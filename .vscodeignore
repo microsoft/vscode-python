@@ -1,6 +1,5 @@
 **/*.map
 **/*.analyzer.html
-!out/startPage-ui/viewers/
 *.vsix
 .editorconfig
 .env

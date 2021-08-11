@@ -15,8 +15,6 @@ import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposed
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { traceError } from './common/logger';
 import { IFileSystem } from './common/platform/types';
-import { StartPage } from './common/startPage/startPage';
-import { IStartPage } from './common/startPage/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -152,8 +150,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
     const outputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
-    const startPage = serviceManager.get<StartPage>(IStartPage);
-    cmdManager.registerCommand(Commands.OpenStartPage, () => startPage.open());
     cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
 
     serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();

@@ -23,11 +23,8 @@ export const AppinsightsKey = 'AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217';
 export type Channel = 'stable' | 'insiders';
 
 export enum CommandSource {
-    auto = 'auto',
     ui = 'ui',
-    codelens = 'codelens',
     commandPalette = 'commandpalette',
-    testExplorer = 'testExplorer',
 }
 
 export namespace Commands {
@@ -60,7 +57,6 @@ export namespace Commands {
     export const GetSelectedInterpreterPath = 'python.interpreterPath';
     export const ClearStorage = 'python.clearPersistentStorage';
     export const ClearWorkspaceInterpreter = 'python.clearWorkspaceInterpreter';
-    export const OpenStartPage = 'python.startPage.open';
     export const LaunchTensorBoard = 'python.launchTensorBoard';
     export const RefreshTensorBoard = 'python.refreshTensorBoard';
     export const ReportIssue = 'python.reportIssue';
@@ -98,8 +94,6 @@ export function isUnitTestExecution(): boolean {
     return process.env.VSC_PYTHON_UNIT_TEST === '1';
 }
 
-// Temporary constant, used to indicate whether we're using custom editor api or not.
-export const UseCustomEditorApi = Symbol('USE_CUSTOM_EDITOR');
 export const UseProposedApi = Symbol('USE_VSC_PROPOSED_API');
 
 export * from '../constants';

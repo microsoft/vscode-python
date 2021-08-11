@@ -7,7 +7,7 @@ import { CancellationTokenSource } from 'vscode';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { IExperimentService } from '../../client/common/types';
 import { TensorBoardNbextensionCodeLensProvider } from '../../client/tensorBoard/nbextensionCodeLensProvider';
-import { MockDocument } from '../startPage/mockDocument';
+import { MockDocument } from '../mocks/mockDocument';
 
 suite('TensorBoard nbextension code lens provider', () => {
     let experimentService: IExperimentService;

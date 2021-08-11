@@ -131,13 +131,6 @@ export namespace Pylance {
     export const pylanceRevertToJedi = localize('Pylance.pylanceRevertToJedi', 'Revert to Jedi');
 }
 
-export namespace Jupyter {
-    export const jupyterExtensionNotInstalled = localize(
-        'Jupyter.extensionNotInstalled',
-        "This feature is available in the Jupyter extension, which isn't currently installed.",
-    );
-}
-
 export namespace TensorBoard {
     export const enterRemoteUrl = localize('TensorBoard.enterRemoteUrl', 'Enter remote URL');
     export const enterRemoteUrlDetail = localize(
@@ -426,57 +419,6 @@ export namespace ExtensionSurveyBanner {
 export namespace Products {
     export const installingModule = localize('products.installingModule', 'Installing {0}');
 }
-
-export namespace StartPage {
-    export const getStarted = localize('StartPage.getStarted', 'Python - Get Started');
-    export const pythonExtensionTitle = localize('StartPage.pythonExtensionTitle', 'Python Extension');
-    export const createJupyterNotebook = localize('StartPage.createJupyterNotebook', 'Create a Jupyter Notebook');
-    export const notebookDescription = localize(
-        'StartPage.notebookDescription',
-        '- Run "<div class="link italics" role="button" onclick={0}>Create New Blank Notebook</div>" in the Command Palette (<div class="italics">Shift + Command + P</div>)<br />- Explore our <div class="link" role="button" onclick={1}>sample notebook</div> to learn about notebook features',
-    );
-    export const createAPythonFile = localize('StartPage.createAPythonFile', 'Create a Python File');
-    export const pythonFileDescription = localize(
-        'StartPage.pythonFileDescription',
-        '- Create a <div class="link" role="button" onclick={0}>new file</div> with a .py extension',
-    );
-    export const openInteractiveWindow = localize(
-        'StartPage.openInteractiveWindow',
-        'Use the Interactive Window to develop Python Scripts',
-    );
-    export const interactiveWindowDesc = localize(
-        'StartPage.interactiveWindowDesc',
-        '- You can create cells on a Python file by typing "#%%". Make sure you have the Jupyter extension installed. <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window',
-    );
-
-    export const releaseNotes = localize(
-        'StartPage.releaseNotes',
-        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features.',
-    );
-    export const tutorialAndDoc = localize(
-        'StartPage.tutorialAndDoc',
-        'Explore more features in our <a class="link" href={0}>Tutorials</a> or check <a class="link" href={1}>Documentation</a> for tips and troubleshooting.',
-    );
-    export const mailingList = localize(
-        'StartPage.mailingList',
-        '<a class="link" href={0}>Sign up</a> for tips and tutorials through our mailing list.',
-    );
-    export const dontShowAgain = localize('StartPage.dontShowAgain', "Don't show this page again");
-    export const helloWorld = localize('StartPage.helloWorld', 'Hello world');
-    // When localizing sampleNotebook, the translated notebook must also be included in
-    // pythonFiles\*
-    export const sampleNotebook = localize('StartPage.sampleNotebook', 'Notebooks intro');
-    export const openFolder = localize('StartPage.openFolder', 'Open a Folder or Workspace');
-    export const folderDesc = localize(
-        'StartPage.folderDesc',
-        '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a <div class="link" role="button" onclick={1}>Workspace</div>',
-    );
-    export const badWebPanelFormatString = localize(
-        'StartPage.badWebPanelFormatString',
-        '<html><body><h1>{0} is not a valid file name</h1></body></html>',
-    );
-}
-
 export namespace DebugConfigStrings {
     export const selectConfiguration = {
         title: localize('debug.selectConfigurationTitle'),

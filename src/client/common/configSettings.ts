@@ -92,8 +92,6 @@ export class PythonSettings implements IPythonSettings {
 
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
 
-    public showStartPage = true;
-
     public downloadLanguageServer = true;
 
     public jediPath = '';
@@ -580,11 +578,6 @@ export class PythonSettings implements IPythonSettings {
                   optInto: [],
                   optOutFrom: [],
               };
-
-        const showStartPage = pythonSettings.get<boolean>('showStartPage');
-        if (showStartPage !== undefined) {
-            this.showStartPage = showStartPage;
-        }
 
         this.insidersChannel = pythonSettings.get<ExtensionChannels>('insidersChannel')!;
         this.tensorBoard = pythonSettings.get<ITensorBoardSettings>('tensorBoard');

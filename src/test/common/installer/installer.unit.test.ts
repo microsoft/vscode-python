@@ -63,7 +63,7 @@ import { LinterManager } from '../../../client/linters/linterManager';
 import { ILinterManager } from '../../../client/linters/types';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { sleep } from '../../common';
-import { MockWorkspaceConfiguration } from '../../startPage/mockWorkspaceConfig';
+import { MockWorkspaceConfiguration } from '../../mocks/mockWorkspaceConfig';
 
 use(chaiAsPromised);
 

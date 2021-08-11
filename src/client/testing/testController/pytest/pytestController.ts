@@ -11,6 +11,8 @@ import { traceError } from '../../../common/logger';
 import { runAdapter } from '../../../common/process/internal/scripts/testing_tools';
 import { IConfigurationService } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { EventName } from '../../../telemetry/constants';
 import { PYTEST_PROVIDER } from '../../common/constants';
 import { TestDiscoveryOptions } from '../../common/types';
 import {
@@ -71,7 +73,6 @@ export class PytestController implements ITestFrameworkController {
                     // This is the workspace root node
                     if (rawTestData.length === 1) {
                         if (rawTestData[0].tests.length > 0) {
-                            item.description = item.id;
                             updateTestItemFromRawData(item, testController, this.idToRawData, item.id, rawTestData);
                         } else {
                             this.idToRawData.delete(item.id);
@@ -79,8 +80,6 @@ export class PytestController implements ITestFrameworkController {
                             return Promise.resolve();
                         }
                     } else {
-                        item.description = workspace.uri.fsPath;
-
                         // To figure out which top level nodes have to removed. First we get all the
                         // existing nodes. Then if they have data we keep those nodes, Nodes without
                         // data will be removed after we check the raw data.
@@ -142,6 +141,7 @@ export class PytestController implements ITestFrameworkController {
     }
 
     public async refreshTestData(testController: TestController, uri: Uri, token?: CancellationToken): Promise<void> {
+        sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: 'pytest' });
         const workspace = this.workspaceService.getWorkspaceFolder(uri);
         if (workspace) {
             // Discovery is expensive. So if it is already running then use the promise
@@ -199,6 +199,7 @@ export class PytestController implements ITestFrameworkController {
 
                 deferred.resolve();
             } catch (ex) {
+                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: 'pytest', failed: true });
                 const cancel = options.token?.isCancellationRequested ? 'Cancelled' : 'Error';
                 traceError(`${cancel} discovering pytest tests:\r\n`, ex);
                 const message = getTestDiscoveryExceptions((ex as Error).message);
@@ -252,6 +253,7 @@ export class PytestController implements ITestFrameworkController {
                 await this.resolveChildren(testController, newItem);
             }
         }
+        sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: 'pytest', failed: false });
         return Promise.resolve();
     }
 

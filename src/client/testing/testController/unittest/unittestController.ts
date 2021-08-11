@@ -29,6 +29,8 @@ import {
     updateTestItemFromRawData,
 } from '../common/testItemUtilities';
 import { traceError } from '../../../common/logger';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { EventName } from '../../../telemetry/constants';
 
 @injectable()
 export class UnittestController implements ITestFrameworkController {
@@ -64,7 +66,6 @@ export class UnittestController implements ITestFrameworkController {
                     }
 
                     if (rawTestData.tests.length > 0) {
-                        item.description = item.id;
                         updateTestItemFromRawData(item, testController, this.idToRawData, item.id, [rawTestData]);
                     } else {
                         this.idToRawData.delete(item.id);
@@ -89,6 +90,7 @@ export class UnittestController implements ITestFrameworkController {
     }
 
     public async refreshTestData(testController: TestController, uri: Uri, token?: CancellationToken): Promise<void> {
+        sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: 'unittest' });
         const workspace = this.workspaceService.getWorkspaceFolder(uri);
         if (workspace) {
             // Discovery is expensive. So if it is already running then use the promise
@@ -199,6 +201,7 @@ for error in loader_errors:
 
                 deferred.resolve();
             } catch (ex) {
+                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: 'unittest', failed: true });
                 const cancel = options.token?.isCancellationRequested ? 'Cancelled' : 'Error';
                 traceError(`${cancel} discovering unittest tests:\r\n`, ex);
 
@@ -253,6 +256,7 @@ for error in loader_errors:
                 await this.resolveChildren(testController, newItem);
             }
         }
+        sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: 'unittest', failed: false });
         return Promise.resolve();
     }
 

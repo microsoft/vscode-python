@@ -393,7 +393,6 @@ src/client/common/nuget/types.ts
 src/client/common/nuget/nugetService.ts
 src/client/common/cancellation.ts
 src/client/common/interpreterPathService.ts
-src/client/common/startPage/startPageMessageListener.ts
 src/client/common/application/applicationShell.ts
 src/client/common/application/languageService.ts
 src/client/common/application/notebook.ts
@@ -511,25 +510,3 @@ src/client/workspaceSymbols/generator.ts
 src/client/workspaceSymbols/parser.ts
 src/client/workspaceSymbols/provider.ts
 
-src/client/common/startPage/codeCssGenerator.ts
-src/client/common/startPage/themeFinder.ts
-src/client/common/startPage/webviewHost.ts
-src/client/common/startPage/webviewPanelHost.ts
-src/startPage-ui/common/main.ts
-src/startPage-ui/react-common/image.tsx
-src/startPage-ui/react-common/locReactSide.ts
-src/startPage-ui/react-common/logger.ts
-src/startPage-ui/react-common/postOffice.ts
-src/startPage-ui/startPage/index.tsx
-src/test/startPage/mockCommandManager.ts
-src/test/startPage/mockDocument.ts
-src/test/startPage/mockDocumentManager.ts
-src/test/startPage/mockExtensions.ts
-src/test/startPage/mockTextEditor.ts
-src/test/startPage/mockWorkspaceConfig.ts
-src/test/startPage/mockWorkspaceFolder.ts
-src/test/startPage/mountedWebView.ts
-src/test/startPage/mountedWebViewFactory.ts
-src/test/startPage/reactHelpers.ts
-src/test/startPage/webBrowserPanel.ts
-src/test/startPage/webBrowserPanelProvider.ts

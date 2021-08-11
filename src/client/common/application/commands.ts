@@ -40,7 +40,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.Exec_Selection_In_Django_Shell]: [];
     [Commands.Create_Terminal]: [];
     [Commands.PickLocalProcess]: [];
-    [Commands.OpenStartPage]: [];
     [Commands.ClearStorage]: [];
     [Commands.ReportIssue]: [];
     [Commands.RefreshTensorBoard]: [];

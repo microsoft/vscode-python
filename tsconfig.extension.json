@@ -10,7 +10,6 @@
             "ES2019",
             "ES2020",
         ],
-        "jsx": "react",
         "sourceMap": true,
         "rootDir": "src",
         "experimentalDecorators": true,
@@ -21,7 +20,6 @@
         "node_modules",
         ".vscode-test",
         ".vscode test",
-        "src/startPage-ui",
         "build"
     ]
 }

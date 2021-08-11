@@ -1,13 +1,18 @@
+/* eslint-disable max-classes-per-file */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 'use strict';
+
 import { EndOfLine, Position, Range, TextDocument, TextDocumentContentChangeEvent, TextLine, Uri } from 'vscode';
 
 class MockLine implements TextLine {
     private _range: Range;
+
     private _rangeWithLineBreak: Range;
+
     private _firstNonWhitespaceIndex: number | undefined;
+
     private _isEmpty: boolean | undefined;
 
     constructor(private _contents: string, private _line: number, private _offset: number) {
@@ -18,24 +23,30 @@ class MockLine implements TextLine {
     public get offset(): number {
         return this._offset;
     }
+
     public get lineNumber(): number {
         return this._line;
     }
+
     public get text(): string {
         return this._contents;
     }
+
     public get range(): Range {
         return this._range;
     }
+
     public get rangeIncludingLineBreak(): Range {
         return this._rangeWithLineBreak;
     }
+
     public get firstNonWhitespaceCharacterIndex(): number {
         if (this._firstNonWhitespaceIndex === undefined) {
             this._firstNonWhitespaceIndex = this._contents.trimLeft().length - this._contents.length;
         }
         return this._firstNonWhitespaceIndex;
     }
+
     public get isEmptyOrWhitespace(): boolean {
         if (this._isEmpty === undefined) {
             this._isEmpty = this._contents.length === 0 || this._contents.trim().length === 0;
@@ -46,12 +57,19 @@ class MockLine implements TextLine {
 
 export class MockDocument implements TextDocument {
     private _uri: Uri;
-    private _version: number = 0;
+
+    private _version = 0;
+
     private _lines: MockLine[] = [];
-    private _contents: string = '';
+
+    private _contents = '';
+
     private _isUntitled = false;
+
     private _isDirty = false;
+
     private _language = 'python';
+
     private _onSave: (doc: TextDocument) => Promise<boolean>;
 
     constructor(
@@ -67,12 +85,12 @@ export class MockDocument implements TextDocument {
         this._language = language ?? this._language;
     }
 
-    public setContent(contents: string) {
+    public setContent(contents: string): void {
         this._contents = contents;
         this._lines = this.createLines();
     }
 
-    public addContent(contents: string) {
+    public addContent(contents: string): void {
         this.setContent(`${this._contents}\n${contents}`);
     }
 
@@ -84,6 +102,7 @@ export class MockDocument implements TextDocument {
     public get uri(): Uri {
         return this._uri;
     }
+
     public get fileName(): string {
         return this._uri.fsPath;
     }
@@ -91,37 +110,48 @@ export class MockDocument implements TextDocument {
     public get isUntitled(): boolean {
         return this._isUntitled;
     }
+
     public get languageId(): string {
         return this._language;
     }
+
     public get version(): number {
         return this._version;
     }
+
     public get isDirty(): boolean {
         return this._isDirty;
     }
+
+    // eslint-disable-next-line class-methods-use-this
     public get isClosed(): boolean {
         return false;
     }
+
     public save(): Thenable<boolean> {
         return this._onSave(this);
     }
+
+    // eslint-disable-next-line class-methods-use-this
     public get eol(): EndOfLine {
         return EndOfLine.LF;
     }
+
     public get lineCount(): number {
         return this._lines.length;
     }
+
     public lineAt(position: Position | number): TextLine {
         if (typeof position === 'number') {
             return this._lines[position as number];
-        } else {
-            return this._lines[position.line];
         }
+        return this._lines[position.line];
     }
+
     public offsetAt(position: Position): number {
         return this.convertToOffset(position);
     }
+
     public positionAt(offset: number): Position {
         let line = 0;
         let ch = 0;
@@ -133,15 +163,17 @@ export class MockDocument implements TextDocument {
         }
         return new Position(line, ch);
     }
+
     public getText(range?: Range | undefined): string {
         if (!range) {
             return this._contents;
-        } else {
-            const startOffset = this.convertToOffset(range.start);
-            const endOffset = this.convertToOffset(range.end);
-            return this._contents.substr(startOffset, endOffset - startOffset);
         }
+        const startOffset = this.convertToOffset(range.start);
+        const endOffset = this.convertToOffset(range.end);
+        return this._contents.substr(startOffset, endOffset - startOffset);
     }
+
+    // eslint-disable-next-line class-methods-use-this
     public getWordRangeAtPosition(position: Position, regexp?: RegExp | undefined): Range | undefined {
         if (!regexp && position.line > 0) {
             // use default when custom-regexp isn't provided
@@ -150,9 +182,13 @@ export class MockDocument implements TextDocument {
 
         return undefined;
     }
+
+    // eslint-disable-next-line class-methods-use-this
     public validateRange(range: Range): Range {
         return range;
     }
+
+    // eslint-disable-next-line class-methods-use-this
     public validatePosition(position: Position): Position {
         return position;
     }
@@ -175,6 +211,7 @@ export class MockDocument implements TextDocument {
         });
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private createTextLine(line: string, index: number, prevLine: MockLine | undefined): MockLine {
         return new MockLine(
             line,
