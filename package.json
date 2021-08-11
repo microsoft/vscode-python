@@ -1907,13 +1907,13 @@
             "editor/title/run": [
                 {
                     "command": "python.execInTerminal-icon",
-                    "group": "navigation",
+                    "group": "navigation@0",
                     "title": "%python.command.python.execInTerminal.title%",
                     "when": "resourceLangId == python && !isInDiffEditor"
                 },
                 {
                     "command": "python.debugInTerminal",
-                    "group": "navigation",
+                    "group": "navigation@1",
                     "title": "%python.command.python.debugInTerminal.title%",
                     "when": "resourceLangId == python && !isInDiffEditor"
                 }
