@@ -10,25 +10,14 @@ import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
-import { EnvironmentSorting } from '../../../client/common/experiments/groups';
-import { ExperimentService } from '../../../client/common/experiments/service';
 import { PersistentState, PersistentStateFactory } from '../../../client/common/persistentState';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IExperimentService, IPersistentStateFactory, Resource } from '../../../client/common/types';
+import { IPersistentStateFactory, Resource } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { InterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection';
 import { InterpreterAutoSelectionProxyService } from '../../../client/interpreter/autoSelection/proxy';
-import { CachedInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/cached';
-import { CurrentPathInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/currentPath';
-import { SettingsInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/settings';
-import { SystemWideInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/system';
-import { WindowsRegistryInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/winRegistry';
-import { WorkspaceVirtualEnvInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/workspaceEnv';
-import {
-    IInterpreterAutoSelectionRule,
-    IInterpreterAutoSelectionProxyService,
-} from '../../../client/interpreter/autoSelection/types';
+import { IInterpreterAutoSelectionProxyService } from '../../../client/interpreter/autoSelection/types';
 import { EnvironmentTypeComparer } from '../../../client/interpreter/configuration/environmentTypeComparer';
 import {
     GetInterpreterOptions,
@@ -49,16 +38,9 @@ suite('Interpreters - Auto Selection', () => {
     let workspaceService: IWorkspaceService;
     let stateFactory: IPersistentStateFactory;
     let fs: IFileSystem;
-    let systemInterpreter: IInterpreterAutoSelectionRule;
-    let currentPathInterpreter: IInterpreterAutoSelectionRule;
-    let winRegInterpreter: IInterpreterAutoSelectionRule;
-    let cachedPaths: IInterpreterAutoSelectionRule;
-    let userDefinedInterpreter: IInterpreterAutoSelectionRule;
-    let workspaceInterpreter: IInterpreterAutoSelectionRule;
     let state: PersistentState<PythonEnvironment | undefined>;
     let helper: IInterpreterHelper;
     let proxy: IInterpreterAutoSelectionProxyService;
-    let experiments: IExperimentService;
     let interpreterService: IInterpreterService;
     class InterpreterAutoSelectionServiceTest extends InterpreterAutoSelectionService {
         public initializeStore(resource: Resource): Promise<void> {
@@ -78,34 +60,18 @@ suite('Interpreters - Auto Selection', () => {
         stateFactory = mock(PersistentStateFactory);
         state = mock(PersistentState) as PersistentState<PythonEnvironment | undefined>;
         fs = mock(FileSystem);
-        systemInterpreter = mock(SystemWideInterpretersAutoSelectionRule);
-        currentPathInterpreter = mock(CurrentPathInterpretersAutoSelectionRule);
-        winRegInterpreter = mock(WindowsRegistryInterpretersAutoSelectionRule);
-        cachedPaths = mock(CachedInterpretersAutoSelectionRule);
-        userDefinedInterpreter = mock(SettingsInterpretersAutoSelectionRule);
-        workspaceInterpreter = mock(WorkspaceVirtualEnvInterpretersAutoSelectionRule);
         helper = mock(InterpreterHelper);
         proxy = mock(InterpreterAutoSelectionProxyService);
-        experiments = mock(ExperimentService);
         interpreterService = mock(InterpreterService);
 
         const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
-
-        when(experiments.inExperimentSync(anything())).thenReturn(false);
 
         autoSelectionService = new InterpreterAutoSelectionServiceTest(
             instance(workspaceService),
             instance(stateFactory),
             instance(fs),
-            instance(experiments),
             instance(interpreterService),
             interpreterComparer,
-            instance(systemInterpreter),
-            instance(currentPathInterpreter),
-            instance(winRegInterpreter),
-            instance(cachedPaths),
-            instance(userDefinedInterpreter),
-            instance(workspaceInterpreter),
             instance(proxy),
             instance(helper),
         );
@@ -113,60 +79,6 @@ suite('Interpreters - Auto Selection', () => {
 
     test('Instance is registered in proxy', () => {
         verify(proxy.registerInstance!(autoSelectionService)).once();
-    });
-    test('Rules are chained in order of preference', () => {
-        verify(userDefinedInterpreter.setNextRule(instance(workspaceInterpreter))).once();
-        verify(workspaceInterpreter.setNextRule(instance(cachedPaths))).once();
-        verify(cachedPaths.setNextRule(instance(currentPathInterpreter))).once();
-        verify(currentPathInterpreter.setNextRule(instance(winRegInterpreter))).once();
-        verify(winRegInterpreter.setNextRule(instance(systemInterpreter))).once();
-        verify(systemInterpreter.setNextRule(anything())).never();
-    });
-
-    suite('When using rule-based auto-selection', () => {
-        setup(() => {
-            when(experiments.inExperiment(EnvironmentSorting.experiment)).thenResolve(false);
-        });
-
-        test('Run rules in background', async () => {
-            let eventFired = false;
-            autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
-                eventFired = true;
-            });
-            autoSelectionService.initializeStore = () => Promise.resolve();
-            await autoSelectionService.autoSelectInterpreter(undefined);
-
-            expect(eventFired).to.deep.equal(true, 'event not fired');
-
-            const allRules = [
-                userDefinedInterpreter,
-                winRegInterpreter,
-                currentPathInterpreter,
-                systemInterpreter,
-                workspaceInterpreter,
-                cachedPaths,
-            ];
-            for (const service of allRules) {
-                verify(service.autoSelectInterpreter(undefined)).once();
-                if (service !== userDefinedInterpreter) {
-                    verify(service.autoSelectInterpreter(anything(), autoSelectionService)).never();
-                }
-            }
-            verify(userDefinedInterpreter.autoSelectInterpreter(anything(), autoSelectionService)).once();
-        });
-
-        test('Run userDefineInterpreter as the first rule', async () => {
-            let eventFired = false;
-            autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
-                eventFired = true;
-            });
-            autoSelectionService.initializeStore = () => Promise.resolve();
-
-            await autoSelectionService.autoSelectInterpreter(undefined);
-
-            expect(eventFired).to.deep.equal(true, 'event not fired');
-            verify(userDefinedInterpreter.autoSelectInterpreter(undefined, autoSelectionService)).once();
-        });
     });
 
     suite('When using locator-based auto-selection', () => {
@@ -194,7 +106,6 @@ suite('Interpreters - Auto Selection', () => {
                 ),
             ).thenReturn(instance(state));
             when(workspaceService.getWorkspaceFolderIdentifier(anything(), '')).thenReturn('workspaceIdentifier');
-            when(experiments.inExperiment(EnvironmentSorting.experiment)).thenResolve(true);
 
             autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
                 eventFired = true;
