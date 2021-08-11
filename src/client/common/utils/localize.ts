@@ -285,11 +285,6 @@ export namespace InterpreterQuickPickList {
         'InterpreterQuickPickList.quickPickListPlaceholder',
         'Current: {0}',
     );
-    export const enterPath = {
-        detail: localize('InterpreterQuickPickList.enterPath.detail', 'Enter path or find an existing interpreter'),
-        label: localize('InterpreterQuickPickList.enterPath.label', 'Enter interpreter path...'),
-        placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python interpreter.'),
-    };
     export const defaultInterpreterPath = {
         label: (): string => {
             const labelText = localize(
@@ -311,6 +306,7 @@ export namespace InterpreterQuickPickList {
             );
             return `${Octicons.Search_Stop} ${labelText()}`;
         },
+        placeholder: localize('InterpreterQuickPickList.findPath.placeholder', 'Enter path to a Python interpreter.'),
     };
     export const browsePath = {
         label: localize('InterpreterQuickPickList.browsePath.label', 'Find...'),
