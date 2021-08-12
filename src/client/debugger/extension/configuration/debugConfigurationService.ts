@@ -13,7 +13,7 @@ import {
     InputStep,
     IQuickPickParameters,
 } from '../../../common/utils/multiStepInput';
-import { AttachRequestArguments, DebugConfigurationArguments, DebugPurpose, LaunchRequestArguments } from '../../types';
+import { AttachRequestArguments, DebugConfigurationArguments, LaunchRequestArguments } from '../../types';
 import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationService } from '../types';
 import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from './types';
 
@@ -61,18 +61,21 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
                 debugConfiguration as AttachRequestArguments,
                 token,
             );
-        } else if (
-            debugConfiguration.request === 'test' ||
-            (debugConfiguration as LaunchRequestArguments).purpose?.includes(DebugPurpose.DebugTest)
-        ) {
-            // We reach here only if people try to use debug-test or request===test configuration for
+        } else if (debugConfiguration.request === 'test') {
+            // `"request": "test"` is now deprecated. But some users might have it in their
+            // launch config. We get here if they triggered it using F5 or start with debugger.
+            throw Error(
+                'This configuration can only be used by the test debugging commands. `"request": "test"` is deprecated use "purpose" instead.',
+            );
+        } else if (((debugConfiguration as LaunchRequestArguments).purpose ?? []).length > 0) {
+            // We reach here only if people try to use debug-test or debug-in-terminal purpose for
             // launching a file via F5 or "start with debugging".
             // debug-test : is not allowed to be launched via (F5 or "start with debugging") since it
             //              requires test framework specific configuration that is done in the test
             //              debug launcher.
-            // debug-in-terminal : is allowed because it is same as launching 'Debug Current File'
-            //                     configuration.
-            throw Error("Please use the command 'Test: Debug All Tests'");
+            // debug-in-terminal : is not allowed because we may update the configuration based on
+            //                     editor context where it was triggered.
+            throw Error('This configuration can only be used as defined by `purpose`.');
         } else {
             if (this.cacheDebugConfig) {
                 debugConfiguration = cloneDeep(this.cacheDebugConfig);

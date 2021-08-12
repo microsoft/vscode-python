@@ -41,10 +41,9 @@ export class DebugCommands implements IExtensionSingleActivationService {
                     // This is only needed if people reuse debug-test for debug-in-terminal
                     config.program = uri.fsPath;
                 }
-                // Ensure that purpose is set to scope to where we want it for this session.
-                // We reject certain scopes later in the debug initialization if it does not
-                // fit the criteria.
-                config.purpose = [DebugPurpose.DebugInTerminal];
+                // Ensure that the purpose is cleared, this is so we can track if people accidentally
+                // trigger this via F5 or Start with debugger.
+                config.purpose = [];
                 return config;
             }
         }

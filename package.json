@@ -1621,8 +1621,8 @@
                                         "debug-in-terminal"
                                     ],
                                     "enumDescriptions": [
-                                        "Use this configuration while debugging tests.",
-                                        "Use this configuration while debugging a file using debug in terminal."
+                                        "Use this configuration while debugging tests using test view or test debug commands.",
+                                        "Use this configuration while debugging a file using debug in terminal button in the editor."
                                     ]
                                 },
                                 "type": "array"
