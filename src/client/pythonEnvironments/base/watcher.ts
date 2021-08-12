@@ -29,7 +29,7 @@ export type PythonEnvsChangedEvent = BasicPythonEnvsChangedEvent & {
     searchLocation?: Uri;
 };
 
-export type PythonEnvChangedEvent = BasicPythonEnvsChangedEvent & {
+export type PythonEnvChangedEvent = BasicPythonEnvChangedEvent & {
     searchLocation?: Uri;
 };
 

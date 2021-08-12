@@ -5,53 +5,58 @@ import { Event, EventEmitter } from 'vscode';
 import '../../../../common/extensions';
 import { createDeferred } from '../../../../common/utils/async';
 import { PythonEnvInfo } from '../../info';
-import { IResolvingLocator, PythonLocatorQuery } from '../../locator';
-import { PythonEnvChangedEvent, PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
+import { IDiscoveryAPI, IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from '../../locator';
+import { getQueryFilter } from '../../locatorUtils';
+import { PythonEnvChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { IEnvsCollectionCache } from './envsCollectionCache';
 
 /**
  * A service which maintains the collection of known environments.
  */
-export class EnvsCollectionService {
-    public readonly onChanged: Event<PythonEnvsChangedEvent>;
+export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvChangedEvent> implements IDiscoveryAPI {
+    /**
+     * Keeps track of ongoing refreshes for various queries.
+     */
+    private refreshPromises = new Map<PythonLocatorQuery | undefined, Promise<void>>();
 
-    private readonly watcher = new PythonEnvsWatcher<PythonEnvChangedEvent>();
+    private readonly refreshTriggered = new EventEmitter<void>();
 
-    private currentRefreshPromise: Promise<void> | undefined;
-
-    private readonly refreshing = new EventEmitter<void>();
-
-    private readonly refreshed = new EventEmitter<void>();
-
-    public get onRefreshing(): Event<void> {
-        return this.refreshing.event;
+    public get onRefreshTrigger(): Event<void> {
+        return this.refreshTriggered.event;
     }
 
-    public get onRefreshed(): Event<void> {
-        return this.refreshed.event;
+    public get refreshPromise(): Promise<void> {
+        return Promise.all(Array.from(this.refreshPromises.values())).then();
     }
 
-    public async initResources(): Promise<void> {
+    public async validateCollection(): Promise<void> {
         const outOfDateEnvs = await this.cache.validateCache();
         const envs = await Promise.all(
             outOfDateEnvs.map((env) => env.executable.filename).map((executable) => this.resolveEnv(executable)),
         );
         const uptoDateEnvs = envs.filter((e) => e !== undefined).map((e) => e!);
-        uptoDateEnvs.map((e) => this.cache.addEnv(e));
+        uptoDateEnvs.forEach((e) => this.cache.addEnv(e));
     }
 
     constructor(private readonly cache: IEnvsCollectionCache, private readonly locator: IResolvingLocator) {
-        this.onChanged = this.watcher.onChanged;
-        this.locator.onChanged((event) => this.ensureNewRefresh(event));
+        super();
+        this.locator.onChanged((event) =>
+            this.ensureNewRefresh().then(() => {
+                // Once refresh of cache is complete, notify changes.
+                this.fire({ type: event.type, searchLocation: event.searchLocation });
+            }),
+        );
         this.cache.onChanged((e) => {
-            this.watcher.fire(e);
+            this.fire(e);
         });
     }
 
     public async resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
-        const cachedEnvs = this.cache.filterEnvs(executablePath);
-        if (cachedEnvs.length > 0 && this.currentRefreshPromise === undefined) {
-            return cachedEnvs[0];
+        const cachedEnv = this.cache.getCachedEnvInfo(executablePath);
+        // Envs in cache may have incomplete info when a refresh is happening, so
+        // do not rely on cache in those cases.
+        if (cachedEnv && this.refreshPromises.size === 0) {
+            return cachedEnv;
         }
         return this.locator.resolveEnv(executablePath);
     }
@@ -61,46 +66,56 @@ export class EnvsCollectionService {
         if (query?.ignoreCache) {
             await this.ensureCurrentRefresh(query);
         } else if (cachedEnvs.length === 0) {
-            this.ensureCurrentRefresh(query).ignoreErrors();
+            // Ignore query and trigger a refresh to get all envs.
+            this.ensureCurrentRefresh(undefined).ignoreErrors();
         }
-        return cachedEnvs;
+        return query ? cachedEnvs.filter(getQueryFilter(query)) : cachedEnvs;
     }
 
     /**
-     * Ensures we have a current alive refresh going on.
+     * Ensures we have a current alive refresh for the query going on.
      */
     private async ensureCurrentRefresh(query?: PythonLocatorQuery): Promise<void> {
-        if (!this.currentRefreshPromise) {
-            this.currentRefreshPromise = this.triggerRefresh(query);
+        let refreshPromiseForQuery = this.refreshPromises.get(query);
+        if (!refreshPromiseForQuery) {
+            refreshPromiseForQuery = this.triggerRefresh(query);
         }
-        return this.currentRefreshPromise.then(() => {
-            this.currentRefreshPromise = undefined;
-        });
+        return refreshPromiseForQuery;
     }
 
     /**
      * Ensure we initialize a fresh refresh after the current refresh (if any) is done.
      */
-    private async ensureNewRefresh(event: PythonEnvsChangedEvent): Promise<void> {
-        const nextRefreshPromise = this.currentRefreshPromise
-            ? this.currentRefreshPromise.then(() => this.triggerRefresh())
+    private async ensureNewRefresh(query?: PythonLocatorQuery): Promise<void> {
+        const refreshPromise = this.refreshPromises.get(query);
+        const nextRefreshPromise = refreshPromise
+            ? refreshPromise.then(() => this.triggerRefresh())
             : this.triggerRefresh();
-        return nextRefreshPromise.then(() => {
-            // Once refresh of cache is complete, notify changes.
-            this.watcher.fire({ type: event.type, searchLocation: event.searchLocation });
-        });
+        return nextRefreshPromise;
     }
 
     private async triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
-        this.refreshing.fire();
+        this.refreshTriggered.fire();
+        const iterator = this.locator.iterEnvs(query);
+        const refreshPromiseForQuery = this.addEnvsToCacheFromIterator(iterator);
+        this.refreshPromises.set(query, refreshPromiseForQuery);
+        return refreshPromiseForQuery.then(async () => {
+            this.refreshPromises.delete(query);
+            // All valid envs in cache must have updated info by now, so do not check for
+            // outdated info when validating cache.
+            await this.cache.validateCache(false);
+            await this.cache.flush();
+        });
+    }
+
+    private async addEnvsToCacheFromIterator(iterator: IPythonEnvsIterator) {
         const seen: PythonEnvInfo[] = [];
         const state = {
             done: true,
             pending: 0,
         };
-        const refreshComplete = createDeferred<void>();
+        const updatesDone = createDeferred<void>();
 
-        const iterator = this.locator.iterEnvs(query);
         if (iterator.onUpdated !== undefined) {
             const listener = iterator.onUpdated(async (event) => {
                 if (event === null) {
@@ -115,22 +130,26 @@ export class EnvsCollectionService {
                     state.pending -= 1;
                 }
                 if (state.done && state.pending === 0) {
-                    refreshComplete.resolve();
+                    updatesDone.resolve();
                 }
             });
         } else {
-            refreshComplete.resolve();
+            updatesDone.resolve();
         }
 
         for await (const env of iterator) {
             seen.push(env);
             this.cache.addEnv(env);
         }
-
-        await refreshComplete.promise;
-        this.refreshed.fire();
-        // All valid envs in cache must have updated info by now.
-        await this.cache.validateCache(true);
-        await this.cache.flush();
+        await updatesDone.promise;
     }
+}
+
+export async function getEnvCollectionService(
+    cache: IEnvsCollectionCache,
+    locator: IResolvingLocator,
+): Promise<IDiscoveryAPI> {
+    const service = new EnvsCollectionService(cache, locator);
+    service.validateCollection().ignoreErrors();
+    return service;
 }

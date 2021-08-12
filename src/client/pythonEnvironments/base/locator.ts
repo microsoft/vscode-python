@@ -7,9 +7,9 @@ import { Event, Uri } from 'vscode';
 import { IAsyncIterableIterator, iterEmpty } from '../../common/utils/async';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from './info';
 import {
-    BasicPythonEnvChangedEvent,
     BasicPythonEnvsChangedEvent,
     IPythonEnvsWatcher,
+    PythonEnvChangedEvent,
     PythonEnvsChangedEvent,
     PythonEnvsWatcher,
 } from './watcher';
@@ -172,22 +172,27 @@ export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ILocato
 
 export interface IDiscoveryAPI {
     /**
+     * Fires when the known list of environments starts refreshing, i.e when discovery starts or restarts.
+     */
+    readonly onRefreshTrigger: Event<void>;
+    /**
+     * Resolves once environment list has finished refreshing, i.e all environments are
+     * discovered.
+     */
+    readonly refreshPromise: Promise<void>;
+    /**
      * Get current list of known environments.
      */
-    getEnvs(query?: PythonLocatorQuery): PythonEnvInfo[];
-
+    getEnvs(query?: PythonLocatorQuery): Promise<PythonEnvInfo[]>;
     /**
      * Fires with details if the known list changes.
      */
-    onChanged: Event<BasicPythonEnvChangedEvent>;
-
+    onChanged: Event<PythonEnvChangedEvent>;
     /**
      * Find as much info about the given Python environment as possible.
      * If executable passed is invalid, then `undefined` is returned.
-     *
-     * @param env - the Python executable path to resolve more information about
      */
-    resolveEnv(env: string): Promise<PythonEnvInfo | undefined>;
+    resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined>;
 }
 
 interface IEmitter<E extends PythonEnvsChangedEvent> {
