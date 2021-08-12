@@ -8,9 +8,6 @@ import { PythonEnvInfo } from '../../info';
 import { areSameEnv } from '../../info/env';
 import { BasicPythonEnvChangedEvent, PythonEnvChangedEvent, PythonEnvsWatcher } from '../../watcher';
 
-/**
- * Represents the environment info cache to be used by the cache locator.
- */
 export interface IEnvsCollectionCache {
     /**
      * Return all environment info currently in memory for this session.
@@ -35,10 +32,8 @@ export interface IEnvsCollectionCache {
     /**
      * Return cached environment information for a given interpreter path if it exists,
      * otherwise return `undefined`.
-     *
-     * @param path Path to a Python interpreter.
      */
-    getCachedEnvInfo(path: string): PythonEnvInfo | undefined;
+    getEnv(path: string): PythonEnvInfo | undefined;
 
     /**
      * Writes the content of the in-memory cache to persistent storage.
@@ -71,11 +66,12 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvChangedEvent>
         super();
     }
 
-    public async validateCache(shouldCheckForUpdates?: boolean): Promise<PythonEnvInfo[]> {
+    public async validateCache(shouldCheckForUpdates = true): Promise<PythonEnvInfo[]> {
         // Remove envs which no longer exist
         this.envs = await asyncFilter(this.envs, (e) => pathExists(e.executable.filename));
         if (shouldCheckForUpdates) {
-            // Checks if any envs are out of date, removes them from cache, and returns the list of envs.
+            // Checks if any envs are out of date, removes them from cache, and returns
+            // the list of envs.
             const isIndexUptoDate = await Promise.all(
                 this.envs.map(async (env) => {
                     const { ctime, mtime } = await getFileInfo(env.executable.filename);
@@ -94,8 +90,11 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvChangedEvent>
     }
 
     public addEnv(env: PythonEnvInfo): void {
-        this.envs.push(env);
-        this.fire({ update: env });
+        const found = this.envs.find((e) => areSameEnv(e, env));
+        if (!found) {
+            this.envs.push(env);
+            this.fire({ update: env });
+        }
     }
 
     public updateEnv(oldValue: PythonEnvInfo, newValue: PythonEnvInfo | undefined): void {
@@ -110,7 +109,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvChangedEvent>
         }
     }
 
-    public getCachedEnvInfo(executablePath: string): PythonEnvInfo | undefined {
+    public getEnv(executablePath: string): PythonEnvInfo | undefined {
         return this.envs.find((e) => areSameEnv(e, executablePath));
     }
 
@@ -128,7 +127,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvChangedEvent>
 /**
  * Build a cache of PythonEnvInfo that is ready to use.
  */
-export async function getPersistentCache(storage: IPersistentStorage): Promise<PythonEnvInfoCache> {
+export async function getCollectionCache(storage: IPersistentStorage): Promise<PythonEnvInfoCache> {
     const cache = new PythonEnvInfoCache(storage);
     await cache.clearAndReloadFromStorage();
     return cache;

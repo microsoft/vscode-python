@@ -57,8 +57,7 @@ export type PythonEnvUpdatedEvent<I = PythonEnvInfo> = {
  */
 export interface IPythonEnvsIterator<I = PythonEnvInfo> extends IAsyncIterableIterator<I> {
     /**
-     * TODO: Note updates might even contain new environments which have not been iterated yet.
-     * Will have to change type of `onUpdated` property accordingly.
+     * Provides possible updates for already-iterated envs.
      *
      * Once there are no more updates, `null` is emitted.
      *
@@ -81,7 +80,7 @@ export const NOOP_ITERATOR: IPythonEnvsIterator = iterEmpty<PythonEnvInfo>();
  */
 type BasicPythonLocatorQuery = {
     /**
-     * If set as true, ignore the cache and query for fresh environments.
+     * If set as true, ignore the cache and wait until the fresh list of environments is retrieved.
      */
     ignoreCache?: boolean;
     /**

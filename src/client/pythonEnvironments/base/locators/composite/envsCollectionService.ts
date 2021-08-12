@@ -14,9 +14,7 @@ import { IEnvsCollectionCache } from './envsCollectionCache';
  * A service which maintains the collection of known environments.
  */
 export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvChangedEvent> implements IDiscoveryAPI {
-    /**
-     * Keeps track of ongoing refreshes for various queries.
-     */
+    /** Keeps track of ongoing refreshes for various queries. */
     private refreshPromises = new Map<PythonLocatorQuery | undefined, Promise<void>>();
 
     private readonly refreshTriggered = new EventEmitter<void>();
@@ -52,7 +50,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvChangedEve
     }
 
     public async resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
-        const cachedEnv = this.cache.getCachedEnvInfo(executablePath);
+        const cachedEnv = this.cache.getEnv(executablePath);
         // Envs in cache may have incomplete info when a refresh is happening, so
         // do not rely on cache in those cases.
         if (cachedEnv && this.refreshPromises.size === 0) {
@@ -66,7 +64,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvChangedEve
         if (query?.ignoreCache) {
             await this.ensureCurrentRefresh(query);
         } else if (cachedEnvs.length === 0) {
-            // Ignore query and trigger a refresh to get all envs.
+            // Ignore query and trigger a refresh to get all envs as cache is empty.
             this.ensureCurrentRefresh(undefined).ignoreErrors();
         }
         return query ? cachedEnvs.filter(getQueryFilter(query)) : cachedEnvs;
@@ -89,20 +87,20 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvChangedEve
     private async ensureNewRefresh(query?: PythonLocatorQuery): Promise<void> {
         const refreshPromise = this.refreshPromises.get(query);
         const nextRefreshPromise = refreshPromise
-            ? refreshPromise.then(() => this.triggerRefresh())
-            : this.triggerRefresh();
+            ? refreshPromise.then(() => this.triggerRefresh(query))
+            : this.triggerRefresh(query);
         return nextRefreshPromise;
     }
 
-    private async triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
+    private async triggerRefresh(query: PythonLocatorQuery | undefined): Promise<void> {
         this.refreshTriggered.fire();
         const iterator = this.locator.iterEnvs(query);
         const refreshPromiseForQuery = this.addEnvsToCacheFromIterator(iterator);
         this.refreshPromises.set(query, refreshPromiseForQuery);
         return refreshPromiseForQuery.then(async () => {
             this.refreshPromises.delete(query);
-            // All valid envs in cache must have updated info by now, so do not check for
-            // outdated info when validating cache.
+            // All valid envs in cache must have updated info by now, so do not check
+            // for outdated info when validating cache.
             await this.cache.validateCache(false);
             await this.cache.flush();
         });
@@ -150,6 +148,6 @@ export async function getEnvCollectionService(
     locator: IResolvingLocator,
 ): Promise<IDiscoveryAPI> {
     const service = new EnvsCollectionService(cache, locator);
-    service.validateCollection().ignoreErrors();
+    await service.validateCollection();
     return service;
 }

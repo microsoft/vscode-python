@@ -29,7 +29,13 @@ class PythonEnvironments implements IDiscoveryAPI, IDisposable {
         await this.disposables.dispose();
     }
 
-    // For ILocator:
+    public get onRefreshTrigger() {
+        return this.locator.onRefreshTrigger;
+    }
+
+    public get refreshPromise() {
+        return this.locator.refreshPromise;
+    }
 
     public get onChanged() {
         return this.locator.onChanged;

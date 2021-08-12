@@ -178,3 +178,8 @@ async function createCachingLocator(ext: ExtensionState, locators: IResolvingLoc
     );
     return new CachingLocator(cache, locators);
 }
+
+export interface IPersistentStorage {
+    load(): Promise<PythonEnvInfo[] | undefined>;
+    store(envs: PythonEnvInfo[]): Promise<void>;
+}
