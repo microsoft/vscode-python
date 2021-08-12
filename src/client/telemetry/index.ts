@@ -14,7 +14,6 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { isPromise } from '../common/utils/async';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
-import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { LinterId } from '../linters/types';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import {
