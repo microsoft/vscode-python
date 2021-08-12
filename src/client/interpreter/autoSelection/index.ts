@@ -53,7 +53,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
      * If there's a cached auto-selected interpreter -> return it.
      * If not, check if we are in the env sorting experiment, and use the appropriate auto-selection logic.
      */
-    @captureTelemetry(EventName.PYTHON_INTERPRETER_AUTO_SELECTION, undefined, true)
+    @captureTelemetry(EventName.PYTHON_INTERPRETER_AUTO_SELECTION, {}, true)
     public async autoSelectInterpreter(resource: Resource): Promise<void> {
         const key = this.getWorkspacePathKey(resource);
 

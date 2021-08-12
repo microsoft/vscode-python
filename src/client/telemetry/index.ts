@@ -1052,12 +1052,6 @@ export interface IEventNamePropertyMapping {
     };
     [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: {
         /**
-         * The rule used to auto-select the interpreter
-         *
-         * @type {AutoSelectionRule}
-         */
-        rule?: AutoSelectionRule;
-        /**
          * If cached interpreter no longer exists or is invalid
          *
          * @type {boolean}
