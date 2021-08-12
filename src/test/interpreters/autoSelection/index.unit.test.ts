@@ -42,6 +42,7 @@ suite('Interpreters - Auto Selection', () => {
     let helper: IInterpreterHelper;
     let proxy: IInterpreterAutoSelectionProxyService;
     let interpreterService: IInterpreterService;
+    let options: GetInterpreterOptions[] = [];
     class InterpreterAutoSelectionServiceTest extends InterpreterAutoSelectionService {
         public initializeStore(resource: Resource): Promise<void> {
             return super.initializeStore(resource);
@@ -75,6 +76,27 @@ suite('Interpreters - Auto Selection', () => {
             instance(proxy),
             instance(helper),
         );
+
+        when(interpreterService.getInterpreters(anything(), anything())).thenCall((_, opts) => {
+            options.push(opts);
+
+            return Promise.resolve([
+                {
+                    envType: EnvironmentType.Conda,
+                    envPath: path.join('some', 'conda', 'env'),
+                    version: { major: 3, minor: 7, patch: 2 },
+                } as PythonEnvironment,
+                {
+                    envType: EnvironmentType.Pipenv,
+                    envPath: path.join('some', 'pipenv', 'env'),
+                    version: { major: 3, minor: 10, patch: 0 },
+                } as PythonEnvironment,
+            ]);
+        });
+    });
+
+    teardown(() => {
+        options = [];
     });
 
     test('Instance is registered in proxy', () => {
@@ -119,10 +141,9 @@ suite('Interpreters - Auto Selection', () => {
                 envPath: path.join(workspacePath, '.venv'),
                 version: { major: 3, minor: 10, patch: 0 },
             } as PythonEnvironment;
-            let options: GetInterpreterOptions = {};
 
             when(interpreterService.getInterpreters(resource, anything())).thenCall((_, opts) => {
-                options = opts;
+                options.push(opts);
                 return Promise.resolve([
                     {
                         envType: EnvironmentType.Conda,
@@ -141,7 +162,7 @@ suite('Interpreters - Auto Selection', () => {
             await autoSelectionService.autoSelectInterpreter(resource);
 
             expect(eventFired).to.deep.equal(true, 'event not fired');
-            expect(options).to.deep.equal({ ignoreCache: true }, 'getInterpreters options are different');
+            expect(options).to.deep.equal([{ ignoreCache: true }], 'getInterpreters options are different');
             verify(interpreterService.getInterpreters(resource, anything())).once();
             verify(state.updateValue(localEnv)).once();
         });
@@ -152,10 +173,9 @@ suite('Interpreters - Auto Selection', () => {
                 envPath: path.join('/', 'usr', 'bin'),
                 version: { major: 3, minor: 9, patch: 1 },
             } as PythonEnvironment;
-            let options: GetInterpreterOptions = {};
 
             when(interpreterService.getInterpreters(resource, anything())).thenCall((_, opts) => {
-                options = opts;
+                options.push(opts);
                 return Promise.resolve([
                     {
                         envType: EnvironmentType.Conda,
@@ -174,14 +194,13 @@ suite('Interpreters - Auto Selection', () => {
             await autoSelectionService.autoSelectInterpreter(resource);
 
             expect(eventFired).to.deep.equal(true, 'event not fired');
-            expect(options).to.deep.equal({ ignoreCache: true }, 'getInterpreters options are different');
+            expect(options).to.deep.equal([{ ignoreCache: true }], 'getInterpreters options are different');
             verify(interpreterService.getInterpreters(resource, anything())).once();
             verify(state.updateValue(systemEnv)).once();
         });
 
         test('getInterpreters is called with ignoreCache at true if there is no value set in the workspace persistent state', async () => {
             const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
-            const options: { ignoreCache: boolean }[] = [];
             const queryState = mock(PersistentState) as PersistentState<boolean | undefined>;
 
             when(queryState.value).thenReturn(undefined);
@@ -225,7 +244,6 @@ suite('Interpreters - Auto Selection', () => {
 
         test('getInterpreters is called with ignoreCache at false if there is a value set in the workspace persistent state', async () => {
             const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
-            const options: { ignoreCache: boolean }[] = [];
             const queryState = mock(PersistentState) as PersistentState<boolean | undefined>;
 
             when(queryState.value).thenReturn(true);
@@ -269,6 +287,13 @@ suite('Interpreters - Auto Selection', () => {
     });
 
     test('Initialize the store', async () => {
+        const queryState = mock(PersistentState) as PersistentState<boolean | undefined>;
+
+        when(queryState.value).thenReturn(undefined);
+        when(stateFactory.createWorkspacePersistentState<boolean | undefined>(anyString(), undefined)).thenReturn(
+            instance(queryState),
+        );
+
         let initialize = false;
         let eventFired = false;
         autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
@@ -283,6 +308,7 @@ suite('Interpreters - Auto Selection', () => {
         expect(eventFired).to.deep.equal(true, 'event not fired');
         expect(initialize).to.be.equal(true, 'Not invoked');
     });
+
     test('Initializing the store would be executed once', async () => {
         when(
             stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
@@ -297,6 +323,7 @@ suite('Interpreters - Auto Selection', () => {
 
         verify(stateFactory.createGlobalPersistentState(preferredGlobalInterpreter, undefined)).twice();
     });
+
     test("Clear file stored in cache if it doesn't exist", async () => {
         const pythonPath = 'Hello World';
         const interpreterInfo = { path: pythonPath } as any;
@@ -316,6 +343,7 @@ suite('Interpreters - Auto Selection', () => {
         verify(fs.fileExists(pythonPath)).once();
         verify(state.updateValue(undefined)).once();
     });
+
     test('Should not clear file stored in cache if it does exist', async () => {
         const pythonPath = 'Hello World';
         const interpreterInfo = { path: pythonPath } as any;
@@ -341,6 +369,7 @@ suite('Interpreters - Auto Selection', () => {
         verify(fs.fileExists(pythonPath)).once();
         verify(state.updateValue(undefined)).never();
     });
+
     test('Store interpreter info in state store when resource is undefined', async () => {
         let eventFired = false;
         const pythonPath = 'Hello World';
@@ -364,6 +393,7 @@ suite('Interpreters - Auto Selection', () => {
         expect(selectedInterpreter).to.deep.equal(interpreterInfo);
         expect(eventFired).to.deep.equal(false, 'event fired');
     });
+
     test('Do not store global interpreter info in state store when resource is undefined and version is lower than one already in state', async () => {
         let eventFired = false;
         const pythonPath = 'Hello World';
@@ -390,6 +420,7 @@ suite('Interpreters - Auto Selection', () => {
         expect(selectedInterpreter).to.deep.equal(interpreterInfoInState);
         expect(eventFired).to.deep.equal(false, 'event fired');
     });
+
     test('Store global interpreter info in state store when resource is undefined and version is higher than one already in state', async () => {
         let eventFired = false;
         const pythonPath = 'Hello World';
@@ -416,6 +447,7 @@ suite('Interpreters - Auto Selection', () => {
         expect(selectedInterpreter).to.deep.equal(interpreterInfo);
         expect(eventFired).to.deep.equal(false, 'event fired');
     });
+
     test('Store global interpreter info in state store', async () => {
         const pythonPath = 'Hello World';
         const interpreterInfo = { path: pythonPath } as any;
@@ -434,6 +466,7 @@ suite('Interpreters - Auto Selection', () => {
         verify(state.updateValue(interpreterInfo)).once();
         expect(selectedInterpreter).to.deep.equal(interpreterInfo);
     });
+
     test('Store interpreter info in state store when resource is defined', async () => {
         let eventFired = false;
         const pythonPath = 'Hello World';
@@ -459,6 +492,7 @@ suite('Interpreters - Auto Selection', () => {
         expect(selectedInterpreter).to.deep.equal(interpreterInfo);
         expect(eventFired).to.deep.equal(false, 'event fired');
     });
+
     test('Store workspace interpreter info in state store', async () => {
         const pythonPath = 'Hello World';
         const interpreterInfo = { path: pythonPath } as any;
@@ -482,6 +516,7 @@ suite('Interpreters - Auto Selection', () => {
         verify(state.updateValue(interpreterInfo)).once();
         expect(selectedInterpreter).to.deep.equal(interpreterInfo);
     });
+
     test('Return undefined when we do not have a global value', async () => {
         const pythonPath = 'Hello World';
         const interpreterInfo = { path: pythonPath } as any;
@@ -502,6 +537,7 @@ suite('Interpreters - Auto Selection', () => {
         verify(state.updateValue(interpreterInfo)).never();
         expect(selectedInterpreter === null || selectedInterpreter === undefined).to.equal(true, 'Should be undefined');
     });
+
     test('Return global value if we do not have a matching value for the resource', async () => {
         const pythonPath = 'Hello World';
         const interpreterInfo = { path: pythonPath } as any;
