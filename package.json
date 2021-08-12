@@ -180,14 +180,33 @@
                 "when": "false",
                 "steps": [
                     {
-                        "id": "python.installPython",
+                        "id": "python.installPythonWinDS",
                         "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python from [Anaconda](https://www.anaconda.com) to use the Python extension.\n \n[Install Python with Anaconda](https://www.anaconda.com)",
+                        "description": "The Python Extension requires Python to be installed. Install Python from the [Microsoft Store](https://aka.ms/AAd9rms).\n\n[Install Python](https://aka.ms/AAd9rms)\n",
                         "media": {
-                            "image": "resources/walkthrough/anaconda-install.png",
-                            "altText": "Screenshot of anaconda webpage"
+                            "markdown": "resources/walkthrough/install-python-windows.md"
                         },
-                        "when": ""
+                        "when": "workspacePlatform == windows"
+                    },
+                    {
+                        "id": "python.installPythonMacDS",
+                        "title": "Install Python",
+                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Open Terminal](command:workbench.action.terminal.new)\n",
+                        "media": {
+                            "markdown": "resources/walkthrough/install-python-macos.md"
+                        },
+                        "when": "workspacePlatform == mac",
+                        "command": "workbench.action.terminal.new"
+                    },
+                    {
+                        "id": "python.installPythonLinuxDS",
+                        "title": "Install Python",
+                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Open Terminal](command:workbench.action.terminal.new)\n",
+                        "media": {
+                            "markdown": "resources/walkthrough/install-python-linux.md"
+                        },
+                        "when": "workspacePlatform == linux",
+                        "command": "workbench.action.terminal.new"
                     },
                     {
                         "id": "python.openFolderMac",
