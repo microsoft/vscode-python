@@ -1,7 +1,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Disposable, Uri, tests, TestResultState } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Uri, tests, TestResultState, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, ICommandManager, IContextKeyManager, IWorkspaceService } from '../common/application/types';
 import * as constants from '../common/constants';
 import '../common/extensions';
@@ -21,6 +21,7 @@ import { DelayedTrigger, IDelayedTrigger } from '../common/utils/delayTrigger';
 import { ShowRefreshTests, ShowRunFailedTests } from '../common/experiments/groups';
 import { ExtensionContextKey } from '../common/application/contextKeys';
 import { checkForFailedTests, updateTestResultMap } from './testController/common/testItemUtilities';
+import { Testing } from '../common/utils/localize';
 
 @injectable()
 export class TestingService implements ITestingService {
@@ -86,6 +87,29 @@ export class UnitTestManagementService implements IExtensionActivationService {
             });
             this.testController.onRefreshingCompleted(async () => {
                 await this.context.setContext(ExtensionContextKey.RefreshingTests, false);
+            });
+            this.testController.onRunWithoutConfiguration(async (unconfigured: WorkspaceFolder[]) => {
+                const workspaces = this.workspaceService.workspaceFolders ?? [];
+                if (unconfigured.length === workspaces.length) {
+                    const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+                    await commandManager.executeCommand('workbench.view.testing.focus');
+
+                    // TODO: this is a workaround for https://github.com/microsoft/vscode/issues/130696
+                    // Once that is fixed delete this notification and test should be configured from the test view.
+                    const app = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+                    const response = await app.showInformationMessage(
+                        Testing.testNotConfigured(),
+                        Testing.configureTests(),
+                    );
+                    if (response === Testing.configureTests()) {
+                        await commandManager.executeCommand(
+                            constants.Commands.Tests_Configure,
+                            undefined,
+                            constants.CommandSource.ui,
+                            unconfigured[0].uri,
+                        );
+                    }
+                }
             });
         }
 

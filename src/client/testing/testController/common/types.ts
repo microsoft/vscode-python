@@ -47,6 +47,7 @@ export interface ITestController {
     stopRefreshing(): void;
     onRefreshingCompleted: Event<void>;
     onRefreshingStarted: Event<void>;
+    onRunWithoutConfiguration: Event<WorkspaceFolder[]>;
 }
 
 export interface ITestRun {

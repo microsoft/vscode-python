@@ -67,8 +67,5 @@
     "debug.attachRemotePortValidationError": "Voer een geldig port-nummer in",
     "debug.attachRemoteHostTitle": "Extern debuggen",
     "debug.attachRemoteHostPrompt": "Voer een hostname of IP-adres in",
-    "debug.attachRemoteHostValidationError": "Voer een geldige hostname of IP-adres in",
-    "Testing.testErrorDiagnosticMessage": "Error",
-    "Testing.testFailDiagnosticMessage": "Mislukt",
-    "Testing.testSkippedDiagnosticMessage": "Overgeslagen"
+    "debug.attachRemoteHostValidationError": "Voer een geldige hostname of IP-adres in"
 }

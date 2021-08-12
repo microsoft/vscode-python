@@ -95,4 +95,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Test_Refreshing]: [];
     [Commands.Test_Stop_Refreshing]: [];
     [Commands.LaunchTensorBoard]: [TensorBoardEntrypoint, TensorBoardEntrypointTrigger];
+    ['workbench.view.testing.focus']: [];
 }

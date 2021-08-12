@@ -549,11 +549,8 @@ export namespace DebugConfigStrings {
 }
 
 export namespace Testing {
-    export const testErrorDiagnosticMessage = localize('Testing.testErrorDiagnosticMessage', 'Error');
-    export const testFailDiagnosticMessage = localize('Testing.testFailDiagnosticMessage', 'Fail');
-    export const testSkippedDiagnosticMessage = localize('Testing.testSkippedDiagnosticMessage', 'Skipped');
     export const configureTests = localize('Testing.configureTests', 'Configure Test Framework');
-    export const disableTests = localize('Testing.disableTests', 'Disable Tests');
+    export const testNotConfigured = localize('Testing.testNotConfigured', 'No test framework configured.');
 }
 
 export namespace OutdatedDebugger {

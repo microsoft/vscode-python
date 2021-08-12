@@ -38,9 +38,15 @@ export class PythonTestController implements ITestController {
 
     private readonly refreshingStartedEvent: EventEmitter<void> = new EventEmitter<void>();
 
+    private readonly runWithoutConfigurationEvent: EventEmitter<WorkspaceFolder[]> = new EventEmitter<
+        WorkspaceFolder[]
+    >();
+
     public readonly onRefreshingCompleted = this.refreshingCompletedEvent.event;
 
     public readonly onRefreshingStarted = this.refreshingStartedEvent.event;
+
+    public readonly onRunWithoutConfiguration = this.runWithoutConfigurationEvent.event;
 
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -108,6 +114,12 @@ export class PythonTestController implements ITestController {
         this.refreshCancellation.cancel();
         this.refreshCancellation.dispose();
         this.refreshCancellation = new CancellationTokenSource();
+    }
+
+    public clearTestController(): void {
+        const ids: string[] = [];
+        this.testController.items.forEach((item) => ids.push(item.id));
+        ids.forEach((id) => this.testController.items.delete(id));
     }
 
     private async refreshTestDataInternal(uri?: Resource): Promise<void> {
@@ -185,6 +197,7 @@ export class PythonTestController implements ITestController {
             runInstance.end();
         });
 
+        const unconfiguredWorkspaces: WorkspaceFolder[] = [];
         try {
             await Promise.all(
                 workspaces.map((workspace) => {
@@ -199,8 +212,8 @@ export class PythonTestController implements ITestController {
                         }
                     });
 
+                    const settings = this.configSettings.getSettings(workspace.uri);
                     if (testItems.length > 0) {
-                        const settings = this.configSettings.getSettings(workspace.uri);
                         if (settings.testing.pytestEnabled) {
                             sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
                                 tool: 'pytest',
@@ -235,6 +248,9 @@ export class PythonTestController implements ITestController {
                         }
                     }
 
+                    if (!settings.testing.pytestEnabled && !settings.testing.unittestEnabled) {
+                        unconfiguredWorkspaces.push(workspace);
+                    }
                     return Promise.resolve();
                 }),
             );
@@ -242,6 +258,10 @@ export class PythonTestController implements ITestController {
             runInstance.appendOutput(`Finished running tests!\r\n`);
             runInstance.end();
             dispose.dispose();
+
+            if (unconfiguredWorkspaces.length > 0) {
+                this.runWithoutConfigurationEvent.fire(unconfiguredWorkspaces);
+            }
         }
     }
 
