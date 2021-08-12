@@ -32,6 +32,7 @@ export namespace Commands {
     export const Set_ShebangInterpreter = 'python.setShebangInterpreter';
     export const Exec_In_Terminal = 'python.execInTerminal';
     export const Exec_In_Terminal_Icon = 'python.execInTerminal-icon';
+    export const Debug_In_Terminal = 'python.debugInTerminal';
     export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
     export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
     export const Tests_Configure = 'python.configureTests';

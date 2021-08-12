@@ -151,4 +151,35 @@ suite('Debugging - Configuration Service', () => {
 
         expect(config).to.equal(undefined, `Config should be undefined`);
     });
+    test('Use cached debug configuration', async () => {
+        const folder = { name: '1', index: 0, uri: Uri.parse('1234') };
+        const expectedConfig = {
+            name: 'File',
+            type: 'python',
+            request: 'launch',
+            program: '${file}',
+            console: 'integratedTerminal',
+        };
+        const multiStepInput = {
+            run: (_: any, state: any) => {
+                Object.assign(state.config, expectedConfig);
+                return Promise.resolve();
+            },
+        };
+        multiStepFactory
+            .setup((f) => f.create())
+            .returns(() => multiStepInput as any)
+            .verifiable(typemoq.Times.once()); // this should be called only once.
+
+        launchResolver
+            .setup((a) => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns(() => Promise.resolve(expectedConfig as any))
+            .verifiable(typemoq.Times.exactly(2)); // this should be called twice with the same config.
+
+        await configService.resolveDebugConfiguration(folder, {} as any);
+        await configService.resolveDebugConfiguration(folder, {} as any);
+
+        multiStepFactory.verifyAll();
+        launchResolver.verifyAll();
+    });
 });

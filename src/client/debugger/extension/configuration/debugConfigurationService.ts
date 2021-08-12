@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
+import { cloneDeep } from 'lodash';
 import { CancellationToken, DebugConfiguration, QuickPickItem, WorkspaceFolder } from 'vscode';
 import { DebugConfigStrings } from '../../../common/utils/localize';
 import {
@@ -18,6 +19,7 @@ import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from 
 
 @injectable()
 export class PythonDebugConfigurationService implements IDebugConfigurationService {
+    private cacheDebugConfig: DebugConfiguration | undefined = undefined;
     constructor(
         @inject(IDebugConfigurationResolver)
         @named('attach')
@@ -62,6 +64,9 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         } else if (debugConfiguration.request === 'test') {
             throw Error("Please use the command 'Python: Debug All Tests'");
         } else {
+            if (this.cacheDebugConfig) {
+                debugConfiguration = cloneDeep(this.cacheDebugConfig);
+            }
             if (Object.keys(debugConfiguration).length === 0) {
                 const configs = await this.provideDebugConfigurations(folder, token);
                 if (configs === undefined) {
@@ -70,6 +75,7 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
                 if (Array.isArray(configs) && configs.length === 1) {
                     debugConfiguration = configs[0];
                 }
+                this.cacheDebugConfig = cloneDeep(debugConfiguration);
             }
             return this.launchResolver.resolveDebugConfiguration(
                 folder,

@@ -8,9 +8,8 @@ import * as path from 'path';
 import { QuickPickItem } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands } from '../../../../common/constants';
-import { FindInterpreterVariants } from '../../../../common/experiments/groups';
 import { IPlatformService } from '../../../../common/platform/types';
-import { IConfigurationService, IExperimentService, IPathUtils, Resource } from '../../../../common/types';
+import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
 import { getIcon } from '../../../../common/utils/icons';
 import { InterpreterQuickPickList } from '../../../../common/utils/localize';
 import {
@@ -47,7 +46,6 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(IExperimentService) private readonly experiments: IExperimentService,
     ) {
         super(pythonPathUpdaterService, commandManager, applicationShell, workspaceService);
     }
@@ -64,14 +62,9 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         let interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
 
-        const inFindExperiment = await this.experiments.inExperiment(FindInterpreterVariants.useFind);
         const manualEntrySuggestion: IFindInterpreterQuickPickItem = {
-            label: inFindExperiment
-                ? InterpreterQuickPickList.findPath.label()
-                : InterpreterQuickPickList.enterPath.label(),
-            detail: inFindExperiment
-                ? InterpreterQuickPickList.findPath.detail()
-                : InterpreterQuickPickList.enterPath.detail(),
+            label: InterpreterQuickPickList.findPath.label(),
+            detail: InterpreterQuickPickList.findPath.detail(),
             alwaysShow: true,
         };
         const { defaultInterpreterPath } = this.configurationService.getSettings(state.workspace);
@@ -153,7 +146,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         ];
 
         const selection = await input.showQuickPick({
-            placeholder: InterpreterQuickPickList.enterPath.placeholder(),
+            placeholder: InterpreterQuickPickList.findPath.placeholder(),
             items,
             acceptFilterBoxTextAsSelection: true,
         });

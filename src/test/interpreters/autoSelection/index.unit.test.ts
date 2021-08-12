@@ -178,6 +178,108 @@ suite('Interpreters - Auto Selection', () => {
             verify(interpreterService.getInterpreters(resource, anything())).once();
             verify(state.updateValue(systemEnv)).once();
         });
+
+        test('getInterpreters is called with ignoreCache at true if there is no value set in the workspace persistent state', async () => {
+            const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
+            const options: { ignoreCache: boolean }[] = [];
+            const queryState = mock(PersistentState) as PersistentState<boolean | undefined>;
+
+            when(queryState.value).thenReturn(undefined);
+            when(stateFactory.createWorkspacePersistentState<boolean | undefined>(anyString(), undefined)).thenReturn(
+                instance(queryState),
+            );
+            when(interpreterService.getInterpreters(resource, anything())).thenCall((_, opts) => {
+                options.push(opts);
+
+                return Promise.resolve([
+                    {
+                        envType: EnvironmentType.Conda,
+                        envPath: path.join('some', 'conda', 'env'),
+                        version: { major: 3, minor: 7, patch: 2 },
+                    } as PythonEnvironment,
+                    {
+                        envType: EnvironmentType.Pipenv,
+                        envPath: path.join('some', 'pipenv', 'env'),
+                        version: { major: 3, minor: 10, patch: 0 },
+                    } as PythonEnvironment,
+                ]);
+            });
+
+            autoSelectionService = new InterpreterAutoSelectionServiceTest(
+                instance(workspaceService),
+                instance(stateFactory),
+                instance(fs),
+                instance(experiments),
+                instance(interpreterService),
+                interpreterComparer,
+                instance(systemInterpreter),
+                instance(currentPathInterpreter),
+                instance(winRegInterpreter),
+                instance(cachedPaths),
+                instance(userDefinedInterpreter),
+                instance(workspaceInterpreter),
+                instance(proxy),
+                instance(helper),
+            );
+
+            autoSelectionService.initializeStore = () => Promise.resolve();
+
+            await autoSelectionService.autoSelectInterpreter(resource);
+
+            verify(interpreterService.getInterpreters(resource, anything())).once();
+            expect(options).to.deep.equal([{ ignoreCache: true }], 'getInterpreters options are different');
+        });
+
+        test('getInterpreters is called with ignoreCache at false if there is a value set in the workspace persistent state', async () => {
+            const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
+            const options: { ignoreCache: boolean }[] = [];
+            const queryState = mock(PersistentState) as PersistentState<boolean | undefined>;
+
+            when(queryState.value).thenReturn(true);
+            when(stateFactory.createWorkspacePersistentState<boolean | undefined>(anyString(), undefined)).thenReturn(
+                instance(queryState),
+            );
+            when(interpreterService.getInterpreters(resource, anything())).thenCall((_, opts) => {
+                options.push(opts);
+
+                return Promise.resolve([
+                    {
+                        envType: EnvironmentType.Conda,
+                        envPath: path.join('some', 'conda', 'env'),
+                        version: { major: 3, minor: 7, patch: 2 },
+                    } as PythonEnvironment,
+                    {
+                        envType: EnvironmentType.Pipenv,
+                        envPath: path.join('some', 'pipenv', 'env'),
+                        version: { major: 3, minor: 10, patch: 0 },
+                    } as PythonEnvironment,
+                ]);
+            });
+
+            autoSelectionService = new InterpreterAutoSelectionServiceTest(
+                instance(workspaceService),
+                instance(stateFactory),
+                instance(fs),
+                instance(experiments),
+                instance(interpreterService),
+                interpreterComparer,
+                instance(systemInterpreter),
+                instance(currentPathInterpreter),
+                instance(winRegInterpreter),
+                instance(cachedPaths),
+                instance(userDefinedInterpreter),
+                instance(workspaceInterpreter),
+                instance(proxy),
+                instance(helper),
+            );
+
+            autoSelectionService.initializeStore = () => Promise.resolve();
+
+            await autoSelectionService.autoSelectInterpreter(resource);
+
+            verify(interpreterService.getInterpreters(resource, anything())).once();
+            expect(options).to.deep.equal([{ ignoreCache: false }], 'getInterpreters options are different');
+        });
     });
 
     test('Initialize the store', async () => {

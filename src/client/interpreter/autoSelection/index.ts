@@ -173,6 +173,13 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         return undefined;
     }
 
+    private getAutoSelectionInterpretersQueryState(resource: Resource): IPersistentState<boolean | undefined> {
+        const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
+        const key = `autoSelectionInterpretersQueried-${workspaceUri?.folderUri.fsPath || 'global'}`;
+
+        return this.stateFactory.createWorkspacePersistentState(key, undefined);
+    }
+
     /**
      * Auto-selection logic:
      * 1. If there are cached interpreters (not the first session in this workspace)
@@ -184,7 +191,11 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
      * As such, we can sort interpreters based on what it returns.
      */
     private async autoselectInterpreterWithLocators(resource: Resource): Promise<void> {
-        const interpreters = await this.interpreterService.getInterpreters(resource, { ignoreCache: true });
+        // Do not perform a full interpreter search if we already have cached interpreters for this workspace.
+        const queriedState = this.getAutoSelectionInterpretersQueryState(resource);
+        const interpreters = await this.interpreterService.getInterpreters(resource, {
+            ignoreCache: queriedState.value !== true,
+        });
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
 
         // When auto-selecting an intepreter for a workspace, we either want to return a local one
@@ -201,6 +212,8 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         } else {
             this.setGlobalInterpreter(filteredInterpreters[0]);
         }
+
+        queriedState.updateValue(true);
 
         this.didAutoSelectedInterpreterEmitter.fire();
     }

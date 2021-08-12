@@ -30,7 +30,7 @@
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-python/issues"
     },
-    "qna": "https://stackoverflow.com/questions/tagged/visual-studio-code+python",
+    "qna": "https://github.com/microsoft/vscode-python/discussions/categories/q-a",
     "icon": "icon.png",
     "galleryBanner": {
         "color": "#1e415e",
@@ -59,6 +59,7 @@
         "onLanguage:python",
         "onDebugResolve:python",
         "onCommand:python.execInTerminal",
+        "onCommand:python.debugInTerminal",
         "onCommand:python.sortImports",
         "onCommand:python.setInterpreter",
         "onCommand:python.setShebangInterpreter",
@@ -197,7 +198,7 @@
                                 "light": "resources/walkthrough/open-folder-light.png",
                                 "dark": "resources/walkthrough/open-folder-dark.png",
                                 "hc": "resources/walkthrough/open-folder-hc.png"
-                               },
+                            },
                             "altText": "Open a folder"
                         },
                         "completionEvents": [
@@ -214,7 +215,7 @@
                                 "light": "resources/walkthrough/open-folder-light.png",
                                 "dark": "resources/walkthrough/open-folder-dark.png",
                                 "hc": "resources/walkthrough/open-folder-hc.png"
-                               },
+                            },
                             "altText": "Open a folder"
                         },
                         "completionEvents": [
@@ -331,11 +332,14 @@
             {
                 "category": "Python",
                 "command": "python.execInTerminal-icon",
-                "icon": {
-                    "dark": "resources/dark/run-file.svg",
-                    "light": "resources/light/run-file.svg"
-                },
+                "icon": "$(play)",
                 "title": "%python.command.python.execInTerminal.title%"
+            },
+            {
+                "category": "Python",
+                "command": "python.debugInTerminal",
+                "icon": "$(debug-alt)",
+                "title": "%python.command.python.debugInTerminal.title%"
             },
             {
                 "category": "Python",
@@ -1900,8 +1904,14 @@
             "editor/title/run": [
                 {
                     "command": "python.execInTerminal-icon",
-                    "group": "navigation",
+                    "group": "navigation@0",
                     "title": "%python.command.python.execInTerminal.title%",
+                    "when": "resourceLangId == python && !isInDiffEditor"
+                },
+                {
+                    "command": "python.debugInTerminal",
+                    "group": "navigation@1",
+                    "title": "%python.command.python.debugInTerminal.title%",
                     "when": "resourceLangId == python && !isInDiffEditor"
                 }
             ],

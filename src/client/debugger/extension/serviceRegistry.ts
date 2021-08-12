@@ -30,6 +30,7 @@ import { AttachConfigurationResolver } from './configuration/resolvers/attach';
 import { DebugEnvironmentVariablesHelper, IDebugEnvironmentVariablesService } from './configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from './configuration/resolvers/launch';
 import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from './configuration/types';
+import { DebugCommands } from './debugCommands';
 import { ChildProcessAttachEventHandler } from './hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from './hooks/childProcessAttachService';
 import { IChildProcessAttachService, IDebugSessionEventHandlers } from './hooks/types';
@@ -138,4 +139,5 @@ export function registerTypes(serviceManager: IServiceManager) {
         IAttachProcessProviderFactory,
         AttachProcessProviderFactory,
     );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebugCommands);
 }
