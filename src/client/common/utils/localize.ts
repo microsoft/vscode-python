@@ -299,19 +299,6 @@ export namespace InterpreterQuickPickList {
             return `${Octicons.Star} ${labelText()}`;
         },
     };
-    export const findPath = {
-        detail: localize(
-            'InterpreterQuickPickList.findPath.detail',
-            'Browse the file system to find a Python interpreter.',
-        ),
-        label: (): string => {
-            const labelText = localize(
-                'InterpreterQuickPickList.findPath.label',
-                "I can't find the interpreter I want to select...",
-            );
-            return `${Octicons.Search_Stop} ${labelText()}`;
-        },
-    };
     export const browsePath = {
         label: localize('InterpreterQuickPickList.browsePath.label', 'Find...'),
         detail: localize(

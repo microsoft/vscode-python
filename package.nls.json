@@ -59,8 +59,6 @@
     "InterpreterQuickPickList.enterPath.detail": "Enter path or find an existing interpreter",
     "InterpreterQuickPickList.enterPath.label": "Enter interpreter path...",
     "InterpreterQuickPickList.enterPath.placeholder": "Enter path to a Python interpreter.",
-    "InterpreterQuickPickList.findPath.detail": "Browse the file system to find a Python interpreter.",
-    "InterpreterQuickPickList.findPath.label": "I can't find the interpreter I want to select...",
     "InterpreterQuickPickList.refreshInterpreterList": "Refresh Interpreter list",
     "InterpreterQuickPickList.browsePath.label": "Find...",
     "InterpreterQuickPickList.browsePath.detail": "Browse your file system to find a Python interpreter.",

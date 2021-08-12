@@ -58,8 +58,6 @@
     "InterpreterQuickPickList.enterPath.detail": "输入路径或选择一个现有的解释器",
     "InterpreterQuickPickList.enterPath.label": "输入解释器路径...",
     "InterpreterQuickPickList.enterPath.placeholder": "请输入 Python 解释器的路径。",
-    "InterpreterQuickPickList.findPath.detail": "浏览文件系统来选择一个 Python 解释器。",
-    "InterpreterQuickPickList.findPath.label": "需要的解释器不在列表中...",
     "InterpreterQuickPickList.refreshInterpreterList": "刷新解释器列表",
     "InterpreterQuickPickList.browsePath.label": "浏览...",
     "InterpreterQuickPickList.browsePath.detail": "浏览文件系统来选择一个 Python 解释器。",
