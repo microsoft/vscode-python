@@ -15,6 +15,7 @@ import { DebuggerBanner } from '../../../client/debugger/extension/banner';
 import { PythonDebugConfigurationService } from '../../../client/debugger/extension/configuration/debugConfigurationService';
 import { LaunchJsonCompletionProvider } from '../../../client/debugger/extension/configuration/launch.json/completionProvider';
 import { InterpreterPathCommand } from '../../../client/debugger/extension/configuration/launch.json/interpreterPathCommand';
+import { LaunchJsonReader } from '../../../client/debugger/extension/configuration/launch.json/launchJsonReader';
 import { LaunchJsonUpdaterService } from '../../../client/debugger/extension/configuration/launch.json/updaterService';
 import { DjangoLaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/djangoLaunch';
 import { FastAPILaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/fastapiLaunch';
@@ -30,6 +31,7 @@ import { LaunchConfigurationResolver } from '../../../client/debugger/extension/
 import {
     IDebugConfigurationProviderFactory,
     IDebugConfigurationResolver,
+    ILaunchJsonReader,
 } from '../../../client/debugger/extension/configuration/types';
 import { DebugCommands } from '../../../client/debugger/extension/debugCommands';
 import { ChildProcessAttachEventHandler } from '../../../client/debugger/extension/hooks/childProcessAttachHandler';
@@ -220,5 +222,6 @@ suite('Debugging - Service Registry', () => {
                 DebugCommands,
             ),
         ).once();
+        verify(serviceManager.addSingleton<ILaunchJsonReader>(ILaunchJsonReader, LaunchJsonReader)).once();
     });
 });

@@ -1,34 +1,32 @@
 import { inject, injectable, named } from 'inversify';
-import { parse } from 'jsonc-parser';
+
 import * as path from 'path';
 import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IDebugService, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { IConfigurationService, IPythonSettings } from '../../common/types';
 import { DebuggerTypeName } from '../../debugger/constants';
-import { IDebugConfigurationResolver } from '../../debugger/extension/configuration/types';
-import { LaunchRequestArguments } from '../../debugger/types';
+import { IDebugConfigurationResolver, ILaunchJsonReader } from '../../debugger/extension/configuration/types';
+import { DebugPurpose, LaunchRequestArguments } from '../../debugger/types';
 import { IServiceContainer } from '../../ioc/types';
 import { TestProvider } from '../types';
-import { ITestDebugConfig, ITestDebugLauncher, LaunchOptions } from './types';
+import { ITestDebugLauncher, LaunchOptions } from './types';
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
     private readonly configService: IConfigurationService;
     private readonly workspaceService: IWorkspaceService;
-    private readonly fs: IFileSystem;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IDebugConfigurationResolver)
         @named('launch')
         private readonly launchResolver: IDebugConfigurationResolver<LaunchRequestArguments>,
+        @inject(ILaunchJsonReader) private readonly launchJsonReader: ILaunchJsonReader,
     ) {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
     public async launchDebugger(options: LaunchOptions) {
@@ -55,23 +53,10 @@ export class DebugLauncher implements ITestDebugLauncher {
             (ex) => traceError('Failed to start debugging tests', ex),
         );
     }
-    public async readAllDebugConfigs(workspaceFolder: WorkspaceFolder): Promise<DebugConfiguration[]> {
-        const filename = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
-        if (!(await this.fs.fileExists(filename))) {
-            return [];
-        }
-
+    public async readAllDebugConfigs(workspace: WorkspaceFolder): Promise<DebugConfiguration[]> {
         try {
-            const text = await this.fs.readFile(filename);
-            const parsed = parse(text, [], { allowTrailingComma: true, disallowComments: false });
-            if (!parsed.configurations || !Array.isArray(parsed.configurations)) {
-                throw Error('Missing field in launch.json: configurations');
-            }
-            if (!parsed.version) {
-                throw Error('Missing field in launch.json: version');
-            }
-            // We do not bother ensuring each item is a DebugConfiguration...
-            return parsed.configurations;
+            const configs = await this.launchJsonReader.getConfigurationsForWorkspace(workspace);
+            return configs;
         } catch (exc) {
             traceError('could not get debug config', exc);
             const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
@@ -120,18 +105,26 @@ export class DebugLauncher implements ITestDebugLauncher {
         return this.convertConfigToArgs(debugConfig!, workspaceFolder, options);
     }
 
-    private async readDebugConfig(workspaceFolder: WorkspaceFolder): Promise<ITestDebugConfig | undefined> {
+    private async readDebugConfig(workspaceFolder: WorkspaceFolder): Promise<LaunchRequestArguments | undefined> {
         const configs = await this.readAllDebugConfigs(workspaceFolder);
         for (const cfg of configs) {
-            if (!cfg.name || cfg.type !== DebuggerTypeName || cfg.request !== 'test') {
-                continue;
+            if (cfg.name && cfg.type === DebuggerTypeName) {
+                if (
+                    cfg.request === 'test' ||
+                    (cfg as LaunchRequestArguments).purpose?.includes(DebugPurpose.DebugTest)
+                ) {
+                    // Return the first one.
+                    return cfg as LaunchRequestArguments;
+                }
             }
-            // Return the first one.
-            return cfg as ITestDebugConfig;
         }
         return undefined;
     }
-    private applyDefaults(cfg: ITestDebugConfig, workspaceFolder: WorkspaceFolder, configSettings: IPythonSettings) {
+    private applyDefaults(
+        cfg: LaunchRequestArguments,
+        workspaceFolder: WorkspaceFolder,
+        configSettings: IPythonSettings,
+    ) {
         // cfg.pythonPath is handled by LaunchConfigurationResolver.
 
         // Default value of justMyCode is not provided intentionally, for now we derive its value required for launchArgs using debugStdLib
@@ -165,7 +158,7 @@ export class DebugLauncher implements ITestDebugLauncher {
     }
 
     private async convertConfigToArgs(
-        debugConfig: ITestDebugConfig,
+        debugConfig: LaunchRequestArguments,
         workspaceFolder: WorkspaceFolder,
         options: LaunchOptions,
     ): Promise<LaunchRequestArguments> {
@@ -195,6 +188,10 @@ export class DebugLauncher implements ITestDebugLauncher {
             throw Error(`Invalid debug config "${debugConfig.name}"`);
         }
         launchArgs.request = 'launch';
+
+        // Clear out purpose so we can detect if the configuration was used to
+        // run via F5 style debugging.
+        launchArgs.purpose = [];
 
         return launchArgs;
     }

@@ -12,16 +12,23 @@ import { IDisposableRegistry } from '../../../client/common/types';
 import { DebugCommands } from '../../../client/debugger/extension/debugCommands';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import * as telemetry from '../../../client/telemetry';
+import { ILaunchJsonReader } from '../../../client/debugger/extension/configuration/types';
 
 suite('Debugging - commands', () => {
     let commandManager: typemoq.IMock<ICommandManager>;
     let debugService: typemoq.IMock<IDebugService>;
     let disposables: typemoq.IMock<IDisposableRegistry>;
+    let launchJsonReader: typemoq.IMock<ILaunchJsonReader>;
     let debugCommands: IExtensionSingleActivationService;
 
     setup(() => {
         commandManager = typemoq.Mock.ofType<ICommandManager>();
         debugService = typemoq.Mock.ofType<IDebugService>();
+        launchJsonReader = typemoq.Mock.ofType<ILaunchJsonReader>();
+        launchJsonReader
+            .setup((l) => l.getConfigurationsByUri(typemoq.It.isAny()))
+            .returns(() => Promise.resolve([]))
+            .verifiable(typemoq.Times.once());
 
         disposables = typemoq.Mock.ofType<IDisposableRegistry>();
         sinon.stub(telemetry, 'sendTelemetryEvent').callsFake(() => {
@@ -41,7 +48,12 @@ suite('Debugging - commands', () => {
             }))
             .verifiable(typemoq.Times.once());
 
-        debugCommands = new DebugCommands(commandManager.object, debugService.object, disposables.object);
+        debugCommands = new DebugCommands(
+            commandManager.object,
+            debugService.object,
+            launchJsonReader.object,
+            disposables.object,
+        );
         await debugCommands.activate();
         commandManager.verifyAll();
     });
@@ -57,11 +69,17 @@ suite('Debugging - commands', () => {
             .returns(() => Promise.resolve(true))
             .verifiable(typemoq.Times.once());
 
-        debugCommands = new DebugCommands(commandManager.object, debugService.object, disposables.object);
+        debugCommands = new DebugCommands(
+            commandManager.object,
+            debugService.object,
+            launchJsonReader.object,
+            disposables.object,
+        );
         await debugCommands.activate();
 
         await callback(Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'test.py')));
         commandManager.verifyAll();
         debugService.verifyAll();
+        launchJsonReader.verifyAll();
     });
 });

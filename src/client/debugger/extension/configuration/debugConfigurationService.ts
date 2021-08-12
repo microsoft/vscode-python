@@ -13,7 +13,7 @@ import {
     InputStep,
     IQuickPickParameters,
 } from '../../../common/utils/multiStepInput';
-import { AttachRequestArguments, DebugConfigurationArguments, LaunchRequestArguments } from '../../types';
+import { AttachRequestArguments, DebugConfigurationArguments, DebugPurpose, LaunchRequestArguments } from '../../types';
 import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationService } from '../types';
 import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from './types';
 
@@ -61,8 +61,18 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
                 debugConfiguration as AttachRequestArguments,
                 token,
             );
-        } else if (debugConfiguration.request === 'test') {
-            throw Error("Please use the command 'Python: Debug All Tests'");
+        } else if (
+            debugConfiguration.request === 'test' ||
+            (debugConfiguration as LaunchRequestArguments).purpose?.includes(DebugPurpose.DebugTest)
+        ) {
+            // We reach here only if people try to use debug-test or request===test configuration for
+            // launching a file via F5 or "start with debugging".
+            // debug-test : is not allowed to be launched via (F5 or "start with debugging") since it
+            //              requires test framework specific configuration that is done in the test
+            //              debug launcher.
+            // debug-in-terminal : is allowed because it is same as launching 'Debug Current File'
+            //                     configuration.
+            throw Error("Please use the command 'Test: Debug All Tests'");
         } else {
             if (this.cacheDebugConfig) {
                 debugConfiguration = cloneDeep(this.cacheDebugConfig);

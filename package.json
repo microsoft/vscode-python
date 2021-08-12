@@ -1612,6 +1612,21 @@
                                 "description": "Absolute path to the program.",
                                 "type": "string"
                             },
+                            "purpose": {
+                                "default": [],
+                                "description": "Tells extension to use this configuration for test debugging, or when using debug-in-terminal command.",
+                                "items": {
+                                    "enum": [
+                                        "debug-test",
+                                        "debug-in-terminal"
+                                    ],
+                                    "enumDescriptions": [
+                                        "Use this configuration while debugging tests.",
+                                        "Use this configuration while debugging a file using debug in terminal."
+                                    ]
+                                },
+                                "type": "array"
+                            },
                             "pyramid": {
                                 "default": false,
                                 "description": "Whether debugging Pyramid applications",
@@ -1653,66 +1668,6 @@
                             "sudo": {
                                 "default": false,
                                 "description": "Running debug program under elevated permissions (on Unix).",
-                                "type": "boolean"
-                            }
-                        }
-                    },
-                    "test": {
-                        "properties": {
-                            "console": {
-                                "default": "internalConsole",
-                                "description": "Where to launch the debug target: internal console, integrated terminal, or external terminal.",
-                                "enum": [
-                                    "externalTerminal",
-                                    "integratedTerminal",
-                                    "internalConsole"
-                                ]
-                            },
-                            "cwd": {
-                                "default": "${workspaceFolder}",
-                                "description": "Absolute path to the working directory of the program being debugged. Default is the root directory of the file (leave empty).",
-                                "type": "string"
-                            },
-                            "debugAdapterPath": {
-                                "description": "Path (fully qualified) to the python debug adapter executable.",
-                                "type": "string"
-                            },
-                            "env": {
-                                "additionalProperties": {
-                                    "type": "string"
-                                },
-                                "default": {},
-                                "description": "Environment variables defined as a key value pair. Property ends up being the Environment Variable and the value of the property ends up being the value of the Env Variable.",
-                                "type": "object"
-                            },
-                            "envFile": {
-                                "default": "${workspaceFolder}/.env",
-                                "description": "Absolute path to a file containing environment variable definitions.",
-                                "type": "string"
-                            },
-                            "justMyCode": {
-                                "default": true,
-                                "description": "Debug only user-written code.",
-                                "type": "boolean"
-                            },
-                            "pythonPath": {
-                                "default": "${command:python.interpreterPath}",
-                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings",
-                                "type": "string"
-                            },
-                            "redirectOutput": {
-                                "default": true,
-                                "description": "Redirect output.",
-                                "type": "boolean"
-                            },
-                            "showReturnValue": {
-                                "default": true,
-                                "description": "Show return value of functions when stepping.",
-                                "type": "boolean"
-                            },
-                            "stopOnEntry": {
-                                "default": false,
-                                "description": "Automatically stop after launch.",
                                 "type": "boolean"
                             }
                         }

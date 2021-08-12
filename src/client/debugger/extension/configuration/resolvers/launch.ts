@@ -11,7 +11,7 @@ import { IDocumentManager, IWorkspaceService } from '../../../../common/applicat
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
 import { DebuggerTypeName } from '../../../constants';
-import { DebugOptions, LaunchRequestArguments } from '../../../types';
+import { DebugOptions, DebugPurpose, LaunchRequestArguments } from '../../../types';
 import { PythonPathSource } from '../../types';
 import { BaseConfigurationResolver } from './base';
 import { IDebugEnvironmentVariablesService } from './helper';
@@ -175,7 +175,11 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             }
             debugConfiguration.pathMappings = pathMappings.length > 0 ? pathMappings : undefined;
         }
-        this.sendTelemetry(debugConfiguration.request as 'launch' | 'test', debugConfiguration);
+        const trigger =
+            debugConfiguration.purpose?.includes(DebugPurpose.DebugTest) || debugConfiguration.request === 'test'
+                ? 'test'
+                : 'launch';
+        this.sendTelemetry(trigger, debugConfiguration);
     }
 
     protected async validateLaunchConfiguration(

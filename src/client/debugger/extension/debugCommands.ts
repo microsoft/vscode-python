@@ -3,35 +3,57 @@
 
 import * as path from 'path';
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
+import { DebugConfiguration, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDebugService } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import { IDisposableRegistry } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { ILaunchJsonReader } from './configuration/types';
+import { DebugPurpose, LaunchRequestArguments } from '../types';
 
 @injectable()
 export class DebugCommands implements IExtensionSingleActivationService {
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDebugService) private readonly debugService: IDebugService,
+        @inject(ILaunchJsonReader) private readonly launchJsonReader: ILaunchJsonReader,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
     ) {}
 
     public activate(): Promise<void> {
         this.disposables.push(
-            this.commandManager.registerCommand(Commands.Debug_In_Terminal, (file: Uri) => {
+            this.commandManager.registerCommand(Commands.Debug_In_Terminal, async (file: Uri) => {
                 sendTelemetryEvent(EventName.DEBUG_IN_TERMINAL_BUTTON);
-                this.debugService.startDebugging(undefined, {
-                    name: `Debug ${path.basename(file.fsPath)}`,
-                    type: 'python',
-                    request: 'launch',
-                    program: file.fsPath,
-                    console: 'integratedTerminal',
-                });
+                const config = await this.getDebugConfiguration(file);
+                this.debugService.startDebugging(undefined, config);
             }),
         );
         return Promise.resolve();
+    }
+
+    private async getDebugConfiguration(uri: Uri): Promise<DebugConfiguration> {
+        const configs = (await this.launchJsonReader.getConfigurationsByUri(uri)).filter((c) => c.request === 'launch');
+        for (const config of configs) {
+            if ((config as LaunchRequestArguments).purpose?.includes(DebugPurpose.DebugInTerminal)) {
+                if (!config.program && !config.module && !config.code) {
+                    // This is only needed if people reuse debug-test for debug-in-terminal
+                    config.program = uri.fsPath;
+                }
+                // Ensure that purpose is set to scope to where we want it for this session.
+                // We reject certain scopes later in the debug initialization if it does not
+                // fit the criteria.
+                config.purpose = [DebugPurpose.DebugInTerminal];
+                return config;
+            }
+        }
+        return {
+            name: `Debug ${path.basename(uri.fsPath)}`,
+            type: 'python',
+            request: 'launch',
+            program: uri.fsPath,
+            console: 'integratedTerminal',
+        };
     }
 }

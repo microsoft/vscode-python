@@ -22,6 +22,11 @@ export enum DebugOptions {
     SubProcess = 'Multiprocess',
 }
 
+export enum DebugPurpose {
+    DebugTest = 'debug-test',
+    DebugInTerminal = 'debug-in-terminal',
+}
+
 export type PathMapping = {
     localRoot: string;
     remoteRoot: string;
@@ -107,6 +112,9 @@ interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
 
     // Configures automatic code reloading.
     autoReload?: IAutomaticCodeReload;
+
+    // Defines where the purpose where the config should be used.
+    purpose?: DebugPurpose[];
 }
 
 export interface LaunchRequestArguments

@@ -1,7 +1,5 @@
-import { CancellationToken, DebugConfiguration, Disposable, OutputChannel, Uri } from 'vscode';
+import { CancellationToken, Disposable, OutputChannel, Uri } from 'vscode';
 import { Product } from '../../common/types';
-import { DebuggerTypeName } from '../../debugger/constants';
-import { ConsoleType } from '../../debugger/types';
 import { TestSettingsPropertyNames } from '../configuration/types';
 import { TestProvider } from '../types';
 
@@ -102,23 +100,4 @@ export interface IUnitTestSocketServer extends Disposable {
 export const ITestRunner = Symbol('ITestRunner');
 export interface ITestRunner {
     run(testProvider: TestProvider, options: Options): Promise<string>;
-}
-
-export interface ITestDebugConfig extends DebugConfiguration {
-    type: typeof DebuggerTypeName;
-    request: 'test';
-
-    pythonPath?: string;
-    console?: ConsoleType;
-    cwd?: string;
-    env?: Record<string, string | undefined>;
-    envFile?: string;
-
-    // converted to DebugOptions:
-    stopOnEntry?: boolean;
-    showReturnValue?: boolean;
-    redirectOutput?: boolean; // default: true
-    debugStdLib?: boolean;
-    justMyCode?: boolean;
-    subProcess?: boolean;
 }

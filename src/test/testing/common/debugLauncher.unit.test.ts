@@ -20,8 +20,10 @@ import '../../../client/common/extensions';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
+import { LaunchJsonReader } from '../../../client/debugger/extension/configuration/launch.json/launchJsonReader';
 import { IDebugEnvironmentVariablesService } from '../../../client/debugger/extension/configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from '../../../client/debugger/extension/configuration/resolvers/launch';
+import { ILaunchJsonReader } from '../../../client/debugger/extension/configuration/types';
 import { DebugOptions } from '../../../client/debugger/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { DebugLauncher } from '../../../client/testing/common/debugLauncher';
@@ -42,6 +44,7 @@ suite('Unit Tests - Debug Launcher', () => {
     let filesystem: TypeMoq.IMock<IFileSystem>;
     let settings: TypeMoq.IMock<IPythonSettings>;
     let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
+    let launchJsonReader: ILaunchJsonReader;
     let hasWorkspaceFolders: boolean;
     setup(async () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
@@ -83,7 +86,13 @@ suite('Unit Tests - Debug Launcher', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IDebugEnvironmentVariablesService)))
             .returns(() => debugEnvHelper.object);
 
-        debugLauncher = new DebugLauncher(serviceContainer.object, getNewResolver(configService.object));
+        launchJsonReader = new LaunchJsonReader(filesystem.object, workspaceService.object);
+
+        debugLauncher = new DebugLauncher(
+            serviceContainer.object,
+            getNewResolver(configService.object),
+            launchJsonReader,
+        );
     });
     function getNewResolver(configService: IConfigurationService) {
         const validator = TypeMoq.Mock.ofType<IInvalidPythonPathInDebuggerService>(
@@ -166,6 +175,7 @@ suite('Unit Tests - Debug Launcher', () => {
             redirectOutput: true,
             debugStdLib: false,
             subProcess: true,
+            purpose: [],
         };
     }
     function setupSuccess(
@@ -347,6 +357,7 @@ suite('Unit Tests - Debug Launcher', () => {
             // added by LaunchConfigurationResolver:
             internalConsoleOptions: 'neverOpen',
             subProcess: true,
+            purpose: [],
         };
         setupSuccess(options, 'unittest', expected, [
             {
