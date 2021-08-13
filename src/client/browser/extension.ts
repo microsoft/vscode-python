@@ -51,7 +51,7 @@ async function runPylance(context: vscode.ExtensionContext): Promise<void> {
             },
         };
 
-        const languageClient = new LanguageClient('python', 'Pylance', clientOptions, worker);
+        const languageClient = new LanguageClient('python', 'Python Language Server', clientOptions, worker);
         const disposable = languageClient.start();
 
         context.subscriptions.push(disposable);
