@@ -20,6 +20,8 @@ import { PVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { MockOutputChannel } from '../../mockClasses';
 import { MockMemento } from '../../mocks/mementos';
 
+const EXP_MEMENTO_KEY = 'VSCode.ABExp.FeatureData';
+
 suite('Experimentation service', () => {
     const extensionVersion = '1.2.3';
 
@@ -172,6 +174,8 @@ suite('Experimentation service', () => {
             getTreatmentVariable = sinon.stub().returns(Promise.resolve(true));
             sinon.stub(tasClient, 'getExperimentationService').returns(({
                 getTreatmentVariable,
+                initializePromise: Promise.resolve(),
+                initialFetch: Promise.resolve(),
             } as unknown) as tasClient.IExperimentationService);
 
             configureApplicationEnvironment('stable', extensionVersion);
@@ -183,18 +187,22 @@ suite('Experimentation service', () => {
 
         test('If the opt-in and opt-out arrays are empty, return the value from the experimentation framework for a given experiment', async () => {
             configureSettings(true, [], []);
+            configureApplicationEnvironment('stable', extensionVersion, { configuration: { properties: {} } });
 
+            globalMemento.update(EXP_MEMENTO_KEY, { features: [experiment] });
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
                 outputChannel,
             );
+            await experimentService.activate();
+
             const result = experimentService.inExperimentSync(experiment);
 
             assert.isTrue(result);
-            sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.calledOnce(getTreatmentVariable);
+            sinon.assert.calledOnce(sendTelemetryEventStub);
+            sinon.assert.notCalled(getTreatmentVariable);
         });
 
         test('If the experiment setting is disabled, inExperiment should return false', async () => {
@@ -241,7 +249,7 @@ suite('Experimentation service', () => {
 
             assert.isTrue(result);
             sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.calledOnce(getTreatmentVariable);
+            sinon.assert.notCalled(getTreatmentVariable);
         });
 
         test('If the opt-in setting contains `All` and the experiment setting is disabled, inExperiment should return false', async () => {
@@ -273,7 +281,7 @@ suite('Experimentation service', () => {
 
             assert.isTrue(result);
             assert.strictEqual(telemetryEvents.length, 0);
-            sinon.assert.calledOnce(getTreatmentVariable);
+            sinon.assert.notCalled(getTreatmentVariable);
         });
 
         test('If the opt-out setting contains "All", inExperiment should return false', async () => {
@@ -333,6 +341,8 @@ suite('Experimentation service', () => {
             getTreatmentVariableStub = sinon.stub().returns(Promise.resolve('value'));
             sinon.stub(tasClient, 'getExperimentationService').returns(({
                 getTreatmentVariable: getTreatmentVariableStub,
+                initializePromise: Promise.resolve(),
+                initialFetch: Promise.resolve(),
             } as unknown) as tasClient.IExperimentationService);
 
             configureApplicationEnvironment('stable', extensionVersion);

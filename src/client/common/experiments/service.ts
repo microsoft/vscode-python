@@ -6,6 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
+import { logInfo } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
@@ -32,6 +33,8 @@ export class ExperimentService implements IExperimentService {
     private readonly enabled: boolean;
 
     private readonly experimentationService?: IExperimentationService;
+
+    private readonly inMemCache: string[] = [];
 
     constructor(
         @inject(IWorkspaceService) readonly workspaceService: IWorkspaceService,
@@ -80,10 +83,14 @@ export class ExperimentService implements IExperimentService {
     }
 
     public async activate(): Promise<void> {
+        const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
         if (this.experimentationService) {
-            await this.experimentationService.initializePromise;
-
-            const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
+            try {
+                await this.experimentationService.initializePromise;
+            } catch (ex) {
+                // what?
+                logInfo(ex);
+            }
             if (experiments.features.length === 0) {
                 // Only await on this if we don't have anything in cache.
                 // This means that we start the session with partial experiment info.
@@ -91,6 +98,7 @@ export class ExperimentService implements IExperimentService {
                 await this.experimentationService.initialFetch;
             }
         }
+        this.inMemCache.push(...experiments.features);
         sendOptInOptOutTelemetry(this._optInto, this._optOutFrom, this.appEnvironment.packageJson);
     }
 
@@ -110,18 +118,11 @@ export class ExperimentService implements IExperimentService {
         }
 
         if (this._optInto.includes('All') || this._optInto.includes(experiment)) {
-            // Check if the user was already in the experiment server-side. We need to do
-            // this to ensure the experiment service is ready and internal states are fully
-            // synced with the experiment server.
-            this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment);
             return true;
         }
 
-        // If getTreatmentVariable returns undefined,
-        // it means that the value for this experiment was not found on the server.
-        const treatmentVariable = this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment);
-
-        return treatmentVariable !== undefined;
+        // Return from in-memory cache
+        return this.inMemCache.includes(experiment);
     }
 
     public async getExperimentValue<T extends boolean | number | string>(experiment: string): Promise<T | undefined> {
