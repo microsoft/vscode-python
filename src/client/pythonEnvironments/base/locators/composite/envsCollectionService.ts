@@ -23,12 +23,17 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return this.refreshTriggered.event;
     }
 
-    public get refreshPromise(): Promise<void> {
-        return Promise.all(Array.from(this.refreshPromises.values())).then();
+    public get refreshPromise(): Promise<void> | undefined {
+        return this.refreshPromises.size ? Promise.all(Array.from(this.refreshPromises.values())).then() : undefined;
     }
 
     public async validateCollection(): Promise<void> {
-        const outOfDateEnvs = await this.cache.validateCache();
+        const outOfDateEnvs = await this.cache.validateCache(
+            // Checking for updates can be expensive. We eventually plan to move into
+            // web workers, which is when we can schedule checking for updates in
+            // background. But until then, we do not check for updates.
+            false,
+        );
         const envs = await Promise.all(
             outOfDateEnvs.map((env) => env.executable.filename).map((executable) => this.resolveEnv(executable)),
         );
@@ -99,9 +104,11 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         this.refreshPromises.set(query, refreshPromiseForQuery);
         return refreshPromiseForQuery.then(async () => {
             this.refreshPromises.delete(query);
-            // All valid envs in cache must have updated info by now, so do not check
-            // for outdated info when validating cache.
-            await this.cache.validateCache(false);
+            await this.cache.validateCache(
+                // All valid envs in cache must have updated info by now, so do not
+                // check for outdated info when validating cache.
+                false,
+            );
             await this.cache.flush();
         });
     }
@@ -143,7 +150,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     }
 }
 
-export async function getEnvCollectionService(
+export async function createEnvCollectionService(
     cache: IEnvsCollectionCache,
     locator: IResolvingLocator,
 ): Promise<IDiscoveryAPI> {

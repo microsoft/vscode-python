@@ -180,9 +180,9 @@ export interface IDiscoveryAPI {
     readonly onChanged: Event<PythonEnvCollectionChangedEvent>;
     /**
      * Resolves once environment list has finished refreshing, i.e all environments are
-     * discovered.
+     * discovered. `undefined` if no refresh has been triggered.
      */
-    readonly refreshPromise: Promise<void>;
+    readonly refreshPromise: Promise<void> | undefined;
     /**
      * Get current list of known environments.
      */

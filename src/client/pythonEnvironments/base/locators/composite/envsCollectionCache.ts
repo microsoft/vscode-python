@@ -135,7 +135,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
 /**
  * Build a cache of PythonEnvInfo that is ready to use.
  */
-export async function getCollectionCache(storage: IPersistentStorage): Promise<PythonEnvInfoCache> {
+export async function createCollectionCache(storage: IPersistentStorage): Promise<PythonEnvInfoCache> {
     const cache = new PythonEnvInfoCache(storage);
     await cache.clearAndReloadFromStorage();
     return cache;

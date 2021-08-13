@@ -30,11 +30,11 @@ export type PythonEnvsChangedEvent = BasicPythonEnvsChangedEvent & {
 };
 
 export type PythonEnvCollectionChangedEvent = BasicPythonEnvCollectionChangedEvent & {
+    type?: FileChangeType;
     searchLocation?: Uri;
 };
 
 export type BasicPythonEnvCollectionChangedEvent = {
-    type?: FileChangeType;
     old?: PythonEnvInfo;
     update?: PythonEnvInfo | undefined;
 };
