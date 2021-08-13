@@ -7,13 +7,13 @@ import { createDeferred } from '../../../../common/utils/async';
 import { PythonEnvInfo } from '../../info';
 import { IDiscoveryAPI, IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from '../../locator';
 import { getQueryFilter } from '../../locatorUtils';
-import { PythonEnvChangedEvent, PythonEnvsWatcher } from '../../watcher';
+import { PythonEnvCollectionChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { IEnvsCollectionCache } from './envsCollectionCache';
 
 /**
  * A service which maintains the collection of known environments.
  */
-export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvChangedEvent> implements IDiscoveryAPI {
+export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollectionChangedEvent> implements IDiscoveryAPI {
     /** Keeps track of ongoing refreshes for various queries. */
     private refreshPromises = new Map<PythonLocatorQuery | undefined, Promise<void>>();
 

@@ -6,7 +6,11 @@ import { asyncFilter } from '../../../../common/utils/arrayUtils';
 import { getFileInfo, pathExists } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
 import { areSameEnv } from '../../info/env';
-import { BasicPythonEnvChangedEvent, PythonEnvChangedEvent, PythonEnvsWatcher } from '../../watcher';
+import {
+    BasicPythonEnvCollectionChangedEvent,
+    PythonEnvCollectionChangedEvent,
+    PythonEnvsWatcher,
+} from '../../watcher';
 
 export interface IEnvsCollectionCache {
     /**
@@ -16,13 +20,14 @@ export interface IEnvsCollectionCache {
 
     /**
      * Updates environment in cache using the value provided.
+     * If no new value is provided, remove the existing value from cache.
      */
     updateEnv(oldValue: PythonEnvInfo, newValue: PythonEnvInfo | undefined): void;
 
     /**
      * Fires with details if the cache changes.
      */
-    onChanged: Event<BasicPythonEnvChangedEvent>;
+    onChanged: Event<BasicPythonEnvCollectionChangedEvent>;
 
     /**
      * Adds environment to cache.
@@ -41,7 +46,8 @@ export interface IEnvsCollectionCache {
     flush(): Promise<void>;
 
     /**
-     * Re-check if envs in cache are still upto date. If an env is no longer valid or needs to be updated, remove it from cache.
+     * Re-check if envs in cache are still up-to-date. If an env is no longer valid or
+     * needs to be updated, remove it from cache.
      *
      * Returns the list of envs which are valid but whose details are outdated.
      *
@@ -59,7 +65,8 @@ interface IPersistentStorage {
 /**
  * Environment info cache using persistent storage to save and retrieve pre-cached env info.
  */
-export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvChangedEvent> implements IEnvsCollectionCache {
+export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionChangedEvent>
+    implements IEnvsCollectionCache {
     private envs: PythonEnvInfo[] = [];
 
     constructor(private readonly persistentStorage: IPersistentStorage) {
@@ -79,6 +86,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvChangedEvent>
                 }),
             );
             const outOfDateEnvs = this.envs.filter((_v, index) => !isIndexUptoDate[index]);
+            // Remove out-of-date envs from cache
             this.envs = this.envs.filter((_v, index) => isIndexUptoDate[index]);
             return outOfDateEnvs;
         }

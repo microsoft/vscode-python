@@ -9,7 +9,7 @@ import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from './info';
 import {
     BasicPythonEnvsChangedEvent,
     IPythonEnvsWatcher,
-    PythonEnvChangedEvent,
+    PythonEnvCollectionChangedEvent,
     PythonEnvsChangedEvent,
     PythonEnvsWatcher,
 } from './watcher';
@@ -175,6 +175,10 @@ export interface IDiscoveryAPI {
      */
     readonly onRefreshTrigger: Event<void>;
     /**
+     * Fires with details if the known list changes.
+     */
+    readonly onChanged: Event<PythonEnvCollectionChangedEvent>;
+    /**
      * Resolves once environment list has finished refreshing, i.e all environments are
      * discovered.
      */
@@ -183,10 +187,6 @@ export interface IDiscoveryAPI {
      * Get current list of known environments.
      */
     getEnvs(query?: PythonLocatorQuery): Promise<PythonEnvInfo[]>;
-    /**
-     * Fires with details if the known list changes.
-     */
-    onChanged: Event<PythonEnvChangedEvent>;
     /**
      * Find as much info about the given Python environment as possible.
      * If executable passed is invalid, then `undefined` is returned.
