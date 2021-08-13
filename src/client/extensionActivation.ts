@@ -55,6 +55,7 @@ import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
 import { setDefaultLanguageServer } from './activation/common/defaultlanguageServer';
 import { logTime } from './common/performance';
+import { addItemsToRun } from './common/utils/runAfterActivation';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -183,12 +184,14 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
     context.subscriptions.push(manager);
 
-    logTime('Activating legacy - interpreter manager refresh');
     // Settings are dependent on Experiment service, so we need to initialize it after experiments are activated.
     serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().initialize();
-    await interpreterManager
-        .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
-        .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
+    addItemsToRun(() => {
+        logTime('Activating legacy - interpreter manager refresh');
+        interpreterManager
+            .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
+            .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
+    });
 
     logTime('Activating legacy - activation manager activate');
     const activationPromise = manager.activate();

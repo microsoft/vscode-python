@@ -39,6 +39,7 @@ import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 import { IStartupDurations } from './types';
 import { logTime } from './common/performance';
+import { runAfterActivation } from './common/utils/runAfterActivation';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -129,6 +130,12 @@ async function activateUnsafe(
 
     startupDurations.totalActivateTime = startupStopWatch.elapsedTime - startupDurations.startActivateTime;
     activationDeferred.resolve();
+
+    setTimeout(() => {
+        logTime('Running post activation - start');
+        runAfterActivation();
+        logTime('Running post activation - end');
+    }, 1);
 
     logTime('Building api');
     const api = buildApi(activationPromise, ext.legacyIOC.serviceManager, ext.legacyIOC.serviceContainer);

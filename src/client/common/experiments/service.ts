@@ -87,8 +87,12 @@ export class ExperimentService implements IExperimentService {
         if (this.experimentationService) {
             logTime('Experiment Service - activation init');
             await this.experimentationService.initializePromise;
-            logTime('Experiment Service - activation init done');
-            await this.experimentationService.initialFetch;
+
+            const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
+            if (experiments.features.length === 0) {
+                logTime('Experiment Service - activation init done');
+                await this.experimentationService.initialFetch;
+            }
             logTime('Experiment Service - activation fetch done');
         }
         sendOptInOptOutTelemetry(this._optInto, this._optOutFrom, this.appEnvironment.packageJson);
@@ -132,8 +136,7 @@ export class ExperimentService implements IExperimentService {
         if (!this.experimentationService || this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
             return undefined;
         }
-
-        return this.experimentationService.getTreatmentVariableAsync(EXP_CONFIG_ID, experiment, true);
+        return this.experimentationService.getTreatmentVariable<T>(EXP_CONFIG_ID, experiment);
     }
 
     private logExperiments() {

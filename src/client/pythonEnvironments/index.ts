@@ -28,6 +28,7 @@ import { WindowsStoreLocator } from './base/locators/lowLevel/windowsStoreLocato
 import { getEnvironmentInfoService } from './base/info/environmentInfoService';
 import { isComponentEnabled, registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
 import { PoetryLocator } from './base/locators/lowLevel/poetryLocator';
+import { addItemsToRun } from '../common/utils/runAfterActivation';
 
 /**
  * Set up the Python environments component (during extension activation).'
@@ -63,10 +64,12 @@ export async function activate(api: PythonEnvironments): Promise<ActivationResul
         };
     }
 
-    // Force an initial background refresh of the environments.
-    getEnvs(api.iterEnvs())
-        // Don't wait for it to finish.
-        .ignoreErrors();
+    addItemsToRun(() => {
+        // Force an initial background refresh of the environments.
+        getEnvs(api.iterEnvs())
+            // Don't wait for it to finish.
+            .ignoreErrors();
+    });
 
     // Registration with VS Code will go here.
 
