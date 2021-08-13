@@ -23,8 +23,8 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return this.refreshTriggered.event;
     }
 
-    public get refreshPromise(): Promise<void> | undefined {
-        return this.refreshPromises.size ? Promise.all(Array.from(this.refreshPromises.values())).then() : undefined;
+    public get refreshPromise(): Promise<void> {
+        return Promise.all(Array.from(this.refreshPromises.values())).then();
     }
 
     public async validateCollection(): Promise<void> {
