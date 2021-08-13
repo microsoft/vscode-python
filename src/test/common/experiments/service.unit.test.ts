@@ -327,12 +327,12 @@ suite('Experimentation service', () => {
 
     suite('Experiment value retrieval', () => {
         const experiment = 'Test Experiment - experiment';
-        let getTreatmentVariableAsyncStub: sinon.SinonStub;
+        let getTreatmentVariableStub: sinon.SinonStub;
 
         setup(() => {
-            getTreatmentVariableAsyncStub = sinon.stub().returns(Promise.resolve('value'));
+            getTreatmentVariableStub = sinon.stub().returns(Promise.resolve('value'));
             sinon.stub(tasClient, 'getExperimentationService').returns(({
-                getTreatmentVariableAsync: getTreatmentVariableAsyncStub,
+                getTreatmentVariable: getTreatmentVariableStub,
             } as unknown) as tasClient.IExperimentationService);
 
             configureApplicationEnvironment('stable', extensionVersion);
@@ -350,7 +350,7 @@ suite('Experimentation service', () => {
             const result = await experimentService.getExperimentValue(experiment);
 
             assert.strictEqual(result, 'value');
-            sinon.assert.calledOnce(getTreatmentVariableAsyncStub);
+            sinon.assert.calledOnce(getTreatmentVariableStub);
         });
 
         test('If the experiment setting is disabled, getExperimentValue should return undefined', async () => {
@@ -365,7 +365,7 @@ suite('Experimentation service', () => {
             const result = await experimentService.getExperimentValue(experiment);
 
             assert.isUndefined(result);
-            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
+            sinon.assert.notCalled(getTreatmentVariableStub);
         });
 
         test('If the opt-out setting contains "All", getExperimentValue should return undefined', async () => {
@@ -380,10 +380,10 @@ suite('Experimentation service', () => {
             const result = await experimentService.getExperimentValue(experiment);
 
             assert.isUndefined(result);
-            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
+            sinon.assert.notCalled(getTreatmentVariableStub);
         });
 
-        test('If the opt-out setting contains the experiment name, igetExperimentValue should return undefined', async () => {
+        test('If the opt-out setting contains the experiment name, getExperimentValue should return undefined', async () => {
             configureSettings(true, [], [experiment]);
 
             const experimentService = new ExperimentService(
@@ -395,7 +395,7 @@ suite('Experimentation service', () => {
             const result = await experimentService.getExperimentValue(experiment);
 
             assert.isUndefined(result);
-            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
+            sinon.assert.notCalled(getTreatmentVariableStub);
         });
     });
 
