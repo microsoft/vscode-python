@@ -82,7 +82,14 @@ export class ExperimentService implements IExperimentService {
     public async activate(): Promise<void> {
         if (this.experimentationService) {
             await this.experimentationService.initializePromise;
-            await this.experimentationService.initialFetch;
+
+            const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
+            if (experiments.features.length === 0) {
+                // Only await on this if we don't have anything in cache.
+                // This means that we start the session with partial experiment info.
+                // We accept this as a compromise to avoid delaying startup.
+                await this.experimentationService.initialFetch;
+            }
         }
         sendOptInOptOutTelemetry(this._optInto, this._optOutFrom, this.appEnvironment.packageJson);
     }
@@ -122,7 +129,7 @@ export class ExperimentService implements IExperimentService {
             return undefined;
         }
 
-        return this.experimentationService.getTreatmentVariableAsync(EXP_CONFIG_ID, experiment, true);
+        return this.experimentationService.getTreatmentVariable<T>(EXP_CONFIG_ID, experiment);
     }
 
     private logExperiments() {
