@@ -4,10 +4,11 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { QuickPickItem } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
-import { Commands } from '../../../../common/constants';
+import { Commands, Octicons } from '../../../../common/constants';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
 import { getIcon } from '../../../../common/utils/icons';
@@ -60,29 +61,42 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs,
     ): Promise<void | InputStep<InterpreterStateArgs>> {
-        let interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
+        const suggestions: (IInterpreterQuickPickItem | IFindInterpreterQuickPickItem)[] = [];
 
         const manualEntrySuggestion: IFindInterpreterQuickPickItem = {
             label: InterpreterQuickPickList.enterPath.label(),
             detail: InterpreterQuickPickList.enterPath.detail(),
             alwaysShow: true,
         };
-        const { defaultInterpreterPath } = this.configurationService.getSettings(state.workspace);
-        const defaultInterpreterPathSuggestion = {
-            label: InterpreterQuickPickList.defaultInterpreterPath.label(),
-            detail: this.pathUtils.getDisplayName(
-                defaultInterpreterPath,
-                state.workspace ? state.workspace.fsPath : undefined,
-            ),
-            path: defaultInterpreterPath,
-            alwaysShow: true,
-        };
+        suggestions.push(manualEntrySuggestion);
 
-        const suggestions: (IInterpreterQuickPickItem | IFindInterpreterQuickPickItem)[] = [
-            manualEntrySuggestion,
-            ...interpreterSuggestions,
-            defaultInterpreterPathSuggestion,
-        ];
+        const config = this.workspaceService.getConfiguration('python', state.workspace);
+        const defaultInterpreterPathValue = config.get<string>('defaultInterpreterPath');
+        let defaultInterpreterPathSuggestion: IInterpreterQuickPickItem | IFindInterpreterQuickPickItem | undefined;
+        if (defaultInterpreterPathValue && defaultInterpreterPathValue !== 'python') {
+            defaultInterpreterPathSuggestion = {
+                label: InterpreterQuickPickList.defaultInterpreterPath.label(),
+                detail: this.pathUtils.getDisplayName(
+                    defaultInterpreterPathValue,
+                    state.workspace ? state.workspace.fsPath : undefined,
+                ),
+                path: defaultInterpreterPathValue,
+                alwaysShow: true,
+            };
+            suggestions.push(defaultInterpreterPathSuggestion as IFindInterpreterQuickPickItem);
+        }
+
+        let interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
+
+        if (interpreterSuggestions.length > 0) {
+            const suggested = interpreterSuggestions.shift();
+            if (suggested) {
+                const starred = cloneDeep(suggested);
+                starred.label = `${Octicons.Star} ${starred.label}`;
+                interpreterSuggestions.unshift(starred);
+            }
+        }
+        suggestions.push(...interpreterSuggestions);
 
         const currentPythonPath = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
@@ -107,12 +121,23 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 button: refreshButton,
                 callback: async (quickPick) => {
                     quickPick.busy = true;
+
                     interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace, true);
-                    quickPick.items = [
-                        manualEntrySuggestion,
-                        ...interpreterSuggestions,
-                        defaultInterpreterPathSuggestion,
-                    ];
+                    if (interpreterSuggestions.length > 0) {
+                        const suggested = interpreterSuggestions.shift();
+                        if (suggested) {
+                            const starred = cloneDeep(suggested);
+                            starred.label = `${Octicons.Star} ${starred.label}`;
+                            interpreterSuggestions.unshift(starred);
+                        }
+                    }
+
+                    const newSuggestions = defaultInterpreterPathSuggestion
+                        ? [manualEntrySuggestion, defaultInterpreterPathSuggestion, ...interpreterSuggestions]
+                        : [manualEntrySuggestion, ...interpreterSuggestions];
+                    quickPick.items = newSuggestions;
+                    quickPick.activeItems = [newSuggestions[1]];
+
                     quickPick.busy = false;
                 },
             },

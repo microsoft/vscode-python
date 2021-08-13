@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, OpenDialogOptions, QuickPickItem, Uri } from 'vscode';
+import { cloneDeep } from 'lodash';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IPlatformService } from '../../../../client/common/platform/types';
@@ -30,6 +31,8 @@ import {
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { EventName } from '../../../../client/telemetry/constants';
 import * as Telemetry from '../../../../client/telemetry';
+import { MockWorkspaceConfiguration } from '../../../mocks/mockWorkspaceConfig';
+import { Octicons } from '../../../../client/common/constants';
 
 const untildify = require('untildify');
 
@@ -138,6 +141,16 @@ suite('Set Interpreter Command', () => {
                 .returns(() => Promise.resolve([refreshedItem]));
             pythonSettings.setup((p) => p.pythonPath).returns(() => currentPythonPath);
             pythonSettings.setup((p) => p.defaultInterpreterPath).returns(() => defaultInterpreterPath);
+
+            workspace
+                .setup((w) => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isAny()))
+                .returns(
+                    () =>
+                        new MockWorkspaceConfiguration({
+                            defaultInterpreterPath,
+                        }),
+                );
+
             setInterpreterCommand = new SetInterpreterCommand(
                 appShell.object,
                 new PathUtils(false),
@@ -171,11 +184,13 @@ suite('Set Interpreter Command', () => {
         test('Picker should be displayed with expected items: Not in find path experiment', async () => {
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
-            const suggestions = [expectedEnterInterpreterPathSuggestion, item, defaultInterpreterPathSuggestion];
+            const starred = cloneDeep(item);
+            starred.label = `${Octicons.Star} ${item.label}`;
+            const suggestions = [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, starred];
             const expectedParameters = {
                 placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
                 items: suggestions,
-                activeItem: item,
+                activeItem: defaultInterpreterPathSuggestion,
                 matchOnDetail: true,
                 matchOnDescription: true,
                 title: InterpreterQuickPickList.browsePath.openButtonLabel(),
@@ -201,9 +216,12 @@ suite('Set Interpreter Command', () => {
             const quickPick = { items: [] };
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await refreshButtonCallback!(quickPick as any); // Invoke callback, meaning that the refresh button is clicked.
+
+            const starredRefreshedItem = cloneDeep(refreshedItem);
+            starredRefreshedItem.label = `${Octicons.Star} ${refreshedItem.label}`;
             assert.deepStrictEqual(
                 quickPick.items,
-                [expectedEnterInterpreterPathSuggestion, refreshedItem, defaultInterpreterPathSuggestion],
+                [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, starredRefreshedItem],
                 'Quickpick not updated correctly',
             );
         });

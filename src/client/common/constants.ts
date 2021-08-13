@@ -72,7 +72,7 @@ export namespace Octicons {
     export const Downloading = '$(cloud-download)';
     export const Installing = '$(desktop-download)';
     export const Search_Stop = '$(search-stop)';
-    export const Star = '$(star)';
+    export const Star = '$(star-full)';
 }
 
 export const DEFAULT_INTERPRETER_SETTING = 'python';

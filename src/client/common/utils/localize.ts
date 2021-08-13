@@ -5,7 +5,6 @@
 
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { Octicons } from '../constants';
 import { FileSystem } from '../platform/fileSystem';
 
 /* eslint-disable @typescript-eslint/no-namespace, no-shadow */
@@ -291,13 +290,7 @@ export namespace InterpreterQuickPickList {
         placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python interpreter.'),
     };
     export const defaultInterpreterPath = {
-        label: (): string => {
-            const labelText = localize(
-                'InterpreterQuickPickList.defaultInterpreterPath.label',
-                'Use default Python interpreter path',
-            );
-            return `${Octicons.Star} ${labelText()}`;
-        },
+        label: localize('InterpreterQuickPickList.defaultInterpreterPath.label', 'Use default Python interpreter path'),
     };
     export const browsePath = {
         label: localize('InterpreterQuickPickList.browsePath.label', 'Find...'),
