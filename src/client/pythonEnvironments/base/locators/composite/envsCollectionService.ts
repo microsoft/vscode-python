@@ -104,12 +104,6 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         this.refreshPromises.set(query, refreshPromiseForQuery);
         return refreshPromiseForQuery.then(async () => {
             this.refreshPromises.delete(query);
-            await this.cache.validateCache(
-                // All valid envs in cache must have updated info by now, so do not
-                // check for outdated info when validating cache.
-                false,
-            );
-            await this.cache.flush();
         });
     }
 
@@ -147,6 +141,12 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             this.cache.addEnv(env);
         }
         await updatesDone.promise;
+        await this.cache.validateCache(
+            // All valid envs in cache must have updated info by now, so do not
+            // check for outdated info when validating cache.
+            false,
+        );
+        this.cache.flush().ignoreErrors();
     }
 }
 
