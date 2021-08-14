@@ -88,6 +88,13 @@ export class ExperimentService implements IExperimentService {
                 // Only await on this if we don't have anything in cache.
                 // This means that we start the session with partial experiment info.
                 // We accept this as a compromise to avoid delaying startup.
+
+                // In the case were we don;t wait on this promise. If the experiment info changes,
+                // those changes will be applied in the next session. This is controlled internally
+                // in the tas-client via `overrideInMemoryFeatures` value that is passed to
+                // `getFeaturesAsync`. At the time of writing this comment the value of
+                // `overrideInMemoryFeatures` was always passed in as `false`. So, the experiment
+                // states did not change mid way.
                 await this.experimentationService.initialFetch;
             }
         }
