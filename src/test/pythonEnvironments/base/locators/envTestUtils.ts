@@ -45,10 +45,6 @@ export function assertEnvEqual(actual: PythonEnvInfo | undefined, expected: Pyth
     assert.notStrictEqual(expected, undefined);
 
     if (actual) {
-        // ensure ctime and mtime are greater than -1
-        assert.ok(actual?.executable.ctime > -1);
-        assert.ok(actual?.executable.mtime > -1);
-
         // No need to match these, so reset them
         actual.executable.ctime = -1;
         actual.executable.mtime = -1;
