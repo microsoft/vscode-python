@@ -8,11 +8,11 @@ import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { QuickPickItem } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
-import { Commands, Octicons } from '../../../../common/constants';
+import { Commands } from '../../../../common/constants';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
 import { getIcon } from '../../../../common/utils/icons';
-import { InterpreterQuickPickList } from '../../../../common/utils/localize';
+import { Common, InterpreterQuickPickList } from '../../../../common/utils/localize';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
@@ -92,7 +92,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             const suggested = interpreterSuggestions.shift();
             if (suggested) {
                 const starred = cloneDeep(suggested);
-                starred.label = `${Octicons.Star} ${starred.label}`;
+                starred.label = `${Common.recommendedWithBrackets()} ${starred.label}`;
                 interpreterSuggestions.unshift(starred);
             }
         }
@@ -114,7 +114,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         >({
             placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
             items: suggestions,
-            activeItem: suggestions[1],
+            activeItem: interpreterSuggestions[0],
             matchOnDetail: true,
             matchOnDescription: true,
             customButtonSetup: {
@@ -127,7 +127,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                         const suggested = interpreterSuggestions.shift();
                         if (suggested) {
                             const starred = cloneDeep(suggested);
-                            starred.label = `${Octicons.Star} ${starred.label}`;
+                            starred.label = `${Common.recommendedWithBrackets()} ${starred.label}`;
                             interpreterSuggestions.unshift(starred);
                         }
                     }
@@ -136,7 +136,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                         ? [manualEntrySuggestion, defaultInterpreterPathSuggestion, ...interpreterSuggestions]
                         : [manualEntrySuggestion, ...interpreterSuggestions];
                     quickPick.items = newSuggestions;
-                    quickPick.activeItems = [newSuggestions[1]];
+                    quickPick.activeItems = [interpreterSuggestions[0]];
 
                     quickPick.busy = false;
                 },

@@ -12,7 +12,7 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IPlatformService } from '../../../../client/common/platform/types';
 import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
-import { InterpreterQuickPickList, Interpreters } from '../../../../client/common/utils/localize';
+import { Common, InterpreterQuickPickList, Interpreters } from '../../../../client/common/utils/localize';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
@@ -32,7 +32,6 @@ import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { EventName } from '../../../../client/telemetry/constants';
 import * as Telemetry from '../../../../client/telemetry';
 import { MockWorkspaceConfiguration } from '../../../mocks/mockWorkspaceConfig';
-import { Octicons } from '../../../../client/common/constants';
 
 const untildify = require('untildify');
 
@@ -181,16 +180,16 @@ suite('Set Interpreter Command', () => {
             expect(state.path).to.equal(undefined, '');
         });
 
-        test('Picker should be displayed with expected items: Not in find path experiment', async () => {
+        test('Picker should be displayed with expected items', async () => {
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             const starred = cloneDeep(item);
-            starred.label = `${Octicons.Star} ${item.label}`;
+            starred.label = `${Common.recommendedWithBrackets()} ${item.label}`;
             const suggestions = [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, starred];
             const expectedParameters = {
                 placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
                 items: suggestions,
-                activeItem: defaultInterpreterPathSuggestion,
+                activeItem: starred,
                 matchOnDetail: true,
                 matchOnDescription: true,
                 title: InterpreterQuickPickList.browsePath.openButtonLabel(),
@@ -218,7 +217,7 @@ suite('Set Interpreter Command', () => {
             await refreshButtonCallback!(quickPick as any); // Invoke callback, meaning that the refresh button is clicked.
 
             const starredRefreshedItem = cloneDeep(refreshedItem);
-            starredRefreshedItem.label = `${Octicons.Star} ${refreshedItem.label}`;
+            starredRefreshedItem.label = `${Common.recommendedWithBrackets()} ${refreshedItem.label}`;
             assert.deepStrictEqual(
                 quickPick.items,
                 [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, starredRefreshedItem],

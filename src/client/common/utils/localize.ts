@@ -91,6 +91,8 @@ export namespace Common {
     export const learnMore = localize('Common.learnMore', 'Learn more');
     export const and = localize('Common.and', 'and');
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
+    export const recommended = localize('Common.recommended', 'Recommended');
+    export const recommendedWithBrackets = (): string => `[${recommended()}]`;
 }
 
 export namespace CommonSurvey {
