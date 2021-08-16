@@ -54,6 +54,7 @@ import * as pythonEnvironments from './pythonEnvironments';
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
 import { setDefaultLanguageServer } from './activation/common/defaultlanguageServer';
+import { addItemsToRunAfterActivation } from './common/utils/runAfterActivation';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -162,9 +163,12 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     // Settings are dependent on Experiment service, so we need to initialize it after experiments are activated.
     serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().initialize();
-    await interpreterManager
-        .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
-        .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
+
+    addItemsToRunAfterActivation(() => {
+        interpreterManager
+            .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
+            .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
+    });
 
     const activationPromise = manager.activate();
 

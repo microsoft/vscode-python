@@ -30,6 +30,7 @@ import {
     IEnvsCollectionCache,
 } from './base/locators/composite/envsCollectionCache';
 import { EnvsCollectionService } from './base/locators/composite/envsCollectionService';
+import { addItemsToRunAfterActivation } from '../common/utils/runAfterActivation';
 
 /**
  * Set up the Python environments component (during extension activation).'
@@ -61,8 +62,10 @@ export async function activate(api: IDiscoveryAPI): Promise<ActivationResult> {
         };
     }
 
-    // Force an initial background refresh of the environments.
-    api.getEnvs().ignoreErrors();
+    addItemsToRunAfterActivation(() => {
+        // Force an initial background refresh of the environments.
+        api.getEnvs().ignoreErrors();
+    });
 
     return {
         fullyReady: Promise.resolve(),
