@@ -127,7 +127,8 @@ def generate_test_cases(suite):
         if isinstance(test, unittest.TestCase):
             yield test
         else:
-            yield from generate_test_cases(test)
+            for test_case in generate_test_cases(test):
+                yield test_case
 
 loader = unittest.TestLoader()
 suite = loader.discover("${startDir}", pattern="${pattern}")

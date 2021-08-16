@@ -31,6 +31,7 @@ import {
     Middleware,
     ResponseError,
 } from 'vscode-languageclient/node';
+import NotebookMiddlewareAddon from 'vscode-jupyter-lsp-middleware';
 import { IJupyterExtensionDependencyManager, IVSCodeNotebook } from '../common/application/types';
 
 import { HiddenFilePrefix, PYTHON_LANGUAGE } from '../common/constants';
@@ -40,10 +41,10 @@ import { isThenable } from '../common/utils/async';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
-import { NotebookMiddlewareAddon } from '../jupyter/languageserver/notebookMiddlewareAddon';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { LanguageServerType } from './types';
+import { traceInfo } from '../common/logger';
 
 // Only send 100 events per hour.
 const globalDebounce = 1000 * 60 * 60;
@@ -138,6 +139,7 @@ export class LanguageClientMiddleware implements Middleware {
             this.notebookAddon = new NotebookMiddlewareAddon(
                 notebookApi,
                 getClient,
+                traceInfo,
                 fileSystem,
                 PYTHON_LANGUAGE,
                 /.*\.(ipynb|interactive)/m,
@@ -152,6 +154,7 @@ export class LanguageClientMiddleware implements Middleware {
                         this.notebookAddon = new NotebookMiddlewareAddon(
                             notebookApi,
                             getClient,
+                            traceInfo,
                             fileSystem,
                             PYTHON_LANGUAGE,
                             /.*\.(ipynb|interactive)/m,

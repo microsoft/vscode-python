@@ -93,6 +93,7 @@
         "workspaceContains:app.py"
     ],
     "main": "./out/client/extension",
+    "browser": "./dist/extension.browser.js",
     "contributes": {
         "walkthroughs": [
             {
@@ -180,14 +181,33 @@
                 "when": "false",
                 "steps": [
                     {
-                        "id": "python.installPython",
+                        "id": "python.installPythonWinDS",
                         "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python from [Anaconda](https://www.anaconda.com) to use the Python extension.\n \n[Install Python with Anaconda](https://www.anaconda.com)",
+                        "description": "The Python Extension requires Python to be installed. Install Python from the [Microsoft Store](https://aka.ms/AAd9rms).\n\n[Install Python](https://aka.ms/AAd9rms)\n",
                         "media": {
-                            "image": "resources/walkthrough/anaconda-install.png",
-                            "altText": "Screenshot of anaconda webpage"
+                            "markdown": "resources/walkthrough/install-python-windows.md"
                         },
-                        "when": ""
+                        "when": "workspacePlatform == windows"
+                    },
+                    {
+                        "id": "python.installPythonMacDS",
+                        "title": "Install Python",
+                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Open Terminal](command:workbench.action.terminal.new)\n",
+                        "media": {
+                            "markdown": "resources/walkthrough/install-python-macos.md"
+                        },
+                        "when": "workspacePlatform == mac",
+                        "command": "workbench.action.terminal.new"
+                    },
+                    {
+                        "id": "python.installPythonLinuxDS",
+                        "title": "Install Python",
+                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Open Terminal](command:workbench.action.terminal.new)\n",
+                        "media": {
+                            "markdown": "resources/walkthrough/install-python-linux.md"
+                        },
+                        "when": "workspacePlatform == linux",
+                        "command": "workbench.action.terminal.new"
                     },
                     {
                         "id": "python.openFolderMac",
@@ -1999,6 +2019,7 @@
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.1.4",
         "vscode-jsonrpc": "6.0.0",
+        "vscode-jupyter-lsp-middleware": "^0.1.3",
         "vscode-languageclient": "7.0.0",
         "vscode-languageserver": "7.0.0",
         "vscode-languageserver-protocol": "3.16.0",

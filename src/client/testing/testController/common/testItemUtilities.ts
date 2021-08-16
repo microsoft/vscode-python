@@ -90,10 +90,10 @@ function getRangeFromRawSource(raw: { source: string }): Range | undefined {
 function getRunIdFromRawData(raw: { id: string }): string {
     // This is the id that will be used to compare with the results.
     const runId = raw.id
+        .replace(/\.py/g, '')
         .replace(/[\\\:\/]/g, '.')
         .replace(/\:\:/g, '.')
-        .replace(/\.\./g, '.')
-        .replace(/\.py/g, '');
+        .replace(/\.\./g, '.');
     return runId.startsWith('.') ? runId.substr(1) : runId;
 }
 

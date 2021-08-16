@@ -67,6 +67,7 @@ gulp.task('webpack', async () => {
     // Build node_modules.
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.browser.config.js', 'browser');
 });
 
 gulp.task('addExtensionPackDependencies', async () => {
@@ -191,6 +192,8 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
                 'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js',
             ];
+        case 'browser':
+            return [];
         default:
             throw new Error('Unknown WebPack Configuration');
     }
