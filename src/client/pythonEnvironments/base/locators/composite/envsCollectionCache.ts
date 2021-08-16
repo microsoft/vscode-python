@@ -52,7 +52,8 @@ export interface IEnvsCollectionCache {
      * Returns the list of envs which are valid but whose details are outdated.
      *
      * @param shouldCheckForUpdates Whether to check if envs have outdated info. Useful
-     * if we already know cache has updated info, and want to avoid cost of validating it.
+     * if we already know cache has updated info, and want to avoid cost of validating
+     * it. Considered `false` by default.
      */
     validateCache(shouldCheckForUpdates?: boolean): Promise<PythonEnvInfo[]>;
 }
@@ -73,7 +74,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         super();
     }
 
-    public async validateCache(shouldCheckForUpdates = true): Promise<PythonEnvInfo[]> {
+    public async validateCache(shouldCheckForUpdates = false): Promise<PythonEnvInfo[]> {
         // Remove envs which no longer exist
         this.envs = await asyncFilter(this.envs, (e) => pathExists(e.executable.filename));
         if (shouldCheckForUpdates) {
