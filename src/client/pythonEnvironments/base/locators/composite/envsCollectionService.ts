@@ -27,20 +27,6 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return Promise.all(Array.from(this.refreshPromises.values())).then();
     }
 
-    public async validateCollection(): Promise<void> {
-        const outOfDateEnvs = await this.cache.validateCache(
-            // Checking for updates can be expensive. We eventually plan to move into
-            // web workers, which is when we can schedule checking for updates in
-            // background. But until then, we do not check for updates.
-            false,
-        );
-        const envs = await Promise.all(
-            outOfDateEnvs.map((env) => env.executable.filename).map((executable) => this.resolveEnv(executable)),
-        );
-        const uptoDateEnvs = envs.filter((e) => e !== undefined).map((e) => e!);
-        uptoDateEnvs.forEach((e) => this.cache.addEnv(e));
-    }
-
     constructor(private readonly cache: IEnvsCollectionCache, private readonly locator: IResolvingLocator) {
         super();
         this.locator.onChanged((event) =>
@@ -141,20 +127,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             this.cache.addEnv(env);
         }
         await updatesDone.promise;
-        await this.cache.validateCache(
-            // All valid envs in cache must have updated info by now, so do not
-            // check for outdated info when validating cache.
-            false,
-        );
+        await this.cache.validateCache();
         this.cache.flush().ignoreErrors();
     }
-}
-
-export async function createEnvCollectionService(
-    cache: IEnvsCollectionCache,
-    locator: IResolvingLocator,
-): Promise<IDiscoveryAPI> {
-    const service = new EnvsCollectionService(cache, locator);
-    await service.validateCollection();
-    return service;
 }

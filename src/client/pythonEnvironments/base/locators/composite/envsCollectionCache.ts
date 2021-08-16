@@ -3,7 +3,7 @@
 
 import { Event } from 'vscode';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
-import { getFileInfo, pathExists } from '../../../common/externalDependencies';
+import { pathExists } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
 import { areSameEnv } from '../../info/env';
 import {
@@ -46,16 +46,10 @@ export interface IEnvsCollectionCache {
     flush(): Promise<void>;
 
     /**
-     * Re-check if envs in cache are still up-to-date. If an env is no longer valid or
-     * needs to be updated, remove it from cache.
-     *
-     * Returns the list of envs which are valid but whose details are outdated.
-     *
-     * @param shouldCheckForUpdates Whether to check if envs have outdated info. Useful
-     * if we already know cache has updated info, and want to avoid cost of validating
-     * it. Considered `false` by default.
+     * Removes invalid envs from cache. Note this does not check for outdated info when
+     * validating cache.
      */
-    validateCache(shouldCheckForUpdates?: boolean): Promise<PythonEnvInfo[]>;
+    validateCache(): Promise<void>;
 }
 
 interface IPersistentStorage {
@@ -74,24 +68,14 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         super();
     }
 
-    public async validateCache(shouldCheckForUpdates = false): Promise<PythonEnvInfo[]> {
-        // Remove envs which no longer exist
+    public async validateCache(): Promise<void> {
+        /**
+         * We do check if an env has updated as we already run discovery in background
+         * which means env cache will have up-to-date envs eventually. This also means
+         * we avoid the cost of running lstat. So simply remove envs which no longer
+         * exist.
+         */
         this.envs = await asyncFilter(this.envs, (e) => pathExists(e.executable.filename));
-        if (shouldCheckForUpdates) {
-            // Checks if any envs are out of date, removes them from cache, and returns
-            // the list of envs.
-            const isIndexUptoDate = await Promise.all(
-                this.envs.map(async (env) => {
-                    const { ctime, mtime } = await getFileInfo(env.executable.filename);
-                    return ctime === env.executable.ctime && mtime === env.executable.mtime;
-                }),
-            );
-            const outOfDateEnvs = this.envs.filter((_v, index) => !isIndexUptoDate[index]);
-            // Remove out-of-date envs from cache
-            this.envs = this.envs.filter((_v, index) => isIndexUptoDate[index]);
-            return outOfDateEnvs;
-        }
-        return [];
     }
 
     public getAllEnvs(): PythonEnvInfo[] {
@@ -139,5 +123,6 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
 export async function createCollectionCache(storage: IPersistentStorage): Promise<PythonEnvInfoCache> {
     const cache = new PythonEnvInfoCache(storage);
     await cache.clearAndReloadFromStorage();
+    await cache.validateCache();
     return cache;
 }

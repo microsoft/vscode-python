@@ -110,25 +110,6 @@ export function getWorkspaceFolders(): string[] {
     return vscode.workspace.workspaceFolders?.map((w) => w.uri.fsPath) ?? [];
 }
 
-export async function getFileInfo(_filePath: string): Promise<{ ctime: number; mtime: number }> {
-    // We calculate file info for validating cache. For now, we have decided not to do
-    // cache validation so simply return -1. The following snippet can be used to
-    // calculate it.
-
-    /* try {
-        const data = await fsapi.lstat(filePath);
-        return {
-            ctime: data.ctime.valueOf(),
-            mtime: data.mtime.valueOf(),
-        };
-    } catch (ex) {
-        // This can fail on some cases, such as, `reparse points` on windows. So, return the
-        // time as -1. Which we treat as not set in the extension.
-        return { ctime: -1, mtime: -1 };
-    } */
-    return { ctime: -1, mtime: -1 };
-}
-
 export async function resolveSymbolicLink(absPath: string): Promise<string> {
     const stats = await fsapi.lstat(absPath);
     if (stats.isSymbolicLink()) {
