@@ -164,11 +164,14 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     // Settings are dependent on Experiment service, so we need to initialize it after experiments are activated.
     serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().initialize();
 
-    addItemsToRunAfterActivation(() => {
-        interpreterManager
-            .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
-            .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
-    });
+    addItemsToRunAfterActivation(
+        () => {
+            interpreterManager
+                .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
+                .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
+        },
+        { addToFront: true },
+    );
 
     const activationPromise = manager.activate();
 

@@ -1,17 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-const _itemsToRun: (() => void)[] = [];
-let _activationCompleted = false;
+const itemsToRun: (() => void)[] = [];
+let activationCompleted = false;
 
 /**
- * Add items to be run after extension activation.
+ * Add items to be run after extension activation. This will add item
+ * to the end of the list. This function will immediately run the item
+ * if extension is already activated.
  */
-export function addItemsToRunAfterActivation(run: () => void): void {
-    if (_activationCompleted) {
+export function addItemsToRunAfterActivation(run: () => void, options?: { addToFront?: boolean }): void {
+    if (activationCompleted) {
         run();
+    } else if (options?.addToFront) {
+        itemsToRun.unshift(run);
     } else {
-        _itemsToRun.push(run);
+        itemsToRun.push(run);
     }
 }
 
@@ -19,9 +23,9 @@ export function addItemsToRunAfterActivation(run: () => void): void {
  * This should be called after extension activation is complete.
  */
 export function runAfterActivation(): void {
-    _activationCompleted = true;
-    while (_itemsToRun.length > 0) {
-        const run = _itemsToRun.shift();
+    activationCompleted = true;
+    while (itemsToRun.length > 0) {
+        const run = itemsToRun.shift();
         if (run) {
             run();
         }
