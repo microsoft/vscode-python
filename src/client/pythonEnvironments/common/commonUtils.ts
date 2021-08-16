@@ -251,11 +251,13 @@ async function checkPythonExecutable(
     const matchFilename = opts.matchFilename || matchPythonBinFilename;
     const filename = typeof executable === 'string' ? executable : executable.filename;
 
-    if (opts.filterFile && !(await opts.filterFile(executable))) {
+    if (!matchFilename(filename)) {
         return false;
     }
 
-    if (!matchFilename(filename)) {
+    // This should occur after we match file names. This is to avoid doing potential
+    // `lstat` calls on too many files which can slow things down.
+    if (opts.filterFile && !(await opts.filterFile(executable))) {
         return false;
     }
 
