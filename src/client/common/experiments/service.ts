@@ -89,7 +89,7 @@ export class ExperimentService implements IExperimentService {
                 // This means that we start the session with partial experiment info.
                 // We accept this as a compromise to avoid delaying startup.
 
-                // In the case were we don;t wait on this promise. If the experiment info changes,
+                // In the case where we don't wait on this promise. If the experiment info changes,
                 // those changes will be applied in the next session. This is controlled internally
                 // in the tas-client via `overrideInMemoryFeatures` value that is passed to
                 // `getFeaturesAsync`. At the time of writing this comment the value of
