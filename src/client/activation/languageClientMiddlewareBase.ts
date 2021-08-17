@@ -38,7 +38,6 @@ import { isThenable } from '../common/utils/async';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
-import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { LanguageServerType } from './types';
 
@@ -57,6 +56,10 @@ const debounceRareCall = 1000 * 60;
 /* eslint-disable consistent-return */
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+interface SendTelemetryEventFunc {
+    (eventName: EventName, measuresOrDurationMs?: Record<string, number> | number, properties?: any, ex?: Error): void;
+}
 
 export class LanguageClientMiddlewareBase implements Middleware {
     // These are public so that the captureTelemetryForLSPMethod decorator can access them.
@@ -115,6 +118,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
     public constructor(
         readonly serviceContainer: IServiceContainer | undefined,
         serverType: LanguageServerType,
+        public readonly sendTelemetryEventFunc: SendTelemetryEventFunc,
         public readonly serverVersion?: string,
     ) {
         this.handleDiagnostics = this.handleDiagnostics.bind(this); // VS Code calls function without context.
@@ -401,7 +405,7 @@ function captureTelemetryForLSPMethod(
                         ...lazyMeasures(this, result),
                     };
                 }
-                sendTelemetryEvent(eventName, measures, properties);
+                this.sendTelemetryEventFunc(eventName, measures, properties);
                 return result;
             };
 

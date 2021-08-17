@@ -9,6 +9,7 @@ import { traceInfo } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { IDisposableRegistry, IExtensions } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import { sendTelemetryEvent } from '../telemetry';
 
 import { LanguageClientMiddlewareBase } from './languageClientMiddlewareBase';
 import { LanguageServerType } from './types';
@@ -20,7 +21,7 @@ export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
         getClient: () => LanguageClient | undefined,
         serverVersion?: string,
     ) {
-        super(serviceContainer, serverType, serverVersion);
+        super(serviceContainer, serverType, sendTelemetryEvent, serverVersion);
 
         if (serverType === LanguageServerType.None || serverType === LanguageServerType.Jedi) {
             return;
