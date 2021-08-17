@@ -1269,7 +1269,7 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
-     * Telemetry event sent hen experiments service is initialized for the first time.
+     * Telemetry event sent when the experiments service is initialized for the first time.
      */
     [EventName.PYTHON_EXPERIMENTS_INIT_PERFORMANCE]: unknown;
     /**
