@@ -6,6 +6,7 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
+import * as sinon from 'sinon';
 import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
@@ -28,6 +29,8 @@ import {
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import * as Telemetry from '../../../client/telemetry';
+import { EventName } from '../../../client/telemetry/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -42,7 +45,9 @@ suite('Interpreters - Auto Selection', () => {
     let helper: IInterpreterHelper;
     let proxy: IInterpreterAutoSelectionProxyService;
     let interpreterService: IInterpreterService;
+    let sendTelemetryEventStub: sinon.SinonStub;
     let options: GetInterpreterOptions[] = [];
+    let telemetryEvents: { eventName: string; properties: Record<string, unknown> }[] = [];
     class InterpreterAutoSelectionServiceTest extends InterpreterAutoSelectionService {
         public initializeStore(resource: Resource): Promise<void> {
             return super.initializeStore(resource);
@@ -93,17 +98,27 @@ suite('Interpreters - Auto Selection', () => {
                 } as PythonEnvironment,
             ]);
         });
+
+        sendTelemetryEventStub = sinon
+            .stub(Telemetry, 'sendTelemetryEvent')
+            .callsFake((eventName: string, _, properties: Record<string, unknown>) => {
+                const telemetry = { eventName, properties };
+                telemetryEvents.push(telemetry);
+            });
     });
 
     teardown(() => {
+        sinon.restore();
+        Telemetry._resetSharedProperties();
         options = [];
+        telemetryEvents = [];
     });
 
     test('Instance is registered in proxy', () => {
         verify(proxy.registerInstance!(autoSelectionService)).once();
     });
 
-    suite('When using locator-based auto-selection', () => {
+    suite('Test locator-based auto-selection method', () => {
         let workspacePath: string;
         let resource: Uri;
         let eventFired: boolean;
@@ -283,6 +298,102 @@ suite('Interpreters - Auto Selection', () => {
 
             verify(interpreterService.getInterpreters(resource, anything())).once();
             expect(options).to.deep.equal([{ ignoreCache: false }], 'getInterpreters options are different');
+        });
+
+        test('Telemetry event is sent with useCachedInterpreter set to false if auto-selection has not been run before', async () => {
+            const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
+
+            when(interpreterService.getInterpreters(resource, anything())).thenCall(() =>
+                Promise.resolve([
+                    {
+                        envType: EnvironmentType.Conda,
+                        envPath: path.join('some', 'conda', 'env'),
+                        version: { major: 3, minor: 7, patch: 2 },
+                    } as PythonEnvironment,
+                    {
+                        envType: EnvironmentType.Pipenv,
+                        envPath: path.join('some', 'pipenv', 'env'),
+                        version: { major: 3, minor: 10, patch: 0 },
+                    } as PythonEnvironment,
+                ]),
+            );
+
+            autoSelectionService = new InterpreterAutoSelectionServiceTest(
+                instance(workspaceService),
+                instance(stateFactory),
+                instance(fs),
+                instance(interpreterService),
+                interpreterComparer,
+                instance(proxy),
+                instance(helper),
+            );
+
+            autoSelectionService.initializeStore = () => Promise.resolve();
+
+            await autoSelectionService.autoSelectInterpreter(resource);
+
+            verify(interpreterService.getInterpreters(resource, anything())).once();
+            sinon.assert.calledOnce(sendTelemetryEventStub);
+            expect(telemetryEvents).to.deep.equal(
+                [
+                    {
+                        eventName: EventName.PYTHON_INTERPRETER_AUTO_SELECTION,
+                        properties: { useCachedInterpreter: false },
+                    },
+                ],
+                'Telemetry event properties are different',
+            );
+        });
+
+        test('Telemetry event is sent with useCachedInterpreter set to true if auto-selection has been run before', async () => {
+            const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
+
+            when(interpreterService.getInterpreters(resource, anything())).thenCall(() =>
+                Promise.resolve([
+                    {
+                        envType: EnvironmentType.Conda,
+                        envPath: path.join('some', 'conda', 'env'),
+                        version: { major: 3, minor: 7, patch: 2 },
+                    } as PythonEnvironment,
+                    {
+                        envType: EnvironmentType.Pipenv,
+                        envPath: path.join('some', 'pipenv', 'env'),
+                        version: { major: 3, minor: 10, patch: 0 },
+                    } as PythonEnvironment,
+                ]),
+            );
+
+            autoSelectionService = new InterpreterAutoSelectionServiceTest(
+                instance(workspaceService),
+                instance(stateFactory),
+                instance(fs),
+                instance(interpreterService),
+                interpreterComparer,
+                instance(proxy),
+                instance(helper),
+            );
+
+            autoSelectionService.initializeStore = () => Promise.resolve();
+
+            await autoSelectionService.autoSelectInterpreter(resource);
+
+            await autoSelectionService.autoSelectInterpreter(resource);
+
+            verify(interpreterService.getInterpreters(resource, anything())).once();
+            sinon.assert.calledTwice(sendTelemetryEventStub);
+            expect(telemetryEvents).to.deep.equal(
+                [
+                    {
+                        eventName: EventName.PYTHON_INTERPRETER_AUTO_SELECTION,
+                        properties: { useCachedInterpreter: false },
+                    },
+                    {
+                        eventName: EventName.PYTHON_INTERPRETER_AUTO_SELECTION,
+                        properties: { useCachedInterpreter: true },
+                    },
+                ],
+                'Telemetry event properties are different',
+            );
         });
     });
 
