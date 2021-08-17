@@ -431,9 +431,9 @@ suite('Experimentation service', () => {
 
             await experimentService.activate();
 
-            assert.strictEqual(telemetryEvents.length, 1);
-            assert.strictEqual(telemetryEvents[0].eventName, EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS);
-            sinon.assert.calledOnce(sendTelemetryEventStub);
+            assert.strictEqual(telemetryEvents.length, 2);
+            assert.strictEqual(telemetryEvents[1].eventName, EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS);
+            sinon.assert.calledTwice(sendTelemetryEventStub);
         });
 
         test('The telemetry event properties should only be populated with valid experiment values', async () => {
@@ -465,7 +465,7 @@ suite('Experimentation service', () => {
 
             await experimentService.activate();
 
-            const { properties } = telemetryEvents[0];
+            const { properties } = telemetryEvents[1];
             assert.deepStrictEqual(properties, { optedInto: ['foo'], optedOutFrom: ['bar'] });
         });
 
@@ -498,7 +498,7 @@ suite('Experimentation service', () => {
 
             await experimentService.activate();
 
-            const { properties } = telemetryEvents[0];
+            const { properties } = telemetryEvents[1];
             assert.deepStrictEqual(properties, { optedInto: [], optedOutFrom: [] });
         });
 
@@ -554,7 +554,7 @@ suite('Experimentation service', () => {
 
             await experimentService.activate();
 
-            const { properties } = telemetryEvents[0];
+            const { properties } = telemetryEvents[1];
             assert.deepStrictEqual(properties, { optedInto: [], optedOutFrom: [] });
         });
 
@@ -586,7 +586,7 @@ suite('Experimentation service', () => {
 
             await experimentService.activate();
 
-            const { properties } = telemetryEvents[0];
+            const { properties } = telemetryEvents[1];
             assert.deepStrictEqual(properties, { optedInto: [], optedOutFrom: [] });
         });
     });
