@@ -1049,25 +1049,16 @@ export interface IEventNamePropertyMapping {
          */
         interpreterType: EnvironmentType;
     };
+    /**
+     * Telemetry event sent when auto-selection is called.
+     */
     [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: {
         /**
-         * If cached interpreter no longer exists or is invalid
+         * If auto-selection has been run earlier in this session, and this call returned a cached value.
          *
          * @type {boolean}
          */
-        interpreterMissing?: boolean;
-        /**
-         * Carries `true` if next rule is identified for autoselecting interpreter
-         *
-         * @type {boolean}
-         */
-        identified?: boolean;
-        /**
-         * Carries `true` if cached interpreter is updated to use the current interpreter, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        updated?: boolean;
+        useCachedInterpreter?: boolean;
     };
     /**
      * Sends information regarding discovered python environments (virtualenv, conda, pipenv etc.)
