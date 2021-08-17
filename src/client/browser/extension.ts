@@ -4,7 +4,9 @@
 import * as vscode from 'vscode';
 import { LanguageClientOptions, State } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/browser';
+import { LanguageClientMiddlewareBase } from '../activation/languageClientMiddlewareBase';
 import { ILSExtensionApi } from '../activation/node/languageServerFolderService';
+import { LanguageServerType } from '../activation/types';
 import { PYLANCE_EXTENSION_ID } from '../common/constants';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -25,7 +27,7 @@ async function runPylance(context: vscode.ExtensionContext): Promise<void> {
         throw new Error('Could not find Pylance extension');
     }
 
-    const { path: distUrl } = await pylanceApi.languageServerFolder();
+    const { path: distUrl, version } = await pylanceApi.languageServerFolder();
 
     try {
         const worker = new Worker(`${distUrl}/browser.server.bundle.js`);
@@ -51,6 +53,7 @@ async function runPylance(context: vscode.ExtensionContext): Promise<void> {
                 // Synchronize the setting section to the server.
                 configurationSection: ['python'],
             },
+            middleware: new LanguageClientMiddlewareBase(undefined, LanguageServerType.Node, version),
         };
 
         const languageClient = new LanguageClient('python', 'Python Language Server', clientOptions, worker);
