@@ -139,10 +139,18 @@ class ComponentAdapter implements IComponentAdapter {
 
     private readonly refreshed = new vscode.EventEmitter<void>();
 
+    private readonly onAddedToCollection = createDeferred();
+
     constructor(
         // The adapter only wraps one thing: the component API.
         private readonly api: IDiscoveryAPI,
-    ) {}
+    ) {
+        this.api.onChanged((e: PythonEnvCollectionChangedEvent) => {
+            if (e.update) {
+                this.onAddedToCollection.resolve();
+            }
+        });
+    }
 
     // For use in VirtualEnvironmentPrompt.activate()
 
@@ -249,13 +257,7 @@ class ComponentAdapter implements IComponentAdapter {
             }
             // We should already have initiated discovery. Wait for an env to be added
             // to the collection until the refresh has finished.
-            const onCollectionChangedDeferred = createDeferred();
-            this.api.onChanged((e: PythonEnvCollectionChangedEvent) => {
-                if (e.update) {
-                    onCollectionChangedDeferred.resolve();
-                }
-            });
-            await Promise.race([onCollectionChangedDeferred.promise, this.api.refreshPromise]);
+            await Promise.race([this.onAddedToCollection.promise, this.api.refreshPromise]);
             const envs = await this.api.getEnvs();
             return envs.length > 0;
         });
