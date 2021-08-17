@@ -81,6 +81,7 @@ export class ExperimentService implements IExperimentService {
 
     public async activate(): Promise<void> {
         if (this.experimentationService) {
+            const initStart = Date.now();
             await this.experimentationService.initializePromise;
 
             const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
@@ -96,6 +97,7 @@ export class ExperimentService implements IExperimentService {
                 // `overrideInMemoryFeatures` was always passed in as `false`. So, the experiment
                 // states did not change mid way.
                 await this.experimentationService.initialFetch;
+                sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_INIT_PERFORMANCE, Date.now() - initStart);
             }
         }
         sendOptInOptOutTelemetry(this._optInto, this._optOutFrom, this.appEnvironment.packageJson);
