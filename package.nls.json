@@ -200,6 +200,7 @@
     "downloading.file.progress": "{0}{1} of {2} KB ({3}%)",
     "products.installingModule": "Installing {0}",
     "OutdatedDebugger.updateDebuggerMessage": "We noticed you are attaching to ptvsd (Python debugger), which was deprecated on May 1st, 2020. Please switch to [debugpy](https://aka.ms/migrateToDebugpy).",
+    "Python27Support.bannerMessage": "The Python extension will have limited support for Python 2.7 starting in the next release, due to changes in external projects we rely on. [Learn more](https://aka.ms/python-27-support).",
     "Jupyter.extensionRequired": "The Jupyter extension is required to perform that task. Click Yes to open the Jupyter extension installation page.",
     "TensorBoard.missingSourceFile": "We could not locate the requested source file on disk. Please manually specify the file.",
     "TensorBoard.selectMissingSourceFile": "Choose File",

@@ -547,6 +547,13 @@ export namespace OutdatedDebugger {
     );
 }
 
+export namespace Python27Support {
+    export const bannerMessage = localize(
+        'Python27Support.bannerMessage',
+        'The Python extension will have limited support for Python 2.7 starting in the next release, due to changes in external projects we rely on. [Learn more](https://aka.ms/python-27-support).',
+    );
+}
+
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
 // can be loaded out of the nls.<locale>.json files
 let loadedCollection: Record<string, string> | undefined;
