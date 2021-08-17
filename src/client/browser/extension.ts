@@ -42,6 +42,14 @@ async function runPylance(context: vscode.ExtensionContext): Promise<void> {
         };
         worker.postMessage(config);
 
+        const middleware = new LanguageClientMiddlewareBase(
+            undefined,
+            LanguageServerType.Node,
+            sendTelemetryEventBrowser,
+            version,
+        );
+        middleware.connect();
+
         const clientOptions: LanguageClientOptions = {
             // Register the server for python source files.
             documentSelector: [
@@ -53,12 +61,7 @@ async function runPylance(context: vscode.ExtensionContext): Promise<void> {
                 // Synchronize the setting section to the server.
                 configurationSection: ['python'],
             },
-            middleware: new LanguageClientMiddlewareBase(
-                undefined,
-                LanguageServerType.Node,
-                sendTelemetryEventBrowser,
-                version,
-            ),
+            middleware,
         };
 
         const languageClient = new LanguageClient('python', 'Python Language Server', clientOptions, worker);
