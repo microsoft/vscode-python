@@ -74,6 +74,12 @@ async function runPylance(context: vscode.ExtensionContext): Promise<void> {
                 return;
             }
 
+            context.subscriptions.push(
+                vscode.commands.registerCommand('python.viewLanguageServerOutput', () =>
+                    languageClient.outputChannel.show(),
+                ),
+            );
+
             languageClient.onTelemetry((telemetryEvent) => {
                 const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
                 const formattedProperties = {
