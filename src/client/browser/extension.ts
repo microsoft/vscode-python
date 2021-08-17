@@ -2,10 +2,12 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { LanguageClientOptions } from 'vscode-languageclient';
+import { LanguageClientOptions, State } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/browser';
 import { ILSExtensionApi } from '../activation/node/languageServerFolderService';
 import { PYLANCE_EXTENSION_ID } from '../common/constants';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
 
 interface BrowserConfig {
     distUrl: string; // URL to Pylance's dist folder.
@@ -52,6 +54,31 @@ async function runPylance(context: vscode.ExtensionContext): Promise<void> {
         };
 
         const languageClient = new LanguageClient('python', 'Python Language Server', clientOptions, worker);
+
+        languageClient.onDidChangeState((e) => {
+            // The client's on* methods must be called after the client has started, but if called too
+            // late the server may have already sent a message (which leads to failures). Register
+            // these on the state change to running to ensure they are ready soon enough.
+            if (e.newState !== State.Running) {
+                return;
+            }
+
+            languageClient.onTelemetry((telemetryEvent) => {
+                const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
+                const formattedProperties = {
+                    ...telemetryEvent.Properties,
+                    // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
+                    method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
+                };
+                sendTelemetryEvent(
+                    eventName,
+                    telemetryEvent.Measurements,
+                    formattedProperties,
+                    telemetryEvent.Exception,
+                );
+            });
+        });
+
         const disposable = languageClient.start();
 
         context.subscriptions.push(disposable);

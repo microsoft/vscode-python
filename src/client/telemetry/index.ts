@@ -155,7 +155,9 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 
         // To avoid hardcoding the names and forgetting to update later.
         const errorPropNames = Object.getOwnPropertyNames(errorProps);
-        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, errorPropNames);
+        // TODO: remove this "as any" once the upstream lib is fixed.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (reporter.sendTelemetryErrorEvent as any)(eventNameSent, customProperties, measures, errorPropNames);
     } else {
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }

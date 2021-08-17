@@ -33,6 +33,11 @@ const nodeConfig = (_, { mode }) => ({
     resolve: {
         extensions: ['.ts', '.js'],
     },
+    node: {
+        child_process: 'empty',
+        fs: 'empty',
+        net: 'empty',
+    },
     externals: {
         vscode: 'commonjs vscode',
 
