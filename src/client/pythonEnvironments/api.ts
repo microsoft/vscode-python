@@ -1,47 +1,50 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Event } from 'vscode';
-import { Disposables, IDisposable } from '../common/utils/resourceLifecycle';
-import { PythonEnvInfo } from './base/info';
-import { IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from './base/locator';
-import { GetLocatorFunc, LazyWrappingLocator } from './base/locators/common/wrappingLocator';
-import { PythonEnvsChangedEvent } from './base/watcher';
+import { IDiscoveryAPI, PythonLocatorQuery } from './base/locator';
+
+export type GetLocatorFunc = () => Promise<IDiscoveryAPI>;
 
 /**
  * The public API for the Python environments component.
  *
  * Note that this is composed of sub-components.
  */
-export class PythonEnvironments implements IResolvingLocator, IDisposable {
-    private readonly disposables = new Disposables();
-
-    private readonly locators: IResolvingLocator;
+class PythonEnvironments implements IDiscoveryAPI {
+    private locator!: IDiscoveryAPI;
 
     constructor(
         // These are factories for the sub-components the full component is composed of:
-        getLocators: GetLocatorFunc,
-    ) {
-        const locators = new LazyWrappingLocator(getLocators);
-        this.locators = locators;
-        this.disposables.push(locators);
+        private readonly getLocator: GetLocatorFunc,
+    ) {}
+
+    public async activate(): Promise<void> {
+        this.locator = await this.getLocator();
     }
 
-    public async dispose(): Promise<void> {
-        await this.disposables.dispose();
+    public get onRefreshTrigger() {
+        return this.locator.onRefreshTrigger;
     }
 
-    // For ILocator:
-
-    public get onChanged(): Event<PythonEnvsChangedEvent> {
-        return this.locators.onChanged;
+    public get refreshPromise() {
+        return this.locator.refreshPromise;
     }
 
-    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        return this.locators.iterEnvs(query);
+    public get onChanged() {
+        return this.locator.onChanged;
     }
 
-    public async resolveEnv(env: string): Promise<PythonEnvInfo | undefined> {
-        return this.locators.resolveEnv(env);
+    public getEnvs(query?: PythonLocatorQuery) {
+        return this.locator.getEnvs(query);
     }
+
+    public async resolveEnv(env: string) {
+        return this.locator.resolveEnv(env);
+    }
+}
+
+export async function createPythonEnvironments(getLocator: GetLocatorFunc): Promise<IDiscoveryAPI> {
+    const api = new PythonEnvironments(getLocator);
+    await api.activate();
+    return api;
 }

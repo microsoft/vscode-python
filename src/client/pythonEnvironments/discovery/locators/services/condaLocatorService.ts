@@ -371,10 +371,6 @@ export class CondaLocatorService implements ICondaLocatorService {
     }
 
     private async getWinRegEnvs(): Promise<PythonEnvironment[]> {
-        if (await inDiscoveryExperiment(this.experimentService)) {
-            return this.pyenvs.getWinRegInterpreters(undefined);
-        }
-
         const registryLookupForConda: IInterpreterLocatorService = this.serviceContainer.get<
             IInterpreterLocatorService
         >(IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE);

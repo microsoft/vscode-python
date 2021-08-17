@@ -6,16 +6,12 @@ import { getGlobalStorage } from '../common/persistentState';
 import { getOSType, OSType } from '../common/utils/platform';
 import { IDisposable } from '../common/utils/resourceLifecycle';
 import { ActivationResult, ExtensionState } from '../components';
-import { PythonEnvironments } from './api';
-import { getPersistentCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
-import { BasicEnvInfo, ILocator, IResolvingLocator } from './base/locator';
-import { CachingLocator } from './base/locators/composite/cachingLocator';
+import { BasicEnvInfo, IDiscoveryAPI, ILocator } from './base/locator';
 import { PythonEnvsReducer } from './base/locators/composite/environmentsReducer';
 import { PythonEnvsResolver } from './base/locators/composite/environmentsResolver';
 import { WindowsPathEnvVarLocator } from './base/locators/lowLevel/windowsKnownPathsLocator';
 import { WorkspaceVirtualEnvironmentLocator } from './base/locators/lowLevel/workspaceVirtualEnvLocator';
-import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
 import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './base/locators/';
 import { CustomVirtualEnvironmentLocator } from './base/locators/lowLevel/customVirtualEnvLocator';
@@ -28,16 +24,18 @@ import { WindowsStoreLocator } from './base/locators/lowLevel/windowsStoreLocato
 import { getEnvironmentInfoService } from './base/info/environmentInfoService';
 import { isComponentEnabled, registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
 import { PoetryLocator } from './base/locators/lowLevel/poetryLocator';
+import { createPythonEnvironments } from './api';
+import {
+    createCollectionCache as createCache,
+    IEnvsCollectionCache,
+} from './base/locators/composite/envsCollectionCache';
+import { EnvsCollectionService } from './base/locators/composite/envsCollectionService';
 
 /**
  * Set up the Python environments component (during extension activation).'
  */
-export async function initialize(ext: ExtensionState): Promise<PythonEnvironments> {
-    const api = new PythonEnvironments(
-        () => createLocators(ext),
-        // Other sub-components (e.g. config, "current" env) will go here.
-    );
-    ext.disposables.push(api);
+export async function initialize(ext: ExtensionState): Promise<IDiscoveryAPI> {
+    const api = await createPythonEnvironments(() => createLocator(ext));
 
     // Any other initialization goes here.
 
@@ -56,7 +54,7 @@ export async function initialize(ext: ExtensionState): Promise<PythonEnvironment
 /**
  * Make use of the component (e.g. register with VS Code).
  */
-export async function activate(api: PythonEnvironments): Promise<ActivationResult> {
+export async function activate(api: IDiscoveryAPI): Promise<ActivationResult> {
     if (!(await isComponentEnabled())) {
         return {
             fullyReady: Promise.resolve(),
@@ -64,11 +62,7 @@ export async function activate(api: PythonEnvironments): Promise<ActivationResul
     }
 
     // Force an initial background refresh of the environments.
-    getEnvs(api.iterEnvs())
-        // Don't wait for it to finish.
-        .ignoreErrors();
-
-    // Registration with VS Code will go here.
+    api.getEnvs().ignoreErrors();
 
     return {
         fullyReady: Promise.resolve(),
@@ -76,12 +70,12 @@ export async function activate(api: PythonEnvironments): Promise<ActivationResul
 }
 
 /**
- * Get the set of locators to use in the component.
+ * Get the locator to use in the component.
  */
-async function createLocators(
+async function createLocator(
     ext: ExtensionState,
     // This is shared.
-): Promise<IResolvingLocator> {
+): Promise<IDiscoveryAPI> {
     // Create the low-level locators.
     let locators: ILocator<BasicEnvInfo> = new ExtensionLocators<BasicEnvInfo>(
         // Here we pull the locators together.
@@ -99,13 +93,11 @@ async function createLocators(
         // These are shared.
         envInfoService,
     );
-    const caching = await createCachingLocator(
-        ext,
+    const caching = new EnvsCollectionService(
+        await createCollectionCache(ext),
         // This is shared.
         resolvingLocator,
     );
-    ext.disposables.push(caching);
-
     return caching;
 }
 
@@ -165,21 +157,11 @@ function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators<BasicEnv
     return locators;
 }
 
-async function createCachingLocator(ext: ExtensionState, locators: IResolvingLocator): Promise<CachingLocator> {
+async function createCollectionCache(ext: ExtensionState): Promise<IEnvsCollectionCache> {
     const storage = getGlobalStorage<PythonEnvInfo[]>(ext.context, 'PYTHON_ENV_INFO_CACHE');
-    const cache = await getPersistentCache(
-        {
-            load: async () => storage.get(),
-            store: async (e) => storage.set(e),
-        },
-        // For now we assume that if when iteration is complete, the env is as complete as it's going to get.
-        // So no further check for complete environments is needed.
-        () => true, // "isComplete"
-    );
-    return new CachingLocator(cache, locators);
-}
-
-export interface IPersistentStorage {
-    load(): Promise<PythonEnvInfo[] | undefined>;
-    store(envs: PythonEnvInfo[]): Promise<void>;
+    const cache = await createCache({
+        load: async () => storage.get(),
+        store: async (e) => storage.set(e),
+    });
+    return cache;
 }

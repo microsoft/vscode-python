@@ -25,8 +25,8 @@ import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import { addOutputChannelLogging } from './logging';
 import * as pythonEnvironments from './pythonEnvironments';
-import { PythonEnvironments } from './pythonEnvironments/api';
 import { TEST_OUTPUT_CHANNEL } from './testing/constants';
+import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 
 // The code in this module should do nothing more complex than register
 // objects to DI and simple init (e.g. no side effects).  That implies
@@ -81,7 +81,7 @@ export function initializeStandard(ext: ExtensionState): void {
  * The set of public APIs from initialized components.
  */
 export type Components = {
-    pythonEnvs: PythonEnvironments;
+    pythonEnvs: IDiscoveryAPI;
 };
 
 /**
