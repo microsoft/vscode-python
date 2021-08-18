@@ -654,7 +654,8 @@
                             "pythonSurveyNotification",
                             "pythonTensorboardExperiment",
                             "pythonRunFailedTestsButtonDisplayed",
-                            "pythonRefreshTestsButtonDisplayed"
+                            "pythonRefreshTestsButtonDisplayed",
+                            "pythonRememberDebugConfig"
                         ]
                     },
                     "scope": "machine",
@@ -674,7 +675,8 @@
                             "pythonSurveyNotification",
                             "pythonTensorboardExperiment",
                             "pythonRunFailedTestsButtonDisplayed",
-                            "pythonRefreshTestsButtonDisplayed"
+                            "pythonRefreshTestsButtonDisplayed",
+                            "pythonRememberDebugConfig"
                         ]
                     },
                     "scope": "machine",

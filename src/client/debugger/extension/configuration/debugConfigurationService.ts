@@ -6,6 +6,8 @@
 import { inject, injectable, named } from 'inversify';
 import { cloneDeep } from 'lodash';
 import { CancellationToken, DebugConfiguration, QuickPickItem, WorkspaceFolder } from 'vscode';
+import { CacheDebugConfig } from '../../../common/experiments/groups';
+import { IExperimentService } from '../../../common/types';
 import { DebugConfigStrings } from '../../../common/utils/localize';
 import {
     IMultiStepInput,
@@ -30,6 +32,7 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         @inject(IDebugConfigurationProviderFactory)
         private readonly providerFactory: IDebugConfigurationProviderFactory,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
+        @inject(IExperimentService) private readonly experiments: IExperimentService,
     ) {}
 
     public async provideDebugConfigurations(
@@ -77,7 +80,7 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
             //                     editor context where it was triggered.
             throw Error('This configuration can only be used as defined by `purpose`.');
         } else {
-            if (this.cacheDebugConfig) {
+            if ((await this.experiments.inExperiment(CacheDebugConfig.experiment)) && this.cacheDebugConfig) {
                 debugConfiguration = cloneDeep(this.cacheDebugConfig);
             }
             if (Object.keys(debugConfiguration).length === 0) {
