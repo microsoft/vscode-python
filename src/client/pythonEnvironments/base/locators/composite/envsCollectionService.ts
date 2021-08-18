@@ -4,6 +4,9 @@
 import { Event, EventEmitter } from 'vscode';
 import '../../../../common/extensions';
 import { createDeferred } from '../../../../common/utils/async';
+import { StopWatch } from '../../../../common/utils/stopWatch';
+import { sendTelemetryEvent } from '../../../../telemetry';
+import { EventName } from '../../../../telemetry/constants';
 import { PythonEnvInfo } from '../../info';
 import { IDiscoveryAPI, IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from '../../locator';
 import { getQueryFilter } from '../../locatorUtils';
@@ -84,12 +87,16 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     }
 
     private async triggerRefresh(query: PythonLocatorQuery | undefined): Promise<void> {
+        const stopWatch = new StopWatch();
         this.refreshTriggered.fire();
         const iterator = this.locator.iterEnvs(query);
         const refreshPromiseForQuery = this.addEnvsToCacheFromIterator(iterator);
         this.refreshPromises.set(query, refreshPromiseForQuery);
         return refreshPromiseForQuery.then(async () => {
             this.refreshPromises.delete(query);
+            sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
+                interpreters: this.cache.getAllEnvs().length,
+            });
         });
     }
 

@@ -1065,10 +1065,6 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: {
         /**
-         * Name of the locator
-         */
-        locator: string;
-        /**
          * The number of the interpreters returned by locator
          */
         interpreters?: number;

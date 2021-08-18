@@ -150,7 +150,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
         }
 
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
-            locator: 'all',
             interpreters: environments?.length ?? 0,
         });
 
