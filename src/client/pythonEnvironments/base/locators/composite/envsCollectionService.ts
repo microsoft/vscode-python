@@ -30,14 +30,10 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return Promise.all(Array.from(this.refreshPromises.values())).then();
     }
 
-    public triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
-        return this.ensureCurrentRefresh(query);
-    }
-
     constructor(private readonly cache: IEnvsCollectionCache, private readonly locator: IResolvingLocator) {
         super();
         this.locator.onChanged((event) =>
-            this.ensureNewRefresh().then(() => {
+            this.triggerNewRefresh().then(() => {
                 // Once refresh of cache is complete, notify changes.
                 this.fire({ type: event.type, searchLocation: event.searchLocation });
             }),
@@ -61,15 +57,12 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         const cachedEnvs = this.cache.getAllEnvs();
         if (cachedEnvs.length === 0) {
             // Ignore query and start a refresh to get all envs as cache is empty.
-            this.ensureCurrentRefresh(undefined).ignoreErrors();
+            this.triggerRefresh(undefined).ignoreErrors();
         }
         return query ? cachedEnvs.filter(getQueryFilter(query)) : cachedEnvs;
     }
 
-    /**
-     * Ensures we have a current alive refresh for the query going on.
-     */
-    private async ensureCurrentRefresh(query?: PythonLocatorQuery): Promise<void> {
+    public triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
         let refreshPromiseForQuery = this.refreshPromises.get(query);
         if (!refreshPromiseForQuery) {
             refreshPromiseForQuery = this.startRefresh(query);
@@ -78,9 +71,9 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     }
 
     /**
-     * Ensure we initialize a fresh refresh after the current refresh (if any) is done.
+     * Ensure we trigger a fresh refresh after the current refresh (if any) is done.
      */
-    private async ensureNewRefresh(query?: PythonLocatorQuery): Promise<void> {
+    private async triggerNewRefresh(query?: PythonLocatorQuery): Promise<void> {
         const refreshPromise = this.refreshPromises.get(query);
         const nextRefreshPromise = refreshPromise
             ? refreshPromise.then(() => this.startRefresh(query))
