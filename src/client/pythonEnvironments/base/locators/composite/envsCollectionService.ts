@@ -55,10 +55,6 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     public getEnvs(query?: PythonLocatorQuery): PythonEnvInfo[] {
         const cachedEnvs = this.cache.getAllEnvs();
-        if (cachedEnvs.length === 0) {
-            // Ignore query and start a refresh to get all envs as cache is empty.
-            this.triggerRefresh(undefined).ignoreErrors();
-        }
         return query ? cachedEnvs.filter(getQueryFilter(query)) : cachedEnvs;
     }
 
