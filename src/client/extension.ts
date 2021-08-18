@@ -129,11 +129,9 @@ async function activateUnsafe(
             const interpreterManager = activatedServiceContainer.get<IInterpreterService>(IInterpreterService);
             const workspaceService = activatedServiceContainer.get<IWorkspaceService>(IWorkspaceService);
             const workspaces = workspaceService.workspaceFolders ?? [];
-            try {
-                await interpreterManager.refresh(workspaces.length > 0 ? workspaces[0].uri : undefined);
-            } catch (ex) {
-                traceError('Python Extension: interpreterManager.refresh', ex);
-            }
+            await interpreterManager
+            .refresh(workspaces.length > 0 ? workspaces[0].uri : undefined)
+            .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
         }
 
         runAfterActivation();
