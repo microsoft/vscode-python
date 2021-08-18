@@ -8,7 +8,7 @@ import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { QuickPickItem } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
-import { Commands } from '../../../../common/constants';
+import { Commands, Octicons } from '../../../../common/constants';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
 import { getIcon } from '../../../../common/utils/icons';
@@ -23,16 +23,17 @@ import { REFRESH_BUTTON_ICON } from '../../../../debugger/extension/attachQuickP
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import {
-    IFindInterpreterQuickPickItem,
     IInterpreterQuickPickItem,
     IInterpreterSelector,
     IPythonPathUpdaterServiceManager,
+    ISpecialQuickPickItem,
 } from '../../types';
 import { BaseInterpreterSelectorCommand } from './base';
 
 const untildify = require('untildify');
 
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
+type QuickPickType = IInterpreterQuickPickItem | ISpecialQuickPickItem;
 
 @injectable()
 export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
@@ -61,29 +62,28 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs,
     ): Promise<void | InputStep<InterpreterStateArgs>> {
-        const suggestions: (IInterpreterQuickPickItem | IFindInterpreterQuickPickItem)[] = [];
+        const suggestions: QuickPickType[] = [];
 
-        const manualEntrySuggestion: IFindInterpreterQuickPickItem = {
-            label: InterpreterQuickPickList.enterPath.label(),
-            detail: InterpreterQuickPickList.enterPath.detail(),
+        const manualEntrySuggestion: ISpecialQuickPickItem = {
+            label: `${Octicons.Add} ${InterpreterQuickPickList.enterPath.label()}`,
             alwaysShow: true,
         };
         suggestions.push(manualEntrySuggestion);
 
         const config = this.workspaceService.getConfiguration('python', state.workspace);
         const defaultInterpreterPathValue = config.get<string>('defaultInterpreterPath');
-        let defaultInterpreterPathSuggestion: IInterpreterQuickPickItem | IFindInterpreterQuickPickItem | undefined;
+        let defaultInterpreterPathSuggestion: ISpecialQuickPickItem | undefined;
         if (defaultInterpreterPathValue && defaultInterpreterPathValue !== 'python') {
             defaultInterpreterPathSuggestion = {
-                label: InterpreterQuickPickList.defaultInterpreterPath.label(),
-                detail: this.pathUtils.getDisplayName(
+                label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
+                description: this.pathUtils.getDisplayName(
                     defaultInterpreterPathValue,
                     state.workspace ? state.workspace.fsPath : undefined,
                 ),
                 path: defaultInterpreterPathValue,
                 alwaysShow: true,
             };
-            suggestions.push(defaultInterpreterPathSuggestion as IFindInterpreterQuickPickItem);
+            suggestions.push(defaultInterpreterPathSuggestion);
         }
 
         let interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
@@ -92,7 +92,8 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             const suggested = interpreterSuggestions.shift();
             if (suggested) {
                 const starred = cloneDeep(suggested);
-                starred.label = `${Common.recommendedWithBrackets()} ${starred.label}`;
+                starred.label = `${Octicons.Star} ${starred.label}`;
+                starred.description = Common.recommended();
                 interpreterSuggestions.unshift(starred);
             }
         }
@@ -108,10 +109,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             iconPath: getIcon(REFRESH_BUTTON_ICON),
             tooltip: InterpreterQuickPickList.refreshInterpreterList(),
         };
-        const selection = await input.showQuickPick<
-            IInterpreterQuickPickItem | IFindInterpreterQuickPickItem,
-            IQuickPickParameters<IInterpreterQuickPickItem | IFindInterpreterQuickPickItem>
-        >({
+        const selection = await input.showQuickPick<QuickPickType, IQuickPickParameters<QuickPickType>>({
             placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
             items: suggestions,
             activeItem: interpreterSuggestions[0],
@@ -127,7 +125,8 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                         const suggested = interpreterSuggestions.shift();
                         if (suggested) {
                             const starred = cloneDeep(suggested);
-                            starred.label = `${Common.recommendedWithBrackets()} ${starred.label}`;
+                            starred.label = `${Octicons.Star} ${starred.label}`;
+                            starred.description = Common.recommended();
                             interpreterSuggestions.unshift(starred);
                         }
                     }

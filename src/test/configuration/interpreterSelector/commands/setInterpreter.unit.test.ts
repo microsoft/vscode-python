@@ -32,6 +32,7 @@ import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { EventName } from '../../../../client/telemetry/constants';
 import * as Telemetry from '../../../../client/telemetry';
 import { MockWorkspaceConfiguration } from '../../../mocks/mockWorkspaceConfig';
+import { Octicons } from '../../../../client/common/constants';
 
 const untildify = require('untildify');
 
@@ -98,8 +99,8 @@ suite('Set Interpreter Command', () => {
         };
         const defaultInterpreterPath = 'defaultInterpreterPath';
         const defaultInterpreterPathSuggestion = {
-            label: InterpreterQuickPickList.defaultInterpreterPath.label(),
-            detail: defaultInterpreterPath,
+            label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
+            description: defaultInterpreterPath,
             path: defaultInterpreterPath,
             alwaysShow: true,
         };
@@ -112,8 +113,7 @@ suite('Set Interpreter Command', () => {
             interpreter: {} as PythonEnvironment,
         };
         const expectedEnterInterpreterPathSuggestion = {
-            label: InterpreterQuickPickList.enterPath.label(),
-            detail: InterpreterQuickPickList.enterPath.detail(),
+            label: `${Octicons.Add} ${InterpreterQuickPickList.enterPath.label()}`,
             alwaysShow: true,
         };
         const currentPythonPath = 'python';
@@ -183,13 +183,14 @@ suite('Set Interpreter Command', () => {
         test('Picker should be displayed with expected items', async () => {
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
-            const starred = cloneDeep(item);
-            starred.label = `${Common.recommendedWithBrackets()} ${item.label}`;
-            const suggestions = [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, starred];
+            const recommended = cloneDeep(item);
+            recommended.label = `${Octicons.Star} ${item.label}`;
+            recommended.description = Common.recommended();
+            const suggestions = [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, recommended];
             const expectedParameters = {
                 placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
                 items: suggestions,
-                activeItem: starred,
+                activeItem: recommended,
                 matchOnDetail: true,
                 matchOnDescription: true,
                 title: InterpreterQuickPickList.browsePath.openButtonLabel(),
@@ -216,11 +217,12 @@ suite('Set Interpreter Command', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await refreshButtonCallback!(quickPick as any); // Invoke callback, meaning that the refresh button is clicked.
 
-            const starredRefreshedItem = cloneDeep(refreshedItem);
-            starredRefreshedItem.label = `${Common.recommendedWithBrackets()} ${refreshedItem.label}`;
+            const recommendedRefreshedItem = cloneDeep(refreshedItem);
+            recommendedRefreshedItem.label = `${Octicons.Star} ${refreshedItem.label}`;
+            recommendedRefreshedItem.description = Common.recommended();
             assert.deepStrictEqual(
                 quickPick.items,
-                [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, starredRefreshedItem],
+                [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, recommendedRefreshedItem],
                 'Quickpick not updated correctly',
             );
         });

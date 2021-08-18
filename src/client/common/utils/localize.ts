@@ -92,7 +92,6 @@ export namespace Common {
     export const and = localize('Common.and', 'and');
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
     export const recommended = localize('Common.recommended', 'Recommended');
-    export const recommendedWithBrackets = (): string => `[${recommended()}]`;
 }
 
 export namespace CommonSurvey {
@@ -287,7 +286,6 @@ export namespace InterpreterQuickPickList {
         'Current: {0}',
     );
     export const enterPath = {
-        detail: localize('InterpreterQuickPickList.enterPath.detail', 'Enter path or find an existing interpreter'),
         label: localize('InterpreterQuickPickList.enterPath.label', 'Enter interpreter path...'),
         placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python interpreter.'),
     };
