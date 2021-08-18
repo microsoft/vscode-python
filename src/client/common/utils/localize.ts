@@ -290,7 +290,10 @@ export namespace InterpreterQuickPickList {
         placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python interpreter.'),
     };
     export const defaultInterpreterPath = {
-        label: localize('InterpreterQuickPickList.defaultInterpreterPath.label', 'Use default Python interpreter path'),
+        label: localize(
+            'InterpreterQuickPickList.defaultInterpreterPath.label',
+            'Use Python from `python.defaultInterpreterPath` setting',
+        ),
     };
     export const browsePath = {
         label: localize('InterpreterQuickPickList.browsePath.label', 'Find...'),
