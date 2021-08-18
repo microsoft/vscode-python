@@ -51,6 +51,7 @@ export class Python27SupportPrompt implements IPython27SupportPrompt {
             }
         });
 
+        // Do not show the prompt again in this session.
         this.promptShownInSession = true;
 
         sendTelemetryEvent(EventName.PYTHON_27_SUPPORT_PROMPT);
