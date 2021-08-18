@@ -9,11 +9,9 @@ let activationCompleted = false;
  * to the end of the list. This function will immediately run the item
  * if extension is already activated.
  */
-export function addItemsToRunAfterActivation(run: () => void, options?: { addToFront?: boolean }): void {
+export function addItemsToRunAfterActivation(run: () => void): void {
     if (activationCompleted) {
         run();
-    } else if (options?.addToFront) {
-        itemsToRun.unshift(run);
     } else {
         itemsToRun.push(run);
     }
