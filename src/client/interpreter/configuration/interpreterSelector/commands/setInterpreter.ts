@@ -104,6 +104,8 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             state.workspace ? state.workspace.fsPath : undefined,
         );
 
+        let activeInterpreter = interpreterSuggestions.filter((i) => i.detail === currentPythonPath);
+
         state.path = undefined;
         const refreshButton = {
             iconPath: getIcon(REFRESH_BUTTON_ICON),
@@ -112,7 +114,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         const selection = await input.showQuickPick<QuickPickType, IQuickPickParameters<QuickPickType>>({
             placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
             items: suggestions,
-            activeItem: interpreterSuggestions[0],
+            activeItem: activeInterpreter.length > 0 ? activeInterpreter[0] : interpreterSuggestions[0],
             matchOnDetail: true,
             matchOnDescription: true,
             customButtonSetup: {
@@ -134,8 +136,12 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                     const newSuggestions = defaultInterpreterPathSuggestion
                         ? [manualEntrySuggestion, defaultInterpreterPathSuggestion, ...interpreterSuggestions]
                         : [manualEntrySuggestion, ...interpreterSuggestions];
+
+                    activeInterpreter = interpreterSuggestions.filter((i) => i.detail === currentPythonPath);
+
                     quickPick.items = newSuggestions;
-                    quickPick.activeItems = [interpreterSuggestions[0]];
+                    quickPick.activeItems =
+                        activeInterpreter.length > 0 ? [activeInterpreter[0]] : [interpreterSuggestions[0]];
 
                     quickPick.busy = false;
                 },
