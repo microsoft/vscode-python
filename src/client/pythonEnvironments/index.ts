@@ -64,7 +64,7 @@ export async function activate(api: IDiscoveryAPI): Promise<ActivationResult> {
 
     addItemsToRunAfterActivation(() => {
         // Force an initial background refresh of the environments.
-        api.getEnvs().ignoreErrors();
+        api.triggerRefresh().ignoreErrors();
     });
 
     return {

@@ -22,8 +22,8 @@ class PythonEnvironments implements IDiscoveryAPI {
         this.locator = await this.getLocator();
     }
 
-    public get onRefreshTrigger() {
-        return this.locator.onRefreshTrigger;
+    public get onRefreshStart() {
+        return this.locator.onRefreshStart;
     }
 
     public get refreshPromise() {
@@ -40,6 +40,10 @@ class PythonEnvironments implements IDiscoveryAPI {
 
     public async resolveEnv(env: string) {
         return this.locator.resolveEnv(env);
+    }
+
+    public async triggerRefresh(query?: PythonLocatorQuery) {
+        return this.locator.triggerRefresh(query);
     }
 }
 

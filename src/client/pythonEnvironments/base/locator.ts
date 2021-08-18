@@ -80,10 +80,6 @@ export const NOOP_ITERATOR: IPythonEnvsIterator = iterEmpty<PythonEnvInfo>();
  */
 type BasicPythonLocatorQuery = {
     /**
-     * If set as true, ignore the cache and wait until the fresh list of environments is retrieved.
-     */
-    ignoreCache?: boolean;
-    /**
      * If provided, results should be limited to these env
      * kinds; if not provided, the kind of each environment
      * is not considered when filtering
@@ -173,7 +169,7 @@ export interface IDiscoveryAPI {
     /**
      * Fires when the known list of environments starts refreshing, i.e when discovery starts or restarts.
      */
-    readonly onRefreshTrigger: Event<void>;
+    readonly onRefreshStart: Event<void>;
     /**
      * Fires with details if the known list changes.
      */
@@ -184,9 +180,13 @@ export interface IDiscoveryAPI {
      */
     readonly refreshPromise: Promise<void>;
     /**
+     * Triggers a new refresh for query if there isn't any already running.
+     */
+    triggerRefresh(query?: PythonLocatorQuery): Promise<void>;
+    /**
      * Get current list of known environments.
      */
-    getEnvs(query?: PythonLocatorQuery): Promise<PythonEnvInfo[]>;
+    getEnvs(query?: PythonLocatorQuery): PythonEnvInfo[];
     /**
      * Find as much info about the given Python environment as possible.
      * If executable passed is invalid, then `undefined` is returned.

@@ -250,15 +250,14 @@ class ComponentAdapter implements IComponentAdapter {
 
     // Implements IInterpreterLocatorService
     public get hasInterpreters(): Promise<boolean> {
-        return this.api.getEnvs().then(async (initialEnvs) => {
-            // Check if the collection already has envs, return true in that case.
-            if (initialEnvs.length > 0) {
-                return true;
-            }
-            // We should already have initiated discovery. Wait for an env to be added
-            // to the collection until the refresh has finished.
-            await Promise.race([this.onAddedToCollection.promise, this.api.refreshPromise]);
-            const envs = await this.api.getEnvs();
+        const initialEnvs = this.api.getEnvs();
+        if (initialEnvs.length > 0) {
+            return Promise.resolve(true);
+        }
+        // We should already have initiated discovery. Wait for an env to be added
+        // to the collection until the refresh has finished.
+        return Promise.race([this.onAddedToCollection.promise, this.api.refreshPromise]).then(() => {
+            const envs = this.api.getEnvs();
             return envs.length > 0;
         });
     }
@@ -287,7 +286,7 @@ class ComponentAdapter implements IComponentAdapter {
         options?: GetInterpreterOptions,
         source?: PythonEnvSource[],
     ): Promise<PythonEnvironment[]> {
-        const query: PythonLocatorQuery = { ignoreCache: options?.ignoreCache };
+        const query: PythonLocatorQuery = {};
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
             if (wsFolder !== undefined) {
@@ -298,8 +297,11 @@ class ComponentAdapter implements IComponentAdapter {
             }
         }
 
+        if (options?.ignoreCache) {
+            await this.api.triggerRefresh(query);
+        }
         await this.api.refreshPromise;
-        let envs = await this.api.getEnvs(query);
+        let envs = this.api.getEnvs(query);
         if (source) {
             envs = envs.filter((env) => intersection(source, env.source).length > 0);
         }
@@ -319,10 +321,12 @@ class ComponentAdapter implements IComponentAdapter {
             searchLocations: {
                 roots: [workspaceFolder.uri],
             },
-            ignoreCache: options?.ignoreCache,
         };
+        if (options?.ignoreCache) {
+            await this.api.triggerRefresh(query);
+        }
         await this.api.refreshPromise;
-        const envs = await this.api.getEnvs(query);
+        const envs = this.api.getEnvs(query);
         return envs.map(convertEnvInfo);
     }
 }
