@@ -42,10 +42,12 @@ type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
 
 @injectable()
 export class InterpreterService implements Disposable, IInterpreterService {
-    public get hasInterpreters(): Promise<boolean> {
+    public async hasInterpreters(
+        filter: (e: PythonEnvironment) => Promise<boolean> = async () => true,
+    ): Promise<boolean> {
         return inDiscoveryExperiment(this.experimentService).then((inExp) => {
             if (inExp) {
-                return this.pyenvs.hasInterpreters;
+                return this.pyenvs.hasInterpreters(filter);
             }
             const locator = this.serviceContainer.get<IInterpreterLocatorService>(
                 IInterpreterLocatorService,

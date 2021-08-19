@@ -105,21 +105,19 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         ? workspaceService.workspaceFolders![0].uri
         : undefined;
     const settings = configurationService.getSettings(mainWorkspaceUri);
-    const [condaVersion, interpreter, interpreters] = await Promise.all([
+    const [condaVersion, interpreter, hasPython3] = await Promise.all([
         condaLocator
             .getCondaVersion()
             .then((ver) => (ver ? ver.raw : ''))
             .catch<string>(() => ''),
         interpreterService.getActiveInterpreter().catch<PythonEnvironment | undefined>(() => undefined),
-        interpreterService.getAllInterpreters(mainWorkspaceUri).catch<PythonEnvironment[]>(() => []),
+        interpreterService.hasInterpreters(async (item) => item.version?.major === 3),
     ]);
     const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
     const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
     const interpreterType = interpreter ? interpreter.envType : undefined;
     const usingUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
     const usingGlobalInterpreter = isUsingGlobalInterpreterInWorkspace(settings.pythonPath, serviceContainer);
-    const hasPython3 =
-        interpreters!.filter((item) => (item && item.version ? item.version.major === 3 : false)).length > 0;
 
     return {
         condaVersion,

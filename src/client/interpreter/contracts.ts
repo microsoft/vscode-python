@@ -43,7 +43,7 @@ export interface IComponentAdapter {
     // VirtualEnvPrompt
     onDidCreate(resource: Resource, callback: () => void): Disposable;
     // IInterpreterLocatorService
-    hasInterpreters: Promise<boolean>;
+    hasInterpreters(filter?: (e: PythonEnvironment) => Promise<boolean>): Promise<boolean>;
     getInterpreters(resource?: Uri, source?: PythonEnvSource[]): PythonEnvironment[];
 
     // WorkspaceVirtualEnvInterpretersAutoSelectionRule
@@ -111,7 +111,7 @@ export interface IInterpreterService {
     onDidChangeInterpreterConfiguration: Event<Uri | undefined>;
     onDidChangeInterpreter: Event<void>;
     onDidChangeInterpreterInformation: Event<PythonEnvironment>;
-    hasInterpreters: Promise<boolean>;
+    hasInterpreters(filter?: (e: PythonEnvironment) => Promise<boolean>): Promise<boolean>;
     getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
     getAllInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
     getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;

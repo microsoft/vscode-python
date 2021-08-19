@@ -68,6 +68,7 @@ import { IExtensionSingleActivationService } from '../activation/types';
 import { EnvironmentInfoServiceQueuePriority, getEnvironmentInfoService } from './base/info/environmentInfoService';
 import { createDeferred } from '../common/utils/async';
 import { PythonEnvCollectionChangedEvent } from './base/watcher';
+import { asyncFilter } from '../common/utils/arrayUtils';
 
 const convertedKinds = new Map(
     Object.entries({
@@ -138,18 +139,10 @@ class ComponentAdapter implements IComponentAdapter {
 
     private readonly refreshed = new vscode.EventEmitter<void>();
 
-    private readonly onAddedToCollection = createDeferred();
-
     constructor(
         // The adapter only wraps one thing: the component API.
         private readonly api: IDiscoveryAPI,
-    ) {
-        this.api.onChanged((e: PythonEnvCollectionChangedEvent) => {
-            if (e.update) {
-                this.onAddedToCollection.resolve();
-            }
-        });
-    }
+    ) {}
 
     public triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
         return this.api.triggerRefresh(query);
@@ -260,17 +253,27 @@ class ComponentAdapter implements IComponentAdapter {
     }
 
     // Implements IInterpreterLocatorService
-    public get hasInterpreters(): Promise<boolean> {
+    public async hasInterpreters(
+        filter: (e: PythonEnvironment) => Promise<boolean> = async () => true,
+    ): Promise<boolean> {
+        const onAddedToCollection = createDeferred();
+        // Watch for collection changed events.
+        this.api.onChanged(async (e: PythonEnvCollectionChangedEvent) => {
+            if (e.update) {
+                if (await filter(convertEnvInfo(e.update))) {
+                    onAddedToCollection.resolve();
+                }
+            }
+        });
         const initialEnvs = this.api.getEnvs();
         if (initialEnvs.length > 0) {
-            return Promise.resolve(true);
+            return true;
         }
         // We should already have initiated discovery. Wait for an env to be added
         // to the collection until the refresh has finished.
-        return Promise.race([this.onAddedToCollection.promise, this.api.refreshPromise]).then(() => {
-            const envs = this.api.getEnvs();
-            return envs.length > 0;
-        });
+        await Promise.race([onAddedToCollection.promise, this.api.refreshPromise]);
+        const envs = await asyncFilter(this.api.getEnvs(), (e) => filter(convertEnvInfo(e)));
+        return envs.length > 0;
     }
 
     public getInterpreters(resource?: vscode.Uri, source?: PythonEnvSource[]): PythonEnvironment[] {
