@@ -17,13 +17,28 @@ interface BrowserConfig {
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     // Run in a promise and return early so that VS Code can go activate Pylance.
-    runPylance(context);
+
+    const pylanceExtension = vscode.extensions.getExtension<ILSExtensionApi>(PYLANCE_EXTENSION_ID);
+    if (pylanceExtension) {
+        runPylance(context, pylanceExtension);
+        return;
+    }
+
+    const changeDisposable = vscode.extensions.onDidChange(() => {
+        const newPylanceExtension = vscode.extensions.getExtension<ILSExtensionApi>(PYLANCE_EXTENSION_ID);
+        if (newPylanceExtension) {
+            changeDisposable.dispose();
+            runPylance(context, newPylanceExtension);
+        }
+    });
 }
 
-async function runPylance(context: vscode.ExtensionContext): Promise<void> {
-    const pylanceExtension = vscode.extensions.getExtension<ILSExtensionApi>(PYLANCE_EXTENSION_ID);
-    const pylanceApi = await pylanceExtension?.activate();
-    if (!pylanceApi?.languageServerFolder) {
+async function runPylance(
+    context: vscode.ExtensionContext,
+    pylanceExtension: vscode.Extension<ILSExtensionApi>,
+): Promise<void> {
+    const pylanceApi = await pylanceExtension.activate();
+    if (!pylanceApi.languageServerFolder) {
         throw new Error('Could not find Pylance extension');
     }
 
