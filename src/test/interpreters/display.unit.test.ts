@@ -31,6 +31,7 @@ import {
     IInterpreterHelper,
     IInterpreterService,
     IInterpreterStatusbarVisibilityFilter,
+    IPython27SupportPrompt,
 } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -62,6 +63,8 @@ suite('Interpreters Display', () => {
     let pathUtils: TypeMoq.IMock<IPathUtils>;
     let output: TypeMoq.IMock<IOutputChannel>;
     let autoSelection: IInterpreterAutoSelectionService;
+    let python27SupportPrompt: TypeMoq.IMock<IPython27SupportPrompt>;
+
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -74,6 +77,7 @@ suite('Interpreters Display', () => {
         interpreterPathProxyService = TypeMoq.Mock.ofType<IInterpreterPathProxyService>();
         pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
         output = TypeMoq.Mock.ofType<IOutputChannel>();
+        python27SupportPrompt = TypeMoq.Mock.ofType<IPython27SupportPrompt>();
         autoSelection = mock(InterpreterAutoSelectionService);
 
         serviceContainer
@@ -100,11 +104,18 @@ suite('Interpreters Display', () => {
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterAutoSelectionService)))
             .returns(() => instance(autoSelection));
+        serviceContainer
+            .setup((c) => c.get(TypeMoq.It.isValue(IPython27SupportPrompt)))
+            .returns(() => python27SupportPrompt.object);
 
         applicationShell
             .setup((a) => a.createStatusBarItem(TypeMoq.It.isValue(StatusBarAlignment.Left), TypeMoq.It.isValue(100)))
             .returns(() => statusBar.object);
         pathUtils.setup((p) => p.getDisplayName(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p) => p);
+        python27SupportPrompt
+            .setup((p) => p.shouldShowPrompt(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(false));
+
         createInterpreterDisplay();
     });
     function createInterpreterDisplay(filters: IInterpreterStatusbarVisibilityFilter[] = []) {
