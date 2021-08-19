@@ -12,7 +12,6 @@ import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
-    GetInterpreterOptions,
     GLOBAL_VIRTUAL_ENV_SERVICE,
     IComponentAdapter,
     ICondaService,
@@ -152,6 +151,18 @@ class ComponentAdapter implements IComponentAdapter {
         });
     }
 
+    public triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
+        return this.api.triggerRefresh(query);
+    }
+
+    public get refreshPromise() {
+        return this.api.refreshPromise;
+    }
+
+    public get onChanged() {
+        return this.api.onChanged;
+    }
+
     // For use in VirtualEnvironmentPrompt.activate()
 
     // Call callback if an environment gets created within the resource provided.
@@ -262,30 +273,10 @@ class ComponentAdapter implements IComponentAdapter {
         });
     }
 
-    public async getInterpreters(
-        resource?: vscode.Uri,
-        options?: GetInterpreterOptions,
-        source?: PythonEnvSource[],
-    ): Promise<PythonEnvironment[]> {
+    public getInterpreters(resource?: vscode.Uri, source?: PythonEnvSource[]): PythonEnvironment[] {
         // Notify locators are locating.
         this.refreshing.fire();
 
-        const legacyEnvs = await this.getInterpretersViaAPI(resource, options, source).catch((ex) => {
-            traceError('Fetching environments via the new API failed', ex);
-            return <PythonEnvironment[]>[];
-        });
-
-        // Notify all locators have completed locating. Note it's crucial to notify this even when getInterpretersViaAPI
-        // fails, to ensure "Python extension loading..." text disappears.
-        this.refreshed.fire();
-        return legacyEnvs;
-    }
-
-    private async getInterpretersViaAPI(
-        resource?: vscode.Uri,
-        options?: GetInterpreterOptions,
-        source?: PythonEnvSource[],
-    ): Promise<PythonEnvironment[]> {
         const query: PythonLocatorQuery = {};
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
@@ -297,16 +288,17 @@ class ComponentAdapter implements IComponentAdapter {
             }
         }
 
-        if (options?.ignoreCache) {
-            await this.api.triggerRefresh(query);
-        }
-        await this.api.refreshPromise;
         let envs = this.api.getEnvs(query);
         if (source) {
             envs = envs.filter((env) => intersection(source, env.source).length > 0);
         }
 
-        return envs.map(convertEnvInfo);
+        const legacyEnvs = envs.map(convertEnvInfo);
+
+        // Notify all locators have completed locating. Note it's crucial to notify this even when getInterpretersViaAPI
+        // fails, to ensure "Python extension loading..." text disappears.
+        this.refreshed.fire();
+        return legacyEnvs;
     }
 
     public async getWorkspaceVirtualEnvInterpreters(

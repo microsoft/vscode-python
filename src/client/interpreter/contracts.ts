@@ -3,6 +3,8 @@ import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument,
 import { IExtensionSingleActivationService } from '../activation/types';
 import { Resource } from '../common/types';
 import { PythonEnvSource } from '../pythonEnvironments/base/info';
+import { PythonLocatorQuery } from '../pythonEnvironments/base/locator';
+import { PythonEnvCollectionChangedEvent } from '../pythonEnvironments/base/watcher';
 import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/common/environmentManagers/conda';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 
@@ -32,6 +34,9 @@ export interface IVirtualEnvironmentsSearchPathProvider {
 
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
+    triggerRefresh(query?: PythonLocatorQuery): Promise<void>;
+    readonly refreshPromise: Promise<void>;
+    readonly onChanged: Event<PythonEnvCollectionChangedEvent>;
     // InterpreterLocatorProgressStatubarHandler
     readonly onRefreshing: Event<void>;
     readonly onRefreshed: Event<void>;
@@ -39,11 +44,7 @@ export interface IComponentAdapter {
     onDidCreate(resource: Resource, callback: () => void): Disposable;
     // IInterpreterLocatorService
     hasInterpreters: Promise<boolean>;
-    getInterpreters(
-        resource?: Uri,
-        options?: GetInterpreterOptions,
-        source?: PythonEnvSource[],
-    ): Promise<PythonEnvironment[]>;
+    getInterpreters(resource?: Uri, source?: PythonEnvSource[]): PythonEnvironment[];
 
     // WorkspaceVirtualEnvInterpretersAutoSelectionRule
     getWorkspaceVirtualEnvInterpreters(
@@ -104,11 +105,15 @@ export interface ICondaLocatorService {
 
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
+    triggerRefresh(query?: PythonLocatorQuery): Promise<void>;
+    readonly refreshPromise: Promise<void>;
+    readonly onDidChangeInterpreters: Event<PythonEnvCollectionChangedEvent>;
     onDidChangeInterpreterConfiguration: Event<Uri | undefined>;
     onDidChangeInterpreter: Event<void>;
     onDidChangeInterpreterInformation: Event<PythonEnvironment>;
     hasInterpreters: Promise<boolean>;
     getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
+    getAllInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
     getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
     getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<undefined | PythonEnvironment>;
     refresh(resource: Resource): Promise<void>;

@@ -78,7 +78,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
 
         // Get latest interpreter list in the background.
         addItemsToRunAfterActivation(() => {
-            this.interpreterService.getInterpreters(resource).ignoreErrors();
+            this.interpreterService.getAllInterpreters(resource).ignoreErrors();
         });
 
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);

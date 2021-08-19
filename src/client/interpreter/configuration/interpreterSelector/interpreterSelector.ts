@@ -25,11 +25,10 @@ export class InterpreterSelector implements IInterpreterSelector {
     }
 
     public async getSuggestions(resource: Resource, ignoreCache?: boolean): Promise<IInterpreterQuickPickItem[]> {
-        const interpreters = await this.interpreterManager.getInterpreters(resource, {
+        const interpreters = await this.interpreterManager.getAllInterpreters(resource, {
             onSuggestion: true,
             ignoreCache,
         });
-
         interpreters.sort(this.envTypeComparer.compare.bind(this.envTypeComparer));
 
         return Promise.all(interpreters.map((item) => this.suggestionToQuickPickItem(item, resource)));

@@ -104,7 +104,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
             return [];
         }
 
-        const interpreters = await this.interpreterService.getInterpreters(resource);
+        const interpreters = await this.interpreterService.getAllInterpreters(resource);
         for (const info of interpreters) {
             if (!(await this.helper.isMacDefaultPythonPath(info.path))) {
                 return [

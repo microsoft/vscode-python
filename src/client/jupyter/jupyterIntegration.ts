@@ -170,7 +170,7 @@ export class JupyterExtensionIntegration {
             getActiveInterpreter: async (resource?: Uri) => this.interpreterService.getActiveInterpreter(resource),
             getInterpreterDetails: async (pythonPath: string) =>
                 this.interpreterService.getInterpreterDetails(pythonPath),
-            getInterpreters: async (resource: Uri | undefined) => this.interpreterService.getInterpreters(resource),
+            getInterpreters: async (resource: Uri | undefined) => this.interpreterService.getAllInterpreters(resource),
             getActivatedEnvironmentVariables: async (
                 resource: Resource,
                 interpreter?: PythonEnvironment,

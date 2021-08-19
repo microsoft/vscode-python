@@ -196,7 +196,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
     private async autoselectInterpreterWithLocators(resource: Resource): Promise<void> {
         // Do not perform a full interpreter search if we already have cached interpreters for this workspace.
         const queriedState = this.getAutoSelectionInterpretersQueryState(resource);
-        const interpreters = await this.interpreterService.getInterpreters(resource, {
+        const interpreters = await this.interpreterService.getAllInterpreters(resource, {
             ignoreCache: queriedState.value !== true,
         });
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);

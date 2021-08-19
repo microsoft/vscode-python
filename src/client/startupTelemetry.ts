@@ -111,7 +111,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
             .then((ver) => (ver ? ver.raw : ''))
             .catch<string>(() => ''),
         interpreterService.getActiveInterpreter().catch<PythonEnvironment | undefined>(() => undefined),
-        interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonEnvironment[]>(() => []),
+        interpreterService.getAllInterpreters(mainWorkspaceUri).catch<PythonEnvironment[]>(() => []),
     ]);
     const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
     const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
