@@ -654,7 +654,8 @@
                             "pythonSurveyNotification",
                             "pythonTensorboardExperiment",
                             "pythonRunFailedTestsButtonDisplayed",
-                            "pythonRefreshTestsButtonDisplayed"
+                            "pythonRefreshTestsButtonDisplayed",
+                            "pythonRememberDebugConfig"
                         ]
                     },
                     "scope": "machine",
@@ -674,7 +675,8 @@
                             "pythonSurveyNotification",
                             "pythonTensorboardExperiment",
                             "pythonRunFailedTestsButtonDisplayed",
-                            "pythonRefreshTestsButtonDisplayed"
+                            "pythonRefreshTestsButtonDisplayed",
+                            "pythonRememberDebugConfig"
                         ]
                     },
                     "scope": "machine",
@@ -1978,6 +1980,7 @@
         "webpack": "webpack"
     },
     "dependencies": {
+        "@vscode/jupyter-lsp-middleware": "^0.2.1",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.4",
         "chokidar": "^3.4.3",
@@ -2017,9 +2020,8 @@
         "untildify": "^3.0.2",
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
-        "vscode-extension-telemetry": "0.1.4",
+        "vscode-extension-telemetry": "0.2.8",
         "vscode-jsonrpc": "6.0.0",
-        "vscode-jupyter-lsp-middleware": "^0.1.3",
         "vscode-languageclient": "7.0.0",
         "vscode-languageserver": "7.0.0",
         "vscode-languageserver-protocol": "3.16.0",

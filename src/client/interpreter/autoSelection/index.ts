@@ -12,7 +12,7 @@ import { IPersistentState, IPersistentStateFactory, Resource } from '../../commo
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { compareSemVerLikeVersions } from '../../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { EnvTypeHeuristic, getEnvTypeHeuristic } from '../configuration/environmentTypeComparer';
 import { IInterpreterComparer } from '../configuration/types';
@@ -50,14 +50,14 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
     }
 
     /**
-     * If there's a cached auto-selected interpreter -> return it.
-     * If not, check if we are in the env sorting experiment, and use the appropriate auto-selection logic.
+     * Auto-select a Python environment from the list returned by environment discovery.
+     * If there's a cached auto-selected environment -> return it.
      */
-    @captureTelemetry(EventName.PYTHON_INTERPRETER_AUTO_SELECTION, {}, true)
     public async autoSelectInterpreter(resource: Resource): Promise<void> {
         const key = this.getWorkspacePathKey(resource);
+        const useCachedInterpreter = this.autoSelectedWorkspacePromises.has(key);
 
-        if (!this.autoSelectedWorkspacePromises.has(key)) {
+        if (!useCachedInterpreter) {
             const deferred = createDeferred<void>();
             this.autoSelectedWorkspacePromises.set(key, deferred);
 
@@ -67,6 +67,10 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
 
             deferred.resolve();
         }
+
+        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_AUTO_SELECTION, undefined, {
+            useCachedInterpreter,
+        });
 
         return this.autoSelectedWorkspacePromises.get(key)!.promise;
     }
@@ -103,7 +107,6 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
     protected async clearWorkspaceStoreIfInvalid(resource: Resource): Promise<void> {
         const stateStore = this.getWorkspaceState(resource);
         if (stateStore && stateStore.value && !(await this.fs.fileExists(stateStore.value.path))) {
-            sendTelemetryEvent(EventName.PYTHON_INTERPRETER_AUTO_SELECTION, {}, { interpreterMissing: true });
             await stateStore.updateValue(undefined);
         }
     }

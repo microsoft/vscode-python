@@ -7,6 +7,8 @@ import { expect } from 'chai';
 import { instance, mock } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
+import { CacheDebugConfig } from '../../../../client/common/experiments/groups';
+import { IExperimentService } from '../../../../client/common/types';
 import { IMultiStepInput, IMultiStepInputFactory } from '../../../../client/common/utils/multiStepInput';
 import { PythonDebugConfigurationService } from '../../../../client/debugger/extension/configuration/debugConfigurationService';
 import { DebugConfigurationProviderFactory } from '../../../../client/debugger/extension/configuration/providers/providerFactory';
@@ -20,6 +22,7 @@ suite('Debugging - Configuration Service', () => {
     let configService: TestPythonDebugConfigurationService;
     let multiStepFactory: typemoq.IMock<IMultiStepInputFactory>;
     let providerFactory: DebugConfigurationProviderFactory;
+    let experiments: typemoq.IMock<IExperimentService>;
 
     class TestPythonDebugConfigurationService extends PythonDebugConfigurationService {
         public async pickDebugConfiguration(
@@ -34,11 +37,17 @@ suite('Debugging - Configuration Service', () => {
         launchResolver = typemoq.Mock.ofType<IDebugConfigurationResolver<LaunchRequestArguments>>();
         multiStepFactory = typemoq.Mock.ofType<IMultiStepInputFactory>();
         providerFactory = mock(DebugConfigurationProviderFactory);
+        experiments = typemoq.Mock.ofType<IExperimentService>();
+        experiments
+            .setup((e) => e.inExperiment(typemoq.It.isValue(CacheDebugConfig.experiment)))
+            .returns(() => Promise.resolve(true));
+
         configService = new TestPythonDebugConfigurationService(
             attachResolver.object,
             launchResolver.object,
             instance(providerFactory),
             multiStepFactory.object,
+            experiments.object,
         );
     });
     test('Should use attach resolver when passing attach config', async () => {

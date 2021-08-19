@@ -53,7 +53,15 @@ const config = {
             },
         ],
     },
-    externals: ['vscode', 'commonjs', ...existingModulesInOutDir],
+    externals: [
+        'vscode',
+        'commonjs',
+        ...existingModulesInOutDir,
+        // These dependencies are ignored because we don't use them, and App Insights has try-catch protecting their loading if they don't exist
+        // See: https://github.com/microsoft/vscode-extension-telemetry/issues/41#issuecomment-598852991
+        'applicationinsights-native-metrics',
+        '@opentelemetry/tracing',
+    ],
     plugins: [...common.getDefaultPlugins('extension')],
     resolve: {
         alias: {

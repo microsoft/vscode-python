@@ -193,7 +193,11 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js',
             ];
         case 'browser':
-            return [];
+            return [
+                'WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).',
+                'WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.',
+                'WARNING in webpack performance recommendations:',
+            ];
         default:
             throw new Error('Unknown WebPack Configuration');
     }

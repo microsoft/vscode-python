@@ -10,10 +10,9 @@ import { IExtensionActivationManager, ILanguageServerExtension } from './activat
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
-import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './common/application/types';
+import { IApplicationEnvironment, ICommandManager } from './common/application/types';
 import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
-import { traceError } from './common/logger';
 import { IFileSystem } from './common/platform/types';
 import {
     IConfigurationService,
@@ -73,7 +72,7 @@ export async function activateComponents(
     // TODO: As of now activateLegacy() registers various classes which might
     // be required while activating components. Once registration from
     // activateLegacy() are moved before we activate other components, we can
-    // activate them parallelly with the other components.
+    // activate them in parallel with the other components.
     // https://github.com/microsoft/vscode-python/issues/15380
     // These will go away eventually once everything is refactored into components.
     const legacyActivationResult = await activateLegacy(ext);
@@ -120,7 +119,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
 
-    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
     await setDefaultLanguageServer(experimentService, extensions, serviceManager);
 
@@ -162,9 +160,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     // Settings are dependent on Experiment service, so we need to initialize it after experiments are activated.
     serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().initialize();
-    await interpreterManager
-        .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
-        .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
 
     const activationPromise = manager.activate();
 

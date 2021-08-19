@@ -5,7 +5,6 @@
 
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { Octicons } from '../constants';
 import { FileSystem } from '../platform/fileSystem';
 
 /* eslint-disable @typescript-eslint/no-namespace, no-shadow */
@@ -92,6 +91,7 @@ export namespace Common {
     export const learnMore = localize('Common.learnMore', 'Learn more');
     export const and = localize('Common.and', 'and');
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
+    export const recommended = localize('Common.recommended', 'Recommended');
 }
 
 export namespace CommonSurvey {
@@ -286,18 +286,14 @@ export namespace InterpreterQuickPickList {
         'Current: {0}',
     );
     export const enterPath = {
-        detail: localize('InterpreterQuickPickList.enterPath.detail', 'Enter path or find an existing interpreter'),
         label: localize('InterpreterQuickPickList.enterPath.label', 'Enter interpreter path...'),
         placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python interpreter.'),
     };
     export const defaultInterpreterPath = {
-        label: (): string => {
-            const labelText = localize(
-                'InterpreterQuickPickList.defaultInterpreterPath.label',
-                'Use default Python interpreter path',
-            );
-            return `${Octicons.Star} ${labelText()}`;
-        },
+        label: localize(
+            'InterpreterQuickPickList.defaultInterpreterPath.label',
+            'Use Python from `python.defaultInterpreterPath` setting',
+        ),
     };
     export const browsePath = {
         label: localize('InterpreterQuickPickList.browsePath.label', 'Find...'),

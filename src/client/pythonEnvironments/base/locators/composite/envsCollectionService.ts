@@ -4,6 +4,9 @@
 import { Event, EventEmitter } from 'vscode';
 import '../../../../common/extensions';
 import { createDeferred } from '../../../../common/utils/async';
+import { StopWatch } from '../../../../common/utils/stopWatch';
+import { sendTelemetryEvent } from '../../../../telemetry';
+import { EventName } from '../../../../telemetry/constants';
 import { PythonEnvInfo } from '../../info';
 import { IDiscoveryAPI, IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from '../../locator';
 import { getQueryFilter } from '../../locatorUtils';
@@ -17,10 +20,10 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     /** Keeps track of ongoing refreshes for various queries. */
     private refreshPromises = new Map<PythonLocatorQuery | undefined, Promise<void>>();
 
-    private readonly refreshTriggered = new EventEmitter<void>();
+    private readonly refreshStarted = new EventEmitter<void>();
 
-    public get onRefreshTrigger(): Event<void> {
-        return this.refreshTriggered.event;
+    public get onRefreshStart(): Event<void> {
+        return this.refreshStarted.event;
     }
 
     public get refreshPromise(): Promise<void> {
@@ -30,7 +33,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     constructor(private readonly cache: IEnvsCollectionCache, private readonly locator: IResolvingLocator) {
         super();
         this.locator.onChanged((event) =>
-            this.ensureNewRefresh().then(() => {
+            this.triggerNewRefresh().then(() => {
                 // Once refresh of cache is complete, notify changes.
                 this.fire({ type: event.type, searchLocation: event.searchLocation });
             }),
@@ -50,46 +53,41 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return this.locator.resolveEnv(executablePath);
     }
 
-    public async getEnvs(query?: PythonLocatorQuery): Promise<PythonEnvInfo[]> {
+    public getEnvs(query?: PythonLocatorQuery): PythonEnvInfo[] {
         const cachedEnvs = this.cache.getAllEnvs();
-        if (query?.ignoreCache) {
-            await this.ensureCurrentRefresh(query);
-        } else if (cachedEnvs.length === 0) {
-            // Ignore query and trigger a refresh to get all envs as cache is empty.
-            this.ensureCurrentRefresh(undefined).ignoreErrors();
-        }
         return query ? cachedEnvs.filter(getQueryFilter(query)) : cachedEnvs;
     }
 
-    /**
-     * Ensures we have a current alive refresh for the query going on.
-     */
-    private async ensureCurrentRefresh(query?: PythonLocatorQuery): Promise<void> {
+    public triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
         let refreshPromiseForQuery = this.refreshPromises.get(query);
         if (!refreshPromiseForQuery) {
-            refreshPromiseForQuery = this.triggerRefresh(query);
+            refreshPromiseForQuery = this.startRefresh(query);
         }
         return refreshPromiseForQuery;
     }
 
     /**
-     * Ensure we initialize a fresh refresh after the current refresh (if any) is done.
+     * Ensure we trigger a fresh refresh after the current refresh (if any) is done.
      */
-    private async ensureNewRefresh(query?: PythonLocatorQuery): Promise<void> {
+    private async triggerNewRefresh(query?: PythonLocatorQuery): Promise<void> {
         const refreshPromise = this.refreshPromises.get(query);
         const nextRefreshPromise = refreshPromise
-            ? refreshPromise.then(() => this.triggerRefresh(query))
-            : this.triggerRefresh(query);
+            ? refreshPromise.then(() => this.startRefresh(query))
+            : this.startRefresh(query);
         return nextRefreshPromise;
     }
 
-    private async triggerRefresh(query: PythonLocatorQuery | undefined): Promise<void> {
-        this.refreshTriggered.fire();
+    private async startRefresh(query: PythonLocatorQuery | undefined): Promise<void> {
+        const stopWatch = new StopWatch();
+        this.refreshStarted.fire();
         const iterator = this.locator.iterEnvs(query);
         const refreshPromiseForQuery = this.addEnvsToCacheFromIterator(iterator);
         this.refreshPromises.set(query, refreshPromiseForQuery);
         return refreshPromiseForQuery.then(async () => {
             this.refreshPromises.delete(query);
+            sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
+                interpreters: this.cache.getAllEnvs().length,
+            });
         });
     }
 

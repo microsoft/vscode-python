@@ -48,3 +48,8 @@ export enum ShowRunFailedTests {
 export enum ShowRefreshTests {
     experiment = 'pythonRefreshTestsButtonDisplayed',
 }
+
+// Experiment to cache debug configuration
+export enum CacheDebugConfig {
+    experiment = 'pythonRememberDebugConfig',
+}

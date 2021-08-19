@@ -65,6 +65,7 @@ export namespace Commands {
 
 // Look at https://microsoft.github.io/vscode-codicons/dist/codicon.html for other Octicon icon ids
 export namespace Octicons {
+    export const Add = '$(add)';
     export const Test_Pass = '$(check)';
     export const Test_Fail = '$(alert)';
     export const Test_Error = '$(x)';
@@ -72,7 +73,8 @@ export namespace Octicons {
     export const Downloading = '$(cloud-download)';
     export const Installing = '$(desktop-download)';
     export const Search_Stop = '$(search-stop)';
-    export const Star = '$(star)';
+    export const Star = '$(star-full)';
+    export const Gear = '$(gear)';
 }
 
 export const DEFAULT_INTERPRETER_SETTING = 'python';
@@ -87,7 +89,7 @@ export function isTestExecution(): boolean {
 
 /**
  * Whether we're running unit tests (*.unit.test.ts).
- * These tests have a speacial meaning, they run fast.
+ * These tests have a special meaning, they run fast.
  * @export
  * @returns {boolean}
  */

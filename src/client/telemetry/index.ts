@@ -155,7 +155,9 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 
         // To avoid hardcoding the names and forgetting to update later.
         const errorPropNames = Object.getOwnPropertyNames(errorProps);
-        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, errorPropNames);
+        // TODO: remove this "as any" once the upstream lib is fixed.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (reporter.sendTelemetryErrorEvent as any)(eventNameSent, customProperties, measures, errorPropNames);
     } else {
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
@@ -1049,34 +1051,21 @@ export interface IEventNamePropertyMapping {
          */
         interpreterType: EnvironmentType;
     };
+    /**
+     * Telemetry event sent when auto-selection is called.
+     */
     [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: {
         /**
-         * If cached interpreter no longer exists or is invalid
+         * If auto-selection has been run earlier in this session, and this call returned a cached value.
          *
          * @type {boolean}
          */
-        interpreterMissing?: boolean;
-        /**
-         * Carries `true` if next rule is identified for autoselecting interpreter
-         *
-         * @type {boolean}
-         */
-        identified?: boolean;
-        /**
-         * Carries `true` if cached interpreter is updated to use the current interpreter, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        updated?: boolean;
+        useCachedInterpreter?: boolean;
     };
     /**
      * Sends information regarding discovered python environments (virtualenv, conda, pipenv etc.)
      */
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: {
-        /**
-         * Name of the locator
-         */
-        locator: string;
         /**
          * The number of the interpreters returned by locator
          */
@@ -1277,6 +1266,10 @@ export interface IEventNamePropertyMapping {
      * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: unknown;
+    /**
+     * Telemetry event sent when the experiments service is initialized for the first time.
+     */
+    [EventName.PYTHON_EXPERIMENTS_INIT_PERFORMANCE]: unknown;
     /**
      * Telemetry event sent once on session start with details on which experiments are opted into and opted out from.
      */

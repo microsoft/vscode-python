@@ -4,14 +4,15 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { QuickPickItem } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
-import { Commands } from '../../../../common/constants';
+import { Commands, Octicons } from '../../../../common/constants';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
 import { getIcon } from '../../../../common/utils/icons';
-import { InterpreterQuickPickList } from '../../../../common/utils/localize';
+import { Common, InterpreterQuickPickList } from '../../../../common/utils/localize';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
@@ -22,16 +23,17 @@ import { REFRESH_BUTTON_ICON } from '../../../../debugger/extension/attachQuickP
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import {
-    IFindInterpreterQuickPickItem,
     IInterpreterQuickPickItem,
     IInterpreterSelector,
     IPythonPathUpdaterServiceManager,
+    ISpecialQuickPickItem,
 } from '../../types';
 import { BaseInterpreterSelectorCommand } from './base';
 
 const untildify = require('untildify');
 
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
+type QuickPickType = IInterpreterQuickPickItem | ISpecialQuickPickItem;
 
 @injectable()
 export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
@@ -60,59 +62,87 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs,
     ): Promise<void | InputStep<InterpreterStateArgs>> {
+        const suggestions: QuickPickType[] = [];
+
+        const manualEntrySuggestion: ISpecialQuickPickItem = {
+            label: `${Octicons.Add} ${InterpreterQuickPickList.enterPath.label()}`,
+            alwaysShow: true,
+        };
+        suggestions.push(manualEntrySuggestion);
+
+        const config = this.workspaceService.getConfiguration('python', state.workspace);
+        const defaultInterpreterPathValue = config.get<string>('defaultInterpreterPath');
+        let defaultInterpreterPathSuggestion: ISpecialQuickPickItem | undefined;
+        if (defaultInterpreterPathValue && defaultInterpreterPathValue !== 'python') {
+            defaultInterpreterPathSuggestion = {
+                label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
+                description: this.pathUtils.getDisplayName(
+                    defaultInterpreterPathValue,
+                    state.workspace ? state.workspace.fsPath : undefined,
+                ),
+                path: defaultInterpreterPathValue,
+                alwaysShow: true,
+            };
+            suggestions.push(defaultInterpreterPathSuggestion);
+        }
+
         let interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
 
-        const manualEntrySuggestion: IFindInterpreterQuickPickItem = {
-            label: InterpreterQuickPickList.enterPath.label(),
-            detail: InterpreterQuickPickList.enterPath.detail(),
-            alwaysShow: true,
-        };
-        const { defaultInterpreterPath } = this.configurationService.getSettings(state.workspace);
-        const defaultInterpreterPathSuggestion = {
-            label: InterpreterQuickPickList.defaultInterpreterPath.label(),
-            detail: this.pathUtils.getDisplayName(
-                defaultInterpreterPath,
-                state.workspace ? state.workspace.fsPath : undefined,
-            ),
-            path: defaultInterpreterPath,
-            alwaysShow: true,
-        };
-
-        const suggestions: (IInterpreterQuickPickItem | IFindInterpreterQuickPickItem)[] = [
-            manualEntrySuggestion,
-            ...interpreterSuggestions,
-            defaultInterpreterPathSuggestion,
-        ];
+        if (interpreterSuggestions.length > 0) {
+            const suggested = interpreterSuggestions.shift();
+            if (suggested) {
+                const starred = cloneDeep(suggested);
+                starred.label = `${Octicons.Star} ${starred.label}`;
+                starred.description = Common.recommended();
+                interpreterSuggestions.unshift(starred);
+            }
+        }
+        suggestions.push(...interpreterSuggestions);
 
         const currentPythonPath = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
             state.workspace ? state.workspace.fsPath : undefined,
         );
 
+        let activeInterpreter = interpreterSuggestions.filter((i) => i.detail === currentPythonPath);
+
         state.path = undefined;
         const refreshButton = {
             iconPath: getIcon(REFRESH_BUTTON_ICON),
             tooltip: InterpreterQuickPickList.refreshInterpreterList(),
         };
-        const selection = await input.showQuickPick<
-            IInterpreterQuickPickItem | IFindInterpreterQuickPickItem,
-            IQuickPickParameters<IInterpreterQuickPickItem | IFindInterpreterQuickPickItem>
-        >({
+        const selection = await input.showQuickPick<QuickPickType, IQuickPickParameters<QuickPickType>>({
             placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
             items: suggestions,
-            activeItem: suggestions[1],
+            activeItem: activeInterpreter.length > 0 ? activeInterpreter[0] : interpreterSuggestions[0],
             matchOnDetail: true,
             matchOnDescription: true,
             customButtonSetup: {
                 button: refreshButton,
                 callback: async (quickPick) => {
                     quickPick.busy = true;
+
                     interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace, true);
-                    quickPick.items = [
-                        manualEntrySuggestion,
-                        ...interpreterSuggestions,
-                        defaultInterpreterPathSuggestion,
-                    ];
+                    if (interpreterSuggestions.length > 0) {
+                        const suggested = interpreterSuggestions.shift();
+                        if (suggested) {
+                            const starred = cloneDeep(suggested);
+                            starred.label = `${Octicons.Star} ${starred.label}`;
+                            starred.description = Common.recommended();
+                            interpreterSuggestions.unshift(starred);
+                        }
+                    }
+
+                    const newSuggestions = defaultInterpreterPathSuggestion
+                        ? [manualEntrySuggestion, defaultInterpreterPathSuggestion, ...interpreterSuggestions]
+                        : [manualEntrySuggestion, ...interpreterSuggestions];
+
+                    activeInterpreter = interpreterSuggestions.filter((i) => i.detail === currentPythonPath);
+
+                    quickPick.items = newSuggestions;
+                    quickPick.activeItems =
+                        activeInterpreter.length > 0 ? [activeInterpreter[0]] : [interpreterSuggestions[0]];
+
                     quickPick.busy = false;
                 },
             },
