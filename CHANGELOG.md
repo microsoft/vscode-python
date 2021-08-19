@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.8.2 (18 August 2021)
+## 2021.8.2 (19 August 2021)
 
 ### Enhancements
 
