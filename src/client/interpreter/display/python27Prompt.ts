@@ -27,7 +27,10 @@ export class Python27SupportPrompt implements IPython27SupportPrompt {
 
     public async shouldShowPrompt(resource?: Uri): Promise<boolean> {
         // Check if "Do not show again" has been selected before.
-        const doNotShowAgain = this.persistentState.createGlobalPersistentState(doNotShowPromptStateKey, false);
+        const doNotShowAgain = this.persistentState.createGlobalPersistentState<boolean>(
+            doNotShowPromptStateKey,
+            false,
+        );
 
         if (doNotShowAgain.value || this.promptShownInSession) {
             return Promise.resolve(false);
@@ -43,13 +46,13 @@ export class Python27SupportPrompt implements IPython27SupportPrompt {
         return Promise.resolve(false);
     }
 
-    public showPrompt(): void {
-        this.appShell.showInformationMessage(Python27Support.bannerMessage(), Common.gotIt()).then((selection) => {
-            // Never show the prompt again.
-            if (selection === Common.gotIt()) {
-                this.persistentState.createGlobalPersistentState(doNotShowPromptStateKey, false).updateValue(true);
-            }
-        });
+    public async showPrompt(): Promise<void> {
+        const selection = await this.appShell.showInformationMessage(Python27Support.bannerMessage(), Common.gotIt());
+
+        // Never show the prompt again.
+        if (selection === Common.gotIt()) {
+            this.persistentState.createGlobalPersistentState<boolean>(doNotShowPromptStateKey, false).updateValue(true);
+        }
 
         // Do not show the prompt again in this session.
         this.promptShownInSession = true;
