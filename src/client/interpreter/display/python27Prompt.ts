@@ -4,13 +4,13 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { IPersistentStateFactory } from '../../common/types';
 import { Common, Python27Support } from '../../common/utils/localize';
-import { IInterpreterService, IPython27SupportPrompt } from '../contracts';
+import { IPython27SupportPrompt } from '../contracts';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 
 const doNotShowPromptStateKey = 'MESSAGE_KEY_FOR_27_SUPPORT_PROMPT';
 
@@ -21,11 +21,10 @@ export class Python27SupportPrompt implements IPython27SupportPrompt {
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
     ) {}
 
-    public async shouldShowPrompt(resource?: Uri): Promise<boolean> {
+    public async shouldShowPrompt(interpreter: PythonEnvironment): Promise<boolean> {
         // Check if "Do not show again" has been selected before.
         const doNotShowAgain = this.persistentState.createGlobalPersistentState<boolean>(
             doNotShowPromptStateKey,
@@ -36,10 +35,8 @@ export class Python27SupportPrompt implements IPython27SupportPrompt {
             return Promise.resolve(false);
         }
 
-        // Check if current env version is Python 2.7
-        const currentInterpreter = await this.interpreterService.getActiveInterpreter(resource);
-
-        if (currentInterpreter && currentInterpreter.version?.major === 2 && currentInterpreter.version?.minor === 7) {
+        // Check if current environment version is Python 2.7
+        if (interpreter.version?.major === 2 && interpreter.version?.minor === 7) {
             return Promise.resolve(true);
         }
 
