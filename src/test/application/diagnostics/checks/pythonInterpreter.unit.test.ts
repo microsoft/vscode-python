@@ -148,32 +148,6 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 'not the same',
             );
         });
-        test('Should return empty diagnostics if there are interpreters after double-checking', async () => {
-            const interpreter: PythonEnvironment = { envType: EnvironmentType.Unknown } as any;
-
-            settings
-                .setup((s) => s.disableInstallationChecks)
-                .returns(() => false)
-                .verifiable(typemoq.Times.once());
-            interpreterService
-                .setup((i) => i.hasInterpreters())
-                .returns(() => Promise.resolve(false))
-                .verifiable(typemoq.Times.once());
-            interpreterService
-                .setup((i) => i.getInterpreters(undefined))
-                .returns(() => Promise.resolve([interpreter]))
-                .verifiable(typemoq.Times.once());
-            interpreterService
-                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
-                .returns(() => {
-                    return Promise.resolve(interpreter);
-                })
-                .verifiable(typemoq.Times.once());
-
-            const diagnostics = await diagnosticService.diagnose(undefined);
-
-            expect(diagnostics).to.be.deep.equal([], 'not the same');
-        });
         test('Should return invalid diagnostics if there are interpreters but no current interpreter', async () => {
             settings
                 .setup((s) => s.disableInstallationChecks)

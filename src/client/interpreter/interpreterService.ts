@@ -178,9 +178,9 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     public async getAllInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
         if (options?.ignoreCache) {
-            this.pyenvs.triggerRefresh();
+            this.triggerRefresh().ignoreErrors();
         }
-        await this.pyenvs.refreshPromise;
+        await this.refreshPromise;
         return this.getInterpreters(resource, options);
     }
 
