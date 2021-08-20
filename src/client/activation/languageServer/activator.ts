@@ -5,11 +5,17 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
 import { IWorkspaceService } from '../../common/application/types';
-import { EXTENSION_ROOT_DIR } from '../../common/constants';
+import { EXTENSION_ROOT_DIR, isTestExecution } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { LanguageServerActivatorBase } from '../common/activatorBase';
-import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../types';
+import {
+    ILanguageServerDownloader,
+    ILanguageServerFolderService,
+    ILanguageServerManager,
+    IMPLSDeprecationPrompt,
+} from '../types';
 
 /**
  * Starts the language server managers per workspaces (currently one for first workspace).
@@ -29,8 +35,16 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
         @inject(ILanguageServerFolderService)
         private readonly languageServerFolderService: ILanguageServerFolderService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
+        @inject(IMPLSDeprecationPrompt) private readonly mplsDeprecationPrompt: IMPLSDeprecationPrompt,
     ) {
         super(manager, workspace, fs, configurationService);
+    }
+
+    public async start(resource: Resource, interpreter?: PythonEnvironment): Promise<void> {
+        if (!isTestExecution()) {
+            this.mplsDeprecationPrompt.showPrompt().ignoreErrors();
+        }
+        return super.start(resource, interpreter);
     }
 
     public async ensureLanguageServerIsAvailable(resource: Resource): Promise<void> {

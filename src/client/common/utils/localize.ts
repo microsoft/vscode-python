@@ -550,6 +550,15 @@ export namespace Python27Support {
     );
 }
 
+export namespace MPLSDeprecation {
+    export const bannerMessage = localize(
+        'MPLSDeprecation.bannerMessage',
+        'The Microsoft Python Language Server is reaching end of life at the beginning of November. Read more about this in our [September release blog post](https://aka.ms/pvsc-september-2021). Please switch your language server to a supported value:',
+    );
+    export const switchToPylance = localize('MPLSDeprecation.switchToPylance', 'Switch to Pylance (recommended)');
+    export const switchToJedi = localize('MPLSDeprecation.switchToJedi', 'Switch to Jedi (open source)');
+}
+
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
 // can be loaded out of the nls.<locale>.json files
 let loadedCollection: Record<string, string> | undefined;

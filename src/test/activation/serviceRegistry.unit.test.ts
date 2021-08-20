@@ -11,6 +11,7 @@ import { ExtensionSurveyPrompt } from '../../client/activation/extensionSurvey';
 import { JediExtensionActivator } from '../../client/activation/jedi';
 import { DotNetLanguageServerActivator } from '../../client/activation/languageServer/activator';
 import { DotNetLanguageServerAnalysisOptions } from '../../client/activation/languageServer/analysisOptions';
+import { MPLSDeprecationPrompt } from '../../client/activation/languageServer/deprecationPrompt';
 import { DotNetLanguageClientFactory } from '../../client/activation/languageServer/languageClientFactory';
 import { LanguageServerCompatibilityService } from '../../client/activation/languageServer/languageServerCompatibilityService';
 import { LanguageServerExtension } from '../../client/activation/languageServer/languageServerExtension';
@@ -42,6 +43,7 @@ import {
     ILanguageServerOutputChannel,
     ILanguageServerPackageService,
     ILanguageServerProxy,
+    IMPLSDeprecationPrompt,
     IPlatformData,
     LanguageServerType,
 } from '../../client/activation/types';
@@ -172,6 +174,9 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
                 IExtensionSingleActivationService,
                 ExtensionSurveyPrompt,
             ),
+        ).once();
+        verify(
+            serviceManager.addSingleton<IMPLSDeprecationPrompt>(IMPLSDeprecationPrompt, MPLSDeprecationPrompt),
         ).once();
     });
 });

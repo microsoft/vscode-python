@@ -55,10 +55,12 @@ import {
     ILanguageServerOutputChannel,
     ILanguageServerPackageService,
     ILanguageServerProxy,
+    IMPLSDeprecationPrompt,
     IPlatformData,
     LanguageServerType,
 } from './types';
 import { JediLanguageServerActivator } from './jedi/activator';
+import { MPLSDeprecationPrompt } from './languageServer/deprecationPrompt';
 
 export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType): void {
     serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
@@ -67,6 +69,7 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
 
     if (languageServerType === LanguageServerType.Microsoft) {
+        serviceManager.addSingleton<IMPLSDeprecationPrompt>(IMPLSDeprecationPrompt, MPLSDeprecationPrompt);
         serviceManager.add<ILanguageServerAnalysisOptions>(
             ILanguageServerAnalysisOptions,
             DotNetLanguageServerAnalysisOptions,

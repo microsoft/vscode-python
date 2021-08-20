@@ -1737,4 +1737,9 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the prompt about Python 2.7 support is displayed.
      */
     [EventName.PYTHON_27_SUPPORT_PROMPT]: never | undefined;
+
+    /**
+     * Telemetry event sent when the prompt about the MPLS deprecation is displayed.
+     */
+    [EventName.MPLS_DEPRECATION_PROMPT]: never | undefined;
 }

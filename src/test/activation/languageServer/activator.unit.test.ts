@@ -12,6 +12,7 @@ import {
     ILanguageServerDownloader,
     ILanguageServerFolderService,
     ILanguageServerManager,
+    IMPLSDeprecationPrompt,
 } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
@@ -29,6 +30,7 @@ suite('Microsoft Language Server - Activator', () => {
     let lsFolderService: ILanguageServerFolderService;
     let configuration: IConfigurationService;
     let settings: IPythonSettings;
+    let mplsDeprecationPrompt: IMPLSDeprecationPrompt;
     setup(() => {
         manager = mock(DotNetLanguageServerManager);
         workspaceService = mock<IWorkspaceService>();
@@ -38,6 +40,7 @@ suite('Microsoft Language Server - Activator', () => {
         configuration = mock<IConfigurationService>();
         settings = mock<IPythonSettings>();
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
+        mplsDeprecationPrompt = mock<IMPLSDeprecationPrompt>();
         activator = new DotNetLanguageServerActivator(
             instance(manager),
             instance(workspaceService),
@@ -45,6 +48,7 @@ suite('Microsoft Language Server - Activator', () => {
             instance(lsDownloader),
             instance(lsFolderService),
             instance(configuration),
+            instance(mplsDeprecationPrompt),
         );
     });
     test('Manager must be started without any workspace', async () => {
