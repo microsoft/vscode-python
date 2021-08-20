@@ -177,7 +177,7 @@
             {
                 "id": "pythonDataScienceWelcome",
                 "title": "Get started with Python for Data Science",
-                "description": "Your first steps to getting started with a Python Data Science project!",
+                "description": "Your first steps to getting started with a Data Science project with Python!",
                 "when": "false",
                 "steps": [
                     {
@@ -277,11 +277,10 @@
                     },
                     {
                         "id": "python.dataScienceLearnMore",
-                        "title": "Learn more",
-                        "description": "• Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands).\n• [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list.\n• Explore more features in our [Tutorials](https://aka.ms/AAdar6q) or check the [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n• Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
+                        "title": "Find out more!",
+                        "description": "Take a look into our [documentation](https://aka.ms/AAdar6q) to learn more about Python for Data Science in VS Code. \n[Learn more](https://aka.ms/AAdar6q)",
                         "media": {
-                            "image": "resources/walkthrough/datascience-learn-more.png",
-                            "altText": "Learning more from python visual studio code documentation"
+                            "markdown": "resources/walkthrough/python-datascience-learn-more.md"
                         }
                     }
                 ]
