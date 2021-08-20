@@ -2176,7 +2176,7 @@
         "url-loader": "^1.1.2",
         "uuid": "^3.3.2",
         "vinyl-fs": "^3.0.3",
-        "vsce": "^1.59.0",
+        "vsce": "^1.96.1",
         "vscode-debugadapter-testsupport": "^1.27.0",
         "webpack": "^4.33.0",
         "webpack-bundle-analyzer": "^3.6.0",
