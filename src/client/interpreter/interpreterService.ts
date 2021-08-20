@@ -28,12 +28,12 @@ import {
     IInterpreterLocatorService,
     IInterpreterService,
     INTERPRETER_LOCATOR_SERVICE,
+    PythonEnvironmentsChangedEvent,
 } from './contracts';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 import { getInterpreterHash } from '../pythonEnvironments/discovery/locators/services/hashProvider';
 import { inDiscoveryExperiment, inDiscoveryExperimentSync } from '../common/experiments/helpers';
 import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
-import { PythonEnvCollectionChangedEvent } from '../pythonEnvironments/base/watcher';
 import { PythonLocatorQuery } from '../pythonEnvironments/base/locator';
 
 const EXPIRY_DURATION = 24 * 60 * 60 * 1000;
@@ -71,7 +71,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.didChangeInterpreterEmitter.event;
     }
 
-    public onDidChangeInterpreters: Event<PythonEnvCollectionChangedEvent>;
+    public onDidChangeInterpreters: Event<PythonEnvironmentsChangedEvent>;
 
     public get onDidChangeInterpreterInformation(): Event<PythonEnvironment> {
         return this.didChangeInterpreterInformation.event;

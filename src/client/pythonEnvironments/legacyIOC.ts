@@ -28,6 +28,7 @@ import {
     PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE,
+    PythonEnvironmentsChangedEvent,
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../interpreter/virtualEnvs';
@@ -139,10 +140,21 @@ class ComponentAdapter implements IComponentAdapter {
 
     private readonly refreshed = new vscode.EventEmitter<void>();
 
+    private readonly changed = new vscode.EventEmitter<PythonEnvironmentsChangedEvent>();
+
     constructor(
         // The adapter only wraps one thing: the component API.
         private readonly api: IDiscoveryAPI,
-    ) {}
+    ) {
+        this.api.onChanged((event) => {
+            this.changed.fire({
+                type: event.type,
+                update: event.update ? convertEnvInfo(event.update) : undefined,
+                old: event.old ? convertEnvInfo(event.old) : undefined,
+                resource: event.searchLocation,
+            });
+        });
+    }
 
     public triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
         return this.api.triggerRefresh(query);
@@ -153,7 +165,7 @@ class ComponentAdapter implements IComponentAdapter {
     }
 
     public get onChanged() {
-        return this.api.onChanged;
+        return this.changed.event;
     }
 
     // For use in VirtualEnvironmentPrompt.activate()
