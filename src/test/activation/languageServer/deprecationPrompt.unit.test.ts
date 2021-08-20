@@ -162,7 +162,7 @@ suite('MPLS deprecation prompt', () => {
                         verify(state.updateValue(anything())).never();
                         verify(wrongState.updateValue(anything())).never();
                         verify(
-                            applicationShell.showInformationMessage(anything(), anything(), anything(), anything()),
+                            applicationShell.showWarningMessage(anything(), anything(), anything(), anything()),
                         ).never();
                         verify(configService.updateSetting(anything(), anything(), anything(), anything())).never();
                         sinon.assert.notCalled(sendTelemetryEventStub);
@@ -170,7 +170,7 @@ suite('MPLS deprecation prompt', () => {
                     }
 
                     when(
-                        applicationShell.showInformationMessage(
+                        applicationShell.showWarningMessage(
                             MPLSDeprecation.bannerMessage(),
                             MPLSDeprecation.switchToPylance(),
                             MPLSDeprecation.switchToJedi(),

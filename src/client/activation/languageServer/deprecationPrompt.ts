@@ -45,7 +45,7 @@ export class MPLSDeprecationPrompt implements IMPLSDeprecationPrompt {
             return;
         }
 
-        const selection = await this.appShell.showInformationMessage(
+        const selection = await this.appShell.showWarningMessage(
             MPLSDeprecation.bannerMessage(),
             MPLSDeprecation.switchToPylance(),
             MPLSDeprecation.switchToJedi(),
