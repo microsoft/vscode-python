@@ -165,8 +165,8 @@
                     },
                     {
                         "id": "python.learnMore",
-                        "title": "Learn more",
-                        "description": "Check the [documentation](https://aka.ms/AA8dxwy) to learn more about Python support in VS Code",
+                        "title": "Explore more resources",
+                        "description": "Take a look into our [documentation](https://aka.ms/AA8dxwy) to learn more about support for Python in VS Code. \n[Learn more](https://aka.ms/AA8dxwy)",
                         "media": {
                             "markdown": "resources/walkthrough/python-dev-learn-more.md"
                         },
