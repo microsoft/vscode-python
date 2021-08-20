@@ -63,7 +63,7 @@ suite('Refactor Rename', () => {
             .setup((p) => p.create(typeMoq.It.isAny()))
             .returns(() => Promise.resolve(new ProcessService(new BufferDecoder())));
         const interpreterService = typeMoq.Mock.ofType<IInterpreterService>();
-        interpreterService.setup((i) => i.hasInterpreters).returns(() => Promise.resolve(true));
+        interpreterService.setup((i) => i.hasInterpreters()).returns(() => Promise.resolve(true));
         const envActivationService = typeMoq.Mock.ofType<IEnvironmentActivationService>();
         envActivationService
             .setup((e) => e.getActivatedEnvironmentVariables(typeMoq.It.isAny()))

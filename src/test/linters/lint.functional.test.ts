@@ -697,7 +697,7 @@ class TestFixture extends BaseTestFixture {
             .returns(() => decoder);
 
         const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>(undefined, TypeMoq.MockBehavior.Strict);
-        interpreterService.setup((i) => i.hasInterpreters).returns(() => Promise.resolve(true));
+        interpreterService.setup((i) => i.hasInterpreters()).returns(() => Promise.resolve(true));
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny()))
             .returns(() => interpreterService.object);

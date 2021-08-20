@@ -134,7 +134,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup((i) => i.hasInterpreters)
+                .setup((i) => i.hasInterpreters())
                 .returns(() => Promise.resolve(false))
                 .verifiable(typemoq.Times.once());
             interpreterService
@@ -147,8 +147,6 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic, undefined)],
                 'not the same',
             );
-            settings.verifyAll();
-            interpreterService.verifyAll();
         });
         test('Should return empty diagnostics if there are interpreters after double-checking', async () => {
             const interpreter: PythonEnvironment = { envType: EnvironmentType.Unknown } as any;
@@ -158,7 +156,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup((i) => i.hasInterpreters)
+                .setup((i) => i.hasInterpreters())
                 .returns(() => Promise.resolve(false))
                 .verifiable(typemoq.Times.once());
             interpreterService
@@ -175,8 +173,6 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             const diagnostics = await diagnosticService.diagnose(undefined);
 
             expect(diagnostics).to.be.deep.equal([], 'not the same');
-            settings.verifyAll();
-            interpreterService.verifyAll();
         });
         test('Should return invalid diagnostics if there are interpreters but no current interpreter', async () => {
             settings
@@ -184,7 +180,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup((i) => i.hasInterpreters)
+                .setup((i) => i.hasInterpreters())
                 .returns(() => Promise.resolve(true))
                 .verifiable(typemoq.Times.once());
             interpreterService
@@ -213,7 +209,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup((i) => i.hasInterpreters)
+                .setup((i) => i.hasInterpreters())
                 .returns(() => Promise.resolve(true))
                 .verifiable(typemoq.Times.once());
             interpreterService

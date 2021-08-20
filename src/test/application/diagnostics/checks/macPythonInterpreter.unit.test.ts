@@ -169,7 +169,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup((i) => i.hasInterpreters)
+                .setup((i) => i.hasInterpreters())
                 .returns(() => Promise.resolve(true))
                 .verifiable(typemoq.Times.once());
             interpreterService
@@ -199,7 +199,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup((i) => i.hasInterpreters)
+                .setup((i) => i.hasInterpreters())
                 .returns(() => Promise.resolve(true))
                 .verifiable(typemoq.Times.once());
             interpreterService
@@ -234,8 +234,12 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup((i) => i.getInterpreters(typemoq.It.isAny()))
-                .returns(() => Promise.resolve([{ path: pythonPath } as any, { path: pythonPath } as any]))
+                .setup((i) => i.hasInterpreters())
+                .returns(() => Promise.resolve(true))
+                .verifiable(typemoq.Times.once());
+            interpreterService
+                .setup((i) => i.hasInterpreters(typemoq.It.isAny()))
+                .returns(() => Promise.resolve(false))
                 .verifiable(typemoq.Times.once());
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
@@ -262,10 +266,6 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 ],
                 'not the same',
             );
-            settings.verifyAll();
-            interpreterService.verifyAll();
-            platformService.verifyAll();
-            helper.verifyAll();
         });
         test('Should return diagnostic if there are other interpreters, platform is mac and selected interpreter is default mac interpreter', async () => {
             const nonMacStandardInterpreter = 'Non Mac Std Interpreter';
@@ -274,14 +274,12 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup((i) => i.getInterpreters(typemoq.It.isAny()))
-                .returns(() =>
-                    Promise.resolve([
-                        { path: pythonPath } as any,
-                        { path: pythonPath } as any,
-                        { path: nonMacStandardInterpreter } as any,
-                    ]),
-                )
+                .setup((i) => i.hasInterpreters())
+                .returns(() => Promise.resolve(true))
+                .verifiable(typemoq.Times.once());
+            interpreterService
+                .setup((i) => i.hasInterpreters(typemoq.It.isAny()))
+                .returns(() => Promise.resolve(true))
                 .verifiable(typemoq.Times.once());
             platformService
                 .setup((i) => i.isMac)
@@ -312,10 +310,6 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 ],
                 'not the same',
             );
-            settings.verifyAll();
-            interpreterService.verifyAll();
-            platformService.verifyAll();
-            helper.verifyAll();
         });
         test('Handling no interpreters diagnostic should return select interpreter cmd', async () => {
             const diagnostic = new InvalidMacPythonInterpreterDiagnostic(

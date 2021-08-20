@@ -285,7 +285,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);
 
-                when(interpreterService.hasInterpreters).thenResolve(true);
+                when(interpreterService.hasInterpreters()).thenResolve(true);
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
@@ -315,7 +315,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
                 when(condaService.getCondaVersion()).thenResolve(new SemVer('1.0.0'));
-                when(interpreterService.hasInterpreters).thenResolve(true);
+                when(interpreterService.hasInterpreters()).thenResolve(true);
 
                 const service = await factory.create({ resource });
 
