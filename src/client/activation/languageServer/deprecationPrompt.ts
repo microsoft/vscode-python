@@ -67,7 +67,7 @@ export class MPLSDeprecationPrompt implements IMPLSDeprecationPrompt {
         // Do not show the prompt again in this session.
         this.promptShownInSession = true;
 
-        sendTelemetryEvent(EventName.MPLS_DEPRECATION_PROMPT);
+        sendTelemetryEvent(EventName.MPLS_DEPRECATION_PROMPT, undefined, { switchTo });
     }
 
     private getPersistentState(): IPersistentState<boolean> {

@@ -72,7 +72,8 @@ suite('MPLS deprecation prompt', () => {
 
         defaultLSType?: DefaultLSType;
         selection?: string;
-        changeTo?: LanguageServerType;
+        switchTo?: LanguageServerType;
+        telemSwitchTo?: LanguageServerType;
     };
 
     const testCases: TestCaseType[] = [
@@ -83,48 +84,54 @@ suite('MPLS deprecation prompt', () => {
             shownInPreviousSession: false,
             defaultLSType: LanguageServerType.Node,
             selection: MPLSDeprecation.switchToPylance(),
-            changeTo: undefined,
+            switchTo: undefined,
+            telemSwitchTo: LanguageServerType.Node,
         },
         {
             shownInPreviousSession: false,
             defaultLSType: LanguageServerType.Node,
             selection: MPLSDeprecation.switchToJedi(),
-            changeTo: LanguageServerType.Node,
+            switchTo: LanguageServerType.Node,
+            telemSwitchTo: LanguageServerType.Jedi,
         },
         {
             shownInPreviousSession: false,
             defaultLSType: LanguageServerType.Jedi,
             selection: MPLSDeprecation.switchToJedi(),
-            changeTo: undefined,
+            switchTo: undefined,
+            telemSwitchTo: LanguageServerType.Jedi,
         },
         {
             shownInPreviousSession: false,
             defaultLSType: LanguageServerType.JediLSP,
             selection: MPLSDeprecation.switchToJedi(),
-            changeTo: undefined,
+            switchTo: undefined,
+            telemSwitchTo: LanguageServerType.Jedi,
         },
         {
             shownInPreviousSession: false,
             defaultLSType: LanguageServerType.Jedi,
             selection: MPLSDeprecation.switchToPylance(),
-            changeTo: LanguageServerType.Node,
+            switchTo: LanguageServerType.Node,
+            telemSwitchTo: LanguageServerType.Node,
         },
         {
             shownInPreviousSession: false,
             defaultLSType: LanguageServerType.JediLSP,
             selection: MPLSDeprecation.switchToPylance(),
-            changeTo: LanguageServerType.Node,
+            switchTo: LanguageServerType.Node,
+            telemSwitchTo: LanguageServerType.Node,
         },
     ];
 
     [ConfigurationTarget.Workspace, ConfigurationTarget.Global].forEach((configLocation) => {
         suite(`Config is ${ConfigurationTarget[configLocation]}`, () => {
-            testCases.forEach(({ shownInPreviousSession, defaultLSType, selection, changeTo }) => {
+            testCases.forEach(({ shownInPreviousSession, defaultLSType, selection, switchTo, telemSwitchTo }) => {
                 const configIsWorkspace = configLocation === ConfigurationTarget.Workspace;
 
                 const testName = shownInPreviousSession
                     ? 'Should not show prompt when shown in previous session'
-                    : `Should show when not previously shown and setting should change to "${changeTo}" when the default is "${defaultLSType}" and the prompt selection is "${selection}"`;
+                    : `Should show when not previously shown and setting should change to "${switchTo}" when the default is "${defaultLSType}" and the prompt selection is "${selection}"`;
 
                 test(testName, async () => {
                     const prompt = new MPLSDeprecationPrompt(
@@ -175,14 +182,14 @@ suite('MPLS deprecation prompt', () => {
 
                     await prompt.showPrompt();
 
-                    verify(configService.updateSetting('languageServer', changeTo, undefined, configLocation));
+                    verify(configService.updateSetting('languageServer', switchTo, undefined, configLocation));
 
                     verify(state.updateValue(true)).once();
                     verify(wrongState.updateValue(anything())).never();
 
                     sinon.assert.calledOnce(sendTelemetryEventStub);
                     assert.deepStrictEqual(telemetryEvents, [
-                        { eventName: EventName.MPLS_DEPRECATION_PROMPT, properties: undefined },
+                        { eventName: EventName.MPLS_DEPRECATION_PROMPT, properties: { switchTo: telemSwitchTo } },
                     ]);
 
                     assert.strictEqual(prompt.shouldShowPrompt, false);

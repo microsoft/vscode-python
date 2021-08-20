@@ -1741,5 +1741,7 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when the prompt about the MPLS deprecation is displayed.
      */
-    [EventName.MPLS_DEPRECATION_PROMPT]: never | undefined;
+    [EventName.MPLS_DEPRECATION_PROMPT]: {
+        switchTo: LanguageServerType | undefined;
+    };
 }
