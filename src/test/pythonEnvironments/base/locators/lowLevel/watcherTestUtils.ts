@@ -154,7 +154,9 @@ export function testLocatorWatcher(
         return items.some((item) => externalDeps.arePathsSame(item.executablePath, executable));
     }
 
-    suiteSetup(() => venvs.cleanUp());
+    suiteSetup(async () => {
+        await venvs.cleanUp();
+    });
 
     setup(() => {
         inExperimentStub = sinon.stub(externalDeps, 'inExperiment');
