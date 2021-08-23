@@ -6,7 +6,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Disposable, QuickInput, QuickInputButton, QuickInputButtons, QuickPick, QuickPickItem } from 'vscode';
+import { Disposable, QuickInput, QuickInputButton, QuickInputButtons, QuickPick, QuickPickItem, Event } from 'vscode';
 import { IApplicationShell } from '../application/types';
 
 // Borrowed from https://github.com/Microsoft/vscode-extension-samples/blob/master/quickinput-sample/src/multiStepInput.ts
@@ -51,6 +51,7 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     matchOnDescription?: boolean;
     matchOnDetail?: boolean;
     acceptFilterBoxTextAsSelection?: boolean;
+    onChangeItem?: { getItems: () => Promise<T[]>; event: Event<unknown> };
 }
 
 interface InputBoxParameters {
@@ -110,6 +111,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         matchOnDescription,
         matchOnDetail,
         acceptFilterBoxTextAsSelection,
+        onChangeItem,
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>> {
         const disposables: Disposable[] = [];
         try {
@@ -160,6 +162,13 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     this.current.dispose();
                 }
                 this.current = input;
+                if (onChangeItem) {
+                    disposables.push(
+                        onChangeItem.event(async () => {
+                            input.items = await onChangeItem.getItems();
+                        }),
+                    );
+                }
                 this.current.show();
             });
         } finally {

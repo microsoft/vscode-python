@@ -22,6 +22,7 @@ import {
 import { REFRESH_BUTTON_ICON } from '../../../../debugger/extension/attachQuickPick/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
+import { IInterpreterService } from '../../../contracts';
 import {
     IInterpreterQuickPickItem,
     IInterpreterSelector,
@@ -48,6 +49,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
     ) {
         super(pythonPathUpdaterService, commandManager, applicationShell, workspaceService);
     }
@@ -104,7 +106,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             state.workspace ? state.workspace.fsPath : undefined,
         );
 
-        let activeInterpreter = interpreterSuggestions.filter((i) => i.detail === currentPythonPath);
+        const activeInterpreter = interpreterSuggestions.filter((i) => i.detail === currentPythonPath);
 
         state.path = undefined;
         const refreshButton = {
@@ -117,11 +119,9 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             activeItem: activeInterpreter.length > 0 ? activeInterpreter[0] : interpreterSuggestions[0],
             matchOnDetail: true,
             matchOnDescription: true,
-            customButtonSetup: {
-                button: refreshButton,
-                callback: async (quickPick) => {
-                    quickPick.busy = true;
-
+            onChangeItem: {
+                event: this.interpreterSelector.onChanged,
+                getItems: async () => {
                     interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace, true);
                     if (interpreterSuggestions.length > 0) {
                         const suggested = interpreterSuggestions.shift();
@@ -133,15 +133,17 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                         }
                     }
 
-                    const newSuggestions = defaultInterpreterPathSuggestion
+                    return defaultInterpreterPathSuggestion
                         ? [manualEntrySuggestion, defaultInterpreterPathSuggestion, ...interpreterSuggestions]
                         : [manualEntrySuggestion, ...interpreterSuggestions];
+                },
+            },
+            customButtonSetup: {
+                button: refreshButton,
+                callback: async (quickPick) => {
+                    quickPick.busy = true;
 
-                    activeInterpreter = interpreterSuggestions.filter((i) => i.detail === currentPythonPath);
-
-                    quickPick.items = newSuggestions;
-                    quickPick.activeItems =
-                        activeInterpreter.length > 0 ? [activeInterpreter[0]] : [interpreterSuggestions[0]];
+                    await this.interpreterService.triggerRefresh();
 
                     quickPick.busy = false;
                 },

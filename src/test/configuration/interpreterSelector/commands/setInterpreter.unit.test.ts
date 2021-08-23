@@ -133,10 +133,10 @@ suite('Set Interpreter Command', () => {
                     };
                 });
             interpreterSelector
-                .setup((i) => i.getSuggestions(TypeMoq.It.isAny()))
+                .setup((i) => i.getAllSuggestions(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([item]));
             interpreterSelector
-                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), true))
+                .setup((i) => i.getAllSuggestions(TypeMoq.It.isAny(), true))
                 .returns(() => Promise.resolve([refreshedItem]));
             pythonSettings.setup((p) => p.pythonPath).returns(() => currentPythonPath);
             pythonSettings.setup((p) => p.defaultInterpreterPath).returns(() => defaultInterpreterPath);
@@ -521,7 +521,9 @@ suite('Set Interpreter Command', () => {
 
             workspace.setup((w) => w.workspaceFolders).returns(() => undefined);
 
-            interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
+            interpreterSelector
+                .setup((i) => i.getAllSuggestions(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve([]));
             const multiStepInput = {
                 run: (_: unknown, state: InterpreterStateArgs) => {
                     state.path = selectedItem.path;
@@ -561,7 +563,9 @@ suite('Set Interpreter Command', () => {
             const folder = { name: 'one', uri: Uri.parse('one'), index: 0 };
             workspace.setup((w) => w.workspaceFolders).returns(() => [folder]);
 
-            interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
+            interpreterSelector
+                .setup((i) => i.getAllSuggestions(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve([]));
 
             const multiStepInput = {
                 run: (_: unknown, state: InterpreterStateArgs) => {
@@ -617,7 +621,9 @@ suite('Set Interpreter Command', () => {
                 },
             ];
 
-            interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
+            interpreterSelector
+                .setup((i) => i.getAllSuggestions(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve([]));
 
             const multiStepInput = {
                 run: (_: unknown, state: InterpreterStateArgs) => {
@@ -684,7 +690,7 @@ suite('Set Interpreter Command', () => {
             ];
 
             interpreterSelector
-                .setup((i) => i.getSuggestions(TypeMoq.It.isAny()))
+                .setup((i) => i.getAllSuggestions(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([selectedItem]));
             const multiStepInput = {
                 run: (_: unknown, state: InterpreterStateArgs) => {
@@ -723,7 +729,9 @@ suite('Set Interpreter Command', () => {
         test('Do not update anything when user does not select a workspace folder and there is more than one workspace folder', async () => {
             workspace.setup((w) => w.workspaceFolders).returns(() => [folder1, folder2]);
 
-            interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
+            interpreterSelector
+                .setup((i) => i.getAllSuggestions(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve([]));
             multiStepInputFactory.setup((f) => f.create()).verifiable(TypeMoq.Times.never());
 
             const expectedItems = [
@@ -788,7 +796,9 @@ suite('Set Interpreter Command', () => {
 
             workspace.setup((w) => w.workspaceFolders).returns(() => undefined);
 
-            interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
+            interpreterSelector
+                .setup((i) => i.getAllSuggestions(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve([]));
             const multiStepInput = {
                 run: (inputStepArg: InputStepType, state: InterpreterStateArgs) => {
                     inputStep = inputStepArg;

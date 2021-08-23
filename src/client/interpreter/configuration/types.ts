@@ -1,4 +1,4 @@
-import { ConfigurationTarget, Disposable, QuickPickItem, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, QuickPickItem, Uri, Event } from 'vscode';
 import { Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 
@@ -23,8 +23,15 @@ export interface IPythonPathUpdaterServiceManager {
     ): Promise<void>;
 }
 
+export type PythonEnvSuggestionChangedEvent = {
+    old?: IInterpreterQuickPickItem;
+    update?: IInterpreterQuickPickItem | undefined;
+};
+
 export const IInterpreterSelector = Symbol('IInterpreterSelector');
 export interface IInterpreterSelector extends Disposable {
+    readonly onChanged: Event<PythonEnvSuggestionChangedEvent>;
+    getAllSuggestions(resource: Resource, ignoreCache?: boolean): Promise<IInterpreterQuickPickItem[]>;
     getSuggestions(resource: Resource, ignoreCache?: boolean): Promise<IInterpreterQuickPickItem[]>;
 }
 

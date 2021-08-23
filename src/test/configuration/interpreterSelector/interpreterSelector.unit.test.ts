@@ -94,7 +94,7 @@ suite('Interpreters - selector', () => {
                 .setup((x) => x.getAllInterpreters(TypeMoq.It.isAny(), { onSuggestion: true, ignoreCache }))
                 .returns(() => new Promise((resolve) => resolve(initial)));
 
-            const actual = await selector.getSuggestions(undefined, ignoreCache);
+            const actual = await selector.getAllSuggestions(undefined, ignoreCache);
 
             const expected: InterpreterQuickPickItem[] = [
                 new InterpreterQuickPickItem('1', 'c:/path1/path1'),
@@ -169,7 +169,7 @@ suite('Interpreters - selector', () => {
             new PathUtils(getOSType() === OSType.Windows),
         );
 
-        const result = await selector.getSuggestions(undefined, ignoreCache);
+        const result = await selector.getAllSuggestions(undefined, ignoreCache);
 
         const expected: InterpreterQuickPickItem[] = [
             new InterpreterQuickPickItem('two', path.join(workspacePath, '.venv', 'bin', 'python')),
