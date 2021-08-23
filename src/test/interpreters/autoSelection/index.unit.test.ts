@@ -82,7 +82,7 @@ suite('Interpreters - Auto Selection', () => {
             instance(helper),
         );
 
-        when(interpreterService.getInterpreters(anything(), anything())).thenCall((_, opts) => {
+        when(interpreterService.getAllInterpreters(anything(), anything())).thenCall((_, opts) => {
             options.push(opts);
 
             return Promise.resolve([
@@ -157,7 +157,7 @@ suite('Interpreters - Auto Selection', () => {
                 version: { major: 3, minor: 10, patch: 0 },
             } as PythonEnvironment;
 
-            when(interpreterService.getInterpreters(resource, anything())).thenCall((_, opts) => {
+            when(interpreterService.getAllInterpreters(resource, anything())).thenCall((_, opts) => {
                 options.push(opts);
                 return Promise.resolve([
                     {
@@ -177,8 +177,8 @@ suite('Interpreters - Auto Selection', () => {
             await autoSelectionService.autoSelectInterpreter(resource);
 
             expect(eventFired).to.deep.equal(true, 'event not fired');
-            expect(options).to.deep.equal([{ ignoreCache: true }], 'getInterpreters options are different');
-            verify(interpreterService.getInterpreters(resource, anything())).once();
+            expect(options).to.deep.equal([{ ignoreCache: true }], 'getAllInterpreters options are different');
+            verify(interpreterService.getAllInterpreters(resource, anything())).once();
             verify(state.updateValue(localEnv)).once();
         });
 
@@ -189,7 +189,7 @@ suite('Interpreters - Auto Selection', () => {
                 version: { major: 3, minor: 9, patch: 1 },
             } as PythonEnvironment;
 
-            when(interpreterService.getInterpreters(resource, anything())).thenCall((_, opts) => {
+            when(interpreterService.getAllInterpreters(resource, anything())).thenCall((_, opts) => {
                 options.push(opts);
                 return Promise.resolve([
                     {
@@ -209,12 +209,12 @@ suite('Interpreters - Auto Selection', () => {
             await autoSelectionService.autoSelectInterpreter(resource);
 
             expect(eventFired).to.deep.equal(true, 'event not fired');
-            expect(options).to.deep.equal([{ ignoreCache: true }], 'getInterpreters options are different');
-            verify(interpreterService.getInterpreters(resource, anything())).once();
+            expect(options).to.deep.equal([{ ignoreCache: true }], 'getAllInterpreters options are different');
+            verify(interpreterService.getAllInterpreters(resource, anything())).once();
             verify(state.updateValue(systemEnv)).once();
         });
 
-        test('getInterpreters is called with ignoreCache at true if there is no value set in the workspace persistent state', async () => {
+        test('getAllInterpreters is called with ignoreCache at true if there is no value set in the workspace persistent state', async () => {
             const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
             const queryState = mock(PersistentState) as PersistentState<boolean | undefined>;
 
@@ -222,7 +222,7 @@ suite('Interpreters - Auto Selection', () => {
             when(stateFactory.createWorkspacePersistentState<boolean | undefined>(anyString(), undefined)).thenReturn(
                 instance(queryState),
             );
-            when(interpreterService.getInterpreters(resource, anything())).thenCall((_, opts) => {
+            when(interpreterService.getAllInterpreters(resource, anything())).thenCall((_, opts) => {
                 options.push(opts);
 
                 return Promise.resolve([
@@ -253,11 +253,11 @@ suite('Interpreters - Auto Selection', () => {
 
             await autoSelectionService.autoSelectInterpreter(resource);
 
-            verify(interpreterService.getInterpreters(resource, anything())).once();
-            expect(options).to.deep.equal([{ ignoreCache: true }], 'getInterpreters options are different');
+            verify(interpreterService.getAllInterpreters(resource, anything())).once();
+            expect(options).to.deep.equal([{ ignoreCache: true }], 'getAllInterpreters options are different');
         });
 
-        test('getInterpreters is called with ignoreCache at false if there is a value set in the workspace persistent state', async () => {
+        test('getAllInterpreters is called with ignoreCache at false if there is a value set in the workspace persistent state', async () => {
             const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
             const queryState = mock(PersistentState) as PersistentState<boolean | undefined>;
 
@@ -265,7 +265,7 @@ suite('Interpreters - Auto Selection', () => {
             when(stateFactory.createWorkspacePersistentState<boolean | undefined>(anyString(), undefined)).thenReturn(
                 instance(queryState),
             );
-            when(interpreterService.getInterpreters(resource, anything())).thenCall((_, opts) => {
+            when(interpreterService.getAllInterpreters(resource, anything())).thenCall((_, opts) => {
                 options.push(opts);
 
                 return Promise.resolve([
@@ -296,14 +296,14 @@ suite('Interpreters - Auto Selection', () => {
 
             await autoSelectionService.autoSelectInterpreter(resource);
 
-            verify(interpreterService.getInterpreters(resource, anything())).once();
-            expect(options).to.deep.equal([{ ignoreCache: false }], 'getInterpreters options are different');
+            verify(interpreterService.getAllInterpreters(resource, anything())).once();
+            expect(options).to.deep.equal([{ ignoreCache: false }], 'getAllInterpreters options are different');
         });
 
         test('Telemetry event is sent with useCachedInterpreter set to false if auto-selection has not been run before', async () => {
             const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
 
-            when(interpreterService.getInterpreters(resource, anything())).thenCall(() =>
+            when(interpreterService.getAllInterpreters(resource, anything())).thenCall(() =>
                 Promise.resolve([
                     {
                         envType: EnvironmentType.Conda,
@@ -332,7 +332,7 @@ suite('Interpreters - Auto Selection', () => {
 
             await autoSelectionService.autoSelectInterpreter(resource);
 
-            verify(interpreterService.getInterpreters(resource, anything())).once();
+            verify(interpreterService.getAllInterpreters(resource, anything())).once();
             sinon.assert.calledOnce(sendTelemetryEventStub);
             expect(telemetryEvents).to.deep.equal(
                 [
@@ -348,7 +348,7 @@ suite('Interpreters - Auto Selection', () => {
         test('Telemetry event is sent with useCachedInterpreter set to true if auto-selection has been run before', async () => {
             const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
 
-            when(interpreterService.getInterpreters(resource, anything())).thenCall(() =>
+            when(interpreterService.getAllInterpreters(resource, anything())).thenCall(() =>
                 Promise.resolve([
                     {
                         envType: EnvironmentType.Conda,
@@ -379,7 +379,7 @@ suite('Interpreters - Auto Selection', () => {
 
             await autoSelectionService.autoSelectInterpreter(resource);
 
-            verify(interpreterService.getInterpreters(resource, anything())).once();
+            verify(interpreterService.getAllInterpreters(resource, anything())).once();
             sinon.assert.calledTwice(sendTelemetryEventStub);
             expect(telemetryEvents).to.deep.equal(
                 [

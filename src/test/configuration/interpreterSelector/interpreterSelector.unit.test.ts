@@ -91,7 +91,7 @@ suite('Interpreters - selector', () => {
                 { displayName: '4', path: 'c:/path4/path4', envType: EnvironmentType.Conda },
             ].map((item) => ({ ...info, ...item }));
             interpreterService
-                .setup((x) => x.getInterpreters(TypeMoq.It.isAny(), { onSuggestion: true, ignoreCache }))
+                .setup((x) => x.getAllInterpreters(TypeMoq.It.isAny(), { onSuggestion: true, ignoreCache }))
                 .returns(() => new Promise((resolve) => resolve(initial)));
 
             const actual = await selector.getSuggestions(undefined, ignoreCache);
@@ -153,7 +153,7 @@ suite('Interpreters - selector', () => {
         ].map((item) => ({ ...info, ...item }));
 
         interpreterService
-            .setup((x) => x.getInterpreters(TypeMoq.It.isAny(), { onSuggestion: true, ignoreCache }))
+            .setup((x) => x.getAllInterpreters(TypeMoq.It.isAny(), { onSuggestion: true, ignoreCache }))
             .returns(() => new Promise((resolve) => resolve(environments)));
 
         const interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
