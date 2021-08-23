@@ -28,8 +28,7 @@ suite('File System Watching Locator Tests', () => {
     });
 
     teardown(() => {
-        inExperimentStub.restore();
-        watchLocationStub.restore();
+        sinon.restore();
     });
 
     class TestWatcher extends FSWatchingLocator {

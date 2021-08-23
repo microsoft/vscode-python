@@ -170,9 +170,11 @@ export function testLocatorWatcher(
     }
 
     teardown(async () => {
+        sinon.restore();
+        if (locator) {
+            await locator.dispose();
+        }
         await venvs.cleanUp();
-        locator.dispose();
-        inExperimentStub.restore();
     });
 
     test('Detect a new environment', async () => {

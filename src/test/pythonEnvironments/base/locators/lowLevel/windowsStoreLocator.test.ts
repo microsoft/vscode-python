@@ -117,7 +117,7 @@ suite('Windows Store Locator', async () => {
     }
 
     teardown(async () => {
-        inExperimentStub.restore();
+        sinon.restore();
         await windowsStoreEnvs.cleanUp();
         await locator.dispose();
     });

@@ -179,6 +179,7 @@ suite('Experimentation service', () => {
 
         teardown(() => {
             telemetryEvents = [];
+            sinon.restore();
         });
 
         test('If the opt-in and opt-out arrays are empty, return the value from the experimentation framework for a given experiment', async () => {
