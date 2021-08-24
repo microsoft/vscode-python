@@ -18,7 +18,10 @@ suite('Poetry Watcher', async () => {
     let shellExecute: sinon.SinonStub;
     const testPoetryDir = path.join(TEST_LAYOUT_ROOT, 'poetry');
     const project1 = path.join(testPoetryDir, 'project1');
-    suiteSetup(async () => {
+    suiteSetup(async function () {
+        // Skipping these test see https://github.com/microsoft/vscode-python/issues/17087
+        this.skip();
+
         shellExecute = sinon.stub(externalDependencies, 'shellExecute');
         shellExecute.callsFake((command: string, options: ShellOptions) => {
             // eslint-disable-next-line default-case
