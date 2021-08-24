@@ -39,7 +39,8 @@ type QuickInputButtonSetup = {
      */
     callback: buttonCallbackType<QuickPickItem>;
 };
-export interface IQuickPickParameters<T extends QuickPickItem> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface IQuickPickParameters<T extends QuickPickItem, E = any> {
     title?: string;
     step?: number;
     totalSteps?: number;
@@ -51,7 +52,10 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     matchOnDescription?: boolean;
     matchOnDetail?: boolean;
     acceptFilterBoxTextAsSelection?: boolean;
-    onChangeItem?: { getItems: () => Promise<T[]>; event: Event<unknown> };
+    onChangeItem?: {
+        callback: (event: E, quickPick: QuickPick<T>) => Promise<void>;
+        event: Event<E>;
+    };
 }
 
 interface InputBoxParameters {
@@ -163,11 +167,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 }
                 this.current = input;
                 if (onChangeItem) {
-                    disposables.push(
-                        onChangeItem.event(async () => {
-                            input.items = await onChangeItem.getItems();
-                        }),
-                    );
+                    disposables.push(onChangeItem.event((e) => onChangeItem.callback(e, input)));
                 }
                 this.current.show();
             });
