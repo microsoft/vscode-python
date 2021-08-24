@@ -87,9 +87,9 @@ function getRangeFromRawSource(raw: { source: string }): Range | undefined {
     return undefined;
 }
 
-function getRunIdFromRawData(raw: { id: string }): string {
+export function getRunIdFromRawData(id: string): string {
     // This is the id that will be used to compare with the results.
-    const runId = raw.id
+    const runId = id
         .replace(/\.py/g, '')
         .replace(/[\\\:\/]/g, '.')
         .replace(/\:\:/g, '.')
@@ -166,7 +166,7 @@ function createCollectionTestItem(
     const label = rawData.name;
 
     const parentId = getParentIdFromRawParentId(idToRawData, testRoot, rawData);
-    const runId = getRunIdFromRawData(rawData);
+    const runId = getRunIdFromRawData(rawData.id);
 
     const testItem = testController.createTestItem(id, label, uri);
 
@@ -197,7 +197,7 @@ function updateCollectionTestItem(
     item.label = rawData.name;
 
     const parentId = getParentIdFromRawParentId(idToRawData, testRoot, rawData);
-    const runId = getRunIdFromRawData(rawData);
+    const runId = getRunIdFromRawData(rawData.id);
 
     item.canResolveChildren = true;
 
@@ -230,7 +230,7 @@ function createTestCaseItem(
     const label = rawData.name;
 
     const parentId = getParentIdFromRawParentId(idToRawData, testRoot, rawData);
-    const runId = getRunIdFromRawData(rawData);
+    const runId = getRunIdFromRawData(rawData.id);
 
     const testItem = testController.createTestItem(id, label, uri);
 
@@ -262,7 +262,7 @@ function updateTestCaseItem(
     item.label = rawData.name;
 
     const parentId = getParentIdFromRawParentId(idToRawData, testRoot, rawData);
-    const runId = getRunIdFromRawData(rawData);
+    const runId = getRunIdFromRawData(rawData.id);
 
     item.canResolveChildren = false;
     item.range = getRangeFromRawSource(rawData);

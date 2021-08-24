@@ -3,7 +3,7 @@
 
 import * as fsapi from 'fs-extra';
 import { Location, TestItem, TestMessage, TestRun } from 'vscode';
-import { getTestCaseNodes } from './testItemUtilities';
+import { getRunIdFromRawData, getTestCaseNodes } from './testItemUtilities';
 import { TestData } from './types';
 
 type TestSuiteResult = {
@@ -97,7 +97,7 @@ export async function updateResultFromJunitXml(
             }
 
             const result = junitSuite.testcase.find((t) => {
-                const idResult = `${t.$.classname}.${t.$.name}`;
+                const idResult = getRunIdFromRawData(`${t.$.classname}.${t.$.name}`);
                 const idNode = rawTestCaseNode.runId;
                 return idResult === idNode || idNode.endsWith(idResult);
             });
