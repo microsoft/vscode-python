@@ -100,7 +100,7 @@
                 "id": "pythonWelcome",
                 "title": "Get started with Python development",
                 "description": "Your first steps to set up a Python project with all the powerful tools and features that the Python extension has to offer!",
-                "when": "false",
+                "when": "true",
                 "steps": [
                     {
                         "id": "python.installPythonWin",
@@ -178,7 +178,7 @@
                 "id": "pythonDataScienceWelcome",
                 "title": "Get started with Python for Data Science",
                 "description": "Your first steps to getting started with a Data Science project with Python!",
-                "when": "false",
+                "when": "true",
                 "steps": [
                     {
                         "id": "python.installPythonWinDS",
