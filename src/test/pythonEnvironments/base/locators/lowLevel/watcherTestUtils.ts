@@ -203,7 +203,7 @@ export function testLocatorWatcher(
             externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
             'Wrong event emitted',
         );
-    });
+    }).timeout(TEST_TIMEOUT * 2);
 
     test('Detect when an environment has been deleted', async () => {
         let actualEvent: PythonEnvsChangedEvent;
@@ -237,7 +237,7 @@ export function testLocatorWatcher(
             externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
             'Wrong event emitted',
         );
-    });
+    }).timeout(TEST_TIMEOUT * 2);
 
     test('Detect when an environment has been updated', async () => {
         let actualEvent: PythonEnvsChangedEvent;
@@ -264,5 +264,5 @@ export function testLocatorWatcher(
             externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
             `Paths don't match ${actualEvent!.searchLocation!.fsPath} != ${path.dirname(envDir)}`,
         );
-    });
+    }).timeout(TEST_TIMEOUT * 2);
 }
