@@ -168,7 +168,7 @@ export function testLocatorWatcher(
         locator.onChanged(onChanged);
         await getEnvs(locator.iterEnvs()); // Force the FS watcher to start.
         // Wait for watchers to get ready
-        await sleep(1000);
+        await sleep(2000);
     }
 
     teardown(async () => {
