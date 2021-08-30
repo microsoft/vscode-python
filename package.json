@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2021.9.0-dev",
+    "version": "2021.9.0-rc",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
