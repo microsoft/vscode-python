@@ -100,7 +100,7 @@ suite('Set Interpreter Command', () => {
         const defaultInterpreterPath = 'defaultInterpreterPath';
         const defaultInterpreterPathSuggestion = {
             label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
-            description: defaultInterpreterPath,
+            detail: defaultInterpreterPath,
             path: defaultInterpreterPath,
             alwaysShow: true,
         };

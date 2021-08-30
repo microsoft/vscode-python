@@ -76,7 +76,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         if (defaultInterpreterPathValue && defaultInterpreterPathValue !== 'python') {
             defaultInterpreterPathSuggestion = {
                 label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
-                description: this.pathUtils.getDisplayName(
+                detail: this.pathUtils.getDisplayName(
                     defaultInterpreterPathValue,
                     state.workspace ? state.workspace.fsPath : undefined,
                 ),
