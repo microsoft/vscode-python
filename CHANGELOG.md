@@ -1,5 +1,228 @@
 # Changelog
 
+## 2021.9.0-rc (30 August 2021)
+
+### Enhancements
+
+1. Added commands to select and run a set of tests.
+   ([#3652](https://github.com/Microsoft/vscode-python/issues/3652))
+1. Fix for tests should be re-discovered after switching environment.
+   ([#5347](https://github.com/Microsoft/vscode-python/issues/5347))
+1. Remove the testing functionality from the status bar.
+   ([#8405](https://github.com/Microsoft/vscode-python/issues/8405))
+1. Automatically detect new test file in test explorer.
+   ([#8675](https://github.com/Microsoft/vscode-python/issues/8675))
+1. Search test names in test explorer.
+   ([#8836](https://github.com/Microsoft/vscode-python/issues/8836))
+1. Added a command for displaying the test explorer.
+   ([#9026](https://github.com/Microsoft/vscode-python/issues/9026))
+1. Make "run all tests" icon gray instead of green.
+   ([#9402](https://github.com/Microsoft/vscode-python/issues/9402))
+1. Use VS Code's test UI instead of code lenses above tests.
+   ([#10898](https://github.com/Microsoft/vscode-python/issues/10898))
+1. Added command to run last executed test.
+   ([#11864](https://github.com/Microsoft/vscode-python/issues/11864))
+1. Fix for PyTest discovery can fail but not give any clue as to what the problem is.
+   ([#12043](https://github.com/Microsoft/vscode-python/issues/12043))
+1. Add shortcut to run the current test (at cursor position).
+   ([#12218](https://github.com/Microsoft/vscode-python/issues/12218))
+1. Run all tests in a multi-root workspace without prompting.
+   ([#13147](https://github.com/Microsoft/vscode-python/issues/13147))
+1. Plug into VS Code's Test UI.
+   ([#15750](https://github.com/Microsoft/vscode-python/issues/15750))
+1. Show notification to join insiders after 5 mins.
+   ([#16833](https://github.com/Microsoft/vscode-python/issues/16833))
+1. Update Simplified Chinese translation. (thanks [FiftysixTimes7](https://github.com/FiftysixTimes7))
+   ([#16916](https://github.com/Microsoft/vscode-python/issues/16916))
+1. Added Debug file button to editor run menu.
+   ([#16924](https://github.com/Microsoft/vscode-python/issues/16924))
+1. Cache last selection for debug configuration when debugging without launch.json.
+   ([#16934](https://github.com/Microsoft/vscode-python/issues/16934))
+1. Improve display of default interpreter and suggested interpreter in the interpreter selection quick pick.
+   ([#16971](https://github.com/Microsoft/vscode-python/issues/16971))
+1. Improve discovery component API.
+   ([#17005](https://github.com/Microsoft/vscode-python/issues/17005))
+1. Add a notification about Python 2.7 support, displayed whenever a tool is used or whenever debugging is started.
+   ([#17009](https://github.com/Microsoft/vscode-python/issues/17009))
+1. Add caching debug configuration behind experiment.
+   ([#17025](https://github.com/Microsoft/vscode-python/issues/17025))
+1. Do not query to get all interpreters where it's not needed in the extension code.
+   ([#17030](https://github.com/Microsoft/vscode-python/issues/17030))
+1. Add a warning prompt for the Microsoft Python Language Server deprecation.
+   ([#17056](https://github.com/Microsoft/vscode-python/issues/17056))
+1. Update to latest jedi-language-server.
+   ([#17072](https://github.com/Microsoft/vscode-python/issues/17072))
+
+### Fixes
+
+1. Fix for test code lenses do not disappear even after disabling the unit tests.
+   ([#1654](https://github.com/Microsoft/vscode-python/issues/1654))
+1. Fix for code lens for a test class run under unittest doesn't show overall results for methods.
+   ([#2382](https://github.com/Microsoft/vscode-python/issues/2382))
+1. Fix for test code lens do not appear on initial activation of testing support.
+   ([#2644](https://github.com/Microsoft/vscode-python/issues/2644))
+1. Fix for "No tests ran, please check the configuration settings for the tests".
+   ([#2660](https://github.com/Microsoft/vscode-python/issues/2660))
+1. Fix for code lenses disappear on save, then re-appear when tabbing on/off the file.
+   ([#2790](https://github.com/Microsoft/vscode-python/issues/2790))
+1. Fix for code lenses for tests not showing up when test is defined on line 1.
+   ([#3062](https://github.com/Microsoft/vscode-python/issues/3062))
+1. Fix for command 'python.runtests' not found.
+   ([#3591](https://github.com/Microsoft/vscode-python/issues/3591))
+1. Fix for navigation to code doesn't work with parameterized tests.
+   ([#4469](https://github.com/Microsoft/vscode-python/issues/4469))
+1. Fix for tests are not being discovered at first in multiroot workspace.
+   ([#4848](https://github.com/Microsoft/vscode-python/issues/4848))
+1. Fix for tests not found after upgrade.
+   ([#5417](https://github.com/Microsoft/vscode-python/issues/5417))
+1. Fix for failed icon of the first failed test doesn't changed to running icon when using unittest framework.
+   ([#5791](https://github.com/Microsoft/vscode-python/issues/5791))
+1. Fix for failure details in unittest discovery are not always logged.
+   ([#5889](https://github.com/Microsoft/vscode-python/issues/5889))
+1. Fix for test results not updated if test is run via codelens.
+   ([#6787](https://github.com/Microsoft/vscode-python/issues/6787))
+1. Fix for "Run Current Test File" is not running tests, just discovering them.
+   ([#7150](https://github.com/Microsoft/vscode-python/issues/7150))
+1. Fix for testing code lenses don't show for remote sessions to a directory symlink.
+   ([#7443](https://github.com/Microsoft/vscode-python/issues/7443))
+1. Fix for discover test per folder icon is missing in multi-root workspace after upgrade.
+   ([#7870](https://github.com/Microsoft/vscode-python/issues/7870))
+1. Fix for clicking on a test in the Test Explorer does not navigate to the correct test.
+   ([#8448](https://github.com/Microsoft/vscode-python/issues/8448))
+1. Fix for if multiple tests have the same name, only one is run.
+   ([#8761](https://github.com/Microsoft/vscode-python/issues/8761))
+1. Fix for test failure is reported as a compile error.
+   ([#9640](https://github.com/Microsoft/vscode-python/issues/9640))
+1. Fix for discovering tests immediately after interpreter change often fails.
+   ([#9854](https://github.com/Microsoft/vscode-python/issues/9854))
+1. Fix for unittest module invoking wrong TestCase.
+   ([#10972](https://github.com/Microsoft/vscode-python/issues/10972))
+1. Fix for unable to navigate to test function.
+   ([#11866](https://github.com/Microsoft/vscode-python/issues/11866))
+1. Fix for running test fails trying to access non-existing file.
+   ([#12403](https://github.com/Microsoft/vscode-python/issues/12403))
+1. Fix for code lenses don't work after opening files from different projects in workspace.
+   ([#12995](https://github.com/Microsoft/vscode-python/issues/12995))
+1. Fix for the pytest icons keep spinning when run Test Method.
+   ([#13285](https://github.com/Microsoft/vscode-python/issues/13285))
+1. Test for any functionality related to testing doesn't work if language server is set to none.
+   ([#13713](https://github.com/Microsoft/vscode-python/issues/13713))
+1. Fix for cannot configure PyTest from UI.
+   ([#13916](https://github.com/Microsoft/vscode-python/issues/13916))
+1. Fix for test icons not updating when using pytest.
+   ([#15260](https://github.com/Microsoft/vscode-python/issues/15260))
+1. Fix for debugging tests is returning errors due to "unsupported status".
+   ([#15736](https://github.com/Microsoft/vscode-python/issues/15736))
+1. Removes `"request": "test"` as a config option. This can now be done with `"purpose": ["debug-test"]`.
+   ([#15790](https://github.com/Microsoft/vscode-python/issues/15790))
+1. Fix for "There was an error in running the tests" when stopping debugger.
+   ([#16475](https://github.com/Microsoft/vscode-python/issues/16475))
+1. Use the vscode API appropriately to find out what terminal is being used.
+   ([#16577](https://github.com/Microsoft/vscode-python/issues/16577))
+1. Fix unittest discovery. (thanks [JulianEdwards](https://github.com/bigjools))
+   ([#16593](https://github.com/Microsoft/vscode-python/issues/16593))
+1. Fix run `installPythonLibs` error in windows.
+   ([#16844](https://github.com/Microsoft/vscode-python/issues/16844))
+1. Fix for test welcome screen flashes on refresh.
+   ([#16855](https://github.com/Microsoft/vscode-python/issues/16855))
+1. Show re-run failed test button only when there are failed tests.
+   ([#16856](https://github.com/Microsoft/vscode-python/issues/16856))
+1. Triggering test refresh shows progress indicator.
+   ([#16891](https://github.com/Microsoft/vscode-python/issues/16891))
+1. Fix environment sorting for the `Python: Select Interpreter` command.
+   (thanks [Marc Mueller](https://github.com/cdce8p))
+   ([#16893](https://github.com/Microsoft/vscode-python/issues/16893))
+1. Fix for unittest not getting discovered in all cases.
+   ([#16902](https://github.com/Microsoft/vscode-python/issues/16902))
+1. Don't show full path in the description for each test node.
+   ([#16927](https://github.com/Microsoft/vscode-python/issues/16927))
+1. Fix for no notification shown if test framework is not configured and run all tests is called.
+   ([#16941](https://github.com/Microsoft/vscode-python/issues/16941))
+1. In experiments service don't always `await` on `initialfetch` which can be slow depending on the network.
+   ([#16959](https://github.com/Microsoft/vscode-python/issues/16959))
+1. Ensure 2.7 unittest still work with new test support.
+   ([#16962](https://github.com/Microsoft/vscode-python/issues/16962))
+1. Fix issue with parsing test run ids for reporting test status.
+   ([#16963](https://github.com/Microsoft/vscode-python/issues/16963))
+1. Fix cell magics, line magics, and shell escaping in jupyter notebooks to not show error diagnostics.
+   ([#17058](https://github.com/Microsoft/vscode-python/issues/17058))
+1. Fix for testing ui update issue when `pytest` parameter has '/'.
+   ([#17079](https://github.com/Microsoft/vscode-python/issues/17079))
+
+### Code Health
+
+1. Remove nose test support.
+   ([#16371](https://github.com/Microsoft/vscode-python/issues/16371))
+1. Remove custom start page experience in favor of VSCode's built-in walkthrough support.
+   ([#16453](https://github.com/Microsoft/vscode-python/issues/16453))
+1. Run auto-selection only once, and return the cached value for subsequent calls.
+   ([#16735](https://github.com/Microsoft/vscode-python/issues/16735))
+1. Add telemetry for when an interpreter gets auto-selected.
+   ([#16764](https://github.com/Microsoft/vscode-python/issues/16764))
+1. Remove pre-existing environment sorting algorithm and old rule-based auto-selection logic.
+   ([#16935](https://github.com/Microsoft/vscode-python/issues/16935))
+1. Add API to run code after extension activation.
+   ([#16983](https://github.com/Microsoft/vscode-python/issues/16983))
+1. Add telemetry sending time it took to load data from experiment service.
+   ([#17011](https://github.com/Microsoft/vscode-python/issues/17011))
+1. Improve reliability of virtual env tests and disable poetry watcher tests.
+   ([#17088](https://github.com/Microsoft/vscode-python/issues/17088))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [poetry](https://pypi.org/project/poetry/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2021.8.3 (23 August 2021)
 
 ### Fixes
