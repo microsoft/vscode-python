@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import type { TextDocument, Uri } from 'vscode';
+import { arePathsSame, isParentPath } from '../../pythonEnvironments/common/externalDependencies';
 import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
 import { InterpreterUri } from '../installer/types';
 import { Resource } from '../types';
@@ -126,15 +127,15 @@ export function getURIFilter(
         while (candidate.path.endsWith('/')) {
             candidatePath = candidatePath.slice(0, -1);
         }
-        if (opts.checkExact && candidatePath === uriPath) {
+        if (opts.checkExact && arePathsSame(candidatePath, uriPath)) {
             return true;
         }
-        if (opts.checkParent && candidatePath.startsWith(uriRoot)) {
+        if (opts.checkParent && isParentPath(candidatePath, uriRoot)) {
             return true;
         }
         if (opts.checkChild) {
-            const candidateRoot = `{candidatePath}/`;
-            if (uriPath.startsWith(candidateRoot)) {
+            const candidateRoot = `${candidatePath}/`;
+            if (isParentPath(uriPath, candidateRoot)) {
                 return true;
             }
         }

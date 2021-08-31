@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Event } from 'vscode';
+import { traceInfo } from '../../../../common/logger';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
 import { pathExists } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
@@ -112,6 +113,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
 
     public async flush(): Promise<void> {
         if (this.envs.length) {
+            traceInfo('Environments added to cache', JSON.stringify(this.envs));
             await this.persistentStorage.store(this.envs);
         }
     }
