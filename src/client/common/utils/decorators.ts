@@ -219,8 +219,14 @@ export type CallInfo = {
     args: any[];
 };
 
+export type TraceDecoratorType = (
+    _: Object,
+    __: string,
+    descriptor: TypedPropertyDescriptor<any>,
+) => TypedPropertyDescriptor<any>;
+
 // Return a decorator that traces the decorated function.
-export function trace(log: (c: CallInfo, t: TraceInfo) => void) {
+export function trace(log: (c: CallInfo, t: TraceInfo) => void): TraceDecoratorType {
     return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
 

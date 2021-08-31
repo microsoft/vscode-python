@@ -490,15 +490,6 @@ src/client/application/diagnostics/commands/factory.ts
 src/client/application/diagnostics/commands/execVSCCommand.ts
 src/client/application/diagnostics/commands/launchBrowser.ts
 
-src/client/logging/levels.ts
-src/client/logging/transports.ts
-src/client/logging/_global.ts
-src/client/logging/logger.ts
-src/client/logging/util.ts
-src/client/logging/index.ts
-src/client/logging/formatters.ts
-src/client/logging/trace.ts
-
 src/client/refactor/proxy.ts
 src/client/workspaceSymbols/main.ts
 src/client/workspaceSymbols/generator.ts

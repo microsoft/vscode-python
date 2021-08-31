@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import * as winston from 'winston';
@@ -8,7 +9,7 @@ import { CallInfo } from '../common/utils/decorators';
 import { getFormatter } from './formatters';
 import { LogLevel, resolveLevelName } from './levels';
 import { configureLogger, createLogger, getPreDefinedConfiguration, logToAll } from './logger';
-import { createTracingDecorator, LogInfo, TraceOptions, tracing as _tracing } from './trace';
+import { LogInfo, tracing as _tracing } from './trace';
 import { getPythonOutputChannelTransport, IPythonOutputChannelContent } from './transports';
 import { Arguments } from './util';
 
@@ -44,7 +45,7 @@ function initialize() {
 }
 
 // Set the logging level the extension logs at.
-export function setLoggingLevel(level: LogLevel | 'off') {
+export function setLoggingLevel(level: LogLevel | 'off'): void {
     if (level === 'off') {
         // For now we disable all logging. One alternative would be
         // to only disable logging to the output channel (by removing
@@ -59,7 +60,7 @@ export function setLoggingLevel(level: LogLevel | 'off') {
 }
 
 // Register the output channel transport the logger will log into.
-export function addOutputChannelLogging(channel: IOutputChannel) {
+export function addOutputChannelLogging(channel: IOutputChannel): void {
     const formatter = getFormatter();
     const transport = getPythonOutputChannelTransport(channel, formatter);
     _globalLoggerContent = transport;
@@ -75,19 +76,19 @@ function log(logLevel: LogLevel, ...args: Arguments) {
     logToAll([globalLogger], logLevel, args);
 }
 
-export function logVerbose(...args: any[]) {
+export function logVerbose(...args: Arguments): void {
     log(LogLevel.Info, ...args);
 }
 
-export function logError(...args: any[]) {
+export function logError(...args: Arguments): void {
     log(LogLevel.Error, ...args);
 }
 
-export function logInfo(...args: any[]) {
+export function logInfo(...args: Arguments): void {
     log(LogLevel.Info, ...args);
 }
 
-export function logWarning(...args: any[]) {
+export function logWarning(...args: Arguments): void {
     log(LogLevel.Warn, ...args);
 }
 
@@ -96,24 +97,6 @@ export function tracing<T>(info: LogInfo, run: () => T, call?: CallInfo): T {
     return _tracing([globalLogger], info, run, call);
 }
 
-export namespace traceDecorators {
-    const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
-
-    export function verbose(message: string, opts: TraceOptions = DEFAULT_OPTS) {
-        return createTracingDecorator([globalLogger], { message, opts });
-    }
-    export function error(message: string) {
-        const opts = DEFAULT_OPTS;
-        const level = LogLevel.Error;
-        return createTracingDecorator([globalLogger], { message, opts, level });
-    }
-    export function info(message: string) {
-        const opts = TraceOptions.None;
-        return createTracingDecorator([globalLogger], { message, opts });
-    }
-    export function warn(message: string) {
-        const opts = DEFAULT_OPTS;
-        const level = LogLevel.Warn;
-        return createTracingDecorator([globalLogger], { message, opts, level });
-    }
+export function getGlobalLogger(): winston.Logger {
+    return globalLogger;
 }

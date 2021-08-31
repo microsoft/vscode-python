@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
+import { Format } from 'logform';
 import { format } from 'winston';
 import { isTestExecution } from '../common/constants';
 import { getLevel, LogLevel, LogLevelName } from './levels';
@@ -78,7 +80,7 @@ function getLabeledFormatter(label_: string) {
 }
 
 // Return a format object that can be used with a "winston" logging transport.
-export function getFormatter(opts: FormatterOptions = {}) {
+export function getFormatter(opts: FormatterOptions = {}): Format {
     if (opts.label) {
         return getLabeledFormatter(opts.label);
     }

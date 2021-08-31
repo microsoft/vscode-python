@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 // IMPORTANT: This file should only be importing from the '../client/logging' directory, as we
@@ -7,7 +8,6 @@
 
 import * as winston from 'winston';
 
-//======================
 // Our custom log levels
 
 export enum LogLevel {
@@ -35,7 +35,6 @@ const configLevels: winston.config.AbstractConfigSetLevels = {
     'DEBUG-TRACE': 5,
 };
 
-//======================
 // Other log levels
 
 // The level names from winston/config.npm.
@@ -49,8 +48,7 @@ const npmLogLevelMap: { [K in LogLevel]: NPMLogLevelName } = {
     [LogLevel.Trace]: 'silly',
 };
 
-//======================
-// lookup functions
+// Lookup functions
 
 // Convert from LogLevel enum to the proper level name.
 export function resolveLevelName(
@@ -60,13 +58,14 @@ export function resolveLevelName(
 ): string | undefined {
     if (levels === undefined) {
         return getLevelName(level);
-    } else if (levels === configLevels) {
-        return getLevelName(level);
-    } else if (levels === winston.config.npm.levels) {
-        return npmLogLevelMap[level];
-    } else {
-        return undefined;
     }
+    if (levels === configLevels) {
+        return getLevelName(level);
+    }
+    if (levels === winston.config.npm.levels) {
+        return npmLogLevelMap[level];
+    }
+    return undefined;
 }
 function getLevelName(level: LogLevel): LogLevelName | undefined {
     return logLevelMap[level];
@@ -89,10 +88,7 @@ export function resolveLevel(
         return undefined;
     }
     for (const level of Object.keys(levelMap)) {
-        if (typeof level === 'string') {
-            continue;
-        }
-        if (logLevelMap[level] === levelName) {
+        if (typeof level !== 'string' && logLevelMap[level] === levelName) {
             return level;
         }
     }

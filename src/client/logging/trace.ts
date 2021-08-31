@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
-import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
+import { CallInfo, trace as traceDecorator, TraceDecoratorType } from '../common/utils/decorators';
 import { TraceInfo, tracing as _tracing } from '../common/utils/misc';
 import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
 import { LogLevel } from './levels';
 import { ILogger, logToAll } from './logger';
 import { argsToLogString, returnValueToLogString } from './util';
@@ -16,7 +18,7 @@ export enum TraceOptions {
     ReturnValue = 2,
 }
 
-export function createTracingDecorator(loggers: ILogger[], logInfo: LogInfo) {
+export function createTracingDecorator(loggers: ILogger[], logInfo: LogInfo): TraceDecoratorType {
     return traceDecorator((call, traced) => logResult(loggers, logInfo, traced, call));
 }
 
@@ -72,6 +74,6 @@ function logResult(loggers: ILogger[], info: LogInfo, traced: TraceInfo, call?: 
     } else {
         logToAll(loggers, LogLevel.Error, [formatted, traced.err]);
 
-        sendTelemetryEvent('ERROR' as any, undefined, undefined, traced.err);
+        sendTelemetryEvent(('ERROR' as unknown) as EventName, undefined, undefined, traced.err);
     }
 }
