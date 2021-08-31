@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import type { TextDocument, Uri } from 'vscode';
-import { arePathsSame, isParentPath } from '../../pythonEnvironments/common/externalDependencies';
 import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
 import { InterpreterUri } from '../installer/types';
+import { arePathsSame, isParentPath } from '../platform/fs-paths';
 import { Resource } from '../types';
 import { isPromise } from './async';
 import { StopWatch } from './stopWatch';

@@ -156,3 +156,7 @@ export function normCasePath(filePath: string): string {
 export function isParentPath(filePath: string, parentPath: string): boolean {
     return normCasePath(filePath).startsWith(normCasePath(parentPath));
 }
+
+export function arePathsSame(path1: string, path2: string): boolean {
+    return normCasePath(path1) === normCasePath(path2);
+}
