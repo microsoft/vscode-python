@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { DiscoveryVariants } from '../../../../common/experiments/groups';
-import { traceVerbose } from '../../../../common/logger';
+import { traceError, traceVerbose } from '../../../../common/logger';
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
 import { logError } from '../../../../logging';
@@ -34,7 +34,7 @@ function checkDirWatchable(dirname: string): DirUnwatchableReason {
     try {
         names = fs.readdirSync(dirname);
     } catch (err) {
-        traceVerbose('haha', err);
+        traceError('Reading directory to watch failed', err);
         if (err.code === 'ENOENT') {
             // We treat a missing directory as watchable since it should
             // be watchable if created later.
@@ -44,10 +44,8 @@ function checkDirWatchable(dirname: string): DirUnwatchableReason {
     }
     // The limit here is an educated guess.
     if (names.length > 200) {
-        traceVerbose('say what');
         return 'too many files';
     }
-    traceVerbose('yep');
     return undefined;
 }
 
