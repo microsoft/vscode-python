@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { DiscoveryVariants } from '../../../../common/experiments/groups';
+import { traceError, traceVerbose } from '../../../../common/logger';
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
 import { logError } from '../../../../logging';
@@ -33,6 +34,7 @@ function checkDirWatchable(dirname: string): DirUnwatchableReason {
     try {
         names = fs.readdirSync(dirname);
     } catch (err) {
+        traceError('Reading directory to watch failed', err);
         if (err.code === 'ENOENT') {
             // We treat a missing directory as watchable since it should
             // be watchable if created later.
@@ -92,12 +94,15 @@ export abstract class FSWatchingLocator<I = PythonEnvInfo> extends LazyResourceB
             // Enable global watchers only if the experiment allows it.
             const enableGlobalWatchers = await inExperiment(DiscoveryVariants.discoverWithFileWatching);
             if (!enableGlobalWatchers) {
+                traceVerbose('Watcher disabled');
                 return;
             }
         }
 
         // Start the FS watchers.
+        traceVerbose('Getting roots');
         let roots = await this.getRoots();
+        traceVerbose('Found roots');
         if (typeof roots === 'string') {
             roots = [roots];
         }
@@ -106,13 +111,12 @@ export abstract class FSWatchingLocator<I = PythonEnvInfo> extends LazyResourceB
             // that might be watched due to a glob are not checked.
             const unwatchable = await checkDirWatchable(root);
             if (unwatchable) {
-                logError(`dir "${root}" is not watchable (${unwatchable})`);
+                logError(`Dir "${root}" is not watchable (${unwatchable})`);
                 return undefined;
             }
             return root;
         });
         const watchableRoots = (await Promise.all(promises)).filter((root) => !!root) as string[];
-
         watchableRoots.forEach((root) => this.startWatchers(root));
     }
 
@@ -147,6 +151,7 @@ export abstract class FSWatchingLocator<I = PythonEnvInfo> extends LazyResourceB
             // The structure determines which globs are returned.
             this.opts.envStructure,
         );
+        traceVerbose('Start watching root', root, 'for globs', JSON.stringify(globs));
         const watchers = globs.map((g) => watchLocationForPythonBinaries(root, callback, g));
         this.disposables.push(...watchers);
     }

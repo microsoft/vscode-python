@@ -4,6 +4,7 @@
 import type { TextDocument, Uri } from 'vscode';
 import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
 import { InterpreterUri } from '../installer/types';
+import { arePathsSame, isParentPath } from '../platform/fs-paths';
 import { Resource } from '../types';
 import { isPromise } from './async';
 import { StopWatch } from './stopWatch';
@@ -126,15 +127,15 @@ export function getURIFilter(
         while (candidate.path.endsWith('/')) {
             candidatePath = candidatePath.slice(0, -1);
         }
-        if (opts.checkExact && candidatePath === uriPath) {
+        if (opts.checkExact && arePathsSame(candidatePath, uriPath)) {
             return true;
         }
-        if (opts.checkParent && candidatePath.startsWith(uriRoot)) {
+        if (opts.checkParent && isParentPath(candidatePath, uriRoot)) {
             return true;
         }
         if (opts.checkChild) {
-            const candidateRoot = `{candidatePath}/`;
-            if (uriPath.startsWith(candidateRoot)) {
+            const candidateRoot = `${candidatePath}/`;
+            if (isParentPath(uriPath, candidateRoot)) {
                 return true;
             }
         }

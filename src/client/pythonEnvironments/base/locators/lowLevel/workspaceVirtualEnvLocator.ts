@@ -10,7 +10,7 @@ import { isPipenvEnvironment } from '../../../common/environmentManagers/pipenv'
 import { isVenvEnvironment, isVirtualenvEnvironment } from '../../../common/environmentManagers/simplevirtualenvs';
 import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
-import { FSWatchingLocator } from './fsWatchingLocator';
+import { FSWatcherKind, FSWatchingLocator } from './fsWatchingLocator';
 import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
 
@@ -52,11 +52,16 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
  */
 export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator<BasicEnvInfo> {
     public constructor(private readonly root: string) {
-        super(() => getWorkspaceVirtualEnvDirs(this.root), getVirtualEnvKind, {
-            // Note detecting kind of virtual env depends on the file structure around the
-            // executable, so we need to wait before attempting to detect it.
-            delayOnCreated: 1000,
-        });
+        super(
+            () => getWorkspaceVirtualEnvDirs(this.root),
+            getVirtualEnvKind,
+            {
+                // Note detecting kind of virtual env depends on the file structure around the
+                // executable, so we need to wait before attempting to detect it.
+                delayOnCreated: 1000,
+            },
+            FSWatcherKind.Workspace,
+        );
     }
 
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
