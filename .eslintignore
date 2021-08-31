@@ -1,4 +1,3 @@
-# The following files were grandfathered out of eslint. They can be removed as time permits.
 
 src/test/mocks/vsc/extHostedTypes.ts
 src/test/mocks/vsc/uuid.ts
@@ -96,12 +95,8 @@ src/test/language/tokenizer.unit.test.ts
 src/test/api.functional.test.ts
 
 src/test/testing/mocks.ts
-src/test/testing/helper.ts
 src/test/testing/common/debugLauncher.unit.test.ts
-src/test/testing/common/testUtils.unit.test.ts
-src/test/testing/common/services/storageService.unit.test.ts
 src/test/testing/common/services/configSettingService.unit.test.ts
-src/test/testing/results.ts
 
 src/test/common/exitCIAfterTestReporter.ts
 src/test/common/crypto.unit.test.ts
