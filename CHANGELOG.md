@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.9.0-rc (30 August 2021)
+## 2021.9.0 (1 September 2021)
 
 ### Enhancements
 
