@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
-import { arePathsSame, pathExists } from '../externalDependencies';
+import { arePathsSame, isParentPath, pathExists } from '../externalDependencies';
 
 export function getPyenvDir(): string {
     // Check if the pyenv environment variables exist: PYENV on Windows, PYENV_ROOT on Unix.
@@ -53,7 +53,7 @@ export async function isPyenvEnvironment(interpreterPath: string): Promise<boole
         pathToCheck = pathToCheck.toUpperCase();
     }
 
-    return pathToCheck.startsWith(pyenvDir);
+    return isParentPath(pathToCheck, pyenvDir);
 }
 
 export interface IPyenvVersionStrings {

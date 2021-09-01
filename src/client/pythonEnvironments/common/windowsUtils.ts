@@ -5,6 +5,7 @@ import { uniqBy } from 'lodash';
 import * as path from 'path';
 import { isTestExecution } from '../../common/constants';
 import { traceError, traceVerbose } from '../../common/logger';
+import { normCasePath } from './externalDependencies';
 import {
     HKCU,
     HKLM,
@@ -21,7 +22,7 @@ import {
  * Determine if the given filename looks like the simplest Python executable.
  */
 export function matchBasicPythonBinFilename(filename: string): boolean {
-    return path.basename(filename).toLowerCase() === 'python.exe';
+    return path.basename(normCasePath(filename)) === 'python.exe';
 }
 
 /**

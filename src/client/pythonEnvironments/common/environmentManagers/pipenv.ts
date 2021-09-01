@@ -4,7 +4,7 @@
 import * as path from 'path';
 import { traceError } from '../../../common/logger';
 import { getEnvironmentVariable } from '../../../common/utils/platform';
-import { arePathsSame, pathExists, readFile } from '../externalDependencies';
+import { arePathsSame, normCasePath, pathExists, readFile } from '../externalDependencies';
 
 function getSearchHeight() {
     // PIPENV_MAX_DEPTH tells pipenv the maximum number of directories to recursively search for
@@ -108,8 +108,8 @@ async function getPipfileIfGlobal(interpreterPath: string): Promise<string | und
     //  project
     // |__ Pipfile  <--- check if Pipfile exists here and return it
     // The name of the project (directory where Pipfile resides) is used as a prefix in the environment folder
-    const envFolderName = path.basename(envFolder);
-    if (!envFolderName.startsWith(`${path.basename(projectDir)}-`)) {
+    const envFolderName = path.basename(normCasePath(envFolder));
+    if (!envFolderName.startsWith(`${path.basename(normCasePath(projectDir))}-`)) {
         return undefined;
     }
 
