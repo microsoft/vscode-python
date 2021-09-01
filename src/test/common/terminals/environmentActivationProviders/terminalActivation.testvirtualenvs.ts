@@ -191,22 +191,27 @@ suite('Activation of Environments in Terminal', () => {
         await testActivation(envPaths.virtualEnvPath);
     });
     test('Should activate with conda', async function () {
-        await terminalSettings.update('integrated.profiles.windows', {
-            PowerShell: {
-                source: 'PowerShell',
-                icon: 'terminal-powershell',
+        await terminalSettings.update(
+            'integrated.profiles.windows',
+            {
+                PowerShell: {
+                    source: 'PowerShell',
+                    icon: 'terminal-powershell',
+                },
+                'Command Prompt': {
+                    path: ['${env:windir}\\Sysnative\\cmd.exe', '${env:windir}\\System32\\cmd.exe'],
+                    args: [],
+                },
             },
-            'Command Prompt': {
-                path: ['${env:windir}\\Sysnative\\cmd.exe', '${env:windir}\\System32\\cmd.exe'],
-                args: [],
-            },
-        });
+            vscode.ConfigurationTarget.Global,
+        );
         // Powershell does not work with conda by default, hence use cmd.
         await terminalSettings.update(
             'integrated.defaultProfile.windows',
             'Command Prompt',
             vscode.ConfigurationTarget.Global,
         );
+        expect(envPaths.condaExecPath).to.contain('conda');
         await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
         await testActivation(envPaths.condaPath);
     }).timeout(TEST_TIMEOUT * 2);
