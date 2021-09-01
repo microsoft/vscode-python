@@ -191,7 +191,6 @@ suite('Activation of Environments in Terminal', () => {
         await testActivation(envPaths.virtualEnvPath);
     });
     test('Should activate with conda', async function () {
-        this.skip();
         // Powershell does not work with conda by default, hence use cmd.
         await terminalSettings.update(
             'integrated.defaultProfile.windows',
