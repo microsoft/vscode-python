@@ -4,11 +4,8 @@
 'use strict';
 
 export class vscMockTelemetryReporter {
-    constructor() {
-        //
-    }
-
+    // eslint-disable-next-line class-methods-use-this
     public sendTelemetryEvent(): void {
-        //
+        // Noop.
     }
 }

@@ -1,18 +1,5 @@
 # The following files were grandfathered out of eslint. They can be removed as time permits.
 
-src/test/mocks/vsc/extHostedTypes.ts
-src/test/mocks/vsc/uuid.ts
-src/test/mocks/vsc/strings.ts
-src/test/mocks/vsc/charCode.ts
-src/test/mocks/vsc/htmlContent.ts
-src/test/mocks/vsc/selection.ts
-src/test/mocks/vsc/position.ts
-src/test/mocks/vsc/uri.ts
-src/test/mocks/vsc/telemetryReporter.ts
-src/test/mocks/vsc/range.ts
-src/test/mocks/vsc/index.ts
-src/test/mocks/vsc/arrays.ts
-
 src/test/analysisEngineTest.ts
 src/test/ciConstants.ts
 src/test/common.ts
