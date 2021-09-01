@@ -88,11 +88,11 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
             placeHolder: 'Select the pattern to identify test files',
         };
         const items: QuickPickItem[] = [
-            { label: '*test.py', description: "Python Files ending with 'test'" },
-            { label: '*_test.py', description: "Python Files ending with '_test'" },
-            { label: 'test*.py', description: "Python Files beginning with 'test'" },
-            { label: 'test_*.py', description: "Python Files beginning with 'test_'" },
-            { label: '*test*.py', description: "Python Files containing the word 'test'" },
+            { label: '*test.py', description: "Python files ending with 'test'" },
+            { label: '*_test.py', description: "Python files ending with '_test'" },
+            { label: 'test*.py', description: "Python files beginning with 'test'" },
+            { label: 'test_*.py', description: "Python files beginning with 'test_'" },
+            { label: '*test*.py', description: "Python files containing the word 'test'" },
         ];
 
         return this.showQuickPick(items, options);
