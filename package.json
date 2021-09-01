@@ -144,29 +144,21 @@
                     {
                         "id": "python.runAndDebug",
                         "title": "Run and debug your Python file",
-                        "description": "Open your Python file, press F5 and select 'Python File' to start running and debugging. \n[Learn more](https://code.visualstudio.com/docs/python/python-tutorial#_run-hello-world)",
+                        "description": "[Open](command:toSide:workbench.action.files.openFile) or [create](command:welcome.showNewFileEntries) a Python file - make sure to save it as \".py\". \n Click on the play button on the top right of the editor, or press F5 when on the file and select \"Python File\" to run with the debugger. \n  \n[Open file](command:toSide:workbench.action.files.openFile)",
                         "media": {
-                            "markdown": "resources/walkthrough/run-and-debug-python-file.md"
+                            "svg": "resources/walkthrough/rundebug2.svg",
+                            "altText": "How to run and debug in VS Code with F5 or the play button on the top right."
                         },
-                        "when": "workspacePlatform != mac"
-                    },
-                    {
-                        "id": "python.runAndDebugMacOS",
-                        "title": "Run and debug your Python file",
-                        "description": "Open your Python file, press F5 and select 'Python File' to start running and debugging. \n[Learn more](https://code.visualstudio.com/docs/python/python-tutorial#_run-hello-world)",
-                        "media": {
-                            "markdown": "resources/walkthrough/run-and-debug-python-file-macOS.md"
-                        },
-                        "when": "workspacePlatform == mac"
+                        "when": ""
                     },
                     {
                         "id": "python.learnMore",
                         "title": "Explore more resources",
-                        "description": "Take a look into our [documentation](https://aka.ms/AA8dxwy) to learn more about support for Python in VS Code. \n[Learn more](https://aka.ms/AA8dxwy)",
+                        "description": "🎨 Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands). \n 💌 [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list. \n ✨ Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features. \n \n[Learn More](https://aka.ms/AA8dqti)",
                         "media": {
-                            "markdown": "resources/walkthrough/python-dev-learn-more.md"
-                        },
-                        "when": ""
+                            "altText": "Image representing our documentation page and mailing list resources.",
+                            "svg": "resources/walkthrough/learnmore.svg"
+                        }
                     }
                 ]
             },
@@ -274,9 +266,10 @@
                     {
                         "id": "python.dataScienceLearnMore",
                         "title": "Find out more!",
-                        "description": "Take a look into our [documentation](https://aka.ms/AAdar6q) to learn more about Python for Data Science in VS Code. \n[Learn more](https://aka.ms/AAdar6q)",
+                        "description": "🎨 Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands). \n 📒 Take a look into the [Jupyter extension](command:workbench.extensions.search?\"ms-toolsai.jupyter\") features, by looking for \"Jupyter\" in the [Command Palette](command:workbench.action.showCommands). \n 📃 Find out more features in our [Tutorials](https://aka.ms/AAdjzpd).  \n[Learn more](https://aka.ms/AAdar6q)",
                         "media": {
-                            "markdown": "resources/walkthrough/python-datascience-learn-more.md"
+                            "svg": "resources/walkthrough/learnmore.svg",
+                            "altText": "Image representing our documentation page and mailing list resources."
                         }
                     }
                 ]

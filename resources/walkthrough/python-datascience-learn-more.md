@@ -7,6 +7,7 @@
 
 💌 [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list. 
 
+
 📃 Find out more features in our [Tutorials](https://aka.ms/AAdjzpd). 
 
 ✨ Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features. 
