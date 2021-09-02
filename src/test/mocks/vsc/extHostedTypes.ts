@@ -1040,10 +1040,10 @@ export class SymbolInformation {
         }
     }
 
-    toJSON(): any {
+    toJSON(): { name: string; kind: SymbolKind; location: Location; containerName: string } {
         return {
             name: this.name,
-            kind: SymbolKind[this.kind],
+            kind: (SymbolKind[this.kind] as unknown) as SymbolKind,
             location: this.location,
             containerName: this.containerName,
         };
@@ -1118,11 +1118,10 @@ export class CodeActionKind {
 export class CodeLens {
     range: Range;
 
-    command: vscode.Command;
+    command: vscode.Command | undefined;
 
     constructor(range: Range, command?: vscode.Command) {
         this.range = range;
-        // @ts-ignore
         this.command = command;
     }
 
@@ -1189,11 +1188,9 @@ export class SignatureInformation {
 export class SignatureHelp {
     signatures: SignatureInformation[];
 
-    // @ts-ignore
-    activeSignature: number;
+    activeSignature: number | undefined;
 
-    // @ts-ignore
-    activeParameter: number;
+    activeParameter: number | undefined;
 
     constructor() {
         this.signatures = [];
@@ -1290,11 +1287,22 @@ export class CompletionItem {
         this.kind = kind;
     }
 
-    toJSON(): any {
+    toJSON(): {
+        label: string;
+        label2?: CompletionItemLabel;
+        kind?: CompletionItemKind;
+        detail?: string;
+        documentation?: string | MarkdownString;
+        sortText?: string;
+        filterText?: string;
+        preselect?: boolean;
+        insertText?: string | SnippetString;
+        textEdit?: TextEdit;
+    } {
         return {
             label: this.label,
             label2: this.label2,
-            kind: this.kind && CompletionItemKind[this.kind],
+            kind: this.kind && ((CompletionItemKind[this.kind] as unknown) as CompletionItemKind),
             detail: this.detail,
             documentation: this.documentation,
             sortText: this.sortText,
@@ -1416,8 +1424,9 @@ export enum DecorationRangeBehavior {
     ClosedOpen = 3,
 }
 
+// eslint-disable-next-line import/export, @typescript-eslint/no-namespace
 export namespace TextEditorSelectionChangeKind {
-    export function fromValue(s: string) {
+    export function fromValue(s: string): TextEditorSelectionChangeKind | undefined {
         switch (s) {
             case 'keyboard':
                 return TextEditorSelectionChangeKind.Keyboard;
@@ -1425,8 +1434,9 @@ export namespace TextEditorSelectionChangeKind {
                 return TextEditorSelectionChangeKind.Mouse;
             case 'api':
                 return TextEditorSelectionChangeKind.Command;
+            default:
+                return undefined;
         }
-        return undefined;
     }
 }
 
@@ -2021,6 +2031,12 @@ export enum ProgressLocation {
     Notification = 15,
 }
 
+export enum TreeItemCollapsibleState {
+    None = 0,
+    Collapsed = 1,
+    Expanded = 2,
+}
+
 export class TreeItem {
     label?: string;
 
@@ -2048,12 +2064,6 @@ export class TreeItem {
             this.label = arg1;
         }
     }
-}
-
-export enum TreeItemCollapsibleState {
-    None = 0,
-    Collapsed = 1,
-    Expanded = 2,
 }
 
 export class ThemeIcon {
@@ -2104,6 +2114,7 @@ export class RelativePattern implements IRelativePattern {
         this.pattern = pattern;
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public pathToRelative(from: string, to: string): string {
         return relative(from, to);
     }
@@ -2227,15 +2238,11 @@ export class FileSystemError extends Error {
         return new FileSystemError(messageOrUri, 'Unavailable', FileSystemError.Unavailable);
     }
 
-    constructor(uriOrMessage?: string | vscUri.URI, code?: string, terminator?: Function) {
+    constructor(uriOrMessage?: string | vscUri.URI, code?: string, terminator?: () => void) {
         super(vscUri.URI.isUri(uriOrMessage) ? uriOrMessage.toString(true) : uriOrMessage);
         this.name = code ? `${code} (FileSystemError)` : `FileSystemError`;
 
-        // workaround when extending builtin objects and when compiling to ES5, see:
-        // https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work
-        if (typeof (<any>Object).setPrototypeOf === 'function') {
-            (<any>Object).setPrototypeOf(this, FileSystemError.prototype);
-        }
+        Object.setPrototypeOf(this, FileSystemError.prototype);
 
         if (typeof Error.captureStackTrace === 'function' && typeof terminator === 'function') {
             // nice stack traces
