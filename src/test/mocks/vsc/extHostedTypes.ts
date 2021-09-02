@@ -37,7 +37,7 @@ export interface IRelativePattern {
 const illegalArgument = (msg = 'Illegal Argument') => new Error(msg);
 
 export class Disposable {
-    static from(...disposables: { dispose(): any }[]): Disposable {
+    static from(...disposables: { dispose(): () => void }[]): Disposable {
         return new Disposable(() => {
             if (disposables) {
                 for (const disposable of disposables) {
@@ -51,13 +51,13 @@ export class Disposable {
         });
     }
 
-    private _callOnDispose: Function | undefined;
+    private _callOnDispose: (() => void) | undefined;
 
-    constructor(callOnDispose: Function) {
+    constructor(callOnDispose: () => void) {
         this._callOnDispose = callOnDispose;
     }
 
-    dispose(): any {
+    dispose(): void {
         if (typeof this._callOnDispose === 'function') {
             this._callOnDispose();
             this._callOnDispose = undefined;
@@ -175,11 +175,10 @@ export class Position {
 
     translate(change: { lineDelta?: number; characterDelta?: number }): Position;
 
-    // @ts-ignore
     translate(lineDelta?: number, characterDelta?: number): Position;
 
     translate(
-        lineDeltaOrChange: number | { lineDelta?: number; characterDelta?: number },
+        lineDeltaOrChange: number | { lineDelta?: number; characterDelta?: number } | undefined,
         characterDelta = 0,
     ): Position {
         if (lineDeltaOrChange === null || characterDelta === null) {
@@ -205,10 +204,12 @@ export class Position {
 
     with(change: { line?: number; character?: number }): Position;
 
-    // @ts-ignore
     with(line?: number, character?: number): Position;
 
-    with(lineOrChange: number | { line?: number; character?: number }, character: number = this.character): Position {
+    with(
+        lineOrChange: number | { line?: number; character?: number } | undefined,
+        character: number = this.character,
+    ): Position {
         if (lineOrChange === null || character === null) {
             throw illegalArgument();
         }
@@ -229,20 +230,20 @@ export class Position {
         return new Position(line, character);
     }
 
-    toJSON(): any {
+    toJSON(): { line: number; character: number } {
         return { line: this.line, character: this.character };
     }
 }
 
 export class Range {
-    static isRange(thing: any): thing is vscode.Range {
+    static isRange(thing: unknown): thing is vscode.Range {
         if (thing instanceof Range) {
             return true;
         }
         if (!thing) {
             return false;
         }
-        return Position.isPosition((<Range>thing).start) && Position.isPosition(<Range>thing.end);
+        return Position.isPosition((thing as Range).start) && Position.isPosition((thing as Range).end);
     }
 
     protected _start: Position;
@@ -267,8 +268,8 @@ export class Range {
         endLine?: number,
         endColumn?: number,
     ) {
-        let start: Position;
-        let end: Position;
+        let start: Position | undefined;
+        let end: Position | undefined;
 
         if (
             typeof startLineOrStart === 'number' &&
@@ -282,7 +283,7 @@ export class Range {
             start = startLineOrStart;
             end = startColumnOrEnd;
         }
-        // @ts-ignore
+
         if (!start || !end) {
             throw new Error('Invalid arguments');
         }
@@ -373,7 +374,7 @@ export class Range {
         return new Range(start, end);
     }
 
-    toJSON(): any {
+    toJSON(): [Position, Position] {
         return [this.start, this.end];
     }
 }
@@ -446,13 +447,13 @@ export class Selection extends Range {
         return this._anchor === this._end;
     }
 
-    toJSON() {
-        return {
+    toJSON(): [Position, Position] {
+        return ({
             start: this.start,
             end: this.end,
             active: this.active,
             anchor: this.anchor,
-        };
+        } as unknown) as [Position, Position];
     }
 }
 
@@ -492,7 +493,7 @@ export class TextEdit {
 
     protected _range: Range = new Range(new Position(0, 0), new Position(0, 0));
 
-    protected _newText: string = '';
+    protected _newText = '';
 
     protected _newEol: EndOfLine = EndOfLine.LF;
 
@@ -534,7 +535,7 @@ export class TextEdit {
         this.newText = newText;
     }
 
-    toJSON(): any {
+    toJSON(): { range: Range; newText: string; newEol: EndOfLine } {
         return {
             range: this.range,
             newText: this.newText,
@@ -683,8 +684,7 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
             this._textEdits.set(uri.toString(), data);
         }
         if (!edits) {
-            // @ts-ignore
-            data.edits = undefined;
+            data.edits = [];
         } else {
             data.edits = edits.slice(0);
         }
@@ -692,12 +692,10 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
 
     get(uri: vscUri.URI): TextEdit[] {
         if (!this._textEdits.has(uri.toString())) {
-            // @ts-ignore
-            return undefined;
+            return [];
         }
-        // @ts-ignore
-        const { edits } = this._textEdits.get(uri.toString());
-        return edits ? edits.slice() : undefined;
+        const { edits } = this._textEdits.get(uri.toString()) || {};
+        return edits ? edits.slice() : [];
     }
 
     entries(): [vscUri.URI, TextEdit[]][] {
@@ -727,7 +725,7 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
         return this._textEdits.size + this._resourceEdits.length;
     }
 
-    toJSON(): any {
+    toJSON(): [vscUri.URI, TextEdit[]][] {
         return this.entries();
     }
 }
@@ -767,7 +765,7 @@ export class SnippetString {
     }
 
     appendPlaceholder(
-        value: string | ((snippet: SnippetString) => any),
+        value: string | ((snippet: SnippetString) => void),
         number: number = (this._tabstop += 1),
     ): SnippetString {
         if (typeof value === 'function') {
@@ -801,7 +799,7 @@ export class SnippetString {
         return this;
     }
 
-    appendVariable(name: string, defaultValue?: string | ((snippet: SnippetString) => any)): SnippetString {
+    appendVariable(name: string, defaultValue?: string | ((snippet: SnippetString) => void)): SnippetString {
         if (typeof defaultValue === 'function') {
             const nested = new SnippetString();
             nested._tabstop = this._tabstop;
@@ -864,7 +862,7 @@ export class Location {
         }
     }
 
-    toJSON(): any {
+    toJSON(): { uri: vscUri.URI; range: Range } {
         return {
             uri: this.uri,
             range: this.range,
@@ -900,7 +898,7 @@ export class Diagnostic {
 
     message: string;
 
-    source: string = '';
+    source = '';
 
     code: string | number = '';
 
@@ -916,9 +914,9 @@ export class Diagnostic {
         this.severity = severity;
     }
 
-    toJSON(): any {
+    toJSON(): { severity: DiagnosticSeverity; message: string; range: Range; source: string; code: string | number } {
         return {
-            severity: DiagnosticSeverity[this.severity],
+            severity: (DiagnosticSeverity[this.severity] as unknown) as DiagnosticSeverity,
             message: this.message,
             range: this.range,
             source: this.source,
@@ -946,8 +944,8 @@ export class Hover {
         } else {
             this.contents = [contents];
         }
-        // @ts-ignore
-        this.range = range;
+
+        this.range = range || new Range(new Position(0, 0), new Position(0, 0));
     }
 }
 
@@ -967,10 +965,10 @@ export class DocumentHighlight {
         this.kind = kind;
     }
 
-    toJSON(): any {
+    toJSON(): { range: Range; kind: DocumentHighlightKind } {
         return {
             range: this.range,
-            kind: DocumentHighlightKind[this.kind],
+            kind: (DocumentHighlightKind[this.kind] as unknown) as DocumentHighlightKind,
         };
     }
 }
@@ -1007,8 +1005,10 @@ export enum SymbolKind {
 export class SymbolInformation {
     name: string;
 
-    // @ts-ignore
-    location: Location;
+    location: Location = new Location(
+        vscUri.URI.parse('testLocation'),
+        new Range(new Position(0, 0), new Position(0, 0)),
+    );
 
     kind: SymbolKind;
 
@@ -1027,8 +1027,7 @@ export class SymbolInformation {
     ) {
         this.name = name;
         this.kind = kind;
-        // @ts-ignore
-        this.containerName = containerName;
+        this.containerName = containerName || '';
 
         if (typeof rangeOrContainer === 'string') {
             this.containerName = rangeOrContainer;
@@ -1037,8 +1036,7 @@ export class SymbolInformation {
         if (locationOrUri instanceof Location) {
             this.location = locationOrUri;
         } else if (rangeOrContainer instanceof Range) {
-            // @ts-ignore
-            this.location = new Location(locationOrUri, rangeOrContainer);
+            this.location = new Location(locationOrUri as vscUri.URI, rangeOrContainer);
         }
     }
 
@@ -1651,7 +1649,7 @@ export class ProcessExecution implements vscode.ProcessExecution {
 }
 
 export class ShellExecution implements vscode.ShellExecution {
-    private _commandLine: string = '';
+    private _commandLine = '';
 
     private _command: string | vscode.ShellQuotedString = '';
 
