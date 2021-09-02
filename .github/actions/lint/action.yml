@@ -23,18 +23,23 @@ runs:
 
     - name: Install Node dependencies
       run: npm ci --prefer-offline
+      shell: bash
 
     - name: Run `gulp prePublishNonBundle`
       run: npx gulp prePublishNonBundle
+      shell: bash
 
     - name: Check dependencies
       run: npm run checkDependencies
+      shell: bash
 
     - name: Lint TypeScript code
       run: npm run lint
+      shell: bash
 
     - name: Check TypeScript format
       run: npm run format-check
+      shell: bash
 
     - name: Install Python
       uses: actions/setup-python@v2
@@ -53,3 +58,4 @@ runs:
         python -m pip install -U black
         python -m black . --check
       working-directory: pythonFiles
+      shell: bash
