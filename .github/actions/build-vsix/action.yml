@@ -20,7 +20,8 @@ runs:
       with:
         node-version: ${{ inputs.node_version }}
 
-    - uses: actions/cache@v2
+    - name: Node cache
+      uses: actions/cache@v2
       with:
         path: ~/.npm
         key: ${{ runner.os }}-node-build-vsix-${{ hashFiles('**/package-lock.json') }}
@@ -33,7 +34,8 @@ runs:
       with:
         python-version: 3.6
 
-    - uses: actions/cache@v2
+    - name: Pip cache
+      uses: actions/cache@v2
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-build-vsix-${{ hashFiles('**/requirements.txt') }}
