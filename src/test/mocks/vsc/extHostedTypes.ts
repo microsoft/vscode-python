@@ -1188,12 +1188,14 @@ export class SignatureInformation {
 export class SignatureHelp {
     signatures: SignatureInformation[];
 
-    activeSignature: number | undefined;
+    activeSignature: number;
 
-    activeParameter: number | undefined;
+    activeParameter: number;
 
     constructor() {
         this.signatures = [];
+        this.activeSignature = -1;
+        this.activeParameter = -1;
     }
 }
 
