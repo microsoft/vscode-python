@@ -290,59 +290,15 @@ jobs:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest, windows-latest]
-        python: ['3.x']
     steps:
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
-      - name: Install Node
-        uses: actions/setup-node@v2.4.0
+      - name: Smoke tests
+        uses: ./.github/actions/smoke-tests
         with:
-          node-version: ${{env.NODE_VERSION}}
-
-      - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{matrix.python}}
-
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
-
-      - name: pip install system test requirements
-        run: |
-          python -m pip install --upgrade -r build/test-requirements.txt
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
-        shell: bash
-
-      - name: pip install smoke test requirements
-        run: |
-          python -m pip install --upgrade -r build/smoke-test-requirements.txt
-        shell: bash
-
-      # Save time by reusing bits from the VSIX.
-      - name: Download VSIX
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.setup.outputs.vsix_artifact_name }}
-
-      - name: Prepare for smoke tests
-        run: npx tsc -p ./
-        shell: bash
-
-      - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
-        run: |
-          echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
-          echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Run smoke tests
-        env:
-          DISPLAY: 10
-          INSTALL_JUPYTER_EXTENSION: true
-        uses: GabrielBB/xvfb-action@v1.5
-        with:
-          run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
+          node_version: ${{ env.NODE_VERSION }}
+          artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}
 
   #   insider-tests:
   #     name: Insider tests
