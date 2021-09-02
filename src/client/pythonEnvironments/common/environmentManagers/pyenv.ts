@@ -37,20 +37,11 @@ export function isPyenvShimDir(dirPath: string): boolean {
  */
 
 export async function isPyenvEnvironment(interpreterPath: string): Promise<boolean> {
-    let pathToCheck = interpreterPath;
-    let pyenvDir = getPyenvDir();
+    const pathToCheck = interpreterPath;
+    const pyenvDir = getPyenvDir();
 
     if (!(await pathExists(pyenvDir))) {
         return false;
-    }
-
-    if (!pyenvDir.endsWith(path.sep)) {
-        pyenvDir += path.sep;
-    }
-
-    if (getOSType() === OSType.Windows) {
-        pyenvDir = pyenvDir.toUpperCase();
-        pathToCheck = pathToCheck.toUpperCase();
     }
 
     return isParentPath(pathToCheck, pyenvDir);

@@ -11,6 +11,7 @@ import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from './environmentManagers/conda';
 import { getPythonVersionFromPyvenvCfg } from './environmentManagers/simplevirtualenvs';
+import { normCasePath } from './externalDependencies';
 import * as posix from './posixUtils';
 import * as windows from './windowsUtils';
 
@@ -362,7 +363,7 @@ export function getEnvironmentDirFromPath(interpreterPath: string): string {
     // env <--- Return this directory if it is not 'bin' or 'scripts'
     // |__ python  <--- interpreterPath
     const dir = path.basename(path.dirname(interpreterPath));
-    if (!skipDirs.includes(dir.toLowerCase())) {
+    if (!skipDirs.map((e) => normCasePath(e)).includes(normCasePath(dir))) {
         return path.dirname(interpreterPath);
     }
 
