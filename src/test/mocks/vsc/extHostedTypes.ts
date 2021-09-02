@@ -46,12 +46,12 @@ export class Disposable {
                     }
                 }
 
-                disposables = undefined;
+                disposables = [];
             }
         });
     }
 
-    private _callOnDispose: Function;
+    private _callOnDispose: Function | undefined;
 
     constructor(callOnDispose: Function) {
         this._callOnDispose = callOnDispose;
@@ -69,21 +69,21 @@ export class Position {
     static Min(...positions: Position[]): Position {
         let result = positions.pop();
         for (const p of positions) {
-            if (p.isBefore(result)) {
+            if (result && p.isBefore(result)) {
                 result = p;
             }
         }
-        return result;
+        return result || new Position(0, 0);
     }
 
     static Max(...positions: Position[]): Position {
         let result = positions.pop();
         for (const p of positions) {
-            if (p.isAfter(result)) {
+            if (result && p.isAfter(result)) {
                 result = p;
             }
         }
-        return result;
+        return result || new Position(0, 0);
     }
 
     static isPosition(other: unknown): other is Position {
@@ -316,7 +316,7 @@ export class Range {
         return this._start.isEqual(other._start) && this._end.isEqual(other._end);
     }
 
-    intersection(other: Range): Range {
+    intersection(other: Range): Range | undefined {
         const start = Position.Max(other.start, this._start);
         const end = Position.Min(other.end, this._end);
         if (start.isAfter(end)) {
@@ -416,8 +416,8 @@ export class Selection extends Range {
         activeLine?: number,
         activeColumn?: number,
     ) {
-        let anchor: Position;
-        let active: Position;
+        let anchor: Position | undefined;
+        let active: Position | undefined;
 
         if (
             typeof anchorLineOrAnchor === 'number' &&
@@ -485,16 +485,16 @@ export class TextEdit {
     }
 
     static setEndOfLine(eol: EndOfLine): TextEdit {
-        const ret = new TextEdit(undefined, undefined);
+        const ret = new TextEdit(new Range(new Position(0, 0), new Position(0, 0)), '');
         ret.newEol = eol;
         return ret;
     }
 
-    protected _range: Range;
+    protected _range: Range = new Range(new Position(0, 0), new Position(0, 0));
 
-    protected _newText: string;
+    protected _newText: string = '';
 
-    protected _newEol: EndOfLine;
+    protected _newEol: EndOfLine = EndOfLine.LF;
 
     get range(): Range {
         return this._range;
@@ -848,7 +848,7 @@ export class Location {
 
     uri: vscUri.URI;
 
-    range: Range;
+    range: Range = new Range(new Position(0, 0), new Position(0, 0));
 
     constructor(uri: vscUri.URI, rangeOrPosition: Range | Position) {
         this.uri = uri;
@@ -900,13 +900,13 @@ export class Diagnostic {
 
     message: string;
 
-    source: string;
+    source: string = '';
 
-    code: string | number;
+    code: string | number = '';
 
     severity: DiagnosticSeverity;
 
-    relatedInformation: DiagnosticRelatedInformation[];
+    relatedInformation: DiagnosticRelatedInformation[] = [];
 
     customTags?: DiagnosticTag[];
 
@@ -1651,13 +1651,13 @@ export class ProcessExecution implements vscode.ProcessExecution {
 }
 
 export class ShellExecution implements vscode.ShellExecution {
-    private _commandLine: string;
+    private _commandLine: string = '';
 
-    private _command: string | vscode.ShellQuotedString;
+    private _command: string | vscode.ShellQuotedString = '';
 
-    private _args: (string | vscode.ShellQuotedString)[];
+    private _args: (string | vscode.ShellQuotedString)[] = [];
 
-    private _options: vscode.ShellExecutionOptions;
+    private _options: vscode.ShellExecutionOptions | undefined;
 
     constructor(commandLine: string, options?: vscode.ShellExecutionOptions);
 
@@ -1722,7 +1722,7 @@ export class ShellExecution implements vscode.ShellExecution {
     }
 
     get options(): vscode.ShellExecutionOptions {
-        return this._options;
+        return this._options || {};
     }
 
     set options(value: vscode.ShellExecutionOptions) {
@@ -2171,7 +2171,7 @@ export class DebugAdapterExecutable {
 
     constructor(command: string, args?: string[]) {
         this.command = command;
-        this.args = args;
+        this.args = args || [];
     }
 }
 
