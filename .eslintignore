@@ -1,7 +1,5 @@
 # The following files were grandfathered out of eslint. They can be removed as time permits.
 
-src/test/mocks/vsc/extHostedTypes.ts
-
 src/test/analysisEngineTest.ts
 src/test/ciConstants.ts
 src/test/common.ts

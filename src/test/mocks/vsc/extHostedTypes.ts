@@ -1821,30 +1821,24 @@ export class Task implements vscode.Task {
     constructor(
         definition: vscode.TaskDefinition,
         arg2: string | (vscode.TaskScope.Global | vscode.TaskScope.Workspace) | vscode.WorkspaceFolder,
-        arg3: any,
-        arg4?: any,
-        arg5?: any,
-        arg6?: any,
+        arg3: string,
+        arg4?: string | ProcessExecution | ShellExecution,
+        arg5?: ProcessExecution | ShellExecution | string | string[],
+        arg6?: string | string[],
     ) {
         this.definition = definition;
         let problemMatchers: string | string[];
         if (typeof arg2 === 'string') {
             this.name = arg2;
             this.source = arg3;
-            this.execution = arg4;
-            problemMatchers = arg5;
-        } else if (arg2 === TaskScope.Global || arg2 === TaskScope.Workspace) {
-            this.target = arg2;
-            this.name = arg3;
-            this.source = arg4;
-            this.execution = arg5;
-            problemMatchers = arg6;
+            this.execution = arg4 as ProcessExecution | ShellExecution;
+            problemMatchers = arg5 as string | string[];
         } else {
             this.target = arg2;
             this.name = arg3;
-            this.source = arg4;
-            this.execution = arg5;
-            problemMatchers = arg6;
+            this.source = arg4 as string;
+            this.execution = arg5 as ProcessExecution | ShellExecution;
+            problemMatchers = arg6 as string | string[];
         }
         if (typeof problemMatchers === 'string') {
             this._problemMatchers = [problemMatchers];
