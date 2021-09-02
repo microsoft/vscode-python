@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -44,7 +45,7 @@ export class Disposable {
                         disposable.dispose();
                     }
                 }
-                // @ts-ignore
+
                 disposables = undefined;
             }
         });
@@ -59,7 +60,6 @@ export class Disposable {
     dispose(): any {
         if (typeof this._callOnDispose === 'function') {
             this._callOnDispose();
-            // @ts-ignore
             this._callOnDispose = undefined;
         }
     }
@@ -69,28 +69,24 @@ export class Position {
     static Min(...positions: Position[]): Position {
         let result = positions.pop();
         for (const p of positions) {
-            // @ts-ignore
             if (p.isBefore(result)) {
                 result = p;
             }
         }
-        // @ts-ignore
         return result;
     }
 
     static Max(...positions: Position[]): Position {
         let result = positions.pop();
         for (const p of positions) {
-            // @ts-ignore
             if (p.isAfter(result)) {
                 result = p;
             }
         }
-        // @ts-ignore
         return result;
     }
 
-    static isPosition(other: any): other is Position {
+    static isPosition(other: unknown): other is Position {
         if (!other) {
             return false;
         }
@@ -327,7 +323,6 @@ export class Range {
             // this happens when there is no overlap:
             // |-----|
             //          |----|
-            // @ts-ignore
             return undefined;
         }
         return new Range(start, end);
@@ -355,10 +350,9 @@ export class Range {
 
     with(change: { start?: Position; end?: Position }): Range;
 
-    // @ts-ignore
     with(start?: Position, end?: Position): Range;
 
-    with(startOrChange: Position | { start?: Position; end?: Position }, end: Position = this.end): Range {
+    with(startOrChange: Position | { start?: Position; end?: Position } | undefined, end: Position = this.end): Range {
         if (startOrChange === null || end === null) {
             throw illegalArgument();
         }
@@ -385,7 +379,7 @@ export class Range {
 }
 
 export class Selection extends Range {
-    static isSelection(thing: any): thing is Selection {
+    static isSelection(thing: unknown): thing is Selection {
         if (thing instanceof Selection) {
             return true;
         }
@@ -437,7 +431,7 @@ export class Selection extends Range {
             anchor = anchorLineOrAnchor;
             active = anchorColumnOrActive;
         }
-        // @ts-ignore
+
         if (!anchor || !active) {
             throw new Error('Invalid arguments');
         }
@@ -468,7 +462,7 @@ export enum EndOfLine {
 }
 
 export class TextEdit {
-    static isTextEdit(thing: any): thing is TextEdit {
+    static isTextEdit(thing: unknown): thing is TextEdit {
         if (thing instanceof TextEdit) {
             return true;
         }
@@ -491,19 +485,15 @@ export class TextEdit {
     }
 
     static setEndOfLine(eol: EndOfLine): TextEdit {
-        // @ts-ignore
         const ret = new TextEdit(undefined, undefined);
         ret.newEol = eol;
         return ret;
     }
 
-    // @ts-ignore
     protected _range: Range;
 
-    // @ts-ignore
     protected _newText: string;
 
-    // @ts-ignore
     protected _newEol: EndOfLine;
 
     get range(): Range {
@@ -554,15 +544,17 @@ export class TextEdit {
 }
 
 export class WorkspaceEdit implements vscode.WorkspaceEdit {
+    // eslint-disable-next-line class-methods-use-this
     appendNotebookCellOutput(
         _uri: vscode.Uri,
         _index: number,
         _outputs: vscode.NotebookCellOutput[],
         _metadata?: vscode.WorkspaceEditEntryMetadata,
     ): void {
-        // Noop
+        // Noop.
     }
 
+    // eslint-disable-next-line class-methods-use-this
     replaceNotebookCellOutputItems(
         _uri: vscode.Uri,
         _index: number,
@@ -570,9 +562,10 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
         _items: vscode.NotebookCellOutputItem[],
         _metadata?: vscode.WorkspaceEditEntryMetadata,
     ): void {
-        // Noop
+        // Noop.
     }
 
+    // eslint-disable-next-line class-methods-use-this
     appendNotebookCellOutputItems(
         _uri: vscode.Uri,
         _index: number,
@@ -580,13 +573,15 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
         _items: vscode.NotebookCellOutputItem[],
         _metadata?: vscode.WorkspaceEditEntryMetadata,
     ): void {
-        // Noop
+        // Noop.
     }
 
+    // eslint-disable-next-line class-methods-use-this
     replaceNotebookMetadata(_uri: vscode.Uri, _value: vscode.NotebookDocumentMetadata): void {
-        //
+        // Noop.
     }
 
+    // eslint-disable-next-line class-methods-use-this
     replaceNotebookCells(
         _uri: vscode.Uri,
         _start: number,
@@ -597,6 +592,7 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
         // Noop.
     }
 
+    // eslint-disable-next-line class-methods-use-this
     replaceNotebookCellOutput(
         _uri: vscode.Uri,
         _index: number,
@@ -606,6 +602,7 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
         // Noop.
     }
 
+    // eslint-disable-next-line class-methods-use-this
     replaceNotebookCellMetadata(
         _uri: vscode.Uri,
         _index: number,
@@ -630,21 +627,24 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
     // }
 
     // renameResource(from: vscode.Uri, to: vscode.Uri): void {
-    // 	this._resourceEdits.push({ seq: this._seqPool++, from, to });
+    // 	this._resourceEdits.push({ seq: this._seqPool+= 1, from, to });
     // }
 
     // resourceEdits(): [vscode.Uri, vscode.Uri][] {
     // 	return this._resourceEdits.map(({ from, to }) => (<[vscode.Uri, vscode.Uri]>[from, to]));
     // }
 
+    // eslint-disable-next-line class-methods-use-this
     createFile(_uri: vscode.Uri, _options?: { overwrite?: boolean; ignoreIfExists?: boolean }): void {
         throw new Error('Method not implemented.');
     }
 
+    // eslint-disable-next-line class-methods-use-this
     deleteFile(_uri: vscode.Uri, _options?: { recursive?: boolean; ignoreIfNotExists?: boolean }): void {
         throw new Error('Method not implemented.');
     }
 
+    // eslint-disable-next-line class-methods-use-this
     renameFile(
         _oldUri: vscode.Uri,
         _newUri: vscode.Uri,
@@ -679,7 +679,7 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
     set(uri: vscUri.URI, edits: TextEdit[]): void {
         let data = this._textEdits.get(uri.toString());
         if (!data) {
-            data = { seq: this._seqPool++, uri, edits: [] };
+            data = { seq: this._seqPool += 1, uri, edits: [] };
             this._textEdits.set(uri.toString(), data);
         }
         if (!edits) {
@@ -733,7 +733,7 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
 }
 
 export class SnippetString {
-    static isSnippetString(thing: any): thing is SnippetString {
+    static isSnippetString(thing: unknown): thing is SnippetString {
         if (thing instanceof SnippetString) {
             return true;
         }
@@ -760,7 +760,7 @@ export class SnippetString {
         return this;
     }
 
-    appendTabstop(number: number = this._tabstop++): SnippetString {
+    appendTabstop(number: number = (this._tabstop += 1)): SnippetString {
         this.value += '$';
         this.value += number;
         return this;
@@ -768,7 +768,7 @@ export class SnippetString {
 
     appendPlaceholder(
         value: string | ((snippet: SnippetString) => any),
-        number: number = this._tabstop++,
+        number: number = (this._tabstop += 1),
     ): SnippetString {
         if (typeof value === 'function') {
             const nested = new SnippetString();
@@ -789,7 +789,7 @@ export class SnippetString {
         return this;
     }
 
-    appendChoice(values: string[], number: number = this._tabstop++): SnippetString {
+    appendChoice(values: string[], number: number = (this._tabstop += 1)): SnippetString {
         const value = SnippetString._escape(values.toString());
 
         this.value += '${';
@@ -836,7 +836,7 @@ export enum DiagnosticSeverity {
 }
 
 export class Location {
-    static isLocation(thing: any): thing is Location {
+    static isLocation(thing: unknown): thing is Location {
         if (thing instanceof Location) {
             return true;
         }
@@ -848,7 +848,6 @@ export class Location {
 
     uri: vscUri.URI;
 
-    // @ts-ignore
     range: Range;
 
     constructor(uri: vscUri.URI, rangeOrPosition: Range | Position) {
@@ -874,7 +873,7 @@ export class Location {
 }
 
 export class DiagnosticRelatedInformation {
-    static is(thing: any): thing is DiagnosticRelatedInformation {
+    static is(thing: unknown): thing is DiagnosticRelatedInformation {
         if (!thing) {
             return false;
         }
@@ -901,15 +900,12 @@ export class Diagnostic {
 
     message: string;
 
-    // @ts-ignore
     source: string;
 
-    // @ts-ignore
     code: string | number;
 
     severity: DiagnosticSeverity;
 
-    // @ts-ignore
     relatedInformation: DiagnosticRelatedInformation[];
 
     customTags?: DiagnosticTag[];
@@ -1259,7 +1255,6 @@ export interface CompletionItemLabel {
 }
 
 export class CompletionItem {
-    // @ts-ignore
     label: string;
 
     label2?: CompletionItemLabel;
@@ -1394,6 +1389,7 @@ export enum TextEditorRevealType {
     AtTop = 3,
 }
 
+// eslint-disable-next-line import/export
 export enum TextEditorSelectionChangeKind {
     Keyboard = 1,
     Mouse = 2,
@@ -1543,7 +1539,7 @@ export class TaskGroup implements vscode.TaskGroup {
 
     public static Test: TaskGroup = new TaskGroup('test', 'Test');
 
-    public static from(value: string) {
+    public static from(value: string): TaskGroup | undefined {
         switch (value) {
             case 'clean':
                 return TaskGroup.Clean;
@@ -1576,10 +1572,9 @@ export class TaskGroup implements vscode.TaskGroup {
 export class ProcessExecution implements vscode.ProcessExecution {
     private _process: string;
 
-    private _args: string[];
+    private _args: string[] | undefined;
 
-    // @ts-ignore
-    private _options: vscode.ProcessExecutionOptions;
+    private _options: vscode.ProcessExecutionOptions | undefined;
 
     constructor(process: string, options?: vscode.ProcessExecutionOptions);
 
@@ -1594,17 +1589,16 @@ export class ProcessExecution implements vscode.ProcessExecution {
             throw illegalArgument('process');
         }
         this._process = process;
-        if (varg1 !== void 0) {
+        if (varg1) {
             if (Array.isArray(varg1)) {
                 this._args = varg1;
-                // @ts-ignore
                 this._options = varg2;
             } else {
                 this._options = varg1;
             }
         }
-        // @ts-ignore
-        if (this._args === void 0) {
+
+        if (this._args === undefined) {
             this._args = [];
         }
     }
@@ -1621,7 +1615,7 @@ export class ProcessExecution implements vscode.ProcessExecution {
     }
 
     get args(): string[] {
-        return this._args;
+        return this._args || [];
     }
 
     set args(value: string[]) {
@@ -1632,13 +1626,14 @@ export class ProcessExecution implements vscode.ProcessExecution {
     }
 
     get options(): vscode.ProcessExecutionOptions {
-        return this._options;
+        return this._options || {};
     }
 
     set options(value: vscode.ProcessExecutionOptions) {
         this._options = value;
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public computeId(): string {
         // const hash = crypto.createHash('md5');
         // hash.update('process');
@@ -1656,14 +1651,10 @@ export class ProcessExecution implements vscode.ProcessExecution {
 }
 
 export class ShellExecution implements vscode.ShellExecution {
-    // @ts-ignore
-
     private _commandLine: string;
 
-    // @ts-ignore
     private _command: string | vscode.ShellQuotedString;
 
-    // @ts-ignore
     private _args: (string | vscode.ShellQuotedString)[];
 
     private _options: vscode.ShellExecutionOptions;
@@ -1690,14 +1681,12 @@ export class ShellExecution implements vscode.ShellExecution {
             }
             this._command = arg0;
             this._args = arg1 as (string | vscode.ShellQuotedString)[];
-            // @ts-ignore
             this._options = arg2;
         } else {
             if (typeof arg0 !== 'string') {
                 throw illegalArgument('commandLine');
             }
             this._commandLine = arg0;
-            // @ts-ignore
             this._options = arg1;
         }
     }
@@ -1740,6 +1729,7 @@ export class ShellExecution implements vscode.ShellExecution {
         this._options = value;
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public computeId(): string {
         // const hash = crypto.createHash('md5');
         // hash.update('shell');
@@ -2181,7 +2171,6 @@ export class DebugAdapterExecutable {
 
     constructor(command: string, args?: string[]) {
         this.command = command;
-        // @ts-ignore
         this.args = args;
     }
 }
@@ -2256,6 +2245,7 @@ export class FileSystemError extends Error {
         }
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public get code(): string {
         return '';
     }
