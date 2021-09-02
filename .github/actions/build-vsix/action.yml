@@ -1,14 +1,31 @@
 name: 'Build VSIX'
 description: "Build the extension's VSIX"
 
-outputs:
-  path:
-    description: 'Path to the VSIX'
-    value: 'ms-python-insiders.vsix'
+inputs:
+  node_version:
+    description: 'Version of Node to install'
+    required: true
+  vsix_name:
+    description: 'Name to give the final VSIX'
+    required: true
+  artifact_name:
+    description: 'Name to give the artifact containing the VSIX'
+    required: true
 
 runs:
   using: 'composite'
   steps:
+    - name: Install Node
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ inputs.node_version }}
+
+    # Jedi LS depends on dataclasses which is not in the stdlib in Python 3.6.
+    - name: Use Python 3.6 for JediLSP
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+
     - name: Upgrade Pip
       run: python -m pip install -U pip
       shell: bash
@@ -51,3 +68,16 @@ runs:
     - name: Build VSIX
       run: npm run package
       shell: bash
+
+    - name: Rename VSIX
+      # Move to a temp name in case the specified name happens to match the default name.
+      run: mv ms-python-insiders.vsix ms-python-temp.vsix && mv ms-python-temp.vsix ${{ inputs.vsix_name }}
+      shell: bash
+
+    - name: Upload VSIX
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ inputs.artifact_name }}
+        path: ${{ inputs.vsix_name }}
+        if-no-files-found: error
+        retention-days: 7

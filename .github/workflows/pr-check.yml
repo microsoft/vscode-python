@@ -21,36 +21,18 @@ env:
 
 jobs:
   build-vsix:
-    name: Build VSIX
+    name: Create VSIX
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
-
-      - name: Install Node
-        uses: actions/setup-node@v2.4.0
-        with:
-          node-version: ${{env.NODE_VERSION}}
-
-      # Jedi LS depends on dataclasses which was a pypi install in 3.6
-      - name: Use Python 3.6 for JediLSP
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.6
+        uses: actions/checkout@v2
 
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
-        id: build-vsix
-
-      - name: Rename VSIX
-        if: steps.build-vsix.outputs.path != env.VSIX_NAME
-        run: mv ${{ steps.build-vsix.outputs.path }} ${{ env.VSIX_NAME }}
-
-      - uses: actions/upload-artifact@v2
         with:
-          name: ${{env.ARTIFACT_NAME_VSIX}}
-          path: ${{env.VSIX_NAME}}
-          retention-days: 7
+          node_version: ${{ env.NODE_VERSION}}
+          vsix_name: ${{ env.VSIX_NAME }}
+          artifact_name: ${{ env.ARTIFACT_NAME_VSIX }}
 
   lint:
     name: Lint
