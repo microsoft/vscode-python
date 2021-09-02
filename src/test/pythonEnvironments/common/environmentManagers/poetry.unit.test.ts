@@ -5,7 +5,7 @@ import { assert, expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { ExecutionResult, ShellOptions } from '../../../../client/common/process/types';
-import { getUserHomeDir } from '../../../../client/common/utils/platform';
+import * as platformApis from '../../../../client/common/utils/platform';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { isPoetryEnvironment, Poetry } from '../../../../client/pythonEnvironments/common/environmentManagers/poetry';
 import { TEST_LAYOUT_ROOT } from '../commonTestConstants';
@@ -20,6 +20,12 @@ suite('isPoetryEnvironment Tests', () => {
     let getPythonSetting: sinon.SinonStub;
 
     suite('Global poetry environment', async () => {
+        setup(() => {
+            sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
+        });
+        teardown(() => {
+            sinon.restore();
+        });
         test('Return true if environment folder name matches global env pattern and environment is of virtual env type', async () => {
             const result = await isPoetryEnvironment(
                 path.join(testPoetryDir, 'poetry-tutorial-project-6hnqYwvD-py3.8', 'Scripts', 'python.exe'),
@@ -60,16 +66,19 @@ suite('isPoetryEnvironment Tests', () => {
         });
 
         test('Return true if environment folder name matches criteria for local envs', async () => {
+            sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
             const result = await isPoetryEnvironment(path.join(project1, '.venv', 'Scripts', 'python.exe'));
             expect(result).to.equal(true);
         });
 
         test(`Return false if environment folder name is not named '.venv' for local envs`, async () => {
+            sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
             const result = await isPoetryEnvironment(path.join(project1, '.venv2', 'Scripts', 'python.exe'));
             expect(result).to.equal(false);
         });
 
         test(`Return false if running poetry for project dir as cwd fails (pyproject.toml file is invalid)`, async () => {
+            sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Linux);
             const result = await isPoetryEnvironment(path.join(project4, '.venv', 'bin', 'python'));
             expect(result).to.equal(false);
         });
@@ -148,7 +157,7 @@ suite('Poetry binary is located correctly', async () => {
     });
 
     test('When poetry is not available on PATH, try using the default poetry location if valid', async () => {
-        const home = getUserHomeDir();
+        const home = platformApis.getUserHomeDir();
         if (!home) {
             assert(true);
             return;
