@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -37,7 +36,7 @@ export interface IRelativePattern {
 const illegalArgument = (msg = 'Illegal Argument') => new Error(msg);
 
 export class Disposable {
-    static from(...disposables: { dispose(): () => void }[]): Disposable {
+    static from(...disposables: { dispose(): any }[]): Disposable {
         return new Disposable(() => {
             if (disposables) {
                 for (const disposable of disposables) {
@@ -45,20 +44,22 @@ export class Disposable {
                         disposable.dispose();
                     }
                 }
-                disposables = [];
+                // @ts-ignore
+                disposables = undefined;
             }
         });
     }
 
-    private _callOnDispose: (() => void) | undefined;
+    private _callOnDispose: Function;
 
-    constructor(callOnDispose: () => void) {
+    constructor(callOnDispose: Function) {
         this._callOnDispose = callOnDispose;
     }
 
-    dispose(): void {
+    dispose(): any {
         if (typeof this._callOnDispose === 'function') {
             this._callOnDispose();
+            // @ts-ignore
             this._callOnDispose = undefined;
         }
     }
@@ -68,24 +69,28 @@ export class Position {
     static Min(...positions: Position[]): Position {
         let result = positions.pop();
         for (const p of positions) {
-            if (p.isBefore(result!)) {
+            // @ts-ignore
+            if (p.isBefore(result)) {
                 result = p;
             }
         }
-        return result!;
+        // @ts-ignore
+        return result;
     }
 
     static Max(...positions: Position[]): Position {
         let result = positions.pop();
         for (const p of positions) {
-            if (p.isAfter(result!)) {
+            // @ts-ignore
+            if (p.isAfter(result)) {
                 result = p;
             }
         }
-        return result!;
+        // @ts-ignore
+        return result;
     }
 
-    static isPosition(other: unknown): other is Position {
+    static isPosition(other: any): other is Position {
         if (!other) {
             return false;
         }
@@ -174,10 +179,11 @@ export class Position {
 
     translate(change: { lineDelta?: number; characterDelta?: number }): Position;
 
+    // @ts-ignore
     translate(lineDelta?: number, characterDelta?: number): Position;
 
     translate(
-        lineDeltaOrChange: number | { lineDelta?: number; characterDelta?: number } | undefined,
+        lineDeltaOrChange: number | { lineDelta?: number; characterDelta?: number },
         characterDelta = 0,
     ): Position {
         if (lineDeltaOrChange === null || characterDelta === null) {
@@ -203,12 +209,10 @@ export class Position {
 
     with(change: { line?: number; character?: number }): Position;
 
+    // @ts-ignore
     with(line?: number, character?: number): Position;
 
-    with(
-        lineOrChange: number | { line?: number; character?: number } | undefined,
-        character: number = this.character,
-    ): Position {
+    with(lineOrChange: number | { line?: number; character?: number }, character: number = this.character): Position {
         if (lineOrChange === null || character === null) {
             throw illegalArgument();
         }
@@ -229,20 +233,20 @@ export class Position {
         return new Position(line, character);
     }
 
-    toJSON(): { line: number; character: number } {
+    toJSON(): any {
         return { line: this.line, character: this.character };
     }
 }
 
 export class Range {
-    static isRange(thing: unknown): thing is vscode.Range {
+    static isRange(thing: any): thing is vscode.Range {
         if (thing instanceof Range) {
             return true;
         }
         if (!thing) {
             return false;
         }
-        return Position.isPosition((thing as Range).start) && Position.isPosition((thing as Range).end);
+        return Position.isPosition((<Range>thing).start) && Position.isPosition(<Range>thing.end);
     }
 
     protected _start: Position;
@@ -267,8 +271,8 @@ export class Range {
         endLine?: number,
         endColumn?: number,
     ) {
-        let start: Position | undefined;
-        let end: Position | undefined;
+        let start: Position;
+        let end: Position;
 
         if (
             typeof startLineOrStart === 'number' &&
@@ -282,7 +286,7 @@ export class Range {
             start = startLineOrStart;
             end = startColumnOrEnd;
         }
-
+        // @ts-ignore
         if (!start || !end) {
             throw new Error('Invalid arguments');
         }
@@ -316,14 +320,14 @@ export class Range {
         return this._start.isEqual(other._start) && this._end.isEqual(other._end);
     }
 
-    intersection(other: Range): Range | undefined {
+    intersection(other: Range): Range {
         const start = Position.Max(other.start, this._start);
         const end = Position.Min(other.end, this._end);
         if (start.isAfter(end)) {
             // this happens when there is no overlap:
             // |-----|
             //          |----|
-
+            // @ts-ignore
             return undefined;
         }
         return new Range(start, end);
@@ -351,9 +355,10 @@ export class Range {
 
     with(change: { start?: Position; end?: Position }): Range;
 
+    // @ts-ignore
     with(start?: Position, end?: Position): Range;
 
-    with(startOrChange: Position | { start?: Position; end?: Position } | undefined, end: Position = this.end): Range {
+    with(startOrChange: Position | { start?: Position; end?: Position }, end: Position = this.end): Range {
         if (startOrChange === null || end === null) {
             throw illegalArgument();
         }
@@ -374,13 +379,13 @@ export class Range {
         return new Range(start, end);
     }
 
-    toJSON(): Position[] {
+    toJSON(): any {
         return [this.start, this.end];
     }
 }
 
 export class Selection extends Range {
-    static isSelection(thing: unknown): thing is Selection {
+    static isSelection(thing: any): thing is Selection {
         if (thing instanceof Selection) {
             return true;
         }
@@ -417,8 +422,8 @@ export class Selection extends Range {
         activeLine?: number,
         activeColumn?: number,
     ) {
-        let anchor: Position | undefined;
-        let active: Position | undefined;
+        let anchor: Position;
+        let active: Position;
 
         if (
             typeof anchorLineOrAnchor === 'number' &&
@@ -432,7 +437,7 @@ export class Selection extends Range {
             anchor = anchorLineOrAnchor;
             active = anchorColumnOrActive;
         }
-
+        // @ts-ignore
         if (!anchor || !active) {
             throw new Error('Invalid arguments');
         }
@@ -447,13 +452,13 @@ export class Selection extends Range {
         return this._anchor === this._end;
     }
 
-    toJSON(): Position[] {
-        return ({
+    toJSON() {
+        return {
             start: this.start,
             end: this.end,
             active: this.active,
             anchor: this.anchor,
-        } as unknown) as Position[];
+        };
     }
 }
 
@@ -463,7 +468,7 @@ export enum EndOfLine {
 }
 
 export class TextEdit {
-    static isTextEdit(thing: unknown): thing is TextEdit {
+    static isTextEdit(thing: any): thing is TextEdit {
         if (thing instanceof TextEdit) {
             return true;
         }
@@ -486,19 +491,23 @@ export class TextEdit {
     }
 
     static setEndOfLine(eol: EndOfLine): TextEdit {
-        const ret = new TextEdit(new Range(new Position(0, 0), new Position(0, 0)), '');
+        // @ts-ignore
+        const ret = new TextEdit(undefined, undefined);
         ret.newEol = eol;
         return ret;
     }
 
-    protected _range: Range | undefined;
+    // @ts-ignore
+    protected _range: Range;
 
-    protected _newText: string | undefined;
+    // @ts-ignore
+    protected _newText: string;
 
-    protected _newEol: EndOfLine | undefined;
+    // @ts-ignore
+    protected _newEol: EndOfLine;
 
     get range(): Range {
-        return this._range!;
+        return this._range;
     }
 
     set range(value: Range) {
@@ -520,7 +529,7 @@ export class TextEdit {
     }
 
     get newEol(): EndOfLine {
-        return this._newEol!;
+        return this._newEol;
     }
 
     set newEol(value: EndOfLine) {
@@ -535,17 +544,16 @@ export class TextEdit {
         this.newText = newText;
     }
 
-    toJSON(): { range: Range; newText: string; newEol: EndOfLine } {
+    toJSON(): any {
         return {
             range: this.range,
             newText: this.newText,
-            newEol: this._newEol!,
+            newEol: this._newEol,
         };
     }
 }
 
 export class WorkspaceEdit implements vscode.WorkspaceEdit {
-    // eslint-disable-next-line class-methods-use-this
     appendNotebookCellOutput(
         _uri: vscode.Uri,
         _index: number,
@@ -555,7 +563,6 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
         // Noop
     }
 
-    // eslint-disable-next-line class-methods-use-this
     replaceNotebookCellOutputItems(
         _uri: vscode.Uri,
         _index: number,
@@ -566,7 +573,6 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
         // Noop
     }
 
-    // eslint-disable-next-line class-methods-use-this
     appendNotebookCellOutputItems(
         _uri: vscode.Uri,
         _index: number,
@@ -577,12 +583,10 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
         // Noop
     }
 
-    // eslint-disable-next-line class-methods-use-this
     replaceNotebookMetadata(_uri: vscode.Uri, _value: vscode.NotebookDocumentMetadata): void {
-        // Noop
+        //
     }
 
-    // eslint-disable-next-line class-methods-use-this
     replaceNotebookCells(
         _uri: vscode.Uri,
         _start: number,
@@ -593,7 +597,6 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
         // Noop.
     }
 
-    // eslint-disable-next-line class-methods-use-this
     replaceNotebookCellOutput(
         _uri: vscode.Uri,
         _index: number,
@@ -603,7 +606,6 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
         // Noop.
     }
 
-    // eslint-disable-next-line class-methods-use-this
     replaceNotebookCellMetadata(
         _uri: vscode.Uri,
         _index: number,
@@ -628,24 +630,21 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
     // }
 
     // renameResource(from: vscode.Uri, to: vscode.Uri): void {
-    // 	this._resourceEdits.push({ seq: this._seqPool+=1, from, to });
+    // 	this._resourceEdits.push({ seq: this._seqPool++, from, to });
     // }
 
     // resourceEdits(): [vscode.Uri, vscode.Uri][] {
     // 	return this._resourceEdits.map(({ from, to }) => (<[vscode.Uri, vscode.Uri]>[from, to]));
     // }
 
-    // eslint-disable-next-line class-methods-use-this
     createFile(_uri: vscode.Uri, _options?: { overwrite?: boolean; ignoreIfExists?: boolean }): void {
         throw new Error('Method not implemented.');
     }
 
-    // eslint-disable-next-line class-methods-use-this
     deleteFile(_uri: vscode.Uri, _options?: { recursive?: boolean; ignoreIfNotExists?: boolean }): void {
         throw new Error('Method not implemented.');
     }
 
-    // eslint-disable-next-line class-methods-use-this
     renameFile(
         _oldUri: vscode.Uri,
         _newUri: vscode.Uri,
@@ -680,11 +679,12 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
     set(uri: vscUri.URI, edits: TextEdit[]): void {
         let data = this._textEdits.get(uri.toString());
         if (!data) {
-            data = { seq: this._seqPool += 1, uri, edits: [] };
+            data = { seq: this._seqPool++, uri, edits: [] };
             this._textEdits.set(uri.toString(), data);
         }
         if (!edits) {
-            data.edits = [];
+            // @ts-ignore
+            data.edits = undefined;
         } else {
             data.edits = edits.slice(0);
         }
@@ -692,11 +692,12 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
 
     get(uri: vscUri.URI): TextEdit[] {
         if (!this._textEdits.has(uri.toString())) {
-            return [];
+            // @ts-ignore
+            return undefined;
         }
-
-        const { edits } = this._textEdits.get(uri.toString())!;
-        return edits ? edits.slice() : [];
+        // @ts-ignore
+        const { edits } = this._textEdits.get(uri.toString());
+        return edits ? edits.slice() : undefined;
     }
 
     entries(): [vscUri.URI, TextEdit[]][] {
@@ -726,13 +727,13 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
         return this._textEdits.size + this._resourceEdits.length;
     }
 
-    toJSON(): [vscUri.URI, TextEdit[]][] {
+    toJSON(): any {
         return this.entries();
     }
 }
 
 export class SnippetString {
-    static isSnippetString(thing: unknown): thing is SnippetString {
+    static isSnippetString(thing: any): thing is SnippetString {
         if (thing instanceof SnippetString) {
             return true;
         }
@@ -759,15 +760,15 @@ export class SnippetString {
         return this;
     }
 
-    appendTabstop(number: number = (this._tabstop += 1)): SnippetString {
+    appendTabstop(number: number = this._tabstop++): SnippetString {
         this.value += '$';
         this.value += number;
         return this;
     }
 
     appendPlaceholder(
-        value: string | ((snippet: SnippetString) => void),
-        number: number = (this._tabstop += 1),
+        value: string | ((snippet: SnippetString) => any),
+        number: number = this._tabstop++,
     ): SnippetString {
         if (typeof value === 'function') {
             const nested = new SnippetString();
@@ -788,7 +789,7 @@ export class SnippetString {
         return this;
     }
 
-    appendChoice(values: string[], number: number = (this._tabstop += 1)): SnippetString {
+    appendChoice(values: string[], number: number = this._tabstop++): SnippetString {
         const value = SnippetString._escape(values.toString());
 
         this.value += '${';
@@ -800,7 +801,7 @@ export class SnippetString {
         return this;
     }
 
-    appendVariable(name: string, defaultValue?: string | ((snippet: SnippetString) => void)): SnippetString {
+    appendVariable(name: string, defaultValue?: string | ((snippet: SnippetString) => any)): SnippetString {
         if (typeof defaultValue === 'function') {
             const nested = new SnippetString();
             nested._tabstop = this._tabstop;
@@ -835,7 +836,7 @@ export enum DiagnosticSeverity {
 }
 
 export class Location {
-    static isLocation(thing: unknown): thing is Location {
+    static isLocation(thing: any): thing is Location {
         if (thing instanceof Location) {
             return true;
         }
@@ -847,6 +848,7 @@ export class Location {
 
     uri: vscUri.URI;
 
+    // @ts-ignore
     range: Range;
 
     constructor(uri: vscUri.URI, rangeOrPosition: Range | Position) {
@@ -854,7 +856,6 @@ export class Location {
 
         if (!rangeOrPosition) {
             // that's OK
-            this.range = new Range(0, 0, 1, 1);
         } else if (rangeOrPosition instanceof Range) {
             this.range = rangeOrPosition;
         } else if (rangeOrPosition instanceof Position) {
@@ -864,7 +865,7 @@ export class Location {
         }
     }
 
-    toJSON(): { uri: vscUri.URI; range?: Range } {
+    toJSON(): any {
         return {
             uri: this.uri,
             range: this.range,
@@ -873,7 +874,7 @@ export class Location {
 }
 
 export class DiagnosticRelatedInformation {
-    static is(thing: unknown): thing is DiagnosticRelatedInformation {
+    static is(thing: any): thing is DiagnosticRelatedInformation {
         if (!thing) {
             return false;
         }
@@ -900,13 +901,16 @@ export class Diagnostic {
 
     message: string;
 
-    source: string | undefined;
+    // @ts-ignore
+    source: string;
 
-    code: string | number | undefined;
+    // @ts-ignore
+    code: string | number;
 
     severity: DiagnosticSeverity;
 
-    relatedInformation: DiagnosticRelatedInformation[] | undefined;
+    // @ts-ignore
+    relatedInformation: DiagnosticRelatedInformation[];
 
     customTags?: DiagnosticTag[];
 
@@ -916,7 +920,7 @@ export class Diagnostic {
         this.severity = severity;
     }
 
-    toJSON(): { severity: string; message: string; range: Range; source?: string; code?: string | number } {
+    toJSON(): any {
         return {
             severity: DiagnosticSeverity[this.severity],
             message: this.message,
@@ -930,7 +934,7 @@ export class Diagnostic {
 export class Hover {
     public contents: vscode.MarkdownString[] | vscode.MarkedString[];
 
-    public range: Range | undefined;
+    public range: Range;
 
     constructor(
         contents: vscode.MarkdownString | vscode.MarkedString | vscode.MarkdownString[] | vscode.MarkedString[],
@@ -946,7 +950,7 @@ export class Hover {
         } else {
             this.contents = [contents];
         }
-
+        // @ts-ignore
         this.range = range;
     }
 }
@@ -967,7 +971,7 @@ export class DocumentHighlight {
         this.kind = kind;
     }
 
-    toJSON(): { range: Range; kind: string } {
+    toJSON(): any {
         return {
             range: this.range,
             kind: DocumentHighlightKind[this.kind],
@@ -1007,6 +1011,7 @@ export enum SymbolKind {
 export class SymbolInformation {
     name: string;
 
+    // @ts-ignore
     location: Location;
 
     kind: SymbolKind;
@@ -1026,8 +1031,8 @@ export class SymbolInformation {
     ) {
         this.name = name;
         this.kind = kind;
-
-        this.containerName = containerName || '';
+        // @ts-ignore
+        this.containerName = containerName;
 
         if (typeof rangeOrContainer === 'string') {
             this.containerName = rangeOrContainer;
@@ -1036,12 +1041,12 @@ export class SymbolInformation {
         if (locationOrUri instanceof Location) {
             this.location = locationOrUri;
         } else if (rangeOrContainer instanceof Range) {
-            this.location = new Location(locationOrUri!, rangeOrContainer);
+            // @ts-ignore
+            this.location = new Location(locationOrUri, rangeOrContainer);
         }
-        this.location = new Location(vscUri.URI.parse('name'), new Range(0, 0, 0, 0));
     }
 
-    toJSON(): { name: string; kind: string; location?: Location; containerName?: string } {
+    toJSON(): any {
         return {
             name: this.name,
             kind: SymbolKind[this.kind],
@@ -1052,7 +1057,7 @@ export class SymbolInformation {
 }
 
 export class SymbolInformation2 extends SymbolInformation {
-    definingRange: Range | undefined;
+    definingRange: Range;
 
     children: SymbolInformation2[];
 
@@ -1119,11 +1124,11 @@ export class CodeActionKind {
 export class CodeLens {
     range: Range;
 
-    command: vscode.Command | undefined;
+    command: vscode.Command;
 
     constructor(range: Range, command?: vscode.Command) {
         this.range = range;
-
+        // @ts-ignore
         this.command = command;
     }
 
@@ -1190,14 +1195,14 @@ export class SignatureInformation {
 export class SignatureHelp {
     signatures: SignatureInformation[];
 
+    // @ts-ignore
     activeSignature: number;
 
+    // @ts-ignore
     activeParameter: number;
 
     constructor() {
         this.signatures = [];
-        this.activeSignature = 0;
-        this.activeParameter = 0;
     }
 }
 
@@ -1254,6 +1259,7 @@ export interface CompletionItemLabel {
 }
 
 export class CompletionItem {
+    // @ts-ignore
     label: string;
 
     label2?: CompletionItemLabel;
@@ -1291,18 +1297,7 @@ export class CompletionItem {
         this.kind = kind;
     }
 
-    toJSON(): {
-        label: string;
-        label2?: CompletionItemLabel;
-        kind?: CompletionItemKind | string;
-        detail?: string;
-        documentation?: string | MarkdownString;
-        sortText?: string;
-        filterText?: string;
-        preselect?: boolean;
-        insertText?: string | SnippetString;
-        textEdit?: TextEdit;
-    } {
+    toJSON(): any {
         return {
             label: this.label,
             label2: this.label2,
@@ -1399,7 +1394,6 @@ export enum TextEditorRevealType {
     AtTop = 3,
 }
 
-// eslint-disable-next-line import/export
 export enum TextEditorSelectionChangeKind {
     Keyboard = 1,
     Mouse = 2,
@@ -1428,9 +1422,8 @@ export enum DecorationRangeBehavior {
     ClosedOpen = 3,
 }
 
-// eslint-disable-next-line @typescript-eslint/no-namespace, import/export
 export namespace TextEditorSelectionChangeKind {
-    export function fromValue(s: string): TextEditorSelectionChangeKind | undefined {
+    export function fromValue(s: string) {
         switch (s) {
             case 'keyboard':
                 return TextEditorSelectionChangeKind.Keyboard;
@@ -1438,9 +1431,8 @@ export namespace TextEditorSelectionChangeKind {
                 return TextEditorSelectionChangeKind.Mouse;
             case 'api':
                 return TextEditorSelectionChangeKind.Command;
-            default:
-                return undefined;
         }
+        return undefined;
     }
 }
 
@@ -1551,7 +1543,7 @@ export class TaskGroup implements vscode.TaskGroup {
 
     public static Test: TaskGroup = new TaskGroup('test', 'Test');
 
-    public static from(value: string): TaskGroup | undefined {
+    public static from(value: string) {
         switch (value) {
             case 'clean':
                 return TaskGroup.Clean;
@@ -1584,9 +1576,10 @@ export class TaskGroup implements vscode.TaskGroup {
 export class ProcessExecution implements vscode.ProcessExecution {
     private _process: string;
 
-    private _args: string[] = [];
+    private _args: string[];
 
-    private _options: vscode.ProcessExecutionOptions | undefined;
+    // @ts-ignore
+    private _options: vscode.ProcessExecutionOptions;
 
     constructor(process: string, options?: vscode.ProcessExecutionOptions);
 
@@ -1601,14 +1594,18 @@ export class ProcessExecution implements vscode.ProcessExecution {
             throw illegalArgument('process');
         }
         this._process = process;
-        if (varg1) {
+        if (varg1 !== void 0) {
             if (Array.isArray(varg1)) {
                 this._args = varg1;
-
+                // @ts-ignore
                 this._options = varg2;
             } else {
                 this._options = varg1;
             }
+        }
+        // @ts-ignore
+        if (this._args === void 0) {
+            this._args = [];
         }
     }
 
@@ -1635,14 +1632,13 @@ export class ProcessExecution implements vscode.ProcessExecution {
     }
 
     get options(): vscode.ProcessExecutionOptions {
-        return this._options!;
+        return this._options;
     }
 
     set options(value: vscode.ProcessExecutionOptions) {
         this._options = value;
     }
 
-    // eslint-disable-next-line class-methods-use-this
     public computeId(): string {
         // const hash = crypto.createHash('md5');
         // hash.update('process');
@@ -1660,13 +1656,17 @@ export class ProcessExecution implements vscode.ProcessExecution {
 }
 
 export class ShellExecution implements vscode.ShellExecution {
-    private _commandLine: string | undefined;
+    // @ts-ignore
 
-    private _command: string | vscode.ShellQuotedString | undefined;
+    private _commandLine: string;
 
-    private _args: (string | vscode.ShellQuotedString)[] | undefined;
+    // @ts-ignore
+    private _command: string | vscode.ShellQuotedString;
 
-    private _options: vscode.ShellExecutionOptions | undefined;
+    // @ts-ignore
+    private _args: (string | vscode.ShellQuotedString)[];
+
+    private _options: vscode.ShellExecutionOptions;
 
     constructor(commandLine: string, options?: vscode.ShellExecutionOptions);
 
@@ -1690,20 +1690,20 @@ export class ShellExecution implements vscode.ShellExecution {
             }
             this._command = arg0;
             this._args = arg1 as (string | vscode.ShellQuotedString)[];
-
+            // @ts-ignore
             this._options = arg2;
         } else {
             if (typeof arg0 !== 'string') {
                 throw illegalArgument('commandLine');
             }
             this._commandLine = arg0;
-
+            // @ts-ignore
             this._options = arg1;
         }
     }
 
     get commandLine(): string {
-        return this._commandLine!;
+        return this._commandLine;
     }
 
     set commandLine(value: string) {
@@ -1714,7 +1714,7 @@ export class ShellExecution implements vscode.ShellExecution {
     }
 
     get command(): string | vscode.ShellQuotedString {
-        return this._command!;
+        return this._command;
     }
 
     set command(value: string | vscode.ShellQuotedString) {
@@ -1725,7 +1725,7 @@ export class ShellExecution implements vscode.ShellExecution {
     }
 
     get args(): (string | vscode.ShellQuotedString)[] {
-        return this._args!;
+        return this._args;
     }
 
     set args(value: (string | vscode.ShellQuotedString)[]) {
@@ -1733,14 +1733,13 @@ export class ShellExecution implements vscode.ShellExecution {
     }
 
     get options(): vscode.ShellExecutionOptions {
-        return this._options!;
+        return this._options;
     }
 
     set options(value: vscode.ShellExecutionOptions) {
         this._options = value;
     }
 
-    // eslint-disable-next-line class-methods-use-this
     public computeId(): string {
         // const hash = crypto.createHash('md5');
         // hash.update('shell');
@@ -1756,7 +1755,7 @@ export class ShellExecution implements vscode.ShellExecution {
         //     }
         // }
         // return hash.digest('hex');
-        throw new Error('Not supported');
+        throw new Error('Not spported');
     }
 }
 
@@ -1822,30 +1821,30 @@ export class Task implements vscode.Task {
     constructor(
         definition: vscode.TaskDefinition,
         arg2: string | (vscode.TaskScope.Global | vscode.TaskScope.Workspace) | vscode.WorkspaceFolder,
-        arg3: string,
-        arg4?: string | ProcessExecution | ShellExecution,
-        arg5?: string | string[] | ProcessExecution | ShellExecution,
-        arg6?: string | string[],
+        arg3: any,
+        arg4?: any,
+        arg5?: any,
+        arg6?: any,
     ) {
         this.definition = definition;
         let problemMatchers: string | string[];
         if (typeof arg2 === 'string') {
             this.name = arg2;
             this.source = arg3;
-            this.execution = arg4 as ProcessExecution | ShellExecution;
-            problemMatchers = arg5 as string | string[];
+            this.execution = arg4;
+            problemMatchers = arg5;
         } else if (arg2 === TaskScope.Global || arg2 === TaskScope.Workspace) {
             this.target = arg2;
             this.name = arg3;
-            this.source = arg4 as string;
-            this.execution = arg5 as ProcessExecution | ShellExecution;
-            problemMatchers = arg6 as string | string[];
+            this.source = arg4;
+            this.execution = arg5;
+            problemMatchers = arg6;
         } else {
             this.target = arg2;
             this.name = arg3;
-            this.source = arg4 as string;
-            this.execution = arg5 as ProcessExecution | ShellExecution;
-            problemMatchers = arg6 as string | string[];
+            this.source = arg4;
+            this.execution = arg5;
+            problemMatchers = arg6;
         }
         if (typeof problemMatchers === 'string') {
             this._problemMatchers = [problemMatchers];
@@ -2034,12 +2033,6 @@ export enum ProgressLocation {
     Notification = 15,
 }
 
-export enum TreeItemCollapsibleState {
-    None = 0,
-    Collapsed = 1,
-    Expanded = 2,
-}
-
 export class TreeItem {
     label?: string;
 
@@ -2067,6 +2060,12 @@ export class TreeItem {
             this.label = arg1;
         }
     }
+}
+
+export enum TreeItemCollapsibleState {
+    None = 0,
+    Collapsed = 1,
+    Expanded = 2,
 }
 
 export class ThemeIcon {
@@ -2117,7 +2116,6 @@ export class RelativePattern implements IRelativePattern {
         this.pattern = pattern;
     }
 
-    // eslint-disable-next-line class-methods-use-this
     public pathToRelative(from: string, to: string): string {
         return relative(from, to);
     }
@@ -2179,11 +2177,11 @@ export class FunctionBreakpoint extends Breakpoint {
 export class DebugAdapterExecutable {
     readonly command: string;
 
-    readonly args: string[] | undefined;
+    readonly args: string[];
 
     constructor(command: string, args?: string[]) {
         this.command = command;
-
+        // @ts-ignore
         this.args = args;
     }
 }
@@ -2242,11 +2240,15 @@ export class FileSystemError extends Error {
         return new FileSystemError(messageOrUri, 'Unavailable', FileSystemError.Unavailable);
     }
 
-    constructor(uriOrMessage?: string | vscUri.URI, code?: string, terminator?: () => void) {
+    constructor(uriOrMessage?: string | vscUri.URI, code?: string, terminator?: Function) {
         super(vscUri.URI.isUri(uriOrMessage) ? uriOrMessage.toString(true) : uriOrMessage);
         this.name = code ? `${code} (FileSystemError)` : `FileSystemError`;
 
-        Object.setPrototypeOf(this, FileSystemError.prototype);
+        // workaround when extending builtin objects and when compiling to ES5, see:
+        // https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work
+        if (typeof (<any>Object).setPrototypeOf === 'function') {
+            (<any>Object).setPrototypeOf(this, FileSystemError.prototype);
+        }
 
         if (typeof Error.captureStackTrace === 'function' && typeof terminator === 'function') {
             // nice stack traces
@@ -2254,7 +2256,6 @@ export class FileSystemError extends Error {
         }
     }
 
-    // eslint-disable-next-line class-methods-use-this
     public get code(): string {
         return '';
     }
