@@ -82,6 +82,9 @@ export const untildify: (value: string) => string = require('untildify');
  * @param parentPath The potential parent path to check for
  */
 export function isParentPath(filePath: string, parentPath: string): boolean {
+    if (!parentPath.endsWith(path.sep)) {
+        parentPath += path.sep;
+    }
     return normCasePath(filePath).startsWith(normCasePath(parentPath));
 }
 

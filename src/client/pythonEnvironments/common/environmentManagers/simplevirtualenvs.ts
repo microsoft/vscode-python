@@ -8,7 +8,7 @@ import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../..
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../base/info';
 import { comparePythonVersionSpecificity } from '../../base/info/env';
 import { parseBasicVersion, parseRelease, parseVersion } from '../../base/info/pythonVersion';
-import { pathExists, readFile } from '../externalDependencies';
+import { isParentPath, pathExists, readFile } from '../externalDependencies';
 
 function getPyvenvConfigPathsFrom(interpreterPath: string): string[] {
     const pyvenvConfigFile = 'pyvenv.cfg';
@@ -99,20 +99,13 @@ function getWorkOnHome(): Promise<string> {
  */
 export async function isVirtualenvwrapperEnvironment(interpreterPath: string): Promise<boolean> {
     const workOnHomeDir = await getWorkOnHome();
-    let pathToCheck = interpreterPath;
-    let workOnRoot = workOnHomeDir;
-
-    if (getOSType() === OSType.Windows) {
-        workOnRoot = workOnHomeDir.toUpperCase();
-        pathToCheck = interpreterPath.toUpperCase();
-    }
 
     // For environment to be a virtualenvwrapper based it has to follow these two rules:
     // 1. It should be in a sub-directory under the WORKON_HOME
     // 2. It should be a valid virtualenv environment
     return (
         (await pathExists(workOnHomeDir)) &&
-        pathToCheck.startsWith(`${workOnRoot}${path.sep}`) &&
+        isParentPath(interpreterPath, workOnHomeDir) &&
         isVirtualenvEnvironment(interpreterPath)
     );
 }
