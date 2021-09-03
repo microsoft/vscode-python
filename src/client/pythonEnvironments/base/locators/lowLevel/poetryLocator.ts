@@ -7,8 +7,7 @@ import * as path from 'path';
 import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { PythonEnvKind } from '../../info';
-import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
-import { FSWatcherKind, FSWatchingLocator } from './fsWatchingLocator';
+import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../locator';
 import { getInterpreterPathFromDir } from '../../../common/commonUtils';
 import { pathExists } from '../../../common/externalDependencies';
 import { isPoetryEnvironment, localPoetryEnvDirName, Poetry } from '../../../common/environmentManagers/poetry';
@@ -28,27 +27,6 @@ async function getVirtualEnvDirs(root: string): Promise<string[]> {
     return asyncFilter(envDirs, pathExists);
 }
 
-async function getRootVirtualEnvDir(root: string): Promise<string[]> {
-    const rootDirs = [];
-    const poetry = await Poetry.getPoetry(root);
-    /**
-     * We can infer the directory in which the existing poetry environments are created to determine
-     * the root virtual env dir. If no virtual envs are created yet, then fetch the setting value to
-     * get the root directory instead. We prefer to use 'poetry env list' command first because the
-     * result of that command is already cached when getting poetry.
-     */
-    const virtualenvs = await poetry?.getEnvList();
-    if (virtualenvs?.length) {
-        rootDirs.push(path.dirname(virtualenvs[0]));
-    } else {
-        const setting = await poetry?.getVirtualenvsPathSetting();
-        if (setting) {
-            rootDirs.push(setting);
-        }
-    }
-    return rootDirs;
-}
-
 async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind> {
     if (await isPoetryEnvironment(interpreterPath)) {
         return PythonEnvKind.Poetry;
@@ -60,17 +38,13 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
 /**
  * Finds and resolves virtual environments created using poetry.
  */
-export class PoetryLocator extends FSWatchingLocator<BasicEnvInfo> {
+export class PoetryLocator extends Locator<BasicEnvInfo> {
     public constructor(private readonly root: string) {
-        super(
-            () => getRootVirtualEnvDir(root),
-            async () => PythonEnvKind.Poetry,
-            undefined,
-            FSWatcherKind.Workspace,
-        );
+        super();
     }
 
-    protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
+    // eslint-disable-next-line class-methods-use-this
+    public iterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         async function* iterator(root: string) {
             const envDirs = await getVirtualEnvDirs(root);
             const envGenerators = envDirs.map((envDir) => {
