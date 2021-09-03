@@ -3,7 +3,6 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { JediLSP } from '../../../client/common/experiments/groups';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 
 // Modify package.json so that it allows workspace based experiment settings
@@ -16,8 +15,6 @@ fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, undefined, ' '));
 const settingsJsonPath = path.join(__dirname, '..', '..', '..', '..', 'src', 'test', '.vscode', 'settings.json');
 const settingsJsonPromise = import('../../.vscode/settings.json');
 
-settingsJsonPromise.then((settingsJson) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (<any>settingsJson)['python.experiments.optInto'] = [JediLSP.experiment];
-    return fs.writeFile(settingsJsonPath, JSON.stringify(settingsJson, undefined, ' '));
-});
+settingsJsonPromise.then((settingsJson) =>
+    fs.writeFile(settingsJsonPath, JSON.stringify(settingsJson, undefined, ' ')),
+);
