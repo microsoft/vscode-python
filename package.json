@@ -426,10 +426,7 @@
             {
                 "category": "Test",
                 "command": "testing.reRunFailTests",
-                "icon": {
-                    "dark": "resources/dark/run-failed-tests.svg",
-                    "light": "resources/light/run-failed-tests.svg"
-                },
+                "icon": "$(run-errors)",
                 "title": "%python.command.testing.rerunFailedTests.title%"
             },
             {
