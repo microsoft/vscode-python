@@ -14,13 +14,7 @@ import { IApplicationEnvironment, ICommandManager } from './common/application/t
 import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentService,
-    IExtensions,
-    IOutputChannel,
-} from './common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensions, IOutputChannel } from './common/types';
 import { noop } from './common/utils/misc';
 import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
@@ -117,10 +111,8 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     debugConfigurationRegisterTypes(serviceManager);
     tensorBoardRegisterTypes(serviceManager);
 
-    const experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
-
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
-    await setDefaultLanguageServer(experimentService, extensions, serviceManager);
+    await setDefaultLanguageServer(extensions, serviceManager);
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
