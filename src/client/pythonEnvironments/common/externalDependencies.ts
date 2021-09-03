@@ -85,6 +85,9 @@ export function isParentPath(filePath: string, parentPath: string): boolean {
     if (!parentPath.endsWith(path.sep)) {
         parentPath += path.sep;
     }
+    if (!filePath.endsWith(path.sep)) {
+        filePath += path.sep;
+    }
     return normCasePath(filePath).startsWith(normCasePath(parentPath));
 }
 
