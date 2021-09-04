@@ -97,7 +97,7 @@ export async function updateResultFromJunitXml(
             }
 
             const result = junitSuite.testcase.find((t) => {
-                const idResult = getRunIdFromRawData(`${t.$.classname}.${t.$.name}`);
+                const idResult = getRunIdFromRawData(`${t.$.classname}::${t.$.name}`);
                 const idNode = rawTestCaseNode.runId;
                 return idResult === idNode || idNode.endsWith(idResult);
             });

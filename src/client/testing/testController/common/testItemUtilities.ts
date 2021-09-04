@@ -88,9 +88,12 @@ function getRangeFromRawSource(raw: { source: string }): Range | undefined {
 }
 
 export function getRunIdFromRawData(id: string): string {
+    // TODO: This is a temporary solution to normalize test ids.
+    // The current method is error prone and easy to break. When we
+    // re-write the test adapters we should make sure we consider this.
     // This is the id that will be used to compare with the results.
     const runId = id
-        .replace(/\.py/g, '')
+        .replace(/\.py[^\w\-]/g, '') // we want to get rid of the `.py` in file names
         .replace(/[\\\:\/]/g, '.')
         .replace(/\:\:/g, '.')
         .replace(/\.\./g, '.');
