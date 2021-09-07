@@ -5,7 +5,7 @@ import { injectable } from 'inversify';
 import { intersection } from 'lodash';
 import * as vscode from 'vscode';
 import { DiscoveryVariants } from '../common/experiments/groups';
-import { traceError } from '../common/logger';
+import { traceError, traceVerbose } from '../common/logger';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { Resource } from '../common/types';
 import {
@@ -177,6 +177,7 @@ class ComponentAdapter implements IComponentAdapter {
             if (!workspaceFolder || !e.searchLocation) {
                 return;
             }
+            traceVerbose(`Recieved event ${JSON.stringify(e)} file change event`);
             if (
                 e.type === FileChangeType.Created &&
                 isParentPath(e.searchLocation.fsPath, workspaceFolder.uri.fsPath)

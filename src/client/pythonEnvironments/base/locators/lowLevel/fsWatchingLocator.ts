@@ -143,6 +143,7 @@ export abstract class FSWatchingLocator<I = PythonEnvInfo> extends LazyResourceB
             const searchLocation = Uri.file(
                 this.opts.searchLocation ?? path.dirname(getEnvironmentDirFromPath(executable)),
             );
+            traceVerbose('Fired event ', JSON.stringify({ type, kind, searchLocation }), 'from locator');
             this.emitter.fire({ type, kind, searchLocation });
         };
 

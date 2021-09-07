@@ -27,7 +27,7 @@ export function watchLocationForPythonBinaries(
     const resolvedGlob = path.posix.normalize(executableGlob);
     const [baseGlob] = resolvedGlob.split('/').slice(-1);
     function callbackClosure(type: FileChangeType, e: string) {
-        traceVerbose('Received event', JSON.stringify(e), 'for baseglob', baseGlob);
+        traceVerbose('Received event', type, JSON.stringify(e), 'for baseglob', baseGlob);
         const isMatch = minimatch(path.basename(e), baseGlob, { nocase: getOSType() === OSType.Windows });
         if (!isMatch) {
             // When deleting the file for some reason path to all directories leading up to python are reported
