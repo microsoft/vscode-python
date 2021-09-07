@@ -76,6 +76,10 @@ type PythonApiForJupyterExtension = {
     /**
      * IInterpreterService
      */
+    triggerRefresh(): Promise<void>;
+    /**
+     * IInterpreterService
+     */
     getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
     /**
      * IInterpreterService
@@ -171,6 +175,7 @@ export class JupyterExtensionIntegration {
             getInterpreterDetails: async (pythonPath: string) =>
                 this.interpreterService.getInterpreterDetails(pythonPath),
             getInterpreters: async (resource: Uri | undefined) => this.interpreterService.getAllInterpreters(resource),
+            triggerRefresh: async () => this.interpreterService.triggerRefresh(),
             getActivatedEnvironmentVariables: async (
                 resource: Resource,
                 interpreter?: PythonEnvironment,
