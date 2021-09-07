@@ -34,8 +34,4 @@ async function getDefaultLanguageServer(extensions: IExtensions): Promise<Defaul
     }
 
     return LanguageServerType.Jedi;
-
-    // return (await experimentService.inExperiment(JediLSP.experiment))
-    //     ? LanguageServerType.JediLSP
-    //     : LanguageServerType.Jedi;
 }
