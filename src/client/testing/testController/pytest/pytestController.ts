@@ -87,21 +87,30 @@ export class PytestController implements ITestFrameworkController {
                         item.children.forEach((c) => subRootWithNoData.push(c.id));
 
                         rawTestData.forEach((data) => {
+                            let subRootId = data.root;
+                            let rawId;
+                            if (data.root === root) {
+                                const subRoot = data.parents.filter((p) => p.parentid === '.' || p.parentid === root);
+                                subRootId = path.join(data.root, subRoot.length > 0 ? subRoot[0].id : '');
+                                rawId = subRoot.length > 0 ? subRoot[0].id : undefined;
+                            }
+
                             if (data.tests.length > 0) {
-                                let subRootItem = item.children.get(data.root);
+                                let subRootItem = item.children.get(subRootId);
                                 if (!subRootItem) {
                                     subRootItem = createWorkspaceRootTestItem(testController, this.idToRawData, {
-                                        id: data.root,
-                                        label: path.basename(data.root),
-                                        uri: Uri.file(data.root),
-                                        runId: data.root,
+                                        id: subRootId,
+                                        label: path.basename(subRootId),
+                                        uri: Uri.file(subRootId),
+                                        runId: subRootId,
                                         parentId: item.id,
+                                        rawId,
                                     });
                                     item.children.add(subRootItem);
                                 }
 
-                                // We found data for a node. Remove its id for the no-data list.
-                                subRootWithNoData = subRootWithNoData.filter((s) => s !== data.root);
+                                // We found data for a node. Remove its id from the no-data list.
+                                subRootWithNoData = subRootWithNoData.filter((s) => s !== subRootId);
                                 updateTestItemFromRawData(
                                     subRootItem,
                                     testController,
@@ -111,7 +120,7 @@ export class PytestController implements ITestFrameworkController {
                                 );
                             } else {
                                 // This means there are no tests under this node
-                                removeItemByIdFromChildren(this.idToRawData, item, [data.root]);
+                                removeItemByIdFromChildren(this.idToRawData, item, [subRootId]);
                             }
                         });
 
