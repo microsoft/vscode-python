@@ -30,7 +30,6 @@ import {
     IEnvsCollectionCache,
 } from './base/locators/composite/envsCollectionCache';
 import { EnvsCollectionService } from './base/locators/composite/envsCollectionService';
-import { addItemsToRunAfterActivation } from '../common/utils/runAfterActivation';
 
 /**
  * Set up the Python environments component (during extension activation).'
