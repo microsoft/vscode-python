@@ -6,6 +6,7 @@ import traceback
 start_dir = sys.argv[1]
 pattern = sys.argv[2]
 
+
 def get_sourceline(obj):
     try:
         s, n = inspect.getsourcelines(obj)
@@ -16,12 +17,13 @@ def get_sourceline(obj):
             # This is a temporary solution
             s, n = inspect.getsourcelines(obj.orig_method)
         except:
-            return '*'
+            return "*"
 
     for i, v in enumerate(s):
-        if v.strip().startswith(('def', 'async def')):
-            return str(n+i)
-    return '*'
+        if v.strip().startswith(("def", "async def")):
+            return str(n + i)
+    return "*"
+
 
 def generate_test_cases(suite):
     for test in suite:
@@ -30,10 +32,11 @@ def generate_test_cases(suite):
         else:
             for test_case in generate_test_cases(test):
                 yield test_case
+
+
 try:
     loader = unittest.TestLoader()
     suite = loader.discover(start_dir, pattern=pattern)
-
 
     print("start")  # Don't remove this line
     loader_errors = []
