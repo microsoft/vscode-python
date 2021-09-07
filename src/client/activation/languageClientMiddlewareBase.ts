@@ -133,7 +133,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
             this.eventName = EventName.PYTHON_LANGUAGE_SERVER_REQUEST;
         } else if (serverType === LanguageServerType.Node) {
             this.eventName = EventName.LANGUAGE_SERVER_REQUEST;
-        } else if (serverType === LanguageServerType.JediLSP) {
+        } else if (serverType === LanguageServerType.Jedi) {
             this.eventName = EventName.JEDI_LANGUAGE_SERVER_REQUEST;
         }
     }

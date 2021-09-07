@@ -547,7 +547,7 @@ export interface IInterpreterPathProxyService {
     get(resource: Resource): string;
 }
 
-export type DefaultLSType = LanguageServerType.Jedi | LanguageServerType.JediLSP | LanguageServerType.Node;
+export type DefaultLSType = LanguageServerType.Jedi | LanguageServerType.Node;
 
 /**
  * Interface used to retrieve the default language server.

@@ -293,8 +293,12 @@ export class PythonSettings implements IPythonSettings {
             userLS === 'Default' ||
             !Object.values(LanguageServerType).includes(userLS as LanguageServerType)
         ) {
-            this.languageServer = this.defaultLS?.defaultLSType ?? LanguageServerType.Jedi;
+            this.languageServer = this.defaultLS?.defaultLSType ?? LanguageServerType.None;
             this.languageServerIsDefault = true;
+        } else if (userLS === 'JediLSP') {
+            // Switch JediLSP option to Jedi.
+            this.languageServer = LanguageServerType.Jedi;
+            this.languageServerIsDefault = false;
         } else {
             this.languageServer = userLS as LanguageServerType;
             this.languageServerIsDefault = false;

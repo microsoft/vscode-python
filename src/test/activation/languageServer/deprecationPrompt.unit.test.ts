@@ -103,21 +103,7 @@ suite('MPLS deprecation prompt', () => {
         },
         {
             shownInPreviousSession: false,
-            defaultLSType: LanguageServerType.JediLSP,
-            selection: MPLSDeprecation.switchToJedi(),
-            switchTo: undefined,
-            telemSwitchTo: LanguageServerType.Jedi,
-        },
-        {
-            shownInPreviousSession: false,
             defaultLSType: LanguageServerType.Jedi,
-            selection: MPLSDeprecation.switchToPylance(),
-            switchTo: LanguageServerType.Node,
-            telemSwitchTo: LanguageServerType.Node,
-        },
-        {
-            shownInPreviousSession: false,
-            defaultLSType: LanguageServerType.JediLSP,
             selection: MPLSDeprecation.switchToPylance(),
             switchTo: LanguageServerType.Node,
             telemSwitchTo: LanguageServerType.Node,

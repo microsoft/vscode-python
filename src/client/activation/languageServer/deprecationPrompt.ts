@@ -94,10 +94,7 @@ export class MPLSDeprecationPrompt implements IMPLSDeprecationPrompt {
     }
 
     private async switchLanguageServer(lsType: LanguageServerType.Node | LanguageServerType.Jedi): Promise<void> {
-        let defaultType = this.defaultLanguageServer.defaultLSType;
-        if (defaultType === LanguageServerType.JediLSP) {
-            defaultType = LanguageServerType.Jedi;
-        }
+        const defaultType = this.defaultLanguageServer.defaultLSType;
 
         // If changing to the default, unset the setting instead of explicitly setting it.
         const changeTo = lsType !== defaultType ? lsType : undefined;

@@ -45,7 +45,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILanguageServerAnalysisOptions)
-        @named(LanguageServerType.JediLSP)
+        @named(LanguageServerType.Jedi)
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(ICommandManager) commandManager: ICommandManager,
     ) {
@@ -144,7 +144,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         const options = await this.analysisOptions.getAnalysisOptions();
         this.middleware = new LanguageClientMiddleware(
             this.serviceContainer,
-            LanguageServerType.JediLSP,
+            LanguageServerType.Jedi,
             () => this.languageServerProxy?.languageClient,
             this.lsVersion,
         );
