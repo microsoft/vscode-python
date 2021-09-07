@@ -151,6 +151,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
         },
     ].forEach((item) => {
         test(item.testTitle, async () => {
+            when(fs.fileExists(__filename)).thenResolve(true);
             when(fs.readFile(__filename)).thenResolve(item.contents);
 
             const needsToBeFixed = await diagnosticService.doesFileNeedToBeFixed(__filename);
@@ -160,6 +161,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
         });
     });
     test("File should not be fixed if there's an error in reading the file", async () => {
+        when(fs.fileExists(__filename)).thenResolve(true);
         when(fs.readFile(__filename)).thenReject(new Error('Kaboom'));
 
         const needsToBeFixed = await diagnosticService.doesFileNeedToBeFixed(__filename);
@@ -172,6 +174,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
         assert.ok(!needsToBeFixed);
     });
     test('Verify `python.jediEnabled` is found in user settings', async () => {
+        when(fs.fileExists(__filename)).thenResolve(true);
         when(fs.readFile(__filename)).thenResolve('"python.jediEnabled": false');
         const needsToBeFixed = await diagnosticService.doesFileNeedToBeFixed(__filename);
         assert.ok(needsToBeFixed);
@@ -207,6 +210,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
         },
     ].forEach((item) => {
         test(item.testTitle, async () => {
+            when(fs.fileExists(__filename)).thenResolve(true);
             when(fs.readFile(__filename)).thenResolve(item.contents);
             when(fs.writeFile(__filename, anything())).thenResolve();
 
@@ -266,6 +270,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
         },
     ].forEach((item) => {
         test(item.testTitle, async () => {
+            when(fs.fileExists(__filename)).thenResolve(true);
             when(fs.readFile(__filename)).thenResolve(item.contents);
 
             const actualContent = await diagnosticService.fixSettingInFile(__filename);
