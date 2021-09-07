@@ -32,6 +32,7 @@ const nodeConfig = (_, { mode }) => ({
     // },
     resolve: {
         extensions: ['.ts', '.js'],
+        fallback: { path: require.resolve('path-browserify') },
     },
     externals: {
         vscode: 'commonjs vscode',

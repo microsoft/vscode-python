@@ -64,12 +64,6 @@ const config = {
     ],
     plugins: [...common.getDefaultPlugins('extension')],
     resolve: {
-        alias: {
-            // Pointing pdfkit to a dummy js file so webpack doesn't fall over.
-            // Since pdfkit has been externalized (it gets updated with the valid code by copying the pdfkit files
-            // into the right destination).
-            pdfkit: path.resolve(__dirname, 'pdfkit.js'),
-        },
         extensions: ['.ts', '.js'],
         plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })],
     },
