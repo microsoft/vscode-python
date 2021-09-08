@@ -15,9 +15,7 @@ export function getQueryFilter(query: PythonLocatorQuery): (env: PythonEnvInfo) 
     const kinds = query.kinds !== undefined && query.kinds.length > 0 ? query.kinds : undefined;
     let includeNonRooted = true; // We default to `true`.
     if (query.searchLocations !== undefined) {
-        if (query.searchLocations.doNotIncludeNonRooted !== undefined) {
-            includeNonRooted = !query.searchLocations.doNotIncludeNonRooted;
-        }
+        includeNonRooted = !query.searchLocations.doNotIncludeNonRooted;
     }
     const locationFilters = getSearchLocationFilters(query);
     function checkKind(env: PythonEnvInfo): boolean {
