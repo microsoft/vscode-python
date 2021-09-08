@@ -7,7 +7,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
-import { rootWorkspaceUri } from '../../../common';
+import { isPythonVersion, rootWorkspaceUri } from '../../../common';
 import { closeActiveWindows, initialize, initializeTest } from '../../../initialize';
 import { UnitTestIocContainer } from '../../../testing/serviceRegistry';
 
@@ -19,7 +19,12 @@ suite('Language Server: Definition Navigation', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
 
-    suiteSetup(async () => {
+    suiteSetup(async function () {
+        // Skip this test suite if we're on Python 2.7, as Jedi LSP doesn't support it.
+        if (await isPythonVersion('2.7')) {
+            this.skip();
+        }
+
         await initialize();
         await initializeDI();
         isPython2 = (await ioc.getPythonMajorVersion(rootWorkspaceUri!)) === 2;

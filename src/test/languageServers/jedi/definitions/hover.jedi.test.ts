@@ -23,7 +23,12 @@ const fileStringFormat = path.join(hoverPath, 'functionHover.py');
 
 suite('Language Server: Hover Definition (Jedi)', () => {
     let skipTest: boolean;
-    suiteSetup(async () => {
+    suiteSetup(async function () {
+        // Skip this test suite if we're on Python 2.7, as Jedi LSP doesn't support it.
+        if (await isPythonVersion('2.7')) {
+            this.skip();
+        }
+
         await initialize();
         skipTest = isOs(OSType.Windows) && (await isPythonVersion('3.8', '3.9'));
     });

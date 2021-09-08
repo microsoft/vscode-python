@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
 import { IS_WINDOWS } from '../../../../client/common/platform/constants';
+import { isPythonVersion } from '../../../common';
 import { closeActiveWindows, initialize } from '../../../initialize';
 import { normalizeMarkedString } from '../../../textUtils';
 
@@ -16,7 +17,15 @@ const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles',
 const fileOne = path.join(autoCompPath, 'one.py');
 
 suite('Language Server: Code, Hover Definition and Intellisense (Jedi)', () => {
-    suiteSetup(initialize);
+    suiteSetup(async function () {
+        // Skip this test suite if we're on Python 2.7, as Jedi LSP doesn't support it.
+        if (await isPythonVersion('2.7')) {
+            this.skip();
+        }
+
+        await initialize();
+    });
+
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
 

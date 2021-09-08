@@ -22,14 +22,15 @@ const fileEncodingUsed = path.join(autoCompPath, 'five.py');
 const fileSuppress = path.join(autoCompPath, 'suppress.py');
 
 suite('Language Server: Autocomplete Base Tests', function () {
-    // Attempt to fix #1301
-
     this.timeout(60000);
     let ioc: UnitTestIocContainer;
     let skipTest: boolean;
 
     suiteSetup(async function () {
-        // Attempt to fix #1301
+        // Skip this test suite if we're on Python 2.7, as Jedi LSP doesn't support it.
+        if (await isPythonVersion('2.7')) {
+            this.skip();
+        }
 
         this.timeout(60000);
         await initialize();
