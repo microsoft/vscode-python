@@ -212,7 +212,7 @@ export class JupyterExtensionIntegration {
                 const interpreter = !isResource(r) ? r : undefined;
                 const client = await this.languageServerCache.get(resource, interpreter);
 
-                // Some language servers don't support the connection yet. (like Jedi until we switch to LSP)
+                // Some language servers don't support the connection yet.
                 if (client && client.connection && client.capabilities) {
                     return {
                         connection: client.connection,
