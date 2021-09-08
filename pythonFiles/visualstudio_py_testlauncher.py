@@ -340,11 +340,9 @@ def main():
                                 testId = m.id()
                                 if testId.startswith(opts.tests[0]):
                                     suite = cls
-                                if testId in opts.tests:
-                                    if tests is None:
-                                        tests = unittest.TestSuite([m])
-                                    else:
-                                        tests.addTest(m)
+                                if testId == opts.tests[0]:
+                                    tests = unittest.TestSuite([m])
+                                    break
                         except Exception as err:
                             errorMessage = traceback.format_exc()
                 if tests is None:
