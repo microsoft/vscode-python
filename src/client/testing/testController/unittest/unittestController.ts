@@ -20,7 +20,6 @@ import {
     TestData,
 } from '../common/types';
 import { unittestGetTestFolders, unittestGetTestPattern } from './arguments';
-import { execCode } from '../../../common/process/internal/python';
 import {
     createErrorTestItem,
     createWorkspaceRootTestItem,
@@ -31,6 +30,7 @@ import {
 import { traceError } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
+import { unittestDiscovery } from '../../../common/process/internal/scripts/testing_tools';
 
 @injectable()
 export class UnittestController implements ITestFrameworkController {
@@ -111,51 +111,16 @@ export class UnittestController implements ITestFrameworkController {
 
             const startDir = unittestGetTestFolders(options.args)[0];
             const pattern = unittestGetTestPattern(options.args);
-            const discoveryScript = `
-import unittest
-import inspect
-
-def get_sourceline(obj):
-    s, n = inspect.getsourcelines(obj)
-    for i, v in enumerate(s):
-        if v.strip().startswith('def'):
-            return str(n+i)
-    return '*'
-
-def generate_test_cases(suite):
-    for test in suite:
-        if isinstance(test, unittest.TestCase):
-            yield test
-        else:
-            for test_case in generate_test_cases(test):
-                yield test_case
-
-loader = unittest.TestLoader()
-suite = loader.discover("${startDir}", pattern="${pattern}")
-
-print("start")  # Don't remove this line
-loader_errors = []
-for s in generate_test_cases(suite):
-    tm = getattr(s, s._testMethodName)
-    testId = s.id()
-    if testId.startswith("unittest.loader._FailedTest"):
-        loader_errors.append(s._exception)
-    else:
-        print(testId.replace(".", ":") + ":" + get_sourceline(tm))
-
-for error in loader_errors:
-    try:
-        print("=== exception start ===")
-        print(error.msg)
-        print("=== exception end ===")
-    except:
-        pass
-`;
+            let testDir = startDir;
+            if (path.isAbsolute(startDir)) {
+                const relative = path.relative(options.cwd, startDir);
+                testDir = relative.length > 0 ? relative : '.';
+            }
 
             const runOptions: Options = {
                 // unittest needs to load modules in the workspace
                 // isolating it breaks unittest discovery
-                args: execCode(discoveryScript),
+                args: unittestDiscovery([startDir, pattern]),
                 cwd: options.cwd,
                 workspaceFolder: options.workspaceFolder,
                 token: options.token,
@@ -168,12 +133,7 @@ for error in loader_errors:
             let rawTestData: RawDiscoveredTests | undefined;
             try {
                 const content = await this.discoveryRunner.run(UNITTEST_PROVIDER, runOptions);
-                rawTestData = await testDiscoveryParser(
-                    options.cwd,
-                    path.isAbsolute(startDir) ? path.relative(options.cwd, startDir) : startDir,
-                    getTestIds(content),
-                    options.token,
-                );
+                rawTestData = await testDiscoveryParser(options.cwd, testDir, getTestIds(content), options.token);
                 this.testData.set(workspace.uri.fsPath, rawTestData);
 
                 const exceptions = getTestDiscoveryExceptions(content);
