@@ -249,9 +249,14 @@ export class LanguageServerExtensionActivationService
             }
         }
 
-        // If the interpreter is Python 2, default to Pylance.
-        if (this.getCurrentLanguageServerTypeIsDefault() && interpreter && (interpreter.version?.major ?? 0) < 3) {
-            serverType = LanguageServerType.Node;
+        // If the interpreter is Python 2, turn of the language server if it's explicit set to Jedi,
+        // Otherwise default to Pylance.
+        if (interpreter && (interpreter.version?.major ?? 0) < 3) {
+            if (this.getCurrentLanguageServerTypeIsDefault()) {
+                serverType = LanguageServerType.Node;
+            } else if (serverType === LanguageServerType.Jedi) {
+                serverType = LanguageServerType.None;
+            }
         }
 
         this.sendTelemetryForChosenLanguageServer(serverType).ignoreErrors();
