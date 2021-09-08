@@ -3,6 +3,7 @@
 
 import { Event, EventEmitter } from 'vscode';
 import '../../../../common/extensions';
+import { traceError } from '../../../../common/logger';
 import { createDeferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../../telemetry';
@@ -55,25 +56,26 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     public getEnvs(query?: PythonLocatorQuery): PythonEnvInfo[] {
         const cachedEnvs = this.cache.getAllEnvs();
-        if (cachedEnvs.length === 0) {
+        if (cachedEnvs.length === 0 && this.refreshPromises.size === 0) {
+            traceError('Refresh should have already been triggered when activating discovery component');
             this.triggerRefresh().ignoreErrors();
         }
         return query ? cachedEnvs.filter(getQueryFilter(query)) : cachedEnvs;
     }
 
     public triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
-        let refreshPromiseForQuery = this.refreshPromises.get(query);
-        if (!refreshPromiseForQuery) {
-            refreshPromiseForQuery = this.startRefresh(query);
+        let refreshPromise = this.getRefreshPromiseForQuery(query);
+        if (!refreshPromise) {
+            refreshPromise = this.startRefresh(query);
         }
-        return refreshPromiseForQuery;
+        return refreshPromise;
     }
 
     /**
      * Ensure we trigger a fresh refresh after the current refresh (if any) is done.
      */
     private async triggerNewRefresh(query?: PythonLocatorQuery): Promise<void> {
-        const refreshPromise = this.refreshPromises.get(query);
+        const refreshPromise = this.getRefreshPromiseForQuery(query);
         const nextRefreshPromise = refreshPromise
             ? refreshPromise.then(() => this.startRefresh(query))
             : this.startRefresh(query);
@@ -130,5 +132,15 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         await updatesDone.promise;
         await this.cache.validateCache();
         this.cache.flush().ignoreErrors();
+    }
+
+    /**
+     * See if we already have a refresh promise for the query going on and return it.
+     */
+    private getRefreshPromiseForQuery(query?: PythonLocatorQuery) {
+        // Even if no refresh is running for this exact query, there might be other
+        // refreshes running for a superset of this query. For eg. the `undefined` query
+        // is a superset for every other query, only consider that for simplicity.
+        return this.refreshPromises.get(query) ?? this.refreshPromises.get(undefined);
     }
 }

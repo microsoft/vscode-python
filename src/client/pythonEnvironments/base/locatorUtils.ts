@@ -13,13 +13,10 @@ import { IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '
  */
 export function getQueryFilter(query: PythonLocatorQuery): (env: PythonEnvInfo) => boolean {
     const kinds = query.kinds !== undefined && query.kinds.length > 0 ? query.kinds : undefined;
-    let includeNonRooted = true;
+    let includeNonRooted = true; // We default to `true`.
     if (query.searchLocations !== undefined) {
-        if (query.searchLocations.includeNonRooted !== undefined) {
-            includeNonRooted = query.searchLocations.includeNonRooted;
-        } else {
-            // We default to `false`.
-            includeNonRooted = false;
+        if (query.searchLocations.doNotIncludeNonRooted !== undefined) {
+            includeNonRooted = !query.searchLocations.doNotIncludeNonRooted;
         }
     }
     const locationFilters = getSearchLocationFilters(query);

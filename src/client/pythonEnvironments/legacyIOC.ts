@@ -299,7 +299,7 @@ class ComponentAdapter implements IComponentAdapter {
             if (wsFolder !== undefined) {
                 query.searchLocations = {
                     roots: [wsFolder.uri],
-                    includeNonRooted: true,
+                    doNotIncludeNonRooted: false,
                 };
             }
         }
