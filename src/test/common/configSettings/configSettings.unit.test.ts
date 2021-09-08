@@ -210,11 +210,19 @@ suite('Python Settings', async () => {
     }
 
     suite('languageServer settings', async () => {
-        Object.values(LanguageServerType).forEach(async (languageServer) => {
-            testLanguageServer(languageServer, languageServer, false);
+        const values = [
+            { ls: LanguageServerType.Jedi, expected: LanguageServerType.Jedi },
+            { ls: LanguageServerType.JediLSP, expected: LanguageServerType.Jedi },
+            { ls: LanguageServerType.Microsoft, expected: LanguageServerType.Microsoft },
+            { ls: LanguageServerType.Node, expected: LanguageServerType.Node },
+            { ls: LanguageServerType.None, expected: LanguageServerType.None },
+        ];
+
+        values.forEach(({ ls, expected }) => {
+            testLanguageServer(ls, expected, false);
         });
 
-        testLanguageServer('invalid' as LanguageServerType, LanguageServerType.Jedi, true);
+        testLanguageServer('invalid' as LanguageServerType, LanguageServerType.None, true);
     });
 
     function testExperiments(enabled: boolean) {
