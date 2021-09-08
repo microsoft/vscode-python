@@ -145,13 +145,13 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, JediLanguageClientFactory);
         serviceManager.add<ILanguageServerManager>(ILanguageServerManager, JediLanguageServerManager);
         serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, JediLanguageServerProxy);
-    } else if (languageServerType === LanguageServerType.None) {
-        serviceManager.add<ILanguageServerActivator>(
-            ILanguageServerActivator,
-            NoLanguageServerExtensionActivator,
-            LanguageServerType.None,
-        );
     }
+
+    serviceManager.add<ILanguageServerActivator>(
+        ILanguageServerActivator,
+        NoLanguageServerExtensionActivator,
+        LanguageServerType.None,
+    );
 
     serviceManager.addSingleton<IDownloadChannelRule>(
         IDownloadChannelRule,
