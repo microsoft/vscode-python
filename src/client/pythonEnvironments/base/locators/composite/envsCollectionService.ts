@@ -86,20 +86,25 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         const stopWatch = new StopWatch();
         this.refreshStarted.fire();
         const iterator = this.locator.iterEnvs(query);
-        const refreshPromiseForQuery = this.addEnvsToCacheFromIterator(iterator);
-        this.refreshPromises.set(query, refreshPromiseForQuery);
-        return refreshPromiseForQuery.then(async () => {
-            this.refreshPromises.delete(query);
-            sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
-                interpreters: this.cache.getAllEnvs().length,
-            });
-        });
+        const deferred = createDeferred<void>();
+        // Ensure we set this before we trigger the promise to correctly indicate when a refresh has started.
+        this.refreshPromises.set(query, deferred.promise);
+        const promise = this.addEnvsToCacheFromIterator(iterator);
+        return promise
+            .then(async () => {
+                deferred.resolve();
+                this.refreshPromises.delete(query);
+                sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
+                    interpreters: this.cache.getAllEnvs().length,
+                });
+            })
+            .catch((ex) => deferred.reject(ex));
     }
 
     private async addEnvsToCacheFromIterator(iterator: IPythonEnvsIterator) {
         const seen: PythonEnvInfo[] = [];
         const state = {
-            done: true,
+            done: false,
             pending: 0,
         };
         const updatesDone = createDeferred<void>();
