@@ -5,6 +5,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import { Disposable } from 'vscode';
 import { DiscoveryVariants } from '../../../../../client/common/experiments/groups';
 import { traceWarning } from '../../../../../client/common/logger';
 import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
@@ -137,132 +138,140 @@ export function testLocatorWatcher(
         doNotVerifyIfLocated?: boolean;
     },
 ): void {
-    let locator: ILocator<BasicEnvInfo> & IDisposable;
-    let inExperimentStub: sinon.SinonStub;
-    const venvs = new Venvs(root);
+    suite('Locator Watcher Tests', () => {
+        let locator: ILocator<BasicEnvInfo> & IDisposable;
+        let inExperimentStub: sinon.SinonStub;
+        const disposables: Disposable[] = [];
+        const venvs = new Venvs(root);
 
-    async function waitForChangeToBeDetected(deferred: Deferred<void>) {
-        const timeout = setTimeout(() => {
-            clearTimeout(timeout);
-            deferred.reject(new Error('Environment not detected'));
-        }, TEST_TIMEOUT);
-        await deferred.promise;
-    }
-
-    async function isLocated(executable: string): Promise<boolean> {
-        const items = await getEnvs(locator.iterEnvs());
-        return items.some((item) => externalDeps.arePathsSame(item.executablePath, executable));
-    }
-
-    suiteSetup(async () => {
-        await venvs.cleanUp();
-    });
-
-    setup(() => {
-        inExperimentStub = sinon.stub(externalDeps, 'inExperiment');
-        inExperimentStub.withArgs(DiscoveryVariants.discoverWithFileWatching).resolves(true);
-    });
-
-    async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
-        locator = options?.arg ? await createLocatorFactoryFunc(options.arg) : await createLocatorFactoryFunc();
-        locator.onChanged(onChanged);
-        await getEnvs(locator.iterEnvs()); // Force the FS watcher to start.
-        // Wait for watchers to get ready
-        await sleep(2000);
-    }
-
-    teardown(async () => {
-        sinon.restore();
-        if (locator) {
-            await locator.dispose();
+        async function waitForChangeToBeDetected(deferred: Deferred<void>) {
+            const timeout = setTimeout(() => {
+                deferred.reject(new Error('Environment not detected'));
+            }, TEST_TIMEOUT);
+            disposables.push({
+                dispose: () => {
+                    clearTimeout(timeout);
+                },
+            });
+            await deferred.promise;
         }
-        await venvs.cleanUp();
-    });
 
-    test('Detect a new environment', async () => {
-        let actualEvent: PythonEnvsChangedEvent;
-        const deferred = createDeferred<void>();
-        await setupLocator(async (e) => {
-            actualEvent = e;
-            deferred.resolve();
+        async function isLocated(executable: string): Promise<boolean> {
+            const items = await getEnvs(locator.iterEnvs());
+            return items.some((item) => externalDeps.arePathsSame(item.executablePath, executable));
+        }
+
+        suiteSetup(async () => {
+            await venvs.cleanUp();
         });
 
-        const { executable, envDir } = await venvs.create('one');
-        await waitForChangeToBeDetected(deferred);
-        if (!options?.doNotVerifyIfLocated) {
-            const isFound = await isLocated(executable);
-            assert.ok(isFound);
+        setup(() => {
+            inExperimentStub = sinon.stub(externalDeps, 'inExperiment');
+            inExperimentStub.withArgs(DiscoveryVariants.discoverWithFileWatching).resolves(true);
+        });
+
+        async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
+            locator = options?.arg ? await createLocatorFactoryFunc(options.arg) : await createLocatorFactoryFunc();
+            disposables.push(locator.onChanged(onChanged));
+            await getEnvs(locator.iterEnvs()); // Force the FS watcher to start.
+            // Wait for watchers to get ready
+            await sleep(2000);
         }
 
-        assert.equal(actualEvent!.type, FileChangeType.Created, 'Wrong event emitted');
-        if (options?.kind) {
-            assert.equal(actualEvent!.kind, options.kind, 'Wrong event emitted');
-        }
-        assert.notEqual(actualEvent!.searchLocation, undefined, 'Wrong event emitted');
-        assert.ok(
-            externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
-            'Wrong event emitted',
-        );
-    }).timeout(TEST_TIMEOUT * 2);
+        teardown(async () => {
+            sinon.restore();
+            if (locator) {
+                await locator.dispose();
+            }
+            await venvs.cleanUp();
+            disposables.forEach((d) => d.dispose());
+        });
 
-    test('Detect when an environment has been deleted', async () => {
-        let actualEvent: PythonEnvsChangedEvent;
-        const deferred = createDeferred<void>();
-        const { executable, envDir } = await venvs.create('one');
-        await setupLocator(async (e) => {
-            if (e.type === FileChangeType.Deleted) {
+        test('Detect a new environment', async () => {
+            let actualEvent: PythonEnvsChangedEvent;
+            const deferred = createDeferred<void>();
+            await setupLocator(async (e) => {
                 actualEvent = e;
                 deferred.resolve();
+            });
+
+            const { executable, envDir } = await venvs.create('one');
+            await waitForChangeToBeDetected(deferred);
+            if (!options?.doNotVerifyIfLocated) {
+                const isFound = await isLocated(executable);
+                assert.ok(isFound);
             }
-        });
 
-        // VSCode API has a limitation where it fails to fire event when environment folder is deleted directly:
-        // https://github.com/microsoft/vscode/issues/110923
-        // Using chokidar directly in tests work, but it has permission issues on Windows that you cannot delete a
-        // folder if it has a subfolder that is being watched inside: https://github.com/paulmillr/chokidar/issues/422
-        // Hence we test directly deleting the executable, and not the whole folder using `workspaceVenvs.cleanUp()`.
-        await venvs.delete(executable);
-        await waitForChangeToBeDetected(deferred);
-        if (!options?.doNotVerifyIfLocated) {
-            const isFound = await isLocated(executable);
-            assert.notOk(isFound);
-        }
-
-        assert.notEqual(actualEvent!, undefined, 'Wrong event emitted');
-        if (options?.kind) {
-            assert.equal(actualEvent!.kind, options.kind, 'Wrong event emitted');
-        }
-        assert.notEqual(actualEvent!.searchLocation, undefined, 'Wrong event emitted');
-        assert.ok(
-            externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
-            'Wrong event emitted',
-        );
-    }).timeout(TEST_TIMEOUT * 2);
-
-    test('Detect when an environment has been updated', async () => {
-        let actualEvent: PythonEnvsChangedEvent;
-        const deferred = createDeferred<void>();
-        // Create a dummy environment so we can update its executable later. We can't choose a real environment here.
-        // Executables inside real environments can be symlinks, so writing on them can result in the real executable
-        // being updated instead of the symlink.
-        const { executable, envDir } = await venvs.createDummyEnv('one', options?.kind);
-        await setupLocator(async (e) => {
-            if (e.type === FileChangeType.Changed) {
-                actualEvent = e;
-                deferred.resolve();
+            assert.equal(actualEvent!.type, FileChangeType.Created, 'Wrong event emitted');
+            if (options?.kind) {
+                assert.equal(actualEvent!.kind, options.kind, 'Wrong event emitted');
             }
-        });
+            assert.notEqual(actualEvent!.searchLocation, undefined, 'Wrong event emitted');
+            assert.ok(
+                externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
+                'Wrong event emitted',
+            );
+        }).timeout(TEST_TIMEOUT * 2);
 
-        await venvs.update(executable);
-        await waitForChangeToBeDetected(deferred);
-        assert.notEqual(actualEvent!, undefined, 'Event was not emitted');
-        if (options?.kind) {
-            assert.equal(actualEvent!.kind, options.kind, 'Kind is not as expected');
-        }
-        assert.notEqual(actualEvent!.searchLocation, undefined, 'Search location is not set');
-        assert.ok(
-            externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
-            `Paths don't match ${actualEvent!.searchLocation!.fsPath} != ${path.dirname(envDir)}`,
-        );
-    }).timeout(TEST_TIMEOUT * 2);
+        test('Detect when an environment has been deleted', async () => {
+            let actualEvent: PythonEnvsChangedEvent;
+            const deferred = createDeferred<void>();
+            const { executable, envDir } = await venvs.create('one');
+            await setupLocator(async (e) => {
+                if (e.type === FileChangeType.Deleted) {
+                    actualEvent = e;
+                    deferred.resolve();
+                }
+            });
+
+            // VSCode API has a limitation where it fails to fire event when environment folder is deleted directly:
+            // https://github.com/microsoft/vscode/issues/110923
+            // Using chokidar directly in tests work, but it has permission issues on Windows that you cannot delete a
+            // folder if it has a subfolder that is being watched inside: https://github.com/paulmillr/chokidar/issues/422
+            // Hence we test directly deleting the executable, and not the whole folder using `workspaceVenvs.cleanUp()`.
+            await venvs.delete(executable);
+            await waitForChangeToBeDetected(deferred);
+            if (!options?.doNotVerifyIfLocated) {
+                const isFound = await isLocated(executable);
+                assert.notOk(isFound);
+            }
+
+            assert.notEqual(actualEvent!, undefined, 'Wrong event emitted');
+            if (options?.kind) {
+                assert.equal(actualEvent!.kind, options.kind, 'Wrong event emitted');
+            }
+            assert.notEqual(actualEvent!.searchLocation, undefined, 'Wrong event emitted');
+            assert.ok(
+                externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
+                'Wrong event emitted',
+            );
+        }).timeout(TEST_TIMEOUT * 2);
+
+        test('Detect when an environment has been updated', async () => {
+            let actualEvent: PythonEnvsChangedEvent;
+            const deferred = createDeferred<void>();
+            // Create a dummy environment so we can update its executable later. We can't choose a real environment here.
+            // Executables inside real environments can be symlinks, so writing on them can result in the real executable
+            // being updated instead of the symlink.
+            const { executable, envDir } = await venvs.createDummyEnv('one', options?.kind);
+            await setupLocator(async (e) => {
+                if (e.type === FileChangeType.Changed) {
+                    actualEvent = e;
+                    deferred.resolve();
+                }
+            });
+
+            await venvs.update(executable);
+            await waitForChangeToBeDetected(deferred);
+            assert.notEqual(actualEvent!, undefined, 'Event was not emitted');
+            if (options?.kind) {
+                assert.equal(actualEvent!.kind, options.kind, 'Kind is not as expected');
+            }
+            assert.notEqual(actualEvent!.searchLocation, undefined, 'Search location is not set');
+            assert.ok(
+                externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
+                `Paths don't match ${actualEvent!.searchLocation!.fsPath} != ${path.dirname(envDir)}`,
+            );
+        }).timeout(TEST_TIMEOUT * 2);
+    });
 }
