@@ -6,7 +6,6 @@ import { Location, TestItem, TestMessage, TestRun, TestRunProfileKind } from 'vs
 import { traceError, traceInfo } from '../../../common/logger';
 import * as internalScripts from '../../../common/process/internal/scripts';
 import { IOutputChannel } from '../../../common/types';
-import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import { ITestRunner, ITestDebugLauncher, IUnitTestSocketServer, LaunchOptions, Options } from '../../common/types';
@@ -57,7 +56,23 @@ export class UnittestRunner implements ITestsRunner {
     ): Promise<void> {
         runInstance.appendOutput(`Running tests (unittest): ${testNodes.map((t) => t.id).join(' ; ')}\r\n`);
         const testCaseNodes: TestItem[] = [];
-        testNodes.forEach((t) => testCaseNodes.push(...getTestCaseNodes(t)));
+        const fileToTestCases: Map<string, TestItem[]> = new Map();
+
+        testNodes.forEach((t) => {
+            const nodes = getTestCaseNodes(t);
+            nodes.forEach((n) => {
+                if (n.uri) {
+                    const fsRunIds = fileToTestCases.get(n.uri.fsPath);
+                    if (fsRunIds) {
+                        fsRunIds.push(n);
+                    } else {
+                        fileToTestCases.set(n.uri.fsPath, [n]);
+                    }
+                }
+            });
+            testCaseNodes.push(...nodes);
+        });
+
         const tested: string[] = [];
 
         const counts = {
@@ -70,10 +85,8 @@ export class UnittestRunner implements ITestsRunner {
 
         let failFast = false;
         let stopTesting = false;
-        let testCasePromise: Deferred<void>;
         this.server.on('error', (message: string, ...data: string[]) => {
             traceError(`${message} ${data.join(' ')}`);
-            testCasePromise.reject();
         });
         this.server.on('log', (message: string, ...data: string[]) => {
             traceInfo(`${message} ${data.join(' ')}`);
@@ -81,7 +94,6 @@ export class UnittestRunner implements ITestsRunner {
         this.server.on('connect', noop);
         this.server.on('start', noop);
         this.server.on('result', (data: ITestData) => {
-            testCasePromise.resolve();
             const testCase = testCaseNodes.find((node) => idToRawData.get(node.id)?.runId === data.test);
             const rawTestCase = idToRawData.get(testCase?.id ?? '');
             if (testCase && rawTestCase) {
@@ -147,18 +159,15 @@ export class UnittestRunner implements ITestsRunner {
         });
 
         const port = await this.server.start();
-        const runTestInternal = async (testFile = '', testId = ''): Promise<void> => {
+        const runTestInternal = async (testFilePath: string, testRunIds: string[]): Promise<void> => {
             let testArgs = getTestRunArgs(options.args);
             failFast = testArgs.indexOf('--uf') >= 0;
             testArgs = testArgs.filter((arg) => arg !== '--uf');
 
             testArgs.push(`--result-port=${port}`);
-            if (testId.length > 0) {
-                testArgs.push(`-t${testId}`);
-            }
-            if (testFile.length > 0) {
-                testArgs.push(`--testFile=${testFile}`);
-            }
+            testRunIds.forEach((i) => testArgs.push(`-t${i}`));
+            testArgs.push(`--testFile=${testFilePath}`);
+
             if (options.debug === true) {
                 testArgs.push('--debug');
                 const launchOptions: LaunchOptions = {
@@ -179,23 +188,30 @@ export class UnittestRunner implements ITestsRunner {
                 token: options.token,
                 workspaceFolder: options.workspaceFolder,
             };
-            testCasePromise = createDeferred();
             await this.runner.run(UNITTEST_PROVIDER, runOptions);
-            return testCasePromise.promise;
+            return Promise.resolve();
         };
 
         try {
-            for (const testCaseNode of testCaseNodes) {
+            for (const testFile of fileToTestCases.keys()) {
                 if (stopTesting || options.token.isCancellationRequested) {
                     break;
                 }
-                runInstance.appendOutput(`Running tests: ${testCaseNode.id}\r\n`);
-                const rawTestCaseNode = idToRawData.get(testCaseNode.id);
-                if (rawTestCaseNode) {
-                    // VS Code API requires that we set the run state on the leaf nodes. The state of the
-                    // parent nodes are computed based on the state of child nodes.
-                    runInstance.started(testCaseNode);
-                    await runTestInternal(testCaseNode.uri?.fsPath, rawTestCaseNode.runId);
+
+                const nodes = fileToTestCases.get(testFile);
+                if (nodes) {
+                    runInstance.appendOutput(`Running tests: ${nodes.join('\r\n')}\r\n`);
+                    const runIds: string[] = [];
+                    nodes.forEach((n) => {
+                        const rawNode = idToRawData.get(n.id);
+                        if (rawNode) {
+                            // VS Code API requires that we set the run state on the leaf nodes. The state of the
+                            // parent nodes are computed based on the state of child nodes.
+                            runInstance.started(n);
+                            runIds.push(rawNode.runId);
+                        }
+                    });
+                    await runTestInternal(testFile, runIds);
                 }
             }
         } catch (ex) {

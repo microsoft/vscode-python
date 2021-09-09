@@ -96,9 +96,9 @@ type SearchLocations = {
      */
     roots: Uri[];
     /**
-     * If true, also look for environments that do not have a search location.
+     * If true, only query for workspace related envs, i.e do not look for environments that do not have a search location.
      */
-    includeNonRooted?: boolean;
+    doNotIncludeNonRooted?: boolean;
 };
 
 /**

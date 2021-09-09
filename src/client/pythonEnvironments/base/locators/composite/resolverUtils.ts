@@ -12,7 +12,7 @@ import {
     getInterpreterPathFromDir,
     getPythonVersionFromPath,
 } from '../../../common/commonUtils';
-import { getWorkspaceFolders, isParentPath } from '../../../common/externalDependencies';
+import { arePathsSame, getWorkspaceFolders, isParentPath } from '../../../common/externalDependencies';
 import { AnacondaCompanyName, Conda } from '../../../common/environmentManagers/conda';
 import { parsePyenvVersion } from '../../../common/environmentManagers/pyenv';
 import { Architecture, getOSType, OSType } from '../../../../common/utils/platform';
@@ -82,7 +82,7 @@ async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
         traceError('Expected registry interpreter cache to be initialized already');
         interpreters = await getRegistryInterpreters();
     }
-    const data = interpreters.find((i) => i.interpreterPath.toUpperCase() === env.executable.filename.toUpperCase());
+    const data = interpreters.find((i) => arePathsSame(i.interpreterPath, env.executable.filename));
     if (data) {
         const versionStr = data.versionStr ?? data.sysVersionStr ?? data.interpreterPath;
         let version;

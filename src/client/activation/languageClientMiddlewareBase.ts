@@ -30,7 +30,7 @@ import {
     Middleware,
     ResponseError,
 } from 'vscode-languageclient';
-import type NotebookMiddlewareAddon from '@vscode/jupyter-lsp-middleware';
+import type { MiddlewareAddon } from '@vscode/jupyter-lsp-middleware';
 
 import { HiddenFilePrefix } from '../common/constants';
 import { IConfigurationService } from '../common/types';
@@ -111,7 +111,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
         },
     };
 
-    protected notebookAddon: NotebookMiddlewareAddon | undefined;
+    protected notebookAddon: MiddlewareAddon | undefined;
 
     private connected = false; // Default to not forwarding to VS code.
 
@@ -343,7 +343,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    private callNext(funcName: keyof NotebookMiddlewareAddon, args: IArguments) {
+    private callNext(funcName: keyof MiddlewareAddon, args: IArguments) {
         // This function uses the last argument to call the 'next' item. If we're allowing notebook
         // middleware, it calls into the notebook middleware first.
         if (this.notebookAddon) {

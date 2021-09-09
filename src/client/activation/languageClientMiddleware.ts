@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import NotebookMiddlewareAddon from '@vscode/jupyter-lsp-middleware';
 import { LanguageClient } from 'vscode-languageclient/node';
 import { IJupyterExtensionDependencyManager, IVSCodeNotebook } from '../common/application/types';
 import { PYTHON_LANGUAGE } from '../common/constants';
@@ -13,6 +12,8 @@ import { sendTelemetryEvent } from '../telemetry';
 
 import { LanguageClientMiddlewareBase } from './languageClientMiddlewareBase';
 import { LanguageServerType } from './types';
+
+import { createMiddlewareAddon } from '@vscode/jupyter-lsp-middleware';
 
 export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
     public constructor(
@@ -37,7 +38,7 @@ export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
 
         // Enable notebook support if jupyter support is installed
         if (jupyterDependencyManager && jupyterDependencyManager.isJupyterExtensionInstalled) {
-            this.notebookAddon = new NotebookMiddlewareAddon(
+            this.notebookAddon = createMiddlewareAddon(
                 notebookApi,
                 getClient,
                 traceInfo,
@@ -52,7 +53,7 @@ export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
                     if (this.notebookAddon && !jupyterDependencyManager.isJupyterExtensionInstalled) {
                         this.notebookAddon = undefined;
                     } else if (!this.notebookAddon && jupyterDependencyManager.isJupyterExtensionInstalled) {
-                        this.notebookAddon = new NotebookMiddlewareAddon(
+                        this.notebookAddon = createMiddlewareAddon(
                             notebookApi,
                             getClient,
                             traceInfo,

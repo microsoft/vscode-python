@@ -426,10 +426,7 @@
             {
                 "category": "Test",
                 "command": "testing.reRunFailTests",
-                "icon": {
-                    "dark": "resources/dark/run-failed-tests.svg",
-                    "light": "resources/light/run-failed-tests.svg"
-                },
+                "icon": "$(run-errors)",
                 "title": "%python.command.testing.rerunFailedTests.title%"
             },
             {
@@ -1975,7 +1972,7 @@
         "webpack": "webpack"
     },
     "dependencies": {
-        "@vscode/jupyter-lsp-middleware": "0.2.3",
+        "@vscode/jupyter-lsp-middleware": "^0.2.5",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.4",
         "chokidar": "^3.4.3",
@@ -2108,14 +2105,11 @@
         "flat": "^4.0.0",
         "fork-ts-checker-webpack-plugin": "^4.1.6",
         "gulp": "^4.0.0",
-        "gulp-azure-storage": "^0.11.1",
         "gulp-chmod": "^2.0.0",
         "gulp-gunzip": "^1.1.0",
         "gulp-rename": "^1.4.0",
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^4.0.1",
-        "gulp-untar": "0.0.8",
-        "gulp-vinyl-zip": "^2.1.2",
         "husky": "^1.1.2",
         "immutable": "^4.0.0-rc.12",
         "json-loader": "^0.5.7",
@@ -2170,7 +2164,6 @@
         "unicode-properties": "^1.3.1",
         "url-loader": "^1.1.2",
         "uuid": "^3.3.2",
-        "vinyl-fs": "^3.0.3",
         "vsce": "^1.96.1",
         "vscode-debugadapter-testsupport": "^1.27.0",
         "webpack": "^4.33.0",

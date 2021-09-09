@@ -1,0 +1,79 @@
+name: 'Smoke tests'
+description: 'Run smoke tests'
+
+inputs:
+  node_version:
+    description: 'Version of Node to install'
+    required: true
+  artifact_name:
+    description: 'Name of the artifact containing the VSIX'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Node
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ inputs.node_version }}
+
+    - name: Node cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-smoke-tests-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-smoke-tests-
+
+    - name: Install Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Pip cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-smoke-tests-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-smoke-tests-
+
+    - name: Install dependencies (npm ci)
+      run: npm ci --prefer-offline
+      shell: bash
+
+    - name: pip install system test requirements
+      run: |
+        python -m pip install --upgrade -r build/test-requirements.txt
+        python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+        python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+      shell: bash
+
+    - name: pip install smoke test requirements
+      run: |
+        python -m pip install --upgrade -r build/smoke-test-requirements.txt
+      shell: bash
+
+    # Bits from the VSIX are reused by smokeTest.ts to speed things up.
+    - name: Download VSIX
+      uses: actions/download-artifact@v2
+      with:
+        name: ${{ inputs.artifact_name }}
+
+    - name: Prepare for smoke tests
+      run: npx tsc -p ./
+      shell: bash
+
+    - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
+      run: |
+        echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
+        echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Run smoke tests
+      env:
+        DISPLAY: 10
+        INSTALL_JUPYTER_EXTENSION: true
+      uses: GabrielBB/xvfb-action@v1.5
+      with:
+        run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
