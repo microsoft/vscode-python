@@ -26,6 +26,8 @@
    ([#17309](https://github.com/Microsoft/vscode-python/issues/17309))
 1. For CI ensure `tensorboard` is installed in python 3 environments only.
    ([#17325](https://github.com/Microsoft/vscode-python/issues/17325))
+1. Fix for test result not found for files starting with py.
+   ([#17270](https://github.com/Microsoft/vscode-python/issues/17270))
 
 ### Thanks
 
