@@ -30,8 +30,10 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return this.refreshStarted.event;
     }
 
-    public get refreshPromise(): Promise<void> {
-        return Promise.all(Array.from(this.refreshPromises.values())).then();
+    public get refreshPromise(): Promise<void> | undefined {
+        return this.refreshPromises.size > 0
+            ? Promise.all(Array.from(this.refreshPromises.values())).then()
+            : undefined;
     }
 
     constructor(private readonly cache: IEnvsCollectionCache, private readonly locator: IResolvingLocator) {

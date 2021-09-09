@@ -51,6 +51,8 @@ export interface IQuickPickParameters<T extends QuickPickItem, E = any> {
     customButtonSetup?: QuickInputButtonSetup;
     matchOnDescription?: boolean;
     matchOnDetail?: boolean;
+    keepScrollPosition?: boolean;
+    sortByLabel?: boolean;
     acceptFilterBoxTextAsSelection?: boolean;
     onChangeItem?: {
         callback: (event: E, quickPick: QuickPick<T>) => Promise<void>;
@@ -116,6 +118,8 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         matchOnDetail,
         acceptFilterBoxTextAsSelection,
         onChangeItem,
+        keepScrollPosition,
+        sortByLabel
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>> {
         const disposables: Disposable[] = [];
         try {
@@ -123,6 +127,8 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 const input = this.shell.createQuickPick<T>();
                 input.title = title;
                 input.step = step;
+                input.keepScrollPosition = keepScrollPosition;
+                input.sortByLabel = sortByLabel || false;
                 input.totalSteps = totalSteps;
                 input.placeholder = placeholder;
                 input.ignoreFocusOut = true;

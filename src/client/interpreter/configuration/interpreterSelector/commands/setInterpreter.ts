@@ -9,6 +9,7 @@ import * as path from 'path';
 import { QuickPickItem } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands, Octicons } from '../../../../common/constants';
+import { traceWarning } from '../../../../common/logger';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
 import { getIcon } from '../../../../common/utils/icons';
@@ -28,7 +29,6 @@ import {
     IInterpreterSelector,
     IPythonPathUpdaterServiceManager,
     ISpecialQuickPickItem,
-    PythonEnvSuggestionChangedEvent,
 } from '../../types';
 import { BaseInterpreterSelectorCommand } from './base';
 
@@ -89,15 +89,21 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             suggestions.push(defaultInterpreterPathSuggestion);
         }
 
-        let interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
-
-        if (interpreterSuggestions.length > 0) {
-            const suggested = interpreterSuggestions.shift();
-            if (suggested) {
-                const starred = cloneDeep(suggested);
-                starred.label = `${Octicons.Star} ${starred.label}`;
-                starred.description = Common.recommended();
-                interpreterSuggestions.unshift(starred);
+        let isRefreshing = false;
+        let interpreterSuggestions: IInterpreterQuickPickItem[];
+        if (this.interpreterService.refreshPromise) {
+            isRefreshing = true;
+            interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
+        } else {
+            interpreterSuggestions = await this.interpreterSelector.getAllSuggestions(state.workspace);
+            if (interpreterSuggestions.length > 0) {
+                const suggested = interpreterSuggestions.shift();
+                if (suggested) {
+                    const starred = cloneDeep(suggested);
+                    starred.label = `${Octicons.Star} ${starred.label}`;
+                    starred.description = Common.recommended();
+                    interpreterSuggestions.unshift(starred);
+                }
             }
         }
         suggestions.push(...interpreterSuggestions);
@@ -114,54 +120,41 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             iconPath: getIcon(REFRESH_BUTTON_ICON),
             tooltip: InterpreterQuickPickList.refreshInterpreterList(),
         };
-        const selection = await input.showQuickPick<
-            QuickPickType,
-            IQuickPickParameters<QuickPickType, PythonEnvSuggestionChangedEvent>
-        >({
+        const selection = await input.showQuickPick<QuickPickType, IQuickPickParameters<QuickPickType>>({
             placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
             items: suggestions,
-            activeItem: activeInterpreter.length > 0 ? activeInterpreter[0] : interpreterSuggestions[0],
+            // If the list is refreshing, adding elements in the end is only
+            // way to preserve scroll position, so we don't need sorting.
+            sortByLabel: !isRefreshing,
+            keepScrollPosition: true,
+            activeItem: undefined,
             matchOnDetail: true,
             matchOnDescription: true,
             onChangeItem: {
-                event: this.interpreterSelector.onChanged,
+                event: this.interpreterService.onDidChangeInterpreters,
                 callback: async (_event, quickPick) => {
-                    quickPick.busy = true;
-                    this.interpreterService.refreshPromise.then(() => {
-                        this.interpreterService.refreshPromise.then(() => {
+                    if (this.interpreterService.refreshPromise) {
+                        quickPick.busy = true;
+                        this.interpreterService.refreshPromise.then(async () => {
+                            // TODO: Suggested a recommended interpreter now that refresh has finished
                             quickPick.busy = false;
                         });
-                    });
-                    interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace, true);
-                    if (interpreterSuggestions.length > 0) {
-                        const suggested = interpreterSuggestions.shift();
-                        if (suggested) {
-                            const starred = cloneDeep(suggested);
-                            starred.label = `${Octicons.Star} ${starred.label}`;
-                            starred.description = Common.recommended();
-                            interpreterSuggestions.unshift(starred);
-                        }
+                    } else {
+                        traceWarning('An ongoing refresh is expected if interpreter quickpick list is changing');
                     }
 
-                    const newSuggestions = defaultInterpreterPathSuggestion
+                    quickPick.items = defaultInterpreterPathSuggestion
                         ? [manualEntrySuggestion, defaultInterpreterPathSuggestion, ...interpreterSuggestions]
                         : [manualEntrySuggestion, ...interpreterSuggestions];
-                    activeInterpreter = interpreterSuggestions.filter((i) => i.detail === currentPythonPath);
 
-                    quickPick.items = newSuggestions;
+                    activeInterpreter = interpreterSuggestions.filter((i) => i.detail === currentPythonPath);
                     quickPick.activeItems =
                         activeInterpreter.length > 0 ? [activeInterpreter[0]] : [interpreterSuggestions[0]];
                 },
             },
             customButtonSetup: {
                 button: refreshButton,
-                callback: async (quickPick) => {
-                    quickPick.busy = true;
-
-                    await this.interpreterService.triggerRefresh();
-
-                    quickPick.busy = false;
-                },
+                callback: () => this.interpreterService.triggerRefresh(),
             },
             title: InterpreterQuickPickList.browsePath.openButtonLabel(),
         });

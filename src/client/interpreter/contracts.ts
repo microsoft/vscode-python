@@ -43,7 +43,7 @@ export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
     readonly onRefreshStart: Event<void>;
     triggerRefresh(query?: PythonLocatorQuery): Promise<void>;
-    readonly refreshPromise: Promise<void>;
+    readonly refreshPromise: Promise<void> | undefined;
     readonly onChanged: Event<PythonEnvironmentsChangedEvent>;
     // VirtualEnvPrompt
     onDidCreate(resource: Resource, callback: () => void): Disposable;
@@ -111,7 +111,7 @@ export interface ICondaLocatorService {
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
     triggerRefresh(query?: PythonLocatorQuery): Promise<void>;
-    readonly refreshPromise: Promise<void>;
+    readonly refreshPromise: Promise<void> | undefined;
     readonly onDidChangeInterpreters: Event<PythonEnvironmentsChangedEvent>;
     onDidChangeInterpreterConfiguration: Event<Uri | undefined>;
     onDidChangeInterpreter: Event<void>;
