@@ -33,17 +33,21 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
 
     public async activate(): Promise<void> {
         if (await inDiscoveryExperiment(this.experimentService)) {
-            this.pyenvs.onRefreshStart( () => {
-                this.showProgress();
-                if (this.pyenvs.refreshPromise) {
-                    this.pyenvs.refreshPromise.then(() => this.hideProgress());
-                }
-            }, this, this.disposables);
+            this.pyenvs.onRefreshStart(
+                () => {
+                    this.showProgress();
+                    if (this.pyenvs.refreshPromise) {
+                        this.pyenvs.refreshPromise.then(() => this.hideProgress());
+                    }
+                },
+                this,
+                this.disposables,
+            );
         } else {
             const progressService = this.serviceContainer.get<IInterpreterLocatorProgressService>(
                 IInterpreterLocatorProgressService,
             );
-            progressService.onRefreshing(() => this.showProgress(), this, this.disposables);;
+            progressService.onRefreshing(() => this.showProgress(), this, this.disposables);
             progressService.onRefreshed(() => this.hideProgress(), this, this.disposables);
         }
     }
