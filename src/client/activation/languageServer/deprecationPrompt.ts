@@ -17,8 +17,8 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IMPLSDeprecationPrompt, LanguageServerType } from '../types';
 
-const doNotShowPromptStateKey = 'MESSAGE_KEY_FOR_MPLS_DEPRECATION_PROMPT';
-const frequency = 1000 * 60 * 60 * 24 * 30; // One month.
+const doNotShowPromptStateKey = 'MESSAGE_KEY_FOR_MPLS_DEPRECATION_PROMPT2';
+const frequency = 1000 * 60 * 60 * 24 * 7; // One week.
 
 @injectable()
 export class MPLSDeprecationPrompt implements IMPLSDeprecationPrompt {
