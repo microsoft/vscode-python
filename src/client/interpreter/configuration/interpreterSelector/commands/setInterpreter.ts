@@ -143,6 +143,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                         traceWarning('An ongoing refresh is expected if interpreter quickpick list is changing');
                     }
 
+                    interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
                     quickPick.items = defaultInterpreterPathSuggestion
                         ? [manualEntrySuggestion, defaultInterpreterPathSuggestion, ...interpreterSuggestions]
                         : [manualEntrySuggestion, ...interpreterSuggestions];
