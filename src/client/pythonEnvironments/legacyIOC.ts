@@ -303,9 +303,12 @@ class ComponentAdapter implements IComponentAdapter {
             if (wsFolder !== undefined) {
                 query.searchLocations = {
                     roots: [wsFolder.uri],
-                    doNotIncludeNonRooted: false,
                 };
             }
+        } else {
+            query.searchLocations = {
+                roots: [],
+            };
         }
 
         let envs = this.api.getEnvs(query);
