@@ -4,12 +4,16 @@
 
 ### Fixes
 
+1. Fix for debug configuration used when no launch.json exists is still used after launch.json is created.
+   ([#17353](https://github.com/Microsoft/vscode-python/issues/17353))
 1. Ensure default python executable to use is 'python' instead of ''.
    ([#17089](https://github.com/Microsoft/vscode-python/issues/17089))
 1. Ensure workspace interpreters are discovered and watched when in `pythonDiscoveryModuleWithoutWatcher` experiment.
    ([#17144](https://github.com/Microsoft/vscode-python/issues/17144))
 1. Do path comparisons appropriately in the new discovery component.
    ([#17244](https://github.com/Microsoft/vscode-python/issues/17244))
+1. Fix for test result not found for files starting with py.
+   ([#17270](https://github.com/Microsoft/vscode-python/issues/17270))
 1. Fix for unable to import when running unittest.
    ([#17280](https://github.com/Microsoft/vscode-python/issues/17280))
 1. Fix for multiple folders in `pytest` args.
@@ -26,8 +30,6 @@
    ([#17309](https://github.com/Microsoft/vscode-python/issues/17309))
 1. For CI ensure `tensorboard` is installed in python 3 environments only.
    ([#17325](https://github.com/Microsoft/vscode-python/issues/17325))
-1. Fix for test result not found for files starting with py.
-   ([#17270](https://github.com/Microsoft/vscode-python/issues/17270))
 
 ### Thanks
 
