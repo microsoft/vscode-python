@@ -164,6 +164,10 @@ class ComponentAdapter implements IComponentAdapter {
         return this.api.refreshPromise;
     }
 
+    public get onRefreshStart(): vscode.Event<void> {
+        return this.api.onRefreshStart;
+    }
+
     public get onChanged() {
         return this.changed.event;
     }

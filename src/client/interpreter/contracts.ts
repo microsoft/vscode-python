@@ -41,12 +41,10 @@ export type PythonEnvironmentsChangedEvent = {
 
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
+    readonly onRefreshStart: Event<void>;
     triggerRefresh(query?: PythonLocatorQuery): Promise<void>;
     readonly refreshPromise: Promise<void>;
     readonly onChanged: Event<PythonEnvironmentsChangedEvent>;
-    // InterpreterLocatorProgressStatubarHandler
-    readonly onRefreshing: Event<void>;
-    readonly onRefreshed: Event<void>;
     // VirtualEnvPrompt
     onDidCreate(resource: Resource, callback: () => void): Disposable;
     // IInterpreterLocatorService

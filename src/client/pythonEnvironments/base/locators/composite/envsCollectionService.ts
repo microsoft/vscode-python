@@ -6,7 +6,7 @@ import '../../../../common/extensions';
 import { traceError } from '../../../../common/logger';
 import { createDeferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
-import { sendTelemetryEvent } from '../../../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { PythonEnvInfo } from '../../info';
 import { IDiscoveryAPI, IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from '../../locator';
@@ -64,6 +64,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     }
 
     public triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
+        this.cache.clear();
         let refreshPromise = this.getRefreshPromiseForQuery(query);
         if (!refreshPromise) {
             refreshPromise = this.startRefresh(query);
@@ -84,11 +85,11 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     private async startRefresh(query: PythonLocatorQuery | undefined): Promise<void> {
         const stopWatch = new StopWatch();
+        const deferred = createDeferred<void>();
+        // Ensure we set this before we trigger the promise to correctly track when a refresh has started.
+        this.refreshPromises.set(query, deferred.promise);
         this.refreshStarted.fire();
         const iterator = this.locator.iterEnvs(query);
-        const deferred = createDeferred<void>();
-        // Ensure we set this before we trigger the promise to correctly indicate when a refresh has started.
-        this.refreshPromises.set(query, deferred.promise);
         const promise = this.addEnvsToCacheFromIterator(iterator);
         return promise
             .then(async () => {
