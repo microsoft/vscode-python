@@ -21,6 +21,9 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     /** Keeps track of ongoing refreshes for various queries. */
     private refreshPromises = new Map<PythonLocatorQuery | undefined, Promise<void>>();
 
+    /** Keeps track of whether there are any scheduled refreshes other than the ongoing one for various queries. */
+    private scheduledRefreshes = new Map<PythonLocatorQuery | undefined, boolean>();
+
     private readonly refreshStarted = new EventEmitter<void>();
 
     public get onRefreshStart(): Event<void> {
@@ -33,12 +36,18 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     constructor(private readonly cache: IEnvsCollectionCache, private readonly locator: IResolvingLocator) {
         super();
-        this.locator.onChanged((event) =>
-            this.triggerNewRefresh().then(() => {
+        this.locator.onChanged((event) => {
+            const query = undefined; // We can also form a query based on the event, but skip that for simplicity.
+            const isNewRefreshScheduled = this.scheduledRefreshes.get(query);
+            if (isNewRefreshScheduled) {
+                // If there is already a new refresh scheduled for the query, no need to start another one.
+                return;
+            }
+            this.scheduleNewRefresh(query).then(() => {
                 // Once refresh of cache is complete, notify changes.
                 this.fire({ type: event.type, searchLocation: event.searchLocation });
-            }),
-        );
+            });
+        });
         this.cache.onChanged((e) => {
             this.fire(e);
         });
@@ -71,18 +80,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return refreshPromise;
     }
 
-    /**
-     * Ensure we trigger a fresh refresh after the current refresh (if any) is done.
-     */
-    private async triggerNewRefresh(query?: PythonLocatorQuery): Promise<void> {
-        const refreshPromise = this.getRefreshPromiseForQuery(query);
-        const nextRefreshPromise = refreshPromise
-            ? refreshPromise.then(() => this.startRefresh(query))
-            : this.startRefresh(query);
-        return nextRefreshPromise;
-    }
-
-    private async startRefresh(query: PythonLocatorQuery | undefined): Promise<void> {
+    private startRefresh(query: PythonLocatorQuery | undefined): Promise<void> {
         const stopWatch = new StopWatch();
         this.refreshStarted.fire();
         const iterator = this.locator.iterEnvs(query);
@@ -147,5 +145,19 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         // refreshes running for a superset of this query. For eg. the `undefined` query
         // is a superset for every other query, only consider that for simplicity.
         return this.refreshPromises.get(query) ?? this.refreshPromises.get(undefined);
+    }
+
+    /**
+     * Ensure we trigger a fresh refresh for the query after the current refresh (if any) is done.
+     */
+    private async scheduleNewRefresh(query?: PythonLocatorQuery): Promise<void> {
+        this.scheduledRefreshes.set(query, true);
+        const refreshPromise = this.getRefreshPromiseForQuery(query) ?? Promise.resolve();
+        const nextRefreshPromise = refreshPromise.then(() => {
+            // No more scheduled refreshes for this query as we're about to start the scheduled one.
+            this.scheduledRefreshes.set(query, false);
+            this.startRefresh(query);
+        });
+        return nextRefreshPromise;
     }
 }
