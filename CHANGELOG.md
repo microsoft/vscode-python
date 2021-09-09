@@ -20,6 +20,8 @@
    ([#17285](https://github.com/Microsoft/vscode-python/issues/17285))
 1. Ensure we trigger discovery for the first time as part of extension activation.
    ([#17303](https://github.com/Microsoft/vscode-python/issues/17303))
+1. Correctly indicate when interpreter refresh has finished.
+   ([#17335](https://github.com/Microsoft/vscode-python/issues/17335))
 1. Missing location info for `async def` functions.
    ([#17309](https://github.com/Microsoft/vscode-python/issues/17309))
 1. For CI ensure `tensorboard` is installed in python 3 environments only.
