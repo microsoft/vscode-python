@@ -56,8 +56,4 @@ suite('Activation - setDefaultLanguageServer()', () => {
         verify(serviceManager.addSingletonInstance<IDefaultLanguageServer>(IDefaultLanguageServer, anything())).once();
         expect(defaultServerType).to.equal(LanguageServerType.Node);
     });
-
-    /**
-     * Will need to add Python 2.7 tests
-     */
 });
