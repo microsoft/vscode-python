@@ -6,7 +6,7 @@ import '../../../../common/extensions';
 import { traceError } from '../../../../common/logger';
 import { createDeferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
-import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
+import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { PythonEnvInfo } from '../../info';
 import { IDiscoveryAPI, IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from '../../locator';
@@ -64,7 +64,6 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     }
 
     public triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
-        this.cache.clear();
         let refreshPromise = this.getRefreshPromiseForQuery(query);
         if (!refreshPromise) {
             refreshPromise = this.startRefresh(query);
