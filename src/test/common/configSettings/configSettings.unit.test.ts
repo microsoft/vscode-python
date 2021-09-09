@@ -222,7 +222,7 @@ suite('Python Settings', async () => {
             testLanguageServer(ls, expected, false);
         });
 
-        testLanguageServer('invalid' as LanguageServerType, LanguageServerType.Node, true);
+        testLanguageServer('invalid' as LanguageServerType, LanguageServerType.None, true);
     });
 
     function testExperiments(enabled: boolean) {
