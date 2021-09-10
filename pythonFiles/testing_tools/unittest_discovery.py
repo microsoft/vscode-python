@@ -8,6 +8,7 @@ start_dir = sys.argv[1]
 pattern = sys.argv[2]
 sys.path.insert(0, os.getcwd())
 
+
 def get_sourceline(obj):
     try:
         s, n = inspect.getsourcelines(obj)
