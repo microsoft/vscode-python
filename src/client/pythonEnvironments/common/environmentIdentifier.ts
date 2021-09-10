@@ -4,7 +4,7 @@
 import { PythonEnvKind } from '../base/info';
 import { getPrioritizedEnvKinds } from '../base/info/envKind';
 import { isCondaEnvironment } from './environmentManagers/conda';
-import { isGloballyInstalledEnv } from './environmentManagers/globalEnvs';
+import { isGloballyInstalledEnv } from './environmentManagers/globalInstalledEnvs';
 import { isPipenvEnvironment } from './environmentManagers/pipenv';
 import { isPoetryEnvironment } from './environmentManagers/poetry';
 import { isPyenvEnvironment } from './environmentManagers/pyenv';
