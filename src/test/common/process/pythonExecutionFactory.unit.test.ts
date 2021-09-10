@@ -7,7 +7,7 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as sinon from 'sinon';
-import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 
@@ -24,7 +24,12 @@ import {
     IProcessServiceFactory,
     IPythonExecutionService,
 } from '../../../client/common/process/types';
-import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../../client/common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentService,
+    IInterpreterPathProxyService,
+} from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
@@ -42,6 +47,7 @@ import * as ExperimentHelpers from '../../../client/common/experiments/helpers';
 import * as WindowsStoreInterpreter from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { ExperimentService } from '../../../client/common/experiments/service';
 import { DiscoveryVariants } from '../../../client/common/experiments/groups';
+import { IInterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection/types';
 
 const pythonInterpreter: PythonEnvironment = {
     path: '/foo/bar/python.exe',
@@ -96,7 +102,8 @@ suite('Process - PythonExecutionFactory', () => {
             let executionService: typemoq.IMock<IPythonExecutionService>;
             let isWindowsStoreInterpreterStub: sinon.SinonStub;
             let inDiscoveryExperimentStub: sinon.SinonStub;
-
+            let autoSelection: IInterpreterAutoSelectionService;
+            let interpreterPathExpHelper: IInterpreterPathProxyService;
             setup(() => {
                 bufferDecoder = mock(BufferDecoder);
                 activationHelper = mock(EnvironmentActivationService);
@@ -105,6 +112,9 @@ suite('Process - PythonExecutionFactory', () => {
                 condaService = mock(CondaService);
                 condaLocatorService = mock<ICondaLocatorService>();
                 processLogger = mock(ProcessLogger);
+                autoSelection = mock<IInterpreterAutoSelectionService>();
+                interpreterPathExpHelper = mock<IInterpreterPathProxyService>();
+                when(interpreterPathExpHelper.get(anything())).thenReturn('selected interpreter path');
                 experimentService = mock(ExperimentService);
                 when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
                 when(experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching)).thenResolve(false);
@@ -152,6 +162,8 @@ suite('Process - PythonExecutionFactory', () => {
                     instance(bufferDecoder),
                     instance(pyenvs),
                     instance(experimentService),
+                    instance(autoSelection),
+                    instance(interpreterPathExpHelper),
                 );
 
                 isWindowsStoreInterpreterStub = sinon.stub(WindowsStoreInterpreter, 'isWindowsStoreInterpreter');
@@ -175,6 +187,25 @@ suite('Process - PythonExecutionFactory', () => {
                 verify(processFactory.create(resource)).once();
                 verify(pythonSettings.pythonPath).once();
             });
+
+            test('If no interpreter is explicitly set, ensure we autoselect before PythonExecutionService is created', async () => {
+                const pythonSettings = mock(PythonSettings);
+                when(processFactory.create(resource)).thenResolve(processService.object);
+                when(activationHelper.getActivatedEnvironmentVariables(resource)).thenResolve({ x: '1' });
+                when(pythonSettings.pythonPath).thenReturn('HELLO');
+                reset(interpreterPathExpHelper);
+                when(interpreterPathExpHelper.get(anything())).thenReturn('python');
+                when(autoSelection.autoSelectInterpreter(anything())).thenResolve();
+                when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
+
+                const service = await factory.create({ resource });
+
+                expect(service).to.not.equal(undefined);
+                verify(autoSelection.autoSelectInterpreter(anything())).once();
+                verify(processFactory.create(resource)).once();
+                verify(pythonSettings.pythonPath).once();
+            });
+
             test('Ensure we use an existing `create` method if there are no environment variables for the activated env', async () => {
                 const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);

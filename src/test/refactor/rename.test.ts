@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import { EOL } from 'os';
 import * as path from 'path';
-import { instance, mock } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as typeMoq from 'typemoq';
 import {
     Range,
@@ -29,8 +29,14 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService,
 } from '../../client/common/process/types';
-import { IConfigurationService, IExperimentService, IPythonSettings } from '../../client/common/types';
+import {
+    IConfigurationService,
+    IExperimentService,
+    IInterpreterPathProxyService,
+    IPythonSettings,
+} from '../../client/common/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
+import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
 import { IComponentAdapter, ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { RefactorProxy } from '../../client/refactor/proxy';
@@ -96,6 +102,10 @@ suite('Refactor Rename', () => {
             .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
             .returns(() => Promise.resolve(false));
 
+        const autoSelection = mock<IInterpreterAutoSelectionService>();
+        const interpreterPathExpHelper = mock<IInterpreterPathProxyService>();
+        when(interpreterPathExpHelper.get(anything())).thenReturn('selected interpreter path');
+
         serviceContainer
             .setup((s) => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
             .returns(
@@ -111,6 +121,8 @@ suite('Refactor Rename', () => {
                         undefined as any,
                         instance(pyenvs),
                         experimentService.object,
+                        instance(autoSelection),
+                        instance(interpreterPathExpHelper),
                     ),
             );
         const processLogger = typeMoq.Mock.ofType<IProcessLogger>();
