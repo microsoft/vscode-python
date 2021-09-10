@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import {
     ConfigurationTarget,
@@ -15,17 +14,9 @@ import {
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
-import {
-    IInterpreterPathProxyService,
-    IDisposableRegistry,
-    IOutputChannel,
-    IPathUtils,
-    ReadWrite,
-} from '../../client/common/types';
+import { IDisposableRegistry, IOutputChannel, IPathUtils, ReadWrite } from '../../client/common/types';
 import { Interpreters } from '../../client/common/utils/localize';
 import { Architecture } from '../../client/common/utils/platform';
-import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSelection';
-import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
 import {
     IInterpreterDisplay,
     IInterpreterHelper,
@@ -57,12 +48,10 @@ suite('Interpreters Display', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let disposableRegistry: Disposable[];
     let statusBar: TypeMoq.IMock<StatusBarItem>;
-    let interpreterPathProxyService: TypeMoq.IMock<IInterpreterPathProxyService>;
     let interpreterDisplay: IInterpreterDisplay;
     let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
     let pathUtils: TypeMoq.IMock<IPathUtils>;
     let output: TypeMoq.IMock<IOutputChannel>;
-    let autoSelection: IInterpreterAutoSelectionService;
     let python27SupportPrompt: TypeMoq.IMock<IPython27SupportPrompt>;
 
     setup(() => {
@@ -74,11 +63,9 @@ suite('Interpreters Display', () => {
         interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
         disposableRegistry = [];
         statusBar = TypeMoq.Mock.ofType<StatusBarItem>();
-        interpreterPathProxyService = TypeMoq.Mock.ofType<IInterpreterPathProxyService>();
         pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
         output = TypeMoq.Mock.ofType<IOutputChannel>();
         python27SupportPrompt = TypeMoq.Mock.ofType<IPython27SupportPrompt>();
-        autoSelection = mock(InterpreterAutoSelectionService);
 
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), STANDARD_OUTPUT_CHANNEL))
@@ -95,15 +82,9 @@ suite('Interpreters Display', () => {
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => disposableRegistry);
         serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterPathProxyService)))
-            .returns(() => interpreterPathProxyService.object);
-        serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterHelper)))
             .returns(() => interpreterHelper.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterAutoSelectionService)))
-            .returns(() => instance(autoSelection));
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IPython27SupportPrompt)))
             .returns(() => python27SupportPrompt.object);
@@ -148,7 +129,6 @@ suite('Interpreters Display', () => {
             path: path.join('user', 'development', 'env', 'bin', 'python'),
         };
         setupWorkspaceFolder(resource, workspaceFolder);
-        when(autoSelection.autoSelectInterpreter(anything())).thenResolve();
         interpreterService
             .setup((i) => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder)))
             .returns(() => Promise.resolve([]));
@@ -158,7 +138,6 @@ suite('Interpreters Display', () => {
 
         await interpreterDisplay.refresh(resource);
 
-        verify(autoSelection.autoSelectInterpreter(anything())).once();
         statusBar.verify((s) => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!), TypeMoq.Times.once());
         statusBar.verify((s) => (s.tooltip = TypeMoq.It.isValue(activeInterpreter.path)!), TypeMoq.Times.atLeastOnce());
     });
@@ -175,7 +154,6 @@ suite('Interpreters Display', () => {
             .setup((p) => p.getDisplayName(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => activeInterpreter.path);
         setupWorkspaceFolder(resource, workspaceFolder);
-        when(autoSelection.autoSelectInterpreter(anything())).thenResolve();
         interpreterService
             .setup((i) => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder)))
             .returns(() => Promise.resolve([]));
@@ -223,7 +201,6 @@ suite('Interpreters Display', () => {
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
             .returns(() => Promise.resolve(undefined));
-        interpreterPathProxyService.setup((c) => c.get(TypeMoq.It.isAny())).returns(() => pythonPath);
         fileSystem.setup((f) => f.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
         interpreterHelper
             .setup((v) => v.getInterpreterInformation(TypeMoq.It.isValue(pythonPath)))
@@ -278,7 +255,6 @@ suite('Interpreters Display', () => {
                 path: path.join('user', 'development', 'env', 'bin', 'python'),
             };
             setupWorkspaceFolder(resource, workspaceFolder);
-            when(autoSelection.autoSelectInterpreter(anything())).thenResolve();
             interpreterService
                 .setup((i) => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder)))
                 .returns(() => Promise.resolve([]));
