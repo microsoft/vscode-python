@@ -205,7 +205,10 @@ suite('Installer', () => {
         );
         ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
         ioc.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
-        ioc.serviceManager.addSingleton<IInterpreterPathProxyService>(IInterpreterPathProxyService, InterpreterPathProxyService);
+        ioc.serviceManager.addSingleton<IInterpreterPathProxyService>(
+            IInterpreterPathProxyService,
+            InterpreterPathProxyService,
+        );
         ioc.serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
         ioc.serviceManager.addSingleton<IRandom>(IRandom, Random);
         ioc.serviceManager.addSingleton<ITerminalServiceFactory>(ITerminalServiceFactory, TerminalServiceFactory);
