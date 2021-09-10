@@ -24,7 +24,7 @@ export class DebugCommands implements IExtensionSingleActivationService {
 
     public activate(): Promise<void> {
         this.disposables.push(
-            this.commandManager.registerCommand(Commands.Debug_In_Terminal, async (file: Uri) => {
+            this.commandManager.registerCommand(Commands.Debug_In_Terminal, async (file?: Uri) => {
                 sendTelemetryEvent(EventName.DEBUG_IN_TERMINAL_BUTTON);
                 const config = await this.getDebugConfiguration(file);
                 this.debugService.startDebugging(undefined, config);
@@ -33,13 +33,13 @@ export class DebugCommands implements IExtensionSingleActivationService {
         return Promise.resolve();
     }
 
-    private async getDebugConfiguration(uri: Uri): Promise<DebugConfiguration> {
+    private async getDebugConfiguration(uri?: Uri): Promise<DebugConfiguration> {
         const configs = (await this.launchJsonReader.getConfigurationsByUri(uri)).filter((c) => c.request === 'launch');
         for (const config of configs) {
             if ((config as LaunchRequestArguments).purpose?.includes(DebugPurpose.DebugInTerminal)) {
                 if (!config.program && !config.module && !config.code) {
                     // This is only needed if people reuse debug-test for debug-in-terminal
-                    config.program = uri.fsPath;
+                    config.program = uri?.fsPath ?? '${file}';
                 }
                 // Ensure that the purpose is cleared, this is so we can track if people accidentally
                 // trigger this via F5 or Start with debugger.
@@ -48,10 +48,10 @@ export class DebugCommands implements IExtensionSingleActivationService {
             }
         }
         return {
-            name: `Debug ${path.basename(uri.fsPath)}`,
+            name: `Debug ${uri ? path.basename(uri.fsPath) : 'File'}`,
             type: 'python',
             request: 'launch',
-            program: uri.fsPath,
+            program: uri?.fsPath ?? '${file}',
             console: 'integratedTerminal',
         };
     }

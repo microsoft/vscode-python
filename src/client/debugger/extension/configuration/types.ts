@@ -29,5 +29,5 @@ export interface IDebugConfigurationProviderFactory {
 export const ILaunchJsonReader = Symbol('ILaunchJsonReader');
 export interface ILaunchJsonReader {
     getConfigurationsForWorkspace(workspace: WorkspaceFolder): Promise<DebugConfiguration[]>;
-    getConfigurationsByUri(uri: Uri): Promise<DebugConfiguration[]>;
+    getConfigurationsByUri(uri?: Uri): Promise<DebugConfiguration[]>;
 }
