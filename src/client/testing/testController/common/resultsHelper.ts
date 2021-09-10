@@ -5,6 +5,7 @@ import * as fsapi from 'fs-extra';
 import { Location, TestItem, TestMessage, TestRun } from 'vscode';
 import { getRunIdFromRawData, getTestCaseNodes } from './testItemUtilities';
 import { TestData } from './types';
+import { fixLogLines } from './utils';
 
 type TestSuiteResult = {
     $: {
@@ -113,7 +114,7 @@ export async function updateResultFromJunitXml(
                     }
 
                     runInstance.errored(node, message);
-                    runInstance.appendOutput(text);
+                    runInstance.appendOutput(fixLogLines(text));
                 } else if (result.failure) {
                     failures += 1;
                     const failure = result.failure[0];
@@ -125,23 +126,23 @@ export async function updateResultFromJunitXml(
                     }
 
                     runInstance.failed(node, message);
-                    runInstance.appendOutput(text);
+                    runInstance.appendOutput(fixLogLines(text));
                 } else if (result.skipped) {
                     skipped += 1;
                     const skip = result.skipped[0];
                     const text = `${rawTestCaseNode.rawId} Skipped: [${skip.$.type}]${skip.$.message}\r\n`;
 
                     runInstance.skipped(node);
-                    runInstance.appendOutput(text);
+                    runInstance.appendOutput(fixLogLines(text));
                 } else {
                     passed += 1;
                     const text = `${rawTestCaseNode.rawId} Passed\r\n`;
                     runInstance.passed(node);
-                    runInstance.appendOutput(text);
+                    runInstance.appendOutput(fixLogLines(text));
                 }
             } else {
                 const text = `Test result not found for: ${rawTestCaseNode.rawId}\r\n`;
-                runInstance.appendOutput(text);
+                runInstance.appendOutput(fixLogLines(text));
                 const message = new TestMessage(text);
 
                 if (node.uri && node.range) {

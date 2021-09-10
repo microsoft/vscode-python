@@ -12,6 +12,7 @@ import { ITestRunner, ITestDebugLauncher, IUnitTestSocketServer, LaunchOptions, 
 import { TEST_OUTPUT_CHANNEL } from '../../constants';
 import { getTestCaseNodes } from '../common/testItemUtilities';
 import { ITestRun, ITestsRunner, TestData, TestRunInstanceOptions, TestRunOptions } from '../common/types';
+import { fixLogLines } from '../common/utils';
 import { getTestRunArgs } from './arguments';
 
 interface ITestData {
@@ -102,7 +103,7 @@ export class UnittestRunner implements ITestsRunner {
                 if (data.outcome === 'passed' || data.outcome === 'failed-expected') {
                     const text = `${rawTestCase.rawId} Passed\r\n`;
                     runInstance.passed(testCase);
-                    runInstance.appendOutput(text);
+                    runInstance.appendOutput(fixLogLines(text));
                     counts.passed += 1;
                 } else if (data.outcome === 'failed' || data.outcome === 'passed-unexpected') {
                     const traceback = data.traceback
@@ -116,7 +117,7 @@ export class UnittestRunner implements ITestsRunner {
                     }
 
                     runInstance.failed(testCase, message);
-                    runInstance.appendOutput(text);
+                    runInstance.appendOutput(fixLogLines(text));
                     counts.failed += 1;
                     if (failFast) {
                         stopTesting = true;
@@ -133,7 +134,7 @@ export class UnittestRunner implements ITestsRunner {
                     }
 
                     runInstance.errored(testCase, message);
-                    runInstance.appendOutput(text);
+                    runInstance.appendOutput(fixLogLines(text));
                     counts.errored += 1;
                     if (failFast) {
                         stopTesting = true;
@@ -144,11 +145,11 @@ export class UnittestRunner implements ITestsRunner {
                         : '';
                     const text = `${rawTestCase.rawId} Skipped: ${data.message}\r\n${traceback}\r\n`;
                     runInstance.skipped(testCase);
-                    runInstance.appendOutput(text);
+                    runInstance.appendOutput(fixLogLines(text));
                     counts.skipped += 1;
                 } else {
                     const text = `Unknown outcome type for test ${rawTestCase.rawId}: ${data.outcome}`;
-                    runInstance.appendOutput(text);
+                    runInstance.appendOutput(fixLogLines(text));
                     const message = new TestMessage(text);
                     if (testCase.uri && testCase.range) {
                         message.location = new Location(testCase.uri, testCase.range);
