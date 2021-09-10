@@ -102,6 +102,7 @@ import {
     IFileDownloader,
     IHttpClient,
     IInstaller,
+    IInterpreterPathProxyService,
     IInterpreterPathService,
     IPathUtils,
     IPersistentStateFactory,
@@ -131,6 +132,7 @@ import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initializeTest } from '../initialize';
+import { InterpreterPathProxyService } from '../../client/common/interpreterPathProxyService';
 
 chaiUse(chaiAsPromised);
 
@@ -228,6 +230,10 @@ suite('Module Installer', () => {
 
             ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
             ioc.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
+            ioc.serviceManager.addSingleton<IInterpreterPathProxyService>(
+                IInterpreterPathProxyService,
+                InterpreterPathProxyService,
+            );
             ioc.serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
             ioc.serviceManager.addSingleton<IRandom>(IRandom, Random);
             ioc.serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
