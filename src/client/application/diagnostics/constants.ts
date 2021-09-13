@@ -21,4 +21,5 @@ export enum DiagnosticCodes {
     UpgradeCodeRunnerDiagnostic = 'UpgradeCodeRunnerDiagnostic',
     PylanceDefaultDiagnostic = 'PylanceDefaultDiagnostic',
     MPLSSurveyDiagnostic = 'MPLSSurveyDiagnostic',
+    JediPython27NotSupportedDiagnostic = 'JediPython27NotSupportedDiagnostic',
 }

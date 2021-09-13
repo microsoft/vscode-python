@@ -548,6 +548,11 @@ export namespace Python27Support {
         'Python27Support.bannerMessage',
         'The Python extension will have limited support for Python 2.7 starting in the next release, due to changes in external projects we rely on. [Learn more](https://aka.ms/python-27-support).',
     );
+
+    export const jediMessage = localize(
+        'Python27Support.jediMessage',
+        'IntelliSense with Jedi for Python 2.7 is no longer supported. [Learn more](https://aka.ms/python-27-support).',
+    );
 }
 
 export namespace MPLSDeprecation {
