@@ -3,14 +3,7 @@
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import {
-    ConfigurationChangeEvent,
-    ConfigurationTarget,
-    Disposable,
-    EventEmitter,
-    Uri,
-    WorkspaceConfiguration,
-} from 'vscode';
+import { ConfigurationChangeEvent, Disposable, EventEmitter, Uri, WorkspaceConfiguration } from 'vscode';
 
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import {
@@ -20,6 +13,7 @@ import {
     ILanguageServerFolderService,
     LanguageServerType,
 } from '../../client/activation/types';
+import { JediPython27NotSupportedDiagnosticServiceId } from '../../client/application/diagnostics/checks/jediPython27NotSupported';
 import { LSNotSupportedDiagnosticServiceId } from '../../client/application/diagnostics/checks/lsNotSupported';
 import { IDiagnostic, IDiagnosticsService } from '../../client/application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
@@ -57,6 +51,7 @@ suite('Language Server Activation - ActivationService', () => {
                 let workspaceService: TypeMoq.IMock<IWorkspaceService>;
                 let platformService: TypeMoq.IMock<IPlatformService>;
                 let lsNotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
+                let jediPython27NotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
                 let stateFactory: TypeMoq.IMock<IPersistentStateFactory>;
                 let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
                 let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
@@ -81,6 +76,14 @@ suite('Language Server Activation - ActivationService', () => {
                         version: new SemVer('1.2.3'),
                     };
                     lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
+                    jediPython27NotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
+                    jediPython27NotSupportedDiagnosticService
+                        .setup((l) => l.diagnose(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve([]));
+                    jediPython27NotSupportedDiagnosticService
+                        .setup((l) => l.handle([]))
+                        .returns(() => Promise.resolve());
+
                     workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
                     workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
                     configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
@@ -147,6 +150,14 @@ suite('Language Server Activation - ActivationService', () => {
                             ),
                         )
                         .returns(() => lsNotSupportedDiagnosticService.object);
+                    serviceContainer
+                        .setup((s) =>
+                            s.get(
+                                TypeMoq.It.isValue(IDiagnosticsService),
+                                TypeMoq.It.isValue(JediPython27NotSupportedDiagnosticServiceId),
+                            ),
+                        )
+                        .returns(() => jediPython27NotSupportedDiagnosticService.object);
                 });
 
                 async function testActivation(
@@ -660,188 +671,6 @@ suite('Language Server Activation - ActivationService', () => {
         );
     });
 
-    suite('Test JediLSP -> Jedi language server swap', () => {
-        let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-        let appShell: TypeMoq.IMock<IApplicationShell>;
-        let cmdManager: TypeMoq.IMock<ICommandManager>;
-        let workspaceService: TypeMoq.IMock<IWorkspaceService>;
-        let platformService: TypeMoq.IMock<IPlatformService>;
-        let lsNotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
-        let stateFactory: TypeMoq.IMock<IPersistentStateFactory>;
-        let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
-        let interpreterService: TypeMoq.IMock<IInterpreterService>;
-        let configurationService: TypeMoq.IMock<IConfigurationService>;
-
-        setup(() => {
-            serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-            appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-            workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-            cmdManager = TypeMoq.Mock.ofType<ICommandManager>();
-            platformService = TypeMoq.Mock.ofType<IPlatformService>();
-            stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
-            state = TypeMoq.Mock.ofType<IPersistentState<boolean | undefined>>();
-            configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
-            const extensionsMock = TypeMoq.Mock.ofType<IExtensions>();
-            lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
-            workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
-            workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
-            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-            state.setup((s) => s.value).returns(() => undefined);
-            state.setup((s) => s.updateValue(TypeMoq.It.isAny())).returns(() => Promise.resolve());
-            const output = TypeMoq.Mock.ofType<IOutputChannel>();
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny()))
-                .returns(() => output.object);
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
-                .returns(() => workspaceService.object);
-            serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
-            serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => []);
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
-                .returns(() => configurationService.object);
-            serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ICommandManager))).returns(() => cmdManager.object);
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
-                .returns(() => platformService.object);
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService)))
-                .returns(() => interpreterService.object);
-            serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IExtensions))).returns(() => extensionsMock.object);
-            serviceContainer
-                .setup((s) =>
-                    s.get(
-                        TypeMoq.It.isValue(IDiagnosticsService),
-                        TypeMoq.It.isValue(LSNotSupportedDiagnosticServiceId),
-                    ),
-                )
-                .returns(() => lsNotSupportedDiagnosticService.object);
-            const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isAny()))
-                .returns(() => activator.object);
-        });
-
-        test('If the workspace language server settings is set to JediLSP, update it to Jedi', async () => {
-            const resource = Uri.parse('one.py');
-            const interpreter = {
-                version: { major: 3, minor: 8, patch: 0 },
-            } as PythonEnvironment;
-
-            configurationService
-                .setup((c) => c.getSettings(TypeMoq.It.isAny()))
-                .returns(
-                    () =>
-                        ({
-                            languageServer: LanguageServerType.JediLSP,
-                            languageServerIsDefault: false,
-                        } as PythonSettings),
-                );
-            workspaceService
-                .setup((ws) => ws.getConfiguration('python', resource))
-                .returns(
-                    () =>
-                        (({
-                            inspect: () => ({
-                                workspaceValue: LanguageServerType.JediLSP,
-                            }),
-                        } as unknown) as WorkspaceConfiguration),
-                );
-
-            const activationService = new LanguageServerExtensionActivationService(
-                serviceContainer.object,
-                stateFactory.object,
-            );
-
-            await activationService.get(resource, interpreter);
-
-            configurationService.verify(
-                (c) =>
-                    c.updateSetting('languageServer', LanguageServerType.Jedi, resource, ConfigurationTarget.Workspace),
-                TypeMoq.Times.once(),
-            );
-        });
-
-        test('If the global language server settings is set to JediLSP, update it to Jedi', async () => {
-            const resource = Uri.parse('one.py');
-            const interpreter = {
-                version: { major: 3, minor: 8, patch: 0 },
-            } as PythonEnvironment;
-
-            configurationService
-                .setup((c) => c.getSettings(TypeMoq.It.isAny()))
-                .returns(
-                    () =>
-                        ({
-                            languageServer: LanguageServerType.JediLSP,
-                            languageServerIsDefault: false,
-                        } as PythonSettings),
-                );
-            workspaceService
-                .setup((ws) => ws.getConfiguration('python', resource))
-                .returns(
-                    () =>
-                        (({
-                            inspect: () => ({
-                                globalValue: LanguageServerType.JediLSP,
-                            }),
-                        } as unknown) as WorkspaceConfiguration),
-                );
-
-            const activationService = new LanguageServerExtensionActivationService(
-                serviceContainer.object,
-                stateFactory.object,
-            );
-
-            await activationService.get(resource, interpreter);
-
-            configurationService.verify(
-                (c) => c.updateSetting('languageServer', LanguageServerType.Jedi, resource, ConfigurationTarget.Global),
-                TypeMoq.Times.once(),
-            );
-        });
-
-        test('If no language server settings are set to JediLSP, do nothing', async () => {
-            const resource = Uri.parse('one.py');
-            const interpreter = {
-                version: { major: 3, minor: 8, patch: 0 },
-            } as PythonEnvironment;
-
-            configurationService
-                .setup((c) => c.getSettings(TypeMoq.It.isAny()))
-                .returns(
-                    () =>
-                        ({
-                            languageServer: LanguageServerType.JediLSP,
-                            languageServerIsDefault: false,
-                        } as PythonSettings),
-                );
-            workspaceService
-                .setup((ws) => ws.getConfiguration('python', resource))
-                .returns(
-                    () =>
-                        (({
-                            inspect: () => ({
-                                workspaceValue: LanguageServerType.Node,
-                            }),
-                        } as unknown) as WorkspaceConfiguration),
-                );
-
-            const activationService = new LanguageServerExtensionActivationService(
-                serviceContainer.object,
-                stateFactory.object,
-            );
-
-            await activationService.get(resource, interpreter);
-
-            configurationService.verify(
-                (c) =>
-                    c.updateSetting('languageServer', LanguageServerType.Jedi, resource, ConfigurationTarget.Workspace),
-                TypeMoq.Times.never(),
-            );
-        });
-    });
-
     suite('Test language server swap when using Python 2.7', () => {
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
         let appShell: TypeMoq.IMock<IApplicationShell>;
@@ -849,6 +678,7 @@ suite('Language Server Activation - ActivationService', () => {
         let workspaceService: TypeMoq.IMock<IWorkspaceService>;
         let platformService: TypeMoq.IMock<IPlatformService>;
         let lsNotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
+        let jediPython27NotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
         let stateFactory: TypeMoq.IMock<IPersistentStateFactory>;
         let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
         let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
@@ -867,6 +697,12 @@ suite('Language Server Activation - ActivationService', () => {
             configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
             const extensionsMock = TypeMoq.Mock.ofType<IExtensions>();
             lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
+            jediPython27NotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
+            jediPython27NotSupportedDiagnosticService
+                .setup((l) => l.diagnose(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve([]));
+            jediPython27NotSupportedDiagnosticService.setup((l) => l.handle([])).returns(() => Promise.resolve());
+
             workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
             workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
@@ -904,6 +740,14 @@ suite('Language Server Activation - ActivationService', () => {
                     ),
                 )
                 .returns(() => lsNotSupportedDiagnosticService.object);
+            serviceContainer
+                .setup((s) =>
+                    s.get(
+                        TypeMoq.It.isValue(IDiagnosticsService),
+                        TypeMoq.It.isValue(JediPython27NotSupportedDiagnosticServiceId),
+                    ),
+                )
+                .returns(() => jediPython27NotSupportedDiagnosticService.object);
         });
 
         const values: { ls: LanguageServerType; expected: LanguageServerType; outputString: string }[] = [
@@ -983,6 +827,7 @@ suite('Language Server Activation - ActivationService', () => {
         let workspaceService: TypeMoq.IMock<IWorkspaceService>;
         let platformService: TypeMoq.IMock<IPlatformService>;
         let lsNotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
+        let jediPython27NotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
         let stateFactory: TypeMoq.IMock<IPersistentStateFactory>;
         let state: TypeMoq.IMock<IPersistentState<LanguageServerType | undefined>>;
         let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
@@ -1007,6 +852,7 @@ suite('Language Server Activation - ActivationService', () => {
                 version: new SemVer('1.2.3'),
             };
             lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
+            jediPython27NotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
             workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
             workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
@@ -1059,6 +905,14 @@ suite('Language Server Activation - ActivationService', () => {
                     ),
                 )
                 .returns(() => lsNotSupportedDiagnosticService.object);
+            serviceContainer
+                .setup((s) =>
+                    s.get(
+                        TypeMoq.It.isValue(IDiagnosticsService),
+                        TypeMoq.It.isValue(JediPython27NotSupportedDiagnosticServiceId),
+                    ),
+                )
+                .returns(() => jediPython27NotSupportedDiagnosticService.object);
         });
 
         test('Track current LS usage for first usage', async () => {
@@ -1150,6 +1004,7 @@ suite('Language Server Activation - ActivationService', () => {
         let workspaceService: TypeMoq.IMock<IWorkspaceService>;
         let platformService: TypeMoq.IMock<IPlatformService>;
         let lsNotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
+        let jediPython27NotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
         let stateFactory: TypeMoq.IMock<IPersistentStateFactory>;
         let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
         let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
@@ -1174,6 +1029,7 @@ suite('Language Server Activation - ActivationService', () => {
                 version: new SemVer('1.2.3'),
             };
             lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
+            jediPython27NotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
             workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
             workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
@@ -1226,6 +1082,14 @@ suite('Language Server Activation - ActivationService', () => {
                     ),
                 )
                 .returns(() => lsNotSupportedDiagnosticService.object);
+            serviceContainer
+                .setup((s) =>
+                    s.get(
+                        TypeMoq.It.isValue(IDiagnosticsService),
+                        TypeMoq.It.isValue(JediPython27NotSupportedDiagnosticServiceId),
+                    ),
+                )
+                .returns(() => jediPython27NotSupportedDiagnosticService.object);
         });
         const value = [undefined, true, false]; // Possible values of settings
         const index = [0, 1, 2]; // Index associated with each value
