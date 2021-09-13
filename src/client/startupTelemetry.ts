@@ -105,15 +105,23 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         ? workspaceService.workspaceFolders![0].uri
         : undefined;
     const settings = configurationService.getSettings(mainWorkspaceUri);
-    const [condaVersion, interpreter, hasPython3] = await Promise.all([
+    const [condaVersion, hasPython3] = await Promise.all([
         condaLocator
             .getCondaVersion()
             .then((ver) => (ver ? ver.raw : ''))
             .catch<string>(() => ''),
-        interpreterService.getActiveInterpreter().catch<PythonEnvironment | undefined>(() => undefined),
         interpreterService.hasInterpreters(async (item) => item.version?.major === 3),
     ]);
     const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
+    // If an unknown type environment can be found from windows registry or path env var,
+    // consider them as global type instead of unknown. Such types can only be known after
+    // windows registry is queried. So wait for the refresh of windows registry locator to
+    // finish. API getActiveInterpreter() does not block on windows registry by default as
+    // it is slow.
+    await interpreterService.refreshPromise;
+    const interpreter = await interpreterService
+        .getActiveInterpreter()
+        .catch<PythonEnvironment | undefined>(() => undefined);
     const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
     const interpreterType = interpreter ? interpreter.envType : undefined;
     const usingUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);

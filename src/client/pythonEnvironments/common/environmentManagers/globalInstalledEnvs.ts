@@ -3,33 +3,27 @@
 
 import { getSearchPathEntries } from '../../../common/utils/exec';
 import { getOSType, OSType } from '../../../common/utils/platform';
-import { arePathsSame, isParentPath } from '../externalDependencies';
+import { isParentPath } from '../externalDependencies';
 import { commonPosixBinPaths } from '../posixUtils';
-import { getRegistryInterpreters } from '../windowsUtils';
 import { isPyenvShimDir } from './pyenv';
 
 /**
- * Checks if the given interpreter belongs to known globally installed types.
+ * Checks if the given interpreter belongs to known globally installed types. If an global
+ * executable is discoverable, we consider it as global type.
  * @param {string} interpreterPath: Absolute path to the python interpreter.
  * @returns {boolean} : Returns true if the interpreter belongs to a venv environment.
  */
 export async function isGloballyInstalledEnv(executablePath: string): Promise<boolean> {
-    if (getOSType() === OSType.Windows) {
-        if (await isFoundInWindowsRegistry(executablePath)) {
-            return true;
-        }
-    }
+    // Identifying this type is not important, as the extension treats `Global` and `Unknown`
+    // types the same way. This is only required for telemetry. As windows registry is known
+    // to be slow, we do not want to unnecessarily block on that by default, hence skip this
+    // step.
+    // if (getOSType() === OSType.Windows) {
+    //     if (await isFoundInWindowsRegistry(executablePath)) {
+    //         return true;
+    //     }
+    // }
     return isFoundInPathEnvVar(executablePath);
-}
-
-async function isFoundInWindowsRegistry(executablePath: string): Promise<boolean> {
-    const interpreters = await getRegistryInterpreters();
-    for (const interpreter of interpreters) {
-        if (arePathsSame(executablePath, interpreter.interpreterPath)) {
-            return true;
-        }
-    }
-    return false;
 }
 
 async function isFoundInPathEnvVar(executablePath: string): Promise<boolean> {
