@@ -41,7 +41,7 @@ export class JediPython27NotSupportedDiagnosticService extends BaseDiagnosticsSe
         protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
-        super([DiagnosticCodes.JediPython27NotSupportedDiagnostic], serviceContainer, disposableRegistry, false);
+        super([DiagnosticCodes.JediPython27NotSupportedDiagnostic], serviceContainer, disposableRegistry, true);
     }
 
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
