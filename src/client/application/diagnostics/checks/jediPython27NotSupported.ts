@@ -71,7 +71,7 @@ export class JediPython27NotSupportedDiagnosticService extends BaseDiagnosticsSe
                 prompt: Common.gotIt(),
             },
             {
-                prompt: 'Do not show again',
+                prompt: Common.doNotShowAgain(),
                 command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global }),
             },
         ];
