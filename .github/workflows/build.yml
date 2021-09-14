@@ -1,13 +1,13 @@
 name: Build
 
 on:
+  pull_request:
   push:
     branches:
       - 'main'
       - 'release'
       - 'release/*'
       - 'release-*'
-      - fix-build-*
 
 env:
   NODE_VERSION: 12.15.0
