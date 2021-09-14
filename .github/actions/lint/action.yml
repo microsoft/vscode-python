@@ -13,14 +13,7 @@ runs:
       uses: actions/setup-node@v2
       with:
         node-version: ${{ inputs.node_version }}
-
-    - name: Node cache
-      uses: actions/cache@v2
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-lint-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-lint-
+        cache: 'npm'
 
     - name: Install Node dependencies
       run: npm ci --prefer-offline

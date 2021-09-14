@@ -16,14 +16,7 @@ runs:
       uses: actions/setup-node@v2
       with:
         node-version: ${{ inputs.node_version }}
-
-    - name: Node cache
-      uses: actions/cache@v2
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-smoke-tests-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-smoke-tests-
+        cache: 'npm'
 
     - name: Install Python
       uses: actions/setup-python@v2

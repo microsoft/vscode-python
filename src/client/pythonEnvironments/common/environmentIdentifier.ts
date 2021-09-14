@@ -4,6 +4,7 @@
 import { PythonEnvKind } from '../base/info';
 import { getPrioritizedEnvKinds } from '../base/info/envKind';
 import { isCondaEnvironment } from './environmentManagers/conda';
+import { isGloballyInstalledEnv } from './environmentManagers/globalInstalledEnvs';
 import { isPipenvEnvironment } from './environmentManagers/pipenv';
 import { isPoetryEnvironment } from './environmentManagers/poetry';
 import { isPyenvEnvironment } from './environmentManagers/pyenv';
@@ -31,6 +32,7 @@ function getIdentifiers(): Map<PythonEnvKind, (path: string) => Promise<boolean>
     identifier.set(PythonEnvKind.VirtualEnvWrapper, isVirtualEnvWrapperEnvironment);
     identifier.set(PythonEnvKind.VirtualEnv, isVirtualEnvEnvironment);
     identifier.set(PythonEnvKind.Unknown, defaultTrue);
+    identifier.set(PythonEnvKind.OtherGlobal, isGloballyInstalledEnv);
     return identifier;
 }
 

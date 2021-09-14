@@ -3,8 +3,7 @@
 import '../common/extensions';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, ConfigurationTarget, Disposable, OutputChannel, Uri } from 'vscode';
-
+import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
 import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/checks/lsNotSupported';
 import { IDiagnosticsService } from '../application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
@@ -232,8 +231,6 @@ export class LanguageServerExtensionActivationService
     ): Promise<RefCountedLanguageServer> {
         let serverType = this.getCurrentLanguageServerType();
 
-        this.updateLanguageServerSetting(resource);
-
         if (serverType === LanguageServerType.Microsoft) {
             const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
                 IDiagnosticsService,
@@ -341,24 +338,5 @@ export class LanguageServerExtensionActivationService
     private async onClearAnalysisCaches() {
         const values = await Promise.all([...this.cache.values()]);
         values.forEach((v) => (v.clearAnalysisCache ? v.clearAnalysisCache() : noop()));
-    }
-
-    private updateLanguageServerSetting(resource: Resource): void {
-        // Update settings.json value to Jedi if it's JediLSP.
-        const settings = this.workspaceService
-            .getConfiguration('python', resource)
-            .inspect<LanguageServerType>('languageServer');
-
-        let configTarget: ConfigurationTarget;
-
-        if (settings?.workspaceValue === LanguageServerType.JediLSP) {
-            configTarget = ConfigurationTarget.Workspace;
-        } else if (settings?.globalValue === LanguageServerType.JediLSP) {
-            configTarget = ConfigurationTarget.Global;
-        } else {
-            return;
-        }
-
-        this.configurationService.updateSetting('languageServer', LanguageServerType.Jedi, resource, configTarget);
     }
 }

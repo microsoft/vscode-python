@@ -19,6 +19,10 @@ import {
     InvalidPythonPathInDebuggerServiceId,
 } from '../../../client/application/diagnostics/checks/invalidPythonPathInDebugger';
 import {
+    JediPython27NotSupportedDiagnosticService,
+    JediPython27NotSupportedDiagnosticServiceId,
+} from '../../../client/application/diagnostics/checks/jediPython27NotSupported';
+import {
     LSNotSupportedDiagnosticService,
     LSNotSupportedDiagnosticServiceId,
 } from '../../../client/application/diagnostics/checks/lsNotSupported';
@@ -112,6 +116,13 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
                 IDiagnosticsService,
                 InvalidPythonPathInDebuggerService,
                 InvalidPythonPathInDebuggerServiceId,
+            ),
+        );
+        verify(
+            serviceManager.addSingleton<IDiagnosticsService>(
+                IDiagnosticsService,
+                JediPython27NotSupportedDiagnosticService,
+                JediPython27NotSupportedDiagnosticServiceId,
             ),
         );
         verify(

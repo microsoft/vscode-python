@@ -60,7 +60,11 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         if (cachedEnv && this.refreshPromises.size === 0) {
             return cachedEnv;
         }
-        return this.locator.resolveEnv(executablePath);
+        const resolved = await this.locator.resolveEnv(executablePath);
+        if (resolved) {
+            this.cache.addEnv(resolved);
+        }
+        return resolved;
     }
 
     public getEnvs(query?: PythonLocatorQuery): PythonEnvInfo[] {
