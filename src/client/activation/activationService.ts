@@ -36,7 +36,6 @@ import {
     LanguageServerType,
 } from './types';
 import { StopWatch } from '../common/utils/stopWatch';
-import { JediPython27NotSupportedDiagnosticServiceId } from '../application/diagnostics/checks/jediPython27NotSupported';
 
 const languageServerSetting: keyof IPythonSettings = 'languageServer';
 const workspacePathNameForGlobalWorkspaces = '';
@@ -231,13 +230,6 @@ export class LanguageServerExtensionActivationService
         key: string,
     ): Promise<RefCountedLanguageServer> {
         let serverType = this.getCurrentLanguageServerType();
-
-        const jediPython27DiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
-            IDiagnosticsService,
-            JediPython27NotSupportedDiagnosticServiceId,
-        );
-        const jediDiagnostic = await jediPython27DiagnosticService.diagnose(resource);
-        jediPython27DiagnosticService.handle(jediDiagnostic).ignoreErrors();
 
         if (serverType === LanguageServerType.Microsoft) {
             const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
