@@ -205,13 +205,12 @@ export namespace TensorBoard {
 }
 
 export namespace LanguageService {
-    export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi Python language engine.');
     export const startingMicrosoft = localize(
         'LanguageService.startingMicrosoft',
         'Starting Microsoft Python language server.',
     );
     export const startingPylance = localize('LanguageService.startingPylance', 'Starting Pylance language server.');
-    export const startingJediLSP = localize('LanguageService.startingJediLSP', 'Starting Jedi language server.');
+    export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi language server.');
     export const startingNone = localize(
         'LanguageService.startingNone',
         'Editor support is inactive since language server is set to None.',
