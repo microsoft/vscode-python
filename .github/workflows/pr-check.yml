@@ -53,7 +53,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        working-directory: ${{env.special-working-directory}}
+        working-directory: ${{ env.special-working-directory }}
     strategy:
       fail-fast: false
       matrix:
@@ -71,14 +71,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          path: ${{env.special-working-directory-relative}}
+          path: ${{ env.special-working-directory-relative }}
 
       - name: Install Node
         uses: actions/setup-node@v2
         with:
-          node-version: ${{env.NODE_VERSION}}
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: ${{env.special-working-directory-relative}}/package-lock.json
+          cache-dependency-path: ${{ env.special-working-directory-relative }}/package-lock.json
 
       - name: Install dependencies (npm ci)
         run: npm ci
@@ -86,10 +86,10 @@ jobs:
       - name: Compile
         run: npx gulp prePublishNonBundle
 
-      - name: Use Python ${{matrix.python}}
+      - name: Use Python ${{ matrix.python }}
         uses: actions/setup-python@v2
         with:
-          python-version: ${{matrix.python}}
+          python-version: ${{ matrix.python }}
 
       - name: Install Python requirements
         run: |
@@ -130,7 +130,7 @@ jobs:
         if: matrix.test-suite == 'venv'
         run: |
           python -m pip install pipenv
-          python -m pipenv run python ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} pipenvPath
+          python -m pipenv run python ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} pipenvPath
 
       - name: Prepare poetry for venv tests
         env:
@@ -151,10 +151,10 @@ jobs:
         run: |
           python -m pip install virtualenv
           python -m virtualenv .virtualenv/
-          if ('${{matrix.os}}' -match 'windows-latest') {
-            & ".virtualenv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} virtualEnvPath
+          if ('${{ matrix.os }}' -match 'windows-latest') {
+            & ".virtualenv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} virtualEnvPath
           } else {
-            & ".virtualenv/bin/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} virtualEnvPath
+            & ".virtualenv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} virtualEnvPath
           }
 
       - name: Prepare venv for venv tests
@@ -165,10 +165,10 @@ jobs:
         if: matrix.test-suite == 'venv' && startsWith(matrix.python, 3.)
         run: |
           python -m venv .venv
-          if ('${{matrix.os}}' -match 'windows-latest') {
-            & ".venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} venvPath
+          if ('${{ matrix.os }}' -match 'windows-latest') {
+            & ".venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           } else {
-            & ".venv/bin/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} venvPath
+            & ".venv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           }
 
       - name: Prepare conda for venv tests
@@ -179,15 +179,15 @@ jobs:
         if: matrix.test-suite == 'venv'
         run: |
           # 1. For `terminalActivation.testvirtualenvs.test.ts`
-          if ('${{matrix.os}}' -match 'windows-latest') {
+          if ('${{ matrix.os }}' -match 'windows-latest') {
             $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python.exe
             $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath Scripts | Join-Path -ChildPath conda
           } else{
             $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath python
             $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath conda
           }
-          & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaExecPath $condaExecPath
-          & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaPath
+          & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaExecPath $condaExecPath
+          & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaPath
           & $condaExecPath init --all
 
           # 2. For `interpreterLocatorService.testvirtualenvs.ts`
@@ -223,38 +223,38 @@ jobs:
       - name: Run venv tests
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
-          CI_PYTHON_VERSION: ${{matrix.python}}
+          CI_PYTHON_VERSION: ${{ matrix.python }}
         uses: GabrielBB/xvfb-action@v1.5
         with:
           run: npm run testSingleWorkspace
-          working-directory: ${{env.special-working-directory}}
+          working-directory: ${{ env.special-working-directory }}
         if: matrix.test-suite == 'venv' && matrix.os == 'ubuntu-latest'
 
       - name: Run single-workspace tests
         env:
-          CI_PYTHON_VERSION: ${{matrix.python}}
+          CI_PYTHON_VERSION: ${{ matrix.python }}
         uses: GabrielBB/xvfb-action@v1.5
         with:
           run: npm run testSingleWorkspace
-          working-directory: ${{env.special-working-directory}}
+          working-directory: ${{ env.special-working-directory }}
         if: matrix.test-suite == 'single-workspace'
 
       - name: Run multi-workspace tests
         env:
-          CI_PYTHON_VERSION: ${{matrix.python}}
+          CI_PYTHON_VERSION: ${{ matrix.python }}
         uses: GabrielBB/xvfb-action@v1.5
         with:
           run: npm run testMultiWorkspace
-          working-directory: ${{env.special-working-directory}}
+          working-directory: ${{ env.special-working-directory }}
         if: matrix.test-suite == 'multi-workspace'
 
       - name: Run debugger tests
         env:
-          CI_PYTHON_VERSION: ${{matrix.python}}
+          CI_PYTHON_VERSION: ${{ matrix.python }}
         uses: GabrielBB/xvfb-action@v1.5
         with:
           run: npm run testDebugger
-          working-directory: ${{env.special-working-directory}}
+          working-directory: ${{ env.special-working-directory }}
         if: matrix.test-suite == 'debugger'
 
       # Run TypeScript functional tests
@@ -303,13 +303,13 @@ jobs:
   #       - name: Install Node
   #         uses: actions/setup-node@v2
   #         with:
-  #           node-version: ${{env.NODE_VERSION}}
+  #           node-version: ${{ env.NODE_VERSION }}
   #           cache: 'npm'
 
-  #       - name: Use Python ${{matrix.python}}
+  #       - name: Use Python ${{ matrix.python }}
   #         uses: actions/setup-python@v2
   #         with:
-  #           python-version: ${{matrix.python}}
+  #           python-version: ${{ matrix.python }}
 
   #       - name: Install dependencies (npm ci)
   #         run: npm ci --prefer-offline
@@ -367,7 +367,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v2
         with:
-          node-version: ${{env.NODE_VERSION}}
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
       - name: Install dependencies (npm ci)
@@ -376,10 +376,10 @@ jobs:
       - name: Compile
         run: npx gulp prePublishNonBundle
 
-      - name: Use Python ${{env.PYTHON_VERSION}}
+      - name: Use Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v2
         with:
-          python-version: ${{env.PYTHON_VERSION}}
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Python requirements
         run: |
@@ -401,7 +401,7 @@ jobs:
         shell: pwsh
         run: |
           python -m pip install pipenv
-          python -m pipenv run python ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} pipenvPath
+          python -m pipenv run python ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} pipenvPath
 
       - name: Prepare poetry for venv tests
         env:
@@ -420,10 +420,10 @@ jobs:
         run: |
           python -m pip install virtualenv
           python -m virtualenv .virtualenv/
-          if ('${{matrix.os}}' -match 'windows-latest') {
-            & ".virtualenv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} virtualEnvPath
+          if ('${{ matrix.os }}' -match 'windows-latest') {
+            & ".virtualenv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} virtualEnvPath
           } else {
-            & ".virtualenv/bin/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} virtualEnvPath
+            & ".virtualenv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} virtualEnvPath
           }
 
       - name: Prepare venv for venv tests
@@ -433,10 +433,10 @@ jobs:
         shell: pwsh
         run: |
           python -m venv .venv
-          if ('${{matrix.os}}' -match 'windows-latest') {
-            & ".venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} venvPath
+          if ('${{ matrix.os }}' -match 'windows-latest') {
+            & ".venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           } else {
-            & ".venv/bin/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} venvPath
+            & ".venv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           }
 
       - name: Prepare conda for venv tests
@@ -446,15 +446,15 @@ jobs:
         shell: pwsh
         run: |
           # 1. For `terminalActivation.testvirtualenvs.test.ts`
-          if ('${{matrix.os}}' -match 'windows-latest') {
+          if ('${{ matrix.os }}' -match 'windows-latest') {
             $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python.exe
             $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath Scripts | Join-Path -ChildPath conda
           } else{
             $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath python
             $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath conda
           }
-          & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaExecPath $condaExecPath
-          & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaPath
+          & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaExecPath $condaExecPath
+          & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaPath
           & $condaExecPath init --all
 
           # 2. For `interpreterLocatorService.testvirtualenvs.ts`
@@ -479,7 +479,7 @@ jobs:
       - name: Run venv tests
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
-          CI_PYTHON_VERSION: ${{env.PYTHON_VERSION}}
+          CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
           CI_DISABLE_AUTO_SELECTION: 1
         uses: GabrielBB/xvfb-action@v1.5
         with:
@@ -487,7 +487,7 @@ jobs:
 
       - name: Run single-workspace tests
         env:
-          CI_PYTHON_VERSION: ${{env.PYTHON_VERSION}}
+          CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
           CI_DISABLE_AUTO_SELECTION: 1
         uses: GabrielBB/xvfb-action@v1.5
         with:
@@ -496,7 +496,7 @@ jobs:
       # Enable these tests when coverage is setup for multiroot workspace tests
       # - name: Run multi-workspace tests
       #   env:
-      #     CI_PYTHON_VERSION: ${{env.PYTHON_VERSION}}
+      #     CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
       #     CI_DISABLE_AUTO_SELECTION: 1
       #   uses: GabrielBB/xvfb-action@v1.5
       #   with:
@@ -505,7 +505,7 @@ jobs:
       # Enable these tests when coverage is setup for debugger tests
       # - name: Run debugger tests
       #   env:
-      #     CI_PYTHON_VERSION: ${{env.PYTHON_VERSION}}
+      #     CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
       #     CI_DISABLE_AUTO_SELECTION: 1
       #   uses: GabrielBB/xvfb-action@v1.5
       #   with:
@@ -514,7 +514,7 @@ jobs:
       # Run TypeScript functional tests
       - name: Run TypeScript functional tests
         env:
-          CI_PYTHON_VERSION: ${{env.PYTHON_VERSION}}
+          CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
           CI_DISABLE_AUTO_SELECTION: 1
         run: npm run test:functional:cover
 
