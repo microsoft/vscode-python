@@ -77,6 +77,7 @@ jobs:
         uses: actions/setup-node@v2.4.0
         with:
           node-version: ${{env.NODE_VERSION}}
+          cache: 'npm'
 
       - name: Install dependencies (npm ci)
         run: npm ci
@@ -88,11 +89,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
-
-      - name: Install Node
-        uses: actions/setup-node@v2.4.0
-        with:
-          node-version: ${{env.NODE_VERSION}}
 
       - name: Install Python requirements
         run: |
@@ -307,6 +303,7 @@ jobs:
   #         uses: actions/setup-node@v2.4.0
   #         with:
   #           node-version: ${{env.NODE_VERSION}}
+  #           cache: 'npm'
 
   #       - name: Use Python ${{matrix.python}}
   #         uses: actions/setup-python@v2
@@ -370,6 +367,7 @@ jobs:
         uses: actions/setup-node@v2.4.0
         with:
           node-version: ${{env.NODE_VERSION}}
+          cache: 'npm'
 
       - name: Install dependencies (npm ci)
         run: npm ci
@@ -381,11 +379,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{env.PYTHON_VERSION}}
-
-      - name: Install Node
-        uses: actions/setup-node@v2.4.0
-        with:
-          node-version: ${{env.NODE_VERSION}}
 
       - name: Install Python requirements
         run: |

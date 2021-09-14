@@ -19,14 +19,7 @@ runs:
       uses: actions/setup-node@v2
       with:
         node-version: ${{ inputs.node_version }}
-
-    - name: Node cache
-      uses: actions/cache@v2
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-build-vsix-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-build-vsix-
+        cache: 'npm'
 
     # Jedi LS depends on dataclasses which is not in the stdlib in Python 3.6.
     - name: Use Python 3.6 for JediLSP
