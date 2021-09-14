@@ -115,7 +115,7 @@ export class PytestController implements ITestFrameworkController {
                                     subRootItem,
                                     testController,
                                     this.idToRawData,
-                                    subRootItem.id,
+                                    root, // All the file paths are based on workspace root.
                                     [data],
                                 );
                             } else {

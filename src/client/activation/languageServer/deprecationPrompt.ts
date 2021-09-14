@@ -17,8 +17,9 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IMPLSDeprecationPrompt, LanguageServerType } from '../types';
 
-const doNotShowPromptStateKey = 'MESSAGE_KEY_FOR_MPLS_DEPRECATION_PROMPT';
-const frequency = 1000 * 60 * 60 * 24 * 30; // One month.
+// Exported for testing.
+export const mplsDeprecationPromptStateKey = 'MESSAGE_KEY_FOR_MPLS_DEPRECATION_PROMPT2';
+export const mplsDeprecationPromptFrequency = 1000 * 60 * 60 * 24 * 7; // One week.
 
 @injectable()
 export class MPLSDeprecationPrompt implements IMPLSDeprecationPrompt {
@@ -73,9 +74,17 @@ export class MPLSDeprecationPrompt implements IMPLSDeprecationPrompt {
     private getPersistentState(): IPersistentState<boolean> {
         const target = this.getConfigurationTarget();
         if (target === ConfigurationTarget.Global) {
-            return this.persistentState.createGlobalPersistentState<boolean>(doNotShowPromptStateKey, false, frequency);
+            return this.persistentState.createGlobalPersistentState<boolean>(
+                mplsDeprecationPromptStateKey,
+                false,
+                mplsDeprecationPromptFrequency,
+            );
         }
-        return this.persistentState.createWorkspacePersistentState<boolean>(doNotShowPromptStateKey, false, frequency);
+        return this.persistentState.createWorkspacePersistentState<boolean>(
+            mplsDeprecationPromptStateKey,
+            false,
+            mplsDeprecationPromptFrequency,
+        );
     }
 
     private getConfigurationTarget() {

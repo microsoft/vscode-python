@@ -7,7 +7,11 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationTarget, WorkspaceConfiguration } from 'vscode';
-import { MPLSDeprecationPrompt } from '../../../client/activation/languageServer/deprecationPrompt';
+import {
+    MPLSDeprecationPrompt,
+    mplsDeprecationPromptFrequency,
+    mplsDeprecationPromptStateKey,
+} from '../../../client/activation/languageServer/deprecationPrompt';
 import { LanguageServerType } from '../../../client/activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { PersistentState } from '../../../client/common/persistentState';
@@ -39,12 +43,20 @@ suite('MPLS deprecation prompt', () => {
         persistentStateFactory = mock();
         globalState = mock<PersistentState<boolean>>(PersistentState);
         workspaceState = mock<PersistentState<boolean>>(PersistentState);
-        when(persistentStateFactory.createGlobalPersistentState(anything(), anything(), anything())).thenReturn(
-            instance(globalState),
-        );
-        when(persistentStateFactory.createWorkspacePersistentState(anything(), anything(), anything())).thenReturn(
-            instance(workspaceState),
-        );
+        when(
+            persistentStateFactory.createGlobalPersistentState(
+                mplsDeprecationPromptStateKey,
+                false,
+                mplsDeprecationPromptFrequency,
+            ),
+        ).thenReturn(instance(globalState));
+        when(
+            persistentStateFactory.createWorkspacePersistentState(
+                mplsDeprecationPromptStateKey,
+                false,
+                mplsDeprecationPromptFrequency,
+            ),
+        ).thenReturn(instance(workspaceState));
 
         workspaceService = mock();
         workspaceConfiguration = mock();

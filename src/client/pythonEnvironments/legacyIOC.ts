@@ -164,6 +164,10 @@ class ComponentAdapter implements IComponentAdapter {
         return this.api.refreshPromise;
     }
 
+    public get onRefreshStart(): vscode.Event<void> {
+        return this.api.onRefreshStart;
+    }
+
     public get onChanged() {
         return this.changed.event;
     }
@@ -299,9 +303,12 @@ class ComponentAdapter implements IComponentAdapter {
             if (wsFolder !== undefined) {
                 query.searchLocations = {
                     roots: [wsFolder.uri],
-                    doNotIncludeNonRooted: false,
                 };
             }
+        } else {
+            query.searchLocations = {
+                roots: [],
+            };
         }
 
         let envs = this.api.getEnvs(query);

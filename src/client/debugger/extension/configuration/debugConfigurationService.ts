@@ -80,18 +80,19 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
             //                     editor context where it was triggered.
             throw Error('This configuration can only be used as defined by `purpose`.');
         } else {
-            if ((await this.experiments.inExperiment(CacheDebugConfig.experiment)) && this.cacheDebugConfig) {
-                debugConfiguration = cloneDeep(this.cacheDebugConfig);
-            }
             if (Object.keys(debugConfiguration).length === 0) {
-                const configs = await this.provideDebugConfigurations(folder, token);
-                if (configs === undefined) {
-                    return;
+                if ((await this.experiments.inExperiment(CacheDebugConfig.experiment)) && this.cacheDebugConfig) {
+                    debugConfiguration = cloneDeep(this.cacheDebugConfig);
+                } else {
+                    const configs = await this.provideDebugConfigurations(folder, token);
+                    if (configs === undefined) {
+                        return;
+                    }
+                    if (Array.isArray(configs) && configs.length === 1) {
+                        debugConfiguration = configs[0];
+                    }
+                    this.cacheDebugConfig = cloneDeep(debugConfiguration);
                 }
-                if (Array.isArray(configs) && configs.length === 1) {
-                    debugConfiguration = configs[0];
-                }
-                this.cacheDebugConfig = cloneDeep(debugConfiguration);
             }
             return this.launchResolver.resolveDebugConfiguration(
                 folder,

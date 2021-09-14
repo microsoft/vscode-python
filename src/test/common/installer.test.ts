@@ -103,6 +103,7 @@ import {
     IFileDownloader,
     IHttpClient,
     IInstaller,
+    IInterpreterPathProxyService,
     IInterpreterPathService,
     IPathUtils,
     IPersistentStateFactory,
@@ -122,6 +123,7 @@ import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
+import { InterpreterPathProxyService } from '../../client/common/interpreterPathProxyService';
 
 suite('Installer', () => {
     let ioc: UnitTestIocContainer;
@@ -203,6 +205,10 @@ suite('Installer', () => {
         );
         ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
         ioc.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
+        ioc.serviceManager.addSingleton<IInterpreterPathProxyService>(
+            IInterpreterPathProxyService,
+            InterpreterPathProxyService,
+        );
         ioc.serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
         ioc.serviceManager.addSingleton<IRandom>(IRandom, Random);
         ioc.serviceManager.addSingleton<ITerminalServiceFactory>(ITerminalServiceFactory, TerminalServiceFactory);
