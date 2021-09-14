@@ -69,15 +69,16 @@ jobs:
             python: '2.7'
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2
         with:
           path: ${{env.special-working-directory-relative}}
 
       - name: Install Node
-        uses: actions/setup-node@v2.4.0
+        uses: actions/setup-node@v2
         with:
           node-version: ${{env.NODE_VERSION}}
           cache: 'npm'
+          cache-dependency-path: ${{env.special-working-directory-relative}}/package-lock.json
 
       - name: Install dependencies (npm ci)
         run: npm ci
@@ -297,10 +298,10 @@ jobs:
   #     steps:
   #       # Need the source to have the tests available.
   #       - name: Checkout
-  #         uses: actions/checkout@v2.3.4
+  #         uses: actions/checkout@v2
 
   #       - name: Install Node
-  #         uses: actions/setup-node@v2.4.0
+  #         uses: actions/setup-node@v2
   #         with:
   #           node-version: ${{env.NODE_VERSION}}
   #           cache: 'npm'
