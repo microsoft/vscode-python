@@ -8,6 +8,7 @@ import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, OpenDialogOptions, QuickPickItem, Uri } from 'vscode';
 import { cloneDeep } from 'lodash';
+import { instance, mock, verify, when } from 'ts-mockito';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IPlatformService } from '../../../../client/common/platform/types';
@@ -35,7 +36,6 @@ import { MockWorkspaceConfiguration } from '../../../mocks/mockWorkspaceConfig';
 import { Octicons } from '../../../../client/common/constants';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { createDeferred, sleep } from '../../../../client/common/utils/async';
-import { instance, mock, verify, when } from 'ts-mockito';
 
 const untildify = require('untildify');
 
@@ -238,6 +238,7 @@ suite('Set Interpreter Command', () => {
             expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
 
             when(interpreterService.triggerRefresh()).thenResolve();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await refreshButtonCallback!({} as any); // Invoke callback, meaning that the refresh button is clicked.
             verify(interpreterService.triggerRefresh()).once();
         });

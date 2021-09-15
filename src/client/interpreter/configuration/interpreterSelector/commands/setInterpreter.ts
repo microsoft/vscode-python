@@ -42,6 +42,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         label: `${Octicons.Add} ${InterpreterQuickPickList.enterPath.label()}`,
         alwaysShow: true,
     };
+
     constructor(
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
@@ -199,7 +200,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         if (defaultInterpreterPathSuggestion) {
             suggestions.push(defaultInterpreterPathSuggestion);
         }
-        let interpreterSuggestions = await this.interpreterSelector.getSuggestions(resource, sortList);
+        const interpreterSuggestions = await this.interpreterSelector.getSuggestions(resource, sortList);
         if (sortList && interpreterSuggestions.length > 0) {
             // If list is already sorted, the first item is the recommended one.
             const suggested = interpreterSuggestions.shift();
@@ -241,6 +242,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 alwaysShow: true,
             };
         }
+        return undefined;
     }
 
     /**
