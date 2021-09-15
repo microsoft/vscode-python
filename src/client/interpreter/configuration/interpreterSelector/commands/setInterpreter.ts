@@ -69,7 +69,8 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         state: InterpreterStateArgs,
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         // If the list is refreshing, adding elements in the end is only
-        // way to preserve scroll position, so we don't need sorting.
+        // way to preserve scroll position. If we try to maintain a
+        // sorted list, that is not guaranteed, so disable sorting.
         const sortList = !this.interpreterService.refreshPromise;
         const suggestions = await this.getItems(state.workspace, sortList);
         state.path = undefined;
@@ -98,14 +99,8 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 callback: async (_event, quickPick) => {
                     if (this.interpreterService.refreshPromise) {
                         quickPick.busy = true;
-                        this.interpreterService.refreshPromise.then(async () => {
-                            // TODO: Suggested a recommended interpreter now that refresh has finished?
+                        this.interpreterService.refreshPromise.then(() => {
                             quickPick.busy = false;
-                            const interpreterSuggestions = await this.getItems(state.workspace, false);
-                            if (quickPick.activeItems.length === 0) {
-                                // Changing active items if one is already set is not a good idea as user might be using it.
-                                quickPick.activeItems = [this.getActiveItem(state.workspace, interpreterSuggestions)];
-                            }
                         });
                     }
 
@@ -215,13 +210,21 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 interpreterSuggestions.unshift(starred);
             }
         }
+        suggestions.push(...interpreterSuggestions);
         return suggestions;
     }
 
-    private getActiveItem(resource: Resource, interpreterSuggestions: QuickPickType[]) {
+    private getActiveItem(resource: Resource, suggestions: QuickPickType[]) {
         const currentPythonPath = this.configurationService.getSettings(resource).pythonPath;
-        const activeInterpreter = interpreterSuggestions.filter((i) => i.path === currentPythonPath);
-        return activeInterpreter.length > 0 ? activeInterpreter[0] : interpreterSuggestions[0];
+        const activeInterpreter = suggestions.filter((i) => i.path === currentPythonPath);
+        if (activeInterpreter.length > 0) {
+            return activeInterpreter[0];
+        }
+        const firstInterpreterSuggestion = suggestions.find((s) => 'interpreter' in s && s.interpreter);
+        if (firstInterpreterSuggestion) {
+            return firstInterpreterSuggestion;
+        }
+        return suggestions[0];
     }
 
     private getDefaultInterpreterPathSuggestion(resource: Resource): ISpecialQuickPickItem | undefined {

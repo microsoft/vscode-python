@@ -1,4 +1,4 @@
-import { ConfigurationTarget, Disposable, QuickPickItem, Uri, Event } from 'vscode';
+import { ConfigurationTarget, Disposable, QuickPickItem, Uri } from 'vscode';
 import { Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 

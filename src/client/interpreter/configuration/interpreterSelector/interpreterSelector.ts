@@ -39,6 +39,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         const interpreters = await this.interpreterManager.getAllInterpreters(resource, {
             onSuggestion: true,
         });
+        interpreters.sort(this.envTypeComparer.compare.bind(this.envTypeComparer));
 
         return Promise.all(interpreters.map((item) => this.suggestionToQuickPickItem(item, resource)));
     }

@@ -119,7 +119,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         acceptFilterBoxTextAsSelection,
         onChangeItem,
         keepScrollPosition,
-        sortByLabel
+        sortByLabel,
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>> {
         const disposables: Disposable[] = [];
         try {
