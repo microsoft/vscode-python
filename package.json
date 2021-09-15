@@ -1121,7 +1121,7 @@
                     "type": "string"
                 },
                 "python.linting.pylintEnabled": {
-                    "default": true,
+                    "default": false,
                     "description": "Whether to lint Python files using pylint.",
                     "scope": "resource",
                     "type": "boolean"

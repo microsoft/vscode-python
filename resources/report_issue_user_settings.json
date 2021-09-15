@@ -58,7 +58,7 @@
         "pylamaPath": "placeholder",
         "pylintArgs": "placeholder",
         "pylintCategorySeverity": false,
-        "pylintEnabled": true,
+        "pylintEnabled": false,
         "pylintPath": "placeholder",
         "pylintUseMinimalCheckers": true
     },
