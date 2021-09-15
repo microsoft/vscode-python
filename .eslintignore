@@ -311,7 +311,6 @@ src/client/common/net/socket/SocketStream.ts
 src/client/common/asyncDisposableRegistry.ts
 src/client/common/editor.ts
 src/client/common/contextKey.ts
-src/client/common/markdown/restTextConverter.ts
 src/client/common/experiments/telemetry.ts
 src/client/common/platform/serviceRegistry.ts
 src/client/common/platform/errors.ts
