@@ -33,10 +33,6 @@ import { MockLintingSettings } from '../mockClasses';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
 suite('Linting - Pylint', () => {
-    const basePath = '/user/a/b/c/d';
-    const pylintrc = 'pylintrc';
-    const dotPylintrc = '.pylintrc';
-
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let workspace: TypeMoq.IMock<IWorkspaceService>;
@@ -92,76 +88,6 @@ suite('Linting - Pylint', () => {
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, linterManager);
         const installer = TypeMoq.Mock.ofType<IInstaller>();
         serviceManager.addSingletonInstance<IInstaller>(IInstaller, installer.object);
-    });
-
-    test('pylintrc in the file folder', async () => {
-        fileSystem.setup((x) => x.fileExists(path.join(basePath, pylintrc))).returns(() => Promise.resolve(true));
-        let result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
-        expect(result).to.be.equal(true, `'${pylintrc}' not detected in the file folder.`);
-
-        fileSystem.setup((x) => x.fileExists(path.join(basePath, dotPylintrc))).returns(() => Promise.resolve(true));
-        result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
-        expect(result).to.be.equal(true, `'${dotPylintrc}' not detected in the file folder.`);
-    });
-    test('pylintrc up the module tree', async () => {
-        const module1 = path.join('/user/a/b/c/d', '__init__.py');
-        const module2 = path.join('/user/a/b/c', '__init__.py');
-        const module3 = path.join('/user/a/b', '__init__.py');
-        const rc = path.join('/user/a/b/c', pylintrc);
-
-        fileSystem.setup((x) => x.fileExists(module1)).returns(() => Promise.resolve(true));
-        fileSystem.setup((x) => x.fileExists(module2)).returns(() => Promise.resolve(true));
-        fileSystem.setup((x) => x.fileExists(module3)).returns(() => Promise.resolve(true));
-        fileSystem.setup((x) => x.fileExists(rc)).returns(() => Promise.resolve(true));
-
-        const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
-        expect(result).to.be.equal(true, `'${pylintrc}' not detected in the module tree.`);
-    });
-    test('.pylintrc up the module tree', async () => {
-        // Don't use path.join since it will use / on Travis and Mac
-        const module1 = path.join('/user/a/b/c/d', '__init__.py');
-        const module2 = path.join('/user/a/b/c', '__init__.py');
-        const module3 = path.join('/user/a/b', '__init__.py');
-        const rc = path.join('/user/a/b/c', pylintrc);
-
-        fileSystem.setup((x) => x.fileExists(module1)).returns(() => Promise.resolve(true));
-        fileSystem.setup((x) => x.fileExists(module2)).returns(() => Promise.resolve(true));
-        fileSystem.setup((x) => x.fileExists(module3)).returns(() => Promise.resolve(true));
-        fileSystem.setup((x) => x.fileExists(rc)).returns(() => Promise.resolve(true));
-
-        const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
-        expect(result).to.be.equal(true, `'${dotPylintrc}' not detected in the module tree.`);
-    });
-    test('.pylintrc up the ~ folder', async () => {
-        const home = os.homedir();
-        const rc = path.join(home, dotPylintrc);
-        fileSystem.setup((x) => x.fileExists(rc)).returns(() => Promise.resolve(true));
-
-        const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
-        expect(result).to.be.equal(true, `'${dotPylintrc}' not detected in the ~ folder.`);
-    });
-    test('pylintrc up the ~/.config folder', async () => {
-        const home = os.homedir();
-        const rc = path.join(home, '.config', pylintrc);
-        fileSystem.setup((x) => x.fileExists(rc)).returns(() => Promise.resolve(true));
-
-        const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
-        expect(result).to.be.equal(true, `'${pylintrc}' not detected in the  ~/.config folder.`);
-    });
-    test('pylintrc in the /etc folder', async () => {
-        const rc = path.join('/etc', pylintrc);
-        fileSystem.setup((x) => x.fileExists(rc)).returns(() => Promise.resolve(true));
-
-        const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
-        expect(result).to.be.equal(true, `'${pylintrc}' not detected in the /etc folder.`);
-    });
-    test('pylintrc between file and workspace root', async () => {
-        const root = '/user/a';
-        const midFolder = '/user/a/b';
-        fileSystem.setup((x) => x.fileExists(path.join(midFolder, pylintrc))).returns(() => Promise.resolve(true));
-
-        const result = await Pylint.hasConfigurationFileInWorkspace(fileSystem.object, basePath, root);
-        expect(result).to.be.equal(true, `'${pylintrc}' not detected in the workspace tree.`);
     });
 
     test('Negative column numbers should be treated 0', async () => {
