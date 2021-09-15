@@ -191,14 +191,6 @@ src/test/application/misc/joinMailingListPrompt.unit.test.ts
 
 src/test/performance/load.perf.test.ts
 
-src/test/refactor/extension.refactor.extract.method.test.ts
-src/test/refactor/extension.refactor.extract.var.test.ts
-
-src/test/workspaceSymbols/provider.unit.test.ts
-src/test/workspaceSymbols/common.ts
-src/test/workspaceSymbols/main.unit.test.ts
-src/test/workspaceSymbols/generator.unit.test.ts
-
 src/client/interpreter/configuration/interpreterSelector/commands/base.ts
 src/client/interpreter/configuration/interpreterSelector/commands/resetInterpreter.ts
 src/client/interpreter/configuration/interpreterSelector/commands/setShebangInterpreter.ts
@@ -223,27 +215,16 @@ src/client/terminals/codeExecution/terminalCodeExecution.ts
 src/client/terminals/codeExecution/codeExecutionManager.ts
 src/client/terminals/codeExecution/djangoContext.ts
 
-src/client/providers/objectDefinitionProvider.ts
 src/client/providers/serviceRegistry.ts
-src/client/providers/symbolProvider.ts
 src/client/providers/completionSource.ts
-src/client/providers/renameProvider.ts
-src/client/providers/hoverProvider.ts
-src/client/providers/itemInfoSource.ts
 src/client/providers/formatProvider.ts
 src/client/providers/importSortProvider.ts
 src/client/providers/replProvider.ts
 src/client/providers/codeActionProvider/main.ts
 src/client/providers/codeActionProvider/launchJsonCodeActionProvider.ts
 src/client/providers/codeActionProvider/pythonCodeActionProvider.ts
-src/client/providers/docStringFoldingProvider.ts
 src/client/providers/linterProvider.ts
-src/client/providers/simpleRefactorProvider.ts
-src/client/providers/completionProvider.ts
-src/client/providers/definitionProvider.ts
-src/client/providers/referenceProvider.ts
 src/client/providers/terminalProvider.ts
-src/client/providers/signatureProvider.ts
 
 src/client/activation/languageServer/manager.ts
 src/client/activation/languageServer/languageServerExtension.ts
@@ -463,10 +444,4 @@ src/client/application/diagnostics/commands/ignore.ts
 src/client/application/diagnostics/commands/factory.ts
 src/client/application/diagnostics/commands/execVSCCommand.ts
 src/client/application/diagnostics/commands/launchBrowser.ts
-
-src/client/refactor/proxy.ts
-src/client/workspaceSymbols/main.ts
-src/client/workspaceSymbols/generator.ts
-src/client/workspaceSymbols/parser.ts
-src/client/workspaceSymbols/provider.ts
 
