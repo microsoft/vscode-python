@@ -19,5 +19,4 @@ jobs:
         with:
           github-token: ${{ github.token }}
           issue-lock-inactive-days: '30'
-          issue-lock-comment: 'This issue has been automatically locked since there has been no recent activity since its closing. Please open a new issue if you have a related bug.'
           process-only: 'issues'
