@@ -4,8 +4,6 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
-import { IWebviewPanelProvider } from '../../../client/common/application/types';
-import { WebviewPanelProvider } from '../../../client/common/application/webviewPanels/webviewPanelProvider';
 import { InstallationChannelManager } from '../../../client/common/installer/channelManager';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
 import { InsidersBuildInstaller, StableBuildInstaller } from '../../../client/common/installer/extensionBuildInstaller';
@@ -88,6 +86,5 @@ suite('Common installer Service Registry', () => {
                 ProductType.TestFramework,
             ),
         ).once();
-        verify(serviceManager.addSingleton<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider)).once();
     });
 });

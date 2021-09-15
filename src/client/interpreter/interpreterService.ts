@@ -20,8 +20,6 @@ import {
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../telemetry';
-import { EventName } from '../telemetry/constants';
 import {
     GetInterpreterOptions,
     IComponentAdapter,
@@ -30,12 +28,13 @@ import {
     IInterpreterLocatorService,
     IInterpreterService,
     INTERPRETER_LOCATOR_SERVICE,
+    PythonEnvironmentsChangedEvent,
 } from './contracts';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 import { getInterpreterHash } from '../pythonEnvironments/discovery/locators/services/hashProvider';
 import { inDiscoveryExperiment, inDiscoveryExperimentSync } from '../common/experiments/helpers';
-import { StopWatch } from '../common/utils/stopWatch';
 import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
+import { PythonLocatorQuery } from '../pythonEnvironments/base/locator';
 
 const EXPIRY_DURATION = 24 * 60 * 60 * 1000;
 
@@ -43,10 +42,12 @@ type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
 
 @injectable()
 export class InterpreterService implements Disposable, IInterpreterService {
-    public get hasInterpreters(): Promise<boolean> {
+    public async hasInterpreters(
+        filter: (e: PythonEnvironment) => Promise<boolean> = async () => true,
+    ): Promise<boolean> {
         return inDiscoveryExperiment(this.experimentService).then((inExp) => {
             if (inExp) {
-                return this.pyenvs.hasInterpreters;
+                return this.pyenvs.hasInterpreters(filter);
             }
             const locator = this.serviceContainer.get<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
@@ -56,9 +57,21 @@ export class InterpreterService implements Disposable, IInterpreterService {
         });
     }
 
+    public triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
+        return inDiscoveryExperimentSync(this.experimentService)
+            ? this.pyenvs.triggerRefresh(query)
+            : Promise.resolve();
+    }
+
+    public get refreshPromise(): Promise<void> {
+        return inDiscoveryExperimentSync(this.experimentService) ? this.pyenvs.refreshPromise : Promise.resolve();
+    }
+
     public get onDidChangeInterpreter(): Event<void> {
         return this.didChangeInterpreterEmitter.event;
     }
+
+    public onDidChangeInterpreters: Event<PythonEnvironmentsChangedEvent>;
 
     public get onDidChangeInterpreterInformation(): Event<PythonEnvironment> {
         return this.didChangeInterpreterInformation.event;
@@ -97,6 +110,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         this.experimentsManager = this.serviceContainer.get<IExperimentService>(IExperimentService);
+        this.onDidChangeInterpreters = pyenvs.onChanged;
     }
 
     public async refresh(resource?: Uri): Promise<void> {
@@ -138,9 +152,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
         let environments: PythonEnvironment[] = [];
-        const stopWatch = new StopWatch();
         if (inDiscoveryExperimentSync(this.experimentService)) {
-            environments = await this.pyenvs.getInterpreters(resource, options);
+            environments = this.pyenvs.getInterpreters(resource);
         } else {
             const locator = this.serviceContainer.get<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
@@ -148,11 +161,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
             );
             environments = await locator.getInterpreters(resource, options);
         }
-
-        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
-            locator: 'all',
-            interpreters: environments?.length ?? 0,
-        });
 
         await Promise.all(
             environments
@@ -166,6 +174,14 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 }),
         );
         return environments;
+    }
+
+    public async getAllInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
+        if (options?.ignoreCache) {
+            this.triggerRefresh().ignoreErrors();
+        }
+        await this.refreshPromise;
+        return this.getInterpreters(resource, options);
     }
 
     public dispose(): void {
@@ -244,6 +260,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
         // This is the preferred approach, hence the delay in option 1.
         const option2 = (async () => {
+            await this.refreshPromise;
             const interpreters = await this.getInterpreters(resource);
             const found = interpreters.find((i) => fs.arePathsSame(i.path, pythonPath));
             if (found) {

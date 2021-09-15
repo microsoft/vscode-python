@@ -5,7 +5,6 @@
 
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { Octicons } from '../constants';
 import { FileSystem } from '../platform/fileSystem';
 
 /* eslint-disable @typescript-eslint/no-namespace, no-shadow */
@@ -92,6 +91,7 @@ export namespace Common {
     export const learnMore = localize('Common.learnMore', 'Learn more');
     export const and = localize('Common.and', 'and');
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
+    export const recommended = localize('Common.recommended', 'Recommended');
 }
 
 export namespace CommonSurvey {
@@ -129,13 +129,6 @@ export namespace Pylance {
     );
     export const pylanceInstallPylance = localize('Pylance.pylanceInstallPylance', 'Install Pylance');
     export const pylanceRevertToJedi = localize('Pylance.pylanceRevertToJedi', 'Revert to Jedi');
-}
-
-export namespace Jupyter {
-    export const jupyterExtensionNotInstalled = localize(
-        'Jupyter.extensionNotInstalled',
-        "This feature is available in the Jupyter extension, which isn't currently installed.",
-    );
 }
 
 export namespace TensorBoard {
@@ -212,13 +205,12 @@ export namespace TensorBoard {
 }
 
 export namespace LanguageService {
-    export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi Python language engine.');
     export const startingMicrosoft = localize(
         'LanguageService.startingMicrosoft',
         'Starting Microsoft Python language server.',
     );
     export const startingPylance = localize('LanguageService.startingPylance', 'Starting Pylance language server.');
-    export const startingJediLSP = localize('LanguageService.startingJediLSP', 'Starting Jedi language server.');
+    export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi language server.');
     export const startingNone = localize(
         'LanguageService.startingNone',
         'Editor support is inactive since language server is set to None.',
@@ -293,31 +285,14 @@ export namespace InterpreterQuickPickList {
         'Current: {0}',
     );
     export const enterPath = {
-        detail: localize('InterpreterQuickPickList.enterPath.detail', 'Enter path or find an existing interpreter'),
         label: localize('InterpreterQuickPickList.enterPath.label', 'Enter interpreter path...'),
         placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python interpreter.'),
     };
     export const defaultInterpreterPath = {
-        label: (): string => {
-            const labelText = localize(
-                'InterpreterQuickPickList.defaultInterpreterPath.label',
-                'Use default Python interpreter path',
-            );
-            return `${Octicons.Star} ${labelText()}`;
-        },
-    };
-    export const findPath = {
-        detail: localize(
-            'InterpreterQuickPickList.findPath.detail',
-            'Browse the file system to find a Python interpreter.',
+        label: localize(
+            'InterpreterQuickPickList.defaultInterpreterPath.label',
+            'Use Python from `python.defaultInterpreterPath` setting',
         ),
-        label: (): string => {
-            const labelText = localize(
-                'InterpreterQuickPickList.findPath.label',
-                "I can't find the interpreter I want to select...",
-            );
-            return `${Octicons.Search_Stop} ${labelText()}`;
-        },
     };
     export const browsePath = {
         label: localize('InterpreterQuickPickList.browsePath.label', 'Find...'),
@@ -421,66 +396,11 @@ export namespace ExtensionSurveyBanner {
     export const bannerLabelYes = localize('ExtensionSurveyBanner.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('ExtensionSurveyBanner.bannerLabelNo', 'No, thanks');
     export const maybeLater = localize('ExtensionSurveyBanner.maybeLater', 'Maybe later');
-    export const mplsMessage = localize(
-        'ExtensionSurveyBanner.mplsMessage',
-        'Can you please take 2 minutes to tell us about your experience using the Microsoft Python Language Server?',
-    );
 }
 
 export namespace Products {
     export const installingModule = localize('products.installingModule', 'Installing {0}');
 }
-
-export namespace StartPage {
-    export const getStarted = localize('StartPage.getStarted', 'Python - Get Started');
-    export const pythonExtensionTitle = localize('StartPage.pythonExtensionTitle', 'Python Extension');
-    export const createJupyterNotebook = localize('StartPage.createJupyterNotebook', 'Create a Jupyter Notebook');
-    export const notebookDescription = localize(
-        'StartPage.notebookDescription',
-        '- Run "<div class="link italics" role="button" onclick={0}>Create New Blank Notebook</div>" in the Command Palette (<div class="italics">Shift + Command + P</div>)<br />- Explore our <div class="link" role="button" onclick={1}>sample notebook</div> to learn about notebook features',
-    );
-    export const createAPythonFile = localize('StartPage.createAPythonFile', 'Create a Python File');
-    export const pythonFileDescription = localize(
-        'StartPage.pythonFileDescription',
-        '- Create a <div class="link" role="button" onclick={0}>new file</div> with a .py extension',
-    );
-    export const openInteractiveWindow = localize(
-        'StartPage.openInteractiveWindow',
-        'Use the Interactive Window to develop Python Scripts',
-    );
-    export const interactiveWindowDesc = localize(
-        'StartPage.interactiveWindowDesc',
-        '- You can create cells on a Python file by typing "#%%". Make sure you have the Jupyter extension installed. <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window',
-    );
-
-    export const releaseNotes = localize(
-        'StartPage.releaseNotes',
-        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features.',
-    );
-    export const tutorialAndDoc = localize(
-        'StartPage.tutorialAndDoc',
-        'Explore more features in our <a class="link" href={0}>Tutorials</a> or check <a class="link" href={1}>Documentation</a> for tips and troubleshooting.',
-    );
-    export const mailingList = localize(
-        'StartPage.mailingList',
-        '<a class="link" href={0}>Sign up</a> for tips and tutorials through our mailing list.',
-    );
-    export const dontShowAgain = localize('StartPage.dontShowAgain', "Don't show this page again");
-    export const helloWorld = localize('StartPage.helloWorld', 'Hello world');
-    // When localizing sampleNotebook, the translated notebook must also be included in
-    // pythonFiles\*
-    export const sampleNotebook = localize('StartPage.sampleNotebook', 'Notebooks intro');
-    export const openFolder = localize('StartPage.openFolder', 'Open a Folder or Workspace');
-    export const folderDesc = localize(
-        'StartPage.folderDesc',
-        '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a <div class="link" role="button" onclick={1}>Workspace</div>',
-    );
-    export const badWebPanelFormatString = localize(
-        'StartPage.badWebPanelFormatString',
-        '<html><body><h1>{0} is not a valid file name</h1></body></html>',
-    );
-}
-
 export namespace DebugConfigStrings {
     export const selectConfiguration = {
         title: localize('debug.selectConfigurationTitle'),
@@ -611,11 +531,8 @@ export namespace DebugConfigStrings {
 }
 
 export namespace Testing {
-    export const testErrorDiagnosticMessage = localize('Testing.testErrorDiagnosticMessage', 'Error');
-    export const testFailDiagnosticMessage = localize('Testing.testFailDiagnosticMessage', 'Fail');
-    export const testSkippedDiagnosticMessage = localize('Testing.testSkippedDiagnosticMessage', 'Skipped');
     export const configureTests = localize('Testing.configureTests', 'Configure Test Framework');
-    export const disableTests = localize('Testing.disableTests', 'Disable Tests');
+    export const testNotConfigured = localize('Testing.testNotConfigured', 'No test framework configured.');
 }
 
 export namespace OutdatedDebugger {
@@ -623,6 +540,27 @@ export namespace OutdatedDebugger {
         'OutdatedDebugger.updateDebuggerMessage',
         'We noticed you are attaching to ptvsd (Python debugger), which was deprecated on May 1st, 2020. Please switch to [debugpy](https://aka.ms/migrateToDebugpy).',
     );
+}
+
+export namespace Python27Support {
+    export const bannerMessage = localize(
+        'Python27Support.bannerMessage',
+        'The Python extension will have limited support for Python 2.7 starting in the next release, due to changes in external projects we rely on. [Learn more](https://aka.ms/python-27-support).',
+    );
+
+    export const jediMessage = localize(
+        'Python27Support.jediMessage',
+        'IntelliSense with Jedi for Python 2.7 is no longer supported. [Learn more](https://aka.ms/python-27-support).',
+    );
+}
+
+export namespace MPLSDeprecation {
+    export const bannerMessage = localize(
+        'MPLSDeprecation.bannerMessage',
+        'The Microsoft Python Language Server is reaching end of life at the beginning of November. If you do not select a new language server, you will have your setting automatically updated at deprecation. Read more about this in our [September release blog post](https://aka.ms/pvsc-september-2021). Please switch your language server to a supported value:',
+    );
+    export const switchToPylance = localize('MPLSDeprecation.switchToPylance', 'Switch to Pylance (recommended)');
+    export const switchToJedi = localize('MPLSDeprecation.switchToJedi', 'Switch to Jedi (open source)');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

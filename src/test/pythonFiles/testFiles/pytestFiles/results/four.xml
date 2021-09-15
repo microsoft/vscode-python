@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?><testsuite errors="0" failures="1" name="pytest" skips="1" tests="3" time="0.052"><testcase classname="test_root.Test_Root_test1" file="test_root.py" line="6" name="test_Root_A" time="0.0012121200561523438"><failure message="AssertionError: Not implemented">self = &lt;test_root.Test_Root_test1 testMethod=test_Root_A&gt;
-
-    def test_Root_A(self):
-&gt;       self.fail(&quot;Not implemented&quot;)
-E       AssertionError: Not implemented
-
-test_root.py:8: AssertionError</failure></testcase><testcase classname="test_root.Test_Root_test1" file="test_root.py" line="9" name="test_Root_B" time="0.0005743503570556641"></testcase><testcase classname="test_root.Test_Root_test1" file="test_root.py" line="12" name="test_Root_c" time="0.0008814334869384766"><skipped message="demonstrating skipping" type="pytest.skip">test_root.py:12: &lt;py._xmlgen.raw object at 0x10a139048&gt;</skipped></testcase></testsuite>

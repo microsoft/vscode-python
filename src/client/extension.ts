@@ -28,9 +28,9 @@ const stopWatch = new StopWatch();
 import { ProgressLocation, ProgressOptions, window } from 'vscode';
 
 import { buildApi, IExtensionApi } from './api';
-import { IApplicationShell } from './common/application/types';
+import { IApplicationShell, IWorkspaceService } from './common/application/types';
 import { traceError } from './common/logger';
-import { IAsyncDisposableRegistry, IExtensionContext } from './common/types';
+import { IAsyncDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
 import { activateComponents } from './extensionActivation';
@@ -38,6 +38,8 @@ import { initializeStandard, initializeComponents, initializeGlobals } from './e
 import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 import { IStartupDurations } from './types';
+import { runAfterActivation } from './common/utils/runAfterActivation';
+import { IInterpreterService } from './interpreter/contracts';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -103,6 +105,10 @@ async function activateUnsafe(
     // Note standard utils especially experiment and platform code are fundamental to the extension
     // and should be available before we activate anything else.Hence register them first.
     initializeStandard(ext);
+    // We need to activate experiments before initializing components as objects are created or not created based on experiments.
+    const experimentService = activatedServiceContainer.get<IExperimentService>(IExperimentService);
+    // This guarantees that all experiment information has loaded & all telemetry will contain experiment info.
+    await experimentService.activate();
     const components = await initializeComponents(ext);
 
     // Then we finish activating.
@@ -117,6 +123,19 @@ async function activateUnsafe(
 
     startupDurations.totalActivateTime = startupStopWatch.elapsedTime - startupDurations.startActivateTime;
     activationDeferred.resolve();
+
+    setTimeout(async () => {
+        if (activatedServiceContainer) {
+            const interpreterManager = activatedServiceContainer.get<IInterpreterService>(IInterpreterService);
+            const workspaceService = activatedServiceContainer.get<IWorkspaceService>(IWorkspaceService);
+            const workspaces = workspaceService.workspaceFolders ?? [];
+            await interpreterManager
+                .refresh(workspaces.length > 0 ? workspaces[0].uri : undefined)
+                .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
+        }
+
+        runAfterActivation();
+    });
 
     const api = buildApi(activationPromise, ext.legacyIOC.serviceManager, ext.legacyIOC.serviceContainer);
     return [api, activationPromise, ext.legacyIOC.serviceContainer];

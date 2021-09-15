@@ -12,7 +12,7 @@ import {
     getInterpreterPathFromDir,
     getPythonVersionFromPath,
 } from '../../../common/commonUtils';
-import { getFileInfo, getWorkspaceFolders, isParentPath } from '../../../common/externalDependencies';
+import { arePathsSame, getWorkspaceFolders, isParentPath } from '../../../common/externalDependencies';
 import { AnacondaCompanyName, Conda } from '../../../common/environmentManagers/conda';
 import { parsePyenvVersion } from '../../../common/environmentManagers/pyenv';
 import { Architecture, getOSType, OSType } from '../../../../common/utils/platform';
@@ -82,7 +82,7 @@ async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
         traceError('Expected registry interpreter cache to be initialized already');
         interpreters = await getRegistryInterpreters();
     }
-    const data = interpreters.find((i) => i.interpreterPath.toUpperCase() === env.executable.filename.toUpperCase());
+    const data = interpreters.find((i) => arePathsSame(i.interpreterPath, env.executable.filename));
     if (data) {
         const versionStr = data.versionStr ?? data.sysVersionStr ?? data.interpreterPath;
         let version;
@@ -113,7 +113,6 @@ async function resolveGloballyInstalledEnv(executablePath: string, kind: PythonE
         kind,
         version,
         executable: executablePath,
-        fileInfo: await getFileInfo(executablePath),
     });
     return envInfo;
 }
@@ -123,7 +122,6 @@ async function resolveSimpleEnv(executablePath: string, kind: PythonEnvKind): Pr
         kind,
         version: await getPythonVersionFromPath(executablePath),
         executable: executablePath,
-        fileInfo: await getFileInfo(executablePath),
     });
     const location = getEnvironmentDirFromPath(executablePath);
     envInfo.location = location;
@@ -148,7 +146,6 @@ async function resolveCondaEnv(executablePath: string): Promise<PythonEnvInfo> {
                 location: prefix,
                 source: [],
                 version: await getPythonVersionFromPath(executable),
-                fileInfo: await getFileInfo(executable),
             });
             if (name) {
                 info.name = name;
@@ -196,7 +193,6 @@ async function resolvePyenvEnv(executablePath: string): Promise<PythonEnvInfo> {
         // without running python itself.
         version: await getPythonVersionFromPath(executablePath, versionStrings?.pythonVer),
         org: versionStrings && versionStrings.distro ? versionStrings.distro : '',
-        fileInfo: await getFileInfo(executablePath),
     });
 
     envInfo.name = name;
@@ -210,7 +206,6 @@ async function resolveWindowsStoreEnv(executablePath: string): Promise<PythonEnv
         version: parsePythonVersionFromPath(executablePath),
         org: 'Microsoft',
         arch: Architecture.x64,
-        fileInfo: await getFileInfo(executablePath),
         source: [PythonEnvSource.PathEnvVar],
     });
 }

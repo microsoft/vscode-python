@@ -1,18 +1,5 @@
 # The following files were grandfathered out of eslint. They can be removed as time permits.
 
-src/test/mocks/vsc/extHostedTypes.ts
-src/test/mocks/vsc/uuid.ts
-src/test/mocks/vsc/strings.ts
-src/test/mocks/vsc/charCode.ts
-src/test/mocks/vsc/htmlContent.ts
-src/test/mocks/vsc/selection.ts
-src/test/mocks/vsc/position.ts
-src/test/mocks/vsc/uri.ts
-src/test/mocks/vsc/telemetryReporter.ts
-src/test/mocks/vsc/range.ts
-src/test/mocks/vsc/index.ts
-src/test/mocks/vsc/arrays.ts
-
 src/test/analysisEngineTest.ts
 src/test/ciConstants.ts
 src/test/common.ts
@@ -52,16 +39,6 @@ src/test/terminals/codeExecution/terminalCodeExec.unit.test.ts
 src/test/terminals/codeExecution/codeExecutionManager.unit.test.ts
 src/test/terminals/codeExecution/djangoShellCodeExect.unit.test.ts
 
-src/test/languageServers/jedi/autocomplete/base.test.ts
-src/test/languageServers/jedi/autocomplete/pep526.test.ts
-src/test/languageServers/jedi/autocomplete/pep484.test.ts
-src/test/languageServers/jedi/signature/signature.jedi.test.ts
-src/test/languageServers/jedi/completionSource.unit.test.ts
-src/test/languageServers/jedi/symbolProvider.unit.test.ts
-src/test/languageServers/jedi/pythonSignatureProvider.unit.test.ts
-src/test/languageServers/jedi/definitions/parallel.jedi.test.ts
-src/test/languageServers/jedi/definitions/hover.jedi.test.ts
-
 src/test/providers/importSortProvider.unit.test.ts
 src/test/providers/terminal.unit.test.ts
 src/test/providers/repl.unit.test.ts
@@ -96,12 +73,8 @@ src/test/language/tokenizer.unit.test.ts
 src/test/api.functional.test.ts
 
 src/test/testing/mocks.ts
-src/test/testing/helper.ts
 src/test/testing/common/debugLauncher.unit.test.ts
-src/test/testing/common/testUtils.unit.test.ts
-src/test/testing/common/services/storageService.unit.test.ts
 src/test/testing/common/services/configSettingService.unit.test.ts
-src/test/testing/results.ts
 
 src/test/common/exitCIAfterTestReporter.ts
 src/test/common/crypto.unit.test.ts
@@ -295,7 +268,6 @@ src/client/activation/common/packageRepository.ts
 src/client/activation/common/analysisOptions.ts
 src/client/activation/common/downloadChannelRules.ts
 src/client/activation/refCountedLanguageServer.ts
-src/client/activation/jedi.ts
 src/client/activation/languageClientMiddleware.ts
 src/client/activation/node/manager.ts
 src/client/activation/node/languageServerProxy.ts
@@ -339,7 +311,6 @@ src/client/common/net/socket/SocketStream.ts
 src/client/common/asyncDisposableRegistry.ts
 src/client/common/editor.ts
 src/client/common/contextKey.ts
-src/client/common/markdown/restTextConverter.ts
 src/client/common/experiments/telemetry.ts
 src/client/common/platform/serviceRegistry.ts
 src/client/common/platform/errors.ts
@@ -393,7 +364,6 @@ src/client/common/nuget/types.ts
 src/client/common/nuget/nugetService.ts
 src/client/common/cancellation.ts
 src/client/common/interpreterPathService.ts
-src/client/common/startPage/startPageMessageListener.ts
 src/client/common/application/applicationShell.ts
 src/client/common/application/languageService.ts
 src/client/common/application/notebook.ts
@@ -466,8 +436,6 @@ src/client/debugger/extension/attachQuickPick/psProcessParser.ts
 src/client/debugger/extension/attachQuickPick/picker.ts
 src/client/debugger/extension/helpers/protocolParser.ts
 
-src/client/languageServices/jediProxyFactory.ts
-
 src/client/linters/pydocstyle.ts
 src/client/linters/serviceRegistry.ts
 src/client/linters/linterAvailability.ts
@@ -496,40 +464,9 @@ src/client/application/diagnostics/commands/factory.ts
 src/client/application/diagnostics/commands/execVSCCommand.ts
 src/client/application/diagnostics/commands/launchBrowser.ts
 
-src/client/logging/levels.ts
-src/client/logging/transports.ts
-src/client/logging/_global.ts
-src/client/logging/logger.ts
-src/client/logging/util.ts
-src/client/logging/index.ts
-src/client/logging/formatters.ts
-src/client/logging/trace.ts
-
 src/client/refactor/proxy.ts
 src/client/workspaceSymbols/main.ts
 src/client/workspaceSymbols/generator.ts
 src/client/workspaceSymbols/parser.ts
 src/client/workspaceSymbols/provider.ts
 
-src/client/common/startPage/codeCssGenerator.ts
-src/client/common/startPage/themeFinder.ts
-src/client/common/startPage/webviewHost.ts
-src/client/common/startPage/webviewPanelHost.ts
-src/startPage-ui/common/main.ts
-src/startPage-ui/react-common/image.tsx
-src/startPage-ui/react-common/locReactSide.ts
-src/startPage-ui/react-common/logger.ts
-src/startPage-ui/react-common/postOffice.ts
-src/startPage-ui/startPage/index.tsx
-src/test/startPage/mockCommandManager.ts
-src/test/startPage/mockDocument.ts
-src/test/startPage/mockDocumentManager.ts
-src/test/startPage/mockExtensions.ts
-src/test/startPage/mockTextEditor.ts
-src/test/startPage/mockWorkspaceConfig.ts
-src/test/startPage/mockWorkspaceFolder.ts
-src/test/startPage/mountedWebView.ts
-src/test/startPage/mountedWebViewFactory.ts
-src/test/startPage/reactHelpers.ts
-src/test/startPage/webBrowserPanel.ts
-src/test/startPage/webBrowserPanelProvider.ts

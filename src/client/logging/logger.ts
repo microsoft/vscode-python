@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 // IMPORTANT: This file should only be importing from the '../client/logging' directory, as we
@@ -24,7 +25,7 @@ type LoggerConfig = {
 };
 
 // Create a logger just the way we like it.
-export function createLogger(config?: LoggerConfig) {
+export function createLogger(config?: LoggerConfig): winston.Logger {
     const logger = winston.createLogger({
         // We would also set "levels" here.
         exitOnError: false, // Do not exit extension host if there is an exception.
@@ -68,7 +69,7 @@ export function getPreDefinedConfiguration(): LoggerConfig {
 }
 
 // Set up a logger just the way we like it.
-export function configureLogger(logger: IConfigurableLogger, config: LoggerConfig) {
+export function configureLogger(logger: IConfigurableLogger, config: LoggerConfig): void {
     if (config.level) {
         const levelName = resolveLevelName(config.level);
         if (levelName) {
@@ -95,7 +96,7 @@ export interface ILogger {
 }
 
 // Emit a log message derived from the args to all enabled transports.
-export function logToAll(loggers: ILogger[], logLevel: LogLevel, args: Arguments) {
+export function logToAll(loggers: ILogger[], logLevel: LogLevel, args: Arguments): void {
     const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
     for (const logger of loggers) {
         if (logger.transports.length > 0) {
@@ -118,10 +119,10 @@ function getLevelName(level: LogLevel, levels: winston.config.AbstractConfigSetL
     const levelName = resolveLevelName(level, levels);
     if (levelName) {
         return levelName;
-    } else if (isConsole) {
+    }
+    if (isConsole) {
         // XXX Hard-coding this is fragile:
         return 'silly';
-    } else {
-        return resolveLevelName(LogLevel.Info, levels) || 'info';
     }
+    return resolveLevelName(LogLevel.Info, levels) || 'info';
 }

@@ -1032,6 +1032,12 @@ declare module 'vscode' {
          * @returns An instance of the {@link TestController}.
          */
         export function createTestController(id: string, label: string): TestController;
+
+        /**
+         * List of test results stored by the editor, sorted in descending
+         * order by their `completedAt` time.
+         */
+        export const testResults: ReadonlyArray<TestRunResult>;
     }
 
     /**
@@ -1489,6 +1495,101 @@ declare module 'vscode' {
          * @param message The message to show to the user.
          */
         constructor(message: string | MarkdownString);
+    }
+    /**
+     * TestResults can be provided to the editor in {@link tests.publishTestResult},
+     * or read from it in {@link tests.testResults}.
+     *
+     * The results contain a 'snapshot' of the tests at the point when the test
+     * run is complete. Therefore, information such as its {@link Range} may be
+     * out of date. If the test still exists in the workspace, consumers can use
+     * its `id` to correlate the result instance with the living test.
+     */
+    export interface TestRunResult {
+        /**
+         * Unix milliseconds timestamp at which the test run was completed.
+         */
+        readonly completedAt: number;
+
+        /**
+         * Optional raw output from the test run.
+         */
+        readonly output?: string;
+
+        /**
+         * List of test results. The items in this array are the items that
+         * were passed in the {@link tests.runTests} method.
+         */
+        readonly results: ReadonlyArray<Readonly<TestResultSnapshot>>;
+    }
+
+    /**
+     * A {@link TestItem}-like interface with an associated result, which appear
+     * or can be provided in {@link TestResult} interfaces.
+     */
+    export interface TestResultSnapshot {
+        /**
+         * Unique identifier that matches that of the associated TestItem.
+         * This is used to correlate test results and tests in the document with
+         * those in the workspace (test explorer).
+         */
+        readonly id: string;
+
+        /**
+         * Parent of this item.
+         */
+        readonly parent?: TestResultSnapshot;
+
+        /**
+         * URI this TestItem is associated with. May be a file or file.
+         */
+        readonly uri?: Uri;
+
+        /**
+         * Display name describing the test case.
+         */
+        readonly label: string;
+
+        /**
+         * Optional description that appears next to the label.
+         */
+        readonly description?: string;
+
+        /**
+         * Location of the test item in its `uri`. This is only meaningful if the
+         * `uri` points to a file.
+         */
+        readonly range?: Range;
+
+        /**
+         * State of the test in each task. In the common case, a test will only
+         * be executed in a single task and the length of this array will be 1.
+         */
+        readonly taskStates: ReadonlyArray<TestSnapshotTaskState>;
+
+        /**
+         * Optional list of nested tests for this item.
+         */
+        readonly children: Readonly<TestResultSnapshot>[];
+    }
+
+    export interface TestSnapshotTaskState {
+        /**
+         * Current result of the test.
+         */
+        readonly state: TestResultState;
+
+        /**
+         * The number of milliseconds the test took to run. This is set once the
+         * `state` is `Passed`, `Failed`, or `Errored`.
+         */
+        readonly duration?: number;
+
+        /**
+         * Associated test run message. Can, for example, contain assertion
+         * failure information if the test fails.
+         */
+        readonly messages: ReadonlyArray<TestMessage>;
     }
 }
 //#endregion

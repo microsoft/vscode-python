@@ -3,8 +3,7 @@
 
 import { injectable } from 'inversify';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
-import { JediLSP } from '../../common/experiments/groups';
-import { IDefaultLanguageServer, IExperimentService, IExtensions, DefaultLSType } from '../../common/types';
+import { IDefaultLanguageServer, IExtensions, DefaultLSType } from '../../common/types';
 import { IServiceManager } from '../../ioc/types';
 import { ILSExtensionApi } from '../node/languageServerFolderService';
 import { LanguageServerType } from '../types';
@@ -19,26 +18,20 @@ class DefaultLanguageServer implements IDefaultLanguageServer {
 }
 
 export async function setDefaultLanguageServer(
-    experimentService: IExperimentService,
     extensions: IExtensions,
     serviceManager: IServiceManager,
 ): Promise<void> {
-    const lsType = await getDefaultLanguageServer(experimentService, extensions);
+    const lsType = await getDefaultLanguageServer(extensions);
     serviceManager.addSingletonInstance<IDefaultLanguageServer>(
         IDefaultLanguageServer,
         new DefaultLanguageServer(lsType),
     );
 }
 
-async function getDefaultLanguageServer(
-    experimentService: IExperimentService,
-    extensions: IExtensions,
-): Promise<DefaultLSType> {
+async function getDefaultLanguageServer(extensions: IExtensions): Promise<DefaultLSType> {
     if (extensions.getExtension<ILSExtensionApi>(PYLANCE_EXTENSION_ID)) {
         return LanguageServerType.Node;
     }
 
-    return (await experimentService.inExperiment(JediLSP.experiment))
-        ? LanguageServerType.JediLSP
-        : LanguageServerType.Jedi;
+    return LanguageServerType.Jedi;
 }

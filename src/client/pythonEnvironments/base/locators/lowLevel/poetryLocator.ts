@@ -8,7 +8,7 @@ import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
-import { FSWatchingLocator } from './fsWatchingLocator';
+import { FSWatcherKind, FSWatchingLocator } from './fsWatchingLocator';
 import { getInterpreterPathFromDir } from '../../../common/commonUtils';
 import { pathExists } from '../../../common/externalDependencies';
 import { isPoetryEnvironment, localPoetryEnvDirName, Poetry } from '../../../common/environmentManagers/poetry';
@@ -65,6 +65,8 @@ export class PoetryLocator extends FSWatchingLocator<BasicEnvInfo> {
         super(
             () => getRootVirtualEnvDir(root),
             async () => PythonEnvKind.Poetry,
+            undefined,
+            FSWatcherKind.Workspace,
         );
     }
 

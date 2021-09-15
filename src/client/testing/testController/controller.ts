@@ -14,11 +14,14 @@ import {
     TestRunProfileKind,
     CancellationTokenSource,
     Uri,
+    EventEmitter,
 } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceVerbose } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { getNodeByUri } from './common/testItemUtilities';
 import { ITestController, ITestFrameworkController, TestRefreshOptions } from './common/types';
@@ -30,6 +33,20 @@ export class PythonTestController implements ITestController {
     private readonly refreshData: IDelayedTrigger;
 
     private refreshCancellation: CancellationTokenSource;
+
+    private readonly refreshingCompletedEvent: EventEmitter<void> = new EventEmitter<void>();
+
+    private readonly refreshingStartedEvent: EventEmitter<void> = new EventEmitter<void>();
+
+    private readonly runWithoutConfigurationEvent: EventEmitter<WorkspaceFolder[]> = new EventEmitter<
+        WorkspaceFolder[]
+    >();
+
+    public readonly onRefreshingCompleted = this.refreshingCompletedEvent.event;
+
+    public readonly onRefreshingStarted = this.refreshingStartedEvent.event;
+
+    public readonly onRunWithoutConfiguration = this.runWithoutConfigurationEvent.event;
 
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -72,16 +89,14 @@ export class PythonTestController implements ITestController {
 
     public refreshTestData(uri?: Resource, options?: TestRefreshOptions): Promise<void> {
         if (options?.forceRefresh) {
-            this.refreshCancellation.cancel();
-            this.refreshCancellation.dispose();
-            this.refreshCancellation = new CancellationTokenSource();
-
             if (uri === undefined) {
                 // This is a special case where we want everything to be re-discovered.
                 traceVerbose('Testing: Clearing all discovered tests');
-                const ids: string[] = [];
-                this.testController.items.forEach((i) => ids.push(i.id));
-                ids.forEach((id) => this.testController.items.delete(id));
+                this.testController.items.forEach((item) => {
+                    const ids: string[] = [];
+                    item.children.forEach((child) => ids.push(child.id));
+                    ids.forEach((id) => item.children.delete(id));
+                });
 
                 traceVerbose('Testing: Forcing test data refresh');
                 return this.refreshTestDataInternal(undefined);
@@ -95,37 +110,51 @@ export class PythonTestController implements ITestController {
         return Promise.resolve();
     }
 
+    public stopRefreshing(): void {
+        this.refreshCancellation.cancel();
+        this.refreshCancellation.dispose();
+        this.refreshCancellation = new CancellationTokenSource();
+    }
+
+    public clearTestController(): void {
+        const ids: string[] = [];
+        this.testController.items.forEach((item) => ids.push(item.id));
+        ids.forEach((id) => this.testController.items.delete(id));
+    }
+
     private async refreshTestDataInternal(uri?: Resource): Promise<void> {
+        this.refreshingStartedEvent.fire();
         if (uri) {
             traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
 
             const settings = this.configSettings.getSettings(uri);
             if (settings.testing.pytestEnabled) {
-                return this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
-            }
-            if (settings.testing.unittestEnabled) {
-                return this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
-            }
-
-            // If we are here we may have to remove an existing node from the tree
-            // This handles the case where user removes test settings. Which should remove the
-            // tests for that particular case from the tree view
-            const workspace = this.workspaceService.getWorkspaceFolder(uri);
-            if (workspace) {
-                const toDelete: string[] = [];
-                this.testController.items.forEach((i: TestItem) => {
-                    const w = this.workspaceService.getWorkspaceFolder(i.uri);
-                    if (w?.uri.fsPath === workspace.uri.fsPath) {
-                        toDelete.push(i.id);
-                    }
-                });
-                toDelete.forEach((i) => this.testController.items.delete(i));
+                await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+            } else if (settings.testing.unittestEnabled) {
+                await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+            } else {
+                sendTelemetryEvent(EventName.UNITTEST_DISABLED);
+                // If we are here we may have to remove an existing node from the tree
+                // This handles the case where user removes test settings. Which should remove the
+                // tests for that particular case from the tree view
+                const workspace = this.workspaceService.getWorkspaceFolder(uri);
+                if (workspace) {
+                    const toDelete: string[] = [];
+                    this.testController.items.forEach((i: TestItem) => {
+                        const w = this.workspaceService.getWorkspaceFolder(i.uri);
+                        if (w?.uri.fsPath === workspace.uri.fsPath) {
+                            toDelete.push(i.id);
+                        }
+                    });
+                    toDelete.forEach((i) => this.testController.items.delete(i));
+                }
             }
         } else {
             traceVerbose('Testing: Refreshing all test data');
             const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
             await Promise.all(workspaces.map((workspace) => this.refreshTestDataInternal(workspace.uri)));
         }
+        this.refreshingCompletedEvent.fire();
         return Promise.resolve();
     }
 
@@ -141,6 +170,7 @@ export class PythonTestController implements ITestController {
             }
         } else {
             traceVerbose('Testing: Refreshing all test data');
+            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'auto' });
             const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
             await Promise.all(workspaces.map((workspace) => this.refreshTestDataInternal(workspace.uri)));
         }
@@ -167,6 +197,7 @@ export class PythonTestController implements ITestController {
             runInstance.end();
         });
 
+        const unconfiguredWorkspaces: WorkspaceFolder[] = [];
         try {
             await Promise.all(
                 workspaces.map((workspace) => {
@@ -181,9 +212,13 @@ export class PythonTestController implements ITestController {
                         }
                     });
 
+                    const settings = this.configSettings.getSettings(workspace.uri);
                     if (testItems.length > 0) {
-                        const settings = this.configSettings.getSettings(workspace.uri);
                         if (settings.testing.pytestEnabled) {
+                            sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
+                                tool: 'pytest',
+                                debugging: request.profile?.kind === TestRunProfileKind.Debug,
+                            });
                             return this.pytest.runTests(
                                 {
                                     includes: testItems,
@@ -196,6 +231,10 @@ export class PythonTestController implements ITestController {
                             );
                         }
                         if (settings.testing.unittestEnabled) {
+                            sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
+                                tool: 'unittest',
+                                debugging: request.profile?.kind === TestRunProfileKind.Debug,
+                            });
                             return this.unittest.runTests(
                                 {
                                     includes: testItems,
@@ -209,6 +248,9 @@ export class PythonTestController implements ITestController {
                         }
                     }
 
+                    if (!settings.testing.pytestEnabled && !settings.testing.unittestEnabled) {
+                        unconfiguredWorkspaces.push(workspace);
+                    }
                     return Promise.resolve();
                 }),
             );
@@ -216,6 +258,10 @@ export class PythonTestController implements ITestController {
             runInstance.appendOutput(`Finished running tests!\r\n`);
             runInstance.end();
             dispose.dispose();
+
+            if (unconfiguredWorkspaces.length > 0) {
+                this.runWithoutConfigurationEvent.fire(unconfiguredWorkspaces);
+            }
         }
     }
 
@@ -250,18 +296,21 @@ export class PythonTestController implements ITestController {
         this.disposables.push(
             watcher.onDidChange((uri) => {
                 traceVerbose(`Testing: Trigger refresh after change in ${uri.fsPath}`);
+                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'watching' });
                 this.refreshData.trigger(uri, false);
             }),
         );
         this.disposables.push(
             watcher.onDidCreate((uri) => {
                 traceVerbose(`Testing: Trigger refresh after creating ${uri.fsPath}`);
+                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'watching' });
                 this.refreshData.trigger(uri, false);
             }),
         );
         this.disposables.push(
             watcher.onDidDelete((uri) => {
                 traceVerbose(`Testing: Trigger refresh after deleting in ${uri.fsPath}`);
+                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'watching' });
                 this.refreshData.trigger(uri, false);
             }),
         );
@@ -275,6 +324,7 @@ export class PythonTestController implements ITestController {
         this.disposables.push(
             watcher.onDidChange((uri) => {
                 traceVerbose(`Testing: Trigger refresh after change in ${uri.fsPath}`);
+                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'watching' });
                 // We want to invalidate tests for code change
                 this.refreshData.trigger(uri, true);
             }),
@@ -282,12 +332,14 @@ export class PythonTestController implements ITestController {
         this.disposables.push(
             watcher.onDidCreate((uri) => {
                 traceVerbose(`Testing: Trigger refresh after creating ${uri.fsPath}`);
+                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'watching' });
                 this.refreshData.trigger(uri, false);
             }),
         );
         this.disposables.push(
             watcher.onDidDelete((uri) => {
                 traceVerbose(`Testing: Trigger refresh after deleting in ${uri.fsPath}`);
+                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'watching' });
                 this.refreshData.trigger(uri, false);
             }),
         );

@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { _SCRIPTS_DIR } from './constants';
-import { CompletionResponse, SymbolProviderSymbols } from './types';
+import { SymbolProviderSymbols } from './types';
 
 const SCRIPTS_DIR = _SCRIPTS_DIR;
 
@@ -54,23 +54,6 @@ export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJs
             throw Error(`python ${args} returned bad JSON (${out}) (${ex})`);
         }
         return json;
-    }
-
-    return [args, parse];
-}
-
-// completion.py
-
-export function completion(jediPath?: string): [string[], (out: string) => CompletionResponse[]] {
-    const script = path.join(SCRIPTS_DIR, 'completion.py');
-    const args = [script];
-    if (jediPath) {
-        args.push('custom');
-        args.push(jediPath);
-    }
-
-    function parse(out: string): CompletionResponse[] {
-        return out.splitLines().map((resp) => JSON.parse(resp));
     }
 
     return [args, parse];

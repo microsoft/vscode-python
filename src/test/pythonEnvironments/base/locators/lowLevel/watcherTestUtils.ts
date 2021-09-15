@@ -154,7 +154,9 @@ export function testLocatorWatcher(
         return items.some((item) => externalDeps.arePathsSame(item.executablePath, executable));
     }
 
-    suiteSetup(() => venvs.cleanUp());
+    suiteSetup(async () => {
+        await venvs.cleanUp();
+    });
 
     setup(() => {
         inExperimentStub = sinon.stub(externalDeps, 'inExperiment');
@@ -163,16 +165,18 @@ export function testLocatorWatcher(
 
     async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
         locator = options?.arg ? await createLocatorFactoryFunc(options.arg) : await createLocatorFactoryFunc();
+        locator.onChanged(onChanged);
         await getEnvs(locator.iterEnvs()); // Force the FS watcher to start.
         // Wait for watchers to get ready
-        await sleep(1000);
-        locator.onChanged(onChanged);
+        await sleep(2000);
     }
 
     teardown(async () => {
+        sinon.restore();
+        if (locator) {
+            await locator.dispose();
+        }
         await venvs.cleanUp();
-        locator.dispose();
-        inExperimentStub.restore();
     });
 
     test('Detect a new environment', async () => {
@@ -199,7 +203,7 @@ export function testLocatorWatcher(
             externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
             'Wrong event emitted',
         );
-    });
+    }).timeout(TEST_TIMEOUT * 2);
 
     test('Detect when an environment has been deleted', async () => {
         let actualEvent: PythonEnvsChangedEvent;
@@ -233,7 +237,7 @@ export function testLocatorWatcher(
             externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
             'Wrong event emitted',
         );
-    });
+    }).timeout(TEST_TIMEOUT * 2);
 
     test('Detect when an environment has been updated', async () => {
         let actualEvent: PythonEnvsChangedEvent;
@@ -260,5 +264,5 @@ export function testLocatorWatcher(
             externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
             `Paths don't match ${actualEvent!.searchLocation!.fsPath} != ${path.dirname(envDir)}`,
         );
-    });
+    }).timeout(TEST_TIMEOUT * 2);
 }

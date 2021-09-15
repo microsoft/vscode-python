@@ -82,6 +82,12 @@ export const untildify: (value: string) => string = require('untildify');
  * @param parentPath The potential parent path to check for
  */
 export function isParentPath(filePath: string, parentPath: string): boolean {
+    if (!parentPath.endsWith(path.sep)) {
+        parentPath += path.sep;
+    }
+    if (!filePath.endsWith(path.sep)) {
+        filePath += path.sep;
+    }
     return normCasePath(filePath).startsWith(normCasePath(parentPath));
 }
 
@@ -108,20 +114,6 @@ export function arePathsSame(path1: string, path2: string): boolean {
 
 export function getWorkspaceFolders(): string[] {
     return vscode.workspace.workspaceFolders?.map((w) => w.uri.fsPath) ?? [];
-}
-
-export async function getFileInfo(filePath: string): Promise<{ ctime: number; mtime: number }> {
-    try {
-        const data = await fsapi.lstat(filePath);
-        return {
-            ctime: data.ctime.valueOf(),
-            mtime: data.mtime.valueOf(),
-        };
-    } catch (ex) {
-        // This can fail on some cases, such as, `reparse points` on windows. So, return the
-        // time as -1. Which we treat as not set in the extension.
-        return { ctime: -1, mtime: -1 };
-    }
 }
 
 export async function resolveSymbolicLink(absPath: string): Promise<string> {

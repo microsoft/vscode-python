@@ -3,7 +3,7 @@
 
 import { Event, EventEmitter, Uri } from 'vscode';
 import { FileChangeType } from '../../common/platform/fileSystemWatcher';
-import { PythonEnvKind } from './info';
+import { PythonEnvInfo, PythonEnvKind } from './info';
 
 // The use cases for `BasicPythonEnvsChangedEvent` are currently
 // hypothetical.  However, there's a real chance they may prove
@@ -27,6 +27,16 @@ export type BasicPythonEnvsChangedEvent = {
  */
 export type PythonEnvsChangedEvent = BasicPythonEnvsChangedEvent & {
     searchLocation?: Uri;
+};
+
+export type PythonEnvCollectionChangedEvent = BasicPythonEnvCollectionChangedEvent & {
+    type?: FileChangeType;
+    searchLocation?: Uri;
+};
+
+export type BasicPythonEnvCollectionChangedEvent = {
+    old?: PythonEnvInfo;
+    update?: PythonEnvInfo | undefined;
 };
 
 /**
@@ -59,8 +69,7 @@ export interface IPythonEnvsWatcher<E extends BasicPythonEnvsChangedEvent = Pyth
  * should be used.  Only in low-level cases should you consider using
  * `BasicPythonEnvsChangedEvent`.
  */
-export class PythonEnvsWatcher<T extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
-    implements IPythonEnvsWatcher<T> {
+export class PythonEnvsWatcher<T = PythonEnvsChangedEvent> implements IPythonEnvsWatcher<T> {
     /**
      * The hook for registering event listeners (callbacks).
      */

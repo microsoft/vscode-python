@@ -9,13 +9,11 @@ import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceInfo } from '../common/logger';
-import { Telemetry } from '../common/startPage/constants';
 import type { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { isPromise } from '../common/utils/async';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
-import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { LinterId } from '../linters/types';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import {
@@ -24,10 +22,8 @@ import {
     TensorBoardSessionStartResult,
     TensorBoardEntrypoint,
 } from '../tensorBoard/constants';
-import { TestProvider } from '../testing/types';
 import { EventName, PlatformErrors } from './constants';
 import type { LinterTrigger, TestTool } from './types';
-import { JupyterNotInstalledOrigin } from '../jupyter/types';
 
 /**
  * Checks whether telemetry is supported.
@@ -329,6 +325,10 @@ export interface IEventNamePropertyMapping {
          */
         enabled: boolean;
     };
+    /**
+     * Telemetry event sent when debug in terminal button was used to debug current file.
+     */
+    [EventName.DEBUG_IN_TERMINAL_BUTTON]: never | undefined;
     /**
      * Telemetry event captured when debug adapter executable is created
      */
@@ -687,10 +687,6 @@ export interface IEventNamePropertyMapping {
          * If user has defined an interpreter in settings.json
          */
         usingUserDefinedInterpreter: boolean;
-        /**
-         * If interpreter is auto selected for the workspace
-         */
-        usingAutoSelectedWorkspaceInterpreter: boolean;
         /**
          * If global interpreter is being used
          */
@@ -1053,40 +1049,21 @@ export interface IEventNamePropertyMapping {
          */
         interpreterType: EnvironmentType;
     };
+    /**
+     * Telemetry event sent when auto-selection is called.
+     */
     [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: {
         /**
-         * The rule used to auto-select the interpreter
-         *
-         * @type {AutoSelectionRule}
-         */
-        rule?: AutoSelectionRule;
-        /**
-         * If cached interpreter no longer exists or is invalid
+         * If auto-selection has been run earlier in this session, and this call returned a cached value.
          *
          * @type {boolean}
          */
-        interpreterMissing?: boolean;
-        /**
-         * Carries `true` if next rule is identified for autoselecting interpreter
-         *
-         * @type {boolean}
-         */
-        identified?: boolean;
-        /**
-         * Carries `true` if cached interpreter is updated to use the current interpreter, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        updated?: boolean;
+        useCachedInterpreter?: boolean;
     };
     /**
      * Sends information regarding discovered python environments (virtualenv, conda, pipenv etc.)
      */
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: {
-        /**
-         * Name of the locator
-         */
-        locator: string;
         /**
          * The number of the interpreters returned by locator
          */
@@ -1287,6 +1264,10 @@ export interface IEventNamePropertyMapping {
      * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: unknown;
+    /**
+     * Telemetry event sent when the experiments service is initialized for the first time.
+     */
+    [EventName.PYTHON_EXPERIMENTS_INIT_PERFORMANCE]: unknown;
     /**
      * Telemetry event sent once on session start with details on which experiments are opted into and opted out from.
      */
@@ -1507,21 +1488,42 @@ export interface IEventNamePropertyMapping {
         interpreterType?: EnvironmentType;
     };
     /**
+     * Telemetry event sent indicating the trigger source for discovery.
+     */
+    [EventName.UNITTEST_DISCOVERY_TRIGGER]: {
+        /**
+         * Carries the source which triggered discovering of tests
+         *
+         * @type {('auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter')}
+         * auto           : Triggered by VS Code editor.
+         * ui             : Triggered by clicking a button.
+         * commandpalette : Triggered by running the command from the command palette.
+         * watching       : Triggered by filesystem or content changes.
+         * interpreter    : Triggered by interpreter change.
+         */
+        trigger: 'auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter';
+    };
+    /**
      * Telemetry event sent with details about discovering tests
      */
-    [EventName.UNITTEST_DISCOVER]: {
+    [EventName.UNITTEST_DISCOVERING]: {
         /**
          * The test framework used to discover tests
          *
          * @type {TestTool}
          */
         tool: TestTool;
+    };
+    /**
+     * Telemetry event sent with details about discovering tests
+     */
+    [EventName.UNITTEST_DISCOVERY_DONE]: {
         /**
-         * Carries the source which triggered discovering of tests
+         * The test framework used to discover tests
          *
-         * @type {('ui' | 'commandpalette')}
+         * @type {TestTool}
          */
-        trigger: 'ui' | 'commandpalette';
+        tool: TestTool;
         /**
          * Carries `true` if discovering tests failed, `false` otherwise
          *
@@ -1530,42 +1532,9 @@ export interface IEventNamePropertyMapping {
         failed: boolean;
     };
     /**
-     * Telemetry event is sent if we are doing test discovery using python code
+     * Telemetry event sent when cancelling discovering tests
      */
-    [EventName.UNITTEST_DISCOVER_WITH_PYCODE]: never | undefined;
-    /**
-     * Telemetry event sent when user clicks a file, function, or suite in test explorer.
-     */
-    [EventName.UNITTEST_NAVIGATE]: {
-        /**
-         * Carries `true` if user clicks a file, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        byFile?: boolean;
-        /**
-         * Carries `true` if user clicks a function, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        byFunction?: boolean;
-        /**
-         * Carries `true` if user clicks a suite, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        bySuite?: boolean;
-        /**
-         * Carries `true` if we are changing focus to the suite/file/function, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        focusCode?: boolean;
-    };
-    /**
-     * Tracks number of workspace folders shown in test explorer
-     */
-    [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
+    [EventName.UNITTEST_DISCOVERING_STOP]: never | undefined;
     /**
      * Telemetry event sent with details about running the tests, what is being run, what framework is being used etc.
      */
@@ -1575,44 +1544,22 @@ export interface IEventNamePropertyMapping {
          */
         tool: TestTool;
         /**
-         * Carries info what is being run
-         */
-        scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
-        /**
          * Carries `true` if debugging, `false` otherwise
          */
         debugging: boolean;
-        /**
-         * Carries what triggered the execution of the tests
-         */
-        triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto' | 'testExplorer';
-        /**
-         * Carries `true` if running tests failed, `false` otherwise
-         */
-        failed: boolean;
     };
     /**
-     * Telemetry event sent when cancelling running or discovering tests
+     * Telemetry event sent when cancelling running tests
      */
-    [EventName.UNITTEST_STOP]: never | undefined;
+    [EventName.UNITTEST_RUN_STOP]: never | undefined;
     /**
-     * Telemetry event sent when disabling all test frameworks
+     * Telemetry event sent when run all failed test command is triggered
      */
-    [EventName.UNITTEST_DISABLE]: never | undefined;
+    [EventName.UNITTEST_RUN_ALL_FAILED]: never | undefined;
     /**
-     * Telemetry event sent when viewing Python test log output
+     * Telemetry event sent when testing is disabled for a workspace.
      */
-    [EventName.UNITTEST_VIEW_OUTPUT]: never | undefined;
-    /**
-     * Tracks which testing framework has been enabled by the user.
-     * Telemetry is sent when settings have been modified by the user.
-     * Values sent include:
-     * unittest -   If this value is `true`, then unittest has been enabled by the user.
-     * pytest   -   If this value is `true`, then pytest has been enabled by the user.
-     * @type {(never | undefined)}
-     * @memberof IEventNamePropertyMapping
-     */
-    [EventName.UNITTEST_ENABLED]: Partial<Record<TestProvider, undefined | boolean>>;
+    [EventName.UNITTEST_DISABLED]: never | undefined;
     /**
      * Telemetry sent when building workspace symbols
      */
@@ -1669,58 +1616,6 @@ export interface IEventNamePropertyMapping {
          */
         terminal: TerminalShellType;
     };
-
-    /**
-     * Telemetry event sent when the notification about the Jupyter extension not being installed is displayed.
-     * Since this notification will only be displayed after an action that requires the Jupyter extension,
-     * the telemetry event will include the action the user took, under the `entrypoint` property.
-     */
-    [EventName.JUPYTER_NOT_INSTALLED_NOTIFICATION_DISPLAYED]: {
-        /**
-         * Action that the user took to trigger the notification.
-         */
-        entrypoint: JupyterNotInstalledOrigin;
-    };
-
-    /**
-     * Telemetry event sent when the notification about the Jupyter extension not being installed is closed.
-     */
-    [EventName.JUPYTER_NOT_INSTALLED_NOTIFICATION_ACTION]: {
-        /**
-         * Action selected by the user in response to the notification:
-         * close the notification using the close button, or "Do not show again".
-         *
-         * @type {('Do not show again' | undefined)}
-         */
-        selection: 'Do not show again' | undefined;
-    };
-
-    [Telemetry.WebviewStyleUpdate]: never | undefined;
-    [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
-    [Telemetry.WebviewStartup]: { type: string };
-    [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
-    [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
-    [Telemetry.ShiftEnterBannerShown]: never | undefined;
-
-    // Start Page Events
-    [Telemetry.StartPageViewed]: never | undefined;
-    [Telemetry.StartPageOpenedFromCommandPalette]: never | undefined;
-    [Telemetry.StartPageOpenedFromNewInstall]: never | undefined;
-    [Telemetry.StartPageOpenedFromNewUpdate]: never | undefined;
-    [Telemetry.StartPageWebViewError]: never | undefined;
-    [Telemetry.StartPageTime]: never | undefined;
-    [Telemetry.StartPageClickedDontShowAgain]: never | undefined;
-    [Telemetry.StartPageClosedWithoutAction]: never | undefined;
-    [Telemetry.StartPageUsedAnActionOnFirstTime]: never | undefined;
-    [Telemetry.StartPageOpenBlankNotebook]: never | undefined;
-    [Telemetry.StartPageOpenBlankPythonFile]: never | undefined;
-    [Telemetry.StartPageOpenInteractiveWindow]: never | undefined;
-    [Telemetry.StartPageOpenCommandPalette]: never | undefined;
-    [Telemetry.StartPageOpenCommandPaletteWithOpenNBSelected]: never | undefined;
-    [Telemetry.StartPageOpenSampleNotebook]: never | undefined;
-    [Telemetry.StartPageOpenFileBrowser]: never | undefined;
-    [Telemetry.StartPageOpenFolder]: never | undefined;
-    [Telemetry.StartPageOpenWorkspace]: never | undefined;
 
     // TensorBoard integration events
     /**
@@ -1835,4 +1730,16 @@ export interface IEventNamePropertyMapping {
      * on the machine currently running TensorBoard.
      */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND]: never | undefined;
+
+    /**
+     * Telemetry event sent when the prompt about Python 2.7 support is displayed.
+     */
+    [EventName.PYTHON_27_SUPPORT_PROMPT]: never | undefined;
+
+    /**
+     * Telemetry event sent when the prompt about the MPLS deprecation is displayed.
+     */
+    [EventName.MPLS_DEPRECATION_PROMPT]: {
+        switchTo: LanguageServerType | undefined;
+    };
 }

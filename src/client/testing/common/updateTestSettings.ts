@@ -87,6 +87,10 @@ export class UpdateTestSettingService implements IExtensionActivationService {
 
     public async doesFileNeedToBeFixed(filePath: string): Promise<boolean> {
         try {
+            if (!(await this.fs.fileExists(filePath))) {
+                return false;
+            }
+
             const contents = await this.fs.readFile(filePath);
             return (
                 contents.indexOf('python.jediEnabled') > 0 ||

@@ -229,3 +229,8 @@ export const IExtensionSingleActivationService = Symbol('IExtensionSingleActivat
 export interface IExtensionSingleActivationService {
     activate(): Promise<void>;
 }
+
+export const IMPLSDeprecationPrompt = Symbol('IMPLSDeprecationPrompt');
+export interface IMPLSDeprecationPrompt {
+    showPrompt(): Promise<void>;
+}

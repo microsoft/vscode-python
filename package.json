@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2021.9.0-dev",
+    "version": "2021.10.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -30,7 +30,7 @@
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-python/issues"
     },
-    "qna": "https://stackoverflow.com/questions/tagged/visual-studio-code+python",
+    "qna": "https://github.com/microsoft/vscode-python/discussions/categories/q-a",
     "icon": "icon.png",
     "galleryBanner": {
         "color": "#1e415e",
@@ -59,6 +59,7 @@
         "onLanguage:python",
         "onDebugResolve:python",
         "onCommand:python.execInTerminal",
+        "onCommand:python.debugInTerminal",
         "onCommand:python.sortImports",
         "onCommand:python.setInterpreter",
         "onCommand:python.setShebangInterpreter",
@@ -91,6 +92,7 @@
         "workspaceContains:app.py"
     ],
     "main": "./out/client/extension",
+    "browser": "./dist/extension.browser.js",
     "contributes": {
         "walkthroughs": [
             {
@@ -162,37 +164,60 @@
                     },
                     {
                         "id": "python.learnMore",
-                        "title": "Learn more",
-                        "description": "� Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands).\n� [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list.\n� Explore more features in our [Tutorials](https://aka.ms/AA8dqti) or check [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n� Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
+                        "title": "Explore more resources",
+                        "description": "Take a look into our [documentation](https://aka.ms/AA8dxwy) to learn more about support for Python in VS Code. \n[Learn more](https://aka.ms/AA8dxwy)",
                         "media": {
-                            "image": "resources/walkthrough/python-docs-learn-more.png",
-                            "altText": "Documentation page for Python in VS Code"
-                        }
+                            "markdown": "resources/walkthrough/python-dev-learn-more.md"
+                        },
+                        "when": ""
                     }
                 ]
             },
             {
                 "id": "pythonDataScienceWelcome",
                 "title": "Get started with Python for Data Science",
-                "description": "Your first steps to getting started with a Python Data Science project!",
+                "description": "Your first steps to getting started with a Data Science project with Python!",
                 "when": "false",
                 "steps": [
                     {
-                        "id": "python.installPython",
+                        "id": "python.installPythonWinDS",
                         "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python from [Anaconda](https://www.anaconda.com) to use the Python extension.\n \n[Install Python with Anaconda](https://www.anaconda.com)",
+                        "description": "The Python Extension requires Python to be installed. Install Python from the [Microsoft Store](https://aka.ms/AAd9rms).\n\n[Install Python](https://aka.ms/AAd9rms)\n",
                         "media": {
-                            "image": "resources/walkthrough/anaconda-install.png",
-                            "altText": "Screenshot of anaconda webpage"
+                            "markdown": "resources/walkthrough/install-python-windows.md"
                         },
-                        "when": ""
+                        "when": "workspacePlatform == windows"
+                    },
+                    {
+                        "id": "python.installPythonMacDS",
+                        "title": "Install Python",
+                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Open Terminal](command:workbench.action.terminal.new)\n",
+                        "media": {
+                            "markdown": "resources/walkthrough/install-python-macos.md"
+                        },
+                        "when": "workspacePlatform == mac",
+                        "command": "workbench.action.terminal.new"
+                    },
+                    {
+                        "id": "python.installPythonLinuxDS",
+                        "title": "Install Python",
+                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Open Terminal](command:workbench.action.terminal.new)\n",
+                        "media": {
+                            "markdown": "resources/walkthrough/install-python-linux.md"
+                        },
+                        "when": "workspacePlatform == linux",
+                        "command": "workbench.action.terminal.new"
                     },
                     {
                         "id": "python.openFolderMac",
                         "title": "Open an existing Python project",
                         "description": "If you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFileFolder)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
                         "media": {
-                            "image": "images/OpenOrCreateNotebook.gif",
+                            "image": {
+                                "light": "resources/walkthrough/open-folder-light.png",
+                                "dark": "resources/walkthrough/open-folder-dark.png",
+                                "hc": "resources/walkthrough/open-folder-hc.png"
+                            },
                             "altText": "Open a folder"
                         },
                         "completionEvents": [
@@ -205,7 +230,11 @@
                         "title": "Open an existing Python project",
                         "description": "To start, open a Python folder/project.\nIf you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFolder)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
                         "media": {
-                            "image": "images/OpenOrCreateNotebook.gif",
+                            "image": {
+                                "light": "resources/walkthrough/open-folder-light.png",
+                                "dark": "resources/walkthrough/open-folder-dark.png",
+                                "hc": "resources/walkthrough/open-folder-hc.png"
+                            },
                             "altText": "Open a folder"
                         },
                         "completionEvents": [
@@ -247,11 +276,10 @@
                     },
                     {
                         "id": "python.dataScienceLearnMore",
-                        "title": "Learn more",
-                        "description": "� Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands).\n� [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list.\n� Explore more features in our [Tutorials](https://aka.ms/AAdar6q) or check the [Documentation](https://aka.ms/AA8dxwy) for tips and troubleshooting.\n� Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features.",
+                        "title": "Find out more!",
+                        "description": "Take a look into our [documentation](https://aka.ms/AAdar6q) to learn more about Python for Data Science in VS Code. \n[Learn more](https://aka.ms/AAdar6q)",
                         "media": {
-                            "image": "resources/walkthrough/datascience-learn-more.png",
-                            "altText": "Learning more from python visual studio code documentation"
+                            "markdown": "resources/walkthrough/python-datascience-learn-more.md"
                         }
                     }
                 ]
@@ -317,11 +345,14 @@
             {
                 "category": "Python",
                 "command": "python.execInTerminal-icon",
-                "icon": {
-                    "dark": "resources/dark/run-file.svg",
-                    "light": "resources/light/run-file.svg"
-                },
+                "icon": "$(play)",
                 "title": "%python.command.python.execInTerminal.title%"
+            },
+            {
+                "category": "Python",
+                "command": "python.debugInTerminal",
+                "icon": "$(debug-alt)",
+                "title": "%python.command.python.debugInTerminal.title%"
             },
             {
                 "category": "Python",
@@ -357,6 +388,21 @@
                 "title": "%python.command.python.refreshTests.title%"
             },
             {
+                "category": "Test",
+                "command": "python.refreshingTests",
+                "icon": {
+                    "dark": "resources/dark/discovering-tests.svg",
+                    "light": "resources/light/discovering-tests.svg"
+                },
+                "title": "%python.command.python.refreshingTests.title%"
+            },
+            {
+                "category": "Test",
+                "command": "python.stopRefreshingTests",
+                "icon": "$(stop-circle)",
+                "title": "%python.command.python.stopRefreshingTests.title%"
+            },
+            {
                 "category": "Python",
                 "command": "python.reportIssue",
                 "title": "%python.command.python.reportIssue.title%"
@@ -364,10 +410,7 @@
             {
                 "category": "Test",
                 "command": "testing.reRunFailTests",
-                "icon": {
-                    "dark": "resources/dark/run-failed-tests.svg",
-                    "light": "resources/light/run-failed-tests.svg"
-                },
+                "icon": "$(run-errors)",
                 "title": "%python.command.testing.rerunFailedTests.title%"
             },
             {
@@ -586,10 +629,12 @@
                             "pythonDeprecatePythonPath",
                             "pythonDiscoveryModule",
                             "pythonDiscoveryModuleWithoutWatcher",
-                            "pythonJediLSP",
                             "pythonSortEnvs",
                             "pythonSurveyNotification",
-                            "pythonTensorboardExperiment"
+                            "pythonTensorboardExperiment",
+                            "pythonRunFailedTestsButtonDisplayed",
+                            "pythonRefreshTestsButtonDisplayed",
+                            "pythonRememberDebugConfig"
                         ]
                     },
                     "scope": "machine",
@@ -604,10 +649,12 @@
                             "pythonDeprecatePythonPath",
                             "pythonDiscoveryModule",
                             "pythonDiscoveryModuleWithoutWatcher",
-                            "pythonJediLSP",
                             "pythonSortEnvs",
                             "pythonSurveyNotification",
-                            "pythonTensorboardExperiment"
+                            "pythonTensorboardExperiment",
+                            "pythonRunFailedTestsButtonDisplayed",
+                            "pythonRefreshTestsButtonDisplayed",
+                            "pythonRememberDebugConfig"
                         ]
                     },
                     "scope": "machine",
@@ -705,13 +752,11 @@
                     "enum": [
                         "Default",
                         "Jedi",
-                        "JediLSP",
                         "Pylance",
                         "None"
                     ],
                     "enumDescriptions": [
                         "Automatically select a language server: Pylance if installed and available, otherwise fallback to Jedi.",
-                        "Use Jedi as a language server.",
                         "Use Jedi behind the Language Server Protocol (LSP) as a language server.",
                         "Use Pylance as a language server.",
                         "Disable language server capabilities."
@@ -1193,11 +1238,11 @@
                 },
                 "python.testing.unittestArgs": {
                     "default": [
-                        "*test*.py",
-                        "-p",
-                        "-s",
                         "-v",
-                        "."
+                        "-s",
+                        ".",
+                        "-p",
+                        "*test*.py"
                     ],
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "items": {
@@ -1518,6 +1563,21 @@
                                 "description": "Absolute path to the program.",
                                 "type": "string"
                             },
+                            "purpose": {
+                                "default": [],
+                                "description": "Tells extension to use this configuration for test debugging, or when using debug-in-terminal command.",
+                                "items": {
+                                    "enum": [
+                                        "debug-test",
+                                        "debug-in-terminal"
+                                    ],
+                                    "enumDescriptions": [
+                                        "Use this configuration while debugging tests using test view or test debug commands.",
+                                        "Use this configuration while debugging a file using debug in terminal button in the editor."
+                                    ]
+                                },
+                                "type": "array"
+                            },
                             "pyramid": {
                                 "default": false,
                                 "description": "Whether debugging Pyramid applications",
@@ -1559,66 +1619,6 @@
                             "sudo": {
                                 "default": false,
                                 "description": "Running debug program under elevated permissions (on Unix).",
-                                "type": "boolean"
-                            }
-                        }
-                    },
-                    "test": {
-                        "properties": {
-                            "console": {
-                                "default": "internalConsole",
-                                "description": "Where to launch the debug target: internal console, integrated terminal, or external terminal.",
-                                "enum": [
-                                    "externalTerminal",
-                                    "integratedTerminal",
-                                    "internalConsole"
-                                ]
-                            },
-                            "cwd": {
-                                "default": "${workspaceFolder}",
-                                "description": "Absolute path to the working directory of the program being debugged. Default is the root directory of the file (leave empty).",
-                                "type": "string"
-                            },
-                            "debugAdapterPath": {
-                                "description": "Path (fully qualified) to the python debug adapter executable.",
-                                "type": "string"
-                            },
-                            "env": {
-                                "additionalProperties": {
-                                    "type": "string"
-                                },
-                                "default": {},
-                                "description": "Environment variables defined as a key value pair. Property ends up being the Environment Variable and the value of the property ends up being the value of the Env Variable.",
-                                "type": "object"
-                            },
-                            "envFile": {
-                                "default": "${workspaceFolder}/.env",
-                                "description": "Absolute path to a file containing environment variable definitions.",
-                                "type": "string"
-                            },
-                            "justMyCode": {
-                                "default": true,
-                                "description": "Debug only user-written code.",
-                                "type": "boolean"
-                            },
-                            "pythonPath": {
-                                "default": "${command:python.interpreterPath}",
-                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings",
-                                "type": "string"
-                            },
-                            "redirectOutput": {
-                                "default": true,
-                                "description": "Redirect output.",
-                                "type": "boolean"
-                            },
-                            "showReturnValue": {
-                                "default": true,
-                                "description": "Show return value of functions when stepping.",
-                                "type": "boolean"
-                            },
-                            "stopOnEntry": {
-                                "default": false,
-                                "description": "Automatically stop after launch.",
                                 "type": "boolean"
                             }
                         }
@@ -1798,8 +1798,14 @@
             "editor/title/run": [
                 {
                     "command": "python.execInTerminal-icon",
-                    "group": "navigation",
+                    "group": "navigation@0",
                     "title": "%python.command.python.execInTerminal.title%",
+                    "when": "resourceLangId == python && !isInDiffEditor"
+                },
+                {
+                    "command": "python.debugInTerminal",
+                    "group": "navigation@1",
+                    "title": "%python.command.python.debugInTerminal.title%",
                     "when": "resourceLangId == python && !isInDiffEditor"
                 }
             ],
@@ -1813,13 +1819,23 @@
             "view/title": [
                 {
                     "command": "python.refreshTests",
-                    "when": "view == workbench.view.testing",
-                    "group": "navigation"
+                    "when": "view == workbench.view.testing && !refreshingTests && inShowRefreshingTestsExperiment",
+                    "group": "navigation@0"
+                },
+                {
+                    "command": "python.refreshingTests",
+                    "when": "view == workbench.view.testing && refreshingTests && inShowRefreshingTestsExperiment",
+                    "group": "navigation@0"
+                },
+                {
+                    "command": "python.stopRefreshingTests",
+                    "when": "view == workbench.view.testing && refreshingTests && inShowRefreshingTestsExperiment",
+                    "group": "navigation@0"
                 },
                 {
                     "command": "testing.reRunFailTests",
-                    "when": "view == workbench.view.testing",
-                    "group": "navigation"
+                    "when": "view == workbench.view.testing && hasFailedTests && inShowRunFailedTestsExperiment",
+                    "group": "navigation@1"
                 }
             ]
         },
@@ -1850,9 +1866,6 @@
         "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",
-        "compile-webviews-watch": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.startPage-ui-viewers.config.js --watch",
-        "compile-webviews-watchd": "deemon npm run compile-webviews-watch",
-        "kill-compile-webviews-watchd": "deemon --kill npm run compile-webviews-watch",
         "checkDependencies": "gulp checkDependencies",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "mocha --config ./build/.mocha.unittests.json",
@@ -1873,10 +1886,10 @@
         "testSmoke": "cross-env INSTALL_JUPYTER_EXTENSION=true \"node ./out/test/smokeTest.js\"",
         "testInsiders": "cross-env VSC_PYTHON_CI_TEST_VSC_CHANNEL=insiders INSTALL_PYLANCE_EXTENSION=true TEST_FILES_SUFFIX=insiders.test CODE_TESTS_WORKSPACE=src/testMultiRootWkspc/smokeTests \"node ./out/test/standardTest.js\"",
         "lint-staged": "node gulpfile.js",
-        "lint": "eslint --ext .ts,.tsx,.js src build",
-        "lint-fix": "eslint --fix --ext .ts,.tsx,.js src build gulpfile.js",
-        "format-check": "prettier --check 'src/**/*.ts' 'src/**/*.tsx' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
-        "format-fix": "prettier --write 'src/**/*.ts' 'src/**/*.tsx' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
+        "lint": "eslint --ext .ts,.js src build",
+        "lint-fix": "eslint --fix --ext .ts,.js src build gulpfile.js",
+        "format-check": "prettier --check 'src/**/*.ts' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
+        "format-fix": "prettier --write 'src/**/*.ts' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
         "clean": "gulp clean",
         "addExtensionPackDependencies": "gulp addExtensionPackDependencies",
         "updateBuildNumber": "gulp updateBuildNumber",
@@ -1884,6 +1897,7 @@
         "webpack": "webpack"
     },
     "dependencies": {
+        "@vscode/jupyter-lsp-middleware": "^0.2.5",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.4",
         "chokidar": "^3.4.3",
@@ -1923,7 +1937,7 @@
         "untildify": "^3.0.2",
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
-        "vscode-extension-telemetry": "0.1.4",
+        "vscode-extension-telemetry": "0.3.2",
         "vscode-jsonrpc": "6.0.0",
         "vscode-languageclient": "7.0.0",
         "vscode-languageserver": "7.0.0",
@@ -1949,14 +1963,11 @@
         "@types/diff-match-patch": "^1.0.32",
         "@types/download": "^6.2.2",
         "@types/enzyme": "^3.1.14",
-        "@types/enzyme-adapter-react-16": "^1.0.3",
         "@types/event-stream": "^3.3.33",
         "@types/fs-extra": "^5.0.1",
         "@types/get-port": "^3.2.0",
         "@types/glob": "^5.0.35",
-        "@types/html-webpack-plugin": "^3.2.0",
         "@types/iconv-lite": "^0.0.1",
-        "@types/jsdom": "^11.12.0",
         "@types/lodash": "^4.14.104",
         "@types/md5": "^2.1.32",
         "@types/memoize-one": "^4.1.1",
@@ -1964,9 +1975,6 @@
         "@types/nock": "^10.0.3",
         "@types/node": "^12.19.12",
         "@types/promisify-node": "^0.4.0",
-        "@types/react": "^16.4.14",
-        "@types/react-dom": "^16.0.8",
-        "@types/react-json-tree": "^0.6.8",
         "@types/request": "^2.47.0",
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
@@ -2006,7 +2014,6 @@
         "del": "^3.0.0",
         "download": "^7.0.0",
         "enzyme": "^3.7.0",
-        "enzyme-adapter-react-16": "^1.6.0",
         "eslint": "^7.2.0",
         "eslint-config-airbnb": "^18.2.0",
         "eslint-config-prettier": "^8.3.0",
@@ -2023,18 +2030,13 @@
         "flat": "^4.0.0",
         "fork-ts-checker-webpack-plugin": "^4.1.6",
         "gulp": "^4.0.0",
-        "gulp-azure-storage": "^0.11.1",
         "gulp-chmod": "^2.0.0",
         "gulp-gunzip": "^1.1.0",
         "gulp-rename": "^1.4.0",
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^4.0.1",
-        "gulp-untar": "0.0.8",
-        "gulp-vinyl-zip": "^2.1.2",
-        "html-webpack-plugin": "^3.2.0",
         "husky": "^1.1.2",
         "immutable": "^4.0.0-rc.12",
-        "jsdom": "^15.0.0",
         "json-loader": "^0.5.7",
         "less": "^3.9.0",
         "less-loader": "^5.0.0",
@@ -2062,10 +2064,6 @@
         "prettier": "^2.0.2",
         "range-inclusive": "^1.0.2",
         "raw-loader": "^0.5.1",
-        "react": "^16.5.2",
-        "react-dev-utils": "^11.0.4",
-        "react-dom": "^16.5.2",
-        "react-svgmt": "^1.1.8",
         "remove-files-webpack-plugin": "^1.4.0",
         "requirejs": "^2.3.6",
         "rewiremock": "^3.13.0",
@@ -2076,9 +2074,7 @@
         "socket.io": "^2.4.0",
         "source-map-support": "^0.5.12",
         "style-loader": "^0.23.1",
-        "styled-jsx": "^3.1.0",
         "svg-inline-loader": "^0.8.0",
-        "svg-inline-react": "^3.1.0",
         "terser-webpack-plugin": "^3.1.0",
         "thread-loader": "^2.1.3",
         "transform-loader": "^0.2.4",
@@ -2087,15 +2083,13 @@
         "ts-mockito": "^2.5.0",
         "ts-node": "^8.3.0",
         "tsconfig-paths-webpack-plugin": "^3.2.0",
-        "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
         "typescript": "4.1.5",
         "typescript-formatter": "^7.1.0",
         "unicode-properties": "^1.3.1",
         "url-loader": "^1.1.2",
         "uuid": "^3.3.2",
-        "vinyl-fs": "^3.0.3",
-        "vsce": "^1.59.0",
+        "vsce": "^1.96.1",
         "vscode-debugadapter-testsupport": "^1.27.0",
         "webpack": "^4.33.0",
         "webpack-bundle-analyzer": "^3.6.0",
@@ -2112,8 +2106,5 @@
         "id": "f1f59ae4-9318-4f3c-a9b5-81b2eaa5f8a5",
         "publisherDisplayName": "Microsoft",
         "publisherId": "998b010b-e2af-44a5-a6cd-0b5fd3b9b6f8"
-    },
-    "optionalDependencies": {
-        "canvas": "^2.7.0"
     }
 }

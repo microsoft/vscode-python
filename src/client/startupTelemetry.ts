@@ -14,11 +14,7 @@ import {
     Resource,
 } from './common/types';
 import { IStopWatch } from './common/utils/stopWatch';
-import {
-    AutoSelectionRule,
-    IInterpreterAutoSelectionRule,
-    IInterpreterAutoSelectionService,
-} from './interpreter/autoSelection/types';
+import { IInterpreterAutoSelectionService } from './interpreter/autoSelection/types';
 import { ICondaService, IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
 import { PythonEnvironment } from './pythonEnvironments/info';
@@ -93,15 +89,6 @@ export function hasUserDefinedPythonPath(resource: Resource, serviceContainer: I
         : false;
 }
 
-function getPreferredWorkspaceInterpreter(resource: Resource, serviceContainer: IServiceContainer) {
-    const workspaceInterpreterSelector = serviceContainer.get<IInterpreterAutoSelectionRule>(
-        IInterpreterAutoSelectionRule,
-        AutoSelectionRule.workspaceVirtualEnvs,
-    );
-    const interpreter = workspaceInterpreterSelector.getPreviouslyAutoSelectedInterpreter(resource);
-    return interpreter ? interpreter.path : undefined;
-}
-
 async function getActivationTelemetryProps(serviceContainer: IServiceContainer): Promise<EditorLoadTelemetry> {
     // TODO: Not all of this data is showing up in the database...
 
@@ -118,25 +105,27 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         ? workspaceService.workspaceFolders![0].uri
         : undefined;
     const settings = configurationService.getSettings(mainWorkspaceUri);
-    const [condaVersion, interpreter, interpreters] = await Promise.all([
+    const [condaVersion, hasPython3] = await Promise.all([
         condaLocator
             .getCondaVersion()
             .then((ver) => (ver ? ver.raw : ''))
             .catch<string>(() => ''),
-        interpreterService.getActiveInterpreter().catch<PythonEnvironment | undefined>(() => undefined),
-        interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonEnvironment[]>(() => []),
+        interpreterService.hasInterpreters(async (item) => item.version?.major === 3),
     ]);
     const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
+    // If an unknown type environment can be found from windows registry or path env var,
+    // consider them as global type instead of unknown. Such types can only be known after
+    // windows registry is queried. So wait for the refresh of windows registry locator to
+    // finish. API getActiveInterpreter() does not block on windows registry by default as
+    // it is slow.
+    await interpreterService.refreshPromise;
+    const interpreter = await interpreterService
+        .getActiveInterpreter()
+        .catch<PythonEnvironment | undefined>(() => undefined);
     const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
     const interpreterType = interpreter ? interpreter.envType : undefined;
     const usingUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
-    const preferredWorkspaceInterpreter = getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer);
     const usingGlobalInterpreter = isUsingGlobalInterpreterInWorkspace(settings.pythonPath, serviceContainer);
-    const usingAutoSelectedWorkspaceInterpreter = preferredWorkspaceInterpreter
-        ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer)
-        : false;
-    const hasPython3 =
-        interpreters!.filter((item) => (item && item.version ? item.version.major === 3 : false)).length > 0;
 
     return {
         condaVersion,
@@ -146,7 +135,6 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         workspaceFolderCount,
         hasPython3,
         usingUserDefinedInterpreter,
-        usingAutoSelectedWorkspaceInterpreter,
         usingGlobalInterpreter,
     };
 }

@@ -4,7 +4,6 @@ import '../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
-
 import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/checks/lsNotSupported';
 import { IDiagnosticsService } from '../application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
@@ -56,6 +55,8 @@ export class LanguageServerExtensionActivationService
 
     private readonly workspaceService: IWorkspaceService;
 
+    private readonly configurationService: IConfigurationService;
+
     private readonly output: OutputChannel;
 
     private readonly interpreterService: IInterpreterService;
@@ -69,6 +70,7 @@ export class LanguageServerExtensionActivationService
         @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
     ) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
 
@@ -87,8 +89,8 @@ export class LanguageServerExtensionActivationService
             this.serviceContainer.get<IExtensions>(IExtensions),
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.serviceContainer.get<ICommandManager>(ICommandManager),
-            this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
-            this.serviceContainer.get<IConfigurationService>(IConfigurationService),
+            this.workspaceService,
+            this.configurationService,
         );
         disposables.push(this.languageServerChangeHandler);
     }
@@ -228,6 +230,7 @@ export class LanguageServerExtensionActivationService
         key: string,
     ): Promise<RefCountedLanguageServer> {
         let serverType = this.getCurrentLanguageServerType();
+
         if (serverType === LanguageServerType.Microsoft) {
             const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
                 IDiagnosticsService,
@@ -243,22 +246,13 @@ export class LanguageServerExtensionActivationService
             }
         }
 
-        if (serverType === LanguageServerType.JediLSP && interpreter && interpreter.version) {
-            if (interpreter.version.major < 3 || (interpreter.version.major === 3 && interpreter.version.minor < 6)) {
-                sendTelemetryEvent(EventName.JEDI_FALLBACK);
-                serverType = LanguageServerType.Jedi;
-            }
-        }
-
-        // If Pylance was chosen via the default and the interpreter is Python 2, fall back to
-        // Jedi. If Pylance was explicitly chosen, continue anyway, even if Pylance won't work
-        // as expected, matching pre-default behavior.
-        if (this.getCurrentLanguageServerTypeIsDefault()) {
-            if (serverType === LanguageServerType.Node && interpreter && interpreter.version) {
-                if (interpreter.version.major < 3) {
-                    sendTelemetryEvent(EventName.JEDI_FALLBACK);
-                    serverType = LanguageServerType.Jedi;
-                }
+        // If the interpreter is Python 2 and the LS setting is explicitly set to Jedi, turn it off.
+        // If set to Default, use Pylance.
+        if (interpreter && (interpreter.version?.major ?? 0) < 3) {
+            if (serverType === LanguageServerType.Jedi) {
+                serverType = LanguageServerType.None;
+            } else if (this.getCurrentLanguageServerTypeIsDefault()) {
+                serverType = LanguageServerType.Node;
             }
         }
 
@@ -294,9 +288,6 @@ export class LanguageServerExtensionActivationService
         switch (serverType) {
             case LanguageServerType.Jedi:
                 outputLine = LanguageService.startingJedi();
-                break;
-            case LanguageServerType.JediLSP:
-                outputLine = LanguageService.startingJediLSP();
                 break;
             case LanguageServerType.Microsoft:
                 outputLine = LanguageService.startingMicrosoft();

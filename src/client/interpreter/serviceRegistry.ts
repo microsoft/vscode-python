@@ -9,20 +9,8 @@ import { EnvironmentActivationService } from './activation/service';
 import { IEnvironmentActivationService } from './activation/types';
 import { InterpreterAutoSelectionService } from './autoSelection/index';
 import { InterpreterAutoSelectionProxyService } from './autoSelection/proxy';
-import { CachedInterpretersAutoSelectionRule } from './autoSelection/rules/cached';
-import { CurrentPathInterpretersAutoSelectionRule } from './autoSelection/rules/currentPath';
-import { SettingsInterpretersAutoSelectionRule } from './autoSelection/rules/settings';
-import { SystemWideInterpretersAutoSelectionRule } from './autoSelection/rules/system';
-import { WindowsRegistryInterpretersAutoSelectionRule } from './autoSelection/rules/winRegistry';
-import { WorkspaceVirtualEnvInterpretersAutoSelectionRule } from './autoSelection/rules/workspaceEnv';
-import {
-    AutoSelectionRule,
-    IInterpreterAutoSelectionRule,
-    IInterpreterAutoSelectionService,
-    IInterpreterAutoSelectionProxyService,
-} from './autoSelection/types';
+import { IInterpreterAutoSelectionService, IInterpreterAutoSelectionProxyService } from './autoSelection/types';
 import { EnvironmentTypeComparer } from './configuration/environmentTypeComparer';
-import { InterpreterComparer } from './configuration/interpreterComparer';
 import { ResetInterpreterCommand } from './configuration/interpreterSelector/commands/resetInterpreter';
 import { SetInterpreterCommand } from './configuration/interpreterSelector/commands/setInterpreter';
 import { SetShebangInterpreterCommand } from './configuration/interpreterSelector/commands/setShebangInterpreter';
@@ -32,7 +20,6 @@ import { PythonPathUpdaterServiceFactory } from './configuration/pythonPathUpdat
 import {
     IInterpreterComparer,
     IInterpreterSelector,
-    InterpreterComparisonType,
     IPythonPathUpdaterServiceFactory,
     IPythonPathUpdaterServiceManager,
 } from './configuration/types';
@@ -41,10 +28,12 @@ import {
     IInterpreterHelper,
     IInterpreterService,
     IInterpreterVersionService,
+    IPython27SupportPrompt,
     IShebangCodeLensProvider,
 } from './contracts';
 import { InterpreterDisplay } from './display';
 import { InterpreterLocatorProgressStatubarHandler } from './display/progressDisplay';
+import { Python27SupportPrompt } from './display/python27Prompt';
 import { ShebangCodeLensProvider } from './display/shebangCodeLensProvider';
 import { InterpreterHelper } from './helpers';
 import { InterpreterService } from './interpreterService';
@@ -93,58 +82,21 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
     serviceManager.addSingleton<IShebangCodeLensProvider>(IShebangCodeLensProvider, ShebangCodeLensProvider);
     serviceManager.addSingleton<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
 
-    serviceManager.addSingleton<IInterpreterComparer>(
-        IInterpreterComparer,
-        InterpreterComparer,
-        InterpreterComparisonType.Default,
-    );
-    serviceManager.addSingleton<IInterpreterComparer>(
-        IInterpreterComparer,
-        EnvironmentTypeComparer,
-        InterpreterComparisonType.EnvType,
-    );
+    serviceManager.addSingleton<IInterpreterComparer>(IInterpreterComparer, EnvironmentTypeComparer);
 
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         InterpreterLocatorProgressStatubarHandler,
     );
 
-    serviceManager.addSingleton<IInterpreterAutoSelectionRule>(
-        IInterpreterAutoSelectionRule,
-        CurrentPathInterpretersAutoSelectionRule,
-        AutoSelectionRule.currentPath,
-    );
-    serviceManager.addSingleton<IInterpreterAutoSelectionRule>(
-        IInterpreterAutoSelectionRule,
-        SystemWideInterpretersAutoSelectionRule,
-        AutoSelectionRule.systemWide,
-    );
-    serviceManager.addSingleton<IInterpreterAutoSelectionRule>(
-        IInterpreterAutoSelectionRule,
-        WindowsRegistryInterpretersAutoSelectionRule,
-        AutoSelectionRule.windowsRegistry,
-    );
-    serviceManager.addSingleton<IInterpreterAutoSelectionRule>(
-        IInterpreterAutoSelectionRule,
-        WorkspaceVirtualEnvInterpretersAutoSelectionRule,
-        AutoSelectionRule.workspaceVirtualEnvs,
-    );
-    serviceManager.addSingleton<IInterpreterAutoSelectionRule>(
-        IInterpreterAutoSelectionRule,
-        CachedInterpretersAutoSelectionRule,
-        AutoSelectionRule.cachedInterpreters,
-    );
-    serviceManager.addSingleton<IInterpreterAutoSelectionRule>(
-        IInterpreterAutoSelectionRule,
-        SettingsInterpretersAutoSelectionRule,
-        AutoSelectionRule.settings,
-    );
     serviceManager.addSingleton<IInterpreterAutoSelectionService>(
         IInterpreterAutoSelectionService,
         InterpreterAutoSelectionService,
     );
 
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, CondaInheritEnvPrompt);
+
+    serviceManager.addSingleton<IPython27SupportPrompt>(IPython27SupportPrompt, Python27SupportPrompt);
 }
 
 export function registerTypes(serviceManager: IServiceManager): void {

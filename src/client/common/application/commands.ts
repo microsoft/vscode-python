@@ -40,7 +40,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.Exec_Selection_In_Django_Shell]: [];
     [Commands.Create_Terminal]: [];
     [Commands.PickLocalProcess]: [];
-    [Commands.OpenStartPage]: [];
     [Commands.ClearStorage]: [];
     [Commands.ReportIssue]: [];
     [Commands.RefreshTensorBoard]: [];
@@ -90,7 +89,11 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];
     [Commands.Exec_In_Terminal_Icon]: [undefined, Uri];
+    [Commands.Debug_In_Terminal]: [Uri];
     [Commands.Tests_Configure]: [undefined, undefined | CommandSource, undefined | Uri];
     [Commands.Test_Refresh]: [undefined, undefined | CommandSource, undefined | Uri];
+    [Commands.Test_Refreshing]: [];
+    [Commands.Test_Stop_Refreshing]: [];
     [Commands.LaunchTensorBoard]: [TensorBoardEntrypoint, TensorBoardEntrypointTrigger];
+    ['workbench.view.testing.focus']: [];
 }

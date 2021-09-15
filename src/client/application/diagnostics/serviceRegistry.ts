@@ -19,6 +19,10 @@ import {
     InvalidPythonPathInDebuggerService,
     InvalidPythonPathInDebuggerServiceId,
 } from './checks/invalidPythonPathInDebugger';
+import {
+    JediPython27NotSupportedDiagnosticService,
+    JediPython27NotSupportedDiagnosticServiceId,
+} from './checks/jediPython27NotSupported';
 import { LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId } from './checks/lsNotSupported';
 import {
     InvalidMacPythonInterpreterService,
@@ -98,6 +102,12 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         IDiagnosticsService,
         PylanceDefaultDiagnosticService,
         PylanceDefaultDiagnosticServiceId,
+    );
+
+    serviceManager.addSingleton<IDiagnosticsService>(
+        IDiagnosticsService,
+        JediPython27NotSupportedDiagnosticService,
+        JediPython27NotSupportedDiagnosticServiceId,
     );
 
     serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory);

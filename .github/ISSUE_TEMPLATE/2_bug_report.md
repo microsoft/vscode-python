@@ -1,7 +1,7 @@
 ---
 name: General bug report
-about: Create a report to help us improve
-labels: classify, type-bug
+about: Issue with the Python extension, not supporting/sibling extensions
+labels: classify, bug
 ---
 
 <!-- Please search existing issues to avoid creating duplicates. -->

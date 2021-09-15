@@ -2,7 +2,7 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { traceVerbose } from '../../../common/logger';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
-import { exec, getPythonSetting, pathExists, readFile } from '../externalDependencies';
+import { arePathsSame, exec, getPythonSetting, pathExists, readFile } from '../externalDependencies';
 
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../base/info';
 import { parseVersion } from '../../base/info/pythonVersion';
@@ -373,7 +373,7 @@ export class Conda {
         }
 
         function getName(prefix: string) {
-            if (prefix === info.root_prefix) {
+            if (info.root_prefix && arePathsSame(prefix, info.root_prefix)) {
                 return 'base';
             }
 

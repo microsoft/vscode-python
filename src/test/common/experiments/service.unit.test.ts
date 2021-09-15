@@ -155,176 +155,6 @@ suite('Experimentation service', () => {
         });
     });
 
-    suite('In-experiment check', () => {
-        const experiment = 'Test Experiment - experiment';
-        let telemetryEvents: { eventName: string; properties: Record<string, unknown> }[] = [];
-        let getTreatmentVariableAsyncStub: sinon.SinonStub;
-        let sendTelemetryEventStub: sinon.SinonStub;
-
-        setup(() => {
-            sendTelemetryEventStub = sinon
-                .stub(Telemetry, 'sendTelemetryEvent')
-                .callsFake((eventName: string, _, properties: Record<string, unknown>) => {
-                    const telemetry = { eventName, properties };
-                    telemetryEvents.push(telemetry);
-                });
-
-            getTreatmentVariableAsyncStub = sinon.stub().returns(Promise.resolve(true));
-            sinon.stub(tasClient, 'getExperimentationService').returns(({
-                getTreatmentVariableAsync: getTreatmentVariableAsyncStub,
-            } as unknown) as tasClient.IExperimentationService);
-
-            configureApplicationEnvironment('stable', extensionVersion);
-        });
-
-        teardown(() => {
-            telemetryEvents = [];
-        });
-
-        test('If the opt-in and opt-out arrays are empty, return the value from the experimentation framework for a given experiment', async () => {
-            configureSettings(true, [], []);
-
-            const experimentService = new ExperimentService(
-                instance(workspaceService),
-                instance(appEnvironment),
-                globalMemento,
-                outputChannel,
-            );
-            const result = await experimentService.inExperiment(experiment);
-
-            assert.isTrue(result);
-            sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.calledOnce(getTreatmentVariableAsyncStub);
-        });
-
-        test('If the experiment setting is disabled, inExperiment should return false', async () => {
-            configureSettings(false, [], []);
-
-            const experimentService = new ExperimentService(
-                instance(workspaceService),
-                instance(appEnvironment),
-                globalMemento,
-                outputChannel,
-            );
-            const result = await experimentService.inExperiment(experiment);
-
-            assert.isFalse(result);
-            sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
-        });
-
-        test('If the opt-in setting contains "All", inExperiment should return true', async () => {
-            configureSettings(true, ['All'], []);
-
-            const experimentService = new ExperimentService(
-                instance(workspaceService),
-                instance(appEnvironment),
-                globalMemento,
-                outputChannel,
-            );
-            const result = await experimentService.inExperiment(experiment);
-
-            assert.isTrue(result);
-            assert.strictEqual(telemetryEvents.length, 0);
-        });
-
-        test('If the opt-in setting contains `All`, inExperiment should check the value cached by the experiment service', async () => {
-            configureSettings(true, ['All'], []);
-
-            const experimentService = new ExperimentService(
-                instance(workspaceService),
-                instance(appEnvironment),
-                globalMemento,
-                outputChannel,
-            );
-            const result = await experimentService.inExperiment(experiment);
-
-            assert.isTrue(result);
-            sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.calledOnce(getTreatmentVariableAsyncStub);
-        });
-
-        test('If the opt-in setting contains `All` and the experiment setting is disabled, inExperiment should return false', async () => {
-            configureSettings(false, ['All'], []);
-
-            const experimentService = new ExperimentService(
-                instance(workspaceService),
-                instance(appEnvironment),
-                globalMemento,
-                outputChannel,
-            );
-            const result = await experimentService.inExperiment(experiment);
-
-            assert.isFalse(result);
-            sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
-        });
-
-        test('If the opt-in setting contains the experiment name, inExperiment should return true', async () => {
-            configureSettings(true, [experiment], []);
-
-            const experimentService = new ExperimentService(
-                instance(workspaceService),
-                instance(appEnvironment),
-                globalMemento,
-                outputChannel,
-            );
-            const result = await experimentService.inExperiment(experiment);
-
-            assert.isTrue(result);
-            assert.strictEqual(telemetryEvents.length, 0);
-            sinon.assert.calledOnce(getTreatmentVariableAsyncStub);
-        });
-
-        test('If the opt-out setting contains "All", inExperiment should return false', async () => {
-            configureSettings(true, [], ['All']);
-
-            const experimentService = new ExperimentService(
-                instance(workspaceService),
-                instance(appEnvironment),
-                globalMemento,
-                outputChannel,
-            );
-            const result = await experimentService.inExperiment(experiment);
-
-            assert.isFalse(result);
-            sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
-        });
-
-        test('If the opt-out setting contains "All" and the experiment setting is enabled, inExperiment should return false', async () => {
-            configureSettings(true, [], ['All']);
-
-            const experimentService = new ExperimentService(
-                instance(workspaceService),
-                instance(appEnvironment),
-                globalMemento,
-                outputChannel,
-            );
-            const result = await experimentService.inExperiment(experiment);
-
-            assert.isFalse(result);
-            sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
-        });
-
-        test('If the opt-out setting contains the experiment name, inExperiment should return false', async () => {
-            configureSettings(true, [], [experiment]);
-
-            const experimentService = new ExperimentService(
-                instance(workspaceService),
-                instance(appEnvironment),
-                globalMemento,
-                outputChannel,
-            );
-            const result = await experimentService.inExperiment(experiment);
-
-            assert.isFalse(result);
-            assert.strictEqual(telemetryEvents.length, 0);
-            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
-        });
-    });
-
     suite('In-experiment-sync check', () => {
         const experiment = 'Test Experiment - experiment';
         let telemetryEvents: { eventName: string; properties: Record<string, unknown> }[] = [];
@@ -349,6 +179,7 @@ suite('Experimentation service', () => {
 
         teardown(() => {
             telemetryEvents = [];
+            sinon.restore();
         });
 
         test('If the opt-in and opt-out arrays are empty, return the value from the experimentation framework for a given experiment', async () => {
@@ -497,12 +328,12 @@ suite('Experimentation service', () => {
 
     suite('Experiment value retrieval', () => {
         const experiment = 'Test Experiment - experiment';
-        let getTreatmentVariableAsyncStub: sinon.SinonStub;
+        let getTreatmentVariableStub: sinon.SinonStub;
 
         setup(() => {
-            getTreatmentVariableAsyncStub = sinon.stub().returns(Promise.resolve('value'));
+            getTreatmentVariableStub = sinon.stub().returns(Promise.resolve('value'));
             sinon.stub(tasClient, 'getExperimentationService').returns(({
-                getTreatmentVariableAsync: getTreatmentVariableAsyncStub,
+                getTreatmentVariable: getTreatmentVariableStub,
             } as unknown) as tasClient.IExperimentationService);
 
             configureApplicationEnvironment('stable', extensionVersion);
@@ -520,7 +351,7 @@ suite('Experimentation service', () => {
             const result = await experimentService.getExperimentValue(experiment);
 
             assert.strictEqual(result, 'value');
-            sinon.assert.calledOnce(getTreatmentVariableAsyncStub);
+            sinon.assert.calledOnce(getTreatmentVariableStub);
         });
 
         test('If the experiment setting is disabled, getExperimentValue should return undefined', async () => {
@@ -535,7 +366,7 @@ suite('Experimentation service', () => {
             const result = await experimentService.getExperimentValue(experiment);
 
             assert.isUndefined(result);
-            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
+            sinon.assert.notCalled(getTreatmentVariableStub);
         });
 
         test('If the opt-out setting contains "All", getExperimentValue should return undefined', async () => {
@@ -550,10 +381,10 @@ suite('Experimentation service', () => {
             const result = await experimentService.getExperimentValue(experiment);
 
             assert.isUndefined(result);
-            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
+            sinon.assert.notCalled(getTreatmentVariableStub);
         });
 
-        test('If the opt-out setting contains the experiment name, igetExperimentValue should return undefined', async () => {
+        test('If the opt-out setting contains the experiment name, getExperimentValue should return undefined', async () => {
             configureSettings(true, [], [experiment]);
 
             const experimentService = new ExperimentService(
@@ -565,7 +396,7 @@ suite('Experimentation service', () => {
             const result = await experimentService.getExperimentValue(experiment);
 
             assert.isUndefined(result);
-            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
+            sinon.assert.notCalled(getTreatmentVariableStub);
         });
     });
 
@@ -601,9 +432,9 @@ suite('Experimentation service', () => {
 
             await experimentService.activate();
 
-            assert.strictEqual(telemetryEvents.length, 1);
-            assert.strictEqual(telemetryEvents[0].eventName, EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS);
-            sinon.assert.calledOnce(sendTelemetryEventStub);
+            assert.strictEqual(telemetryEvents.length, 2);
+            assert.strictEqual(telemetryEvents[1].eventName, EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS);
+            sinon.assert.calledTwice(sendTelemetryEventStub);
         });
 
         test('The telemetry event properties should only be populated with valid experiment values', async () => {
@@ -635,7 +466,7 @@ suite('Experimentation service', () => {
 
             await experimentService.activate();
 
-            const { properties } = telemetryEvents[0];
+            const { properties } = telemetryEvents[1];
             assert.deepStrictEqual(properties, { optedInto: ['foo'], optedOutFrom: ['bar'] });
         });
 
@@ -668,7 +499,7 @@ suite('Experimentation service', () => {
 
             await experimentService.activate();
 
-            const { properties } = telemetryEvents[0];
+            const { properties } = telemetryEvents[1];
             assert.deepStrictEqual(properties, { optedInto: [], optedOutFrom: [] });
         });
 
@@ -724,7 +555,7 @@ suite('Experimentation service', () => {
 
             await experimentService.activate();
 
-            const { properties } = telemetryEvents[0];
+            const { properties } = telemetryEvents[1];
             assert.deepStrictEqual(properties, { optedInto: [], optedOutFrom: [] });
         });
 
@@ -756,7 +587,7 @@ suite('Experimentation service', () => {
 
             await experimentService.activate();
 
-            const { properties } = telemetryEvents[0];
+            const { properties } = telemetryEvents[1];
             assert.deepStrictEqual(properties, { optedInto: [], optedOutFrom: [] });
         });
     });

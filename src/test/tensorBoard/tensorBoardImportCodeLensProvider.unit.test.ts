@@ -7,7 +7,7 @@ import { CancellationTokenSource } from 'vscode';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { IExperimentService } from '../../client/common/types';
 import { TensorBoardImportCodeLensProvider } from '../../client/tensorBoard/tensorBoardImportCodeLensProvider';
-import { MockDocument } from '../startPage/mockDocument';
+import { MockDocument } from '../mocks/mockDocument';
 
 suite('TensorBoard import code lens provider', () => {
     let experimentService: IExperimentService;

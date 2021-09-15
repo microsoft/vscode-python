@@ -120,19 +120,19 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
 // for components to use
 
 interface IPersistentStorage<T> {
-    get(): T | undefined;
+    get(): T;
     set(value: T): Promise<void>;
 }
 
 /**
  * Build a global storage object for the given key.
  */
-export function getGlobalStorage<T>(context: IExtensionContext, key: string): IPersistentStorage<T> {
+export function getGlobalStorage<T>(context: IExtensionContext, key: string, defaultValue?: T): IPersistentStorage<T> {
     const globalKeysStorage = new PersistentState<keysStorage[]>(context.globalState, GLOBAL_PERSISTENT_KEYS, []);
     if (!globalKeysStorage.value.includes({ key, defaultValue: undefined })) {
         globalKeysStorage.updateValue([{ key, defaultValue: undefined }, ...globalKeysStorage.value]).ignoreErrors();
     }
-    const raw = new PersistentState<T>(context.globalState, key);
+    const raw = new PersistentState<T>(context.globalState, key, defaultValue);
     return {
         // We adapt between PersistentState and IPersistentStorage.
         get() {

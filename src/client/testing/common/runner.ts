@@ -14,7 +14,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { TestProvider } from '../types';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from './constants';
 import { ITestRunner, ITestsHelper, Options } from './types';
-export { Options } from './types';
 
 @injectable()
 export class TestRunner implements ITestRunner {

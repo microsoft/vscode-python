@@ -6,6 +6,7 @@ import { getOSType, OSType } from '../../../common/utils/platform';
 import { getEmptyVersion, parseVersion } from './pythonVersion';
 
 import { PythonVersion } from '.';
+import { normCasePath } from '../../common/externalDependencies';
 
 /**
  * Determine a best-effort Python version based on the given filename.
@@ -21,6 +22,7 @@ export function parseVersionFromExecutable(filename: string): PythonVersion {
 }
 
 function parseBasename(basename: string): PythonVersion {
+    basename = normCasePath(basename);
     if (getOSType() === OSType.Windows) {
         if (basename === 'python.exe') {
             // On Windows we can't assume it is 2.7.

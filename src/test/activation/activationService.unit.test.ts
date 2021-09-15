@@ -16,6 +16,7 @@ import {
 import { LSNotSupportedDiagnosticServiceId } from '../../client/application/diagnostics/checks/lsNotSupported';
 import { IDiagnostic, IDiagnosticsService } from '../../client/application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
+import { PythonSettings } from '../../client/common/configSettings';
 import { IPlatformService } from '../../client/common/platform/types';
 import {
     IConfigurationService,
@@ -28,6 +29,7 @@ import {
     IPythonSettings,
     Resource,
 } from '../../client/common/types';
+import { LanguageService } from '../../client/common/utils/localize';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterService } from '../../client/interpreter/contracts';
@@ -53,6 +55,8 @@ suite('Language Server Activation - ActivationService', () => {
                 let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
                 let interpreterService: TypeMoq.IMock<IInterpreterService>;
                 let interpreterChangedHandler!: Function;
+                let output: TypeMoq.IMock<IOutputChannel>;
+
                 setup(() => {
                     serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                     appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -70,6 +74,7 @@ suite('Language Server Activation - ActivationService', () => {
                         version: new SemVer('1.2.3'),
                     };
                     lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
+
                     workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
                     workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
                     configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
@@ -99,7 +104,7 @@ suite('Language Server Activation - ActivationService', () => {
                     workspaceService
                         .setup((ws) => ws.getConfiguration('python', TypeMoq.It.isAny()))
                         .returns(() => workspaceConfig.object);
-                    const output = TypeMoq.Mock.ofType<IOutputChannel>();
+                    output = TypeMoq.Mock.ofType<IOutputChannel>();
                     serviceContainer
                         .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny()))
                         .returns(() => output.object);
@@ -647,6 +652,140 @@ suite('Language Server Activation - ActivationService', () => {
                 }
             },
         );
+    });
+
+    suite('Test language server swap when using Python 2.7', () => {
+        let serviceContainer: TypeMoq.IMock<IServiceContainer>;
+        let appShell: TypeMoq.IMock<IApplicationShell>;
+        let cmdManager: TypeMoq.IMock<ICommandManager>;
+        let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+        let platformService: TypeMoq.IMock<IPlatformService>;
+        let lsNotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
+        let stateFactory: TypeMoq.IMock<IPersistentStateFactory>;
+        let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
+        let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
+        let interpreterService: TypeMoq.IMock<IInterpreterService>;
+        let output: TypeMoq.IMock<IOutputChannel>;
+        let configurationService: TypeMoq.IMock<IConfigurationService>;
+
+        setup(() => {
+            serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+            appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+            workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+            cmdManager = TypeMoq.Mock.ofType<ICommandManager>();
+            platformService = TypeMoq.Mock.ofType<IPlatformService>();
+            stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+            state = TypeMoq.Mock.ofType<IPersistentState<boolean | undefined>>();
+            configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
+            const extensionsMock = TypeMoq.Mock.ofType<IExtensions>();
+            lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
+
+            workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
+            workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            state.setup((s) => s.value).returns(() => undefined);
+            state.setup((s) => s.updateValue(TypeMoq.It.isAny())).returns(() => Promise.resolve());
+            workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+            workspaceService
+                .setup((ws) => ws.getConfiguration('python', TypeMoq.It.isAny()))
+                .returns(() => workspaceConfig.object);
+            output = TypeMoq.Mock.ofType<IOutputChannel>();
+            serviceContainer
+                .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny()))
+                .returns(() => output.object);
+            serviceContainer
+                .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
+                .returns(() => workspaceService.object);
+            serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
+            serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => []);
+            serviceContainer
+                .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
+                .returns(() => configurationService.object);
+            serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ICommandManager))).returns(() => cmdManager.object);
+            serviceContainer
+                .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
+                .returns(() => platformService.object);
+            serviceContainer
+                .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService)))
+                .returns(() => interpreterService.object);
+            serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IExtensions))).returns(() => extensionsMock.object);
+            serviceContainer
+                .setup((s) =>
+                    s.get(
+                        TypeMoq.It.isValue(IDiagnosticsService),
+                        TypeMoq.It.isValue(LSNotSupportedDiagnosticServiceId),
+                    ),
+                )
+                .returns(() => lsNotSupportedDiagnosticService.object);
+        });
+
+        const values: { ls: LanguageServerType; expected: LanguageServerType; outputString: string }[] = [
+            {
+                ls: LanguageServerType.Jedi,
+                expected: LanguageServerType.None,
+                outputString: LanguageService.startingNone(),
+            },
+            {
+                ls: LanguageServerType.Node,
+                expected: LanguageServerType.Node,
+                outputString: LanguageService.startingPylance(),
+            },
+            {
+                ls: LanguageServerType.None,
+                expected: LanguageServerType.None,
+                outputString: LanguageService.startingNone(),
+            },
+        ];
+
+        const interpreter = {
+            version: { major: 2, minor: 7, patch: 10 },
+        } as PythonEnvironment;
+
+        values.forEach(({ ls, expected, outputString }) => {
+            test(`When language server setting explicitly set to ${ls} and using Python 2.7, use a language server of type ${expected}`, async () => {
+                const resource = Uri.parse('one.py');
+                const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+
+                serviceContainer
+                    .setup((c) => c.get(TypeMoq.It.isValue(ILanguageServerActivator), expected))
+                    .returns(() => activator.object);
+                configurationService
+                    .setup((c) => c.getSettings(TypeMoq.It.isAny()))
+                    .returns(() => ({ languageServer: ls, languageServerIsDefault: false } as PythonSettings));
+
+                const activationService = new LanguageServerExtensionActivationService(
+                    serviceContainer.object,
+                    stateFactory.object,
+                );
+
+                await activationService.get(resource, interpreter);
+
+                output.verify((o) => o.appendLine(outputString), TypeMoq.Times.once());
+                activator.verify((a) => a.start(resource, interpreter), TypeMoq.Times.once());
+            });
+        });
+
+        test('When default language server setting set to true and using Python 2.7, use Pylance', async () => {
+            const resource = Uri.parse('one.py');
+            const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+
+            serviceContainer
+                .setup((c) => c.get(TypeMoq.It.isValue(ILanguageServerActivator), LanguageServerType.Node))
+                .returns(() => activator.object);
+            configurationService
+                .setup((c) => c.getSettings(TypeMoq.It.isAny()))
+                .returns(() => ({ languageServerIsDefault: true } as PythonSettings));
+
+            const activationService = new LanguageServerExtensionActivationService(
+                serviceContainer.object,
+                stateFactory.object,
+            );
+
+            await activationService.get(resource, interpreter);
+
+            output.verify((o) => o.appendLine(LanguageService.startingPylance()), TypeMoq.Times.once());
+            activator.verify((a) => a.start(resource, interpreter), TypeMoq.Times.once());
+        });
     });
 
     suite('Test sendTelemetryForChosenLanguageServer()', () => {

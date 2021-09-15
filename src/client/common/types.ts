@@ -172,7 +172,6 @@ export interface IPythonSettings {
     readonly poetryPath: string;
     readonly insidersChannel: ExtensionChannels;
     readonly downloadLanguageServer: boolean;
-    readonly showStartPage: boolean;
     readonly jediPath: string;
     readonly jediMemoryLimit: number;
     readonly devOptions: string[];
@@ -498,17 +497,6 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
     push(disposable: IDisposable | IAsyncDisposable): void;
 }
 
-/* ABExperiments field carries the identity, and the range of the experiment,
- where the experiment is valid for users falling between the number 'min' and 'max'
- More details: https://en.wikipedia.org/wiki/A/B_testing
-*/
-export type ABExperiments = {
-    name: string; // Name of the experiment
-    salt: string; // Salt string for the experiment
-    min: number; // Lower limit for the experiment
-    max: number; // Upper limit for the experiment
-}[];
-
 /**
  * Experiment service leveraging VS Code's experiment framework.
  */
@@ -547,7 +535,7 @@ export interface IInterpreterPathProxyService {
     get(resource: Resource): string;
 }
 
-export type DefaultLSType = LanguageServerType.Jedi | LanguageServerType.JediLSP | LanguageServerType.Node;
+export type DefaultLSType = LanguageServerType.Jedi | LanguageServerType.Node;
 
 /**
  * Interface used to retrieve the default language server.

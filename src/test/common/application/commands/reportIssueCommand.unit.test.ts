@@ -17,7 +17,7 @@ import { IInterpreterService, IInterpreterVersionService } from '../../../../cli
 import { InterpreterVersionService } from '../../../../client/interpreter/interpreterVersion';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import * as EnvIdentifier from '../../../../client/pythonEnvironments/common/environmentIdentifier';
-import { MockWorkspaceConfiguration } from '../../../startPage/mockWorkspaceConfig';
+import { MockWorkspaceConfiguration } from '../../../mocks/mockWorkspaceConfig';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 import * as Logging from '../../../../client/logging/_global';

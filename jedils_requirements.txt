@@ -22,9 +22,9 @@ jedi==0.18.0 \
     --hash=sha256:18456d83f65f400ab0c2d3319e48520420ef43b23a086fdc05dff34132f0fb93 \
     --hash=sha256:92550a404bad8afed881a137ec9a461fed49eca661414be45059329614ed0707
     # via jedi-language-server
-jedi-language-server==0.34.1 \
-    --hash=sha256:5368bebeddddeaa1dda622d6eed09ac88b2460f41d7e92ba735f494044621c2d \
-    --hash=sha256:8a1b79de1408b28343b424e0697a22fdfe06b0ae5ce273f7f788cc0057014d11
+jedi-language-server==0.34.3 \
+    --hash=sha256:103296591fdfe8a8dc6277f54d31ef4ddf41cee81e7af2cc04b2b1f66349cf6a \
+    --hash=sha256:8356a208b877ba48bdbe7df8373716702446b47e39b925b0e10deed4d52bcb01
     # via -r jedils_requirements.in
 parso==0.8.2 \
     --hash=sha256:12b83492c6239ce32ff5eed6d3639d6a536170723c6f3f1506869f1ace413398 \
@@ -56,9 +56,9 @@ pydantic==1.8.2 \
     # via
     #   jedi-language-server
     #   pygls
-pygls==0.11.1 \
-    --hash=sha256:392a080ef02290a9b672faa1cedeb9962f7ae74e40434148867a5eef2515b6ad \
-    --hash=sha256:cb30ccf1eee14760ce1b7167a9d39df9e72368ec7a61accdd6bf0b9c73ea0319
+pygls==0.11.2 \
+    --hash=sha256:1ade26fc9cf0d7c0700fa5430e8dc8411b1108d1eb21565adbe480b64f721a84 \
+    --hash=sha256:5c5b1c8717a39b97462b197f6186c12d2e16455da00631cdaaca91d25736ffcd
     # via
     #   -r jedils_requirements.in
     #   jedi-language-server

@@ -16,7 +16,7 @@ export type PythonInterpreterTelemetry = IEventNamePropertyMapping[EventName.PYT
 export type DebuggerTelemetry = IEventNamePropertyMapping[EventName.DEBUGGER];
 export type TestTool = 'pytest' | 'unittest';
 export type TestRunTelemetry = IEventNamePropertyMapping[EventName.UNITTEST_RUN];
-export type TestDiscoveryTelemetry = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVER];
+export type TestDiscoveryTelemetry = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_DONE];
 export type TestConfiguringTelemetry = IEventNamePropertyMapping[EventName.UNITTEST_CONFIGURING];
 export const IImportTracker = Symbol('IImportTracker');
 export interface IImportTracker {}

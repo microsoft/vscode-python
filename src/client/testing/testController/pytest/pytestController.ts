@@ -11,6 +11,8 @@ import { traceError } from '../../../common/logger';
 import { runAdapter } from '../../../common/process/internal/scripts/testing_tools';
 import { IConfigurationService } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { EventName } from '../../../telemetry/constants';
 import { PYTEST_PROVIDER } from '../../common/constants';
 import { TestDiscoveryOptions } from '../../common/types';
 import {
@@ -71,7 +73,6 @@ export class PytestController implements ITestFrameworkController {
                     // This is the workspace root node
                     if (rawTestData.length === 1) {
                         if (rawTestData[0].tests.length > 0) {
-                            item.description = item.id;
                             updateTestItemFromRawData(item, testController, this.idToRawData, item.id, rawTestData);
                         } else {
                             this.idToRawData.delete(item.id);
@@ -79,8 +80,6 @@ export class PytestController implements ITestFrameworkController {
                             return Promise.resolve();
                         }
                     } else {
-                        item.description = workspace.uri.fsPath;
-
                         // To figure out which top level nodes have to removed. First we get all the
                         // existing nodes. Then if they have data we keep those nodes, Nodes without
                         // data will be removed after we check the raw data.
@@ -88,31 +87,40 @@ export class PytestController implements ITestFrameworkController {
                         item.children.forEach((c) => subRootWithNoData.push(c.id));
 
                         rawTestData.forEach((data) => {
+                            let subRootId = data.root;
+                            let rawId;
+                            if (data.root === root) {
+                                const subRoot = data.parents.filter((p) => p.parentid === '.' || p.parentid === root);
+                                subRootId = path.join(data.root, subRoot.length > 0 ? subRoot[0].id : '');
+                                rawId = subRoot.length > 0 ? subRoot[0].id : undefined;
+                            }
+
                             if (data.tests.length > 0) {
-                                let subRootItem = item.children.get(data.root);
+                                let subRootItem = item.children.get(subRootId);
                                 if (!subRootItem) {
                                     subRootItem = createWorkspaceRootTestItem(testController, this.idToRawData, {
-                                        id: data.root,
-                                        label: path.basename(data.root),
-                                        uri: Uri.file(data.root),
-                                        runId: data.root,
+                                        id: subRootId,
+                                        label: path.basename(subRootId),
+                                        uri: Uri.file(subRootId),
+                                        runId: subRootId,
                                         parentId: item.id,
+                                        rawId,
                                     });
                                     item.children.add(subRootItem);
                                 }
 
-                                // We found data for a node. Remove its id for the no-data list.
-                                subRootWithNoData = subRootWithNoData.filter((s) => s !== data.root);
+                                // We found data for a node. Remove its id from the no-data list.
+                                subRootWithNoData = subRootWithNoData.filter((s) => s !== subRootId);
                                 updateTestItemFromRawData(
                                     subRootItem,
                                     testController,
                                     this.idToRawData,
-                                    subRootItem.id,
+                                    root, // All the file paths are based on workspace root.
                                     [data],
                                 );
                             } else {
                                 // This means there are no tests under this node
-                                removeItemByIdFromChildren(this.idToRawData, item, [data.root]);
+                                removeItemByIdFromChildren(this.idToRawData, item, [subRootId]);
                             }
                         });
 
@@ -142,6 +150,7 @@ export class PytestController implements ITestFrameworkController {
     }
 
     public async refreshTestData(testController: TestController, uri: Uri, token?: CancellationToken): Promise<void> {
+        sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: 'pytest' });
         const workspace = this.workspaceService.getWorkspaceFolder(uri);
         if (workspace) {
             // Discovery is expensive. So if it is already running then use the promise
@@ -199,8 +208,10 @@ export class PytestController implements ITestFrameworkController {
 
                 deferred.resolve();
             } catch (ex) {
-                traceError('Error discovering pytest tests:\r\n', ex);
-                const message = getTestDiscoveryExceptions(ex.message);
+                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: 'pytest', failed: true });
+                const cancel = options.token?.isCancellationRequested ? 'Cancelled' : 'Error';
+                traceError(`${cancel} discovering pytest tests:\r\n`, ex);
+                const message = getTestDiscoveryExceptions((ex as Error).message);
 
                 // Report also on the test view. Getting root node is more complicated due to fact
                 // that in pytest project can be organized in many ways
@@ -209,13 +220,13 @@ export class PytestController implements ITestFrameworkController {
                         id: `DiscoveryError:${workspace.uri.fsPath}`,
                         label: `Pytest Discovery Error [${path.basename(workspace.uri.fsPath)}]`,
                         error: util.format(
-                            'Error discovering pytest tests (see Output > Python):\r\n',
+                            `${cancel} discovering pytest tests (see Output > Python):\r\n`,
                             message.length > 0 ? message : ex,
                         ),
                     }),
                 );
 
-                deferred.reject(ex);
+                deferred.reject(ex as Error);
             } finally {
                 // Discovery has finished running we have the raw test data at this point.
                 this.discovering.delete(workspace.uri.fsPath);
@@ -251,6 +262,7 @@ export class PytestController implements ITestFrameworkController {
                 await this.resolveChildren(testController, newItem);
             }
         }
+        sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: 'pytest', failed: false });
         return Promise.resolve();
     }
 

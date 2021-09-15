@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Event, ProgressLocation, ProgressOptions } from 'vscode';
+import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
 import { inDiscoveryExperiment } from '../../common/experiments/helpers';
@@ -32,22 +32,24 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
     ) {}
 
     public async activate(): Promise<void> {
-        let onRefreshing: Event<void>;
-        let onRefreshed: Event<void>;
-
         if (await inDiscoveryExperiment(this.experimentService)) {
-            onRefreshing = this.pyenvs.onRefreshing;
-            onRefreshed = this.pyenvs.onRefreshed;
+            this.pyenvs.onRefreshStart(
+                () => {
+                    this.showProgress();
+                    if (this.pyenvs.refreshPromise) {
+                        this.pyenvs.refreshPromise.then(() => this.hideProgress());
+                    }
+                },
+                this,
+                this.disposables,
+            );
         } else {
             const progressService = this.serviceContainer.get<IInterpreterLocatorProgressService>(
                 IInterpreterLocatorProgressService,
             );
-            onRefreshing = progressService.onRefreshing;
-            onRefreshed = progressService.onRefreshed;
+            progressService.onRefreshing(() => this.showProgress(), this, this.disposables);
+            progressService.onRefreshed(() => this.hideProgress(), this, this.disposables);
         }
-
-        onRefreshing(() => this.showProgress(), this, this.disposables);
-        onRefreshed(() => this.hideProgress(), this, this.disposables);
     }
 
     @traceDecorators.verbose('Display locator refreshing progress')

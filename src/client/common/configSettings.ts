@@ -91,8 +91,6 @@ export class PythonSettings implements IPythonSettings {
 
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
 
-    public showStartPage = true;
-
     public downloadLanguageServer = true;
 
     public jediPath = '';
@@ -151,7 +149,7 @@ export class PythonSettings implements IPythonSettings {
 
     private disposables: Disposable[] = [];
 
-    private _pythonPath = '';
+    private _pythonPath = 'python';
 
     private _defaultInterpreterPath = '';
 
@@ -292,8 +290,12 @@ export class PythonSettings implements IPythonSettings {
             userLS === 'Default' ||
             !Object.values(LanguageServerType).includes(userLS as LanguageServerType)
         ) {
-            this.languageServer = this.defaultLS?.defaultLSType ?? LanguageServerType.Jedi;
+            this.languageServer = this.defaultLS?.defaultLSType ?? LanguageServerType.None;
             this.languageServerIsDefault = true;
+        } else if (userLS === 'JediLSP') {
+            // Switch JediLSP option to Jedi.
+            this.languageServer = LanguageServerType.Jedi;
+            this.languageServerIsDefault = false;
         } else {
             this.languageServer = userLS as LanguageServerType;
             this.languageServerIsDefault = false;
@@ -550,11 +552,6 @@ export class PythonSettings implements IPythonSettings {
                   optOutFrom: [],
               };
 
-        const showStartPage = pythonSettings.get<boolean>('showStartPage');
-        if (showStartPage !== undefined) {
-            this.showStartPage = showStartPage;
-        }
-
         this.insidersChannel = pythonSettings.get<ExtensionChannels>('insidersChannel')!;
         this.tensorBoard = pythonSettings.get<ITensorBoardSettings>('tensorBoard');
     }
@@ -645,11 +642,6 @@ export class PythonSettings implements IPythonSettings {
                         .ignoreErrors();
                 }
             }
-        }
-        if (inExperiment && this.pythonPath === DEFAULT_INTERPRETER_SETTING) {
-            // If no interpreter is selected, set pythonPath to an empty string.
-            // This is to ensure that we ask users to select an interpreter in case auto selected interpreter is not safe to select
-            this.pythonPath = '';
         }
         return getAbsolutePath(this.pythonPath, workspaceRoot);
     }

@@ -11,6 +11,7 @@ import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from './environmentManagers/conda';
 import { getPythonVersionFromPyvenvCfg } from './environmentManagers/simplevirtualenvs';
+import { normCasePath } from './externalDependencies';
 import * as posix from './posixUtils';
 import * as windows from './windowsUtils';
 
@@ -251,11 +252,13 @@ async function checkPythonExecutable(
     const matchFilename = opts.matchFilename || matchPythonBinFilename;
     const filename = typeof executable === 'string' ? executable : executable.filename;
 
-    if (opts.filterFile && !(await opts.filterFile(executable))) {
+    if (!matchFilename(filename)) {
         return false;
     }
 
-    if (!matchFilename(filename)) {
+    // This should occur after we match file names. This is to avoid doing potential
+    // `lstat` calls on too many files which can slow things down.
+    if (opts.filterFile && !(await opts.filterFile(executable))) {
         return false;
     }
 
@@ -360,7 +363,7 @@ export function getEnvironmentDirFromPath(interpreterPath: string): string {
     // env <--- Return this directory if it is not 'bin' or 'scripts'
     // |__ python  <--- interpreterPath
     const dir = path.basename(path.dirname(interpreterPath));
-    if (!skipDirs.includes(dir.toLowerCase())) {
+    if (!skipDirs.map((e) => normCasePath(e)).includes(normCasePath(dir))) {
         return path.dirname(interpreterPath);
     }
 

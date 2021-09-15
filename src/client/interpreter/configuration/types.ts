@@ -39,15 +39,12 @@ export interface IInterpreterQuickPickItem extends QuickPickItem {
     interpreter: PythonEnvironment;
 }
 
-export interface IFindInterpreterQuickPickItem {
+export interface ISpecialQuickPickItem {
     label: string;
-    detail: string;
+    description?: string;
+    detail?: string;
     alwaysShow: boolean;
-}
-
-export enum InterpreterComparisonType {
-    Default = 'defaultComparison',
-    EnvType = 'environmentTypeComparison',
+    path?: string;
 }
 
 export const IInterpreterComparer = Symbol('IInterpreterComparer');

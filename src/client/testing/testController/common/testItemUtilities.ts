@@ -2,7 +2,16 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { TestItem, Uri, Range, Position, TestController } from 'vscode';
+import {
+    TestItem,
+    Uri,
+    Range,
+    Position,
+    TestController,
+    TestRunResult,
+    TestResultState,
+    TestResultSnapshot,
+} from 'vscode';
 import { traceError, traceVerbose } from '../../../common/logger';
 import {
     RawDiscoveredTests,
@@ -42,7 +51,6 @@ export function createWorkspaceRootTestItem(
     options: { id: string; label: string; uri: Uri; runId: string; parentId?: string; rawId?: string },
 ): TestItem {
     const testItem = testController.createTestItem(options.id, options.label, options.uri);
-    testItem.description = options.uri.fsPath;
     testItem.canResolveChildren = true;
     idToRawData.set(options.id, {
         ...options,
@@ -79,13 +87,16 @@ function getRangeFromRawSource(raw: { source: string }): Range | undefined {
     return undefined;
 }
 
-function getRunIdFromRawData(raw: { id: string }): string {
+export function getRunIdFromRawData(id: string): string {
+    // TODO: This is a temporary solution to normalize test ids.
+    // The current method is error prone and easy to break. When we
+    // re-write the test adapters we should make sure we consider this.
     // This is the id that will be used to compare with the results.
-    const runId = raw.id
+    const runId = id
+        .replace(/\.py[^\w\-]/g, '') // we want to get rid of the `.py` in file names
         .replace(/[\\\:\/]/g, '.')
         .replace(/\:\:/g, '.')
-        .replace(/\.\./g, '.')
-        .replace(/\.py/g, '');
+        .replace(/\.\./g, '.');
     return runId.startsWith('.') ? runId.substr(1) : runId;
 }
 
@@ -103,7 +114,6 @@ function createFolderOrFileTestItem(
     const label = path.basename(fullPath);
     const testItem = testController.createTestItem(fullPath, label, uri);
 
-    testItem.description = fullPath;
     testItem.canResolveChildren = true;
 
     idToRawData.set(testItem.id, {
@@ -130,7 +140,6 @@ function updateFolderOrFileTestItem(
 
     item.label = path.basename(fullPath);
 
-    item.description = fullPath;
     item.canResolveChildren = true;
 
     idToRawData.set(item.id, {
@@ -160,11 +169,10 @@ function createCollectionTestItem(
     const label = rawData.name;
 
     const parentId = getParentIdFromRawParentId(idToRawData, testRoot, rawData);
-    const runId = getRunIdFromRawData(rawData);
+    const runId = getRunIdFromRawData(rawData.id);
 
     const testItem = testController.createTestItem(id, label, uri);
 
-    testItem.description = id;
     testItem.canResolveChildren = true;
 
     idToRawData.set(testItem.id, {
@@ -184,9 +192,6 @@ function updateCollectionTestItem(
     testRoot: string,
     rawData: RawTestSuite | RawTestFunction,
 ): void {
-    // id can look like test_something.py::SomeClass
-    const id = path.join(testRoot, rawData.id);
-
     // We need the actual document path so we can set the location for the tests. This will be
     // used to provide test result status next to the tests.
     const documentPath = path.join(testRoot, rawData.id.substr(0, rawData.id.indexOf(':')));
@@ -195,9 +200,8 @@ function updateCollectionTestItem(
     item.label = rawData.name;
 
     const parentId = getParentIdFromRawParentId(idToRawData, testRoot, rawData);
-    const runId = getRunIdFromRawData(rawData);
+    const runId = getRunIdFromRawData(rawData.id);
 
-    item.description = id;
     item.canResolveChildren = true;
 
     idToRawData.set(item.id, {
@@ -229,11 +233,10 @@ function createTestCaseItem(
     const label = rawData.name;
 
     const parentId = getParentIdFromRawParentId(idToRawData, testRoot, rawData);
-    const runId = getRunIdFromRawData(rawData);
+    const runId = getRunIdFromRawData(rawData.id);
 
     const testItem = testController.createTestItem(id, label, uri);
 
-    testItem.description = id;
     testItem.canResolveChildren = false;
     testItem.range = getRangeFromRawSource(rawData);
 
@@ -254,11 +257,6 @@ function updateTestCaseItem(
     testRoot: string,
     rawData: RawTest,
 ): void {
-    // id can look like:
-    // test_something.py::SomeClass::someTest
-    // test_something.py::SomeClass::someTest[x1]
-    const id = path.join(testRoot, rawData.id);
-
     // We need the actual document path so we can set the location for the tests. This will be
     // used to provide test result status next to the tests.
     const documentPath = path.join(testRoot, rawData.source.substr(0, rawData.source.indexOf(':')));
@@ -267,9 +265,8 @@ function updateTestCaseItem(
     item.label = rawData.name;
 
     const parentId = getParentIdFromRawParentId(idToRawData, testRoot, rawData);
-    const runId = getRunIdFromRawData(rawData);
+    const runId = getRunIdFromRawData(rawData.id);
 
-    item.description = id;
     item.canResolveChildren = false;
     item.range = getRangeFromRawSource(rawData);
 
@@ -517,4 +514,29 @@ export function getNodeByUri(root: TestItem, uri: Uri): TestItem | undefined {
         }
     }
     return undefined;
+}
+
+function updateTestResultMapForSnapshot(resultMap: Map<string, TestResultState>, snapshot: TestResultSnapshot) {
+    for (const taskState of snapshot.taskStates) {
+        resultMap.set(snapshot.id, taskState.state);
+    }
+    snapshot.children.forEach((child) => updateTestResultMapForSnapshot(resultMap, child));
+}
+
+export function updateTestResultMap(
+    resultMap: Map<string, TestResultState>,
+    testResults: readonly TestRunResult[],
+): void {
+    const ordered = new Array(...testResults).sort((a, b) => a.completedAt - b.completedAt);
+    ordered.forEach((testResult) => {
+        testResult.results.forEach((snapshot) => updateTestResultMapForSnapshot(resultMap, snapshot));
+    });
+}
+
+export function checkForFailedTests(resultMap: Map<string, TestResultState>): boolean {
+    return (
+        Array.from(resultMap.values()).find(
+            (state) => state === TestResultState.Failed || state === TestResultState.Errored,
+        ) !== undefined
+    );
 }

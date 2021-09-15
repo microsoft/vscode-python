@@ -13,7 +13,6 @@ const ts = require('gulp-typescript');
 const spawn = require('cross-spawn');
 const path = require('path');
 const del = require('del');
-const fs = require('fs-extra');
 const fsExtra = require('fs-extra');
 const glob = require('glob');
 const _ = require('lodash');
@@ -42,7 +41,7 @@ gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done
 
 gulp.task('output:clean', () => del(['coverage']));
 
-gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/startPage-ui', 'out/server']));
+gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
 gulp.task('clean:out', () => del(['out']));
 
@@ -57,12 +56,6 @@ gulp.task('checkNativeDependencies', (done) => {
 
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
-gulp.task('compile-viewers', async () => {
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.startPage-ui-viewers.config.js');
-});
-
-gulp.task('compile-webviews', gulp.series('compile-viewers'));
-
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {
         await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
@@ -73,8 +66,8 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
 gulp.task('webpack', async () => {
     // Build node_modules.
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.startPage-ui-viewers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.browser.config.js', 'browser');
 });
 
 gulp.task('addExtensionPackDependencies', async () => {
@@ -199,6 +192,12 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
                 'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js',
             ];
+        case 'browser':
+            return [
+                'WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).',
+                'WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.',
+                'WARNING in webpack performance recommendations:',
+            ];
         default:
             throw new Error('Unknown WebPack Configuration');
     }
@@ -207,7 +206,7 @@ gulp.task('renameSourceMaps', async () => {
     // By default source maps will be disabled in the extension.
     // Users will need to use the command `python.enableSourceMapSupport` to enable source maps.
     const extensionSourceMap = path.join(__dirname, 'out', 'client', 'extension.js.map');
-    await fs.rename(extensionSourceMap, `${extensionSourceMap}.disabled`);
+    await fsExtra.rename(extensionSourceMap, `${extensionSourceMap}.disabled`);
 });
 
 gulp.task('verifyBundle', async () => {
@@ -221,7 +220,7 @@ gulp.task('verifyBundle', async () => {
 
 gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
-gulp.task('prePublishNonBundle', gulp.series('compile', 'compile-webviews'));
+gulp.task('prePublishNonBundle', gulp.series('compile'));
 
 gulp.task('installPythonRequirements', async () => {
     let args = [
@@ -229,6 +228,7 @@ gulp.task('installPythonRequirements', async () => {
         'pip',
         '--disable-pip-version-check',
         'install',
+        '--no-user',
         '-t',
         './pythonFiles/lib/python',
         '--no-cache-dir',
@@ -258,6 +258,7 @@ gulp.task('installPythonRequirements', async () => {
         'pip',
         '--disable-pip-version-check',
         'install',
+        '--no-user',
         '-t',
         './pythonFiles/lib/jedilsp',
         '--no-cache-dir',
@@ -290,6 +291,7 @@ gulp.task('installDebugpy', async () => {
         'pip',
         '--disable-pip-version-check',
         'install',
+        '--no-user',
         '-t',
         './pythonFiles/lib/temp',
         '-r',
@@ -367,7 +369,7 @@ function hasNativeDependencies() {
         path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep),
     )
         .filter((item) => item.length > 0)
-        .filter((item) => !item.includes('zeromq') && item !== 'fsevents' && !item.includes('canvas')) // This is a known native. Allow this one for now
+        .filter((item) => item !== 'fsevents')
         .filter(
             (item) =>
                 jsonProperties.findIndex((flattenedDependency) =>

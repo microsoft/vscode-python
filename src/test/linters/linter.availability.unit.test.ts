@@ -15,13 +15,7 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
-import {
-    IConfigurationService,
-    IPersistentState,
-    IPersistentStateFactory,
-    IPythonSettings,
-    Product,
-} from '../../client/common/types';
+import { IConfigurationService, IPersistentState, IPersistentStateFactory, Product } from '../../client/common/types';
 import { Common, Linters } from '../../client/common/utils/localize';
 import { AvailableLinterActivator } from '../../client/linters/linterAvailability';
 import { LinterInfo } from '../../client/linters/linterInfo';
@@ -362,8 +356,6 @@ suite('Linter Availability Provider tests', () => {
             .returns(async () => options.linterIsInstalled)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
-        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-        setupConfigurationServiceForJediSettingsTest(options.languageServerValue, configServiceMock);
         setupWorkspaceMockForLinterConfiguredTests(
             options.pylintUserEnabled,
             options.pylintWorkspaceEnabled,
@@ -483,21 +475,6 @@ suite('Linter Availability Provider tests', () => {
         const testOpts = new AvailablityTestOverallOptions();
         testOpts.promptAction = 'ignore';
         const expectedResult = false;
-
-        // arrange
-        const result = await performTestOfOverallImplementation(testOpts);
-
-        expect(expectedResult).to.equal(
-            result,
-            'Configuration should change if the user is prompted and they choose to update the linter config.',
-        );
-    });
-
-    test('Overall implementation changes configuration when user is prompted and "Enable <linter>" is selected', async () => {
-        // set expectations
-        const testOpts = new AvailablityTestOverallOptions();
-        testOpts.promptAction = 'enable';
-        const expectedResult = true;
 
         // arrange
         const result = await performTestOfOverallImplementation(testOpts);
@@ -724,20 +701,6 @@ function setupWorkspaceMockForLinterConfiguredTests(
         .verifiable(TypeMoq.Times.once());
 
     return workspaceServiceMock;
-}
-
-function setupConfigurationServiceForJediSettingsTest(
-    languageServerValue: LanguageServerType,
-    configServiceMock: TypeMoq.IMock<IConfigurationService>,
-): [TypeMoq.IMock<IConfigurationService>, TypeMoq.IMock<IPythonSettings>] {
-    if (!configServiceMock) {
-        configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-    }
-    const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-    pythonSettings.setup((ps) => ps.languageServer).returns(() => languageServerValue);
-
-    configServiceMock.setup((cs) => cs.getSettings()).returns(() => pythonSettings.object);
-    return [configServiceMock, pythonSettings];
 }
 
 function setupInstallerForAvailabilityTest(

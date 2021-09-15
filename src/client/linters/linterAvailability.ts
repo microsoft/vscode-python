@@ -35,17 +35,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      *
      * @returns true if configuration was updated in any way, false otherwise.
      */
-    public async promptIfLinterAvailable(linterInfo: ILinterInfo, resource?: Uri): Promise<boolean> {
-        // Has the linter in question has been configured explicitly? If so, no need to continue.
-        if (!this.isLinterUsingDefaultConfiguration(linterInfo, resource)) {
-            return false;
-        }
-
-        // Is the linter available in the current workspace?
-        if (await this.isLinterAvailable(linterInfo, resource)) {
-            // great, it is - ask the user if they'd like to enable it.
-            return this.promptToConfigureAvailableLinter(linterInfo);
-        }
+    public async promptIfLinterAvailable(_: ILinterInfo, __?: Uri): Promise<boolean> {
         return false;
     }
 

@@ -3,15 +3,12 @@ contact_links:
   - name: Pylance
     url: https://github.com/microsoft/pylance-release/issues
     about: For issues relating to the Pylance language server extension
+  - name: Jupyter
+    url: https://github.com/microsoft/vscode-jupyter/issues
+    about: For issues relating to the Jupyter extension (including the interactive window)
   - name: Debugpy
     url: https://github.com/microsoft/debugpy/issues
     about: For issues relating to the debugpy debugger
-  - name: Jupyter
-    url: https://github.com/microsoft/vscode-jupyter/issues
-    about: For issues relating to the Jupyter extension
-  - name: Feature Request
-    url: https://github.com/microsoft/vscode-python/discussions/categories/ideas
-    about: For ideas to improve the extension
   - name: Help/Support
     url: https://github.com/microsoft/vscode-python/discussions/categories/q-a
     about: Having trouble with the extension? Need help getting something to work?

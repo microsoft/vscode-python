@@ -46,6 +46,7 @@ import {
     IApplicationShell,
     IClipboard,
     ICommandManager,
+    IContextKeyManager,
     IDebugService,
     IDocumentManager,
     IJupyterExtensionDependencyManager,
@@ -88,10 +89,6 @@ import { PathUtils } from './platform/pathUtils';
 import { CurrentProcess } from './process/currentProcess';
 import { ProcessLogger } from './process/logger';
 import { IProcessLogger } from './process/types';
-import { CodeCssGenerator } from './startPage/codeCssGenerator';
-import { StartPage } from './startPage/startPage';
-import { ThemeFinder } from './startPage/themeFinder';
-import { ICodeCssGenerator, IStartPage, IThemeFinder } from './startPage/types';
 import { TerminalActivator } from './terminal/activator';
 import { PowershellTerminalActivationFailedHandler } from './terminal/activator/powershellFailedHandler';
 import { Bash } from './terminal/environmentActivationProviders/bash';
@@ -117,9 +114,8 @@ import {
 
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { Random } from './utils/random';
-import { JupyterNotInstalledNotificationHelper } from '../jupyter/jupyterNotInstalledNotificationHelper';
-import { IJupyterNotInstalledNotificationHelper } from '../jupyter/types';
 import { InterpreterPathProxyService } from './interpreterPathProxyService';
+import { ContextKeyManager } from './application/contextKeyManager';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
@@ -145,11 +141,8 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IJupyterExtensionDependencyManager,
         JupyterExtensionDependencyManager,
     );
-    serviceManager.addSingleton<IJupyterNotInstalledNotificationHelper>(
-        IJupyterNotInstalledNotificationHelper,
-        JupyterNotInstalledNotificationHelper,
-    );
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
+    serviceManager.addSingleton<IContextKeyManager>(IContextKeyManager, ContextKeyManager);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
@@ -240,7 +233,4 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IExtensionSingleActivationService,
         DebugSessionTelemetry,
     );
-    serviceManager.addSingleton<IStartPage>(IStartPage, StartPage, undefined, [IExtensionSingleActivationService]);
-    serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
-    serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
 }

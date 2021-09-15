@@ -87,7 +87,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
             return [];
         }
 
-        const hasInterpreters = await this.interpreterService.hasInterpreters;
+        const hasInterpreters = await this.interpreterService.hasInterpreters();
         if (!hasInterpreters) {
             return [];
         }
@@ -104,17 +104,20 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
             return [];
         }
 
-        const interpreters = await this.interpreterService.getInterpreters(resource);
-        for (const info of interpreters) {
-            if (!(await this.helper.isMacDefaultPythonPath(info.path))) {
-                return [
-                    new InvalidMacPythonInterpreterDiagnostic(
-                        DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
-                        resource,
-                    ),
-                ];
-            }
+        if (
+            await this.interpreterService.hasInterpreters((e) =>
+                this.helper.isMacDefaultPythonPath(e.path).then((x) => !x),
+            )
+        ) {
+            // If non-mac default interpreters exist.
+            return [
+                new InvalidMacPythonInterpreterDiagnostic(
+                    DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
+                    resource,
+                ),
+            ];
         }
+
         return [
             new InvalidMacPythonInterpreterDiagnostic(
                 DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,

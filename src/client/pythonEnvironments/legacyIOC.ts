@@ -5,14 +5,13 @@ import { injectable } from 'inversify';
 import { intersection } from 'lodash';
 import * as vscode from 'vscode';
 import { DiscoveryVariants } from '../common/experiments/groups';
-import { traceError } from '../common/logger';
+import { traceError, traceVerbose } from '../common/logger';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { Resource } from '../common/types';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
-    GetInterpreterOptions,
     GLOBAL_VIRTUAL_ENV_SERVICE,
     IComponentAdapter,
     ICondaService,
@@ -29,15 +28,15 @@ import {
     PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE,
+    PythonEnvironmentsChangedEvent,
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../interpreter/virtualEnvs/types';
 import { IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from './base/info';
-import { IResolvingLocator, PythonLocatorQuery } from './base/locator';
+import { IDiscoveryAPI, PythonLocatorQuery } from './base/locator';
 import { isMacDefaultPythonPath } from './base/locators/lowLevel/macDefaultLocator';
-import { getEnvs } from './base/locatorUtils';
 import { inExperiment, isParentPath } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
@@ -68,6 +67,9 @@ import { toSemverLikeVersion } from './base/info/pythonVersion';
 import { PythonVersion } from './info/pythonVersion';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { EnvironmentInfoServiceQueuePriority, getEnvironmentInfoService } from './base/info/environmentInfoService';
+import { createDeferred } from '../common/utils/async';
+import { PythonEnvCollectionChangedEvent } from './base/watcher';
+import { asyncFilter } from '../common/utils/arrayUtils';
 
 const convertedKinds = new Map(
     Object.entries({
@@ -132,19 +134,43 @@ export async function isComponentEnabled(): Promise<boolean> {
     ]);
     return results.includes(true);
 }
-
-interface IPythonEnvironments extends IResolvingLocator {}
-
 @injectable()
 class ComponentAdapter implements IComponentAdapter {
     private readonly refreshing = new vscode.EventEmitter<void>();
 
     private readonly refreshed = new vscode.EventEmitter<void>();
 
+    private readonly changed = new vscode.EventEmitter<PythonEnvironmentsChangedEvent>();
+
     constructor(
         // The adapter only wraps one thing: the component API.
-        private readonly api: IPythonEnvironments,
-    ) {}
+        private readonly api: IDiscoveryAPI,
+    ) {
+        this.api.onChanged((event) => {
+            this.changed.fire({
+                type: event.type,
+                update: event.update ? convertEnvInfo(event.update) : undefined,
+                old: event.old ? convertEnvInfo(event.old) : undefined,
+                resource: event.searchLocation,
+            });
+        });
+    }
+
+    public triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
+        return this.api.triggerRefresh(query);
+    }
+
+    public get refreshPromise() {
+        return this.api.refreshPromise;
+    }
+
+    public get onRefreshStart(): vscode.Event<void> {
+        return this.api.onRefreshStart;
+    }
+
+    public get onChanged() {
+        return this.changed.event;
+    }
 
     // For use in VirtualEnvironmentPrompt.activate()
 
@@ -155,6 +181,7 @@ class ComponentAdapter implements IComponentAdapter {
             if (!workspaceFolder || !e.searchLocation) {
                 return;
             }
+            traceVerbose(`Recieved event ${JSON.stringify(e)} file change event`);
             if (
                 e.type === FileChangeType.Created &&
                 isParentPath(e.searchLocation.fsPath, workspaceFolder.uri.fsPath)
@@ -243,53 +270,58 @@ class ComponentAdapter implements IComponentAdapter {
     }
 
     // Implements IInterpreterLocatorService
-    public get hasInterpreters(): Promise<boolean> {
-        const iterator = this.api.iterEnvs();
-        return iterator.next().then((res) => !res.done);
+    public async hasInterpreters(
+        filter: (e: PythonEnvironment) => Promise<boolean> = async () => true,
+    ): Promise<boolean> {
+        const onAddedToCollection = createDeferred();
+        // Watch for collection changed events.
+        this.api.onChanged(async (e: PythonEnvCollectionChangedEvent) => {
+            if (e.update) {
+                if (await filter(convertEnvInfo(e.update))) {
+                    onAddedToCollection.resolve();
+                }
+            }
+        });
+        const initialEnvs = this.api.getEnvs();
+        if (initialEnvs.length > 0) {
+            return true;
+        }
+        // We should already have initiated discovery. Wait for an env to be added
+        // to the collection until the refresh has finished.
+        await Promise.race([onAddedToCollection.promise, this.api.refreshPromise]);
+        const envs = await asyncFilter(this.api.getEnvs(), (e) => filter(convertEnvInfo(e)));
+        return envs.length > 0;
     }
 
-    public async getInterpreters(
-        resource?: vscode.Uri,
-        options?: GetInterpreterOptions,
-        source?: PythonEnvSource[],
-    ): Promise<PythonEnvironment[]> {
+    public getInterpreters(resource?: vscode.Uri, source?: PythonEnvSource[]): PythonEnvironment[] {
         // Notify locators are locating.
         this.refreshing.fire();
 
-        const legacyEnvs = await this.getInterpretersViaAPI(resource, options, source).catch((ex) => {
-            traceError('Fetching environments via the new API failed', ex);
-            return <PythonEnvironment[]>[];
-        });
-
-        // Notify all locators have completed locating. Note it's crucial to notify this even when getInterpretersViaAPI
-        // fails, to ensure "Python extension loading..." text disappears.
-        this.refreshed.fire();
-        return legacyEnvs;
-    }
-
-    private async getInterpretersViaAPI(
-        resource?: vscode.Uri,
-        options?: GetInterpreterOptions,
-        source?: PythonEnvSource[],
-    ): Promise<PythonEnvironment[]> {
-        const query: PythonLocatorQuery = { ignoreCache: options?.ignoreCache };
+        const query: PythonLocatorQuery = {};
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
             if (wsFolder !== undefined) {
                 query.searchLocations = {
                     roots: [wsFolder.uri],
-                    includeNonRooted: true,
                 };
             }
+        } else {
+            query.searchLocations = {
+                roots: [],
+            };
         }
 
-        const iterator = this.api.iterEnvs(query);
-        let envs = await getEnvs(iterator);
+        let envs = this.api.getEnvs(query);
         if (source) {
             envs = envs.filter((env) => intersection(source, env.source).length > 0);
         }
 
-        return envs.map(convertEnvInfo);
+        const legacyEnvs = envs.map(convertEnvInfo);
+
+        // Notify all locators have completed locating. Note it's crucial to notify this even when getInterpretersViaAPI
+        // fails, to ensure "Python extension loading..." text disappears.
+        this.refreshed.fire();
+        return legacyEnvs;
     }
 
     public async getWorkspaceVirtualEnvInterpreters(
@@ -304,17 +336,13 @@ class ComponentAdapter implements IComponentAdapter {
             searchLocations: {
                 roots: [workspaceFolder.uri],
             },
-            ignoreCache: options?.ignoreCache,
         };
-        const iterator = this.api.iterEnvs(query);
-        const envs = await getEnvs(iterator);
+        if (options?.ignoreCache) {
+            await this.api.triggerRefresh(query);
+        }
+        await this.api.refreshPromise;
+        const envs = this.api.getEnvs(query);
         return envs.map(convertEnvInfo);
-    }
-
-    // Implements IInterpreterLocatorService (for WINDOWS_REGISTRY_SERVICE).
-
-    public async getWinRegInterpreters(resource: Resource): Promise<PythonEnvironment[]> {
-        return this.getInterpreters(resource, undefined, [PythonEnvSource.WindowsRegistry]);
     }
 }
 
@@ -410,6 +438,6 @@ export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceMana
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
 }
 
-export function registerNewDiscoveryForIOC(serviceManager: IServiceManager, api: IPythonEnvironments): void {
+export function registerNewDiscoveryForIOC(serviceManager: IServiceManager, api: IDiscoveryAPI): void {
     serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, new ComponentAdapter(api));
 }

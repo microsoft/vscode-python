@@ -13,6 +13,7 @@ import { traceDecorators } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { IDisposable, IExperimentService, IInterpreterPathService, Resource } from '../common/types';
 import { Deferred } from '../common/utils/async';
+import { addItemsToRunAfterActivation } from '../common/utils/runAfterActivation';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { sendActivationTelemetry } from '../telemetry/envFileTelemetry';
@@ -76,7 +77,9 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         }
 
         // Get latest interpreter list in the background.
-        this.interpreterService.getInterpreters(resource).ignoreErrors();
+        addItemsToRunAfterActivation(() => {
+            this.interpreterService.getInterpreters(resource).ignoreErrors();
+        });
 
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
 

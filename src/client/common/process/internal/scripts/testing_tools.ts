@@ -11,8 +11,10 @@ const SCRIPTS_DIR = path.join(_SCRIPTS_DIR, 'testing_tools');
 
 export function runAdapter(adapterArgs: string[]): string[] {
     const script = path.join(SCRIPTS_DIR, 'run_adapter.py');
-    // Note that we for now we do not run this "isolated".  The
-    // script relies on some magic that conflicts with the
-    // isolated script.
     return [script, ...adapterArgs];
+}
+
+export function unittestDiscovery(args: string[]): string[] {
+    const script = path.join(SCRIPTS_DIR, 'unittest_discovery.py');
+    return [script, ...args];
 }

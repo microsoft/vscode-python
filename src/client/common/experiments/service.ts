@@ -81,37 +81,30 @@ export class ExperimentService implements IExperimentService {
 
     public async activate(): Promise<void> {
         if (this.experimentationService) {
+            const initStart = Date.now();
             await this.experimentationService.initializePromise;
-            await this.experimentationService.initialFetch;
+
+            const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
+            if (experiments.features.length === 0) {
+                // Only await on this if we don't have anything in cache.
+                // This means that we start the session with partial experiment info.
+                // We accept this as a compromise to avoid delaying startup.
+
+                // In the case where we don't wait on this promise. If the experiment info changes,
+                // those changes will be applied in the next session. This is controlled internally
+                // in the tas-client via `overrideInMemoryFeatures` value that is passed to
+                // `getFeaturesAsync`. At the time of writing this comment the value of
+                // `overrideInMemoryFeatures` was always passed in as `false`. So, the experiment
+                // states did not change mid way.
+                await this.experimentationService.initialFetch;
+                sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_INIT_PERFORMANCE, Date.now() - initStart);
+            }
         }
         sendOptInOptOutTelemetry(this._optInto, this._optOutFrom, this.appEnvironment.packageJson);
     }
 
     public async inExperiment(experiment: string): Promise<boolean> {
-        if (!this.experimentationService) {
-            return false;
-        }
-
-        // Currently the service doesn't support opting in and out of experiments.
-        // so we need to perform these checks manually.
-        if (this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
-            return false;
-        }
-
-        if (this._optInto.includes('All') || this._optInto.includes(experiment)) {
-            // Check if the user was already in the experiment server-side. We need to do
-            // this to ensure the experiment service is ready and internal states are fully
-            // synced with the experiment server.
-            await this.experimentationService.getTreatmentVariableAsync(EXP_CONFIG_ID, experiment, true);
-            return true;
-        }
-
-        const treatmentVariable = await this.experimentationService.getTreatmentVariableAsync(
-            EXP_CONFIG_ID,
-            experiment,
-            true,
-        );
-        return treatmentVariable !== undefined;
+        return this.inExperimentSync(experiment);
     }
 
     public inExperimentSync(experiment: string): boolean {
@@ -145,7 +138,7 @@ export class ExperimentService implements IExperimentService {
             return undefined;
         }
 
-        return this.experimentationService.getTreatmentVariableAsync(EXP_CONFIG_ID, experiment, true);
+        return this.experimentationService.getTreatmentVariable<T>(EXP_CONFIG_ID, experiment);
     }
 
     private logExperiments() {

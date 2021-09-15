@@ -4,7 +4,10 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
+import { cloneDeep } from 'lodash';
 import { CancellationToken, DebugConfiguration, QuickPickItem, WorkspaceFolder } from 'vscode';
+import { CacheDebugConfig } from '../../../common/experiments/groups';
+import { IExperimentService } from '../../../common/types';
 import { DebugConfigStrings } from '../../../common/utils/localize';
 import {
     IMultiStepInput,
@@ -18,6 +21,7 @@ import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from 
 
 @injectable()
 export class PythonDebugConfigurationService implements IDebugConfigurationService {
+    private cacheDebugConfig: DebugConfiguration | undefined = undefined;
     constructor(
         @inject(IDebugConfigurationResolver)
         @named('attach')
@@ -28,6 +32,7 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         @inject(IDebugConfigurationProviderFactory)
         private readonly providerFactory: IDebugConfigurationProviderFactory,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
+        @inject(IExperimentService) private readonly experiments: IExperimentService,
     ) {}
 
     public async provideDebugConfigurations(
@@ -60,15 +65,33 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
                 token,
             );
         } else if (debugConfiguration.request === 'test') {
-            throw Error("Please use the command 'Python: Debug All Tests'");
+            // `"request": "test"` is now deprecated. But some users might have it in their
+            // launch config. We get here if they triggered it using F5 or start with debugger.
+            throw Error(
+                'This configuration can only be used by the test debugging commands. `"request": "test"` is deprecated use "purpose" instead.',
+            );
+        } else if (((debugConfiguration as LaunchRequestArguments).purpose ?? []).length > 0) {
+            // We reach here only if people try to use debug-test or debug-in-terminal purpose for
+            // launching a file via F5 or "start with debugging".
+            // debug-test : is not allowed to be launched via (F5 or "start with debugging") since it
+            //              requires test framework specific configuration that is done in the test
+            //              debug launcher.
+            // debug-in-terminal : is not allowed because we may update the configuration based on
+            //                     editor context where it was triggered.
+            throw Error('This configuration can only be used as defined by `purpose`.');
         } else {
             if (Object.keys(debugConfiguration).length === 0) {
-                const configs = await this.provideDebugConfigurations(folder, token);
-                if (configs === undefined) {
-                    return;
-                }
-                if (Array.isArray(configs) && configs.length === 1) {
-                    debugConfiguration = configs[0];
+                if ((await this.experiments.inExperiment(CacheDebugConfig.experiment)) && this.cacheDebugConfig) {
+                    debugConfiguration = cloneDeep(this.cacheDebugConfig);
+                } else {
+                    const configs = await this.provideDebugConfigurations(folder, token);
+                    if (configs === undefined) {
+                        return;
+                    }
+                    if (Array.isArray(configs) && configs.length === 1) {
+                        debugConfiguration = configs[0];
+                    }
+                    this.cacheDebugConfig = cloneDeep(debugConfiguration);
                 }
             }
             return this.launchResolver.resolveDebugConfiguration(

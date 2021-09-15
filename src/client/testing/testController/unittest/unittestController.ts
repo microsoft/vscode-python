@@ -20,7 +20,6 @@ import {
     TestData,
 } from '../common/types';
 import { unittestGetTestFolders, unittestGetTestPattern } from './arguments';
-import { execCode } from '../../../common/process/internal/python';
 import {
     createErrorTestItem,
     createWorkspaceRootTestItem,
@@ -29,6 +28,9 @@ import {
     updateTestItemFromRawData,
 } from '../common/testItemUtilities';
 import { traceError } from '../../../common/logger';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { EventName } from '../../../telemetry/constants';
+import { unittestDiscovery } from '../../../common/process/internal/scripts/testing_tools';
 
 @injectable()
 export class UnittestController implements ITestFrameworkController {
@@ -64,7 +66,6 @@ export class UnittestController implements ITestFrameworkController {
                     }
 
                     if (rawTestData.tests.length > 0) {
-                        item.description = item.id;
                         updateTestItemFromRawData(item, testController, this.idToRawData, item.id, [rawTestData]);
                     } else {
                         this.idToRawData.delete(item.id);
@@ -89,6 +90,7 @@ export class UnittestController implements ITestFrameworkController {
     }
 
     public async refreshTestData(testController: TestController, uri: Uri, token?: CancellationToken): Promise<void> {
+        sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: 'unittest' });
         const workspace = this.workspaceService.getWorkspaceFolder(uri);
         if (workspace) {
             // Discovery is expensive. So if it is already running then use the promise
@@ -109,50 +111,16 @@ export class UnittestController implements ITestFrameworkController {
 
             const startDir = unittestGetTestFolders(options.args)[0];
             const pattern = unittestGetTestPattern(options.args);
-            const discoveryScript = `
-import unittest
-import inspect
-
-def get_sourceline(obj):
-    s, n = inspect.getsourcelines(obj)
-    for i, v in enumerate(s):
-        if v.strip().startswith('def'):
-            return str(n+i)
-    return '*'
-
-def generate_test_cases(suite):
-    for test in suite:
-        if isinstance(test, unittest.TestCase):
-            yield test
-        else:
-            yield from generate_test_cases(test)
-
-loader = unittest.TestLoader()
-suite = loader.discover("${startDir}", pattern="${pattern}")
-
-print("start")  # Don't remove this line
-loader_errors = []
-for s in generate_test_cases(suite):
-    tm = getattr(s, s._testMethodName)
-    testId = s.id()
-    if testId.startswith("unittest.loader._FailedTest"):
-        loader_errors.append(s._exception)
-    else:
-        print(testId.replace(".", ":") + ":" + get_sourceline(tm))
-
-for error in loader_errors:
-    try:
-        print("=== exception start ===")
-        print(error.msg)
-        print("=== exception end ===")
-    except:
-        pass
-`;
+            let testDir = startDir;
+            if (path.isAbsolute(startDir)) {
+                const relative = path.relative(options.cwd, startDir);
+                testDir = relative.length > 0 ? relative : '.';
+            }
 
             const runOptions: Options = {
                 // unittest needs to load modules in the workspace
                 // isolating it breaks unittest discovery
-                args: execCode(discoveryScript),
+                args: unittestDiscovery([startDir, pattern]),
                 cwd: options.cwd,
                 workspaceFolder: options.workspaceFolder,
                 token: options.token,
@@ -165,12 +133,7 @@ for error in loader_errors:
             let rawTestData: RawDiscoveredTests | undefined;
             try {
                 const content = await this.discoveryRunner.run(UNITTEST_PROVIDER, runOptions);
-                rawTestData = await testDiscoveryParser(
-                    options.cwd,
-                    path.isAbsolute(startDir) ? path.relative(options.cwd, startDir) : startDir,
-                    getTestIds(content),
-                    options.token,
-                );
+                rawTestData = await testDiscoveryParser(options.cwd, testDir, getTestIds(content), options.token);
                 this.testData.set(workspace.uri.fsPath, rawTestData);
 
                 const exceptions = getTestDiscoveryExceptions(content);
@@ -199,18 +162,20 @@ for error in loader_errors:
 
                 deferred.resolve();
             } catch (ex) {
-                traceError('Error discovering unittest tests:\r\n', ex);
+                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: 'unittest', failed: true });
+                const cancel = options.token?.isCancellationRequested ? 'Cancelled' : 'Error';
+                traceError(`${cancel} discovering unittest tests:\r\n`, ex);
 
                 // Report also on the test view.
                 testController.items.add(
                     createErrorTestItem(testController, {
                         id: `DiscoveryError:${workspace.uri.fsPath}`,
                         label: `Unittest Discovery Error [${path.basename(workspace.uri.fsPath)}]`,
-                        error: util.format('Error discovering unittest tests (see Output > Python):\r\n', ex),
+                        error: util.format(`${cancel} discovering unittest tests (see Output > Python):\r\n`, ex),
                     }),
                 );
 
-                deferred.reject(ex);
+                deferred.reject(ex as Error);
             } finally {
                 // Discovery has finished running we have the raw test data at this point.
                 this.discovering.delete(workspace.uri.fsPath);
@@ -252,6 +217,7 @@ for error in loader_errors:
                 await this.resolveChildren(testController, newItem);
             }
         }
+        sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: 'unittest', failed: false });
         return Promise.resolve();
     }
 
@@ -372,9 +338,9 @@ function testDiscoveryParser(
 
                 const folderParts = [];
                 for (const folder of folders) {
-                    const parentId = folderParts.length === 0 ? testDir : `${folderParts.join('/')}`;
+                    const parentId = folderParts.length === 0 ? testDir : `./${folderParts.join('/')}`;
                     folderParts.push(folder);
-                    const pathId = `${folderParts.join('/')}`;
+                    const pathId = `./${folderParts.join('/')}`;
                     const rawFolder = parents.find((f) => f.id === pathId);
                     if (!rawFolder) {
                         parents.push({

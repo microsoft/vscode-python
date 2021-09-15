@@ -3,27 +3,21 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { EnvironmentSorting } from '../../common/experiments/groups';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IExperimentService, IPersistentState, IPersistentStateFactory, Resource } from '../../common/types';
+import { IPersistentState, IPersistentStateFactory, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { compareSemVerLikeVersions } from '../../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { EnvTypeHeuristic, getEnvTypeHeuristic } from '../configuration/environmentTypeComparer';
-import { InterpreterComparisonType, IInterpreterComparer } from '../configuration/types';
+import { IInterpreterComparer } from '../configuration/types';
 import { IInterpreterHelper, IInterpreterService } from '../contracts';
-import {
-    AutoSelectionRule,
-    IInterpreterAutoSelectionRule,
-    IInterpreterAutoSelectionService,
-    IInterpreterAutoSelectionProxyService,
-} from './types';
+import { IInterpreterAutoSelectionService, IInterpreterAutoSelectionProxyService } from './types';
 
 const preferredGlobalInterpreter = 'preferredGlobalPyInterpreter';
 const workspacePathNameForGlobalWorkspaces = '';
@@ -43,98 +37,40 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         undefined,
     );
 
-    private readonly rules: IInterpreterAutoSelectionRule[] = [];
-
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IInterpreterComparer)
-        @named(InterpreterComparisonType.EnvType)
-        private readonly envTypeComparer: IInterpreterComparer,
-        @inject(IInterpreterAutoSelectionRule)
-        @named(AutoSelectionRule.systemWide)
-        systemInterpreter: IInterpreterAutoSelectionRule,
-        @inject(IInterpreterAutoSelectionRule)
-        @named(AutoSelectionRule.currentPath)
-        currentPathInterpreter: IInterpreterAutoSelectionRule,
-        @inject(IInterpreterAutoSelectionRule)
-        @named(AutoSelectionRule.windowsRegistry)
-        winRegInterpreter: IInterpreterAutoSelectionRule,
-        @inject(IInterpreterAutoSelectionRule)
-        @named(AutoSelectionRule.cachedInterpreters)
-        cachedPaths: IInterpreterAutoSelectionRule,
-        @inject(IInterpreterAutoSelectionRule)
-        @named(AutoSelectionRule.settings)
-        private readonly userDefinedInterpreter: IInterpreterAutoSelectionRule,
-        @inject(IInterpreterAutoSelectionRule)
-        @named(AutoSelectionRule.workspaceVirtualEnvs)
-        workspaceInterpreter: IInterpreterAutoSelectionRule,
+        @inject(IInterpreterComparer) private readonly envTypeComparer: IInterpreterComparer,
         @inject(IInterpreterAutoSelectionProxyService) proxy: IInterpreterAutoSelectionProxyService,
         @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
     ) {
-        // It is possible we area always opening the same workspace folder, but we still need to determine and cache
-        // the best available interpreters based on other rules (cache for furture use).
-        this.rules.push(
-            ...[
-                winRegInterpreter,
-                currentPathInterpreter,
-                systemInterpreter,
-                cachedPaths,
-                userDefinedInterpreter,
-                workspaceInterpreter,
-            ],
-        );
         proxy.registerInstance!(this);
-        // Rules are as follows in order
-        // 1. First check user settings.json
-        //      If we have user settings, then always use that, do not proceed.
-        // 2. Check workspace virtual environments (pipenv, etc).
-        //      If we have some, then use those as preferred workspace environments.
-        // 3. Check list of cached interpreters (previously cachced from all the rules).
-        //      If we find a good one, use that as preferred global env.
-        //      Provided its better than what we have already cached as globally preffered interpreter (globallyPreferredInterpreter).
-        // 4. Check current path.
-        //      If we find a good one, use that as preferred global env.
-        //      Provided its better than what we have already cached as globally preffered interpreter (globallyPreferredInterpreter).
-        // 5. Check windows registry.
-        //      If we find a good one, use that as preferred global env.
-        //      Provided its better than what we have already cached as globally preffered interpreter (globallyPreferredInterpreter).
-        // 6. Check the entire system.
-        //      If we find a good one, use that as preferred global env.
-        //      Provided its better than what we have already cached as globally preffered interpreter (globallyPreferredInterpreter).
-        userDefinedInterpreter.setNextRule(workspaceInterpreter);
-        workspaceInterpreter.setNextRule(cachedPaths);
-        cachedPaths.setNextRule(currentPathInterpreter);
-        currentPathInterpreter.setNextRule(winRegInterpreter);
-        winRegInterpreter.setNextRule(systemInterpreter);
     }
 
     /**
-     * If there's a cached auto-selected interpreter -> return it.
-     * If not, check if we are in the env sorting experiment, and use the appropriate auto-selection logic.
+     * Auto-select a Python environment from the list returned by environment discovery.
+     * If there's a cached auto-selected environment -> return it.
      */
-    @captureTelemetry(EventName.PYTHON_INTERPRETER_AUTO_SELECTION, { rule: AutoSelectionRule.all }, true)
     public async autoSelectInterpreter(resource: Resource): Promise<void> {
         const key = this.getWorkspacePathKey(resource);
+        const useCachedInterpreter = this.autoSelectedWorkspacePromises.has(key);
 
-        if (!this.autoSelectedWorkspacePromises.has(key)) {
+        if (!useCachedInterpreter) {
             const deferred = createDeferred<void>();
             this.autoSelectedWorkspacePromises.set(key, deferred);
 
             await this.initializeStore(resource);
             await this.clearWorkspaceStoreIfInvalid(resource);
-
-            if (await this.experimentService.inExperiment(EnvironmentSorting.experiment)) {
-                await this.autoselectInterpreterWithLocators(resource);
-            } else {
-                await this.autoselectInterpreterWithRules(resource);
-            }
+            await this.autoselectInterpreterWithLocators(resource);
 
             deferred.resolve();
         }
+
+        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_AUTO_SELECTION, undefined, {
+            useCachedInterpreter,
+        });
 
         return this.autoSelectedWorkspacePromises.get(key)!.promise;
     }
@@ -171,7 +107,6 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
     protected async clearWorkspaceStoreIfInvalid(resource: Resource): Promise<void> {
         const stateStore = this.getWorkspaceState(resource);
         if (stateStore && stateStore.value && !(await this.fs.fileExists(stateStore.value.path))) {
-            sendTelemetryEvent(EventName.PYTHON_INTERPRETER_AUTO_SELECTION, {}, { interpreterMissing: true });
             await stateStore.updateValue(undefined);
         }
     }
@@ -241,12 +176,10 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         return undefined;
     }
 
-    private async autoselectInterpreterWithRules(resource: Resource): Promise<void> {
-        await this.userDefinedInterpreter.autoSelectInterpreter(resource, this);
-
-        this.didAutoSelectedInterpreterEmitter.fire();
-
-        Promise.all(this.rules.map((item) => item.autoSelectInterpreter(resource))).ignoreErrors();
+    private getAutoSelectionInterpretersQueryState(resource: Resource): IPersistentState<boolean | undefined> {
+        const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
+        const key = `autoSelectionInterpretersQueried-${workspaceUri?.folderUri.fsPath || 'global'}`;
+        return this.stateFactory.createWorkspacePersistentState(key, undefined);
     }
 
     /**
@@ -260,7 +193,15 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
      * As such, we can sort interpreters based on what it returns.
      */
     private async autoselectInterpreterWithLocators(resource: Resource): Promise<void> {
-        const interpreters = await this.interpreterService.getInterpreters(resource, { ignoreCache: true });
+        // Do not perform a full interpreter search if we already have cached interpreters for this workspace.
+        const queriedState = this.getAutoSelectionInterpretersQueryState(resource);
+        if (queriedState.value !== true && resource) {
+            await this.interpreterService.triggerRefresh({
+                searchLocations: { roots: [resource], doNotIncludeNonRooted: true },
+            });
+        }
+
+        const interpreters = await this.interpreterService.getAllInterpreters(resource);
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
 
         // When auto-selecting an intepreter for a workspace, we either want to return a local one
@@ -277,6 +218,8 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         } else {
             this.setGlobalInterpreter(filteredInterpreters[0]);
         }
+
+        queriedState.updateValue(true);
 
         this.didAutoSelectedInterpreterEmitter.fire();
     }

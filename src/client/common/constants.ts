@@ -23,11 +23,8 @@ export const AppinsightsKey = 'AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217';
 export type Channel = 'stable' | 'insiders';
 
 export enum CommandSource {
-    auto = 'auto',
     ui = 'ui',
-    codelens = 'codelens',
     commandPalette = 'commandpalette',
-    testExplorer = 'testExplorer',
 }
 
 export namespace Commands {
@@ -35,10 +32,14 @@ export namespace Commands {
     export const Set_ShebangInterpreter = 'python.setShebangInterpreter';
     export const Exec_In_Terminal = 'python.execInTerminal';
     export const Exec_In_Terminal_Icon = 'python.execInTerminal-icon';
+    export const Debug_In_Terminal = 'python.debugInTerminal';
     export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
     export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
     export const Tests_Configure = 'python.configureTests';
     export const Test_Refresh = 'python.refreshTests';
+    // `python.refreshingTests` is a dummy command just to show the spinning icon
+    export const Test_Refreshing = 'python.refreshingTests';
+    export const Test_Stop_Refreshing = 'python.stopRefreshingTests';
     export const Sort_Imports = 'python.sortImports';
     export const ViewOutput = 'python.viewOutput';
     export const Build_Workspace_Symbols = 'python.buildWorkspaceSymbols';
@@ -55,7 +56,6 @@ export namespace Commands {
     export const GetSelectedInterpreterPath = 'python.interpreterPath';
     export const ClearStorage = 'python.clearPersistentStorage';
     export const ClearWorkspaceInterpreter = 'python.clearWorkspaceInterpreter';
-    export const OpenStartPage = 'python.startPage.open';
     export const LaunchTensorBoard = 'python.launchTensorBoard';
     export const RefreshTensorBoard = 'python.refreshTensorBoard';
     export const ReportIssue = 'python.reportIssue';
@@ -63,6 +63,7 @@ export namespace Commands {
 
 // Look at https://microsoft.github.io/vscode-codicons/dist/codicon.html for other Octicon icon ids
 export namespace Octicons {
+    export const Add = '$(add)';
     export const Test_Pass = '$(check)';
     export const Test_Fail = '$(alert)';
     export const Test_Error = '$(x)';
@@ -70,7 +71,8 @@ export namespace Octicons {
     export const Downloading = '$(cloud-download)';
     export const Installing = '$(desktop-download)';
     export const Search_Stop = '$(search-stop)';
-    export const Star = '$(star)';
+    export const Star = '$(star-full)';
+    export const Gear = '$(gear)';
 }
 
 export const DEFAULT_INTERPRETER_SETTING = 'python';
@@ -85,7 +87,7 @@ export function isTestExecution(): boolean {
 
 /**
  * Whether we're running unit tests (*.unit.test.ts).
- * These tests have a speacial meaning, they run fast.
+ * These tests have a special meaning, they run fast.
  * @export
  * @returns {boolean}
  */
@@ -93,8 +95,6 @@ export function isUnitTestExecution(): boolean {
     return process.env.VSC_PYTHON_UNIT_TEST === '1';
 }
 
-// Temporary constant, used to indicate whether we're using custom editor api or not.
-export const UseCustomEditorApi = Symbol('USE_CUSTOM_EDITOR');
 export const UseProposedApi = Symbol('USE_VSC_PROPOSED_API');
 
 export * from '../constants';
