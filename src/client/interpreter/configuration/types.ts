@@ -23,14 +23,8 @@ export interface IPythonPathUpdaterServiceManager {
     ): Promise<void>;
 }
 
-export type PythonEnvSuggestionChangedEvent = {
-    old?: IInterpreterQuickPickItem;
-    update?: IInterpreterQuickPickItem | undefined;
-};
-
 export const IInterpreterSelector = Symbol('IInterpreterSelector');
 export interface IInterpreterSelector extends Disposable {
-    readonly onChanged: Event<PythonEnvSuggestionChangedEvent>;
     getAllSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]>;
     getSuggestions(resource: Resource, sortSuggestions: boolean): Promise<IInterpreterQuickPickItem[]>;
 }
