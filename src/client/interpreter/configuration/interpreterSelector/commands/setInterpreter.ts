@@ -263,10 +263,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         }
 
         const expandedPaths = suggestions.map((s) => {
-            const suggestionPath = s.path;
-            if (!suggestionPath) {
-                return undefined;
-            }
+            const suggestionPath = 'interpreter' in s ? s.interpreter.path : '';
             let expandedPath = path.normalize(untildify(suggestionPath));
 
             if (!path.isAbsolute(suggestionPath)) {
