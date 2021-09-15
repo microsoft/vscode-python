@@ -490,21 +490,6 @@ suite('Linter Availability Provider tests', () => {
         );
     });
 
-    // test('Overall implementation changes configuration when user is prompted and "Enable <linter>" is selected', async () => {
-    //     // set expectations
-    //     const testOpts = new AvailablityTestOverallOptions();
-    //     testOpts.promptAction = 'enable';
-    //     const expectedResult = true;
-
-    //     // arrange
-    //     const result = await performTestOfOverallImplementation(testOpts);
-
-    //     expect(expectedResult).to.equal(
-    //         result,
-    //         'Configuration should change if the user is prompted and they choose to update the linter config.',
-    //     );
-    // });
-
     test('Discovery of linter is available in the environment returns true when it succeeds and is present', async () => {
         // set expectations
         const linterIsInstalled = true;
