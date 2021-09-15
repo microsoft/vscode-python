@@ -19,7 +19,7 @@ import { LanguageServerType } from '../../client/activation/types';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IPythonToolExecutionService } from '../../client/common/process/types';
-import { ExecutionInfo, IConfigurationService, IInstaller, IPythonSettings } from '../../client/common/types';
+import { IConfigurationService, IInstaller, IPythonSettings } from '../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
     IInterpreterAutoSelectionProxyService,
@@ -164,67 +164,6 @@ suite('Linting - Pylint', () => {
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the workspace tree.`);
     });
 
-    test('minArgs - pylintrc between the file and the workspace root', async () => {
-        fileSystem.setup((x) => x.fileExists(path.join('/user/a/b', pylintrc))).returns(() => Promise.resolve(true));
-
-        await testPylintArguments('/user/a/b/c', '/user/a', false);
-    });
-
-    test('minArgs - no pylintrc between the file and the workspace root', async () => {
-        await testPylintArguments('/user/a/b/c', '/user/a', true);
-    });
-
-    test('minArgs - pylintrc next to the file', async () => {
-        const fileFolder = '/user/a/b/c';
-        fileSystem.setup((x) => x.fileExists(path.join(fileFolder, pylintrc))).returns(() => Promise.resolve(true));
-
-        await testPylintArguments(fileFolder, '/user/a', false);
-    });
-
-    test('minArgs - pylintrc at the workspace root', async () => {
-        const root = '/user/a';
-        fileSystem.setup((x) => x.fileExists(path.join(root, pylintrc))).returns(() => Promise.resolve(true));
-
-        await testPylintArguments('/user/a/b/c', root, false);
-    });
-
-    async function testPylintArguments(fileFolder: string, wsRoot: string, expectedMinArgs: boolean): Promise<void> {
-        const outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
-        const pylinter = new Pylint(outputChannel.object, serviceContainer);
-
-        const document = TypeMoq.Mock.ofType<TextDocument>();
-        document.setup((x) => x.uri).returns(() => Uri.file(path.join(fileFolder, 'test.py')));
-
-        const wsf = TypeMoq.Mock.ofType<WorkspaceFolder>();
-        wsf.setup((x) => x.uri).returns(() => Uri.file(wsRoot));
-
-        workspace.setup((x) => x.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => wsf.object);
-
-        let execInfo: ExecutionInfo | undefined;
-        execService
-            .setup((x) => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .callback((e: ExecutionInfo) => {
-                execInfo = e;
-            })
-            .returns(() => Promise.resolve({ stdout: '', stderr: '' }));
-
-        const lintSettings = new MockLintingSettings();
-
-        lintSettings.pylintPath = 'pyLint';
-
-        lintSettings.pylintEnabled = true;
-
-        const settings = TypeMoq.Mock.ofType<IPythonSettings>();
-        settings.setup((x) => x.linting).returns(() => lintSettings);
-        settings.setup((x) => x.languageServer).returns(() => LanguageServerType.Jedi);
-        config.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
-
-        await pylinter.lint(document.object, new CancellationTokenSource().token);
-        expect(
-            execInfo!.args.findIndex((x) => x.indexOf('--disable=all') >= 0),
-            'Minimal args passed to pylint while pylintrc exists.',
-        ).to.be.eq(expectedMinArgs ? 0 : -1);
-    }
     test('Negative column numbers should be treated 0', async () => {
         const fileFolder = '/user/a/b/c';
         const outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
