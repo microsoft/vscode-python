@@ -2,7 +2,6 @@
     "python.command.python.sortImports.title": "排序 import 语句",
     "python.command.python.startREPL.title": "启动 REPL",
     "python.command.python.createTerminal.title": "创建终端",
-    "python.command.python.buildWorkspaceSymbols.title": "构建工作区符号",
     "python.command.python.execInTerminal.title": "在终端中运行 Python 文件",
     "python.command.python.setInterpreter.title": "选择解释器",
     "python.command.python.switchOffInsidersChannel.title": "切换到默认版本",

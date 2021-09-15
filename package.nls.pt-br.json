@@ -2,7 +2,6 @@
     "python.command.python.sortImports.title": "Ordenar Importações",
     "python.command.python.startREPL.title": "Iniciar REPL",
     "python.command.python.createTerminal.title": "Criar Terminal",
-    "python.command.python.buildWorkspaceSymbols.title": "Construir Símbolos da Área de Trabalho",
     "python.command.python.execInTerminal.title": "Executar Arquivo no Terminal",
     "python.command.python.setInterpreter.title": "Selecionar Interpretador",
     "python.command.python.execSelectionInTerminal.title": "Executar Seleção/Linha no Terminal",

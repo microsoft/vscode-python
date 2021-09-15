@@ -36,7 +36,6 @@ export enum OSType {
 }
 
 export type PythonSettingKeys =
-    | 'workspaceSymbols.enabled'
     | 'pythonPath'
     | 'languageServer'
     | 'linting.lintOnSave'
