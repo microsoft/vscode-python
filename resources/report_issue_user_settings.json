@@ -5,8 +5,6 @@
     "defaultInterpreterPath": "placeholder",
     "defaultLS": true,
     "downloadLanguageServer": true,
-    "jediPath": false,
-    "jediMemoryLimit": false,
     "envFile": "placeholder",
     "venvPath": "placeholder",
     "venvFolders": "placeholder",
