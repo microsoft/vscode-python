@@ -29,10 +29,10 @@ export class ShellDetector {
     /**
      * Logic is as follows:
      * 1. Try to identify the type of the shell based on the name of the terminal.
-     * 2. Try to identify the type of the shell based on the usettigs in VSC.
+     * 2. Try to identify the type of the shell based on the settings in VSC.
      * 3. Try to identify the type of the shell based on the user environment (OS).
      * 4. If all else fail, use defaults hardcoded (cmd for windows, bash for linux & mac).
-     * More information here See solution here https://github.com/microsoft/vscode/issues/74233#issuecomment-497527337
+     * More information here: https://github.com/microsoft/vscode/issues/74233#issuecomment-497527337
      *
      * @param {Terminal} [terminal]
      * @returns {TerminalShellType}
