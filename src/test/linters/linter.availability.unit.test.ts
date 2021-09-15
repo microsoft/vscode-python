@@ -12,85 +12,16 @@ import { LanguageServerType } from '../../client/activation/types';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
-import { ConfigurationService } from '../../client/common/configuration/service';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
-import {
-    IConfigurationService,
-    IPersistentState,
-    IPersistentStateFactory,
-    IPythonSettings,
-    Product,
-} from '../../client/common/types';
+import { IConfigurationService, IPersistentState, IPersistentStateFactory, Product } from '../../client/common/types';
 import { Common, Linters } from '../../client/common/utils/localize';
 import { AvailableLinterActivator } from '../../client/linters/linterAvailability';
 import { LinterInfo } from '../../client/linters/linterInfo';
 import { IAvailableLinterActivator, ILinterInfo, LinterId } from '../../client/linters/types';
 
 suite('Linter Availability Provider tests', () => {
-    test('Availability feature is disabled when global default for languageServer === Jedi.', async () => {
-        // set expectations
-        const languageServerValue = LanguageServerType.Jedi;
-        const expectedResult = false;
-
-        // arrange
-        const [
-            appShellMock,
-            fsMock,
-            workspaceServiceMock,
-            configServiceMock,
-            factoryMock,
-        ] = getDependenciesForAvailabilityTests();
-        setupConfigurationServiceForJediSettingsTest(languageServerValue, configServiceMock);
-
-        // call
-        const availabilityProvider = new AvailableLinterActivator(
-            appShellMock.object,
-            fsMock.object,
-            workspaceServiceMock.object,
-            configServiceMock.object,
-            factoryMock.object,
-        );
-
-        // check expectaions
-        expect(availabilityProvider.isFeatureEnabled).is.equal(
-            expectedResult,
-            'Avaialability feature should be disabled when python.languageServer is Jedi',
-        );
-        workspaceServiceMock.verifyAll();
-    });
-
-    test('Availability feature is enabled when global default for languageServer is Microsoft.', async () => {
-        // set expectations
-        const languageServerValue = LanguageServerType.Microsoft;
-        const expectedResult = true;
-
-        // arrange
-        const [
-            appShellMock,
-            fsMock,
-            workspaceServiceMock,
-            configServiceMock,
-            factoryMock,
-        ] = getDependenciesForAvailabilityTests();
-        setupConfigurationServiceForJediSettingsTest(languageServerValue, configServiceMock);
-
-        const availabilityProvider = new AvailableLinterActivator(
-            appShellMock.object,
-            fsMock.object,
-            workspaceServiceMock.object,
-            configServiceMock.object,
-            factoryMock.object,
-        );
-
-        expect(availabilityProvider.isFeatureEnabled).is.equal(
-            expectedResult,
-            'Avaialability feature should be enabled when python.languageServer defaults to non-Jedi',
-        );
-        workspaceServiceMock.verifyAll();
-    });
-
     test('Prompt will be performed when linter is not configured at all for the workspace, workspace-folder, or the user', async () => {
         // setup expectations
         const pylintUserValue = undefined;
@@ -102,7 +33,7 @@ suite('Linter Availability Provider tests', () => {
             appShellMock,
             fsMock,
             workspaceServiceMock,
-            configServiceMock,
+            ,
             factoryMock,
             linterInfo,
         ] = getDependenciesForAvailabilityTests();
@@ -117,7 +48,6 @@ suite('Linter Availability Provider tests', () => {
             appShellMock.object,
             fsMock.object,
             workspaceServiceMock.object,
-            configServiceMock.object,
             factoryMock.object,
         );
 
@@ -138,7 +68,7 @@ suite('Linter Availability Provider tests', () => {
             appShellMock,
             fsMock,
             workspaceServiceMock,
-            configServiceMock,
+            ,
             factoryMock,
             linterInfo,
         ] = getDependenciesForAvailabilityTests();
@@ -153,7 +83,6 @@ suite('Linter Availability Provider tests', () => {
             appShellMock.object,
             fsMock.object,
             workspaceServiceMock.object,
-            configServiceMock.object,
             factoryMock.object,
         );
 
@@ -177,7 +106,7 @@ suite('Linter Availability Provider tests', () => {
             appShellMock,
             fsMock,
             workspaceServiceMock,
-            configServiceMock,
+            ,
             factoryMock,
             linterInfo,
         ] = getDependenciesForAvailabilityTests();
@@ -191,7 +120,6 @@ suite('Linter Availability Provider tests', () => {
             appShellMock.object,
             fsMock.object,
             workspaceServiceMock.object,
-            configServiceMock.object,
             factoryMock.object,
         );
 
@@ -215,7 +143,7 @@ suite('Linter Availability Provider tests', () => {
             appShellMock,
             fsMock,
             workspaceServiceMock,
-            configServiceMock,
+            ,
             factoryMock,
             linterInfo,
         ] = getDependenciesForAvailabilityTests();
@@ -229,7 +157,6 @@ suite('Linter Availability Provider tests', () => {
             appShellMock.object,
             fsMock.object,
             workspaceServiceMock.object,
-            configServiceMock.object,
             factoryMock.object,
         );
 
@@ -302,7 +229,6 @@ suite('Linter Availability Provider tests', () => {
             appShellMock.object,
             fsMock.object,
             workspaceServiceMock.object,
-            configServiceMock.object,
             factoryMock.object,
         );
         const result = await availabilityProvider.promptToConfigureAvailableLinter(linterInfo);
@@ -399,7 +325,7 @@ suite('Linter Availability Provider tests', () => {
             appShellMock,
             fsMock,
             workspaceServiceMock,
-            configServiceMock,
+            ,
             factoryMock,
             linterInfo,
         ] = getDependenciesForAvailabilityTests();
@@ -435,7 +361,6 @@ suite('Linter Availability Provider tests', () => {
             .returns(async () => options.linterIsInstalled)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
-        setupConfigurationServiceForJediSettingsTest(options.languageServerValue, configServiceMock);
         setupWorkspaceMockForLinterConfiguredTests(
             options.pylintUserEnabled,
             options.pylintWorkspaceEnabled,
@@ -453,7 +378,6 @@ suite('Linter Availability Provider tests', () => {
             appShellMock.object,
             fsMock.object,
             workspaceServiceMock.object,
-            configServiceMock.object,
             factoryMock.object,
         );
         return availabilityProvider.promptIfLinterAvailable(linterInfo);
@@ -566,21 +490,6 @@ suite('Linter Availability Provider tests', () => {
         );
     });
 
-    test('Overall implementation changes configuration when user is prompted and "Enable <linter>" is selected', async () => {
-        // set expectations
-        const testOpts = new AvailablityTestOverallOptions();
-        testOpts.promptAction = 'enable';
-        const expectedResult = true;
-
-        // arrange
-        const result = await performTestOfOverallImplementation(testOpts);
-
-        expect(expectedResult).to.equal(
-            result,
-            'Configuration should change if the user is prompted and they choose to update the linter config.',
-        );
-    });
-
     test('Discovery of linter is available in the environment returns true when it succeeds and is present', async () => {
         // set expectations
         const linterIsInstalled = true;
@@ -591,7 +500,7 @@ suite('Linter Availability Provider tests', () => {
             appShellMock,
             fsMock,
             workspaceServiceMock,
-            configServiceMock,
+            ,
             factoryMock,
             linterInfo,
         ] = getDependenciesForAvailabilityTests();
@@ -602,7 +511,6 @@ suite('Linter Availability Provider tests', () => {
             appShellMock.object,
             fsMock.object,
             workspaceServiceMock.object,
-            configServiceMock.object,
             factoryMock.object,
         );
         const result = await availabilityProvider.isLinterAvailable(linterInfo, undefined);
@@ -625,7 +533,7 @@ suite('Linter Availability Provider tests', () => {
             appShellMock,
             fsMock,
             workspaceServiceMock,
-            configServiceMock,
+            ,
             factoryMock,
             linterInfo,
         ] = getDependenciesForAvailabilityTests();
@@ -636,7 +544,6 @@ suite('Linter Availability Provider tests', () => {
             appShellMock.object,
             fsMock.object,
             workspaceServiceMock.object,
-            configServiceMock.object,
             factoryMock.object,
         );
         const result = await availabilityProvider.isLinterAvailable(linterInfo, undefined);
@@ -667,7 +574,6 @@ suite('Linter Availability Provider tests', () => {
                 instance(mock(ApplicationShell)),
                 instance(fs),
                 instance(workspaceService),
-                instance(mock(ConfigurationService)),
                 instance(mock(PersistentStateFactory)),
             );
         });
@@ -802,20 +708,6 @@ function setupWorkspaceMockForLinterConfiguredTests(
         .verifiable(TypeMoq.Times.once());
 
     return workspaceServiceMock;
-}
-
-function setupConfigurationServiceForJediSettingsTest(
-    languageServerValue: LanguageServerType,
-    configServiceMock: TypeMoq.IMock<IConfigurationService>,
-): [TypeMoq.IMock<IConfigurationService>, TypeMoq.IMock<IPythonSettings>] {
-    if (!configServiceMock) {
-        configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-    }
-    const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-    pythonSettings.setup((ps) => ps.languageServer).returns(() => languageServerValue);
-
-    configServiceMock.setup((cs) => cs.getSettings()).returns(() => pythonSettings.object);
-    return [configServiceMock, pythonSettings];
 }
 
 function setupInstallerForAvailabilityTest(

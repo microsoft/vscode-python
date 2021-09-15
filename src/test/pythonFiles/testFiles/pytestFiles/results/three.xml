@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?><testsuite errors="0" failures="1" name="pytest" skips="0" tests="4" time="0.048"><testcase classname="tests.test_another_pytest" file="tests/test_another_pytest.py" line="12" name="test_username" time="0.001523733139038086"></testcase><testcase classname="tests.test_another_pytest" file="tests/test_another_pytest.py" line="15" name="test_parametrized_username[one]" time="0.0007066726684570312"></testcase><testcase classname="tests.test_another_pytest" file="tests/test_another_pytest.py" line="15" name="test_parametrized_username[two]" time="0.0009090900421142578"></testcase><testcase classname="tests.test_another_pytest" file="tests/test_another_pytest.py" line="15" name="test_parametrized_username[three]" time="0.0011417865753173828"><failure message="AssertionError: assert &apos;three&apos; in [&apos;one&apos;, &apos;two&apos;, &apos;threes&apos;]">non_parametrized_username = &apos;three&apos;
-
-    def test_parametrized_username(non_parametrized_username):
-&gt;       assert non_parametrized_username in [&apos;one&apos;, &apos;two&apos;, &apos;threes&apos;]
-E       AssertionError: assert &apos;three&apos; in [&apos;one&apos;, &apos;two&apos;, &apos;threes&apos;]
-
-tests/test_another_pytest.py:17: AssertionError</failure></testcase></testsuite>

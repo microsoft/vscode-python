@@ -6,11 +6,10 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { LanguageServerType } from '../activation/types';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
 import '../common/extensions';
 import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService, IPersistentStateFactory, Resource } from '../common/types';
+import { IPersistentStateFactory, Resource } from '../common/types';
 import { Common, Linters } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -23,7 +22,6 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
     ) {}
 
@@ -37,22 +35,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      *
      * @returns true if configuration was updated in any way, false otherwise.
      */
-    public async promptIfLinterAvailable(linterInfo: ILinterInfo, resource?: Uri): Promise<boolean> {
-        // Has the feature been enabled yet?
-        if (!this.isFeatureEnabled) {
-            return false;
-        }
-
-        // Has the linter in question has been configured explicitly? If so, no need to continue.
-        if (!this.isLinterUsingDefaultConfiguration(linterInfo, resource)) {
-            return false;
-        }
-
-        // Is the linter available in the current workspace?
-        if (await this.isLinterAvailable(linterInfo, resource)) {
-            // great, it is - ask the user if they'd like to enable it.
-            return this.promptToConfigureAvailableLinter(linterInfo);
-        }
+    public async promptIfLinterAvailable(_: ILinterInfo, __?: Uri): Promise<boolean> {
         return false;
     }
 
@@ -127,18 +110,5 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
         return (
             pe!.globalValue === undefined && pe!.workspaceValue === undefined && pe!.workspaceFolderValue === undefined
         );
-    }
-
-    /**
-     * Check if this feature is enabled yet.
-     *
-     * This is a feature of the vscode-python extension that will become enabled once the
-     * Python Language Server becomes the default, replacing Jedi as the default. Testing
-     * the global default setting for `"python.languageServer": !Jedi` enables it.
-     *
-     * @returns true if the global default for python.languageServer is not Jedi.
-     */
-    public get isFeatureEnabled(): boolean {
-        return this.configService.getSettings().languageServer !== LanguageServerType.Jedi;
     }
 }

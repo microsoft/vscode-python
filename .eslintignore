@@ -39,16 +39,6 @@ src/test/terminals/codeExecution/terminalCodeExec.unit.test.ts
 src/test/terminals/codeExecution/codeExecutionManager.unit.test.ts
 src/test/terminals/codeExecution/djangoShellCodeExect.unit.test.ts
 
-src/test/languageServers/jedi/autocomplete/base.test.ts
-src/test/languageServers/jedi/autocomplete/pep526.test.ts
-src/test/languageServers/jedi/autocomplete/pep484.test.ts
-src/test/languageServers/jedi/signature/signature.jedi.test.ts
-src/test/languageServers/jedi/completionSource.unit.test.ts
-src/test/languageServers/jedi/symbolProvider.unit.test.ts
-src/test/languageServers/jedi/pythonSignatureProvider.unit.test.ts
-src/test/languageServers/jedi/definitions/parallel.jedi.test.ts
-src/test/languageServers/jedi/definitions/hover.jedi.test.ts
-
 src/test/providers/importSortProvider.unit.test.ts
 src/test/providers/terminal.unit.test.ts
 src/test/providers/repl.unit.test.ts
@@ -278,7 +268,6 @@ src/client/activation/common/packageRepository.ts
 src/client/activation/common/analysisOptions.ts
 src/client/activation/common/downloadChannelRules.ts
 src/client/activation/refCountedLanguageServer.ts
-src/client/activation/jedi.ts
 src/client/activation/languageClientMiddleware.ts
 src/client/activation/node/manager.ts
 src/client/activation/node/languageServerProxy.ts
@@ -322,7 +311,6 @@ src/client/common/net/socket/SocketStream.ts
 src/client/common/asyncDisposableRegistry.ts
 src/client/common/editor.ts
 src/client/common/contextKey.ts
-src/client/common/markdown/restTextConverter.ts
 src/client/common/experiments/telemetry.ts
 src/client/common/platform/serviceRegistry.ts
 src/client/common/platform/errors.ts
@@ -447,8 +435,6 @@ src/client/debugger/extension/attachQuickPick/factory.ts
 src/client/debugger/extension/attachQuickPick/psProcessParser.ts
 src/client/debugger/extension/attachQuickPick/picker.ts
 src/client/debugger/extension/helpers/protocolParser.ts
-
-src/client/languageServices/jediProxyFactory.ts
 
 src/client/linters/pydocstyle.ts
 src/client/linters/serviceRegistry.ts
