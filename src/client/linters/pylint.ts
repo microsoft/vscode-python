@@ -35,7 +35,6 @@ export class Pylint extends BaseLinter {
         const workspaceRoot = this.getWorkspaceRootPath(document);
         const settings = this.configService.getSettings(uri);
         if (
-            settings.linting.pylintUseMinimalCheckers &&
             this.info.linterArgs(uri).length === 0 &&
             // Check pylintrc next to the file or above up to and including the workspace root
             !(await Pylint.hasConfigurationFileInWorkspace(this.fileSystem, path.dirname(uri.fsPath), workspaceRoot)) &&

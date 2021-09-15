@@ -162,7 +162,6 @@ foo = 42  # Marked as a disallowed name.
     -   [ ] Uses `--user` for system-install of Python
     -   [ ] Installs into a virtual environment environment directly
 -   [ ] Pylint works
--   [ ] `"python.linting.pylintUseMinimalCheckers": false` turns off the default rules w/ no `pylintrc` file present
 -   [ ] The existence of a `pylintrc` file turns off the default rules
 
 #### Other linters

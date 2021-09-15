@@ -410,7 +410,6 @@ export class PythonSettings implements IPythonSettings {
                       error: DiagnosticSeverity.Error,
                       note: DiagnosticSeverity.Hint,
                   },
-                  pylintUseMinimalCheckers: false,
               };
         this.linting.pylintPath = getAbsolutePath(systemVariables.resolveAny(this.linting.pylintPath), workspaceRoot);
         this.linting.flake8Path = getAbsolutePath(systemVariables.resolveAny(this.linting.flake8Path), workspaceRoot);

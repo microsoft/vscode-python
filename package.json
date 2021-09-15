@@ -1132,12 +1132,6 @@
                     "scope": "resource",
                     "type": "string"
                 },
-                "python.linting.pylintUseMinimalCheckers": {
-                    "default": true,
-                    "description": "Whether to run Pylint with minimal set of rules.",
-                    "scope": "resource",
-                    "type": "boolean"
-                },
                 "python.logging.level": {
                     "default": "error",
                     "description": "The logging level the extension logs at, defaults to 'error'",

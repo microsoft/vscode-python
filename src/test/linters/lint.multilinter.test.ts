@@ -78,7 +78,6 @@ suite('Linting - Multiple Linters Enabled Test', () => {
 
         await configService.updateSetting('linting.enabled', true, rootWorkspaceUri, target);
         await configService.updateSetting('linting.lintOnSave', false, rootWorkspaceUri, target);
-        await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
 
         linterManager.getAllLinterInfos().forEach(async (x) => {
             await configService.updateSetting(makeSettingKey(x.product), false, rootWorkspaceUri, target);
@@ -100,7 +99,6 @@ suite('Linting - Multiple Linters Enabled Test', () => {
             ConfigurationTarget.Workspace,
         );
         await configService.updateSetting('linting.enabled', true, workspaceUri);
-        await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
         await configService.updateSetting('linting.pylintEnabled', true, workspaceUri);
         await configService.updateSetting('linting.flake8Enabled', true, workspaceUri);
 

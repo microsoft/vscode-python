@@ -209,7 +209,6 @@ suite('Linting - Pylint', () => {
             .returns(() => Promise.resolve({ stdout: '', stderr: '' }));
 
         const lintSettings = new MockLintingSettings();
-        lintSettings.pylintUseMinimalCheckers = true;
 
         lintSettings.pylintPath = 'pyLint';
 
@@ -250,7 +249,6 @@ suite('Linting - Pylint', () => {
             .returns(() => Promise.resolve({ stdout: linterOutput, stderr: '' }));
 
         const lintSettings = new MockLintingSettings();
-        lintSettings.pylintUseMinimalCheckers = false;
         lintSettings.maxNumberOfProblems = 1000;
         lintSettings.pylintPath = 'pyLint';
         lintSettings.pylintEnabled = true;

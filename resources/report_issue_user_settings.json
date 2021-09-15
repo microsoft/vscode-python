@@ -59,8 +59,7 @@
         "pylintArgs": "placeholder",
         "pylintCategorySeverity": false,
         "pylintEnabled": false,
-        "pylintPath": "placeholder",
-        "pylintUseMinimalCheckers": true
+        "pylintPath": "placeholder"
     },
     "analysis": {
         "completeFunctionParens": true,

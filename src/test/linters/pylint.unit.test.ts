@@ -302,33 +302,9 @@ suite('Pylint - Function runLinter()', () => {
     let platformService: TypeMoq.IMock<IPlatformService>;
     let run: sinon.SinonStub<any>;
     let parseMessagesSeverity: sinon.SinonStub<any>;
-    const minArgs = [
-        '--disable=all',
-        '--enable=F' +
-            ',unreachable,duplicate-key,unnecessary-semicolon' +
-            ',global-variable-not-assigned,unused-variable' +
-            ',unused-wildcard-import,binary-op-exception' +
-            ',bad-format-string,anomalous-backslash-in-string' +
-            ',bad-open-mode' +
-            ',E0001,E0011,E0012,E0100,E0101,E0102,E0103,E0104,E0105,E0107' +
-            ',E0108,E0110,E0111,E0112,E0113,E0114,E0115,E0116,E0117,E0118' +
-            ',E0202,E0203,E0211,E0213,E0236,E0237,E0238,E0239,E0240,E0241' +
-            ',E0301,E0302,E0303,E0401,E0402,E0601,E0602,E0603,E0604,E0611' +
-            ',E0632,E0633,E0701,E0702,E0703,E0704,E0710,E0711,E0712,E1003' +
-            ',E1101,E1102,E1111,E1120,E1121,E1123,E1124,E1125,E1126,E1127' +
-            ',E1128,E1129,E1130,E1131,E1132,E1133,E1134,E1135,E1136,E1137' +
-            ',E1138,E1139,E1200,E1201,E1205,E1206,E1300,E1301,E1302,E1303' +
-            ',E1304,E1305,E1306,E1310,E1700,E1701',
-    ];
     const doc = {
         uri: vscode.Uri.file('path/to/doc'),
     };
-    const args = [
-        "--msg-template='{line},{column},{category},{symbol}:{msg}'",
-        '--reports=n',
-        '--output-format=text',
-        doc.uri.fsPath,
-    ];
     const original_hasConfigurationFileInWorkspace = Pylint.hasConfigurationFileInWorkspace;
     const original_hasConfigurationFile = Pylint.hasConfigurationFile;
 
@@ -391,111 +367,6 @@ suite('Pylint - Function runLinter()', () => {
         sinon.restore();
     });
 
-    test('Use minimal checkers if a) setting to use minimal checkers is true, b) there are no custom arguments and c) there is no pylintrc file next to the file or at the workspace root and above', async () => {
-        const settings = {
-            linting: {
-                pylintUseMinimalCheckers: true,
-            },
-        };
-        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
-        _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
-        Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(false);
-        Pylint.hasConfigurationFile = () => Promise.resolve(false);
-        run = sinon.stub(PylintTest.prototype, 'run');
-        run.callsFake(() => Promise.resolve([]));
-        parseMessagesSeverity = sinon.stub(PylintTest.prototype, 'parseMessagesSeverity');
-        parseMessagesSeverity.callsFake(() => 'Severity');
-        const pylint = new PylintTest(output.object, serviceContainer.object);
-        await pylint.runLinter(doc as any, mock(vscode.CancellationTokenSource).token);
-        assert.deepEqual(run.args[0][0], minArgs.concat(args));
-        assert.ok(parseMessagesSeverity.notCalled);
-        assert.ok(run.calledOnce);
-    });
-
-    test('Do not use minimal checkers if setting to use minimal checkers is false', async () => {
-        const settings = {
-            linting: {
-                pylintUseMinimalCheckers: false,
-            },
-        };
-        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
-        _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
-        Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(false);
-        Pylint.hasConfigurationFile = () => Promise.resolve(false);
-        run = sinon.stub(PylintTest.prototype, 'run');
-        run.callsFake(() => Promise.resolve([]));
-        parseMessagesSeverity = sinon.stub(PylintTest.prototype, 'parseMessagesSeverity');
-        parseMessagesSeverity.callsFake(() => 'Severity');
-        const pylint = new PylintTest(output.object, serviceContainer.object);
-        await pylint.runLinter(doc as any, mock(vscode.CancellationTokenSource).token);
-        assert.deepEqual(run.args[0][0], args);
-        assert.ok(parseMessagesSeverity.notCalled);
-        assert.ok(run.calledOnce);
-    });
-
-    test('Do not use minimal checkers if there are custom arguments', async () => {
-        const settings = {
-            linting: {
-                pylintUseMinimalCheckers: true,
-            },
-        };
-        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
-        _info.setup((info) => info.linterArgs(doc.uri)).returns(() => ['customArg1', 'customArg2']);
-        Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(false);
-        Pylint.hasConfigurationFile = () => Promise.resolve(false);
-        run = sinon.stub(PylintTest.prototype, 'run');
-        run.callsFake(() => Promise.resolve([]));
-        parseMessagesSeverity = sinon.stub(PylintTest.prototype, 'parseMessagesSeverity');
-        parseMessagesSeverity.callsFake(() => 'Severity');
-        const pylint = new PylintTest(output.object, serviceContainer.object);
-        await pylint.runLinter(doc as any, mock(vscode.CancellationTokenSource).token);
-        assert.deepEqual(run.args[0][0], args);
-        assert.ok(parseMessagesSeverity.notCalled);
-        assert.ok(run.calledOnce);
-    });
-
-    test('Do not use minimal checkers if there is a pylintrc file in the current working directory or when traversing the workspace up to its root (hasConfigurationFileInWorkspace() returns true)', async () => {
-        const settings = {
-            linting: {
-                pylintUseMinimalCheckers: true,
-            },
-        };
-        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
-        _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
-        Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(true); // This implies method hasConfigurationFileInWorkspace() returns true
-        Pylint.hasConfigurationFile = () => Promise.resolve(false);
-        run = sinon.stub(PylintTest.prototype, 'run');
-        run.callsFake(() => Promise.resolve([]));
-        parseMessagesSeverity = sinon.stub(PylintTest.prototype, 'parseMessagesSeverity');
-        parseMessagesSeverity.callsFake(() => 'Severity');
-        const pylint = new PylintTest(output.object, serviceContainer.object);
-        await pylint.runLinter(doc as any, mock(vscode.CancellationTokenSource).token);
-        assert.deepEqual(run.args[0][0], args);
-        assert.ok(parseMessagesSeverity.notCalled);
-        assert.ok(run.calledOnce);
-    });
-
-    test('Do not use minimal checkers if a pylintrc file exists in the process, in the current working directory or up in the hierarchy tree (hasConfigurationFile() returns true)', async () => {
-        const settings = {
-            linting: {
-                pylintUseMinimalCheckers: true,
-            },
-        };
-        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
-        _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
-        Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(false);
-        Pylint.hasConfigurationFile = () => Promise.resolve(true); // This implies method hasConfigurationFile() returns true
-        run = sinon.stub(PylintTest.prototype, 'run');
-        run.callsFake(() => Promise.resolve([]));
-        parseMessagesSeverity = sinon.stub(PylintTest.prototype, 'parseMessagesSeverity');
-        parseMessagesSeverity.callsFake(() => 'Severity');
-        const pylint = new PylintTest(output.object, serviceContainer.object);
-        await pylint.runLinter(doc as any, mock(vscode.CancellationTokenSource).token);
-        assert.deepEqual(run.args[0][0], args);
-        assert.ok(parseMessagesSeverity.notCalled);
-        assert.ok(run.calledOnce);
-    });
-
     test('Message returned by runLinter() is as expected', async () => {
         const message = [
             {
@@ -508,11 +379,7 @@ suite('Pylint - Function runLinter()', () => {
                 severity: 'LintMessageSeverity',
             },
         ];
-        const settings = {
-            linting: {
-                pylintUseMinimalCheckers: true,
-            },
-        };
+        const settings = { linting: {} };
         configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
         _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
         Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(false);
