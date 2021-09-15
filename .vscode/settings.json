@@ -12,7 +12,6 @@
         ".vscode-test": false,
         ".vscode test": false,
         "**/.mypy_cache/**": true,
-        "**/.ropeproject/**": true
     },
     "search.exclude": {
         "out": true, // set this to false to include "out" folder in search results
