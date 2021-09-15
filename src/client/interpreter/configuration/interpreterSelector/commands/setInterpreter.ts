@@ -131,6 +131,57 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         return undefined;
     }
 
+    private async getItems(resource: Resource, sortList: boolean) {
+        const suggestions: QuickPickType[] = [this.manualEntrySuggestion];
+        const defaultInterpreterPathSuggestion = this.getDefaultInterpreterPathSuggestion(resource);
+        if (defaultInterpreterPathSuggestion) {
+            suggestions.push(defaultInterpreterPathSuggestion);
+        }
+        const interpreterSuggestions = await this.interpreterSelector.getSuggestions(resource, sortList);
+        if (sortList && interpreterSuggestions.length > 0) {
+            // If list is already sorted, the first item is the recommended one.
+            const suggested = interpreterSuggestions.shift();
+            if (suggested) {
+                const starred = cloneDeep(suggested);
+                starred.label = `${Octicons.Star} ${starred.label}`;
+                starred.description = Common.recommended();
+                interpreterSuggestions.unshift(starred);
+            }
+        }
+        suggestions.push(...interpreterSuggestions);
+        return suggestions;
+    }
+
+    private getActiveItem(resource: Resource, suggestions: QuickPickType[]) {
+        const currentPythonPath = this.configurationService.getSettings(resource).pythonPath;
+        const activeInterpreter = suggestions.filter((i) => i.path === currentPythonPath);
+        if (activeInterpreter.length > 0) {
+            return activeInterpreter[0];
+        }
+        const firstInterpreterSuggestion = suggestions.find((s) => 'interpreter' in s && s.interpreter);
+        if (firstInterpreterSuggestion) {
+            return firstInterpreterSuggestion;
+        }
+        return suggestions[0];
+    }
+
+    private getDefaultInterpreterPathSuggestion(resource: Resource): ISpecialQuickPickItem | undefined {
+        const config = this.workspaceService.getConfiguration('python', resource);
+        const defaultInterpreterPathValue = config.get<string>('defaultInterpreterPath');
+        if (defaultInterpreterPathValue && defaultInterpreterPathValue !== 'python') {
+            return {
+                label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
+                detail: this.pathUtils.getDisplayName(
+                    defaultInterpreterPathValue,
+                    resource ? resource.fsPath : undefined,
+                ),
+                path: defaultInterpreterPathValue,
+                alwaysShow: true,
+            };
+        }
+        return undefined;
+    }
+
     @captureTelemetry(EventName.SELECT_INTERPRETER_ENTER_BUTTON)
     public async _enterOrBrowseInterpreterPath(
         input: IMultiStepInput<InterpreterStateArgs>,
@@ -192,57 +243,6 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             // Having the value `undefined` means user cancelled the quickpick, so we update nothing in that case.
             await this.pythonPathUpdaterService.updatePythonPath(interpreterState.path, configTarget, 'ui', wkspace);
         }
-    }
-
-    private async getItems(resource: Resource, sortList: boolean) {
-        const suggestions: QuickPickType[] = [this.manualEntrySuggestion];
-        const defaultInterpreterPathSuggestion = this.getDefaultInterpreterPathSuggestion(resource);
-        if (defaultInterpreterPathSuggestion) {
-            suggestions.push(defaultInterpreterPathSuggestion);
-        }
-        const interpreterSuggestions = await this.interpreterSelector.getSuggestions(resource, sortList);
-        if (sortList && interpreterSuggestions.length > 0) {
-            // If list is already sorted, the first item is the recommended one.
-            const suggested = interpreterSuggestions.shift();
-            if (suggested) {
-                const starred = cloneDeep(suggested);
-                starred.label = `${Octicons.Star} ${starred.label}`;
-                starred.description = Common.recommended();
-                interpreterSuggestions.unshift(starred);
-            }
-        }
-        suggestions.push(...interpreterSuggestions);
-        return suggestions;
-    }
-
-    private getActiveItem(resource: Resource, suggestions: QuickPickType[]) {
-        const currentPythonPath = this.configurationService.getSettings(resource).pythonPath;
-        const activeInterpreter = suggestions.filter((i) => i.path === currentPythonPath);
-        if (activeInterpreter.length > 0) {
-            return activeInterpreter[0];
-        }
-        const firstInterpreterSuggestion = suggestions.find((s) => 'interpreter' in s && s.interpreter);
-        if (firstInterpreterSuggestion) {
-            return firstInterpreterSuggestion;
-        }
-        return suggestions[0];
-    }
-
-    private getDefaultInterpreterPathSuggestion(resource: Resource): ISpecialQuickPickItem | undefined {
-        const config = this.workspaceService.getConfiguration('python', resource);
-        const defaultInterpreterPathValue = config.get<string>('defaultInterpreterPath');
-        if (defaultInterpreterPathValue && defaultInterpreterPathValue !== 'python') {
-            return {
-                label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
-                detail: this.pathUtils.getDisplayName(
-                    defaultInterpreterPathValue,
-                    resource ? resource.fsPath : undefined,
-                ),
-                path: defaultInterpreterPathValue,
-                alwaysShow: true,
-            };
-        }
-        return undefined;
     }
 
     /**
