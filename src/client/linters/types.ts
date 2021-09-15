@@ -41,11 +41,6 @@ export interface ILinter {
     lint(document: vscode.TextDocument, cancellation: vscode.CancellationToken): Promise<ILintMessage[]>;
 }
 
-export const IAvailableLinterActivator = Symbol('IAvailableLinterActivator');
-export interface IAvailableLinterActivator {
-    promptIfLinterAvailable(linter: ILinterInfo, resource?: vscode.Uri): Promise<boolean>;
-}
-
 export const ILinterManager = Symbol('ILinterManager');
 export interface ILinterManager {
     getAllLinterInfos(): ILinterInfo[];

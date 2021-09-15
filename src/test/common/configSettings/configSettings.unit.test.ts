@@ -62,7 +62,6 @@ suite('Python Settings', async () => {
             'poetryPath',
             'insidersChannel',
             'defaultInterpreterPath',
-            'jediPath',
         ]) {
             config
                 .setup((c) => c.get<string>(name))
@@ -90,8 +89,6 @@ suite('Python Settings', async () => {
                 .returns(() => (sourceSettings as any)[name]);
         }
 
-        // number settings
-        config.setup((c) => c.get<number>('jediMemoryLimit')).returns(() => sourceSettings.jediMemoryLimit);
         // Language server type settings
         config.setup((c) => c.get<LanguageServerType>('languageServer')).returns(() => sourceSettings.languageServer);
 
@@ -145,12 +142,6 @@ suite('Python Settings', async () => {
                 testIfValueIsUpdated(settingName, true);
             },
         );
-    });
-
-    suite('Number settings', async () => {
-        ['jediMemoryLimit'].forEach(async (settingName) => {
-            testIfValueIsUpdated(settingName, 1001);
-        });
     });
 
     test('condaPath updated', () => {

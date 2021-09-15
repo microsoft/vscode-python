@@ -93,10 +93,6 @@ export class PythonSettings implements IPythonSettings {
 
     public downloadLanguageServer = true;
 
-    public jediPath = '';
-
-    public jediMemoryLimit = 3072;
-
     public envFile = '';
 
     public venvPath = '';
@@ -300,14 +296,6 @@ export class PythonSettings implements IPythonSettings {
             this.languageServer = userLS as LanguageServerType;
             this.languageServerIsDefault = false;
         }
-
-        this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
-        if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {
-            this.jediPath = getAbsolutePath(systemVariables.resolveAny(this.jediPath), workspaceRoot);
-        } else {
-            this.jediPath = '';
-        }
-        this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
 
         const envFileSetting = pythonSettings.get<string>('envFile');
         this.envFile = systemVariables.resolveAny(envFileSetting)!;

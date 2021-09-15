@@ -5,8 +5,6 @@
     "defaultInterpreterPath": "placeholder",
     "defaultLS": true,
     "downloadLanguageServer": true,
-    "jediPath": false,
-    "jediMemoryLimit": false,
     "envFile": "placeholder",
     "venvPath": "placeholder",
     "venvFolders": "placeholder",
@@ -58,9 +56,8 @@
         "pylamaPath": "placeholder",
         "pylintArgs": "placeholder",
         "pylintCategorySeverity": false,
-        "pylintEnabled": true,
-        "pylintPath": "placeholder",
-        "pylintUseMinimalCheckers": true
+        "pylintEnabled": false,
+        "pylintPath": "placeholder"
     },
     "analysis": {
         "completeFunctionParens": true,
