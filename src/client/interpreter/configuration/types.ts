@@ -31,8 +31,8 @@ export type PythonEnvSuggestionChangedEvent = {
 export const IInterpreterSelector = Symbol('IInterpreterSelector');
 export interface IInterpreterSelector extends Disposable {
     readonly onChanged: Event<PythonEnvSuggestionChangedEvent>;
-    getAllSuggestions(resource: Resource, ignoreCache?: boolean): Promise<IInterpreterQuickPickItem[]>;
-    getSuggestions(resource: Resource, ignoreCache?: boolean): Promise<IInterpreterQuickPickItem[]>;
+    getAllSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]>;
+    getSuggestions(resource: Resource, sortSuggestions: boolean): Promise<IInterpreterQuickPickItem[]>;
 }
 
 export interface IInterpreterQuickPickItem extends QuickPickItem {

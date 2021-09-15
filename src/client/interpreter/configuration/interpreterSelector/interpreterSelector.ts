@@ -42,21 +42,21 @@ export class InterpreterSelector implements IInterpreterSelector {
         this.disposables.forEach((disposable) => disposable.dispose());
     }
 
-    public async getSuggestions(resource: Resource, ignoreCache?: boolean): Promise<IInterpreterQuickPickItem[]> {
+    public async getSuggestions(resource: Resource, sortSuggestions: boolean): Promise<IInterpreterQuickPickItem[]> {
         const interpreters = await this.interpreterManager.getInterpreters(resource, {
             onSuggestion: true,
-            ignoreCache,
         });
+        if (sortSuggestions) {
+            interpreters.sort(this.envTypeComparer.compare.bind(this.envTypeComparer));
+        }
 
         return Promise.all(interpreters.map((item) => this.suggestionToQuickPickItem(item, resource)));
     }
 
-    public async getAllSuggestions(resource: Resource, ignoreCache?: boolean): Promise<IInterpreterQuickPickItem[]> {
+    public async getAllSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]> {
         const interpreters = await this.interpreterManager.getAllInterpreters(resource, {
             onSuggestion: true,
-            ignoreCache,
         });
-        interpreters.sort(this.envTypeComparer.compare.bind(this.envTypeComparer));
 
         return Promise.all(interpreters.map((item) => this.suggestionToQuickPickItem(item, resource)));
     }

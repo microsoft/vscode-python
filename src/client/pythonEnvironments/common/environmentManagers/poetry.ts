@@ -99,11 +99,11 @@ export class Poetry {
     /**
      * Creates a Poetry service corresponding to the corresponding "poetry" command.
      *
-     * @param _command - Command used to run poetry. This has the same meaning as the
+     * @param command - Command used to run poetry. This has the same meaning as the
      * first argument of spawn() - i.e. it can be a full path, or just a binary name.
      * @param cwd - The working directory to use as cwd when running poetry.
      */
-    constructor(public readonly _command: string, private cwd: string) {
+    constructor(public readonly command: string, private cwd: string) {
         this.fixCwd();
     }
 
@@ -184,7 +184,7 @@ export class Poetry {
      */
     @cache(30_000, true, 10_000)
     private async getEnvListCached(_cwd: string): Promise<string[] | undefined> {
-        const result = await this.safeShellExecute(`${this._command} env list --full-path`);
+        const result = await this.safeShellExecute(`${this.command} env list --full-path`);
         if (!result) {
             return undefined;
         }
@@ -220,7 +220,7 @@ export class Poetry {
      */
     @cache(20_000, true, 10_000)
     private async getActiveEnvPathCached(_cwd: string): Promise<string | undefined> {
-        const result = await this.safeShellExecute(`${this._command} env info -p`, true);
+        const result = await this.safeShellExecute(`${this.command} env info -p`, true);
         if (!result) {
             return undefined;
         }
@@ -232,7 +232,7 @@ export class Poetry {
      * environments are created for the directory. Corresponds to "poetry config virtualenvs.path". Swallows errors if any.
      */
     public async getVirtualenvsPathSetting(): Promise<string | undefined> {
-        const result = await this.safeShellExecute(`${this._command} config virtualenvs.path`);
+        const result = await this.safeShellExecute(`${this.command} config virtualenvs.path`);
         if (!result) {
             return undefined;
         }

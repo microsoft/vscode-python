@@ -9,7 +9,6 @@ import * as path from 'path';
 import { QuickPickItem } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands, Octicons } from '../../../../common/constants';
-import { traceWarning } from '../../../../common/logger';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
 import { getIcon } from '../../../../common/utils/icons';
@@ -39,6 +38,10 @@ type QuickPickType = IInterpreterQuickPickItem | ISpecialQuickPickItem;
 
 @injectable()
 export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
+    private readonly manualEntrySuggestion: ISpecialQuickPickItem = {
+        label: `${Octicons.Add} ${InterpreterQuickPickList.enterPath.label()}`,
+        alwaysShow: true,
+    };
     constructor(
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
@@ -65,106 +68,65 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs,
     ): Promise<void | InputStep<InterpreterStateArgs>> {
-        const suggestions: QuickPickType[] = [];
-
-        const manualEntrySuggestion: ISpecialQuickPickItem = {
-            label: `${Octicons.Add} ${InterpreterQuickPickList.enterPath.label()}`,
-            alwaysShow: true,
-        };
-        suggestions.push(manualEntrySuggestion);
-
-        const config = this.workspaceService.getConfiguration('python', state.workspace);
-        const defaultInterpreterPathValue = config.get<string>('defaultInterpreterPath');
-        let defaultInterpreterPathSuggestion: ISpecialQuickPickItem | undefined;
-        if (defaultInterpreterPathValue && defaultInterpreterPathValue !== 'python') {
-            defaultInterpreterPathSuggestion = {
-                label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
-                detail: this.pathUtils.getDisplayName(
-                    defaultInterpreterPathValue,
-                    state.workspace ? state.workspace.fsPath : undefined,
-                ),
-                path: defaultInterpreterPathValue,
-                alwaysShow: true,
-            };
-            suggestions.push(defaultInterpreterPathSuggestion);
-        }
-
-        let isRefreshing = false;
-        let interpreterSuggestions: IInterpreterQuickPickItem[];
-        if (this.interpreterService.refreshPromise) {
-            isRefreshing = true;
-            interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
-        } else {
-            interpreterSuggestions = await this.interpreterSelector.getAllSuggestions(state.workspace);
-            if (interpreterSuggestions.length > 0) {
-                const suggested = interpreterSuggestions.shift();
-                if (suggested) {
-                    const starred = cloneDeep(suggested);
-                    starred.label = `${Octicons.Star} ${starred.label}`;
-                    starred.description = Common.recommended();
-                    interpreterSuggestions.unshift(starred);
-                }
-            }
-        }
-        suggestions.push(...interpreterSuggestions);
-
-        const currentPythonPath = this.pathUtils.getDisplayName(
+        // If the list is refreshing, adding elements in the end is only
+        // way to preserve scroll position, so we don't need sorting.
+        const sortList = !this.interpreterService.refreshPromise;
+        const suggestions = await this.getItems(state.workspace, sortList);
+        state.path = undefined;
+        const currentInterpreterPathDisplay = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
             state.workspace ? state.workspace.fsPath : undefined,
         );
-
-        let activeInterpreter = interpreterSuggestions.filter((i) => i.detail === currentPythonPath);
-
-        state.path = undefined;
-        const refreshButton = {
-            iconPath: getIcon(REFRESH_BUTTON_ICON),
-            tooltip: InterpreterQuickPickList.refreshInterpreterList(),
-        };
         const selection = await input.showQuickPick<QuickPickType, IQuickPickParameters<QuickPickType>>({
-            placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
+            placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentInterpreterPathDisplay),
             items: suggestions,
-            // If the list is refreshing, adding elements in the end is only
-            // way to preserve scroll position, so we don't need sorting.
-            sortByLabel: !isRefreshing,
+            sortByLabel: sortList,
             keepScrollPosition: true,
-            activeItem: undefined,
+            activeItem: this.getActiveItem(state.workspace, suggestions),
             matchOnDetail: true,
             matchOnDescription: true,
+            title: InterpreterQuickPickList.browsePath.openButtonLabel(),
+            customButtonSetup: {
+                button: {
+                    iconPath: getIcon(REFRESH_BUTTON_ICON),
+                    tooltip: InterpreterQuickPickList.refreshInterpreterList(),
+                },
+                callback: () => this.interpreterService.triggerRefresh(),
+            },
             onChangeItem: {
                 event: this.interpreterService.onDidChangeInterpreters,
                 callback: async (_event, quickPick) => {
                     if (this.interpreterService.refreshPromise) {
                         quickPick.busy = true;
                         this.interpreterService.refreshPromise.then(async () => {
-                            // TODO: Suggested a recommended interpreter now that refresh has finished
+                            // TODO: Suggested a recommended interpreter now that refresh has finished?
                             quickPick.busy = false;
+                            const interpreterSuggestions = await this.getItems(state.workspace, false);
+                            if (quickPick.activeItems.length === 0) {
+                                // Changing active items if one is already set is not a good idea as user might be using it.
+                                quickPick.activeItems = [this.getActiveItem(state.workspace, interpreterSuggestions)];
+                            }
                         });
-                    } else {
-                        traceWarning('An ongoing refresh is expected if interpreter quickpick list is changing');
                     }
 
-                    interpreterSuggestions = await this.interpreterSelector.getSuggestions(state.workspace);
-                    quickPick.items = defaultInterpreterPathSuggestion
-                        ? [manualEntrySuggestion, defaultInterpreterPathSuggestion, ...interpreterSuggestions]
-                        : [manualEntrySuggestion, ...interpreterSuggestions];
-
-                    activeInterpreter = interpreterSuggestions.filter((i) => i.detail === currentPythonPath);
-                    quickPick.activeItems =
-                        activeInterpreter.length > 0 ? [activeInterpreter[0]] : [interpreterSuggestions[0]];
+                    const interpreterSuggestions = await this.getItems(
+                        state.workspace,
+                        !this.interpreterService.refreshPromise,
+                    );
+                    quickPick.items = interpreterSuggestions;
+                    if (quickPick.activeItems.length === 0) {
+                        // Changing active items if one is already set is not a good idea as user might be using it.
+                        quickPick.activeItems = [this.getActiveItem(state.workspace, interpreterSuggestions)];
+                    }
                 },
             },
-            customButtonSetup: {
-                button: refreshButton,
-                callback: () => this.interpreterService.triggerRefresh(),
-            },
-            title: InterpreterQuickPickList.browsePath.openButtonLabel(),
         });
 
         if (selection === undefined) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'escape' });
-        } else if (selection.label === manualEntrySuggestion.label) {
+        } else if (selection.label === this.manualEntrySuggestion.label) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_OR_FIND);
-            return this._enterOrBrowseInterpreterPath(input, state, interpreterSuggestions);
+            return this._enterOrBrowseInterpreterPath(input, state, suggestions);
         } else {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'selected' });
             state.path = (selection as IInterpreterQuickPickItem).path;
@@ -177,7 +139,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     public async _enterOrBrowseInterpreterPath(
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs,
-        suggestions: IInterpreterQuickPickItem[],
+        suggestions: QuickPickType[],
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         const items: QuickPickItem[] = [
             {
@@ -236,6 +198,48 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         }
     }
 
+    private async getItems(resource: Resource, sortList: boolean) {
+        const suggestions: QuickPickType[] = [this.manualEntrySuggestion];
+        const defaultInterpreterPathSuggestion = this.getDefaultInterpreterPathSuggestion(resource);
+        if (defaultInterpreterPathSuggestion) {
+            suggestions.push(defaultInterpreterPathSuggestion);
+        }
+        let interpreterSuggestions = await this.interpreterSelector.getSuggestions(resource, sortList);
+        if (sortList && interpreterSuggestions.length > 0) {
+            // If list is already sorted, the first item is the recommended one.
+            const suggested = interpreterSuggestions.shift();
+            if (suggested) {
+                const starred = cloneDeep(suggested);
+                starred.label = `${Octicons.Star} ${starred.label}`;
+                starred.description = Common.recommended();
+                interpreterSuggestions.unshift(starred);
+            }
+        }
+        return suggestions;
+    }
+
+    private getActiveItem(resource: Resource, interpreterSuggestions: QuickPickType[]) {
+        const currentPythonPath = this.configurationService.getSettings(resource).pythonPath;
+        const activeInterpreter = interpreterSuggestions.filter((i) => i.path === currentPythonPath);
+        return activeInterpreter.length > 0 ? activeInterpreter[0] : interpreterSuggestions[0];
+    }
+
+    private getDefaultInterpreterPathSuggestion(resource: Resource): ISpecialQuickPickItem | undefined {
+        const config = this.workspaceService.getConfiguration('python', resource);
+        const defaultInterpreterPathValue = config.get<string>('defaultInterpreterPath');
+        if (defaultInterpreterPathValue && defaultInterpreterPathValue !== 'python') {
+            return {
+                label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
+                detail: this.pathUtils.getDisplayName(
+                    defaultInterpreterPathValue,
+                    resource ? resource.fsPath : undefined,
+                ),
+                path: defaultInterpreterPathValue,
+                alwaysShow: true,
+            };
+        }
+    }
+
     /**
      * Check if the interpreter that was entered exists in the list of suggestions.
      * If it does, it means that it had already been discovered,
@@ -247,7 +251,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     private async sendInterpreterEntryTelemetry(
         selection: string,
         workspace: Resource,
-        suggestions: IInterpreterQuickPickItem[],
+        suggestions: QuickPickType[],
     ): Promise<void> {
         let interpreterPath = path.normalize(untildify(selection));
 
@@ -256,7 +260,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         }
 
         const expandedPaths = suggestions.map((s) => {
-            const suggestionPath = s.interpreter.path;
+            const suggestionPath = s.path;
+            if (!suggestionPath) {
+                return undefined;
+            }
             let expandedPath = path.normalize(untildify(suggestionPath));
 
             if (!path.isAbsolute(suggestionPath)) {

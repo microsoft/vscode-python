@@ -344,8 +344,17 @@ export class Conda {
      * Corresponds to "conda info --json".
      */
     public async getInfo(): Promise<CondaInfo> {
+        return this.getInfoCached(this.command);
+    }
+
+    /**
+     * Cache result for this particular command.
+     */
+    @cache(30_000, true, 10_000)
+    // eslint-disable-next-line class-methods-use-this
+    private async getInfoCached(command: string): Promise<CondaInfo> {
         const disposables = new Set<IDisposable>();
-        const result = await exec(this.command, ['info', '--json'], {}, disposables);
+        const result = await exec(command, ['info', '--json'], {}, disposables);
         traceVerbose(`conda info --json: ${result.stdout}`);
 
         // Ensure the process we started is cleaned up.
