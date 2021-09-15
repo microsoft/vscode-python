@@ -34,9 +34,8 @@ import {
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
-import { AvailableLinterActivator } from '../../client/linters/linterAvailability';
 import { LinterManager } from '../../client/linters/linterManager';
-import { IAvailableLinterActivator, ILinterManager, ILintingEngine } from '../../client/linters/types';
+import { ILinterManager, ILintingEngine } from '../../client/linters/types';
 import { LinterProvider } from '../../client/providers/linterProvider';
 import { initialize } from '../initialize';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
@@ -106,7 +105,6 @@ suite('Linting - Provider', () => {
         serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
         serviceManager.addSingletonInstance<IInstaller>(IInstaller, linterInstaller.object);
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
-        serviceManager.add(IAvailableLinterActivator, AvailableLinterActivator);
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,
             MockAutoSelectionService,
