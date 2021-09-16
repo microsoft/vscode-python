@@ -70,7 +70,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         state: InterpreterStateArgs,
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         // If the list is refreshing, it's crucial to maintain sorting order at all
-        // times, so the visible items do not change.
+        // times so that the visible items do not change.
         const preserveOrderWhenFiltering = !!this.interpreterService.refreshPromise;
         const suggestions = await this.getItems(state.workspace);
         state.path = undefined;
