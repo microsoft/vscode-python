@@ -3,7 +3,6 @@
 
 import * as path from 'path';
 import { _SCRIPTS_DIR } from './constants';
-import { SymbolProviderSymbols } from './types';
 
 const SCRIPTS_DIR = _SCRIPTS_DIR;
 
@@ -85,26 +84,6 @@ export function normalizeSelection(): [string[], (out: string) => string] {
     function parse(out: string) {
         // The text will be used as-is.
         return out;
-    }
-
-    return [args, parse];
-}
-
-// symbolProvider.py
-
-export function symbolProvider(
-    filename: string,
-    // If "text" is provided then it gets passed to the script as-is.
-    text?: string,
-): [string[], (out: string) => SymbolProviderSymbols] {
-    const script = path.join(SCRIPTS_DIR, 'symbolProvider.py');
-    const args = [script, filename];
-    if (text) {
-        args.push(text);
-    }
-
-    function parse(out: string): SymbolProviderSymbols {
-        return JSON.parse(out);
     }
 
     return [args, parse];
