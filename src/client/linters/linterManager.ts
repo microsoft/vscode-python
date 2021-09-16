@@ -18,7 +18,7 @@ import { Pycodestyle } from './pycodestyle';
 import { PyDocStyle } from './pydocstyle';
 import { PyLama } from './pylama';
 import { Pylint } from './pylint';
-import { IAvailableLinterActivator, ILinter, ILinterInfo, ILinterManager, ILintMessage, LinterId } from './types';
+import { ILinter, ILinterInfo, ILinterManager, ILintMessage, LinterId } from './types';
 
 class DisabledLinter implements ILinter {
     constructor(private configService: IConfigurationService) {}
@@ -37,10 +37,10 @@ export class LinterManager implements ILinterManager {
     private checkedForInstalledLinters = new Set<string>();
 
     constructor(
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
     ) {
-        this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         // Note that we use unit tests to ensure all the linters are here.
         this.linters = [
             new LinterInfo(Product.bandit, LinterId.Bandit, this.configService),
@@ -143,7 +143,7 @@ export class LinterManager implements ILinterManager {
 
     protected async enableUnconfiguredLinters(resource?: Uri): Promise<void> {
         const settings = this.configService.getSettings(resource);
-        if (!settings.linting.pylintEnabled || !settings.linting.enabled) {
+        if (!settings.linting.enabled) {
             return;
         }
         // If we've already checked during this session for the same workspace and Python path, then don't bother again.
@@ -152,10 +152,5 @@ export class LinterManager implements ILinterManager {
             return;
         }
         this.checkedForInstalledLinters.add(workspaceKey);
-
-        // only check & ask the user if they'd like to enable pylint
-        const pylintInfo = this.linters.find((linter) => linter.id === 'pylint');
-        const activator = this.serviceContainer.get<IAvailableLinterActivator>(IAvailableLinterActivator);
-        await activator.promptIfLinterAvailable(pylintInfo!, resource);
     }
 }

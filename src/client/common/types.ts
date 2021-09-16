@@ -175,8 +175,6 @@ export interface IPythonSettings {
     readonly poetryPath: string;
     readonly insidersChannel: ExtensionChannels;
     readonly downloadLanguageServer: boolean;
-    readonly jediPath: string;
-    readonly jediMemoryLimit: number;
     readonly devOptions: string[];
     readonly linting: ILintingSettings;
     readonly formatting: IFormattingSettings;
@@ -269,7 +267,6 @@ export interface ILintingSettings {
     banditEnabled: boolean;
     banditArgs: string[];
     banditPath: string;
-    readonly pylintUseMinimalCheckers: boolean;
 }
 export interface IFormattingSettings {
     readonly provider: string;

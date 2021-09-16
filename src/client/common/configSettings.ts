@@ -94,10 +94,6 @@ export class PythonSettings implements IPythonSettings {
 
     public downloadLanguageServer = true;
 
-    public jediPath = '';
-
-    public jediMemoryLimit = 3072;
-
     public envFile = '';
 
     public venvPath = '';
@@ -304,14 +300,6 @@ export class PythonSettings implements IPythonSettings {
             this.languageServerIsDefault = false;
         }
 
-        this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
-        if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {
-            this.jediPath = getAbsolutePath(systemVariables.resolveAny(this.jediPath), workspaceRoot);
-        } else {
-            this.jediPath = '';
-        }
-        this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
-
         const envFileSetting = pythonSettings.get<string>('envFile');
         this.envFile = systemVariables.resolveAny(envFileSetting)!;
         sendSettingTelemetry(this.workspace, envFileSetting);
@@ -410,7 +398,6 @@ export class PythonSettings implements IPythonSettings {
                       error: DiagnosticSeverity.Error,
                       note: DiagnosticSeverity.Hint,
                   },
-                  pylintUseMinimalCheckers: false,
               };
         this.linting.pylintPath = getAbsolutePath(systemVariables.resolveAny(this.linting.pylintPath), workspaceRoot);
         this.linting.flake8Path = getAbsolutePath(systemVariables.resolveAny(this.linting.flake8Path), workspaceRoot);

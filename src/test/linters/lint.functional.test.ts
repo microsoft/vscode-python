@@ -830,10 +830,6 @@ suite('Linting Functional Tests', () => {
             }
 
             const fixture = new TestFixture();
-            if (product === Product.pydocstyle) {
-                fixture.lintingSettings.pylintUseMinimalCheckers = false;
-            }
-
             const { filename, messagesToBeReceived, origRCFile } = await getInfoForConfig(product);
             let rcfile = '';
             async function cleanUp() {

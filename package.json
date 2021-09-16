@@ -750,18 +750,6 @@
                     "scope": "application",
                     "type": "string"
                 },
-                "python.jediMemoryLimit": {
-                    "default": 0,
-                    "description": "Memory limit for the Jedi completion engine in megabytes. Zero (default) means 3072 MB. -1 means unlimited (disable memory limit check)",
-                    "scope": "resource",
-                    "type": "number"
-                },
-                "python.jediPath": {
-                    "default": "",
-                    "description": "Path to directory containing the Jedi library (this path will contain the 'Jedi' sub directory). Note: since Jedi depends on Parso, if using this setting you will need to ensure a suitable version of Parso is available. This setting only works with \"languageServer=Jedi\" and not JediLSP.",
-                    "scope": "resource",
-                    "type": "string"
-                },
                 "python.languageServer": {
                     "default": "Default",
                     "description": "Defines type of the language server.",
@@ -1121,7 +1109,7 @@
                     "type": "string"
                 },
                 "python.linting.pylintEnabled": {
-                    "default": true,
+                    "default": false,
                     "description": "Whether to lint Python files using pylint.",
                     "scope": "resource",
                     "type": "boolean"
@@ -1131,12 +1119,6 @@
                     "description": "Path to Pylint, you can use a custom version of pylint by modifying this setting to include the full path.",
                     "scope": "resource",
                     "type": "string"
-                },
-                "python.linting.pylintUseMinimalCheckers": {
-                    "default": true,
-                    "description": "Whether to run Pylint with minimal set of rules.",
-                    "scope": "resource",
-                    "type": "boolean"
                 },
                 "python.logging.level": {
                     "default": "error",

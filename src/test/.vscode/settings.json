@@ -14,7 +14,6 @@
     "python.linting.mypyEnabled": false,
     "python.linting.banditEnabled": false,
     "python.formatting.provider": "yapf",
-    "python.linting.pylintUseMinimalCheckers": false,
     // Do not set this to "Microsoft", else it will result in LS being downloaded on CI
     // and that slows down tests significantly. We have other tests on CI for testing
     // downloading of LS with this setting enabled.

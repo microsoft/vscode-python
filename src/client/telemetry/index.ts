@@ -311,17 +311,6 @@ type FailedEventType = { failed: true };
 // Map all events to their properties
 export interface IEventNamePropertyMapping {
     /**
-     * Telemetry event sent when providing completion items for the given position and document.
-     *
-     * This event also has a measure, "resultLength", which records the number of completions provided.
-     */
-    /* __GDPR__
-       "completion" : {
-          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
-       }
-     */
-    [EventName.COMPLETION]: never | undefined;
-    /**
      * Telemetry event sent with details 'python.autoComplete.addBrackets' setting
      */
     /* __GDPR__
@@ -709,16 +698,6 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON]: never | undefined;
     /**
-     * Telemetry is sent when providing definitions for python code, particularly when [go to definition](https://code.visualstudio.com/docs/editor/editingevolved#_go-to-definition)
-     * and peek definition features are used.
-     */
-    /* __GDPR__
-       "definition" : {
-          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
-       }
-     */
-    [EventName.DEFINITION]: never | undefined;
-    /**
      * Telemetry event sent with details of actions when invoking a diagnostic command
      */
     /* __GDPR__
@@ -934,24 +913,6 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.FORMAT_SORT_IMPORTS]: never | undefined;
-    /**
-     * Telemetry event sent when Go to Python object command is executed
-     */
-    /* __GDPR__
-       "go_to_object_definition" : {
-          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
-       }
-     */
-    [EventName.GO_TO_OBJECT_DEFINITION]: never | undefined;
-    /**
-     * Telemetry event sent when providing a hover for the given position and document for interactive window using Jedi.
-     */
-    /* __GDPR__
-       "hover_definition" : {
-          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
-       }
-     */
-    [EventName.HOVER_DEFINITION]: never | undefined;
     /**
      * Telemetry event sent with details when tracking imports
      */
@@ -1497,11 +1458,6 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.LANGUAGE_SERVER_REQUEST]: unknown;
     /**
-     * Telemetry event sent when we fallback from JediLSP to Jedi in cases where JediLSP is
-     * not supported.
-     */
-    [EventName.JEDI_FALLBACK]: unknown;
-    /**
      * Telemetry event sent when Jedi Language Server is started for workspace (workspace folder in case of multi-root)
      */
     [EventName.JEDI_LANGUAGE_SERVER_ENABLED]: {
@@ -1556,14 +1512,6 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.REFACTOR_EXTRACT_VAR]: never | undefined;
     /**
-     * Telemetry event sent when providing an edit that describes changes to rename a symbol to a different name
-     */
-    [EventName.REFACTOR_RENAME]: never | undefined;
-    /**
-     * Telemetry event sent when providing a set of project-wide references for the given position and document
-     */
-    [EventName.REFERENCE]: never | undefined;
-    /**
      * Telemetry event sent when starting REPL
      */
     [EventName.REPL]: never | undefined;
@@ -1600,14 +1548,6 @@ export interface IEventNamePropertyMapping {
          */
         action: 'enable' | 'ignore' | 'disablePrompt' | undefined;
     };
-    /**
-     * Telemetry event sent when providing help for the signature at the given position and document.
-     */
-    [EventName.SIGNATURE]: never | undefined;
-    /**
-     * Telemetry event sent when providing document symbol information for Jedi autocomplete intellisense
-     */
-    [EventName.SYMBOL]: never | undefined;
     /**
      * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
      */

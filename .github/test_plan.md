@@ -115,10 +115,10 @@ SPAM='hello ${WHO}'
 **ALWAYS**:
 
 -   Make sure to use `Reload Window` between tests to reset your environment
--   Note that environment files only apply under the debugger and Jedi
+-   Note that environment files only apply under the debugger
 
 -   [ ] Environment variables in a `.env` file are exposed when running under the debugger
--   [ ] `"python.envFile"` allows for specifying an environment file manually (e.g. Jedi picks up `PYTHONPATH` changes)
+-   [ ] `"python.envFile"` allows for specifying an environment file manually
 -   [ ] `envFile` in a `launch.json` configuration works
 -   [ ] simple variable substitution works
 
@@ -162,7 +162,6 @@ foo = 42  # Marked as a disallowed name.
     -   [ ] Uses `--user` for system-install of Python
     -   [ ] Installs into a virtual environment environment directly
 -   [ ] Pylint works
--   [ ] `"python.linting.pylintUseMinimalCheckers": false` turns off the default rules w/ no `pylintrc` file present
 -   [ ] The existence of a `pylintrc` file turns off the default rules
 
 #### Other linters
