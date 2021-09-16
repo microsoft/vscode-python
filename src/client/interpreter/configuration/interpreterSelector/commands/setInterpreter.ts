@@ -113,6 +113,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                               if ('interpreter' in item && 'interpreter' in activeItemBeforeUpdate) {
                                   return arePathsSame(item.interpreter.path, activeItemBeforeUpdate.interpreter.path);
                               }
+                              if ('alwaysShow' in item && 'alwaysShow' in activeItemBeforeUpdate) {
+                                  // It's a special quickpick item, 'label' is a constant here instead of 'path'.
+                                  return item.label === activeItemBeforeUpdate.label;
+                              }
                               return false;
                           })
                         : undefined;
