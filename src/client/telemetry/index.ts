@@ -940,6 +940,12 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent with details of selection in prompt
      * `Prompt message` :- 'Linter ${productName} is not installed'
      */
+    /* __GDPR__
+       "linter_not_installed_prompt" : {
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "action": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.LINTER_NOT_INSTALLED_PROMPT]: {
         /**
          * Name of the linter
@@ -961,6 +967,11 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent before showing the linter prompt to install
      * pylint or flake8.
      */
+    /* __GDPR__
+       "linter_install_prompt" : {
+          "prompt" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.LINTER_INSTALL_PROMPT]: {
         /**
          * Identify which prompt was shown.
@@ -972,6 +983,16 @@ export interface IEventNamePropertyMapping {
 
     /**
      * Telemetry event sent when installing modules
+     */
+    /* __GDPR__
+       "python_install_package" : {
+          "installer" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "requiredinstaller" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "productname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "isinstalled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "envtype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "version" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.PYTHON_INSTALL_PACKAGE]: {
         /**
@@ -1003,6 +1024,14 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry sent with details immediately after linting a document completes
      */
+    /* __GDPR__
+       "linting" : {
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "hascustomargs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "executablespecified" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.LINTING]: {
         /**
          * Name of the linter being used
@@ -1032,6 +1061,12 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent after fetching the OS version
      */
+    /* __GDPR__
+       "platform_info" : {
+          "failuretype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "osversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.PLATFORM_INFO]: {
         /**
          * If fetching OS version fails, list the failure type
@@ -1049,14 +1084,29 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when 'Select Interpreter' command is invoked.
      */
+    /* __GDPR__
+       "select_interpreter" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.SELECT_INTERPRETER]: never | undefined;
     /**
      * Telemetry event sent when 'Enter interpreter path' button is clicked.
+     */
+    /* __GDPR__
+       "select_interpreter_enter_button" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.SELECT_INTERPRETER_ENTER_BUTTON]: never | undefined;
     /**
      * Telemetry event sent with details about what choice user made to input the interpreter path.
      */
+    /* __GDPR__
+       "select_interpreter_enter_choice" : {
+          "choice" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+    */
     [EventName.SELECT_INTERPRETER_ENTER_CHOICE]: {
         /**
          * Carries 'enter' if user chose to enter the path to executable.
@@ -1068,6 +1118,11 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent after an action has been taken while the interpreter quickpick was displayed,
      * and if the action was not 'Enter interpreter path'.
      */
+    /* __GDPR__
+       "select_interpreter_selected" : {
+          "action" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.SELECT_INTERPRETER_SELECTED]: {
         /**
          * 'escape' if the quickpick was dismissed.
@@ -1078,9 +1133,20 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when the user select to either enter or find the interpreter from the quickpick.
      */
+    /* __GDPR__
+       "select_interpreter_enter_or_find" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
+
     [EventName.SELECT_INTERPRETER_ENTER_OR_FIND]: never | undefined;
     /**
      * Telemetry event sent after the user entered an interpreter path, or found it by browsing the filesystem.
+     */
+    /* __GDPR__
+       "select_interpreter_entered_exists" : {
+          "discovered" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.SELECT_INTERPRETER_ENTERED_EXISTS]: {
         /**
@@ -1090,6 +1156,13 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent with details after updating the python interpreter
+     */
+    /* __GDPR__
+       "python_interpreter" : {
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.PYTHON_INTERPRETER]: {
         /**
@@ -1111,6 +1184,12 @@ export interface IEventNamePropertyMapping {
          */
         pythonVersion?: string;
     };
+    /* __GDPR__
+       "python_interpreter_activation_environment_variables" : {
+          "hasenvvars" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: {
         /**
          * Carries `true` if environment variables are present, `false` otherwise
@@ -1127,6 +1206,15 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent when getting activation commands for active interpreter
+     */
+    /* __GDPR__
+       "python_interpreter_activation_for_running_code" : {
+          "hascommands" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_RUNNING_CODE]: {
         /**
@@ -1163,6 +1251,15 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when getting activation commands for terminal when interpreter is not specified
      */
+    /* __GDPR__
+       "python_interpreter_activation_for_terminal" : {
+          "hascommands" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL]: {
         /**
          * Carries `true` if activation commands exists for terminal, `false` otherwise
@@ -1198,6 +1295,12 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when auto-selection is called.
      */
+    /* __GDPR__
+       "python_interpreter_auto_selection" : {
+          "usecachedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
+
     [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: {
         /**
          * If auto-selection has been run earlier in this session, and this call returned a cached value.
@@ -1209,6 +1312,11 @@ export interface IEventNamePropertyMapping {
     /**
      * Sends information regarding discovered python environments (virtualenv, conda, pipenv etc.)
      */
+    /* __GDPR__
+       "python_interpreter_discovery" : {
+          "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+       }
+     */
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: {
         /**
          * The number of the interpreters returned by locator
@@ -1218,10 +1326,20 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when pipenv interpreter discovery is executed.
      */
+    /* __GDPR__
+       "pipenv_interpreter_discovery" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.PIPENV_INTERPRETER_DISCOVERY]: never | undefined;
     /**
      * Telemetry event sent with details when user clicks the prompt with the following message
      * `Prompt message` :- 'We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the "terminal.integrated.inheritEnv" setting to be changed to false. Would you like to update this setting?'
+     */
+    /* __GDPR__
+       "conda_inherit_env_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.CONDA_INHERIT_ENV_PROMPT]: {
         /**
@@ -1234,6 +1352,11 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent with details when user clicks a button in the virtual environment prompt.
      * `Prompt message` :- 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?'
+     */
+    /* __GDPR__
+       "python_interpreter_activate_environment_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT]: {
         /**
@@ -1249,6 +1372,11 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent with details when the user clicks a button in the "Python is not installed" prompt.
      * * `Prompt message` :- 'Python is not installed. Please download and install Python before using the extension.'
      */
+    /* __GDPR__
+       "python_not_installed_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.PYTHON_NOT_INSTALLED_PROMPT]: {
         /**
          * `Download` When the 'Download' option is clicked
@@ -1258,10 +1386,14 @@ export interface IEventNamePropertyMapping {
          */
         selection: 'Download' | 'Ignore' | undefined;
     };
-
     /**
      * Telemetry event sent with details when user clicks a button in the following prompt
      * `Prompt message` :- 'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?'
+     */
+    /* __GDPR__
+       "insiders_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.INSIDERS_PROMPT]: {
         /**
@@ -1275,6 +1407,11 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent with details when user clicks a button in the 'Reload to install insiders prompt'.
      * `Prompt message` :- 'Please reload Visual Studio Code to use the insiders build of the extension'
      */
+    /* __GDPR__
+       "insiders_reload_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.INSIDERS_RELOAD_PROMPT]: {
         /**
          * `Reload` When 'Reload' option is clicked
@@ -1287,6 +1424,13 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry sent with details about the current selection of language server
      */
+    /* __GDPR__
+       "python_language_server.current_selection" : {
+          "lsstartup" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "switchto" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
+
     [EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION]: {
         /**
          * The startup value of the language server setting
@@ -1302,6 +1446,11 @@ export interface IEventNamePropertyMapping {
      * is sent with `durationMs` specifying the total duration of time that the given language server took
      * to activate.
      */
+    /* __GDPR__
+       "python_language_server.startup_duration" : {
+          "languageservertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP_DURATION]: {
         /**
          * Type of Language server activated. Note it can be different from one that is chosen, if the
@@ -1311,6 +1460,14 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent with details after attempting to download LS
+     */
+    /* __GDPR__
+       "python_language_server.downloaded" : {
+          "success" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "usedssl" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "lsname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: {
         /**
@@ -1334,11 +1491,21 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
      */
+    /* __GDPR__
+       "python_langauge_server.enabled" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: {
         lsVersion?: string;
     };
     /**
      * Telemetry event sent with details when downloading or extracting LS fails
+     */
+    /* __GDPR__
+       "python_language_server.error" : {
+          "error" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" }
+       }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_ERROR]: {
         /**
@@ -1348,6 +1515,14 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent with details after attempting to extract LS
+     */
+    /* __GDPR__
+       "python_language_server.extracted" : {
+          "success" : { "classification": "SystemMetaData", "purpose": "PerfomanceAndHealth" },
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "usedssl" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "lsname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED]: {
         /**
@@ -1370,9 +1545,20 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent if azure blob packages are being listed
      */
+    /* __GDPR__
+       "python_language_server.list_blob_store_packages" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES]: never | undefined;
     /**
      * Tracks if LS is supported on platform or not
+     */
+    /* __GDPR__
+       "python_language_server.platform_supported" : {
+          "supported" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "failuretype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED]: {
         /**
@@ -1391,11 +1577,22 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when LS is ready to start
      */
+    /* __GDPR__
+       "python_language_server.ready" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
+
     [EventName.PYTHON_LANGUAGE_SERVER_READY]: {
         lsVersion?: string;
     };
     /**
      * Telemetry event sent when starting LS
+     */
+    /* __GDPR__
+       "python_language_server.startup" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: {
         lsVersion?: string;
@@ -1403,19 +1600,41 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry sent from language server (details of telemetry sent can be provided by LS team)
      */
+    /* __GDPR__
+       "python_language_server.telemetry" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the language server
      *
      * This event also has a measure, "resultLength", which records the number of completions provided.
      */
+    /* __GDPR__
+       "python_language_server.request" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
+
     [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
      * Telemetry event sent when the experiments service is initialized for the first time.
      */
+    /* __GDPR__
+       "python_" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.PYTHON_EXPERIMENTS_INIT_PERFORMANCE]: unknown;
     /**
      * Telemetry event sent once on session start with details on which experiments are opted into and opted out from.
+     */
+    /* __GDPR__
+       "python_experiments_opt_in_opt_out_settings" : {
+          "optedinto" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "optedoutfrom" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS]: {
         /**
@@ -1432,11 +1651,21 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
      */
+    /* __GDPR__
+       "language_server_enabled" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.LANGUAGE_SERVER_ENABLED]: {
         lsVersion?: string;
     };
     /**
      * Telemetry event sent when Node.js server is ready to start
+     */
+    /* __GDPR__
+       "language_server_ready" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.LANGUAGE_SERVER_READY]: {
         lsVersion?: string;
@@ -1444,11 +1673,21 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when starting Node.js server
      */
+    /* __GDPR__
+       "language_server_startup" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.LANGUAGE_SERVER_STARTUP]: {
         lsVersion?: string;
     };
     /**
      * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
+     */
+    /* __GDPR__
+       "language_server_telemetry" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
@@ -1456,9 +1695,19 @@ export interface IEventNamePropertyMapping {
      *
      * This event also has a measure, "resultLength", which records the number of completions provided.
      */
+    /* __GDPR__
+       "language_server_request" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.LANGUAGE_SERVER_REQUEST]: unknown;
     /**
      * Telemetry event sent when Jedi Language Server is started for workspace (workspace folder in case of multi-root)
+     */
+    /* __GDPR__
+       "jedi_language_server.enabled" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.JEDI_LANGUAGE_SERVER_ENABLED]: {
         lsVersion?: string;
@@ -1466,11 +1715,21 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when Jedi Language Server server is ready to receive messages
      */
+    /* __GDPR__
+       "jedi_language_server.ready" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.JEDI_LANGUAGE_SERVER_READY]: {
         lsVersion?: string;
     };
     /**
      * Telemetry event sent when starting Node.js server
+     */
+    /* __GDPR__
+       "jedi_language_server.startup" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.JEDI_LANGUAGE_SERVER_STARTUP]: {
         lsVersion?: string;
@@ -1480,9 +1739,19 @@ export interface IEventNamePropertyMapping {
      *
      * This event also has a measure, "resultLength", which records the number of completions provided.
      */
+    /* __GDPR__
+       "jedi_language_server.request" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.JEDI_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
      * When user clicks a button in the python extension survey prompt, this telemetry event is sent with details
+     */
+    /* __GDPR__
+       "extension_survey_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.EXTENSION_SURVEY_PROMPT]: {
         /**
@@ -1493,9 +1762,19 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry sent back when join mailing list prompt is shown.
      */
+    /* __GDPR__
+       "join_mailing_list_prompt_displayed" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED]: never | undefined;
     /**
      * Telemetry sent back when user selects an option from join mailing list prompt.
+     */
+    /* __GDPR__
+       "join_mailing_list_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.JOIN_MAILING_LIST_PROMPT]: {
         /**
@@ -1514,9 +1793,20 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when starting REPL
      */
+    /* __GDPR__
+       "repl" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.REPL]: never | undefined;
     /**
      * Telemetry event sent with details of linter selected in quickpick of linter list.
+     */
+    /* __GDPR__
+       "select_linter" : {
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "enabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.SELECT_LINTER]: {
         /**
@@ -1551,9 +1841,21 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
      */
+    /* __GDPR__
+       "unittest.configure" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.UNITTEST_CONFIGURE]: never | undefined;
     /**
      * Telemetry event sent when user chooses a test framework in the Quickpick displayed for enabling and configuring test framework
+     */
+    /* __GDPR__
+       "unittest.configuring" : {
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.UNITTEST_CONFIGURING]: {
         /**
