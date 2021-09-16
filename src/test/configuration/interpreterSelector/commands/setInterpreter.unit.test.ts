@@ -34,7 +34,7 @@ import { EventName } from '../../../../client/telemetry/constants';
 import * as Telemetry from '../../../../client/telemetry';
 import { MockWorkspaceConfiguration } from '../../../mocks/mockWorkspaceConfig';
 import { Octicons } from '../../../../client/common/constants';
-import { IInterpreterService } from '../../../../client/interpreter/contracts';
+import { IInterpreterService, PythonEnvironmentsChangedEvent } from '../../../../client/interpreter/contracts';
 import { createDeferred, sleep } from '../../../../client/common/utils/async';
 
 const untildify = require('untildify');
@@ -97,12 +97,13 @@ suite('Set Interpreter Command', () => {
         let sendTelemetryStub: sinon.SinonStub;
         let telemetryEvent: TelemetryEventType | undefined;
 
+        const interpreterPath = 'path/to/interpreter';
         const item: IInterpreterQuickPickItem = {
             description: '',
             detail: '',
-            label: '',
-            path: 'This is the selected Python path',
-            interpreter: {} as PythonEnvironment,
+            label: 'This is the selected Python path',
+            path: interpreterPath,
+            interpreter: { path: interpreterPath } as PythonEnvironment,
         };
         const defaultInterpreterPath = 'defaultInterpreterPath';
         const defaultInterpreterPathSuggestion = {
@@ -115,9 +116,9 @@ suite('Set Interpreter Command', () => {
         const refreshedItem: IInterpreterQuickPickItem = {
             description: '',
             detail: '',
-            label: '',
-            path: 'Refreshed path',
-            interpreter: {} as PythonEnvironment,
+            label: 'Refreshed path',
+            path: interpreterPath,
+            interpreter: { path: interpreterPath } as PythonEnvironment,
         };
         const expectedEnterInterpreterPathSuggestion = {
             label: `${Octicons.Add} ${InterpreterQuickPickList.enterPath.label()}`,
@@ -140,7 +141,7 @@ suite('Set Interpreter Command', () => {
                     };
                 });
             interpreterSelector
-                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), true))
+                .setup((i) => i.getSuggestions(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([item]));
             pythonSettings.setup((p) => p.pythonPath).returns(() => currentPythonPath);
             pythonSettings.setup((p) => p.defaultInterpreterPath).returns(() => defaultInterpreterPath);
@@ -261,17 +262,24 @@ suite('Set Interpreter Command', () => {
             expect(onChangedCallback).to.not.equal(undefined, 'Callback not set');
             multiStepInput.verifyAll();
 
-            const quickPick = { items: [], activeItems: [], busy: false };
-            interpreterSelector.reset();
+            const quickPick = {
+                items: [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, refreshedItem],
+                activeItems: [item],
+                busy: false,
+            };
             interpreterSelector
-                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), false))
-                .returns(() => Promise.resolve([refreshedItem]));
+                .setup((i) => i.suggestionToQuickPickItem(TypeMoq.It.isAny(), undefined))
+                .returns(() => refreshedItem);
             const refreshPromiseDeferred = createDeferred();
             // Assume a refresh is currently going on...
             when(interpreterService.refreshPromise).thenReturn(refreshPromiseDeferred.promise);
 
+            const changeEvent: PythonEnvironmentsChangedEvent = {
+                old: item.interpreter,
+                update: refreshedItem.interpreter,
+            };
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await onChangedCallback!({} as any, quickPick as any); // Invoke callback, meaning that the items are supposed to change.
+            await onChangedCallback!(changeEvent, quickPick as any); // Invoke callback, meaning that the items are supposed to change.
 
             assert.deepStrictEqual(
                 quickPick,
@@ -583,9 +591,7 @@ suite('Set Interpreter Command', () => {
 
             workspace.setup((w) => w.workspaceFolders).returns(() => undefined);
 
-            interpreterSelector
-                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), true))
-                .returns(() => Promise.resolve([]));
+            interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
             const multiStepInput = {
                 run: (_: unknown, state: InterpreterStateArgs) => {
                     state.path = selectedItem.path;
@@ -625,9 +631,7 @@ suite('Set Interpreter Command', () => {
             const folder = { name: 'one', uri: Uri.parse('one'), index: 0 };
             workspace.setup((w) => w.workspaceFolders).returns(() => [folder]);
 
-            interpreterSelector
-                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), true))
-                .returns(() => Promise.resolve([]));
+            interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
 
             const multiStepInput = {
                 run: (_: unknown, state: InterpreterStateArgs) => {
@@ -683,9 +687,7 @@ suite('Set Interpreter Command', () => {
                 },
             ];
 
-            interpreterSelector
-                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), true))
-                .returns(() => Promise.resolve([]));
+            interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
 
             const multiStepInput = {
                 run: (_: unknown, state: InterpreterStateArgs) => {
@@ -752,7 +754,7 @@ suite('Set Interpreter Command', () => {
             ];
 
             interpreterSelector
-                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), true))
+                .setup((i) => i.getSuggestions(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([selectedItem]));
             const multiStepInput = {
                 run: (_: unknown, state: InterpreterStateArgs) => {
@@ -791,9 +793,7 @@ suite('Set Interpreter Command', () => {
         test('Do not update anything when user does not select a workspace folder and there is more than one workspace folder', async () => {
             workspace.setup((w) => w.workspaceFolders).returns(() => [folder1, folder2]);
 
-            interpreterSelector
-                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), true))
-                .returns(() => Promise.resolve([]));
+            interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
             multiStepInputFactory.setup((f) => f.create()).verifiable(TypeMoq.Times.never());
 
             const expectedItems = [
@@ -859,9 +859,7 @@ suite('Set Interpreter Command', () => {
 
             workspace.setup((w) => w.workspaceFolders).returns(() => undefined);
 
-            interpreterSelector
-                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), true))
-                .returns(() => Promise.resolve([]));
+            interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
             const multiStepInput = {
                 run: (inputStepArg: InputStepType, state: InterpreterStateArgs) => {
                     inputStep = inputStepArg;

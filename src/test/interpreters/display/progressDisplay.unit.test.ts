@@ -8,7 +8,7 @@ import { anything, capture, instance, mock, when } from 'ts-mockito';
 import { CancellationToken, Disposable, Progress, ProgressOptions } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { ExperimentService } from '../../../client/common/experiments/service';
-import { Common, Interpreters } from '../../../client/common/utils/localize';
+import { Interpreters } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { IComponentAdapter, IInterpreterLocatorProgressService } from '../../../client/interpreter/contracts';
 import { InterpreterLocatorProgressStatubarHandler } from '../../../client/interpreter/display/progressDisplay';
@@ -60,7 +60,7 @@ suite('Interpreters - Display Progress', () => {
         refreshingCallback(undefined);
 
         const options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
-        expect(options.title).to.be.equal(Common.loadingExtension());
+        expect(options.title).to.be.equal(Interpreters.discovering());
     });
 
     test('Display refreshing message when refreshing interpreters for the second time', async () => {
@@ -78,7 +78,7 @@ suite('Interpreters - Display Progress', () => {
         refreshingCallback(undefined);
 
         let options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
-        expect(options.title).to.be.equal(Common.loadingExtension());
+        expect(options.title).to.be.equal(Interpreters.discovering());
 
         refreshingCallback(undefined);
 
@@ -104,7 +104,7 @@ suite('Interpreters - Display Progress', () => {
         const callback = capture(shell.withProgress as never).last()[1] as ProgressTask<void>;
         const promise = callback(undefined as never, undefined as never);
 
-        expect(options.title).to.be.equal(Common.loadingExtension());
+        expect(options.title).to.be.equal(Interpreters.discovering());
 
         refreshedCallback(undefined);
         // Promise must resolve when refreshed callback is invoked.

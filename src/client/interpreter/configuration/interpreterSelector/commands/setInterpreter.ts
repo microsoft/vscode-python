@@ -4,11 +4,11 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { QuickPickItem } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands, Octicons } from '../../../../common/constants';
+import { arePathsSame } from '../../../../common/platform/fs-paths';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
 import { getIcon } from '../../../../common/utils/icons';
@@ -22,7 +22,7 @@ import {
 import { REFRESH_BUTTON_ICON } from '../../../../debugger/extension/attachQuickPick/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
-import { IInterpreterService } from '../../../contracts';
+import { IInterpreterService, PythonEnvironmentsChangedEvent } from '../../../contracts';
 import {
     IInterpreterQuickPickItem,
     IInterpreterSelector,
@@ -69,11 +69,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs,
     ): Promise<void | InputStep<InterpreterStateArgs>> {
-        // If the list is refreshing, adding elements in the end is only
-        // way to preserve scroll position. If we try to maintain a
-        // sorted list, that is not guaranteed, so disable sorting.
-        const sortList = !this.interpreterService.refreshPromise;
-        const suggestions = await this.getItems(state.workspace, sortList);
+        // If the list is refreshing, it's crucial to maintain sorting order at all
+        // times, so the visible items do not change.
+        const preserveOrderWhenFiltering = !!this.interpreterService.refreshPromise;
+        const suggestions = await this.getItems(state.workspace);
         state.path = undefined;
         const currentInterpreterPathDisplay = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
@@ -82,7 +81,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         const selection = await input.showQuickPick<QuickPickType, IQuickPickParameters<QuickPickType>>({
             placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentInterpreterPathDisplay),
             items: suggestions,
-            sortByLabel: sortList,
+            sortByLabel: !preserveOrderWhenFiltering,
             keepScrollPosition: true,
             activeItem: this.getActiveItem(state.workspace, suggestions),
             matchOnDetail: true,
@@ -97,23 +96,27 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             },
             onChangeItem: {
                 event: this.interpreterService.onDidChangeInterpreters,
-                callback: async (_event, quickPick) => {
+                callback: async (event: PythonEnvironmentsChangedEvent, quickPick) => {
                     if (this.interpreterService.refreshPromise) {
                         quickPick.busy = true;
                         this.interpreterService.refreshPromise.then(() => {
                             quickPick.busy = false;
                         });
                     }
-
-                    const interpreterSuggestions = await this.getItems(
-                        state.workspace,
-                        !this.interpreterService.refreshPromise,
-                    );
-                    quickPick.items = interpreterSuggestions;
-                    if (quickPick.activeItems.length === 0) {
-                        // Changing active items if one is already set is not a good idea as user might be using it.
-                        quickPick.activeItems = [this.getActiveItem(state.workspace, interpreterSuggestions)];
-                    }
+                    // Active items are reset once we replace the current list with updated items, so save it.
+                    const activeItemBeforeUpdate =
+                        quickPick.activeItems.length > 0 ? quickPick.activeItems[0] : undefined;
+                    quickPick.items = this.getUpdatedItems(quickPick.items, event, state.workspace);
+                    // Ensure we maintain the same active item as before.
+                    const activeItem = activeItemBeforeUpdate
+                        ? quickPick.items.find((item) => {
+                              if ('interpreter' in item && 'interpreter' in activeItemBeforeUpdate) {
+                                  return arePathsSame(item.interpreter.path, activeItemBeforeUpdate.interpreter.path);
+                              }
+                              return false;
+                          })
+                        : undefined;
+                    quickPick.activeItems = activeItem ? [activeItem] : [];
                 },
             },
         });
@@ -131,21 +134,19 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         return undefined;
     }
 
-    private async getItems(resource: Resource, sortList: boolean) {
+    private async getItems(resource: Resource) {
         const suggestions: QuickPickType[] = [this.manualEntrySuggestion];
         const defaultInterpreterPathSuggestion = this.getDefaultInterpreterPathSuggestion(resource);
         if (defaultInterpreterPathSuggestion) {
             suggestions.push(defaultInterpreterPathSuggestion);
         }
-        const interpreterSuggestions = await this.interpreterSelector.getSuggestions(resource, sortList);
-        if (sortList && interpreterSuggestions.length > 0) {
-            // If list is already sorted, the first item is the recommended one.
-            const suggested = interpreterSuggestions.shift();
+        const interpreterSuggestions = await this.interpreterSelector.getSuggestions(resource);
+        if (!this.interpreterService.refreshPromise && interpreterSuggestions.length > 0) {
+            // If list is not refreshing, the first item is the recommended one.
+            const suggested = interpreterSuggestions[0];
             if (suggested) {
-                const starred = cloneDeep(suggested);
-                starred.label = `${Octicons.Star} ${starred.label}`;
-                starred.description = Common.recommended();
-                interpreterSuggestions.unshift(starred);
+                suggested.label = `${Octicons.Star} ${suggested.label}`;
+                suggested.description = Common.recommended();
             }
         }
         suggestions.push(...interpreterSuggestions);
@@ -180,6 +181,39 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             };
         }
         return undefined;
+    }
+
+    private getUpdatedItems(
+        items: readonly QuickPickType[],
+        event: PythonEnvironmentsChangedEvent,
+        resource: Resource,
+    ): QuickPickType[] {
+        const updatedItems = [...items.values()];
+        const env = event.old ?? event.update;
+        let envIndex = -1;
+        if (env) {
+            envIndex = updatedItems.findIndex((item) => {
+                if ('interpreter' in item) {
+                    return arePathsSame(item.interpreter.path, env.path);
+                }
+                return false;
+            });
+        }
+        if (event.update) {
+            const newSuggestion: QuickPickType = this.interpreterSelector.suggestionToQuickPickItem(
+                event.update,
+                resource,
+            );
+            if (envIndex === -1) {
+                updatedItems.push(newSuggestion);
+            } else {
+                updatedItems[envIndex] = newSuggestion;
+            }
+        }
+        if (envIndex !== -1 && event.update === undefined) {
+            updatedItems.splice(envIndex, 1);
+        }
+        return updatedItems;
     }
 
     @captureTelemetry(EventName.SELECT_INTERPRETER_ENTER_BUTTON)

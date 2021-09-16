@@ -11,7 +11,7 @@ import { inDiscoveryExperiment } from '../../common/experiments/helpers';
 import { traceDecorators } from '../../common/logger';
 import { IDisposableRegistry, IExperimentService } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
-import { Common, Interpreters } from '../../common/utils/localize';
+import { Interpreters } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { IComponentAdapter, IInterpreterLocatorProgressService } from '../contracts';
 
@@ -70,7 +70,7 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
     private createProgress() {
         const progressOptions: ProgressOptions = {
             location: ProgressLocation.Window,
-            title: this.isFirstTimeLoadingInterpreters ? Common.loadingExtension() : Interpreters.refreshing(),
+            title: this.isFirstTimeLoadingInterpreters ? Interpreters.discovering() : Interpreters.refreshing(),
         };
         this.isFirstTimeLoadingInterpreters = false;
         this.shell.withProgress(progressOptions, () => {

@@ -3,7 +3,6 @@
 
 import { Event } from 'vscode';
 import { traceInfo } from '../../../../common/logger';
-import { asyncFilter } from '../../../../common/utils/arrayUtils';
 import { pathExists } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
 import { areSameEnv } from '../../info/env';
@@ -76,7 +75,12 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
          * we avoid the cost of running lstat. So simply remove envs which no longer
          * exist.
          */
-        this.envs = await asyncFilter(this.envs, (e) => pathExists(e.executable.filename));
+        const areEnvsValid = await Promise.all(this.envs.map((e) => pathExists(e.executable.filename)));
+        const invalidIndexes = areEnvsValid.map((isValid, index) => (isValid ? -1 : index)).filter((i) => i !== -1);
+        invalidIndexes.forEach((index) => {
+            const env = this.envs.splice(index, 1)[0];
+            this.fire({ old: env, update: undefined });
+        });
     }
 
     public getAllEnvs(): PythonEnvInfo[] {

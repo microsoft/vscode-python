@@ -26,7 +26,6 @@
     "LanguageService.lsFailedToDownload": "We zijn een probleem tegengekomen bij het downloaden van de language server. Aan het terugschakelen naar het alternatief, Jedi. Bekijk het weergavepaneel voor details.",
     "LanguageService.lsFailedToExtract": "We zijn een probleem tegengekomen bij het uitpakken van de language server. Aan het terugschakelen naar het alternatief, Jedi. Bekijk het weergavepaneel voor details.",
     "Interpreters.RefreshingInterpreters": "Python-Interpreters verversen",
-    "Interpreters.LoadingInterpreters": "Python-Interpreters laden",
     "Linter.InstalledButNotEnabled": "Linter {0} is geinstalleerd maar niet ingeschakeld.",
     "Linter.replaceWithSelectedLinter": "Meerdere linters zijn ingeschakeld in de instellingen. Vervangen met '{0}'?",
     "diagnostics.warnSourceMaps": "Bronkaartondersteuning is ingeschakeld in de Python-extensie, dit zal een ongunstige impact hebben op de uitvoering van de extensie.",

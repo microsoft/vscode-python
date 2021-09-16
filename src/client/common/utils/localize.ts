@@ -261,7 +261,7 @@ export namespace Experiments {
     export const optedOutOf = localize('Experiments.optedOutOf', "User opted out of experiment group '{0}'");
 }
 export namespace Interpreters {
-    export const loading = localize('Interpreters.LoadingInterpreters', 'Loading Python Interpreters');
+    export const discovering = localize('Interpreters.DiscoveringInterpreters', 'Discovering Python Interpreters');
     export const refreshing = localize('Interpreters.RefreshingInterpreters', 'Refreshing Python Interpreters');
     export const condaInheritEnvMessage = localize(
         'Interpreters.condaInheritEnvMessage',

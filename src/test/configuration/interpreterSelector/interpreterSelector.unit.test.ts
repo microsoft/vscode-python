@@ -51,10 +51,7 @@ suite('Interpreters - selector', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let newComparer: TypeMoq.IMock<IInterpreterComparer>;
     class TestInterpreterSelector extends InterpreterSelector {
-        public async suggestionToQuickPickItem(
-            suggestion: PythonEnvironment,
-            workspaceUri?: Uri,
-        ): Promise<IInterpreterQuickPickItem> {
+        public suggestionToQuickPickItem(suggestion: PythonEnvironment, workspaceUri?: Uri): IInterpreterQuickPickItem {
             return super.suggestionToQuickPickItem(suggestion, workspaceUri);
         }
     }
