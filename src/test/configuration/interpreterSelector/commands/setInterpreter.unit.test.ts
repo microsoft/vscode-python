@@ -41,7 +41,7 @@ const untildify = require('untildify');
 
 type TelemetryEventType = { eventName: EventName; properties: unknown };
 
-suite('xSet Interpreter Command', () => {
+suite('Set Interpreter Command', () => {
     let workspace: TypeMoq.IMock<IWorkspaceService>;
     let interpreterSelector: TypeMoq.IMock<IInterpreterSelector>;
     let appShell: TypeMoq.IMock<IApplicationShell>;

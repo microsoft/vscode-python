@@ -166,6 +166,9 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         return undefined;
     }
 
+    /**
+     * Updates quickpick using the change event received.
+     */
     private async updateQuickPickItems(
         quickPick: QuickPick<QuickPickType>,
         event: PythonEnvironmentsChangedEvent,
@@ -190,6 +193,9 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         quickPick.activeItems = activeItem ? [activeItem] : [];
     }
 
+    /**
+     * Prepare updated items to replace the quickpick list with.
+     */
     private async getUpdatedItems(
         items: readonly QuickPickType[],
         event: PythonEnvironmentsChangedEvent,
