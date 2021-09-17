@@ -113,10 +113,6 @@ export class ExperimentService implements IExperimentService {
             return false;
         }
 
-        if (experiment === DiscoveryVariants.discoveryWithoutFileWatching) {
-            // Enable discovery experiment for all users.
-            return true;
-        }
         // Currently the service doesn't support opting in and out of experiments.
         // so we need to perform these checks manually.
         if (this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
@@ -128,6 +124,11 @@ export class ExperimentService implements IExperimentService {
             // this to ensure the experiment service is ready and internal states are fully
             // synced with the experiment server.
             this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment);
+            return true;
+        }
+
+        if (experiment === DiscoveryVariants.discoveryWithoutFileWatching) {
+            // Enable discovery experiment for all users.
             return true;
         }
 
