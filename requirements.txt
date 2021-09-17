@@ -4,10 +4,12 @@
 #
 #    pip-compile --generate-hashes requirements.in
 #
-dataclasses==0.8 \
+dataclasses==0.8 ; python_version <= "3.6" \
     --hash=sha256:0201d89fa866f68c8ebd9d08ee6ff50c0b255f8ec63a71c16fda7af82bb887bf \
     --hash=sha256:8479067f342acf957dc82ec415d355ab5edb7e7646b90dc6e2fd1d96ad084c97
-    # via pydantic
+    # via
+    #   -r requirements.in
+    #   pydantic
 docstring-to-markdown==0.9 \
     --hash=sha256:0b810e6e16737d2d0ede6182f66f513f814a11fad1222e645fbc14acde78e171 \
     --hash=sha256:488b9f26339651edc7fc9386caeffd3924569072a8b67b727e253f83d5b18c59

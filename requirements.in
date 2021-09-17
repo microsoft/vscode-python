@@ -14,3 +14,4 @@ isort==5.9.3
 # Jedi behind LSP
 jedi-language-server>=0.34.3
 pygls>=0.10.3
+dataclasses==0.8;python_version<="3.6"
