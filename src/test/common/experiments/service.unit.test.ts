@@ -12,6 +12,7 @@ import { ApplicationEnvironment } from '../../../client/common/application/appli
 import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { Channel } from '../../../client/common/constants';
+import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 import { ExperimentService } from '../../../client/common/experiments/service';
 import { Experiments } from '../../../client/common/utils/localize';
 import * as Telemetry from '../../../client/telemetry';
@@ -157,14 +158,14 @@ suite('Experimentation service', () => {
 
     suite('In-experiment-sync check', () => {
         const experiment = 'Test Experiment - experiment';
-        let telemetryEvents: { eventName: string; properties: Record<string, unknown> }[] = [];
+        let telemetryEvents: { eventName: string; properties: unknown }[] = [];
         let getTreatmentVariable: sinon.SinonStub;
         let sendTelemetryEventStub: sinon.SinonStub;
 
         setup(() => {
             sendTelemetryEventStub = sinon
                 .stub(Telemetry, 'sendTelemetryEvent')
-                .callsFake((eventName: string, _, properties: Record<string, unknown>) => {
+                .callsFake((eventName: string, _, properties: unknown) => {
                     const telemetry = { eventName, properties };
                     telemetryEvents.push(telemetry);
                 });
@@ -180,6 +181,20 @@ suite('Experimentation service', () => {
         teardown(() => {
             telemetryEvents = [];
             sinon.restore();
+        });
+
+        test('Enable discovery experiment without file watching for all users', async () => {
+            configureSettings(true, [], []);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+            const result = experimentService.inExperimentSync(DiscoveryVariants.discoveryWithoutFileWatching);
+
+            assert.isTrue(result);
         });
 
         test('If the opt-in and opt-out arrays are empty, return the value from the experimentation framework for a given experiment', async () => {
@@ -401,13 +416,13 @@ suite('Experimentation service', () => {
     });
 
     suite('Opt-in/out telemetry', () => {
-        let telemetryEvents: { eventName: string; properties: Record<string, unknown> }[] = [];
+        let telemetryEvents: { eventName: string; properties: unknown }[] = [];
         let sendTelemetryEventStub: sinon.SinonStub;
 
         setup(() => {
             sendTelemetryEventStub = sinon
                 .stub(Telemetry, 'sendTelemetryEvent')
-                .callsFake((eventName: string, _, properties: Record<string, unknown>) => {
+                .callsFake((eventName: string, _, properties: unknown) => {
                     const telemetry = { eventName, properties };
                     telemetryEvents.push(telemetry);
                 });
