@@ -21,7 +21,7 @@ import { PVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { MockOutputChannel } from '../../mockClasses';
 import { MockMemento } from '../../mocks/mementos';
 
-suite('xExperimentation service', () => {
+suite('Experimentation service', () => {
     const extensionVersion = '1.2.3';
 
     let workspaceService: IWorkspaceService;
@@ -158,14 +158,14 @@ suite('xExperimentation service', () => {
 
     suite('In-experiment-sync check', () => {
         const experiment = 'Test Experiment - experiment';
-        let telemetryEvents: { eventName: string; properties: Record<string, unknown> }[] = [];
+        let telemetryEvents: { eventName: string; properties: unknown }[] = [];
         let getTreatmentVariable: sinon.SinonStub;
         let sendTelemetryEventStub: sinon.SinonStub;
 
         setup(() => {
             sendTelemetryEventStub = sinon
                 .stub(Telemetry, 'sendTelemetryEvent')
-                .callsFake((eventName: string, _, properties: Record<string, unknown>) => {
+                .callsFake((eventName: string, _, properties: unknown) => {
                     const telemetry = { eventName, properties };
                     telemetryEvents.push(telemetry);
                 });
@@ -416,13 +416,13 @@ suite('xExperimentation service', () => {
     });
 
     suite('Opt-in/out telemetry', () => {
-        let telemetryEvents: { eventName: string; properties: Record<string, unknown> }[] = [];
+        let telemetryEvents: { eventName: string; properties: unknown }[] = [];
         let sendTelemetryEventStub: sinon.SinonStub;
 
         setup(() => {
             sendTelemetryEventStub = sinon
                 .stub(Telemetry, 'sendTelemetryEvent')
-                .callsFake((eventName: string, _, properties: Record<string, unknown>) => {
+                .callsFake((eventName: string, _, properties: unknown) => {
                     const telemetry = { eventName, properties };
                     telemetryEvents.push(telemetry);
                 });
