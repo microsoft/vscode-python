@@ -12,6 +12,7 @@ import { ApplicationEnvironment } from '../../../client/common/application/appli
 import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { Channel } from '../../../client/common/constants';
+import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 import { ExperimentService } from '../../../client/common/experiments/service';
 import { Experiments } from '../../../client/common/utils/localize';
 import * as Telemetry from '../../../client/telemetry';
@@ -20,7 +21,7 @@ import { PVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { MockOutputChannel } from '../../mockClasses';
 import { MockMemento } from '../../mocks/mementos';
 
-suite('Experimentation service', () => {
+suite('xExperimentation service', () => {
     const extensionVersion = '1.2.3';
 
     let workspaceService: IWorkspaceService;
@@ -180,6 +181,20 @@ suite('Experimentation service', () => {
         teardown(() => {
             telemetryEvents = [];
             sinon.restore();
+        });
+
+        test('Enable discovery experiment without file watching for all users', async () => {
+            configureSettings(true, [], []);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel,
+            );
+            const result = experimentService.inExperimentSync(DiscoveryVariants.discoveryWithoutFileWatching);
+
+            assert.isTrue(result);
         });
 
         test('If the opt-in and opt-out arrays are empty, return the value from the experimentation framework for a given experiment', async () => {
