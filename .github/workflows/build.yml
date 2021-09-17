@@ -113,12 +113,11 @@ jobs:
 
       - name: Install Python requirements
         run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
           # We need to have debugpy so that tests relying on it keep passing, but we don't need install_debugpy's logic in the test phase.
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
 
-      - name: Install Jedi LSP requirements
-        run: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py --no-deps --upgrade -r ./jedils_requirements.txt
+      - name: Install Python 3 requirements
+        run: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
         if: startsWith(matrix.python, 3.)
 
       - name: Install test requirements

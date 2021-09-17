@@ -44,7 +44,7 @@ runs:
       run: python -m pip install wheel
       shell: bash
 
-    - name: Install python dependencies
+    - name: Install Python dependencies
       run: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
       shell: bash
 
@@ -52,11 +52,6 @@ runs:
       run: |
         python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
         python ./pythonFiles/install_debugpy.py
-      shell: bash
-
-    - name: Install Jedi LSP
-      run: |
-        python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py --platform any --abi none --no-deps --only-binary :all: --upgrade -r jedils_requirements.txt
       shell: bash
 
     - name: Run npm ci
