@@ -144,7 +144,7 @@
                     {
                         "id": "python.runAndDebug",
                         "title": "Run and debug your Python file",
-                        "description": "[Open](command:toSide:workbench.action.files.openFile) or [create](command:welcome.showNewFileEntries) a Python file - make sure to save it as \".py\". \n Click on the play button on the top right of the editor, or press F5 when on the file and select \"Python File\" to run with the debugger. \n  \n[Open file](command:toSide:workbench.action.files.openFile)",
+                        "description": "[Open](command:toSide:workbench.action.files.openFile) or [create](command:toSide:welcome.showNewFileEntries) a Python file - make sure to save it as \".py\". \n Click on the play button on the top right of the editor, or press F5 when on the file and select \"Python File\" to run with the debugger. \n  \n[Learn more](https://code.visualstudio.com/docs/python/python-tutorial#_run-hello-world)",
                         "media": {
                             "svg": "resources/walkthrough/rundebug2.svg",
                             "altText": "How to run and debug in VS Code with F5 or the play button on the top right."
