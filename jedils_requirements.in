@@ -1,9 +1,0 @@
-# This file is used to generate requirements.txt.
-# To update requirements.txt, run the following commands.
-# Use Python 3.6 when creating the environment or using pip-tools
-# 1) pip install pip-tools
-# 2) pip-compile --generate-hashes jedils_requirements.in
-
-jedi-language-server>=0.34.3
-pygls>=0.10.3
-dataclasses==0.8;python_version<="3.6"
