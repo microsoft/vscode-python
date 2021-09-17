@@ -5,3 +5,8 @@
 
 # Sort Imports
 isort==5.9.3; python_version >= '3.6'
+
+# Jedi behind LSP
+jedi-language-server>=0.34.3; python_version >= '3.6'
+pygls>=0.10.3; python_version >= '3.6'
+dataclasses==0.8;python_version<="3.6"
