@@ -223,7 +223,7 @@ gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
 gulp.task('prePublishNonBundle', gulp.series('compile'));
 
 gulp.task('installPythonRequirements', async () => {
-    let args = [
+    const args = [
         '-m',
         'pip',
         '--disable-pip-version-check',
@@ -239,37 +239,7 @@ gulp.task('installPythonRequirements', async () => {
         '-r',
         './requirements.txt',
     ];
-    let success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args, undefined, true)
-        .then(() => true)
-        .catch((ex) => {
-            console.error("Failed to install Python Libs using 'python3'", ex);
-            return false;
-        });
-    if (!success) {
-        console.info("Failed to install Python Libs using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', args).catch((ex) =>
-            console.error("Failed to install Python Libs using 'python'", ex),
-        );
-        return;
-    }
-
-    args = [
-        '-m',
-        'pip',
-        '--disable-pip-version-check',
-        'install',
-        '--no-user',
-        '-t',
-        './pythonFiles/lib/jedilsp',
-        '--no-cache-dir',
-        '--implementation',
-        'py',
-        '--no-deps',
-        '--upgrade',
-        '-r',
-        './jedils_requirements.txt',
-    ];
-    success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args, undefined, true)
+    const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args, undefined, true)
         .then(() => true)
         .catch((ex) => {
             console.error("Failed to install Python Libs using 'python3'", ex);
