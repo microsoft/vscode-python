@@ -81,8 +81,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         const invalidIndexes = areEnvsValid.map((isValid, index) => (isValid ? -1 : index)).filter((i) => i !== -1);
         invalidIndexes.forEach((index) => {
             const env = this.envs.splice(index, 1)[0];
-            // Ensure we fire events for any envs removed from collection.
-            this.fire({ old: env, update: undefined });
+            this.fire({ old: env, new: undefined });
         });
     }
 
@@ -94,7 +93,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         const found = this.envs.find((e) => areSameEnv(e, env));
         if (!found) {
             this.envs.push(env);
-            this.fire({ update: env });
+            this.fire({ new: env });
         }
     }
 
@@ -106,7 +105,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             } else {
                 this.envs[index] = newValue;
             }
-            this.fire({ old: oldValue, update: newValue });
+            this.fire({ old: oldValue, new: newValue });
         }
     }
 

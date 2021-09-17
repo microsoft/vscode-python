@@ -276,7 +276,7 @@ suite('Set Interpreter Command', () => {
 
             const changeEvent: PythonEnvironmentsChangedEvent = {
                 old: item.interpreter,
-                update: refreshedItem.interpreter,
+                new: refreshedItem.interpreter,
             };
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await onChangedCallback!(changeEvent, quickPick as any); // Invoke callback, meaning that the items are supposed to change.

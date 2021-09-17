@@ -57,6 +57,10 @@ export class InterpreterService implements Disposable, IInterpreterService {
         });
     }
 
+    public get onRefreshStart(): Event<void> {
+        return this.pyenvs.onRefreshStart;
+    }
+
     public triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
         return inDiscoveryExperimentSync(this.experimentService)
             ? this.pyenvs.triggerRefresh(query)

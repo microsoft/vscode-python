@@ -36,7 +36,7 @@ export type PythonEnvironmentsChangedEvent = {
     type?: FileChangeType;
     resource?: Uri;
     old?: PythonEnvironment;
-    update?: PythonEnvironment | undefined;
+    new?: PythonEnvironment | undefined;
 };
 
 export const IComponentAdapter = Symbol('IComponentAdapter');
@@ -110,6 +110,7 @@ export interface ICondaLocatorService {
 
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
+    readonly onRefreshStart: Event<void>;
     triggerRefresh(query?: PythonLocatorQuery): Promise<void>;
     readonly refreshPromise: Promise<void> | undefined;
     readonly onDidChangeInterpreters: Event<PythonEnvironmentsChangedEvent>;

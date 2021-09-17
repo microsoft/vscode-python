@@ -210,16 +210,16 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         resource: Resource,
     ): Promise<QuickPickType[]> {
         const updatedItems = [...items.values()];
-        const env = event.old ?? event.update;
+        const env = event.old ?? event.new;
         let envIndex = -1;
         if (env) {
             envIndex = updatedItems.findIndex(
                 (item) => isInterpreterQuickPickItem(item) && arePathsSame(item.interpreter.path, env.path),
             );
         }
-        if (event.update) {
+        if (event.new) {
             const newSuggestion: QuickPickType = this.interpreterSelector.suggestionToQuickPickItem(
-                event.update,
+                event.new,
                 resource,
             );
             if (envIndex === -1) {
@@ -228,7 +228,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 updatedItems[envIndex] = newSuggestion;
             }
         }
-        if (envIndex !== -1 && event.update === undefined) {
+        if (envIndex !== -1 && event.new === undefined) {
             updatedItems.splice(envIndex, 1);
         }
         await this.setRecommendedItem(updatedItems, resource);

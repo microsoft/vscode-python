@@ -31,6 +31,7 @@ import {
     IInterpreterDisplay,
     IInterpreterService,
     IInterpreterStatusbarVisibilityFilter,
+    PythonEnvironmentsChangedEvent,
 } from '../interpreter/contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './types';
@@ -72,6 +73,19 @@ type PythonApiForJupyterExtension = {
     /**
      * IInterpreterService
      */
+    readonly refreshPromise: Promise<void> | undefined;
+    /**
+     * IInterpreterService
+     */
+    readonly onDidChangeInterpreters: Event<PythonEnvironmentsChangedEvent>;
+    /**
+     * Equivalent to getInterpreters() in IInterpreterService
+     */
+    getKnownInterpreters(resource?: Uri): PythonEnvironment[];
+    /**
+     * @deprecated Use `getKnownInterpreters`, `onDidChangeInterpreters`, and `refreshPromise` instead.
+     * Equivalent to getAllInterpreters() in IInterpreterService
+     */
     getInterpreters(resource?: Uri): Promise<PythonEnvironment[]>;
     /**
      * IInterpreterService
@@ -91,6 +105,10 @@ type PythonApiForJupyterExtension = {
         allowExceptions?: boolean,
     ): Promise<NodeJS.ProcessEnv | undefined>;
     isWindowsStoreInterpreter(pythonPath: string): Promise<boolean>;
+    getKnownSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]>;
+    /**
+     * @deprecated Use `getKnownSuggestions` and `suggestionToQuickPickItem` instead.
+     */
     getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]>;
     /**
      * IInstaller
@@ -170,6 +188,9 @@ export class JupyterExtensionIntegration {
             getActiveInterpreter: async (resource?: Uri) => this.interpreterService.getActiveInterpreter(resource),
             getInterpreterDetails: async (pythonPath: string) =>
                 this.interpreterService.getInterpreterDetails(pythonPath),
+            refreshPromise: this.interpreterService.refreshPromise,
+            onDidChangeInterpreters: this.interpreterService.onDidChangeInterpreters,
+            getKnownInterpreters: (resource: Uri | undefined) => this.pyenvs.getInterpreters(resource),
             getInterpreters: async (resource: Uri | undefined) => this.interpreterService.getAllInterpreters(resource),
             getActivatedEnvironmentVariables: async (
                 resource: Resource,
@@ -184,6 +205,8 @@ export class JupyterExtensionIntegration {
             },
             getSuggestions: async (resource: Resource): Promise<IInterpreterQuickPickItem[]> =>
                 this.interpreterSelector.getAllSuggestions(resource),
+            getKnownSuggestions: async (resource: Resource): Promise<IInterpreterQuickPickItem[]> =>
+                this.interpreterSelector.getSuggestions(resource),
             install: async (
                 product: JupyterProductToInstall,
                 resource?: InterpreterUri,

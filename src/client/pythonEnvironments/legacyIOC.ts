@@ -149,7 +149,7 @@ class ComponentAdapter implements IComponentAdapter {
         this.api.onChanged((event) => {
             this.changed.fire({
                 type: event.type,
-                update: event.update ? convertEnvInfo(event.update) : undefined,
+                new: event.new ? convertEnvInfo(event.new) : undefined,
                 old: event.old ? convertEnvInfo(event.old) : undefined,
                 resource: event.searchLocation,
             });
@@ -276,8 +276,8 @@ class ComponentAdapter implements IComponentAdapter {
         const onAddedToCollection = createDeferred();
         // Watch for collection changed events.
         this.api.onChanged(async (e: PythonEnvCollectionChangedEvent) => {
-            if (e.update) {
-                if (await filter(convertEnvInfo(e.update))) {
+            if (e.new) {
+                if (await filter(convertEnvInfo(e.new))) {
                     onAddedToCollection.resolve();
                 }
             }
