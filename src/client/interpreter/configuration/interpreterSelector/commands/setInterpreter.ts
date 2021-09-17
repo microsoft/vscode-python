@@ -4,8 +4,9 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { cloneDeep } from 'lodash';
 import * as path from 'path';
-import { QuickPickItem } from 'vscode';
+import { QuickPick, QuickPickItem } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands, Octicons } from '../../../../common/constants';
 import { arePathsSame } from '../../../../common/platform/fs-paths';
@@ -99,28 +100,13 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 callback: async (event: PythonEnvironmentsChangedEvent, quickPick) => {
                     if (this.interpreterService.refreshPromise) {
                         quickPick.busy = true;
-                        this.interpreterService.refreshPromise.then(() => {
+                        this.interpreterService.refreshPromise.then(async () => {
                             quickPick.busy = false;
+                            // Ensure we set a recommended item after refresh has finished.
+                            await this.updateQuickPickItems(quickPick, {}, state.workspace);
                         });
                     }
-                    // Active items are reset once we replace the current list with updated items, so save it.
-                    const activeItemBeforeUpdate =
-                        quickPick.activeItems.length > 0 ? quickPick.activeItems[0] : undefined;
-                    quickPick.items = this.getUpdatedItems(quickPick.items, event, state.workspace);
-                    // Ensure we maintain the same active item as before.
-                    const activeItem = activeItemBeforeUpdate
-                        ? quickPick.items.find((item) => {
-                              if ('interpreter' in item && 'interpreter' in activeItemBeforeUpdate) {
-                                  return arePathsSame(item.interpreter.path, activeItemBeforeUpdate.interpreter.path);
-                              }
-                              if ('alwaysShow' in item && 'alwaysShow' in activeItemBeforeUpdate) {
-                                  // It's a special quickpick item, 'label' is a constant here instead of 'path'.
-                                  return item.label === activeItemBeforeUpdate.label;
-                              }
-                              return false;
-                          })
-                        : undefined;
-                    quickPick.activeItems = activeItem ? [activeItem] : [];
+                    await this.updateQuickPickItems(quickPick, event, state.workspace);
                 },
             },
         });
@@ -145,14 +131,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             suggestions.push(defaultInterpreterPathSuggestion);
         }
         const interpreterSuggestions = await this.interpreterSelector.getSuggestions(resource);
-        if (!this.interpreterService.refreshPromise && interpreterSuggestions.length > 0) {
-            // If list is not refreshing, the first item is the recommended one.
-            const suggested = interpreterSuggestions[0];
-            if (suggested) {
-                suggested.label = `${Octicons.Star} ${suggested.label}`;
-                suggested.description = Common.recommended();
-            }
-        }
+        await this.setRecommendedItem(interpreterSuggestions, resource);
         suggestions.push(...interpreterSuggestions);
         return suggestions;
     }
@@ -187,11 +166,35 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         return undefined;
     }
 
-    private getUpdatedItems(
+    private async updateQuickPickItems(
+        quickPick: QuickPick<QuickPickType>,
+        event: PythonEnvironmentsChangedEvent,
+        resource: Resource,
+    ) {
+        // Active items are reset once we replace the current list with updated items, so save it.
+        const activeItemBeforeUpdate = quickPick.activeItems.length > 0 ? quickPick.activeItems[0] : undefined;
+        quickPick.items = await this.getUpdatedItems(quickPick.items, event, resource);
+        // Ensure we maintain the same active item as before.
+        const activeItem = activeItemBeforeUpdate
+            ? quickPick.items.find((item) => {
+                  if ('interpreter' in item && 'interpreter' in activeItemBeforeUpdate) {
+                      return arePathsSame(item.interpreter.path, activeItemBeforeUpdate.interpreter.path);
+                  }
+                  if ('alwaysShow' in item && 'alwaysShow' in activeItemBeforeUpdate) {
+                      // It's of special quickpick item type, 'label' is a constant here instead of 'path'.
+                      return item.label === activeItemBeforeUpdate.label;
+                  }
+                  return false;
+              })
+            : undefined;
+        quickPick.activeItems = activeItem ? [activeItem] : [];
+    }
+
+    private async getUpdatedItems(
         items: readonly QuickPickType[],
         event: PythonEnvironmentsChangedEvent,
         resource: Resource,
-    ): QuickPickType[] {
+    ): Promise<QuickPickType[]> {
         const updatedItems = [...items.values()];
         const env = event.old ?? event.update;
         let envIndex = -1;
@@ -217,7 +220,27 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         if (envIndex !== -1 && event.update === undefined) {
             updatedItems.splice(envIndex, 1);
         }
+        await this.setRecommendedItem(updatedItems, resource);
         return updatedItems;
+    }
+
+    private async setRecommendedItem(items: QuickPickType[], resource: Resource) {
+        const interpreterSuggestions = await this.interpreterSelector.getSuggestions(resource);
+        if (!this.interpreterService.refreshPromise && interpreterSuggestions.length > 0) {
+            // If list is in the final state, first suggestion is the recommended one.
+            const recommended = cloneDeep(interpreterSuggestions[0]);
+            recommended.label = `${Octicons.Star} ${recommended.label}`;
+            recommended.description = Common.recommended();
+            const index = items.findIndex((item) => {
+                if ('interpreter' in item) {
+                    return arePathsSame(item.interpreter.path, recommended.interpreter.path);
+                }
+                return false;
+            });
+            if (index !== -1) {
+                items[index] = recommended;
+            }
+        }
     }
 
     @captureTelemetry(EventName.SELECT_INTERPRETER_ENTER_BUTTON)

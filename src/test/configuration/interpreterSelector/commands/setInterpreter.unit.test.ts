@@ -41,7 +41,7 @@ const untildify = require('untildify');
 
 type TelemetryEventType = { eventName: EventName; properties: unknown };
 
-suite('Set Interpreter Command', () => {
+suite('xSet Interpreter Command', () => {
     let workspace: TypeMoq.IMock<IWorkspaceService>;
     let interpreterSelector: TypeMoq.IMock<IInterpreterSelector>;
     let appShell: TypeMoq.IMock<IApplicationShell>;
@@ -254,6 +254,9 @@ suite('Set Interpreter Command', () => {
                     actualParameters = options;
                 })
                 .returns(() => Promise.resolve((undefined as unknown) as QuickPickItem));
+            const refreshPromiseDeferred = createDeferred();
+            // Assume a refresh is currently going on...
+            when(interpreterService.refreshPromise).thenReturn(refreshPromiseDeferred.promise);
 
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
 
@@ -263,16 +266,13 @@ suite('Set Interpreter Command', () => {
             multiStepInput.verifyAll();
 
             const quickPick = {
-                items: [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, refreshedItem],
+                items: [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, item],
                 activeItems: [item],
                 busy: false,
             };
             interpreterSelector
                 .setup((i) => i.suggestionToQuickPickItem(TypeMoq.It.isAny(), undefined))
                 .returns(() => refreshedItem);
-            const refreshPromiseDeferred = createDeferred();
-            // Assume a refresh is currently going on...
-            when(interpreterService.refreshPromise).thenReturn(refreshPromiseDeferred.promise);
 
             const changeEvent: PythonEnvironmentsChangedEvent = {
                 old: item.interpreter,
@@ -291,10 +291,29 @@ suite('Set Interpreter Command', () => {
                 'Quickpick not updated correctly',
             );
 
+            // Refresh is over; set the final states accordingly
+            interpreterSelector
+                .setup((i) => i.getSuggestions(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve([refreshedItem]));
+            when(interpreterService.refreshPromise).thenReturn(undefined);
+
             refreshPromiseDeferred.resolve();
             await sleep(1);
-            // Refresh finishes, so quickpick busy indicator should go away
-            assert.deepStrictEqual(quickPick.busy, false, 'Quickpick status not updated to ideal');
+
+            const recommended = cloneDeep(refreshedItem);
+            recommended.label = `${Octicons.Star} ${refreshedItem.label}`;
+            recommended.description = Common.recommended();
+            assert.deepStrictEqual(
+                quickPick,
+                {
+                    // Refresh has finished, so recommend an interpreter
+                    items: [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, recommended],
+                    activeItems: [recommended],
+                    // Refresh has finished, so quickpick busy indicator should go away
+                    busy: false,
+                },
+                'Quickpick not updated correctly after refresh has finished',
+            );
         });
 
         test('If an item is selected, update state and return', async () => {
