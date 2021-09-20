@@ -105,6 +105,7 @@ type PythonApiForJupyterExtension = {
         allowExceptions?: boolean,
     ): Promise<NodeJS.ProcessEnv | undefined>;
     isWindowsStoreInterpreter(pythonPath: string): Promise<boolean>;
+    suggestionToQuickPickItem(suggestion: PythonEnvironment, workspaceUri?: Uri | undefined): IInterpreterQuickPickItem;
     getKnownSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]>;
     /**
      * @deprecated Use `getKnownSuggestions` and `suggestionToQuickPickItem` instead.
@@ -207,6 +208,11 @@ export class JupyterExtensionIntegration {
                 this.interpreterSelector.getAllSuggestions(resource),
             getKnownSuggestions: async (resource: Resource): Promise<IInterpreterQuickPickItem[]> =>
                 this.interpreterSelector.getSuggestions(resource),
+            suggestionToQuickPickItem: (
+                suggestion: PythonEnvironment,
+                workspaceUri?: Uri | undefined,
+            ): IInterpreterQuickPickItem =>
+                this.interpreterSelector.suggestionToQuickPickItem(suggestion, workspaceUri),
             install: async (
                 product: JupyterProductToInstall,
                 resource?: InterpreterUri,
