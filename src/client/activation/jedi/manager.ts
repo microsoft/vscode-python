@@ -86,7 +86,10 @@ export class JediLanguageServerManager implements ILanguageServerManager {
 
         try {
             // Version is actually hardcoded in our requirements.txt.
-            const requirementsTxt = await fs.readFile(path.join(EXTENSION_ROOT_DIR, 'requirements.txt'), 'utf-8');
+            const requirementsTxt = await fs.readFile(
+                path.join(EXTENSION_ROOT_DIR, 'jedils_requirements.txt'),
+                'utf-8',
+            );
 
             // Search using a regex in the text
             const match = /jedi-language-server==([0-9\.]*)/.exec(requirementsTxt);
