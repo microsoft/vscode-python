@@ -37,6 +37,13 @@ const untildify = require('untildify');
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
 type QuickPickType = IInterpreterQuickPickItem | ISpecialQuickPickItem;
 
+function isInterpreterQuickPickItem(item: QuickPickType): item is IInterpreterQuickPickItem {
+    return 'interpreter' in item;
+}
+
+function isSpecialQuickPickItem(item: QuickPickType): item is ISpecialQuickPickItem {
+    return 'alwaysShow' in item;
+}
 @injectable()
 export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     private readonly manualEntrySuggestion: ISpecialQuickPickItem = {
@@ -142,7 +149,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         if (activeInterpreter.length > 0) {
             return activeInterpreter[0];
         }
-        const firstInterpreterSuggestion = suggestions.find((s) => 'interpreter' in s && s.interpreter);
+        const firstInterpreterSuggestion = suggestions.find((s) => isInterpreterQuickPickItem(s));
         if (firstInterpreterSuggestion) {
             return firstInterpreterSuggestion;
         }
@@ -180,11 +187,11 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         // Ensure we maintain the same active item as before.
         const activeItem = activeItemBeforeUpdate
             ? quickPick.items.find((item) => {
-                  if ('interpreter' in item && 'interpreter' in activeItemBeforeUpdate) {
+                  if (isInterpreterQuickPickItem(item) && isInterpreterQuickPickItem(activeItemBeforeUpdate)) {
                       return arePathsSame(item.interpreter.path, activeItemBeforeUpdate.interpreter.path);
                   }
-                  if ('alwaysShow' in item && 'alwaysShow' in activeItemBeforeUpdate) {
-                      // It's of special quickpick item type, 'label' is a constant here instead of 'path'.
+                  if (isSpecialQuickPickItem(item) && isSpecialQuickPickItem(activeItemBeforeUpdate)) {
+                      // 'label' is a constant here instead of 'path'.
                       return item.label === activeItemBeforeUpdate.label;
                   }
                   return false;
@@ -206,7 +213,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         let envIndex = -1;
         if (env) {
             envIndex = updatedItems.findIndex((item) => {
-                if ('interpreter' in item) {
+                if (isInterpreterQuickPickItem(item)) {
                     return arePathsSame(item.interpreter.path, env.path);
                 }
                 return false;
@@ -237,12 +244,11 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             const recommended = cloneDeep(interpreterSuggestions[0]);
             recommended.label = `${Octicons.Star} ${recommended.label}`;
             recommended.description = Common.recommended();
-            const index = items.findIndex((item) => {
-                if ('interpreter' in item) {
-                    return arePathsSame(item.interpreter.path, recommended.interpreter.path);
-                }
-                return false;
-            });
+            const index = items.findIndex(
+                (item) =>
+                    isInterpreterQuickPickItem(item) &&
+                    arePathsSame(item.interpreter.path, recommended.interpreter.path),
+            );
             if (index !== -1) {
                 items[index] = recommended;
             }
@@ -332,7 +338,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         }
 
         const expandedPaths = suggestions.map((s) => {
-            const suggestionPath = 'interpreter' in s ? s.interpreter.path : '';
+            const suggestionPath = isInterpreterQuickPickItem(s) ? s.interpreter.path : '';
             let expandedPath = path.normalize(untildify(suggestionPath));
 
             if (!path.isAbsolute(suggestionPath)) {
