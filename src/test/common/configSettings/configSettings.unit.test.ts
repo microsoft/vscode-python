@@ -21,7 +21,6 @@ import {
     ILoggingSettings,
     ISortImportSettings,
     ITerminalSettings,
-    IWorkspaceSymbolSettings,
 } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
@@ -104,9 +103,6 @@ suite('Python Settings', async () => {
         config.setup((c) => c.get<ISortImportSettings>('sortImports')).returns(() => sourceSettings.sortImports);
         config.setup((c) => c.get<IFormattingSettings>('formatting')).returns(() => sourceSettings.formatting);
         config.setup((c) => c.get<IAutoCompleteSettings>('autoComplete')).returns(() => sourceSettings.autoComplete);
-        config
-            .setup((c) => c.get<IWorkspaceSymbolSettings>('workspaceSymbols'))
-            .returns(() => sourceSettings.workspaceSymbols);
         config.setup((c) => c.get<ITestingSettings>('testing')).returns(() => sourceSettings.testing);
         config.setup((c) => c.get<ITerminalSettings>('terminal')).returns(() => sourceSettings.terminal);
         config.setup((c) => c.get<IExperiments>('experiments')).returns(() => sourceSettings.experiments);

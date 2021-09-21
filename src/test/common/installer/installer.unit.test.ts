@@ -18,8 +18,6 @@ import { Commands } from '../../../client/common/constants';
 import { ExperimentService } from '../../../client/common/experiments/service';
 import '../../../client/common/extensions';
 import {
-    CTagsInstallationScript,
-    CTagsInstaller,
     FormatterInstaller,
     LinterInstaller,
     ProductInstaller,
@@ -33,7 +31,6 @@ import {
     IProductPathService,
     IProductService,
 } from '../../../client/common/installer/types';
-import { IPlatformService } from '../../../client/common/platform/types';
 import {
     ExecutionResult,
     IProcessService,
@@ -41,7 +38,6 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService,
 } from '../../../client/common/process/types';
-import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -191,114 +187,6 @@ suite('Module Installer only', () => {
                         return;
                     }
                     case Product.isort: {
-                        return;
-                    }
-                    case Product.ctags: {
-                        test(`If platform is Windows, for module installer ${product.name} (${
-                            resource ? 'With a resource' : 'without a resource'
-                        }), print the instructions to install Ctags into the output channel`, async () => {
-                            const platformService = TypeMoq.Mock.ofType<IPlatformService>();
-                            serviceContainer
-                                .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
-                                .returns(() => platformService.object);
-                            platformService.setup((p) => p.isWindows).returns(() => true);
-                            outputChannel.setup((o) => o.appendLine(TypeMoq.It.isAny())).returns(() => undefined);
-                            outputChannel
-                                .setup((o) =>
-                                    o.appendLine(
-                                        'Install Universal Ctags Win32 to enable support for Workspace Symbols',
-                                    ),
-                                )
-                                .returns(() => undefined)
-                                .verifiable(TypeMoq.Times.once());
-                            outputChannel
-                                .setup((o) => o.show())
-                                .returns(() => undefined)
-                                .verifiable(TypeMoq.Times.once());
-                            const response = await installer.install(product.value, resource);
-                            expect(response).to.be.equal(InstallerResponse.Ignore);
-                            outputChannel.verifyAll();
-                        });
-                        test(`If platform is not Windows, for module installer ${product.name} (${
-                            resource ? 'With a resource' : 'without a resource'
-                        }), install Ctags using the corresponding script`, async () => {
-                            const platformService = TypeMoq.Mock.ofType<IPlatformService>();
-                            serviceContainer
-                                .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
-                                .returns(() => platformService.object);
-                            platformService.setup((p) => p.isWindows).returns(() => false);
-                            const terminalService = TypeMoq.Mock.ofType<ITerminalService>();
-                            const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
-                            serviceContainer
-                                .setup((c) => c.get(TypeMoq.It.isValue(ITerminalServiceFactory)))
-                                .returns(() => terminalServiceFactory.object);
-                            terminalServiceFactory
-                                .setup((p) => p.getTerminalService({ resource }))
-                                .returns(() => terminalService.object);
-                            terminalService
-                                .setup((t) => t.sendCommand(CTagsInstallationScript, []))
-                                .returns(() => Promise.resolve())
-                                .verifiable(TypeMoq.Times.once());
-                            const response = await installer.install(product.value, resource);
-                            expect(response).to.be.equal(InstallerResponse.Ignore);
-                            terminalService.verifyAll();
-                        });
-                        test(`If platform is not Windows, for module installer ${product.name} (${
-                            resource ? 'With a resource' : 'without a resource'
-                        }), but installing Ctags fails with Error, log error and return`, async () => {
-                            const platformService = TypeMoq.Mock.ofType<IPlatformService>();
-                            serviceContainer
-                                .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
-                                .returns(() => platformService.object);
-                            platformService.setup((p) => p.isWindows).returns(() => false);
-                            const terminalService = TypeMoq.Mock.ofType<ITerminalService>();
-                            const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
-                            serviceContainer
-                                .setup((c) => c.get(TypeMoq.It.isValue(ITerminalServiceFactory)))
-                                .returns(() => terminalServiceFactory.object);
-                            terminalServiceFactory
-                                .setup((p) => p.getTerminalService({ resource }))
-                                .returns(() => terminalService.object);
-                            terminalService
-                                .setup((t) => t.sendCommand(CTagsInstallationScript, []))
-                                .returns(() => Promise.reject(new Error('Kaboom')))
-                                .verifiable(TypeMoq.Times.once());
-                            const response = await installer.install(product.value, resource);
-                            expect(response).to.be.equal(InstallerResponse.Ignore);
-                            terminalService.verifyAll();
-                        });
-                        test(`If 'Yes' is selected on the install prompt for the the module installer ${
-                            product.name
-                        } (${
-                            resource ? 'With a resource' : 'without a resource'
-                        }), install module and return response`, async () => {
-                            app.setup((a) =>
-                                a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-                            )
-                                .returns(() => Promise.resolve('Yes'))
-                                .verifiable(TypeMoq.Times.once());
-                            const install = sinon.stub(CTagsInstaller.prototype, 'install');
-                            install.resolves(InstallerResponse.Installed);
-                            const response = await installer.promptToInstall(product.value, resource);
-                            expect(response).to.be.equal(InstallerResponse.Installed);
-                            app.verifyAll();
-                            assert.ok(install.calledOnceWith(product.value, resource));
-                        });
-                        test(`If 'No' is selected on the install prompt for the module installer ${product.name} (${
-                            resource ? 'With a resource' : 'without a resource'
-                        }), return ignore response`, async () => {
-                            app.setup((a) =>
-                                a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-                            )
-                                .returns(() => Promise.resolve('No'))
-                                .verifiable(TypeMoq.Times.once());
-                            const install = sinon.stub(CTagsInstaller.prototype, 'install');
-                            install.resolves(InstallerResponse.Installed);
-                            const response = await installer.promptToInstall(product.value, resource);
-                            expect(response).to.be.equal(InstallerResponse.Ignore);
-                            app.verifyAll();
-                            assert.ok(install.notCalled);
-                        });
                         return;
                     }
                     case Product.unittest: {

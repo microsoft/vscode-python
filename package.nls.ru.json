@@ -1,11 +1,8 @@
 {
     "python.command.python.sortImports.title": "Отсортировать Imports",
     "python.command.python.startREPL.title": "Открыть REPL",
-    "python.command.python.buildWorkspaceSymbols.title": "Собрать символы рабочего пространства",
     "python.command.python.execInTerminal.title": "Выполнить файл в консоли",
     "python.command.python.setInterpreter.title": "Выбрать интерпретатор",
-    "python.command.python.refactorExtractVariable.title": "Извлечь в переменную",
-    "python.command.python.refactorExtractMethod.title": "Извлечь в метод",
     "python.command.python.execSelectionInTerminal.title": "Выполнить выбранный текст или текущую строку в консоли",
     "python.command.python.execSelectionInDjangoShell.title": "Выполнить выбранный текст или текущую строку в оболочке Django",
     "python.command.python.goToPythonObject.title": "Перейти к объекту Python",

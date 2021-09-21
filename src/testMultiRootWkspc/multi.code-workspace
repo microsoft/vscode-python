@@ -37,7 +37,6 @@
         "python.linting.pylintEnabled": true,
         "python.linting.pycodestyleEnabled": false,
         "python.linting.prospectorEnabled": false,
-        "python.workspaceSymbols.enabled": false,
         "python.formatting.provider": "yapf",
         "python.sortImports.args": [
             "-sp",

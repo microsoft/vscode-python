@@ -11,10 +11,8 @@ import { PipEnvInstaller } from '../../../client/common/installer/pipEnvInstalle
 import { PipInstaller } from '../../../client/common/installer/pipInstaller';
 import { PoetryInstaller } from '../../../client/common/installer/poetryInstaller';
 import {
-    CTagsProductPathService,
     FormatterProductPathService,
     LinterProductPathService,
-    RefactoringLibraryProductPathService,
     TestFrameworkProductPathService,
 } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
@@ -70,13 +68,6 @@ suite('Common installer Service Registry', () => {
         verify(
             serviceManager.addSingleton<IProductPathService>(
                 IProductPathService,
-                CTagsProductPathService,
-                ProductType.WorkspaceSymbols,
-            ),
-        ).once();
-        verify(
-            serviceManager.addSingleton<IProductPathService>(
-                IProductPathService,
                 FormatterProductPathService,
                 ProductType.Formatter,
             ),
@@ -93,13 +84,6 @@ suite('Common installer Service Registry', () => {
                 IProductPathService,
                 TestFrameworkProductPathService,
                 ProductType.TestFramework,
-            ),
-        ).once();
-        verify(
-            serviceManager.addSingleton<IProductPathService>(
-                IProductPathService,
-                RefactoringLibraryProductPathService,
-                ProductType.RefactoringLibrary,
             ),
         ).once();
     });

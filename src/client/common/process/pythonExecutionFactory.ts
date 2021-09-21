@@ -28,6 +28,8 @@ import {
 } from './types';
 import { isWindowsStoreInterpreter } from '../../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { IInterpreterAutoSelectionService } from '../../interpreter/autoSelection/types';
+import { sleep } from '../utils/async';
+import { traceError } from '../logger';
 
 // Minimum version number of conda required to be able to use 'conda run'
 export const CONDA_RUN_VERSION = '4.6.0';
@@ -59,13 +61,29 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
 
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
-        const interpreterPath = this.interpreterPathExpHelper.get(options.resource);
-        if (!interpreterPath || interpreterPath === 'python') {
-            await this.autoSelection.autoSelectInterpreter(options.resource); // Block on this only if no interpreter selected.
+        let { pythonPath } = options;
+        if (!pythonPath) {
+            // If python path wasn't passed in, we need to auto select it and then read it
+            // from the configuration.
+            const interpreterPath = this.interpreterPathExpHelper.get(options.resource);
+            if (!interpreterPath || interpreterPath === 'python') {
+                // Block on autoselection if no interpreter selected.
+                // Note autoselection blocks on discovery, so we do not want discovery component
+                // to block on this code. Discovery component should 'options.pythonPath' before
+                // calling into this, so this scenario should not happen. But in case consumer
+                // makes such an error. So break the loop via timeout and log error.
+                const success = await Promise.race([
+                    this.autoSelection.autoSelectInterpreter(options.resource).then(() => true),
+                    sleep(50000).then(() => false),
+                ]);
+                if (!success) {
+                    traceError(
+                        'Autoselection timeout out, this is likely a issue with how consumer called execution factory API. Using default python to execute.',
+                    );
+                }
+            }
         }
-        const pythonPath = options.pythonPath
-            ? options.pythonPath
-            : this.configService.getSettings(options.resource).pythonPath;
+        pythonPath = this.configService.getSettings(options.resource).pythonPath;
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
         processService.on('exec', this.logger.logProcess.bind(this.logger));
 

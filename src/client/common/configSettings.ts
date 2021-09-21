@@ -41,7 +41,6 @@ import {
     ISortImportSettings,
     ITensorBoardSettings,
     ITerminalSettings,
-    IWorkspaceSymbolSettings,
     LoggingLevelSettingType,
     Resource,
 } from './types';
@@ -121,8 +120,6 @@ export class PythonSettings implements IPythonSettings {
     public terminal!: ITerminalSettings;
 
     public sortImports!: ISortImportSettings;
-
-    public workspaceSymbols!: IWorkspaceSymbolSettings;
 
     public disableInstallationChecks = false;
 
@@ -466,33 +463,6 @@ export class PythonSettings implements IPythonSettings {
                   showAdvancedMembers: false,
                   typeshedPaths: [],
               };
-
-        const workspaceSymbolsSettings = systemVariables.resolveAny(
-            pythonSettings.get<IWorkspaceSymbolSettings>('workspaceSymbols'),
-        )!;
-        if (this.workspaceSymbols) {
-            Object.assign<IWorkspaceSymbolSettings, IWorkspaceSymbolSettings>(
-                this.workspaceSymbols,
-                workspaceSymbolsSettings,
-            );
-        } else {
-            this.workspaceSymbols = workspaceSymbolsSettings;
-        }
-        // Support for travis.
-        this.workspaceSymbols = this.workspaceSymbols
-            ? this.workspaceSymbols
-            : {
-                  ctagsPath: 'ctags',
-                  enabled: true,
-                  exclusionPatterns: [],
-                  rebuildOnFileSave: true,
-                  rebuildOnStart: true,
-                  tagFilePath: workspaceRoot ? path.join(workspaceRoot, 'tags') : '',
-              };
-        this.workspaceSymbols.tagFilePath = getAbsolutePath(
-            systemVariables.resolveAny(this.workspaceSymbols.tagFilePath),
-            workspaceRoot,
-        );
 
         const testSettings = systemVariables.resolveAny(pythonSettings.get<ITestingSettings>('testing'))!;
         if (this.testing) {

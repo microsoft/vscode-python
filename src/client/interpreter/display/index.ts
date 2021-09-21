@@ -12,7 +12,6 @@ import {
     IInterpreterHelper,
     IInterpreterService,
     IInterpreterStatusbarVisibilityFilter,
-    IPython27SupportPrompt,
 } from '../contracts';
 
 @injectable()
@@ -27,14 +26,12 @@ export class InterpreterDisplay implements IInterpreterDisplay {
     private interpreterPath: string | undefined;
     private statusBarCanBeDisplayed?: boolean;
     private visibilityFilters: IInterpreterStatusbarVisibilityFilter[] = [];
-    private python27SupportPrompt: IPython27SupportPrompt;
 
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.pathUtils = serviceContainer.get<IPathUtils>(IPathUtils);
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-        this.python27SupportPrompt = serviceContainer.get<IPython27SupportPrompt>(IPython27SupportPrompt);
 
         const application = serviceContainer.get<IApplicationShell>(IApplicationShell);
         const disposableRegistry = serviceContainer.get<Disposable[]>(IDisposableRegistry);
@@ -76,10 +73,6 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         const interpreter = await this.interpreterService.getActiveInterpreter(workspaceFolder);
         this.currentlySelectedWorkspaceFolder = workspaceFolder;
         if (interpreter) {
-            if (await this.python27SupportPrompt.shouldShowPrompt(interpreter)) {
-                this.python27SupportPrompt.showPrompt();
-            }
-
             this.statusBar.color = '';
             this.statusBar.tooltip = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath);
             if (this.interpreterPath !== interpreter.path) {

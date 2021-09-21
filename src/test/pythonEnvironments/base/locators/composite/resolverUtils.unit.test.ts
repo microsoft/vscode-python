@@ -14,7 +14,7 @@ import {
     PythonVersion,
     UNKNOWN_PYTHON_VERSION,
 } from '../../../../../client/pythonEnvironments/base/info';
-import { buildEnvInfo } from '../../../../../client/pythonEnvironments/base/info/env';
+import { buildEnvInfo, getEnvDisplayString } from '../../../../../client/pythonEnvironments/base/info/env';
 import { InterpreterInformation } from '../../../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
@@ -61,6 +61,7 @@ suite('Resolver Utils', () => {
             });
             envInfo.location = path.join(testPyenvVersionsDir, '3.9.0');
             envInfo.name = '3.9.0';
+            envInfo.display = getEnvDisplayString(envInfo);
             return envInfo;
         }
 
@@ -114,7 +115,7 @@ suite('Resolver Utils', () => {
 
         test('resolveEnv', async () => {
             const python38path = path.join(testStoreAppRoot, 'python3.8.exe');
-            const expected = {
+            const expected: PythonEnvInfo = {
                 display: undefined,
                 searchLocation: undefined,
                 name: '',
@@ -124,6 +125,7 @@ suite('Resolver Utils', () => {
                 source: [PythonEnvSource.PathEnvVar],
                 ...createExpectedInterpreterInfo(python38path),
             };
+            expected.display = getEnvDisplayString(expected);
 
             const actual = await resolveBasicEnv({
                 executablePath: python38path,
@@ -135,7 +137,7 @@ suite('Resolver Utils', () => {
 
         test('resolveEnv(string): forbidden path', async () => {
             const python38path = path.join(testLocalAppData, 'Program Files', 'WindowsApps', 'python3.8.exe');
-            const expected = {
+            const expected: PythonEnvInfo = {
                 display: undefined,
                 searchLocation: undefined,
                 name: '',
@@ -145,6 +147,7 @@ suite('Resolver Utils', () => {
                 source: [PythonEnvSource.PathEnvVar],
                 ...createExpectedInterpreterInfo(python38path),
             };
+            expected.display = getEnvDisplayString(expected);
 
             const actual = await resolveBasicEnv({
                 executablePath: python38path,
@@ -180,6 +183,7 @@ suite('Resolver Utils', () => {
                 fileInfo: undefined,
                 name: 'base',
             });
+            info.display = getEnvDisplayString(info);
             return info;
         }
         function createSimpleEnvInfo(
@@ -189,7 +193,7 @@ suite('Resolver Utils', () => {
             name = '',
             location = '',
         ): PythonEnvInfo {
-            return {
+            const info: PythonEnvInfo = {
                 name,
                 location,
                 kind,
@@ -206,6 +210,8 @@ suite('Resolver Utils', () => {
                 searchLocation: undefined,
                 source: [],
             };
+            info.display = getEnvDisplayString(info);
+            return info;
         }
 
         teardown(() => {
@@ -284,7 +290,7 @@ suite('Resolver Utils', () => {
             name = '',
             location = '',
         ): PythonEnvInfo {
-            return {
+            const info: PythonEnvInfo = {
                 name,
                 location,
                 kind,
@@ -301,6 +307,8 @@ suite('Resolver Utils', () => {
                 searchLocation: Uri.file(path.dirname(location)),
                 source: [],
             };
+            info.display = getEnvDisplayString(info);
+            return info;
         }
 
         test('resolveEnv', async () => {
@@ -337,7 +345,7 @@ suite('Resolver Utils', () => {
             name = '',
             location = '',
         ): PythonEnvInfo {
-            return {
+            const info: PythonEnvInfo = {
                 name,
                 location,
                 kind,
@@ -354,6 +362,8 @@ suite('Resolver Utils', () => {
                 searchLocation: undefined,
                 source: [],
             };
+            info.display = getEnvDisplayString(info);
+            return info;
         }
 
         test('resolveEnv', async () => {
@@ -540,6 +550,7 @@ suite('Resolver Utils', () => {
                 org: 'PythonCore',
                 source: [PythonEnvSource.WindowsRegistry],
             });
+            expected.display = getEnvDisplayString(expected);
             expected.distro.defaultDisplayName = 'Python 3.9 (64-bit)';
             assertEnvEqual(actual, expected);
         });
@@ -559,6 +570,7 @@ suite('Resolver Utils', () => {
                 org: 'PythonCodingPack', // Provided by registry
                 source: [PythonEnvSource.WindowsRegistry, PythonEnvSource.PathEnvVar],
             });
+            expected.display = getEnvDisplayString(expected);
             expected.distro.defaultDisplayName = 'Python 3.8 (32-bit)';
             assertEnvEqual(actual, expected);
         });
@@ -585,6 +597,7 @@ suite('Resolver Utils', () => {
                 name: 'conda3',
                 source: [PythonEnvSource.WindowsRegistry],
             });
+            expected.display = getEnvDisplayString(expected);
             expected.distro.defaultDisplayName = 'Anaconda py38_4.8.3';
             assertEnvEqual(actual, expected);
         });

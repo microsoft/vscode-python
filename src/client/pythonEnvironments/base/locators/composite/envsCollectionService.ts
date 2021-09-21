@@ -30,8 +30,10 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return this.refreshStarted.event;
     }
 
-    public get refreshPromise(): Promise<void> {
-        return Promise.all(Array.from(this.refreshPromises.values())).then();
+    public get refreshPromise(): Promise<void> | undefined {
+        return this.refreshPromises.size > 0
+            ? Promise.all(Array.from(this.refreshPromises.values())).then()
+            : undefined;
     }
 
     constructor(private readonly cache: IEnvsCollectionCache, private readonly locator: IResolvingLocator) {
@@ -54,10 +56,11 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     }
 
     public async resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
-        const cachedEnv = this.cache.getEnv(executablePath);
-        // Envs in cache may have incomplete info when a refresh is happening, so
-        // do not rely on cache in those cases.
-        if (cachedEnv && this.refreshPromises.size === 0) {
+        // Note cache may have incomplete info when a refresh is happening.
+        // This API is supposed to return complete info by definition, so
+        // only use cache if it has complete info on an environment.
+        const cachedEnv = this.cache.getCompleteInfo(executablePath);
+        if (cachedEnv) {
             return cachedEnv;
         }
         const resolved = await this.locator.resolveEnv(executablePath);
@@ -87,15 +90,16 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     private startRefresh(query: PythonLocatorQuery | undefined): Promise<void> {
         const stopWatch = new StopWatch();
         const deferred = createDeferred<void>();
-        // Ensure we set this before we trigger the promise to correctly track when a refresh has started.
+        // Ensure we set this before we trigger the promise to accurately track when a refresh has started.
         this.refreshPromises.set(query, deferred.promise);
         this.refreshStarted.fire();
         const iterator = this.locator.iterEnvs(query);
         const promise = this.addEnvsToCacheFromIterator(iterator);
         return promise
             .then(async () => {
-                deferred.resolve();
+                // Ensure we delete this before we resolve the promise to accurately track when a refresh finishes.
                 this.refreshPromises.delete(query);
+                deferred.resolve();
                 sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
                     interpreters: this.cache.getAllEnvs().length,
                 });

@@ -38,17 +38,6 @@ export abstract class BaseProductPathsService implements IProductPathService {
 }
 
 @injectable()
-export class CTagsProductPathService extends BaseProductPathsService {
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer);
-    }
-    public getExecutableNameFromSettings(_: Product, resource?: Uri): string {
-        const settings = this.configService.getSettings(resource);
-        return settings.workspaceSymbols.ctagsPath;
-    }
-}
-
-@injectable()
 export class FormatterProductPathService extends BaseProductPathsService {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
@@ -86,16 +75,6 @@ export class TestFrameworkProductPathService extends BaseProductPathsService {
         }
         const settings = this.configService.getSettings(resource);
         return settings.testing[settingsPropNames.pathName] as string;
-    }
-}
-
-@injectable()
-export class RefactoringLibraryProductPathService extends BaseProductPathsService {
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer);
-    }
-    public getExecutableNameFromSettings(product: Product, _?: Uri): string {
-        return this.productInstaller.translateProductToModuleName(product);
     }
 }
 

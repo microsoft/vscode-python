@@ -77,7 +77,7 @@ class DeferredImpl<T> implements Deferred<T> {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export function createDeferred<T>(scope: any = null): Deferred<T> {
+export function createDeferred<T = void>(scope: any = null): Deferred<T> {
     return new DeferredImpl<T>(scope);
 }
 

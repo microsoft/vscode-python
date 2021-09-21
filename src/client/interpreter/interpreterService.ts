@@ -63,7 +63,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             : Promise.resolve();
     }
 
-    public get refreshPromise(): Promise<void> {
+    public get refreshPromise(): Promise<void> | undefined {
         return inDiscoveryExperimentSync(this.experimentService) ? this.pyenvs.refreshPromise : Promise.resolve();
     }
 

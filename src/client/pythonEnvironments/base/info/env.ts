@@ -113,10 +113,7 @@ function updateEnv(
  * E.g. `Python 3.5.1 32-bit (myenv2: virtualenv)`
  */
 export function getEnvDisplayString(env: PythonEnvInfo): string {
-    if (env.display === undefined || env.display === '') {
-        env.display = buildEnvDisplayString(env);
-    }
-    return env.display;
+    return buildEnvDisplayString(env);
 }
 
 function buildEnvDisplayString(env: PythonEnvInfo): string {

@@ -261,7 +261,7 @@ export namespace Experiments {
     export const optedOutOf = localize('Experiments.optedOutOf', "User opted out of experiment group '{0}'");
 }
 export namespace Interpreters {
-    export const loading = localize('Interpreters.LoadingInterpreters', 'Loading Python Interpreters');
+    export const discovering = localize('Interpreters.DiscoveringInterpreters', 'Discovering Python Interpreters');
     export const refreshing = localize('Interpreters.RefreshingInterpreters', 'Refreshing Python Interpreters');
     export const condaInheritEnvMessage = localize(
         'Interpreters.condaInheritEnvMessage',
@@ -543,11 +543,6 @@ export namespace OutdatedDebugger {
 }
 
 export namespace Python27Support {
-    export const bannerMessage = localize(
-        'Python27Support.bannerMessage',
-        'The Python extension will have limited support for Python 2.7 starting in the next release, due to changes in external projects we rely on. [Learn more](https://aka.ms/python-27-support).',
-    );
-
     export const jediMessage = localize(
         'Python27Support.jediMessage',
         'IntelliSense with Jedi for Python 2.7 is no longer supported. [Learn more](https://aka.ms/python-27-support).',

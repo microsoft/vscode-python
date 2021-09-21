@@ -106,7 +106,7 @@ suite('Poetry binary is located correctly', async () => {
 
         const poetry = await Poetry.getPoetry(testPoetryDir);
 
-        expect(poetry?._command).to.equal(undefined);
+        expect(poetry?.command).to.equal(undefined);
     });
 
     test('Return undefined if cwd contains pyproject.toml which does not contain a poetry section', async () => {
@@ -117,7 +117,7 @@ suite('Poetry binary is located correctly', async () => {
 
         const poetry = await Poetry.getPoetry(project3);
 
-        expect(poetry?._command).to.equal(undefined);
+        expect(poetry?.command).to.equal(undefined);
     });
 
     test('When user has specified a valid poetry path, use it', async () => {
@@ -135,7 +135,7 @@ suite('Poetry binary is located correctly', async () => {
 
         const poetry = await Poetry.getPoetry(project1);
 
-        expect(poetry?._command).to.equal('poetryPath');
+        expect(poetry?.command).to.equal('poetryPath');
     });
 
     test("When user hasn't specified a path, use poetry on PATH if available", async () => {
@@ -153,7 +153,7 @@ suite('Poetry binary is located correctly', async () => {
 
         const poetry = await Poetry.getPoetry(project1);
 
-        expect(poetry?._command).to.equal('poetry');
+        expect(poetry?.command).to.equal('poetry');
     });
 
     test('When poetry is not available on PATH, try using the default poetry location if valid', async () => {
@@ -180,7 +180,7 @@ suite('Poetry binary is located correctly', async () => {
 
         const poetry = await Poetry.getPoetry(project1);
 
-        expect(poetry?._command).to.equal(defaultPoetry);
+        expect(poetry?.command).to.equal(defaultPoetry);
     });
 
     test('Return undefined otherwise', async () => {
@@ -191,6 +191,6 @@ suite('Poetry binary is located correctly', async () => {
 
         const poetry = await Poetry.getPoetry(project1);
 
-        expect(poetry?._command).to.equal(undefined);
+        expect(poetry?.command).to.equal(undefined);
     });
 });

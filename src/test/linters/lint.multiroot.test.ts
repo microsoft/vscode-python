@@ -4,10 +4,8 @@ import { CancellationTokenSource, ConfigurationTarget, OutputChannel, Uri, works
 import { LanguageServerType } from '../../client/activation/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import {
-    CTagsProductPathService,
     FormatterProductPathService,
     LinterProductPathService,
-    RefactoringLibraryProductPathService,
     TestFrameworkProductPathService,
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
@@ -55,11 +53,6 @@ suite('Multiroot Linting', () => {
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
-            CTagsProductPathService,
-            ProductType.WorkspaceSymbols,
-        );
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
             FormatterProductPathService,
             ProductType.Formatter,
         );
@@ -72,11 +65,6 @@ suite('Multiroot Linting', () => {
             IProductPathService,
             TestFrameworkProductPathService,
             ProductType.TestFramework,
-        );
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
-            RefactoringLibraryProductPathService,
-            ProductType.RefactoringLibrary,
         );
     }
 

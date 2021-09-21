@@ -5,13 +5,12 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
-import { IWorkspaceService } from '../common/application/types';
 import { traceError } from '../common/logger';
 import { IConfigurationService, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Bandit } from './bandit';
 import { Flake8 } from './flake8';
-import { LinterInfo, PylintLinterInfo } from './linterInfo';
+import { LinterInfo } from './linterInfo';
 import { MyPy } from './mypy';
 import { Prospector } from './prospector';
 import { Pycodestyle } from './pycodestyle';
@@ -33,19 +32,13 @@ class DisabledLinter implements ILinter {
 @injectable()
 export class LinterManager implements ILinterManager {
     protected linters: ILinterInfo[];
-    private configService: IConfigurationService;
-    private checkedForInstalledLinters = new Set<string>();
 
-    constructor(
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-    ) {
-        this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+    constructor(@inject(IConfigurationService) private configService: IConfigurationService) {
         // Note that we use unit tests to ensure all the linters are here.
         this.linters = [
             new LinterInfo(Product.bandit, LinterId.Bandit, this.configService),
             new LinterInfo(Product.flake8, LinterId.Flake8, this.configService),
-            new PylintLinterInfo(this.configService, this.workspaceService, ['.pylintrc', 'pylintrc']),
+            new LinterInfo(Product.pylint, LinterId.PyLint, this.configService, ['pylintrc', '.pylintrc']),
             new LinterInfo(Product.mypy, LinterId.MyPy, this.configService),
             new LinterInfo(Product.pycodestyle, LinterId.PyCodeStyle, this.configService),
             new LinterInfo(Product.prospector, LinterId.Prospector, this.configService),
@@ -66,9 +59,9 @@ export class LinterManager implements ILinterManager {
         throw new Error(`Invalid linter '${Product[product]}'`);
     }
 
-    public async isLintingEnabled(silent: boolean, resource?: Uri): Promise<boolean> {
+    public async isLintingEnabled(resource?: Uri): Promise<boolean> {
         const settings = this.configService.getSettings(resource);
-        const activeLintersPresent = await this.getActiveLinters(silent, resource);
+        const activeLintersPresent = await this.getActiveLinters(resource);
         return settings.linting.enabled && activeLintersPresent.length > 0;
     }
 
@@ -76,10 +69,7 @@ export class LinterManager implements ILinterManager {
         await this.configService.updateSetting('linting.enabled', enable, resource);
     }
 
-    public async getActiveLinters(silent: boolean, resource?: Uri): Promise<ILinterInfo[]> {
-        if (!silent) {
-            await this.enableUnconfiguredLinters(resource);
-        }
+    public async getActiveLinters(resource?: Uri): Promise<ILinterInfo[]> {
         return this.linters.filter((x) => x.isEnabled(resource));
     }
 
@@ -93,7 +83,7 @@ export class LinterManager implements ILinterManager {
 
         // if we have valid linter product(s), enable only those
         if (validProducts.length > 0) {
-            const active = await this.getActiveLinters(true, resource);
+            const active = await this.getActiveLinters(resource);
             for (const x of active) {
                 await x.enableAsync(false, resource);
             }
@@ -113,7 +103,7 @@ export class LinterManager implements ILinterManager {
         serviceContainer: IServiceContainer,
         resource?: Uri,
     ): Promise<ILinter> {
-        if (!(await this.isLintingEnabled(true, resource))) {
+        if (!(await this.isLintingEnabled(resource))) {
             return new DisabledLinter(this.configService);
         }
         const error = 'Linter manager: Unknown linter';
@@ -139,18 +129,5 @@ export class LinterManager implements ILinterManager {
                 break;
         }
         throw new Error(error);
-    }
-
-    protected async enableUnconfiguredLinters(resource?: Uri): Promise<void> {
-        const settings = this.configService.getSettings(resource);
-        if (!settings.linting.enabled) {
-            return;
-        }
-        // If we've already checked during this session for the same workspace and Python path, then don't bother again.
-        const workspaceKey = `${this.workspaceService.getWorkspaceFolderIdentifier(resource)}${settings.pythonPath}`;
-        if (this.checkedForInstalledLinters.has(workspaceKey)) {
-            return;
-        }
-        this.checkedForInstalledLinters.add(workspaceKey);
     }
 }

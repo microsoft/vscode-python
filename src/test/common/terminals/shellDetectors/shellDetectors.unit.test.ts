@@ -33,7 +33,11 @@ suite('Shell Detectors', () => {
     shellPathsAndIdentification.set('c:\\windows\\system32\\wsl.exe', TerminalShellType.wsl);
     shellPathsAndIdentification.set('c:\\windows\\system32\\gitbash.exe', TerminalShellType.gitbash);
     shellPathsAndIdentification.set('/usr/bin/bash', TerminalShellType.bash);
+    shellPathsAndIdentification.set('c:\\cygwin\\bin\\bash.exe', TerminalShellType.bash);
+    shellPathsAndIdentification.set('c:\\cygwin64\\bin\\bash.exe', TerminalShellType.bash);
     shellPathsAndIdentification.set('/usr/bin/zsh', TerminalShellType.zsh);
+    shellPathsAndIdentification.set('c:\\cygwin\\bin\\zsh.exe', TerminalShellType.zsh);
+    shellPathsAndIdentification.set('c:\\cygwin64\\bin\\zsh.exe', TerminalShellType.zsh);
     shellPathsAndIdentification.set('/usr/bin/ksh', TerminalShellType.ksh);
     shellPathsAndIdentification.set('c:\\windows\\system32\\powershell.exe', TerminalShellType.powershell);
     shellPathsAndIdentification.set('c:\\windows\\system32\\pwsh.exe', TerminalShellType.powershellCore);

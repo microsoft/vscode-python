@@ -4,13 +4,10 @@
 
 import * as assert from 'assert';
 import { ConfigurationTarget } from 'vscode';
-import { WorkspaceService } from '../../client/common/application/workspace';
 import { Product } from '../../client/common/installer/productInstaller';
 import {
-    CTagsProductPathService,
     FormatterProductPathService,
     LinterProductPathService,
-    RefactoringLibraryProductPathService,
     TestFrameworkProductPathService,
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
@@ -54,14 +51,9 @@ suite('Linting Settings', () => {
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
         ioc.registerPlatformTypes();
-        linterManager = new LinterManager(ioc.serviceContainer, new WorkspaceService());
         configService = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        linterManager = new LinterManager(configService);
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
-            CTagsProductPathService,
-            ProductType.WorkspaceSymbols,
-        );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             FormatterProductPathService,
@@ -76,11 +68,6 @@ suite('Linting Settings', () => {
             IProductPathService,
             TestFrameworkProductPathService,
             ProductType.TestFramework,
-        );
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
-            RefactoringLibraryProductPathService,
-            ProductType.RefactoringLibrary,
         );
     }
 

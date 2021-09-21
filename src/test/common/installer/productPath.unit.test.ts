@@ -12,10 +12,8 @@ import '../../../client/common/extensions';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
 import {
     BaseProductPathsService,
-    CTagsProductPathService,
     FormatterProductPathService,
     LinterProductPathService,
-    RefactoringLibraryProductPathService,
     TestFrameworkProductPathService,
 } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
@@ -25,7 +23,6 @@ import {
     IFormattingSettings,
     IInstaller,
     IPythonSettings,
-    IWorkspaceSymbolSettings,
     Product,
     ProductType,
 } from '../../../client/common/types';
@@ -49,7 +46,6 @@ suite('Product Path', () => {
             let serviceContainer: TypeMoq.IMock<IServiceContainer>;
             let formattingSettings: TypeMoq.IMock<IFormattingSettings>;
             let unitTestSettings: TypeMoq.IMock<ITestingSettings>;
-            let workspaceSymnbolSettings: TypeMoq.IMock<IWorkspaceSymbolSettings>;
             let configService: TypeMoq.IMock<IConfigurationService>;
             let productInstaller: ProductInstaller;
             setup(function () {
@@ -60,7 +56,6 @@ suite('Product Path', () => {
                 configService = TypeMoq.Mock.ofType<IConfigurationService>();
                 formattingSettings = TypeMoq.Mock.ofType<IFormattingSettings>();
                 unitTestSettings = TypeMoq.Mock.ofType<ITestingSettings>();
-                workspaceSymnbolSettings = TypeMoq.Mock.ofType<IWorkspaceSymbolSettings>();
 
                 productInstaller = new ProductInstaller(
                     serviceContainer.object,
@@ -69,7 +64,6 @@ suite('Product Path', () => {
                 const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
                 pythonSettings.setup((p) => p.formatting).returns(() => formattingSettings.object);
                 pythonSettings.setup((p) => p.testing).returns(() => unitTestSettings.object);
-                pythonSettings.setup((p) => p.workspaceSymbols).returns(() => workspaceSymnbolSettings.object);
                 configService
                     .setup((s) => s.getSettings(TypeMoq.It.isValue(resource)))
                     .returns(() => pythonSettings.object);
@@ -79,7 +73,6 @@ suite('Product Path', () => {
                 serviceContainer
                     .setup((s) => s.get(TypeMoq.It.isValue(IInstaller), TypeMoq.It.isAny()))
                     .returns(() => productInstaller);
-
                 serviceContainer
                     .setup((c) => c.get(TypeMoq.It.isValue(IProductService), TypeMoq.It.isAny()))
                     .returns(() => new ProductService());
@@ -167,35 +160,6 @@ suite('Product Path', () => {
                         expect(value).to.be.equal(expectedPath);
                         linterInfo.verifyAll();
                         linterManager.verifyAll();
-                    });
-                    break;
-                }
-                case ProductType.RefactoringLibrary: {
-                    test(`Ensure path is returned for ${product.name} (${
-                        resource ? 'With a resource' : 'without a resource'
-                    })`, async () => {
-                        const productPathService = new RefactoringLibraryProductPathService(serviceContainer.object);
-
-                        const value = productPathService.getExecutableNameFromSettings(product.value, resource);
-                        const moduleName = productInstaller.translateProductToModuleName(product.value);
-                        expect(value).to.be.equal(moduleName);
-                    });
-                    break;
-                }
-                case ProductType.WorkspaceSymbols: {
-                    test(`Ensure path is returned for ${product.name} (${
-                        resource ? 'With a resource' : 'without a resource'
-                    })`, async () => {
-                        const productPathService = new CTagsProductPathService(serviceContainer.object);
-                        const expectedPath = 'Some Path';
-                        workspaceSymnbolSettings
-                            .setup((w) => w.ctagsPath)
-                            .returns(() => expectedPath)
-                            .verifiable(TypeMoq.Times.atLeastOnce());
-
-                        const value = productPathService.getExecutableNameFromSettings(product.value, resource);
-                        expect(value).to.be.equal(expectedPath);
-                        workspaceSymnbolSettings.verifyAll();
                     });
                     break;
                 }

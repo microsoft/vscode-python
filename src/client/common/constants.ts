@@ -42,9 +42,6 @@ export namespace Commands {
     export const Test_Stop_Refreshing = 'python.stopRefreshingTests';
     export const Sort_Imports = 'python.sortImports';
     export const ViewOutput = 'python.viewOutput';
-    export const Refactor_Extract_Variable = 'python.refactorExtractVariable';
-    export const Refactor_Extract_Method = 'python.refactorExtractMethod';
-    export const Build_Workspace_Symbols = 'python.buildWorkspaceSymbols';
     export const Start_REPL = 'python.startREPL';
     export const Create_Terminal = 'python.createTerminal';
     export const Set_Linter = 'python.setLinter';

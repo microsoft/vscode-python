@@ -20,13 +20,11 @@ export class ProductService implements IProductService {
         this.ProductTypes.set(Product.pydocstyle, ProductType.Linter);
         this.ProductTypes.set(Product.pylama, ProductType.Linter);
         this.ProductTypes.set(Product.pylint, ProductType.Linter);
-        this.ProductTypes.set(Product.ctags, ProductType.WorkspaceSymbols);
         this.ProductTypes.set(Product.pytest, ProductType.TestFramework);
         this.ProductTypes.set(Product.unittest, ProductType.TestFramework);
         this.ProductTypes.set(Product.autopep8, ProductType.Formatter);
         this.ProductTypes.set(Product.black, ProductType.Formatter);
         this.ProductTypes.set(Product.yapf, ProductType.Formatter);
-        this.ProductTypes.set(Product.rope, ProductType.RefactoringLibrary);
         this.ProductTypes.set(Product.jupyter, ProductType.DataScience);
         this.ProductTypes.set(Product.notebook, ProductType.DataScience);
         this.ProductTypes.set(Product.ipykernel, ProductType.DataScience);

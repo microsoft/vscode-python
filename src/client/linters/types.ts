@@ -45,8 +45,8 @@ export const ILinterManager = Symbol('ILinterManager');
 export interface ILinterManager {
     getAllLinterInfos(): ILinterInfo[];
     getLinterInfo(product: Product): ILinterInfo;
-    getActiveLinters(silent: boolean, resource?: vscode.Uri): Promise<ILinterInfo[]>;
-    isLintingEnabled(silent: boolean, resource?: vscode.Uri): Promise<boolean>;
+    getActiveLinters(resource?: vscode.Uri): Promise<ILinterInfo[]>;
+    isLintingEnabled(resource?: vscode.Uri): Promise<boolean>;
     enableLintingAsync(enable: boolean, resource?: vscode.Uri): Promise<void>;
     setActiveLintersAsync(products: Product[], resource?: vscode.Uri): Promise<void>;
     createLinter(

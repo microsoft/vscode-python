@@ -1,7 +1,6 @@
 /* eslint-disable max-classes-per-file */
 
 import { inject, injectable, named } from 'inversify';
-import * as os from 'os';
 import * as semver from 'semver';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import '../extensions';
@@ -14,9 +13,7 @@ import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceError, traceInfo } from '../logger';
-import { IPlatformService } from '../platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
-import { ITerminalServiceFactory } from '../terminal/types';
 import {
     IConfigurationService,
     IInstaller,
@@ -41,9 +38,6 @@ import {
 } from './types';
 
 export { Product } from '../types';
-
-export const CTagsInstallationScript =
-    os.platform() === 'darwin' ? 'brew install ctags' : 'sudo apt-get install exuberant-ctags';
 
 // Products which may not be available to install from certain package registries, keyed by product name
 // Installer implementations can check this to determine a suitable installation channel for a product
@@ -225,46 +219,6 @@ abstract class BaseInstaller {
     }
 }
 
-export class CTagsInstaller extends BaseInstaller {
-    public async install(_product: Product, resource?: Uri): Promise<InstallerResponse> {
-        if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
-            this.outputChannel.appendLine('Install Universal Ctags Win32 to enable support for Workspace Symbols');
-            this.outputChannel.appendLine('Download the CTags binary from the Universal CTags site.');
-            this.outputChannel.appendLine(
-                'Option 1: Extract ctags.exe from the downloaded zip to any folder within your PATH so that Visual Studio Code can run it.',
-            );
-            this.outputChannel.appendLine(
-                'Option 2: Extract to any folder and add the path to this folder to the command setting.',
-            );
-            this.outputChannel.appendLine(
-                'Option 3: Extract to any folder and define that path in the python.workspaceSymbols.ctagsPath setting of your user settings file (settings.json).',
-            );
-            this.outputChannel.show();
-        } else {
-            const terminalService = this.serviceContainer
-                .get<ITerminalServiceFactory>(ITerminalServiceFactory)
-                .getTerminalService({ resource });
-            terminalService
-                .sendCommand(CTagsInstallationScript, [])
-                .catch((ex) => traceError(`Failed to install ctags. Script sent '${CTagsInstallationScript}', ${ex}`));
-        }
-        return InstallerResponse.Ignore;
-    }
-
-    protected async promptToInstallImplementation(
-        product: Product,
-        resource?: Uri,
-        _cancel?: CancellationToken,
-    ): Promise<InstallerResponse> {
-        const item = await this.appShell.showErrorMessage(
-            'Install CTags to enable Python workspace symbols?',
-            'Yes',
-            'No',
-        );
-        return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
-    }
-}
-
 export class FormatterInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(
         product: Product,
@@ -423,23 +377,6 @@ export class TestFrameworkInstaller extends BaseInstaller {
         }
 
         const item = await this.appShell.showErrorMessage(message, ...options);
-        return item === 'Yes' ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
-    }
-}
-
-class RefactoringLibraryInstaller extends BaseInstaller {
-    protected async promptToInstallImplementation(
-        product: Product,
-        resource?: Uri,
-        cancel?: CancellationToken,
-        _flags?: ModuleInstallFlags,
-    ): Promise<InstallerResponse> {
-        const productName = ProductNames.get(product)!;
-        const item = await this.appShell.showErrorMessage(
-            `Refactoring library ${productName} is not installed. Install?`,
-            'Yes',
-            'No',
-        );
         return item === 'Yes' ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
     }
 }
@@ -614,12 +551,8 @@ export class ProductInstaller implements IInstaller {
                 return new FormatterInstaller(this.serviceContainer, this.outputChannel);
             case ProductType.Linter:
                 return new LinterInstaller(this.serviceContainer, this.outputChannel);
-            case ProductType.WorkspaceSymbols:
-                return new CTagsInstaller(this.serviceContainer, this.outputChannel);
             case ProductType.TestFramework:
                 return new TestFrameworkInstaller(this.serviceContainer, this.outputChannel);
-            case ProductType.RefactoringLibrary:
-                return new RefactoringLibraryInstaller(this.serviceContainer, this.outputChannel);
             case ProductType.DataScience:
                 return new DataScienceInstaller(this.serviceContainer, this.outputChannel);
             default:

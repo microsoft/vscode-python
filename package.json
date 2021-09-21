@@ -67,7 +67,6 @@
         "onCommand:python.viewOutput",
         "onCommand:python.execSelectionInTerminal",
         "onCommand:python.execSelectionInDjangoShell",
-        "onCommand:python.buildWorkspaceSymbols",
         "onCommand:python.startREPL",
         "onCommand:python.goToPythonObject",
         "onCommand:python.reportIssue",
@@ -310,11 +309,6 @@
             },
             {
                 "category": "Python",
-                "command": "python.buildWorkspaceSymbols",
-                "title": "%python.command.python.buildWorkspaceSymbols.title%"
-            },
-            {
-                "category": "Python",
                 "command": "python.clearPersistentStorage",
                 "title": "%python.command.python.clearPersistentStorage.title%"
             },
@@ -379,16 +373,6 @@
                 "category": "Python",
                 "command": "python.launchTensorBoard",
                 "title": "%python.command.python.launchTensorBoard.title%"
-            },
-            {
-                "category": "Python Refactor",
-                "command": "python.refactorExtractMethod",
-                "title": "%python.command.python.refactorExtractMethod.title%"
-            },
-            {
-                "category": "Python Refactor",
-                "command": "python.refactorExtractVariable",
-                "title": "%python.command.python.refactorExtractVariable.title%"
             },
             {
                 "category": "Python",
@@ -1275,47 +1259,6 @@
                     "description": "Path to folder with a list of Virtual Environments (e.g. ~/.pyenv, ~/Envs, ~/.virtualenvs).",
                     "scope": "machine",
                     "type": "string"
-                },
-                "python.workspaceSymbols.ctagsPath": {
-                    "default": "ctags",
-                    "description": "Fully qualified path to the ctags executable (else leave as ctags, assuming it is in current path).",
-                    "scope": "resource",
-                    "type": "string"
-                },
-                "python.workspaceSymbols.enabled": {
-                    "default": false,
-                    "description": "Set to 'true' to enable ctags to provide Workspace Symbols.",
-                    "scope": "resource",
-                    "type": "boolean"
-                },
-                "python.workspaceSymbols.exclusionPatterns": {
-                    "default": [
-                        "**/site-packages/**"
-                    ],
-                    "description": "Pattern used to exclude files and folders from ctags See http://ctags.sourceforge.net/ctags.html.",
-                    "items": {
-                        "type": "string"
-                    },
-                    "scope": "resource",
-                    "type": "array"
-                },
-                "python.workspaceSymbols.rebuildOnFileSave": {
-                    "default": true,
-                    "description": "Whether to re-build the tags file on when changes made to python files are saved.",
-                    "scope": "resource",
-                    "type": "boolean"
-                },
-                "python.workspaceSymbols.rebuildOnStart": {
-                    "default": true,
-                    "description": "Whether to re-build the tags file on start (defaults to true).",
-                    "scope": "resource",
-                    "type": "boolean"
-                },
-                "python.workspaceSymbols.tagFilePath": {
-                    "default": "${workspaceFolder}/.vscode/tags",
-                    "description": "Fully qualified path to tag file (exuberant ctag file), used to provide workspace symbols.",
-                    "scope": "resource",
-                    "type": "string"
                 }
             },
             "title": "Python",
@@ -1825,18 +1768,6 @@
                     "command": "python.execSelectionInTerminal",
                     "group": "Python",
                     "when": "editorFocus && editorLangId == python"
-                },
-                {
-                    "command": "python.refactorExtractMethod",
-                    "group": "Refactor",
-                    "title": "Refactor: Extract Method",
-                    "when": "editorHasSelection && editorLangId == python && !notebookEditorFocused"
-                },
-                {
-                    "command": "python.refactorExtractVariable",
-                    "group": "Refactor",
-                    "title": "Refactor: Extract Variable",
-                    "when": "editorHasSelection && editorLangId == python && !notebookEditorFocused"
                 },
                 {
                     "command": "python.sortImports",

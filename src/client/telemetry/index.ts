@@ -1783,14 +1783,6 @@ export interface IEventNamePropertyMapping {
         selection: 'Yes' | 'No' | undefined;
     };
     /**
-     * Telemetry event sent when 'Extract Method' command is invoked
-     */
-    [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;
-    /**
-     * Telemetry event sent when 'Extract Variable' command is invoked
-     */
-    [EventName.REFACTOR_EXTRACT_VAR]: never | undefined;
-    /**
      * Telemetry event sent when starting REPL
      */
     /* __GDPR__
@@ -1817,26 +1809,6 @@ export interface IEventNamePropertyMapping {
          * Carries `true` if linter is enabled, `false` otherwise
          */
         enabled: boolean;
-    };
-    /**
-     * Telemetry event sent with details when clicking the prompt with the following message,
-     * `Prompt message` :- 'You have a pylintrc file in your workspace. Do you want to enable pylint?'
-     */
-    [EventName.CONFIGURE_AVAILABLE_LINTER_PROMPT]: {
-        /**
-         * Name of the linter tool
-         *
-         * @type {LinterId}
-         */
-        tool: LinterId;
-        /**
-         * `enable` When 'Enable [linter name]' option is clicked
-         * `ignore` When 'Not now' option is clicked
-         * `disablePrompt` When 'Do not show again` option is clicked
-         *
-         * @type {('enable' | 'ignore' | 'disablePrompt' | undefined)}
-         */
-        action: 'enable' | 'ignore' | 'disablePrompt' | undefined;
     };
     /**
      * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
@@ -1987,14 +1959,6 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when testing is disabled for a workspace.
      */
     [EventName.UNITTEST_DISABLED]: never | undefined;
-    /**
-     * Telemetry sent when building workspace symbols
-     */
-    [EventName.WORKSPACE_SYMBOLS_BUILD]: never | undefined;
-    /**
-     * Telemetry sent when providing workspace symbols doing Project-wide search for a symbol matching the given query string
-     */
-    [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
     /*
     Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
     This information is useful in determining how well we identify shells on users machines.
@@ -2157,12 +2121,6 @@ export interface IEventNamePropertyMapping {
      * on the machine currently running TensorBoard.
      */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND]: never | undefined;
-
-    /**
-     * Telemetry event sent when the prompt about Python 2.7 support is displayed.
-     */
-    [EventName.PYTHON_27_SUPPORT_PROMPT]: never | undefined;
-
     /**
      * Telemetry event sent when the prompt about the MPLS deprecation is displayed.
      */

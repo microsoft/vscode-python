@@ -6,7 +6,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Disposable, QuickInput, QuickInputButton, QuickInputButtons, QuickPick, QuickPickItem } from 'vscode';
+import { Disposable, QuickInput, QuickInputButton, QuickInputButtons, QuickPick, QuickPickItem, Event } from 'vscode';
 import { IApplicationShell } from '../application/types';
 
 // Borrowed from https://github.com/Microsoft/vscode-extension-samples/blob/master/quickinput-sample/src/multiStepInput.ts
@@ -39,7 +39,8 @@ type QuickInputButtonSetup = {
      */
     callback: buttonCallbackType<QuickPickItem>;
 };
-export interface IQuickPickParameters<T extends QuickPickItem> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface IQuickPickParameters<T extends QuickPickItem, E = any> {
     title?: string;
     step?: number;
     totalSteps?: number;
@@ -50,7 +51,13 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     customButtonSetup?: QuickInputButtonSetup;
     matchOnDescription?: boolean;
     matchOnDetail?: boolean;
+    keepScrollPosition?: boolean;
+    sortByLabel?: boolean;
     acceptFilterBoxTextAsSelection?: boolean;
+    onChangeItem?: {
+        callback: (event: E, quickPick: QuickPick<T>) => Promise<void>;
+        event: Event<E>;
+    };
 }
 
 interface InputBoxParameters {
@@ -110,6 +117,9 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         matchOnDescription,
         matchOnDetail,
         acceptFilterBoxTextAsSelection,
+        onChangeItem,
+        keepScrollPosition,
+        sortByLabel,
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>> {
         const disposables: Disposable[] = [];
         try {
@@ -117,6 +127,8 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 const input = this.shell.createQuickPick<T>();
                 input.title = title;
                 input.step = step;
+                input.keepScrollPosition = keepScrollPosition;
+                input.sortByLabel = sortByLabel || false;
                 input.totalSteps = totalSteps;
                 input.placeholder = placeholder;
                 input.ignoreFocusOut = true;
@@ -160,6 +172,9 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     this.current.dispose();
                 }
                 this.current = input;
+                if (onChangeItem) {
+                    disposables.push(onChangeItem.event((e) => onChangeItem.callback(e, input)));
+                }
                 this.current.show();
             });
         } finally {

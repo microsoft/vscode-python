@@ -80,8 +80,6 @@ suite('Module Installer - Invalid Paths', () => {
 
                 switch (product.value) {
                     case Product.isort:
-                    case Product.ctags:
-                    case Product.rope:
                     case Product.unittest: {
                         return;
                     }

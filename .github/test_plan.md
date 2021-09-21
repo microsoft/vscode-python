@@ -141,36 +141,15 @@ SPAM='hello ${WHO}'
     -   [ ] Create a virtual environment
     -   [ ] Install `requests` into the virtual environment
 
-#### Pylint/default linting
-
-[Prompting to install Pylint is covered under `Environments` above]
-
-For testing the disablement of the default linting rules for Pylint:
-
-```ini
-# pylintrc
-[MESSAGES CONTROL]
-enable=bad-names
-```
-
-```python3
-# example.py
-foo = 42  # Marked as a disallowed name.
-```
-
--   [ ] Installation via the prompt installs Pylint as appropriate
-    -   [ ] Uses `--user` for system-install of Python
-    -   [ ] Installs into a virtual environment environment directly
--   [ ] Pylint works
--   [ ] The existence of a `pylintrc` file turns off the default rules
-
-#### Other linters
+#### Linting
 
 **Note**:
 
 -   You can use the `Run Linting` command to run a newly installed linter
 -   When the extension installs a new linter, it turns off all other linters
 
+-   [ ] pylint works
+    -   [ ] `Select linter` lists the linter and installs it if necessary
 -   [ ] flake8 works
     -   [ ] `Select linter` lists the linter and installs it if necessary
 -   [ ] mypy works
@@ -222,14 +201,6 @@ def foo():pass
     -   [ ] black
     -   [ ] yapf
 -   [ ] `"editor.formatOnType": true` works and has expected results
-
-#### [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring)
-
--   [ ] [`Extract Variable`](https://code.visualstudio.com/docs/python/editing#_extract-variable) works
-    -   [ ] You are prompted to install `rope` if it is not already available
--   [ ] [`Extract method`](https://code.visualstudio.com/docs/python/editing#_extract-method) works
-    -   [ ] You are prompted to install `rope` if it is not already available
--   [ ] [`Sort Imports`](https://code.visualstudio.com/docs/python/editing#_sort-imports) works
 
 ### [Debugging](https://code.visualstudio.com/docs/python/debugging)
 

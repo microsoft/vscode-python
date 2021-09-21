@@ -27,7 +27,12 @@ suite('Pylint - Function runLinter()', () => {
     const doc = {
         uri: vscode.Uri.file('path/to/doc'),
     };
-
+    const args = [
+        "--msg-template='{line},{column},{category},{symbol}:{msg}'",
+        '--reports=n',
+        '--output-format=text',
+        doc.uri.fsPath,
+    ];
     class PylintTest extends Pylint {
         public async run(
             _args: string[],
@@ -85,6 +90,25 @@ suite('Pylint - Function runLinter()', () => {
         sinon.restore();
     });
 
+    test('Test pylint with default settings.', async () => {
+        const settings = {
+            linting: {
+                pylintEnabled: true,
+            },
+        };
+        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
+        _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
+        run = sinon.stub(PylintTest.prototype, 'run');
+        run.callsFake(() => Promise.resolve([]));
+        parseMessagesSeverity = sinon.stub(PylintTest.prototype, 'parseMessagesSeverity');
+        parseMessagesSeverity.callsFake(() => 'Severity');
+        const pylint = new PylintTest(output.object, serviceContainer.object);
+        await pylint.runLinter(doc as any, mock(vscode.CancellationTokenSource).token);
+        assert.deepEqual(run.args[0][0], args);
+        assert.ok(parseMessagesSeverity.notCalled);
+        assert.ok(run.calledOnce);
+    });
+
     test('Message returned by runLinter() is as expected', async () => {
         const message = [
             {
@@ -97,7 +121,11 @@ suite('Pylint - Function runLinter()', () => {
                 severity: 'LintMessageSeverity',
             },
         ];
-        const settings = { linting: {} };
+        const settings = {
+            linting: {
+                pylintEnabled: true,
+            },
+        };
         configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
         _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
         run = sinon.stub(PylintTest.prototype, 'run');

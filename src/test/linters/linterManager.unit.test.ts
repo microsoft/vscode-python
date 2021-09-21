@@ -39,9 +39,6 @@ suite('Linting - Linter Manager', () => {
     class LinterManagerTest extends LinterManager {
         // Override base class property to make it public.
         public linters!: ILinterInfo[];
-        public async enableUnconfiguredLinters(resource?: Uri) {
-            await super.enableUnconfiguredLinters(resource);
-        }
     }
     setup(() => {
         const svcContainer = mock(ServiceContainer);
@@ -57,7 +54,7 @@ suite('Linting - Linter Manager', () => {
         when(svcContainer.get<ILintingEngine>(ILintingEngine)).thenReturn(instance(lintingEngine));
         when(svcContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         when(svcContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
-        linterManager = new LinterManagerTest(instance(svcContainer), instance(workspaceService));
+        linterManager = new LinterManagerTest(instance(configService));
     });
 
     test('Get all linters will return a list of all linters', () => {
@@ -109,26 +106,10 @@ suite('Linting - Linter Manager', () => {
             linterManager.linters = [instanceOfLinterInfo];
             when(linterInfo.isEnabled(resource)).thenReturn(true);
 
-            const linters = await linterManager.getActiveLinters(true, resource);
+            const linters = await linterManager.getActiveLinters(resource);
 
             verify(linterInfo.isEnabled(resource)).once();
             expect(linters[0]).to.deep.equal(instanceOfLinterInfo);
-        });
-        test(`getActiveLinters will check if linter is enabled and not in silent mode ${testResourceSuffix}`, async () => {
-            const linterInfo = mock(LinterInfo);
-            const instanceOfLinterInfo = instance(linterInfo);
-            linterManager.linters = [instanceOfLinterInfo];
-            when(linterInfo.isEnabled(resource)).thenReturn(true);
-            let enableUnconfiguredLintersInvoked = false;
-            linterManager.enableUnconfiguredLinters = async () => {
-                enableUnconfiguredLintersInvoked = true;
-            };
-
-            const linters = await linterManager.getActiveLinters(false, resource);
-
-            verify(linterInfo.isEnabled(resource)).once();
-            expect(linters[0]).to.deep.equal(instanceOfLinterInfo);
-            expect(enableUnconfiguredLintersInvoked).to.equal(true, 'not invoked');
         });
 
         test(`setActiveLintersAsync with invalid products does nothing ${testResourceSuffix}`, async () => {
@@ -138,7 +119,7 @@ suite('Linting - Linter Manager', () => {
                 return [];
             };
 
-            await linterManager.setActiveLintersAsync([Product.ctags, Product.pytest], resource);
+            await linterManager.setActiveLintersAsync([Product.pytest], resource);
 
             expect(getActiveLintersInvoked).to.be.equal(false, 'Should not be invoked');
         });

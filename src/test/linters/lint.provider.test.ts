@@ -120,7 +120,7 @@ suite('Linting - Provider', () => {
             ICommandManager,
             TypeMoq.Mock.ofType<ICommandManager>().object,
         );
-        lm = new LinterManager(serviceContainer, workspaceService.object);
+        lm = new LinterManager(configService.object);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);
         emitter = new vscode.EventEmitter<vscode.TextDocument>();
         document = TypeMoq.Mock.ofType<vscode.TextDocument>();

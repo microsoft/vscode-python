@@ -183,7 +183,7 @@ export class JupyterExtensionIntegration {
                 return isWindowsStoreInterpreter(pythonPath);
             },
             getSuggestions: async (resource: Resource): Promise<IInterpreterQuickPickItem[]> =>
-                this.interpreterSelector.getSuggestions(resource),
+                this.interpreterSelector.getAllSuggestions(resource),
             install: async (
                 product: JupyterProductToInstall,
                 resource?: InterpreterUri,

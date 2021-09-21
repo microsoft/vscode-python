@@ -3,7 +3,6 @@
 
 import * as path from 'path';
 import { _SCRIPTS_DIR } from './constants';
-import { SymbolProviderSymbols } from './types';
 
 const SCRIPTS_DIR = _SCRIPTS_DIR;
 
@@ -76,25 +75,6 @@ export function sortImports(filename: string, sortArgs?: string[]): [string[], (
     return [args, parse];
 }
 
-// refactor.py
-
-export function refactor(root: string): [string[], (out: string) => Record<string, unknown>[]] {
-    const script = path.join(SCRIPTS_DIR, 'refactor.py');
-    const args = [script, root];
-
-    // TODO: Make the return type more specific, like we did
-    // with completion().
-    function parse(out: string): Record<string, unknown>[] {
-        // TODO: Also handle "STARTED"?
-        return out
-            .split(/\r?\n/g)
-            .filter((line) => line.length > 0)
-            .map((resp) => JSON.parse(resp));
-    }
-
-    return [args, parse];
-}
-
 // normalizeSelection.py
 
 export function normalizeSelection(): [string[], (out: string) => string] {
@@ -104,26 +84,6 @@ export function normalizeSelection(): [string[], (out: string) => string] {
     function parse(out: string) {
         // The text will be used as-is.
         return out;
-    }
-
-    return [args, parse];
-}
-
-// symbolProvider.py
-
-export function symbolProvider(
-    filename: string,
-    // If "text" is provided then it gets passed to the script as-is.
-    text?: string,
-): [string[], (out: string) => SymbolProviderSymbols] {
-    const script = path.join(SCRIPTS_DIR, 'symbolProvider.py');
-    const args = [script, filename];
-    if (text) {
-        args.push(text);
-    }
-
-    function parse(out: string): SymbolProviderSymbols {
-        return JSON.parse(out);
     }
 
     return [args, parse];

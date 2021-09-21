@@ -66,6 +66,7 @@ suite('Python envs locator - Environments Resolver', () => {
         version: PythonVersion = UNKNOWN_PYTHON_VERSION,
         name = '',
         location = '',
+        display: string | undefined = undefined,
     ): PythonEnvInfo {
         return {
             name,
@@ -77,7 +78,7 @@ suite('Python envs locator - Environments Resolver', () => {
                 ctime: -1,
                 mtime: -1,
             },
-            display: undefined,
+            display,
             version,
             arch: Architecture.Unknown,
             distro: { org: '' },
@@ -117,6 +118,7 @@ suite('Python envs locator - Environments Resolver', () => {
                 undefined,
                 'win1',
                 path.join(testVirtualHomeDir, '.venvs', 'win1'),
+                "Python ('win1': venv)",
             );
             const envsReturnedByParentLocator = [env1];
             const parentLocator = new SimpleLocator<BasicEnvInfo>(envsReturnedByParentLocator);

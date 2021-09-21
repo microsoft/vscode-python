@@ -9,6 +9,17 @@ import { getEnvDisplayString } from '../../../../client/pythonEnvironments/base/
 import { createLocatedEnv } from '../common';
 
 suite('pyenvs info - getEnvDisplayString()', () => {
+    const name = 'my-env';
+    const location = 'x/y/z/spam/';
+    const arch = Architecture.x64;
+    const version = '3.8.1';
+    const kind = PythonEnvKind.Venv;
+    const distro: PythonDistroInfo = {
+        org: 'Distro X',
+        defaultDisplayName: 'distroX 1.2',
+        version: parseVersionInfo('1.2.3')?.version,
+        binDir: 'distroX/bin',
+    };
     function getEnv(info: {
         version?: string;
         arch?: Architecture;
@@ -30,61 +41,26 @@ suite('pyenvs info - getEnvDisplayString()', () => {
         env.display = info.display;
         return env;
     }
+    const tests: [PythonEnvInfo, string][] = [
+        [getEnv({}), 'Python'],
+        [getEnv({ version, arch, name, kind, distro }), "Python 3.8.1 64-bit ('my-env': venv)"],
+        // without "suffix" info
+        [getEnv({ version }), 'Python 3.8.1'],
+        [getEnv({ arch }), 'Python 64-bit'],
+        [getEnv({ version, arch }), 'Python 3.8.1 64-bit'],
+        // with "suffix" info
+        [getEnv({ name }), "Python ('my-env')"],
+        [getEnv({ kind }), 'Python (venv)'],
+        [getEnv({ name, kind }), "Python ('my-env': venv)"],
+        // env.location is ignored.
+        [getEnv({ location }), 'Python'],
+        [getEnv({ name, location }), "Python ('my-env')"],
+    ];
+    tests.forEach(([env, expected]) => {
+        test(`"${expected}"`, () => {
+            const result = getEnvDisplayString(env);
 
-    suite('already set', () => {
-        [
-            'Python', // built: absolute minimal
-            'Python 3.7.x x64 (my-env: venv)', // built: full
-            'spam',
-            'some env',
-            // corner cases
-            '---',
-            '  ',
-        ].forEach((display: string) => {
-            test(`"${display}"`, () => {
-                const expected = display;
-                const env = getEnv({ display });
-
-                const result = getEnvDisplayString(env);
-
-                assert.equal(result, expected);
-            });
-        });
-    });
-
-    suite('built', () => {
-        const name = 'my-env';
-        const location = 'x/y/z/spam/';
-        const arch = Architecture.x64;
-        const version = '3.8.1';
-        const kind = PythonEnvKind.Venv;
-        const distro: PythonDistroInfo = {
-            org: 'Distro X',
-            defaultDisplayName: 'distroX 1.2',
-            version: parseVersionInfo('1.2.3')?.version,
-            binDir: 'distroX/bin',
-        };
-        const tests: [PythonEnvInfo, string][] = [
-            [getEnv({}), 'Python'],
-            [getEnv({ version, arch, name, kind, distro }), "Python 3.8.1 64-bit ('my-env': venv)"],
-            // without "suffix" info
-            [getEnv({ version }), 'Python 3.8.1'],
-            [getEnv({ arch }), 'Python 64-bit'],
-            [getEnv({ version, arch }), 'Python 3.8.1 64-bit'],
-            // with "suffix" info
-            [getEnv({ name }), "Python ('my-env')"],
-            [getEnv({ kind }), 'Python (venv)'],
-            [getEnv({ name, kind }), "Python ('my-env': venv)"],
-            // env.location is ignored.
-            [getEnv({ location }), 'Python'],
-            [getEnv({ name, location }), "Python ('my-env')"],
-        ];
-        tests.forEach(([env, expected]) => {
-            test(`"${expected}"`, () => {
-                const result = getEnvDisplayString(env);
-
-                assert.equal(result, expected);
-            });
+            assert.equal(result, expected);
         });
     });
 });

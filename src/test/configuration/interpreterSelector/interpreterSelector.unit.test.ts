@@ -50,12 +50,8 @@ suite('Interpreters - selector', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let newComparer: TypeMoq.IMock<IInterpreterComparer>;
-    const ignoreCache = false;
     class TestInterpreterSelector extends InterpreterSelector {
-        public async suggestionToQuickPickItem(
-            suggestion: PythonEnvironment,
-            workspaceUri?: Uri,
-        ): Promise<IInterpreterQuickPickItem> {
+        public suggestionToQuickPickItem(suggestion: PythonEnvironment, workspaceUri?: Uri): IInterpreterQuickPickItem {
             return super.suggestionToQuickPickItem(suggestion, workspaceUri);
         }
     }
@@ -91,10 +87,10 @@ suite('Interpreters - selector', () => {
                 { displayName: '4', path: 'c:/path4/path4', envType: EnvironmentType.Conda },
             ].map((item) => ({ ...info, ...item }));
             interpreterService
-                .setup((x) => x.getAllInterpreters(TypeMoq.It.isAny(), { onSuggestion: true, ignoreCache }))
+                .setup((x) => x.getAllInterpreters(TypeMoq.It.isAny(), { onSuggestion: true }))
                 .returns(() => new Promise((resolve) => resolve(initial)));
 
-            const actual = await selector.getSuggestions(undefined, ignoreCache);
+            const actual = await selector.getAllSuggestions(undefined);
 
             const expected: InterpreterQuickPickItem[] = [
                 new InterpreterQuickPickItem('1', 'c:/path1/path1'),
@@ -153,7 +149,7 @@ suite('Interpreters - selector', () => {
         ].map((item) => ({ ...info, ...item }));
 
         interpreterService
-            .setup((x) => x.getAllInterpreters(TypeMoq.It.isAny(), { onSuggestion: true, ignoreCache }))
+            .setup((x) => x.getAllInterpreters(TypeMoq.It.isAny(), { onSuggestion: true }))
             .returns(() => new Promise((resolve) => resolve(environments)));
 
         const interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
@@ -169,7 +165,7 @@ suite('Interpreters - selector', () => {
             new PathUtils(getOSType() === OSType.Windows),
         );
 
-        const result = await selector.getSuggestions(undefined, ignoreCache);
+        const result = await selector.getAllSuggestions(undefined);
 
         const expected: InterpreterQuickPickItem[] = [
             new InterpreterQuickPickItem('two', path.join(workspacePath, '.venv', 'bin', 'python')),

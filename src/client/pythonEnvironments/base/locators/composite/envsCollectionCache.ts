@@ -3,7 +3,6 @@
 
 import { Event } from 'vscode';
 import { traceInfo } from '../../../../common/logger';
-import { asyncFilter } from '../../../../common/utils/arrayUtils';
 import { pathExists } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
 import { areSameEnv } from '../../info/env';
@@ -36,10 +35,10 @@ export interface IEnvsCollectionCache {
     addEnv(env: PythonEnvInfo): void;
 
     /**
-     * Return cached environment information for a given interpreter path if it exists,
-     * otherwise return `undefined`.
+     * Return cached environment information for a given interpreter path if it exists and
+     * has complete info, otherwise return `undefined`.
      */
-    getEnv(path: string): PythonEnvInfo | undefined;
+    getCompleteInfo(path: string): PythonEnvInfo | undefined;
 
     /**
      * Writes the content of the in-memory cache to persistent storage.
@@ -53,6 +52,8 @@ export interface IEnvsCollectionCache {
     validateCache(): Promise<void>;
 }
 
+type PythonEnvCompleteInfo = { hasCompleteInfo?: boolean } & PythonEnvInfo;
+
 interface IPersistentStorage {
     load(): Promise<PythonEnvInfo[] | undefined>;
     store(envs: PythonEnvInfo[]): Promise<void>;
@@ -63,7 +64,7 @@ interface IPersistentStorage {
  */
 export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionChangedEvent>
     implements IEnvsCollectionCache {
-    private envs: PythonEnvInfo[] = [];
+    private envs: PythonEnvCompleteInfo[] = [];
 
     constructor(private readonly persistentStorage: IPersistentStorage) {
         super();
@@ -76,7 +77,13 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
          * we avoid the cost of running lstat. So simply remove envs which no longer
          * exist.
          */
-        this.envs = await asyncFilter(this.envs, (e) => pathExists(e.executable.filename));
+        const areEnvsValid = await Promise.all(this.envs.map((e) => pathExists(e.executable.filename)));
+        const invalidIndexes = areEnvsValid.map((isValid, index) => (isValid ? -1 : index)).filter((i) => i !== -1);
+        invalidIndexes.forEach((index) => {
+            const env = this.envs.splice(index, 1)[0];
+            // Ensure we fire events for any envs removed from collection.
+            this.fire({ old: env, update: undefined });
+        });
     }
 
     public getAllEnvs(): PythonEnvInfo[] {
@@ -103,8 +110,9 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         }
     }
 
-    public getEnv(executablePath: string): PythonEnvInfo | undefined {
-        return this.envs.find((e) => areSameEnv(e, executablePath));
+    public getCompleteInfo(executablePath: string): PythonEnvInfo | undefined {
+        const env = this.envs.find((e) => areSameEnv(e, executablePath));
+        return env?.hasCompleteInfo ? env : undefined;
     }
 
     public async clearAndReloadFromStorage(): Promise<void> {
@@ -114,6 +122,9 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
     public async flush(): Promise<void> {
         if (this.envs.length) {
             traceInfo('Environments added to cache', JSON.stringify(this.envs));
+            this.envs.forEach((e) => {
+                e.hasCompleteInfo = true;
+            });
             await this.persistentStorage.store(this.envs);
         }
     }
