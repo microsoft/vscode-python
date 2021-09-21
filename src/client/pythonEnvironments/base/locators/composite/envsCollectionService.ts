@@ -54,9 +54,10 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     }
 
     public async resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
+        // Note cache may have incomplete info when a refresh is happening.
+        // This API is supposed to return complete info by definition, so
+        // only use cache if it has complete info on an environment.
         const cachedEnv = this.cache.getCompleteInfo(executablePath);
-        // Envs in cache may have incomplete info when a refresh is happening, so
-        // do not rely on cache in those cases.
         if (cachedEnv) {
             return cachedEnv;
         }
