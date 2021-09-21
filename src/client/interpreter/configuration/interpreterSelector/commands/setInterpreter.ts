@@ -44,6 +44,7 @@ function isInterpreterQuickPickItem(item: QuickPickType): item is IInterpreterQu
 function isSpecialQuickPickItem(item: QuickPickType): item is ISpecialQuickPickItem {
     return 'alwaysShow' in item;
 }
+
 @injectable()
 export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     private readonly manualEntrySuggestion: ISpecialQuickPickItem = {
@@ -212,12 +213,9 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         const env = event.old ?? event.update;
         let envIndex = -1;
         if (env) {
-            envIndex = updatedItems.findIndex((item) => {
-                if (isInterpreterQuickPickItem(item)) {
-                    return arePathsSame(item.interpreter.path, env.path);
-                }
-                return false;
-            });
+            envIndex = updatedItems.findIndex(
+                (item) => isInterpreterQuickPickItem(item) && arePathsSame(item.interpreter.path, env.path),
+            );
         }
         if (event.update) {
             const newSuggestion: QuickPickType = this.interpreterSelector.suggestionToQuickPickItem(
@@ -240,7 +238,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     private async setRecommendedItem(items: QuickPickType[], resource: Resource) {
         const interpreterSuggestions = await this.interpreterSelector.getSuggestions(resource);
         if (!this.interpreterService.refreshPromise && interpreterSuggestions.length > 0) {
-            // If list is in the final state, first suggestion is the recommended one.
+            // List is in the final state, so first suggestion is the recommended one.
             const recommended = cloneDeep(interpreterSuggestions[0]);
             recommended.label = `${Octicons.Star} ${recommended.label}`;
             recommended.description = Common.recommended();
