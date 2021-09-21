@@ -54,10 +54,10 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     }
 
     public async resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
-        const cachedEnv = this.cache.getEnv(executablePath);
+        const cachedEnv = this.cache.getCompleteInfo(executablePath);
         // Envs in cache may have incomplete info when a refresh is happening, so
         // do not rely on cache in those cases.
-        if (cachedEnv && this.refreshPromises.size === 0) {
+        if (cachedEnv) {
             return cachedEnv;
         }
         const resolved = await this.locator.resolveEnv(executablePath);
