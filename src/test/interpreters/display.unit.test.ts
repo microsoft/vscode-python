@@ -22,7 +22,6 @@ import {
     IInterpreterHelper,
     IInterpreterService,
     IInterpreterStatusbarVisibilityFilter,
-    IPython27SupportPrompt,
 } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -52,8 +51,6 @@ suite('Interpreters Display', () => {
     let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
     let pathUtils: TypeMoq.IMock<IPathUtils>;
     let output: TypeMoq.IMock<IOutputChannel>;
-    let python27SupportPrompt: TypeMoq.IMock<IPython27SupportPrompt>;
-
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -65,7 +62,6 @@ suite('Interpreters Display', () => {
         statusBar = TypeMoq.Mock.ofType<StatusBarItem>();
         pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
         output = TypeMoq.Mock.ofType<IOutputChannel>();
-        python27SupportPrompt = TypeMoq.Mock.ofType<IPython27SupportPrompt>();
 
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), STANDARD_OUTPUT_CHANNEL))
@@ -85,18 +81,10 @@ suite('Interpreters Display', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterHelper)))
             .returns(() => interpreterHelper.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IPython27SupportPrompt)))
-            .returns(() => python27SupportPrompt.object);
-
         applicationShell
             .setup((a) => a.createStatusBarItem(TypeMoq.It.isValue(StatusBarAlignment.Left), TypeMoq.It.isValue(100)))
             .returns(() => statusBar.object);
         pathUtils.setup((p) => p.getDisplayName(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p) => p);
-        python27SupportPrompt
-            .setup((p) => p.shouldShowPrompt(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(false));
-
         createInterpreterDisplay();
     });
     function createInterpreterDisplay(filters: IInterpreterStatusbarVisibilityFilter[] = []) {

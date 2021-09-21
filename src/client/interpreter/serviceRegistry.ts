@@ -28,12 +28,10 @@ import {
     IInterpreterHelper,
     IInterpreterService,
     IInterpreterVersionService,
-    IPython27SupportPrompt,
     IShebangCodeLensProvider,
 } from './contracts';
 import { InterpreterDisplay } from './display';
 import { InterpreterLocatorProgressStatubarHandler } from './display/progressDisplay';
-import { Python27SupportPrompt } from './display/python27Prompt';
 import { ShebangCodeLensProvider } from './display/shebangCodeLensProvider';
 import { InterpreterHelper } from './helpers';
 import { InterpreterService } from './interpreterService';
@@ -95,8 +93,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
     );
 
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, CondaInheritEnvPrompt);
-
-    serviceManager.addSingleton<IPython27SupportPrompt>(IPython27SupportPrompt, Python27SupportPrompt);
 }
 
 export function registerTypes(serviceManager: IServiceManager): void {
