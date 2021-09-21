@@ -9,7 +9,7 @@ import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { instance, mock } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, TextDocument, TextLine, Uri } from 'vscode';
 import { Product } from '../../client/common/installer/productInstaller';
@@ -26,12 +26,7 @@ import {
     IPythonExecutionFactory,
     IPythonToolExecutionService,
 } from '../../client/common/process/types';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentService,
-    IInterpreterPathProxyService,
-} from '../../client/common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import {
@@ -47,7 +42,6 @@ import { deleteFile, PYTHON_PATH } from '../common';
 import { BaseTestFixture, getLinterID, getProductName, newMockDocument, throwUnknownProduct } from './common';
 import * as ExperimentHelpers from '../../client/common/experiments/helpers';
 import { DiscoveryVariants } from '../../client/common/experiments/groups';
-import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
 
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const workspaceUri = Uri.file(workspaceDir);
@@ -741,10 +735,6 @@ class TestFixture extends BaseTestFixture {
         const inDiscoveryExperimentStub = sinon.stub(ExperimentHelpers, 'inDiscoveryExperiment');
         inDiscoveryExperimentStub.resolves(false);
 
-        const autoSelection = mock<IInterpreterAutoSelectionService>();
-        const interpreterPathExpHelper = mock<IInterpreterPathProxyService>();
-        when(interpreterPathExpHelper.get(anything())).thenReturn('selected interpreter path');
-
         return new PythonExecutionFactory(
             serviceContainer.object,
             envActivationService.object,
@@ -754,8 +744,6 @@ class TestFixture extends BaseTestFixture {
             decoder,
             instance(pyenvs),
             experimentService.object,
-            instance(autoSelection),
-            instance(interpreterPathExpHelper),
         );
     }
 
