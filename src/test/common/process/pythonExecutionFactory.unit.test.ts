@@ -162,6 +162,8 @@ suite('Process - PythonExecutionFactory', () => {
                     instance(bufferDecoder),
                     instance(pyenvs),
                     instance(experimentService),
+                    instance(autoSelection),
+                    instance(interpreterPathExpHelper),
                 );
 
                 isWindowsStoreInterpreterStub = sinon.stub(WindowsStoreInterpreter, 'isWindowsStoreInterpreter');

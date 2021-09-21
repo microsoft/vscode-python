@@ -12,7 +12,7 @@ import { inDiscoveryExperiment } from '../experiments/helpers';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IFileSystem } from '../platform/types';
-import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../types';
+import { IConfigurationService, IDisposableRegistry, IExperimentService, IInterpreterPathProxyService } from '../types';
 import { ProcessService } from './proc';
 import { createCondaEnv, createPythonEnv, createWindowsStoreEnv } from './pythonEnvironment';
 import { createPythonProcessService } from './pythonProcess';
@@ -27,6 +27,7 @@ import {
     IPythonExecutionService,
 } from './types';
 import { isWindowsStoreInterpreter } from '../../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
+import { IInterpreterAutoSelectionService } from '../../interpreter/autoSelection/types';
 
 // Minimum version number of conda required to be able to use 'conda run'
 export const CONDA_RUN_VERSION = '4.6.0';
@@ -48,6 +49,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
+        @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
+        @inject(IInterpreterPathProxyService) private readonly interpreterPathExpHelper: IInterpreterPathProxyService,
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
@@ -56,6 +59,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
 
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
+        const interpreterPath = this.interpreterPathExpHelper.get(options.resource);
+        if (!interpreterPath || interpreterPath === 'python') {
+            await this.autoSelection.autoSelectInterpreter(options.resource); // Block on this only if no interpreter selected.
+        }
         const pythonPath = options.pythonPath
             ? options.pythonPath
             : this.configService.getSettings(options.resource).pythonPath;

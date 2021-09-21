@@ -20,7 +20,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
-    IInterpreterPathProxyService,
     IInterpreterPathService,
     InterpreterConfigurationScope,
     IPersistentState,
@@ -75,9 +74,6 @@ suite('Interpreters service', () => {
     let interpreterPathService: TypeMoq.IMock<IInterpreterPathService>;
     let experimentService: TypeMoq.IMock<IExperimentService>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
-    let interpreterPathExpHelper: TypeMoq.IMock<IInterpreterPathProxyService>;
-    let autoSelection: TypeMoq.IMock<IInterpreterAutoSelectionService>;
-    let service: InterpreterService;
 
     function setupSuite() {
         const cont = new Container();
@@ -99,9 +95,6 @@ suite('Interpreters service', () => {
         pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
         pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
-        interpreterPathExpHelper = TypeMoq.Mock.ofType<IInterpreterPathProxyService>();
-        interpreterPathExpHelper.setup((i) => i.get(TypeMoq.It.isAny())).returns(() => 'selected path');
-        autoSelection = TypeMoq.Mock.ofType<IInterpreterAutoSelectionService>();
 
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         pythonSettings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
@@ -166,14 +159,6 @@ suite('Interpreters service', () => {
             MockAutoSelectionService,
         );
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService.object);
-
-        service = new InterpreterService(
-            serviceContainer,
-            pyenvs.object,
-            experimentService.object,
-            autoSelection.object,
-            interpreterPathExpHelper.object,
-        );
     }
     suite('Misc', () => {
         setup(setupSuite);
@@ -186,6 +171,7 @@ suite('Interpreters service', () => {
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.once());
 
+                const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
                 await service.refresh(resource);
 
                 interpreterDisplay.verifyAll();
@@ -197,6 +183,7 @@ suite('Interpreters service', () => {
                     .returns(() => Promise.resolve([]))
                     .verifiable(TypeMoq.Times.once());
 
+                const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
                 await service.getInterpreters(resource);
 
                 locator.verifyAll();
@@ -204,6 +191,7 @@ suite('Interpreters service', () => {
         });
 
         test('Changes to active document should invoke interpreter.refresh method', async () => {
+            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
             experimentService.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
@@ -230,6 +218,7 @@ suite('Interpreters service', () => {
         });
 
         test('If there is no active document then interpreter.refresh should not be invoked', async () => {
+            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
             experimentService.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
@@ -251,6 +240,7 @@ suite('Interpreters service', () => {
         });
 
         test('If user belongs to Deprecate pythonPath experiment, register the correct handler', async () => {
+            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
             experimentService.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
@@ -291,6 +281,7 @@ suite('Interpreters service', () => {
         });
 
         test('If stored setting is an empty string, refresh the interpreter display', async () => {
+            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const resource = Uri.parse('a');
             service._pythonPathSetting = '';
             configService.reset();
@@ -304,6 +295,7 @@ suite('Interpreters service', () => {
         });
 
         test('If stored setting is not equal to current interpreter path setting, refresh the interpreter display', async () => {
+            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const resource = Uri.parse('a');
             service._pythonPathSetting = 'stored setting';
             configService.reset();
@@ -317,6 +309,7 @@ suite('Interpreters service', () => {
         });
 
         test('If stored setting is equal to current interpreter path setting, do not refresh the interpreter display', async () => {
+            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const resource = Uri.parse('a');
             service._pythonPathSetting = 'setting';
             configService.reset();
@@ -335,7 +328,7 @@ suite('Interpreters service', () => {
         [undefined, Uri.file('some workspace')].forEach((resource) => {
             test(`Ensure undefined is returned if we're unable to retrieve interpreter info (Resource is ${resource})`, async () => {
                 const pythonPath = 'SOME VALUE';
-
+                const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
                 locator
                     .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve([]))
@@ -395,6 +388,7 @@ suite('Interpreters service', () => {
                 })
                 .verifiable(TypeMoq.Times.once());
 
+            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const displayName = await service.getDisplayName(interpreterInfo, undefined);
 
             expect(displayName).to.equal(expectedDisplayName);
@@ -443,6 +437,7 @@ suite('Interpreters service', () => {
             };
             const expectedDisplayName = 'Python 2.7';
 
+            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const displayName = await service.getDisplayName(interpreterInfo, undefined).catch(() => '');
 
             expect(displayName).to.equal(expectedDisplayName);
@@ -474,6 +469,7 @@ suite('Interpreters service', () => {
             };
             const expectedDisplayName = 'Python 3';
 
+            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
             const displayName = await service.getDisplayName(interpreterInfo, undefined).catch(() => '');
 
             expect(displayName).to.equal(expectedDisplayName);
@@ -554,6 +550,11 @@ suite('Interpreters service', () => {
                                                         .returns(() => `${interpreterType!.name}_display`);
                                                 }
 
+                                                const service = new InterpreterService(
+                                                    serviceContainer,
+                                                    pyenvs.object,
+                                                    experimentService.object,
+                                                );
                                                 const expectedDisplayName = buildDisplayName(interpreterInfo);
 
                                                 const displayName = await service.getDisplayName(
@@ -666,6 +667,8 @@ suite('Interpreters service', () => {
                 .returns(() => state.object)
                 .verifiable(TypeMoq.Times.once());
 
+            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
+
             const store = await service.getInterpreterCache(pythonPath);
 
             expect(store.value).to.deep.equal({ fileHash, info });
@@ -696,6 +699,8 @@ suite('Interpreters service', () => {
                 .setup((f) => f.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => state.object)
                 .verifiable(TypeMoq.Times.once());
+
+            const service = new InterpreterService(serviceContainer, pyenvs.object, experimentService.object);
 
             const store = await service.getInterpreterCache(pythonPath);
 

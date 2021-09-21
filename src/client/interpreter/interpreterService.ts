@@ -12,7 +12,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
-    IInterpreterPathProxyService,
     IInterpreterPathService,
     IPersistentState,
     IPersistentStateFactory,
@@ -36,7 +35,6 @@ import { getInterpreterHash } from '../pythonEnvironments/discovery/locators/ser
 import { inDiscoveryExperiment, inDiscoveryExperimentSync } from '../common/experiments/helpers';
 import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
 import { PythonLocatorQuery } from '../pythonEnvironments/base/locator';
-import { IInterpreterAutoSelectionService } from './autoSelection/types';
 
 const EXPIRY_DURATION = 24 * 60 * 60 * 1000;
 
@@ -107,8 +105,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
-        @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
-        @inject(IInterpreterPathProxyService) private readonly interpreterPathExpHelper: IInterpreterPathProxyService,
     ) {
         this.persistentStateFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -204,10 +200,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         // During shutdown we might not be able to get items out of the service container.
-        const interpreterPath = this.interpreterPathExpHelper.get(resource);
-        if (!interpreterPath || interpreterPath === 'python') {
-            await this.autoSelection.autoSelectInterpreter(resource); // Block on this only if no interpreter selected.
-        }
         const pythonExecutionFactory = this.serviceContainer.tryGet<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecutionService = pythonExecutionFactory
             ? await pythonExecutionFactory.create({ resource })
