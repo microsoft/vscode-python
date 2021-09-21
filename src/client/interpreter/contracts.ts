@@ -191,6 +191,6 @@ export type GetInterpreterOptions = { ignoreCache?: boolean; onSuggestion?: bool
 
 export const IPython27SupportPrompt = Symbol('IPython27SupportPrompt');
 export interface IPython27SupportPrompt {
-    shouldShowPrompt(interpreter: PythonEnvironment): Promise<boolean>;
+    shouldShowPrompt(resource?: Uri): Promise<boolean>;
     showPrompt(): Promise<void>;
 }

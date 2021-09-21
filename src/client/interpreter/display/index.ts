@@ -76,7 +76,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         const interpreter = await this.interpreterService.getActiveInterpreter(workspaceFolder);
         this.currentlySelectedWorkspaceFolder = workspaceFolder;
         if (interpreter) {
-            if (await this.python27SupportPrompt.shouldShowPrompt(interpreter)) {
+            if (await this.python27SupportPrompt.shouldShowPrompt(workspaceFolder)) {
                 this.python27SupportPrompt.showPrompt();
             }
 
