@@ -30,7 +30,6 @@ import {
     IEnvsCollectionCache,
 } from './base/locators/composite/envsCollectionCache';
 import { EnvsCollectionService } from './base/locators/composite/envsCollectionService';
-import { addItemsToRunAfterActivation } from '../common/utils/runAfterActivation';
 
 /**
  * Set up the Python environments component (during extension activation).'
@@ -55,7 +54,7 @@ export async function initialize(ext: ExtensionState): Promise<IDiscoveryAPI> {
 /**
  * Make use of the component (e.g. register with VS Code).
  */
-export async function activate(api: IDiscoveryAPI, ext: ExtensionState): Promise<ActivationResult> {
+export async function activate(api: IDiscoveryAPI, _ext: ExtensionState): Promise<ActivationResult> {
     if (!(await isComponentEnabled())) {
         return {
             fullyReady: Promise.resolve(),
@@ -67,19 +66,14 @@ export async function activate(api: IDiscoveryAPI, ext: ExtensionState): Promise
      *
      * Note API is ready to be queried only after a refresh has been triggered, and extension activation is blocked on API. So,
      * * If discovery was never triggered, we need to block extension activation on the refresh trigger.
-     * * If discovery was already triggered, there's no need to block extension activation on discovery.
+     * * If discovery was already triggered, it maybe the case that this is a new workspace for which it hasn't been triggered yet.
+     * So always trigger discovery as part of extension activation for now.
+     *
+     * TODO: https://github.com/microsoft/vscode-python/issues/17498
+     * Once `onInterpretersChanged` event is exposed via API, we can probably expect extensions to rely on that and
+     * discovery can be triggered after activation, especially in the second case.
      */
-    const wasTriggered = getGlobalStorage<boolean>(ext.context, 'PYTHON_WAS_DISCOVERY_TRIGGERED', false);
-
-    if (!wasTriggered.get()) {
-        api.triggerRefresh()
-            .then(() => wasTriggered.set(true))
-            .ignoreErrors();
-    } else {
-        addItemsToRunAfterActivation(() => {
-            api.triggerRefresh().ignoreErrors();
-        });
-    }
+    api.triggerRefresh().ignoreErrors();
 
     return {
         fullyReady: Promise.resolve(),
