@@ -54,8 +54,6 @@
     "ExtensionChannels.downloadCompletedOutputMessage": "Insiders 組建下載完成。",
     "ExtensionChannels.startingDownloadOutputMessage": "開始下載 Insiders 組建。",
     "Interpreters.environmentPromptMessage": "We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?",
-    "Linter.enableLinter": "啟用 {0}",
-    "Linter.enablePylint": "您的工作區有 pylintrc 檔案。是否啟用 pylint?",
     "Linter.replaceWithSelectedLinter": "設定中啟用了多個 Linter。是否用 '{0}' 取代?",
     "Installer.noCondaOrPipInstaller": "選取環境中沒有可用的 Conda 或 Pip 安裝工具。",
     "Installer.noPipInstaller": "選取環境中沒有可用的 Pip 安裝工具。",

@@ -51,7 +51,6 @@ import {
 } from '../../../client/common/types';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
-import { Common, Linters } from '../../../client/common/utils/localize';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -59,7 +58,6 @@ import { LinterManager } from '../../../client/linters/linterManager';
 import { ILinterManager } from '../../../client/linters/types';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { sleep } from '../../common';
-import { MockWorkspaceConfiguration } from '../../mocks/mockWorkspaceConfig';
 
 use(chaiAsPromised);
 
@@ -911,44 +909,6 @@ suite('Module Installer only', () => {
 
             expect(response).to.be.equal(InstallerResponse.Installed);
             assert.ok(install.calledOnceWith(product, resource, undefined));
-        });
-
-        test('Do not show prompt if linter path is set', async () => {
-            when(workspaceService.getConfiguration('python')).thenReturn(
-                new MockWorkspaceConfiguration({
-                    'linting.pylintPath': {
-                        globalValue: 'path/to/something',
-                    },
-                }),
-            );
-            when(productService.getProductType(Product.pylint)).thenReturn(ProductType.Linter);
-            when(productPathService.getExecutableNameFromSettings(Product.pylint, resource)).thenReturn(
-                'path/to/something',
-            );
-            installer.isModuleExecutable = false;
-
-            const product = Product.pylint;
-            const options = ['Select Linter', 'Do not show again'];
-            const productName = ProductNames.get(product)!;
-            await installer.promptToInstallImplementation(product, resource);
-            verify(
-                appShell.showInformationMessage(
-                    Linters.installMessage(),
-                    Linters.installPylint(),
-                    Linters.installFlake8(),
-                    Common.doNotShowAgain(),
-                ),
-            ).never();
-            verify(
-                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
-            ).never();
-            verify(
-                appShell.showErrorMessage(
-                    `Path to the ${productName} linter is invalid (path/to/something)`,
-                    options[0],
-                    options[1],
-                ),
-            ).once();
         });
     });
 });

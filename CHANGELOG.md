@@ -1,6 +1,224 @@
 # Changelog
 
-## 2021.9.0-rc (30 August 2021)
+## 2021.9.3 (20 September 2021)
+
+### Fixes
+
+1. Fix `Python extension loading...` issue for users who have disabled telemetry.
+   ([#17447](https://github.com/Microsoft/vscode-python/issues/17447))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [poetry](https://pypi.org/project/poetry/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2021.9.2 (13 September 2021)
+
+### Fixes
+
+1. Ensure line feeds are changed to CRLF in test messages.
+   ([#17111](https://github.com/Microsoft/vscode-python/issues/17111))
+1. Fix for `unittest` ModuleNotFoundError when discovering tests.
+   ([#17363](https://github.com/Microsoft/vscode-python/issues/17363))
+1. Ensure we block getting active interpreter on auto-selection.
+   ([#17370](https://github.com/Microsoft/vscode-python/issues/17370))
+1. Fix to handle undefined uri in debug in terminal command.
+   ([#17374](https://github.com/Microsoft/vscode-python/issues/17374))
+1. Fix for missing buttons for tests when using multiple test folders.
+   ([#17378](https://github.com/Microsoft/vscode-python/issues/17378))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [poetry](https://pypi.org/project/poetry/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2021.9.1 (9 September 2021)
+
+### Fixes
+
+1. Fix for debug configuration used when no launch.json exists is still used after launch.json is created.
+   ([#17353](https://github.com/Microsoft/vscode-python/issues/17353))
+1. Ensure default python executable to use is 'python' instead of ''.
+   ([#17089](https://github.com/Microsoft/vscode-python/issues/17089))
+1. Ensure workspace interpreters are discovered and watched when in `pythonDiscoveryModuleWithoutWatcher` experiment.
+   ([#17144](https://github.com/Microsoft/vscode-python/issues/17144))
+1. Do path comparisons appropriately in the new discovery component.
+   ([#17244](https://github.com/Microsoft/vscode-python/issues/17244))
+1. Fix for test result not found for files starting with py.
+   ([#17270](https://github.com/Microsoft/vscode-python/issues/17270))
+1. Fix for unable to import when running unittest.
+   ([#17280](https://github.com/Microsoft/vscode-python/issues/17280))
+1. Fix for multiple folders in `pytest` args.
+   ([#17281](https://github.com/Microsoft/vscode-python/issues/17281))
+1. Fix issue with incomplete `unittest` runs.
+   ([#17282](https://github.com/Microsoft/vscode-python/issues/17282))
+1. Improve detecting lines when using testing wrappers.
+   ([#17285](https://github.com/Microsoft/vscode-python/issues/17285))
+1. Ensure we trigger discovery for the first time as part of extension activation.
+   ([#17303](https://github.com/Microsoft/vscode-python/issues/17303))
+1. Correctly indicate when interpreter refresh has finished.
+   ([#17335](https://github.com/Microsoft/vscode-python/issues/17335))
+1. Missing location info for `async def` functions.
+   ([#17309](https://github.com/Microsoft/vscode-python/issues/17309))
+1. For CI ensure `tensorboard` is installed in python 3 environments only.
+   ([#17325](https://github.com/Microsoft/vscode-python/issues/17325))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [poetry](https://pypi.org/project/poetry/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2021.9.0 (1 September 2021)
 
 ### Enhancements
 
