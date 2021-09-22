@@ -298,13 +298,17 @@ class ComponentAdapter implements IComponentAdapter {
         this.refreshing.fire();
 
         const query: PythonLocatorQuery = {};
+        let wsFolder: vscode.WorkspaceFolder | undefined;
         if (resource !== undefined) {
-            const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
-            if (wsFolder !== undefined) {
-                query.searchLocations = {
-                    roots: [wsFolder.uri],
-                };
-            }
+            wsFolder = vscode.workspace.getWorkspaceFolder(resource);
+        } else if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+            [wsFolder] = vscode.workspace.workspaceFolders;
+        }
+
+        if (wsFolder !== undefined) {
+            query.searchLocations = {
+                roots: [wsFolder.uri],
+            };
         } else {
             query.searchLocations = {
                 roots: [],
