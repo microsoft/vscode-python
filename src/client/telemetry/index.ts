@@ -1851,6 +1851,11 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the extension is activated, if an active terminal is present and
      * the `python.terminal.activateEnvInCurrentTerminal` setting is set to `true`.
      */
+    /* __GDPR__
+       "activate_env_in_current_terminal" : {
+          "isterminalvisible" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.ACTIVATE_ENV_IN_CURRENT_TERMINAL]: {
         /**
          * Carries boolean `true` if an active terminal is present (terminal is visible), `false` otherwise
@@ -1859,6 +1864,11 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent with details when a terminal is created
+     */
+    /* __GDPR__
+       "terminal.create" : {
+          "propertyName" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.TERMINAL_CREATE]: {
         /**
@@ -1889,6 +1899,11 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent indicating the trigger source for discovery.
      */
+    /* __GDPR__
+       "unittest.discovery.trigger" : {
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.UNITTEST_DISCOVERY_TRIGGER]: {
         /**
          * Carries the source which triggered discovering of tests
@@ -1905,6 +1920,11 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent with details about discovering tests
      */
+    /* __GDPR__
+       "unittest.discovering" : {
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.UNITTEST_DISCOVERING]: {
         /**
          * The test framework used to discover tests
@@ -1915,6 +1935,12 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent with details about discovering tests
+     */
+    /* __GDPR__
+       "unittest.discovery.done" : {
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.UNITTEST_DISCOVERY_DONE]: {
         /**
@@ -1933,9 +1959,20 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when cancelling discovering tests
      */
+    /* __GDPR__
+       "unittest.discovering.stop" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.UNITTEST_DISCOVERING_STOP]: never | undefined;
     /**
      * Telemetry event sent with details about running the tests, what is being run, what framework is being used etc.
+     */
+    /* __GDPR__
+       "unittest.run" : {
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "debugging" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.UNITTEST_RUN]: {
         /**
@@ -1950,13 +1987,28 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when cancelling running tests
      */
+    /* __GDPR__
+       "unittest.run.stop" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.UNITTEST_RUN_STOP]: never | undefined;
     /**
      * Telemetry event sent when run all failed test command is triggered
      */
+    /* __GDPR__
+       "unittest.run.all_failed" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.UNITTEST_RUN_ALL_FAILED]: never | undefined;
     /**
      * Telemetry event sent when testing is disabled for a workspace.
+     */
+    /* __GDPR__
+       "unittest.disabled" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.UNITTEST_DISABLED]: never | undefined;
     /*
@@ -1980,6 +2032,15 @@ export interface IEventNamePropertyMapping {
                     If true, user has a shell in their environment.
                     If false, user does not have a shell in their environment.
     */
+    /* __GDPR__
+      "terminal_shell_identification" : {
+         "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+         "terminalprovided" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+         "shellidentificationsource" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+         "hascustomshell" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+         "hasshellinenv" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+      }
+    */
     [EventName.TERMINAL_SHELL_IDENTIFICATION]: {
         failed: boolean;
         terminalProvided: boolean;
@@ -1992,6 +2053,12 @@ export interface IEventNamePropertyMapping {
      *
      * @type {(undefined | never)}
      * @memberof IEventNamePropertyMapping
+     */
+    /* __GDPR__
+       "activate_env_to_get_env_vars_failed" : {
+          "ispossiblycondaenv" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+          "terminal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+       }
      */
     [EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED]: {
         /**
@@ -2014,6 +2081,12 @@ export interface IEventNamePropertyMapping {
      * asking them if they want to launch an integrated TensorBoard session.
      * `selection` is one of 'yes', 'no', or 'do not ask again'.
      */
+    /* __GDPR__
+       "tensorboard.launch_prompt_selection" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
+
     [EventName.TENSORBOARD_LAUNCH_PROMPT_SELECTION]: {
         selection: TensorBoardPromptSelection;
     };
@@ -2025,6 +2098,12 @@ export interface IEventNamePropertyMapping {
      * The `trigger` property indicates whether the entrypoint was triggered by the user
      * importing tensorboard, using tensorboard in a notebook, detected tfevent files in
      * the workspace. For the palette entrypoint, the trigger is also 'palette'.
+     */
+    /* __GDPR__
+       "tensorboard.session_launch" : {
+          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.TENSORBOARD_SESSION_LAUNCH]: {
         entrypoint: TensorBoardEntrypoint;
@@ -2039,6 +2118,11 @@ export interface IEventNamePropertyMapping {
      * 3. 'error' --> 60_000ms, i.e. we timed out waiting for the daemon to launch
      * In the first two cases durationMs should not be more than 60_000ms.
      */
+    /* __GDPR__
+       "tensorboard.session_daemon_startup_duration" : {
+          "result" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION]: {
         result: TensorBoardSessionStartResult;
     };
@@ -2050,11 +2134,21 @@ export interface IEventNamePropertyMapping {
      * installed, requesting the user to select a log directory, starting the tensorboard
      * program instance in a daemon, and showing the TensorBoard UI in a webpanel, in that order.
      */
+    /* __GDPR__
+       "tensorboard.session_e2e_startup_duration" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.TENSORBOARD_SESSION_E2E_STARTUP_DURATION]: never | undefined;
     /**
      * Telemetry event sent after the user has closed a TensorBoard webview panel. This event is
      * sent with `durationMs` specifying the total duration of time that the TensorBoard session
      * ran for before the user terminated the session.
+     */
+    /* __GDPR__
+       "tensorboard.session_duration" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.TENSORBOARD_SESSION_DURATION]: never | undefined;
     /**
@@ -2068,6 +2162,12 @@ export interface IEventNamePropertyMapping {
      * importing tensorboard, using tensorboard in a notebook, detected tfevent files in
      * the workspace. For the palette entrypoint, the trigger is also 'palette'.
      */
+    /* __GDPR__
+       "tensorboard.entrypoint_shown" : {
+          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.TENSORBOARD_ENTRYPOINT_SHOWN]: {
         entrypoint: TensorBoardEntrypoint;
         trigger: TensorBoardEntrypointTrigger;
@@ -2076,11 +2176,22 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the user is prompted to install Python packages that are
      * dependencies for launching an integrated TensorBoard session.
      */
+    /* __GDPR__
+       "tensorboard.session_duration" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.TENSORBOARD_INSTALL_PROMPT_SHOWN]: never | undefined;
     /**
      * Telemetry event sent after the user has clicked on an option in the prompt we display
      * asking them if they want to install Python packages for launching an integrated TensorBoard session.
      * `selection` is one of 'yes' or 'no'.
+     */
+    /* __GDPR__
+       "tensorboard.install_prompt_selection" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "operationtype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.TENSORBOARD_INSTALL_PROMPT_SELECTION]: {
         selection: TensorBoardPromptSelection;
@@ -2089,12 +2200,26 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when we find an active integrated terminal running tensorboard.
      */
+    /* __GDPR__
+       "tensorboard.detected_in_integrated_terminal" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL]: never | undefined;
     /**
      * Telemetry event sent after attempting to install TensorBoard session dependencies.
      * Note, this is only sent if install was attempted. It is not sent if the user opted
      * not to install, or if all dependencies were already installed.
      */
+    /* __GDPR__
+       "tensorboard.package_install_result" : {
+          "wasprofilerpluginattempted" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "wastensorboardattempted" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "wasprofilerplugininstalled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "wastensorboardinstalled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
+
     [EventName.TENSORBOARD_PACKAGE_INSTALL_RESULT]: {
         wasProfilerPluginAttempted: boolean;
         wasTensorBoardAttempted: boolean;
@@ -2107,11 +2232,21 @@ export interface IEventNamePropertyMapping {
      * Matches cover import statements of the form `import torch.profiler` and
      * `from torch import profiler`.
      */
+    /* __GDPR__
+       "tensorboard.torch_profiler_importer" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.TENSORBOARD_TORCH_PROFILER_IMPORT]: never | undefined;
     /**
      * Telemetry event sent when the extension host receives a message from the
      * TensorBoard webview containing a valid jump to source payload from the
      * PyTorch profiler TensorBoard plugin.
+     */
+    /* __GDPR__
+       "tensorboard.jump_to_source_request" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_REQUEST]: never | undefined;
     /**
@@ -2120,9 +2255,19 @@ export interface IEventNamePropertyMapping {
      * PyTorch profiler TensorBoard plugin, but the source file does not exist
      * on the machine currently running TensorBoard.
      */
+    /* __GDPR__
+       "tensorboard.jump_to_source_file_not_found" : {
+          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
+     */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND]: never | undefined;
     /**
      * Telemetry event sent when the prompt about the MPLS deprecation is displayed.
+     */
+    /* __GDPR__
+       "mpls_deprecation_prompt" : {
+          "switchto" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.MPLS_DEPRECATION_PROMPT]: {
         switchTo: LanguageServerType | undefined;
