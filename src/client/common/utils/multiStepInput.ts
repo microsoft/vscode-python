@@ -127,7 +127,6 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 const input = this.shell.createQuickPick<T>();
                 input.title = title;
                 input.step = step;
-                input.keepScrollPosition = keepScrollPosition;
                 input.sortByLabel = sortByLabel || false;
                 input.totalSteps = totalSteps;
                 input.placeholder = placeholder;
@@ -176,6 +175,10 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     disposables.push(onChangeItem.event((e) => onChangeItem.callback(e, input)));
                 }
                 this.current.show();
+                // Keep scroll position is only meant to keep scroll position when updating items,
+                // so do it after initialization. This ensures quickpick starts with the active
+                // item in focus when this is true, instead of having scroll position at top.
+                input.keepScrollPosition = keepScrollPosition;
             });
         } finally {
             disposables.forEach((d) => d.dispose());
