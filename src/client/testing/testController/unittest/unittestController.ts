@@ -47,7 +47,11 @@ export class UnittestController implements ITestFrameworkController {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
     ) {}
 
-    public async resolveChildren(testController: TestController, item: TestItem): Promise<void> {
+    public async resolveChildren(
+        testController: TestController,
+        item: TestItem,
+        token?: CancellationToken,
+    ): Promise<void> {
         const workspace = this.workspaceService.getWorkspaceFolder(item.uri);
         if (workspace) {
             // if we are still discovering then wait
@@ -66,7 +70,14 @@ export class UnittestController implements ITestFrameworkController {
                     }
 
                     if (rawTestData.tests.length > 0) {
-                        updateTestItemFromRawData(item, testController, this.idToRawData, item.id, [rawTestData]);
+                        updateTestItemFromRawData(
+                            item,
+                            testController,
+                            this.idToRawData,
+                            item.id,
+                            [rawTestData],
+                            token,
+                        );
                     } else {
                         this.idToRawData.delete(item.id);
                         testController.items.delete(item.id);
@@ -74,9 +85,14 @@ export class UnittestController implements ITestFrameworkController {
                 } else {
                     const workspaceNode = getWorkspaceNode(item, this.idToRawData);
                     if (workspaceNode) {
-                        updateTestItemFromRawData(item, testController, this.idToRawData, workspaceNode.id, [
-                            rawTestData,
-                        ]);
+                        updateTestItemFromRawData(
+                            item,
+                            testController,
+                            this.idToRawData,
+                            workspaceNode.id,
+                            [rawTestData],
+                            token,
+                        );
                     }
                 }
             } else {
@@ -191,16 +207,16 @@ export class UnittestController implements ITestFrameworkController {
                 if (uri.fsPath === workspace.uri.fsPath) {
                     // this is a workspace level refresh
                     // This is an existing workspace test node. Just update the children
-                    await this.resolveChildren(testController, workspaceNode);
+                    await this.resolveChildren(testController, workspaceNode, token);
                 } else {
                     // This is a child node refresh
                     const testNode = getNodeByUri(workspaceNode, uri);
                     if (testNode) {
                         // We found the node to update
-                        await this.resolveChildren(testController, testNode);
+                        await this.resolveChildren(testController, testNode, token);
                     } else {
                         // update the entire workspace tree
-                        await this.resolveChildren(testController, workspaceNode);
+                        await this.resolveChildren(testController, workspaceNode, token);
                     }
                 }
             } else if (rawTestData.tests.length > 0) {
@@ -214,7 +230,7 @@ export class UnittestController implements ITestFrameworkController {
                 });
                 testController.items.add(newItem);
 
-                await this.resolveChildren(testController, newItem);
+                await this.resolveChildren(testController, newItem, token);
             }
         }
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: 'unittest', failed: false });

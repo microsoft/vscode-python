@@ -12,6 +12,7 @@ import {
     TestResultState,
     TestResultSnapshot,
 } from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
 import { traceError, traceVerbose } from '../../../common/logger';
 import {
     RawDiscoveredTests,
@@ -286,7 +287,12 @@ function updateTestItemFromRawDataInternal(
     idToRawData: Map<string, TestData>,
     testRoot: string,
     rawDataSet: RawDiscoveredTests[],
+    token?: CancellationToken,
 ): void {
+    if (token?.isCancellationRequested) {
+        return;
+    }
+
     const rawId = idToRawData.get(item.id)?.rawId;
     if (!rawId) {
         traceError(`Unknown node id: ${item.id}`);
@@ -316,7 +322,9 @@ function updateTestItemFromRawDataInternal(
     if (rawId === nodeRawData[0].root || rawId === nodeRawData[0].rootid) {
         // This is a test root node, we need to update the entire tree
         // The update children and remove any child that does not have raw data.
-        item.children.forEach((c) => updateTestItemFromRawData(c, testController, idToRawData, testRoot, nodeRawData));
+        item.children.forEach((c) =>
+            updateTestItemFromRawData(c, testController, idToRawData, testRoot, nodeRawData, token),
+        );
 
         // Create child nodes that are new.
         // We only need to look at rawData.parents. Since at this level we either have folder or file.
@@ -332,7 +340,7 @@ function updateTestItemFromRawDataInternal(
                         ? createFolderOrFileTestItem(testController, idToRawData, testRoot, r as RawTestFile)
                         : createFolderOrFileTestItem(testController, idToRawData, testRoot, r as RawTestFolder);
                 item.children.add(childItem);
-                updateTestItemFromRawData(childItem, testController, idToRawData, testRoot, nodeRawData);
+                updateTestItemFromRawData(childItem, testController, idToRawData, testRoot, nodeRawData, token);
             });
 
         return;
@@ -362,7 +370,9 @@ function updateTestItemFromRawDataInternal(
         }
 
         // The update children and remove any child that does not have raw data.
-        item.children.forEach((c) => updateTestItemFromRawData(c, testController, idToRawData, testRoot, nodeRawData));
+        item.children.forEach((c) =>
+            updateTestItemFromRawData(c, testController, idToRawData, testRoot, nodeRawData, token),
+        );
 
         // Create child nodes that are new.
         // Get the existing child node ids so we can skip them
@@ -406,7 +416,7 @@ function updateTestItemFromRawDataInternal(
                 if (childItem) {
                     item.children.add(childItem);
                     // This node can potentially have children. So treat it like a new node and update it.
-                    updateTestItemFromRawData(childItem, testController, idToRawData, testRoot, nodeRawData);
+                    updateTestItemFromRawData(childItem, testController, idToRawData, testRoot, nodeRawData, token);
                 }
             });
 
@@ -450,9 +460,10 @@ export function updateTestItemFromRawData(
     idToRawData: Map<string, TestData>,
     testRoot: string,
     rawDataSet: RawDiscoveredTests[],
+    token?: CancellationToken,
 ): void {
     item.busy = true;
-    updateTestItemFromRawDataInternal(item, testController, idToRawData, testRoot, rawDataSet);
+    updateTestItemFromRawDataInternal(item, testController, idToRawData, testRoot, rawDataSet, token);
     item.busy = false;
 }
 

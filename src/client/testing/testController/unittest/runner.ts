@@ -156,6 +156,12 @@ export class UnittestRunner implements ITestsRunner {
                     }
                     runInstance.errored(testCase, message);
                 }
+            } else if (data.outcome === 'error') {
+                const traceback = data.traceback
+                    ? data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n')
+                    : '';
+                const text = `${data.test} Failed with Error: ${data.message}\r\n${traceback}\r\n`;
+                runInstance.appendOutput(fixLogLines(text));
             }
         });
 
@@ -201,7 +207,7 @@ export class UnittestRunner implements ITestsRunner {
 
                 const nodes = fileToTestCases.get(testFile);
                 if (nodes) {
-                    runInstance.appendOutput(`Running tests: ${nodes.join('\r\n')}\r\n`);
+                    runInstance.appendOutput(`Running tests: ${nodes.map((n) => n.id).join('\r\n')}\r\n`);
                     const runIds: string[] = [];
                     nodes.forEach((n) => {
                         const rawNode = idToRawData.get(n.id);

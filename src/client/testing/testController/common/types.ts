@@ -59,7 +59,7 @@ export interface ITestRun {
 
 export const ITestFrameworkController = Symbol('ITestFrameworkController');
 export interface ITestFrameworkController {
-    resolveChildren(testController: TestController, item: TestItem): Promise<void>;
+    resolveChildren(testController: TestController, item: TestItem, token?: CancellationToken): Promise<void>;
     refreshTestData(testController: TestController, resource?: Uri, token?: CancellationToken): Promise<void>;
     runTests(testRun: ITestRun, workspace: WorkspaceFolder, token: CancellationToken): Promise<void>;
 }

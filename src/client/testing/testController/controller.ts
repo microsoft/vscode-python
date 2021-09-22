@@ -163,10 +163,10 @@ export class PythonTestController implements ITestController {
             traceVerbose(`Testing: Resolving item ${item.id}`);
             const settings = this.configSettings.getSettings(item.uri);
             if (settings.testing.pytestEnabled) {
-                return this.pytest.resolveChildren(this.testController, item);
+                return this.pytest.resolveChildren(this.testController, item, this.refreshCancellation.token);
             }
             if (settings.testing.unittestEnabled) {
-                return this.unittest.resolveChildren(this.testController, item);
+                return this.unittest.resolveChildren(this.testController, item, this.refreshCancellation.token);
             }
         } else {
             traceVerbose('Testing: Refreshing all test data');
