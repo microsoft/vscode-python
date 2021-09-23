@@ -217,7 +217,6 @@ function pytestFilterArguments(args: string[], argumentToRemoveOrFilter: string[
                         '--verbosity',
                         '-r',
                         '--tb',
-                        '--rootdir',
                         '--show-capture',
                         '--durations',
                         '--junit-xml',
@@ -277,6 +276,10 @@ export function preparePytestArgumentsForDiscovery(options: TestDiscoveryOptions
     if (args.indexOf('-s') === -1) {
         args.splice(0, 0, '-s');
     }
-    args.splice(0, 0, '--rootdir', options.workspaceFolder.fsPath);
+
+    // Only add --rootdir if user has not already provided one
+    if (args.filter((a) => a.startsWith('--rootdir')).length === 0) {
+        args.splice(0, 0, '--rootdir', options.cwd);
+    }
     return args;
 }
