@@ -48,11 +48,9 @@ export class JediPython27NotSupportedDiagnosticService extends BaseDiagnosticsSe
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
         const { languageServer } = this.configurationService.getSettings(resource);
 
-        if (
-            interpreter &&
-            (interpreter.version?.major ?? 0) < 3 &&
-            (languageServer === LanguageServerType.JediLSP || languageServer === LanguageServerType.Jedi)
-        ) {
+        // We don't need to check for JediLSP here, because we retrieve the setting from the configuration service,
+        // Which already switched the JediLSP option to Jedi.
+        if (interpreter && (interpreter.version?.major ?? 0) < 3 && languageServer === LanguageServerType.Jedi) {
             return [new JediPython27NotSupportedDiagnostic(Python27Support.jediMessage(), resource)];
         }
 

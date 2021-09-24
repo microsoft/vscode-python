@@ -159,40 +159,6 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
             assert.strictEqual(diagnostic.message, Python27Support.jediMessage());
         });
 
-        test('Should return a diagnostics array with one diagnostic if the language server is JediLSP', async () => {
-            const interpreterService = {
-                getActiveInterpreter: () =>
-                    Promise.resolve({
-                        version: {
-                            major: 2,
-                            minor: 7,
-                            patch: 10,
-                        },
-                    }),
-            } as IInterpreterService;
-
-            const configurationService = {
-                getSettings: () => ({ languageServer: LanguageServerType.JediLSP }),
-            } as IConfigurationService;
-
-            const service = new JediPython27NotSupportedDiagnosticService(
-                ({
-                    get: () => ({}),
-                } as unknown) as IServiceContainer,
-                interpreterService,
-                {} as IWorkspaceService,
-                configurationService,
-                {} as IDiagnosticHandlerService<MessageCommandPrompt>,
-                [],
-            );
-
-            const result = await service.diagnose(resource);
-            const diagnostic = result[0];
-
-            assert.strictEqual(result.length, 1);
-            assert.strictEqual(diagnostic.message, Python27Support.jediMessage());
-        });
-
         test('Should return an empty diagnostics array if the language server is Pylance', async () => {
             const interpreterService = {
                 getActiveInterpreter: () =>
