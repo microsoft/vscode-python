@@ -119,7 +119,10 @@ export class UnittestController implements ITestFrameworkController {
             const settings = this.configService.getSettings(workspace.uri);
             const options: TestDiscoveryOptions = {
                 workspaceFolder: workspace.uri,
-                cwd: settings.testing.cwd ?? workspace.uri.fsPath,
+                cwd:
+                    settings.testing.cwd && settings.testing.cwd.length > 0
+                        ? settings.testing.cwd
+                        : workspace.uri.fsPath,
                 args: settings.testing.unittestArgs,
                 ignoreCache: true,
                 token,
@@ -243,7 +246,10 @@ export class UnittestController implements ITestFrameworkController {
             testRun,
             {
                 workspaceFolder: workspace.uri,
-                cwd: settings.testing.cwd ?? workspace.uri.fsPath,
+                cwd:
+                    settings.testing.cwd && settings.testing.cwd.length > 0
+                        ? settings.testing.cwd
+                        : workspace.uri.fsPath,
                 token,
                 args: settings.testing.unittestArgs,
             },

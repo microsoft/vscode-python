@@ -176,7 +176,10 @@ export class PytestController implements ITestFrameworkController {
             const settings = this.configService.getSettings(workspace.uri);
             const options: TestDiscoveryOptions = {
                 workspaceFolder: workspace.uri,
-                cwd: settings.testing.cwd ?? workspace.uri.fsPath,
+                cwd:
+                    settings.testing.cwd && settings.testing.cwd.length > 0
+                        ? settings.testing.cwd
+                        : workspace.uri.fsPath,
                 args: settings.testing.pytestArgs,
                 ignoreCache: true,
                 token,
@@ -285,7 +288,10 @@ export class PytestController implements ITestFrameworkController {
             testRun,
             {
                 workspaceFolder: workspace.uri,
-                cwd: settings.testing.cwd ?? workspace.uri.fsPath,
+                cwd:
+                    settings.testing.cwd && settings.testing.cwd.length > 0
+                        ? settings.testing.cwd
+                        : workspace.uri.fsPath,
                 token,
                 args: settings.testing.pytestArgs,
             },
