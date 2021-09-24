@@ -46,8 +46,13 @@ export class JediPython27NotSupportedDiagnosticService extends BaseDiagnosticsSe
 
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        const { languageServer } = this.configurationService.getSettings(resource);
 
-        if (interpreter && (interpreter.version?.major ?? 0) < 3) {
+        if (
+            interpreter &&
+            (interpreter.version?.major ?? 0) < 3 &&
+            (languageServer === LanguageServerType.JediLSP || languageServer === LanguageServerType.Jedi)
+        ) {
             return [new JediPython27NotSupportedDiagnostic(Python27Support.jediMessage(), resource)];
         }
 
