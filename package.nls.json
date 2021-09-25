@@ -180,6 +180,7 @@
     "LanguageService.startingJedi": "Starting Jedi language server.",
     "LanguageService.startingNone": "Editor support is inactive since language server is set to None.",
     "LanguageService.reloadAfterLanguageServerChange": "Please reload the window switching between language servers.",
+    "LanguageService.virtualWorkspaceMessage": "Only Pylance is supported when running in virtual workspaces, setting language server to None.",
     "AttachProcess.unsupportedOS": "Operating system '{0}' not supported.",
     "AttachProcess.attachTitle": "Attach to process",
     "AttachProcess.selectProcessPlaceholder": "Select the process to attach to",

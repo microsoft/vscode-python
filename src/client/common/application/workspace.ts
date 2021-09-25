@@ -83,6 +83,12 @@ export class WorkspaceService implements IWorkspaceService {
             : defaultValue;
     }
 
+    public get isVirtualWorkspace(): boolean {
+        const isVirtualWorkspace =
+            workspace.workspaceFolders && workspace.workspaceFolders.every((f) => f.uri.scheme !== 'file');
+        return !!isVirtualWorkspace;
+    }
+
     private get searchExcludes() {
         const searchExcludes = this.getConfiguration('search.exclude');
         const enabledSearchExcludes = Object.keys(searchExcludes).filter((key) => searchExcludes.get(key) === true);

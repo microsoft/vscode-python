@@ -15,7 +15,12 @@ import { Deferred } from '../common/utils/async';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
 import { traceDecoratorError } from '../logging';
 import { sendActivationTelemetry } from '../telemetry/envFileTelemetry';
-import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
+import {
+    IExtensionActivationManager,
+    IExtensionActivationService,
+    IExtensionSingleActivationService,
+    ILanguageServerActivation,
+} from './types';
 
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {
@@ -39,6 +44,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
         @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
+        @inject(ILanguageServerActivation) private readonly languageServerActivation: ILanguageServerActivation,
     ) {}
 
     public dispose(): void {
@@ -56,10 +62,15 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         await this.initialize();
 
         // Activate all activation services together.
-        await Promise.all([
-            Promise.all(this.singleActivationServices.map((item) => item.activate())),
-            this.activateWorkspace(this.activeResourceService.getActiveResource()),
-        ]);
+
+        if (this.workspaceService.isVirtualWorkspace) {
+            await this.activateWorkspace(this.activeResourceService.getActiveResource());
+        } else {
+            await Promise.all([
+                Promise.all(this.singleActivationServices.map((item) => item.activate())),
+                this.activateWorkspace(this.activeResourceService.getActiveResource()),
+            ]);
+        }
     }
 
     @traceDecoratorError('Failed to activate a workspace')
@@ -70,15 +81,18 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         }
         this.activatedWorkspaces.add(key);
 
-        if (this.experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
-            await this.interpreterPathService.copyOldInterpreterStorageValuesToNew(resource);
-        }
-
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
 
-        await this.autoSelection.autoSelectInterpreter(resource);
-        await Promise.all(this.activationServices.map((item) => item.activate(resource)));
-        await this.appDiagnostics.performPreStartupHealthCheck(resource);
+        if (this.workspaceService.isVirtualWorkspace) {
+            await this.languageServerActivation.activate(resource);
+        } else {
+            if (this.experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
+                await this.interpreterPathService.copyOldInterpreterStorageValuesToNew(resource);
+            }
+            await this.autoSelection.autoSelectInterpreter(resource);
+            await Promise.all(this.activationServices.map((item) => item.activate(resource)));
+            await this.appDiagnostics.performPreStartupHealthCheck(resource);
+        }
     }
 
     public async initialize(): Promise<void> {

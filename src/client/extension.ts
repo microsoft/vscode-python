@@ -42,6 +42,7 @@ import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 import { IStartupDurations } from './types';
 import { runAfterActivation } from './common/utils/runAfterActivation';
 import { IInterpreterService } from './interpreter/contracts';
+import { WorkspaceService } from './common/application/workspace';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -68,9 +69,13 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
     }
     // Send the "success" telemetry only if activation did not fail.
     // Otherwise Telemetry is send via the error handler.
-    sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
-        // Run in the background.
-        .ignoreErrors();
+
+    const workspace = new WorkspaceService();
+    if (!workspace.isVirtualWorkspace) {
+        sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
+            // Run in the background.
+            .ignoreErrors();
+    }
     return api;
 }
 
@@ -131,12 +136,14 @@ async function activateUnsafe(
 
     setTimeout(async () => {
         if (activatedServiceContainer) {
-            const interpreterManager = activatedServiceContainer.get<IInterpreterService>(IInterpreterService);
             const workspaceService = activatedServiceContainer.get<IWorkspaceService>(IWorkspaceService);
-            const workspaces = workspaceService.workspaceFolders ?? [];
-            await interpreterManager
-                .refresh(workspaces.length > 0 ? workspaces[0].uri : undefined)
-                .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
+            if (!workspaceService.isVirtualWorkspace) {
+                const interpreterManager = activatedServiceContainer.get<IInterpreterService>(IInterpreterService);
+                const workspaces = workspaceService.workspaceFolders ?? [];
+                await interpreterManager
+                    .refresh(workspaces.length > 0 ? workspaces[0].uri : undefined)
+                    .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
+            }
         }
 
         runAfterActivation();
@@ -159,7 +166,11 @@ async function handleError(ex: Error, startupDurations: IStartupDurations) {
         "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information.",
     );
     traceError('extension activation failed', ex);
-    await sendErrorTelemetry(ex, startupDurations, activatedServiceContainer);
+
+    const workspace = new WorkspaceService();
+    if (!workspace.isVirtualWorkspace) {
+        await sendErrorTelemetry(ex, startupDurations, activatedServiceContainer);
+    }
 }
 
 interface IAppShell {

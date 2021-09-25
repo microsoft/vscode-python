@@ -5,6 +5,7 @@
 
 import { Container } from 'inversify';
 import { Disposable, Memento, OutputChannel, window } from 'vscode';
+import { instance, mock } from 'ts-mockito';
 import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
@@ -28,6 +29,7 @@ import { TEST_OUTPUT_CHANNEL } from './testing/constants';
 import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { registerLogger } from './logging';
 import { OutputChannelLogger } from './logging/outputChannelLogger';
+import { WorkspaceService } from './common/application/workspace';
 
 // The code in this module should do nothing more complex than register
 // objects to DI and simple init (e.g. no side effects).  That implies
@@ -54,7 +56,11 @@ export function initializeGlobals(
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
     context.subscriptions.push(registerLogger(new OutputChannelLogger(standardOutputChannel)));
 
-    const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
+    const workspaceService = new WorkspaceService();
+    const unitTestOutChannel = workspaceService.isVirtualWorkspace
+        ? // Do not create any test related output UI when using virtual workspaces.
+          instance(mock<IOutputChannel>())
+        : window.createOutputChannel(OutputChannelNames.pythonTest());
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
 

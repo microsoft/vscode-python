@@ -22,6 +22,7 @@ import {
     IExtensionActivationService,
     IExtensionSingleActivationService,
     ILanguageClientFactory,
+    ILanguageServerActivation,
     ILanguageServerActivator,
     ILanguageServerAnalysisOptions,
     ILanguageServerCache,
@@ -37,6 +38,7 @@ import { LoadLanguageServerExtension } from './common/loadLanguageServerExtensio
 export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType): void {
     serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
     serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
+    serviceManager.addBinding(ILanguageServerCache, ILanguageServerActivation);
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
     serviceManager.add<ILanguageServerActivator>(
         ILanguageServerActivator,

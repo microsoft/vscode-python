@@ -10,7 +10,11 @@ import * as typemoq from 'typemoq';
 import { TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
-import { IExtensionActivationService, IExtensionSingleActivationService } from '../../client/activation/types';
+import {
+    IExtensionActivationService,
+    IExtensionSingleActivationService,
+    ILanguageServerActivation,
+} from '../../client/activation/types';
 import { IApplicationDiagnostics } from '../../client/application/types';
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
@@ -50,6 +54,7 @@ suite('Activation Manager', () => {
         let experiments: IExperimentService;
         let activationService1: IExtensionActivationService;
         let activationService2: IExtensionActivationService;
+        let languageServerActivation: IExtensionActivationService;
         let fileSystem: IFileSystem;
         setup(() => {
             experiments = mock(ExperimentService);
@@ -61,6 +66,7 @@ suite('Activation Manager', () => {
             documentManager = typemoq.Mock.ofType<IDocumentManager>();
             activationService1 = mock(LanguageServerExtensionActivationService);
             activationService2 = mock(LanguageServerExtensionActivationService);
+            languageServerActivation = mock(LanguageServerExtensionActivationService);
             fileSystem = mock(FileSystem);
             interpreterPathService
                 .setup((i) => i.onDidChange(typemoq.It.isAny()))
@@ -76,6 +82,7 @@ suite('Activation Manager', () => {
                 instance(activeResourceService),
                 instance(experiments),
                 interpreterPathService.object,
+                instance(languageServerActivation),
             );
 
             sinon.stub(EnvFileTelemetry, 'sendActivationTelemetry').resolves();
@@ -404,6 +411,7 @@ suite('Activation Manager', () => {
         const resource = Uri.parse('a');
         let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
         let experiments: IExperimentService;
+        let languageServerActivation: ILanguageServerActivation;
 
         setup(() => {
             experiments = mock(ExperimentService);
@@ -424,6 +432,7 @@ suite('Activation Manager', () => {
             interpreterPathService
                 .setup((i) => i.onDidChange(typemoq.It.isAny()))
                 .returns(() => typemoq.Mock.ofType<IDisposable>().object);
+            languageServerActivation = mock(LanguageServerExtensionActivationService);
             managerTest = new ExtensionActivationManager(
                 [instance(activationService1), instance(activationService2)],
                 [singleActivationService.object],
@@ -435,6 +444,7 @@ suite('Activation Manager', () => {
                 instance(activeResourceService),
                 instance(experiments),
                 interpreterPathService.object,
+                instance(languageServerActivation),
             );
         });
 

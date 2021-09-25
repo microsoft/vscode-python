@@ -206,6 +206,10 @@ export namespace TensorBoard {
 export namespace LanguageService {
     export const startingPylance = localize('LanguageService.startingPylance', 'Starting Pylance language server.');
     export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi language server.');
+    export const virtualWorkspaceMessage = localize(
+        'LanguageService.virtualWorkspaceMessage',
+        'Only Pylance is supported when running in virtual workspaces, setting language server to None.',
+    );
     export const startingNone = localize(
         'LanguageService.startingNone',
         'Editor support is inactive since language server is set to None.',

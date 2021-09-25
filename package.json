@@ -8,7 +8,8 @@
     },
     "capabilities": {
         "untrustedWorkspaces": {
-            "supported": false
+            "supported": "limited",
+            "description": "Only intellisense with Pylance is supported. Cannot execute Python with untrusted files."
         },
         "virtualWorkspaces": {
             "supported": false,

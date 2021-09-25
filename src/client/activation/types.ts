@@ -104,6 +104,9 @@ export interface ILanguageServerCache {
     get(resource: Resource, interpreter?: PythonEnvironment): Promise<ILanguageServer>;
 }
 
+export const ILanguageServerActivation = Symbol('ILanguageServerActivation');
+export interface ILanguageServerActivation extends IExtensionActivationService {}
+
 export type FolderVersionPair = { path: string; version: SemVer };
 export const ILanguageServerFolderService = Symbol('ILanguageServerFolderService');
 

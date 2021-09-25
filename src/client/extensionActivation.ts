@@ -9,16 +9,13 @@ import { registerTypes as activationRegisterTypes } from './activation/serviceRe
 import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
-import { DebugService } from './common/application/debugService';
-import { IApplicationEnvironment, ICommandManager } from './common/application/types';
+import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './common/application/types';
 import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IExtensions, IOutputChannel } from './common/types';
 import { noop } from './common/utils/misc';
 import { DebuggerTypeName } from './debugger/constants';
-import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
-import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
 import { IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
@@ -70,6 +67,11 @@ export async function activateComponents(
     // https://github.com/microsoft/vscode-python/issues/15380
     // These will go away eventually once everything is refactored into components.
     const legacyActivationResult = await activateLegacy(ext);
+    const workspaceService = ext.legacyIOC.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    if (workspaceService.isVirtualWorkspace) {
+        // Nothing other than Pylance is activated when using virtual workspaces.
+        return [legacyActivationResult];
+    }
     const promises: Promise<ActivationResult>[] = [
         // More component activations will go here
         pythonEnvironments.activate(components.pythonEnvs, ext),
@@ -128,20 +130,61 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     // "initialize" "services"
 
-    const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    interpreterManager.initialize();
-
-    const handlers = serviceManager.getAll<IDebugSessionEventHandlers>(IDebugSessionEventHandlers);
+    serviceContainer.get<ILanguageServerExtension>(ILanguageServerExtension).register();
     const disposables = serviceManager.get<IDisposableRegistry>(IDisposableRegistry);
-    const dispatcher = new DebugSessionEventDispatcher(handlers, DebugService.instance, disposables);
-    dispatcher.registerEventHandlers();
-
+    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
-    const outputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
-    cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
+    languages.setLanguageConfiguration(PYTHON_LANGUAGE, getLanguageConfiguration());
+    if (!workspaceService.isVirtualWorkspace) {
+        const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
+        interpreterManager.initialize();
 
-    serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
+        serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
+
+        const outputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
+        cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
+
+        serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
+
+        serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
+        const pythonSettings = configuration.getSettings();
+
+        const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
+        sortImports.registerCommands();
+
+        serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
+
+        context.subscriptions.push(new LinterCommands(serviceManager));
+
+        if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'internalConsole') {
+            const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
+            context.subscriptions.push(languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
+            context.subscriptions.push(languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
+        }
+
+        context.subscriptions.push(new ReplProvider(serviceContainer));
+
+        const terminalProvider = new TerminalProvider(serviceContainer);
+        terminalProvider.initialize(window.activeTerminal).ignoreErrors();
+        context.subscriptions.push(terminalProvider);
+
+        context.subscriptions.push(
+            languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), {
+                providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports],
+            }),
+        );
+
+        serviceContainer
+            .getAll<DebugConfigurationProvider>(IDebugConfigurationService)
+            .forEach((debugConfigProvider) => {
+                context.subscriptions.push(
+                    debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfigProvider),
+                );
+            });
+
+        serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
+    }
 
     // "activate" everything else
 
@@ -152,42 +195,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().initialize();
 
     const activationPromise = manager.activate();
-
-    serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
-    const pythonSettings = configuration.getSettings();
-
-    const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
-    sortImports.registerCommands();
-
-    serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
-
-    context.subscriptions.push(new LinterCommands(serviceManager));
-
-    languages.setLanguageConfiguration(PYTHON_LANGUAGE, getLanguageConfiguration());
-
-    if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'internalConsole') {
-        const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
-        context.subscriptions.push(languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
-        context.subscriptions.push(languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
-    }
-
-    context.subscriptions.push(new ReplProvider(serviceContainer));
-
-    const terminalProvider = new TerminalProvider(serviceContainer);
-    terminalProvider.initialize(window.activeTerminal).ignoreErrors();
-    context.subscriptions.push(terminalProvider);
-
-    context.subscriptions.push(
-        languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), {
-            providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports],
-        }),
-    );
-
-    serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationService).forEach((debugConfigProvider) => {
-        context.subscriptions.push(debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfigProvider));
-    });
-
-    serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
 
     return { fullyReady: activationPromise };
 }
