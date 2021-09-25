@@ -59,7 +59,7 @@ export class LanguageServerExtensionActivationService
 
     private readonly output: OutputChannel;
 
-    private readonly interpreterService: IInterpreterService;
+    private readonly interpreterService?: IInterpreterService;
 
     private readonly languageServerChangeHandler: LanguageServerChangeHandler;
 
@@ -71,7 +71,9 @@ export class LanguageServerExtensionActivationService
     ) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        if (!this.workspaceService.isVirtualWorkspace) {
+            this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        }
         this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
 
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
@@ -79,7 +81,9 @@ export class LanguageServerExtensionActivationService
         disposables.push(this);
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
         disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
-        disposables.push(this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this)));
+        if (this.interpreterService) {
+            disposables.push(this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this)));
+        }
         disposables.push(
             commandManager.registerCommand(Commands.ClearAnalyisCache, this.onClearAnalysisCaches.bind(this)),
         );
@@ -99,7 +103,7 @@ export class LanguageServerExtensionActivationService
         const stopWatch = new StopWatch();
         // Get a new server and dispose of the old one (might be the same one)
         this.resource = resource;
-        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        const interpreter = await this.interpreterService?.getActiveInterpreter(resource);
         const key = await this.getKey(resource, interpreter);
 
         // If we have an old server with a different key, then deactivate it as the
@@ -258,11 +262,20 @@ export class LanguageServerExtensionActivationService
 
         this.sendTelemetryForChosenLanguageServer(serverType).ignoreErrors();
 
+        if (this.workspaceService.isVirtualWorkspace && serverType !== LanguageServerType.Node) {
+            // Only Node is supported when using virtual workspaces.
+            this.output.appendLine(LanguageService.virtualWorkspaceMessage());
+            serverType = LanguageServerType.None;
+        }
+
         await this.logStartup(serverType);
         let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
         try {
             await server.start(resource, interpreter);
         } catch (ex) {
+            if (this.workspaceService.isVirtualWorkspace) {
+                throw ex;
+            }
             if (serverType === LanguageServerType.Jedi) {
                 throw ex;
             }
@@ -330,7 +343,7 @@ export class LanguageServerExtensionActivationService
             resource,
             workspacePathNameForGlobalWorkspaces,
         );
-        interpreter = interpreter || (await this.interpreterService.getActiveInterpreter(resource));
+        interpreter = interpreter || (await this.interpreterService?.getActiveInterpreter(resource));
         const interperterPortion = interpreter ? `${interpreter.path}-${interpreter.envName}` : '';
         return `${resourcePortion}-${interperterPortion}`;
     }

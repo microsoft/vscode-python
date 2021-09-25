@@ -729,7 +729,10 @@ export interface IWorkspaceService {
      * @memberof IWorkspaceService
      */
     readonly hasWorkspaceFolders: boolean;
-
+    /**
+     * Returns if we're running in a virtual workspace.
+     */
+    readonly isVirtualWorkspace: boolean;
     /**
      * Returns the [workspace folder](#WorkspaceFolder) that contains a given uri.
      * * returns `undefined` when the given uri doesn't match any workspace folder

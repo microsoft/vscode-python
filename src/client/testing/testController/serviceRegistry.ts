@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { TestDiscoveryHelper } from './common/discoveryHelper';
@@ -24,4 +25,5 @@ export function registerTestControllerTypes(serviceManager: IServiceManager): vo
     );
     serviceManager.addSingleton<ITestsRunner>(ITestsRunner, UnittestRunner, UNITTEST_PROVIDER);
     serviceManager.addSingleton<ITestController>(ITestController, PythonTestController);
+    serviceManager.addBinding(ITestController, IExtensionSingleActivationService);
 }
