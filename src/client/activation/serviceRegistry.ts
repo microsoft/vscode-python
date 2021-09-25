@@ -43,6 +43,7 @@ import {
     IExtensionActivationService,
     IExtensionSingleActivationService,
     ILanguageClientFactory,
+    ILanguageServerActivation,
     ILanguageServerActivator,
     ILanguageServerAnalysisOptions,
     ILanguageServerCache,
@@ -64,6 +65,7 @@ import { MPLSDeprecationPrompt } from './languageServer/deprecationPrompt';
 export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType): void {
     serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
     serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
+    serviceManager.addBinding(ILanguageServerCache, ILanguageServerActivation);
     serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
 
