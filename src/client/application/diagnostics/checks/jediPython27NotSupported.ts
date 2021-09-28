@@ -48,7 +48,7 @@ export class JediPython27NotSupportedDiagnosticService extends BaseDiagnosticsSe
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
         const { languageServer } = this.configurationService.getSettings(resource);
 
-        this.updateLanguageServerSetting(resource);
+        await this.updateLanguageServerSetting(resource);
 
         // We don't need to check for JediLSP here, because we retrieve the setting from the configuration service,
         // Which already switched the JediLSP option to Jedi.
@@ -82,7 +82,7 @@ export class JediPython27NotSupportedDiagnosticService extends BaseDiagnosticsSe
         await this.messageService.handle(diagnostic, { commandPrompts: options });
     }
 
-    private updateLanguageServerSetting(resource: Resource): void {
+    private async updateLanguageServerSetting(resource: Resource): Promise<void | undefined> {
         // Update settings.json value to Jedi if it's JediLSP.
         const settings = this.workspaceService
             .getConfiguration('python', resource)
@@ -98,6 +98,11 @@ export class JediPython27NotSupportedDiagnosticService extends BaseDiagnosticsSe
             return;
         }
 
-        this.configurationService.updateSetting('languageServer', LanguageServerType.Jedi, resource, configTarget);
+        await this.configurationService.updateSetting(
+            'languageServer',
+            LanguageServerType.Jedi,
+            resource,
+            configTarget,
+        );
     }
 }
