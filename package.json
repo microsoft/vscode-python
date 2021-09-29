@@ -856,7 +856,8 @@
                     "default": [
                         "--follow-imports=silent",
                         "--ignore-missing-imports",
-                        "--show-column-numbers"
+                        "--show-column-numbers",
+                        "--no-pretty"
                     ],
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "items": {
