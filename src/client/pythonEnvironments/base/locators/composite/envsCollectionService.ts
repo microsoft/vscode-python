@@ -100,7 +100,12 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 // Ensure we delete this before we resolve the promise to accurately track when a refresh finishes.
                 traceInfo('Will delete deferred locator query and resolve env collection refresh promise');
                 deferred.resolve();
-                this.refreshPromise.then(() => traceVerbose('All refresh promises resolved'));
+                this.refreshPromises
+                    .get(query)
+                    ?.then(() => traceInfo('All refresh promises for the query resolved'))
+                    .catch((ex) => {
+                        traceError('Failure while resolving refresh promises for the query', ex);
+                    });
                 this.refreshPromises.delete(query);
                 const cachedEnvsCount = this.cache.getAllEnvs().length;
                 traceInfo(
