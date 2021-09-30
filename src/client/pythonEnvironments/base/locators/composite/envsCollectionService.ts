@@ -101,9 +101,12 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 traceInfo('Will delete deferred locator query and resolve env collection refresh promise');
                 this.refreshPromises.delete(query);
                 deferred.resolve();
-                traceInfo('Deferred env collection refresh promise resolved and locator query deleted');
+                const cachedEnvsCount = this.cache.getAllEnvs().length;
+                traceInfo(
+                    `Deferred env collection refresh promise resolved and locator query deleted, number of envs in cache: ${cachedEnvsCount}`,
+                );
                 sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
-                    interpreters: this.cache.getAllEnvs().length,
+                    interpreters: cachedEnvsCount,
                 });
             })
             .catch((ex) => {
