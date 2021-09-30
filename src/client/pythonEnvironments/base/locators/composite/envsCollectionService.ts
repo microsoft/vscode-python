@@ -65,7 +65,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         }
         const resolved = await this.locator.resolveEnv(executablePath);
         if (resolved) {
-            this.cache.addEnv(resolved);
+            this.cache.addEnv(resolved, true);
         }
         return resolved;
     }

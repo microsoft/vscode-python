@@ -32,7 +32,7 @@ export interface IEnvsCollectionCache {
     /**
      * Adds environment to cache.
      */
-    addEnv(env: PythonEnvInfo): void;
+    addEnv(env: PythonEnvInfo, hasCompleteInfo?: boolean): void;
 
     /**
      * Return cached environment information for a given interpreter path if it exists and
@@ -89,9 +89,12 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         return this.envs;
     }
 
-    public addEnv(env: PythonEnvInfo): void {
+    public addEnv(env: PythonEnvCompleteInfo, hasCompleteInfo?: boolean): void {
         const found = this.envs.find((e) => areSameEnv(e, env));
         if (!found) {
+            if (hasCompleteInfo) {
+                env.hasCompleteInfo = true;
+            }
             this.envs.push(env);
             this.fire({ new: env });
         }
