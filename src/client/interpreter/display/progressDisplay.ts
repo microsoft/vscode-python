@@ -8,7 +8,7 @@ import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
 import { inDiscoveryExperiment } from '../../common/experiments/helpers';
-import { traceDecorators, traceInfo } from '../../common/logger';
+import { traceDecorators, traceError, traceInfo } from '../../common/logger';
 import { IDisposableRegistry, IExperimentService } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Interpreters } from '../../common/utils/localize';
@@ -37,7 +37,13 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
                 () => {
                     this.showProgress();
                     if (this.pyenvs.refreshPromise) {
-                        this.pyenvs.refreshPromise.then(() => this.hideProgress());
+                        this.pyenvs.refreshPromise
+                            .then(() => this.hideProgress())
+                            .catch((ex) => {
+                                traceError(`Refresh promise rejected: ${ex}`);
+                            });
+                    } else {
+                        traceInfo('Refresh promise is undefined');
                     }
                 },
                 this,
