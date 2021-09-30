@@ -11,6 +11,7 @@ import {
     TestRunResult,
     TestResultState,
     TestResultSnapshot,
+    TestTag,
 } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { traceError, traceVerbose } from '../../../common/logger';
@@ -24,6 +25,9 @@ import {
     TestData,
     TestDataKinds,
 } from './types';
+
+export const RunTestTag = new TestTag('python-run');
+export const DebugTestTag = new TestTag('python-debug');
 
 export function removeItemByIdFromChildren(
     idToRawData: Map<string, TestData>,
@@ -43,6 +47,7 @@ export function createErrorTestItem(
     const testItem = testController.createTestItem(options.id, options.label);
     testItem.canResolveChildren = false;
     testItem.error = options.error;
+    testItem.tags = [RunTestTag, DebugTestTag];
     return testItem;
 }
 
@@ -58,6 +63,7 @@ export function createWorkspaceRootTestItem(
         rawId: options.rawId ?? options.id,
         kind: TestDataKinds.Workspace,
     });
+    testItem.tags = [RunTestTag, DebugTestTag];
     return testItem;
 }
 
@@ -125,6 +131,7 @@ function createFolderOrFileTestItem(
         kind: TestDataKinds.FolderOrFile,
         parentId,
     });
+    testItem.tags = [RunTestTag, DebugTestTag];
     return testItem;
 }
 
@@ -151,6 +158,7 @@ function updateFolderOrFileTestItem(
         kind: TestDataKinds.FolderOrFile,
         parentId,
     });
+    item.tags = [RunTestTag, DebugTestTag];
 }
 
 function createCollectionTestItem(
@@ -184,6 +192,7 @@ function createCollectionTestItem(
         kind: TestDataKinds.Collection,
         parentId,
     });
+    testItem.tags = [RunTestTag, DebugTestTag];
     return testItem;
 }
 
@@ -213,6 +222,7 @@ function updateCollectionTestItem(
         kind: TestDataKinds.Collection,
         parentId,
     });
+    item.tags = [RunTestTag, DebugTestTag];
 }
 
 function createTestCaseItem(
@@ -249,6 +259,7 @@ function createTestCaseItem(
         kind: TestDataKinds.Case,
         parentId,
     });
+    testItem.tags = [RunTestTag, DebugTestTag];
     return testItem;
 }
 
@@ -279,6 +290,7 @@ function updateTestCaseItem(
         kind: TestDataKinds.Case,
         parentId,
     });
+    item.tags = [RunTestTag, DebugTestTag];
 }
 
 function updateTestItemFromRawDataInternal(
@@ -475,7 +487,7 @@ export function getUri(node: TestItem): Uri | undefined {
 }
 
 export function getTestCaseNodes(testNode: TestItem, collection: TestItem[] = []): TestItem[] {
-    if (!testNode.canResolveChildren) {
+    if (!testNode.canResolveChildren && testNode.tags.length > 0) {
         collection.push(testNode);
     }
 
@@ -550,4 +562,10 @@ export function checkForFailedTests(resultMap: Map<string, TestResultState>): bo
             (state) => state === TestResultState.Failed || state === TestResultState.Errored,
         ) !== undefined
     );
+}
+
+export function clearAllChildren(testNode: TestItem): void {
+    const ids: string[] = [];
+    testNode.children.forEach((c) => ids.push(c.id));
+    ids.forEach(testNode.children.delete);
 }
