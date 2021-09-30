@@ -21,7 +21,6 @@ import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import {
-    GetInterpreterOptions,
     IComponentAdapter,
     IInterpreterDisplay,
     IInterpreterHelper,
@@ -154,38 +153,13 @@ export class InterpreterService implements Disposable, IInterpreterService {
         }
     }
 
-    public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
-        let environments: PythonEnvironment[] = [];
-        if (inDiscoveryExperimentSync(this.experimentService)) {
-            environments = this.pyenvs.getInterpreters(resource);
-        } else {
-            const locator = this.serviceContainer.get<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                INTERPRETER_LOCATOR_SERVICE,
-            );
-            environments = await locator.getInterpreters(resource, options);
-        }
-
-        await Promise.all(
-            environments
-                .filter((item) => !item.displayName)
-                .map(async (item) => {
-                    item.displayName = await this.getDisplayName(item, resource, options?.ignoreCache);
-                    // Keep information up to date with latest details.
-                    if (!item.cachedEntry) {
-                        this.updateCachedInterpreterInformation(item, resource).ignoreErrors();
-                    }
-                }),
-        );
-        return environments;
+    public getInterpreters(resource?: Uri): PythonEnvironment[] {
+        return this.pyenvs.getInterpreters(resource);
     }
 
-    public async getAllInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
-        if (options?.ignoreCache) {
-            this.triggerRefresh().ignoreErrors();
-        }
+    public async getAllInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
         await this.refreshPromise;
-        return this.getInterpreters(resource, options);
+        return this.getInterpreters(resource);
     }
 
     public dispose(): void {

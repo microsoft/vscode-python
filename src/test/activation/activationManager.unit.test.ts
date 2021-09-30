@@ -22,8 +22,6 @@ import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IDisposable, IExperimentService, IInterpreterPathService } from '../../client/common/types';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
-import { IInterpreterService } from '../../client/interpreter/contracts';
-import { InterpreterService } from '../../client/interpreter/interpreterService';
 import * as EnvFileTelemetry from '../../client/telemetry/envFileTelemetry';
 import { sleep } from '../core';
 
@@ -46,7 +44,6 @@ suite('Activation Manager', () => {
         let workspaceService: IWorkspaceService;
         let appDiagnostics: typemoq.IMock<IApplicationDiagnostics>;
         let autoSelection: typemoq.IMock<IInterpreterAutoSelectionService>;
-        let interpreterService: IInterpreterService;
         let activeResourceService: IActiveResourceService;
         let documentManager: typemoq.IMock<IDocumentManager>;
         let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
@@ -61,7 +58,6 @@ suite('Activation Manager', () => {
             activeResourceService = mock(ActiveResourceService);
             appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
             autoSelection = typemoq.Mock.ofType<IInterpreterAutoSelectionService>();
-            interpreterService = mock(InterpreterService);
             documentManager = typemoq.Mock.ofType<IDocumentManager>();
             activationService1 = mock(LanguageServerExtensionActivationService);
             activationService2 = mock(LanguageServerExtensionActivationService);
@@ -73,7 +69,6 @@ suite('Activation Manager', () => {
                 [instance(activationService1), instance(activationService2)],
                 [],
                 documentManager.object,
-                instance(interpreterService),
                 autoSelection.object,
                 appDiagnostics.object,
                 instance(workspaceService),
@@ -195,7 +190,6 @@ suite('Activation Manager', () => {
             when(workspaceService.getWorkspaceFolder(resource)).thenReturn(folder2);
             when(activationService1.activate(resource)).thenResolve();
             when(activationService2.activate(resource)).thenResolve();
-            when(interpreterService.getInterpreters(anything())).thenResolve();
             autoSelection
                 .setup((a) => a.autoSelectInterpreter(resource))
                 .returns(() => Promise.resolve())
@@ -229,7 +223,7 @@ suite('Activation Manager', () => {
             const resource = Uri.parse('two');
             when(activationService1.activate(resource)).thenResolve();
             when(activationService2.activate(resource)).thenResolve();
-            when(interpreterService.getInterpreters(anything())).thenResolve();
+
             autoSelection
                 .setup((a) => a.autoSelectInterpreter(resource))
                 .returns(() => Promise.resolve())
@@ -249,7 +243,7 @@ suite('Activation Manager', () => {
             const resource = Uri.parse('two');
             when(activationService1.activate(resource)).thenResolve();
             when(activationService2.activate(resource)).thenResolve();
-            when(interpreterService.getInterpreters(anything())).thenResolve();
+
             when(experiments.inExperimentSync(DeprecatePythonPath.experiment)).thenReturn(true);
             interpreterPathService
                 .setup((i) => i.copyOldInterpreterStorageValuesToNew(resource))
@@ -275,7 +269,7 @@ suite('Activation Manager', () => {
             const resource = Uri.parse('two');
             when(activationService1.activate(resource)).thenResolve();
             when(activationService2.activate(resource)).thenResolve();
-            when(interpreterService.getInterpreters(anything())).thenResolve();
+
             autoSelection
                 .setup((a) => a.autoSelectInterpreter(resource))
                 .returns(() => Promise.resolve())
@@ -398,7 +392,6 @@ suite('Activation Manager', () => {
         let workspaceService: IWorkspaceService;
         let appDiagnostics: typemoq.IMock<IApplicationDiagnostics>;
         let autoSelection: typemoq.IMock<IInterpreterAutoSelectionService>;
-        let interpreterService: IInterpreterService;
         let activeResourceService: IActiveResourceService;
         let documentManager: typemoq.IMock<IDocumentManager>;
         let activationService1: IExtensionActivationService;
@@ -419,7 +412,6 @@ suite('Activation Manager', () => {
             appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
             autoSelection = typemoq.Mock.ofType<IInterpreterAutoSelectionService>();
             interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
-            interpreterService = mock(InterpreterService);
             documentManager = typemoq.Mock.ofType<IDocumentManager>();
             activationService1 = mock(LanguageServerExtensionActivationService);
             activationService2 = mock(LanguageServerExtensionActivationService);
@@ -436,7 +428,6 @@ suite('Activation Manager', () => {
                 [instance(activationService1), instance(activationService2)],
                 [singleActivationService.object],
                 documentManager.object,
-                instance(interpreterService),
                 autoSelection.object,
                 appDiagnostics.object,
                 instance(workspaceService),

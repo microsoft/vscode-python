@@ -118,7 +118,7 @@ export interface IInterpreterService {
     onDidChangeInterpreter: Event<void>;
     onDidChangeInterpreterInformation: Event<PythonEnvironment>;
     hasInterpreters(filter?: (e: PythonEnvironment) => Promise<boolean>): Promise<boolean>;
-    getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
+    getInterpreters(resource?: Uri): PythonEnvironment[];
     getAllInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
     getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
     getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<undefined | PythonEnvironment>;
