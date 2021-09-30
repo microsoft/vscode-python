@@ -37,6 +37,7 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
                 () => {
                     this.showProgress();
                     if (this.pyenvs.refreshPromise) {
+                        traceInfo('Refresh promise exists, wait on it');
                         this.pyenvs.refreshPromise
                             .then(() => this.hideProgress())
                             .catch((ex) => {
