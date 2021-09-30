@@ -872,7 +872,7 @@ suite('Set Interpreter Command', () => {
 
             workspace.setup((w) => w.workspaceFolders).returns(() => undefined);
 
-            interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => ([]));
+            interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => []);
             const multiStepInput = {
                 run: (inputStepArg: InputStepType, state: InterpreterStateArgs) => {
                     inputStep = inputStepArg;
