@@ -8,7 +8,7 @@ import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
 import { inDiscoveryExperiment } from '../../common/experiments/helpers';
-import { traceDecorators } from '../../common/logger';
+import { traceDecorators, traceInfo } from '../../common/logger';
 import { IDisposableRegistry, IExperimentService } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Interpreters } from '../../common/utils/localize';
@@ -67,6 +67,7 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
         }
     }
 
+    @traceDecorators.verbose('Create locator refreshing progress')
     private createProgress() {
         const progressOptions: ProgressOptions = {
             location: ProgressLocation.Window,
@@ -75,6 +76,7 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
         this.isFirstTimeLoadingInterpreters = false;
         this.shell.withProgress(progressOptions, () => {
             this.deferred = createDeferred();
+            traceInfo(`Deferred promise created for progress with title: ${progressOptions.title}`);
             return this.deferred.promise;
         });
     }

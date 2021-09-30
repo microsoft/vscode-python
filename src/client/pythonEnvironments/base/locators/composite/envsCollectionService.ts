@@ -3,7 +3,7 @@
 
 import { Event, EventEmitter } from 'vscode';
 import '../../../../common/extensions';
-import { traceError } from '../../../../common/logger';
+import { traceError, traceInfo } from '../../../../common/logger';
 import { createDeferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../../telemetry';
@@ -100,11 +100,15 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 // Ensure we delete this before we resolve the promise to accurately track when a refresh finishes.
                 this.refreshPromises.delete(query);
                 deferred.resolve();
+                traceInfo('Deferred env collection refresh promise resolved and locator query deleted');
                 sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
                     interpreters: this.cache.getAllEnvs().length,
                 });
             })
-            .catch((ex) => deferred.reject(ex));
+            .catch((ex) => {
+                traceError('Failure during env collection refresh.', ex);
+                deferred.reject(ex);
+            });
     }
 
     private async addEnvsToCacheFromIterator(iterator: IPythonEnvsIterator) {
