@@ -580,7 +580,7 @@
                 },
                 "python.debugger.VariablePresentation": {
                     "default": "{}",
-                    "description": "Allow the user to specified the preferred presentation of variables.",
+                    "description": "Allow the user to specify the preferred presentation of variables.",
                     "scope": "resource",
                     "type": "object",
                     "properties": {
