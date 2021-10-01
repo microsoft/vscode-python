@@ -124,7 +124,6 @@ export interface IInterpreterService {
     getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<undefined | PythonEnvironment>;
     refresh(resource: Resource): Promise<void>;
     initialize(): void;
-    getDisplayName(interpreter: Partial<PythonEnvironment>): Promise<string>;
 }
 
 export const IInterpreterDisplay = Symbol('IInterpreterDisplay');
