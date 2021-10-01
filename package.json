@@ -135,7 +135,7 @@
                         "description": "Choose which Python interpreter/environment you want to use for your Python project.\n[Select Python Interpreter](command:python.setInterpreter)\nTip: Reload the window if you installed Python but don't see it in the list (``Developer: Reload Window`` command in the [Command Palette](command:workbench.action.showCommands))",
                         "media": {
                             "svg": "resources/walkthrough/python-interpreter.svg",
-                            "altText": "Selecting a python interpreter from the status bar"                            
+                            "altText": "Selecting a python interpreter from the status bar"
                         },
                         "when": ""
                     },
@@ -1606,7 +1606,8 @@
                 "type": "python",
                 "variables": {
                     "pickProcess": "python.pickLocalProcess"
-                }
+                },
+                "when": "!virtualWorkspace"
             }
         ],
         "grammars": [
