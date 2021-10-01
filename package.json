@@ -605,7 +605,7 @@
                 },
                 "python.experiments.enabled": {
                     "default": true,
-                    "description": "Enables/disables A/B tests.",
+                    "description": "Enables A/B tests experiments in the Python extension. If enabled, you may get included in proposed enhancements and/or features.",
                     "scope": "machine",
                     "type": "boolean"
                 },
