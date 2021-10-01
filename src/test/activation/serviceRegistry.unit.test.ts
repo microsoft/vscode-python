@@ -26,6 +26,7 @@ import { DotNetLanguageServerManager } from '../../client/activation/languageSer
 import { LanguageServerOutputChannel } from '../../client/activation/languageServer/outputChannel';
 import { PlatformData } from '../../client/activation/languageServer/platformData';
 import { NoLanguageServerExtensionActivator } from '../../client/activation/none/activator';
+import { RequirementsTxtLinkActivator } from '../../client/activation/requirements_txt/activator';
 import { registerTypes } from '../../client/activation/serviceRegistry';
 import {
     IDownloadChannelRule,
@@ -177,6 +178,13 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
                 ILanguageServerActivator,
                 NoLanguageServerExtensionActivator,
                 LanguageServerType.None,
+            ),
+        ).once();
+
+        verify(
+            serviceManager.addSingleton<IExtensionSingleActivationService>(
+                IExtensionSingleActivationService,
+                RequirementsTxtLinkActivator,
             ),
         ).once();
     });
