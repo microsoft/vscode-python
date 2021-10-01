@@ -578,6 +578,64 @@
                     "scope": "resource",
                     "type": "string"
                 },
+                "python.debugger.VariablePresentation": {
+                    "default": "{}",
+                    "description": "Allow the user to specified the preferred presentation of variables.",
+                    "scope": "resource",
+                    "type": "object",
+                    "properties": {
+                        "all":{
+                            "type": "string",
+                            "default": "none",
+                            "description" : "Set preferred presentation of variables for all instances.",
+                            "enum": [
+                                "inline",
+                                "group",
+                                "hide"
+                            ]
+                        },
+                        "class":{
+                            "type": "string",
+                            "default": "none",
+                            "description" : "Set Class presentation of variables.",
+                            "enum": [
+                                "inline",
+                                "group",
+                                "hide"
+                            ]
+                        },
+                        "function":{
+                            "type": "string",
+                            "default": "none",
+                            "description" : "Set Function preferred presentation of variables.",
+                            "enum": [
+                                "inline",
+                                "group",
+                                "hide"
+                            ]
+                        },
+                        "protected":{
+                            "type": "string",
+                            "default": "none",
+                            "description" : "Set Protected preferred presentation of variables.",
+                            "enum": [
+                                "inline",
+                                "group",
+                                "hide"
+                            ]
+                        },
+                        "special":{
+                            "type": "string",
+                            "default": "none",
+                            "description" : "Set Special preferred presentation of variables.",
+                            "enum": [
+                                "inline",
+                                "group",
+                                "hide"
+                            ]
+                        }
+                    }
+                },
                 "python.defaultInterpreterPath": {
                     "default": "python",
                     "description": "Path to Python, you can use a custom version of Python by modifying this setting to include the full path. This default setting is used as a fallback if no interpreter is selected for the workspace. The extension will also not set nor change the value of this setting, it will only read from it.",
