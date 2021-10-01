@@ -256,8 +256,8 @@ export namespace Http {
     export const downloadingFileProgress = localize('downloading.file.progress', '{0}{1} of {2} KB ({3}%)');
 }
 export namespace Experiments {
-    export const inGroup = localize('Experiments.inGroup', "User belongs to experiment group '{0}'");
-    export const optedOutOf = localize('Experiments.optedOutOf', "User opted out of experiment group '{0}'");
+    export const inGroup = localize('Experiments.inGroup', "Experiment '{0}' is active");
+    export const optedOutOf = localize('Experiments.optedOutOf', "Experiment '{0}' is inactive");
 }
 export namespace Interpreters {
     export const discovering = localize('Interpreters.DiscoveringInterpreters', 'Discovering Python Interpreters');
