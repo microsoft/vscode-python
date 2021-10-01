@@ -71,10 +71,10 @@ export async function getInterpreterInfo(python: PythonExecInfo): Promise<Interp
     const [args, parse] = getInterpreterInfoCommand();
     const info = copyPythonExecInfo(python, args);
     const argv = [info.command, ...info.args];
-    
+
     // Concat these together to make a set of quoted strings
     const quoted = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replaceAll('\\', '\\\\')}"`), '');
-    
+
     // Try shell execing the command, followed by the arguments. This will make node kill the process if it
     // takes too long.
     // Sometimes the python path isn't valid, timeout if that's the case.

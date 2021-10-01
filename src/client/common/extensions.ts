@@ -42,7 +42,7 @@ declare interface String {
      * String.replaceAll implementation
      * Replaces all instances of a substring with a new string
      */
-    replaceAll(substr: string, newSubstr: string): string
+    replaceAll(substr: string, newSubstr: string): string;
 }
 
 /**
@@ -99,21 +99,21 @@ String.prototype.trimQuotes = function (this: string): string {
 };
 
 /**
-* String.replaceAll implementation
-* Replaces all instances of a substring with a new substring.
-*/
+ * String.replaceAll implementation
+ * Replaces all instances of a substring with a new substring.
+ */
 String.prototype.replaceAll = function (this: string, substr: string, newSubstr: string): string {
     if (!this) {
         return this;
     }
 
     /** Escaping function from the MDN web docs site
-     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping 
+     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
      * Escapes all the following special characters in a string . * + ? ^ $ { } ( ) | \ \\ */
 
     function escapeRegExp(unescapedStr: string): string {
         return unescapedStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-      } 
+    }
 
     return this.replace(new RegExp(escapeRegExp(substr), 'g'), newSubstr);
 };
