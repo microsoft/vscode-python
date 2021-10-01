@@ -51,9 +51,14 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
             return;
         }
         // If we have just one workspace, then pass that as the resource.
-        // Until upstream VSC issue is resolved https://github.com/Microsoft/vscode/issues/63052.
+        const cwd =
+            'cwd' in terminal.creationOptions
+                ? terminal.creationOptions.cwd
+                : this.activeResourceService.getActiveResource();
+        const resource = typeof cwd === 'string' ? Uri.file(cwd) : cwd;
+        
         await this.activator.activateEnvironmentInTerminal(terminal, {
-            resource: this.activeResourceService.getActiveResource(),
+            resource: resource,
         });
     }
 }
