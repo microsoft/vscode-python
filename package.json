@@ -586,7 +586,7 @@
                     "properties": {
                         "all":{
                             "type": "string",
-                            "default": "none",
+                            "default": "group",
                             "description" : "Set preferred presentation of variables for all instances.",
                             "enum": [
                                 "inline",
@@ -596,7 +596,7 @@
                         },
                         "class":{
                             "type": "string",
-                            "default": "none",
+                            "default": "group",
                             "description" : "Set Class presentation of variables.",
                             "enum": [
                                 "inline",
@@ -606,7 +606,7 @@
                         },
                         "function":{
                             "type": "string",
-                            "default": "none",
+                            "default": "group",
                             "description" : "Set Function preferred presentation of variables.",
                             "enum": [
                                 "inline",
@@ -616,7 +616,7 @@
                         },
                         "protected":{
                             "type": "string",
-                            "default": "none",
+                            "default": "group",
                             "description" : "Set Protected preferred presentation of variables.",
                             "enum": [
                                 "inline",
@@ -626,7 +626,7 @@
                         },
                         "special":{
                             "type": "string",
-                            "default": "none",
+                            "default": "group",
                             "description" : "Set Special preferred presentation of variables.",
                             "enum": [
                                 "inline",
