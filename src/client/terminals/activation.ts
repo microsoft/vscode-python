@@ -50,7 +50,7 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
         if ('hideFromUser' in terminal.creationOptions && terminal.creationOptions.hideFromUser) {
             return;
         }
-        // If we have just one workspace, then pass that as the resource.
+
         const cwd =
             'cwd' in terminal.creationOptions
                 ? terminal.creationOptions.cwd
