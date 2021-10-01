@@ -63,12 +63,12 @@ type keysStorage = { key: string; defaultValue: unknown };
 
 @injectable()
 export class PersistentStateFactory implements IPersistentStateFactory, IExtensionSingleActivationService {
-    private readonly globalKeysStorage = new PersistentState<keysStorage[]>(
+    public readonly _globalKeysStorage = new PersistentState<keysStorage[]>(
         this.globalState,
         GLOBAL_PERSISTENT_KEYS,
         [],
     );
-    private readonly workspaceKeysStorage = new PersistentState<keysStorage[]>(
+    public readonly _workspaceKeysStorage = new PersistentState<keysStorage[]>(
         this.workspaceState,
         WORKSPACE_PERSISTENT_KEYS,
         [],
@@ -121,7 +121,7 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
      */
     @cache(-1, true)
     private async addKeyToStorage<T>(keyStorageType: keysStorageType, key: string, defaultValue?: T) {
-        const storage = keyStorageType === 'global' ? this.globalKeysStorage : this.workspaceKeysStorage;
+        const storage = keyStorageType === 'global' ? this._globalKeysStorage : this._workspaceKeysStorage;
         const found = storage.value.find((value) => value.key === key && value.defaultValue === defaultValue);
         if (!found) {
             await storage.updateValue([{ key, defaultValue }, ...storage.value]);
@@ -134,19 +134,19 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
             return;
         }
         await Promise.all(
-            this.globalKeysStorage.value.map(async (keyContent) => {
+            this._globalKeysStorage.value.map(async (keyContent) => {
                 const storage = this.createGlobalPersistentState(keyContent.key);
                 await storage.updateValue(keyContent.defaultValue);
             }),
         );
         await Promise.all(
-            this.workspaceKeysStorage.value.map(async (keyContent) => {
+            this._workspaceKeysStorage.value.map(async (keyContent) => {
                 const storage = this.createWorkspacePersistentState(keyContent.key);
                 await storage.updateValue(keyContent.defaultValue);
             }),
         );
-        await this.globalKeysStorage.updateValue([]);
-        await this.workspaceKeysStorage.updateValue([]);
+        await this._globalKeysStorage.updateValue([]);
+        await this._workspaceKeysStorage.updateValue([]);
         this.cleanedOnce = true;
         traceVerbose('Finished clearing storage.');
     }
