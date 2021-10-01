@@ -97,18 +97,12 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         const promise = this.addEnvsToCacheFromIterator(iterator);
         return promise
             .then(async () => {
-                traceInfo('Will resolve env collection refresh promise and delete deferred locator query');
+                traceInfo('Will resolve deferred env collection refresh promise and delete locator query');
                 deferred.resolve();
-                this.refreshPromises
-                    .get(query)
-                    ?.then(() => traceInfo('All refresh promises for the query resolved'))
-                    .catch((ex) => {
-                        traceError('Failure while resolving refresh promises for the query', ex);
-                    });
                 this.refreshPromise
-                    ?.then(() => traceInfo('this.refreshPromise resolved'))
+                    ?.then(() => traceInfo('All refresh promises from all queries resolved'))
                     .catch((ex) => {
-                        traceError('Failure while resolving this.refreshPromise', ex);
+                        traceError('Failure while resolving all refresh promises from all queries', ex);
                     });
                 this.refreshPromises.delete(query);
                 const cachedEnvsCount = this.cache.getAllEnvs().length;
