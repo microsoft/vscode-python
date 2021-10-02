@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Terminal } from 'vscode';
+import { Terminal, Uri } from 'vscode';
 import { IActiveResourceService, ITerminalManager } from '../common/application/types';
 import { ITerminalActivator } from '../common/terminal/types';
 import { IDisposable, IDisposableRegistry } from '../common/types';
