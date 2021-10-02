@@ -9,7 +9,6 @@ import { IActiveResourceService, ITerminalManager } from '../common/application/
 import { ITerminalActivator } from '../common/terminal/types';
 import { IDisposable, IDisposableRegistry } from '../common/types';
 import { ITerminalAutoActivation } from './types';
-import { URI } from 'vscode-uri';
 
 @injectable()
 export class TerminalAutoActivation implements ITerminalAutoActivation {
