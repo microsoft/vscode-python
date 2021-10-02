@@ -270,7 +270,7 @@ export namespace Interpreters {
         'Interpreters.environmentPromptMessage',
         'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?',
     );
-    export const entireWorkspace = localize('Interpreters.entireWorkspace', 'Entire workspace');
+    export const entireWorkspace = localize('Interpreters.entireWorkspace', 'Select at workspace level');
     export const selectInterpreterTip = localize(
         'Interpreters.selectInterpreterTip',
         'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar',
