@@ -47,7 +47,7 @@
     "Experiments.inGroup": "Experiment '{0}' is active",
     "Experiments.optedOutOf": "Experiment '{0}' is inactive",
     "Interpreters.RefreshingInterpreters": "Refreshing Python Interpreters",
-    "Interpreters.entireWorkspace": "Entire workspace",
+    "Interpreters.entireWorkspace": "Select at workspace level",
     "Interpreters.pythonInterpreterPath": "Python interpreter path: {0}",
     "Interpreters.DiscoveringInterpreters": "Discovering Python Interpreters",
     "Interpreters.condaInheritEnvMessage": "We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we recommend that you let the Python extension change \"terminal.integrated.inheritEnv\" to false in your user settings.",

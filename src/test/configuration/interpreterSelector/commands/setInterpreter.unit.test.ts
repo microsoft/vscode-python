@@ -743,7 +743,7 @@ suite('Set Interpreter Command', () => {
             workspace.verifyAll();
             pythonPathUpdater.verifyAll();
         });
-        test('Update entire workspace settings when there is more than one workspace folder and `Entire workspace` is selected', async () => {
+        test('Update entire workspace settings when there is more than one workspace folder and `Select at workspace level` is selected', async () => {
             pythonSettings.setup((p) => p.pythonPath).returns(() => 'python');
             const selectedItem: IInterpreterQuickPickItem = {
                 description: '',
