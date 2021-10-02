@@ -52,9 +52,9 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
         }
 
         const cwd =
-            'cwd' in terminal.creationOptions
-                ? terminal.creationOptions.cwd
-                : this.activeResourceService.getActiveResource();
+              'cwd' in terminal.creationOptions
+               ? terminal.creationOptions.cwd
+               : this.activeResourceService.getActiveResource();
         const resource = typeof cwd === 'string' ? Uri.file(cwd) : cwd;
         
         await this.activator.activateEnvironmentInTerminal(terminal, {
