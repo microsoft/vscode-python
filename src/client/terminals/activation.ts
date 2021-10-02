@@ -1,14 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { inject, injectable } from 'inversify';
-import { Terminal, Uri } from 'vscode';
-import { IActiveResourceService, ITerminalManager } from '../common/application/types';
-import { ITerminalActivator } from '../common/terminal/types';
-import { IDisposable, IDisposableRegistry } from '../common/types';
-import { ITerminalAutoActivation } from './types';
+import { inject, injectable } from "inversify";
+import { Terminal, Uri } from "vscode";
+import {
+  IActiveResourceService,
+  ITerminalManager,
+} from "../common/application/types";
+import { ITerminalActivator } from "../common/terminal/types";
+import { IDisposable, IDisposableRegistry } from "../common/types";
+import { ITerminalAutoActivation } from "./types";
 
 @injectable()
 export class TerminalAutoActivation implements ITerminalAutoActivation {
