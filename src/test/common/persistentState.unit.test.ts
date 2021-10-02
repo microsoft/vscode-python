@@ -93,6 +93,8 @@ suite('Persistent State', () => {
         await sleep(1);
         persistentStateFactory.createGlobalPersistentState('key2', 'defaultValue1');
         await sleep(1);
+        persistentStateFactory.createGlobalPersistentState('key2', 'defaultValue1');
+        await sleep(1);
         persistentStateFactory.createGlobalPersistentState('key1');
         await sleep(1);
         const { value } = persistentStateFactory._globalKeysStorage;
@@ -109,6 +111,8 @@ suite('Persistent State', () => {
         persistentStateFactory.createWorkspacePersistentState('key2', 'defaultValue1');
         await sleep(1);
         persistentStateFactory.createWorkspacePersistentState('key1');
+        await sleep(1);
+        persistentStateFactory.createWorkspacePersistentState('key2', 'defaultValue1');
         await sleep(1);
         persistentStateFactory.createWorkspacePersistentState('key1');
         await sleep(1);
