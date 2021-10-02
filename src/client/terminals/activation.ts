@@ -58,7 +58,7 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
         const resource = typeof cwd === 'string' ? Uri.file(cwd) : cwd;
         
         await this.activator.activateEnvironmentInTerminal(terminal, {
-            resource: resource,
+            resource,
         });
     }
 }
