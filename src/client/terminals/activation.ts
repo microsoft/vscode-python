@@ -1,17 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-"use strict";
+'use strict';
 
-import { inject, injectable } from "inversify";
-import { Terminal, Uri } from "vscode";
-import {
-  IActiveResourceService,
-  ITerminalManager,
-} from "../common/application/types";
-import { ITerminalActivator } from "../common/terminal/types";
-import { IDisposable, IDisposableRegistry } from "../common/types";
-import { ITerminalAutoActivation } from "./types";
+import { inject, injectable } from 'inversify';
+import { Terminal, Uri } from 'vscode';
+import { IActiveResourceService, ITerminalManager } from '../common/application/types';
+import { ITerminalActivator } from '../common/terminal/types';
+import { IDisposable, IDisposableRegistry } from '../common/types';
+import { ITerminalAutoActivation } from './types';
 
 @injectable()
 export class TerminalAutoActivation implements ITerminalAutoActivation {
@@ -41,10 +38,7 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
     if (this.handler) {
       return;
     }
-    this.handler = this.terminalManager.onDidOpenTerminal(
-      this.activateTerminal,
-      this
-    );
+    this.handler = this.terminalManager.onDidOpenTerminal(this.activateTerminal, this);
   }
 
   public disableAutoActivation(terminal: Terminal): void {
@@ -55,18 +49,13 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
     if (this.terminalsNotToAutoActivate.has(terminal)) {
       return;
     }
-    if (
-      "hideFromUser" in terminal.creationOptions &&
-      terminal.creationOptions.hideFromUser
-    ) {
+    if ('hideFromUser' in terminal.creationOptions && terminal.creationOptions.hideFromUser) {
       return;
     }
 
     const cwd =
-      "cwd" in terminal.creationOptions
-        ? terminal.creationOptions.cwd
-        : this.activeResourceService.getActiveResource();
-    const resource = typeof cwd === "string" ? Uri.file(cwd) : cwd;
+      'cwd' in terminal.creationOptions ? terminal.creationOptions.cwd : this.activeResourceService.getActiveResource();
+    const resource = typeof cwd === 'string' ? Uri.file(cwd) : cwd;
 
     await this.activator.activateEnvironmentInTerminal(terminal, {
       resource,
