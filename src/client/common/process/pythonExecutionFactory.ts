@@ -82,8 +82,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                     );
                 }
             }
+            pythonPath = this.configService.getSettings(options.resource).pythonPath;
         }
-        pythonPath = this.configService.getSettings(options.resource).pythonPath;
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
         processService.on('exec', this.logger.logProcess.bind(this.logger));
 
