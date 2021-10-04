@@ -9,7 +9,8 @@ from packaging.version import parse as version_parser
 EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEBUGGER_DEST = os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python")
 DEBUGGER_PACKAGE = "debugpy"
-DEBUGGER_PYTHON_VERSIONS = ("cp39",)
+DEBUGGER_PYTHON_ABI_VERSIONS = ("cp39",)
+DEBUGGER_VERSION = "1.4.3"  # can also be "latest"
 
 
 def _contains(s, parts=()):
@@ -28,7 +29,7 @@ def _get_debugger_wheel_urls(data, version):
     return list(
         r["url"]
         for r in data["releases"][version]
-        if _contains(r["url"], DEBUGGER_PYTHON_VERSIONS)
+        if _contains(r["url"], DEBUGGER_PYTHON_ABI_VERSIONS)
     )
 
 
@@ -53,10 +54,14 @@ def _download_and_extract(root, url, version):
 
 def main(root):
     data = _get_package_data()
-    latest_version = max(data["releases"].keys(), key=version_parser)
 
-    for url in _get_debugger_wheel_urls(data, latest_version):
-        _download_and_extract(root, url, latest_version)
+    if DEBUGGER_VERSION == "latest":
+        use_version = max(data["releases"].keys(), key=version_parser)
+    else:
+        use_version = DEBUGGER_VERSION
+
+    for url in _get_debugger_wheel_urls(data, use_version):
+        _download_and_extract(root, url, use_version)
 
 
 if __name__ == "__main__":

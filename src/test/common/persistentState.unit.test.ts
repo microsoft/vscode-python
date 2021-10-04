@@ -3,19 +3,19 @@
 
 'use strict';
 
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Memento } from 'vscode';
-import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { ICommandManager } from '../../client/common/application/types';
 import { Commands } from '../../client/common/constants';
 import { PersistentStateFactory } from '../../client/common/persistentState';
-import { IDisposable, IPersistentStateFactory } from '../../client/common/types';
+import { IDisposable } from '../../client/common/types';
+import { sleep } from '../core';
 import { MockMemento } from '../mocks/mementos';
 
 suite('Persistent State', () => {
     let cmdManager: TypeMoq.IMock<ICommandManager>;
-    let persistentStateFactory: IPersistentStateFactory & IExtensionSingleActivationService;
+    let persistentStateFactory: PersistentStateFactory;
     let workspaceMemento: Memento;
     let globalMemento: Memento;
     setup(() => {
@@ -86,5 +86,43 @@ suite('Persistent State', () => {
         // Verify states are now reset to their default value.
         expect(workspaceKey1State.value).to.equal(undefined);
         expect(workspaceKey2State.value).to.equal('defaultKey2Value');
+    });
+
+    test('Ensure internal global storage extension uses to track other storages does not contain duplicate entries', async () => {
+        persistentStateFactory.createGlobalPersistentState('key1');
+        await sleep(1);
+        persistentStateFactory.createGlobalPersistentState('key2', 'defaultValue1');
+        await sleep(1);
+        persistentStateFactory.createGlobalPersistentState('key2', 'defaultValue1');
+        await sleep(1);
+        persistentStateFactory.createGlobalPersistentState('key1');
+        await sleep(1);
+        const { value } = persistentStateFactory._globalKeysStorage;
+        assert.deepEqual(
+            value.sort((k1, k2) => k1.key.localeCompare(k2.key)),
+            [
+                { key: 'key1', defaultValue: undefined },
+                { key: 'key2', defaultValue: 'defaultValue1' },
+            ].sort((k1, k2) => k1.key.localeCompare(k2.key)),
+        );
+    });
+
+    test('Ensure internal workspace storage extension uses to track other storages does not contain duplicate entries', async () => {
+        persistentStateFactory.createWorkspacePersistentState('key2', 'defaultValue1');
+        await sleep(1);
+        persistentStateFactory.createWorkspacePersistentState('key1');
+        await sleep(1);
+        persistentStateFactory.createWorkspacePersistentState('key2', 'defaultValue1');
+        await sleep(1);
+        persistentStateFactory.createWorkspacePersistentState('key1');
+        await sleep(1);
+        const { value } = persistentStateFactory._workspaceKeysStorage;
+        assert.deepEqual(
+            value.sort((k1, k2) => k1.key.localeCompare(k2.key)),
+            [
+                { key: 'key1', defaultValue: undefined },
+                { key: 'key2', defaultValue: 'defaultValue1' },
+            ].sort((k1, k2) => k1.key.localeCompare(k2.key)),
+        );
     });
 });
