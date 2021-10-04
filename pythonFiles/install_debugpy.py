@@ -53,7 +53,7 @@ def _download_and_extract(root, url, version):
 
 def main(root):
     data = _get_package_data()
-    latest_version = max(data["releases"].keys(), key=version_parser)
+    latest_version = "1.4.3"
 
     for url in _get_debugger_wheel_urls(data, latest_version):
         _download_and_extract(root, url, latest_version)
