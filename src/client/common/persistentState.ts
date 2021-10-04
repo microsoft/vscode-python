@@ -58,17 +58,17 @@ const WORKSPACE_PERSISTENT_KEYS_DEPRECATED = 'PYTHON_EXTENSION_WORKSPACE_STORAGE
 
 const GLOBAL_PERSISTENT_KEYS = 'PYTHON_GLOBAL_STORAGE_KEYS';
 const WORKSPACE_PERSISTENT_KEYS = 'PYTHON_WORKSPACE_STORAGE_KEYS';
-type keysStorageType = 'global' | 'workspace';
-type keysStorage = { key: string; defaultValue: unknown };
+type KeysStorageType = 'global' | 'workspace';
+type KeysStorage = { key: string; defaultValue: unknown };
 
 @injectable()
 export class PersistentStateFactory implements IPersistentStateFactory, IExtensionSingleActivationService {
-    public readonly _globalKeysStorage = new PersistentState<keysStorage[]>(
+    public readonly _globalKeysStorage = new PersistentState<KeysStorage[]>(
         this.globalState,
         GLOBAL_PERSISTENT_KEYS,
         [],
     );
-    public readonly _workspaceKeysStorage = new PersistentState<keysStorage[]>(
+    public readonly _workspaceKeysStorage = new PersistentState<KeysStorage[]>(
         this.workspaceState,
         WORKSPACE_PERSISTENT_KEYS,
         [],
@@ -120,7 +120,7 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
      * It is only cached for the particular arguments passed, so the argument type is simplified here.
      */
     @cache(-1, true)
-    private async addKeyToStorage<T>(keyStorageType: keysStorageType, key: string, defaultValue?: T) {
+    private async addKeyToStorage<T>(keyStorageType: KeysStorageType, key: string, defaultValue?: T) {
         const storage = keyStorageType === 'global' ? this._globalKeysStorage : this._workspaceKeysStorage;
         const found = storage.value.find((value) => value.key === key && value.defaultValue === defaultValue);
         if (!found) {
@@ -165,9 +165,11 @@ interface IPersistentStorage<T> {
  * Build a global storage object for the given key.
  */
 export function getGlobalStorage<T>(context: IExtensionContext, key: string, defaultValue?: T): IPersistentStorage<T> {
-    const globalKeysStorage = new PersistentState<keysStorage[]>(context.globalState, GLOBAL_PERSISTENT_KEYS, []);
-    if (!globalKeysStorage.value.includes({ key, defaultValue: undefined })) {
-        globalKeysStorage.updateValue([{ key, defaultValue: undefined }, ...globalKeysStorage.value]).ignoreErrors();
+    const globalKeysStorage = new PersistentState<KeysStorage[]>(context.globalState, GLOBAL_PERSISTENT_KEYS, []);
+    const found = globalKeysStorage.value.find((value) => value.key === key && value.defaultValue === defaultValue);
+    if (!found) {
+        const newValue = [{ key, defaultValue }, ...globalKeysStorage.value];
+        globalKeysStorage.updateValue(newValue).ignoreErrors();
     }
     const raw = new PersistentState<T>(context.globalState, key, defaultValue);
     return {
