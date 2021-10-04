@@ -471,25 +471,6 @@ export interface IHashFormat {
     string: string; // If hash format is a string
 }
 
-/**
- * Interface used to implement cryptography tools
- */
-export const ICryptoUtils = Symbol('ICryptoUtils');
-export interface ICryptoUtils {
-    /**
-     * Creates hash using the data and encoding specified
-     * @returns hash as number, or string
-     * @param data The string to hash
-     * @param hashFormat Return format of the hash, number or string
-     * @param [algorithm]
-     */
-    createHash<E extends keyof IHashFormat>(
-        data: string,
-        hashFormat: E,
-        algorithm?: 'SHA512' | 'SHA256' | 'FNV',
-    ): IHashFormat[E];
-}
-
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');
 export interface IAsyncDisposableRegistry extends IAsyncDisposable {
     push(disposable: IDisposable | IAsyncDisposable): void;

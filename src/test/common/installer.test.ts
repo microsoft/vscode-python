@@ -25,7 +25,6 @@ import {
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
 import { ExperimentService } from '../../client/common/experiments/service';
 import {
@@ -93,7 +92,6 @@ import {
     IAsyncDisposableRegistry,
     IBrowserService,
     IConfigurationService,
-    ICryptoUtils,
     ICurrentProcess,
     IEditorUtils,
     IExperimentService,
@@ -214,7 +212,6 @@ suite('Installer', () => {
             ITerminalActivationHandler,
             PowershellTerminalActivationFailedHandler,
         );
-        ioc.serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
         ioc.serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
 
         ioc.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);

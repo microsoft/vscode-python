@@ -5,7 +5,6 @@ import {
     IAsyncDisposableRegistry,
     IBrowserService,
     IConfigurationService,
-    ICryptoUtils,
     ICurrentProcess,
     IEditorUtils,
     IExperimentService,
@@ -59,7 +58,6 @@ import { WorkspaceService } from './application/workspace';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { ConfigurationService } from './configuration/service';
 import { PipEnvExecutionPath } from './configuration/executionSettings/pipEnvExecution';
-import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
 import { ExperimentService } from './experiments/service';
 import {
@@ -161,7 +159,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
         ITerminalActivationHandler,
         PowershellTerminalActivationFailedHandler,
     );
-    serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
