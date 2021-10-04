@@ -10,7 +10,7 @@ EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEBUGGER_DEST = os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python")
 DEBUGGER_PACKAGE = "debugpy"
 DEBUGGER_PYTHON_ABI_VERSIONS = ("cp39",)
-DEBUGGER_VERSION = "1.4.3"  # can also be "latest"
+DEBUGGER_VERSION = "1.5.0"  # can also be "latest"
 
 
 def _contains(s, parts=()):
@@ -35,21 +35,16 @@ def _get_debugger_wheel_urls(data, version):
 
 def _download_and_extract(root, url, version):
     root = os.getcwd() if root is None or root == "." else root
-    prefix = os.path.join("debugpy-{0}.data".format(version), "purelib")
+    print(url)
     with url_lib.urlopen(url) as response:
-        # Extract only the contents of the purelib subfolder (parent folder of debugpy),
-        # since debugpy files rely on the presence of a 'debugpy' folder.
-        with zipfile.ZipFile(io.BytesIO(response.read()), "r") as wheel:
+        data = response.read()
+        with zipfile.ZipFile(io.BytesIO(data), "r") as wheel:
             for zip_info in wheel.infolist():
                 # Ignore dist info since we are merging multiple wheels
-                if ".dist-info" in zip_info.filename:
+                if ".dist-info/" in zip_info.filename:
                     continue
-                # Normalize path for Windows, the wheel folder structure
-                # uses forward slashes.
-                normalized = os.path.normpath(zip_info.filename)
-                # Flatten the folder structure.
-                zip_info.filename = normalized.split(prefix)[-1]
-                wheel.extract(zip_info, root)
+                print("\t" + zip_info.filename)
+                wheel.extract(zip_info.filename, root)
 
 
 def main(root):
