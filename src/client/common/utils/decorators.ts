@@ -153,7 +153,13 @@ export function cache(expiryDurationMs: number, cachePromise = false, expiryDura
             if (isTestExecution()) {
                 return originalMethod.apply(this, args) as Promise<any>;
             }
-            const key = getCacheKeyFromFunctionArgs(keyPrefix, args);
+            let key: string;
+            try {
+                key = getCacheKeyFromFunctionArgs(keyPrefix, args);
+            } catch (ex) {
+                traceError('Error while creating key for keyPrefix:', keyPrefix, ex);
+                return originalMethod.apply(this, args) as Promise<any>;
+            }
             const cachedItem = cacheStoreForMethods.get(key);
             if (cachedItem && (cachedItem.expiry > Date.now() || expiryDurationMs === -1)) {
                 traceVerbose(`Cached data exists ${key}`);
