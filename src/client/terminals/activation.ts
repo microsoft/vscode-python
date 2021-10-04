@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Terminal } from 'vscode';
+import { Terminal, Uri } from 'vscode';
 import { IActiveResourceService, ITerminalManager } from '../common/application/types';
 import { ITerminalActivator } from '../common/terminal/types';
 import { IDisposable, IDisposableRegistry } from '../common/types';
@@ -17,10 +17,12 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
     private readonly terminalsNotToAutoActivate = new WeakSet<Terminal>();
 
     constructor(
-        @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
+        @inject(ITerminalManager)
+        private readonly terminalManager: ITerminalManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(ITerminalActivator) private readonly activator: ITerminalActivator,
-        @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
+        @inject(IActiveResourceService)
+        private readonly activeResourceService: IActiveResourceService,
     ) {
         disposableRegistry.push(this);
     }
@@ -50,10 +52,15 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
         if ('hideFromUser' in terminal.creationOptions && terminal.creationOptions.hideFromUser) {
             return;
         }
-        // If we have just one workspace, then pass that as the resource.
-        // Until upstream VSC issue is resolved https://github.com/Microsoft/vscode/issues/63052.
+
+        const cwd =
+            'cwd' in terminal.creationOptions
+                ? terminal.creationOptions.cwd
+                : this.activeResourceService.getActiveResource();
+        const resource = typeof cwd === 'string' ? Uri.file(cwd) : cwd;
+
         await this.activator.activateEnvironmentInTerminal(terminal, {
-            resource: this.activeResourceService.getActiveResource(),
+            resource,
         });
     }
 }
