@@ -68,7 +68,7 @@ Combinations of:
 6. Conda environments with names and without names.
 7. All installers.
 */
-suite.only('Module Installer', () => {
+suite('Module Installer', () => {
     class TestModuleInstaller extends ModuleInstaller {
         public get priority(): number {
             return 0;
