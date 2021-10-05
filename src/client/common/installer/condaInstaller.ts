@@ -84,11 +84,9 @@ export class CondaInstaller extends ModuleInstaller {
         const info = await condaLocatorService.getCondaEnvironment(pythonPath);
         const args = [flags & ModuleInstallFlags.upgrade ? 'update' : 'install'];
 
-        // Temporarily ensure tensorboard is installed from the conda-forge
-        // channel since 2.4.1 is not yet available in the default index
-        if (moduleName === 'tensorboard') {
-            args.push('-c', 'conda-forge');
-        }
+        // Found that using conda-forge is best as packages like tensorboard, ipykenrle seem to get updated first on conda-forge
+        // https://github.com/microsoft/vscode-jupyter/issues/7787 & https://github.com/microsoft/vscode-python/issues/17628
+        args.push('-c', 'conda-forge');
         if (info && info.name) {
             // If we have the name of the conda environment, then use that.
             args.push('--name');

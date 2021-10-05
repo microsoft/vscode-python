@@ -621,9 +621,7 @@ suite('Module Installer', () => {
                                     test(`Test args (${product.name})`, async () => {
                                         setActiveInterpreter();
                                         const expectedArgs = [isUpgrade ? 'update' : 'install'];
-                                        if (product.name === 'tensorboard') {
-                                            expectedArgs.push('-c', 'conda-forge');
-                                        }
+                                        expectedArgs.push('-c', 'conda-forge');
                                         if (condaEnvInfo && condaEnvInfo.name) {
                                             expectedArgs.push('--name');
                                             expectedArgs.push(condaEnvInfo.name.toCommandArgument());
