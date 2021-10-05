@@ -68,7 +68,7 @@ Combinations of:
 6. Conda environments with names and without names.
 7. All installers.
 */
-suite('Module Installer', () => {
+suite.only('Module Installer', () => {
     class TestModuleInstaller extends ModuleInstaller {
         public get priority(): number {
             return 0;
@@ -621,7 +621,18 @@ suite('Module Installer', () => {
                                     test(`Test args (${product.name})`, async () => {
                                         setActiveInterpreter();
                                         const expectedArgs = [isUpgrade ? 'update' : 'install'];
-                                        expectedArgs.push('-c', 'conda-forge');
+                                        if (
+                                            [
+                                                'pandas',
+                                                'tensorboard',
+                                                'ipykernel',
+                                                'jupyter',
+                                                'notebook',
+                                                'nbconvert',
+                                            ].includes(product.name)
+                                        ) {
+                                            expectedArgs.push('-c', 'conda-forge');
+                                        }
                                         if (condaEnvInfo && condaEnvInfo.name) {
                                             expectedArgs.push('--name');
                                             expectedArgs.push(condaEnvInfo.name.toCommandArgument());
