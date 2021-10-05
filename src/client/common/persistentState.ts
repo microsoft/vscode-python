@@ -53,13 +53,13 @@ export class PersistentState<T> implements IPersistentState<T> {
     }
 }
 
-const GLOBAL_PERSISTENT_KEYS_DEPRECATED = 'PYTHON_EXTENSION_GLOBAL_STORAGE_KEYS';
-const WORKSPACE_PERSISTENT_KEYS_DEPRECATED = 'PYTHON_EXTENSION_WORKSPACE_STORAGE_KEYS';
+export const GLOBAL_PERSISTENT_KEYS_DEPRECATED = 'PYTHON_EXTENSION_GLOBAL_STORAGE_KEYS';
+export const WORKSPACE_PERSISTENT_KEYS_DEPRECATED = 'PYTHON_EXTENSION_WORKSPACE_STORAGE_KEYS';
 
 const GLOBAL_PERSISTENT_KEYS = 'PYTHON_GLOBAL_STORAGE_KEYS';
 const WORKSPACE_PERSISTENT_KEYS = 'PYTHON_WORKSPACE_STORAGE_KEYS';
 type KeysStorageType = 'global' | 'workspace';
-type KeysStorage = { key: string; defaultValue: unknown };
+export type KeysStorage = { key: string; defaultValue: unknown };
 
 @injectable()
 export class PersistentStateFactory implements IPersistentStateFactory, IExtensionSingleActivationService {
@@ -122,7 +122,7 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
     @cache(-1, true)
     private async addKeyToStorage<T>(keyStorageType: KeysStorageType, key: string, defaultValue?: T) {
         const storage = keyStorageType === 'global' ? this._globalKeysStorage : this._workspaceKeysStorage;
-        const found = storage.value.find((value) => value.key === key && value.defaultValue === defaultValue);
+        const found = storage.value.find((value) => value.key === key);
         if (!found) {
             await storage.updateValue([{ key, defaultValue }, ...storage.value]);
         }
