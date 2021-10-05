@@ -7,9 +7,9 @@ import { ICondaService, ICondaLocatorService, IComponentAdapter } from '../../in
 import { IServiceContainer } from '../../ioc/types';
 import { ModuleInstallerType } from '../../pythonEnvironments/info';
 import { inDiscoveryExperiment } from '../experiments/helpers';
-import { ExecutionInfo, IConfigurationService, IExperimentService } from '../types';
+import { ExecutionInfo, IConfigurationService, IExperimentService, Product } from '../types';
 import { isResource } from '../utils/misc';
-import { ModuleInstaller } from './moduleInstaller';
+import { ModuleInstaller, translateProductToModule } from './moduleInstaller';
 import { InterpreterUri, ModuleInstallFlags } from './types';
 
 /**
@@ -84,9 +84,21 @@ export class CondaInstaller extends ModuleInstaller {
         const info = await condaLocatorService.getCondaEnvironment(pythonPath);
         const args = [flags & ModuleInstallFlags.upgrade ? 'update' : 'install'];
 
-        // Temporarily ensure tensorboard is installed from the conda-forge
-        // channel since 2.4.1 is not yet available in the default index
-        if (moduleName === 'tensorboard') {
+        // Found that using conda-forge is best at packages like tensorboard & ipykernel which seem to get updated first on conda-forge
+        // https://github.com/microsoft/vscode-jupyter/issues/7787 & https://github.com/microsoft/vscode-python/issues/17628
+        // Do this just for the datascience packages.
+        if (
+            [
+                Product.tensorboard,
+                Product.ipykernel,
+                Product.pandas,
+                Product.nbconvert,
+                Product.jupyter,
+                Product.notebook,
+            ]
+                .map(translateProductToModule)
+                .includes(moduleName)
+        ) {
             args.push('-c', 'conda-forge');
         }
         if (info && info.name) {
