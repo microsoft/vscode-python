@@ -60,6 +60,8 @@
    ([#17461](https://github.com/Microsoft/vscode-python/issues/17461))
 1. Fix hang caused by loop in getting interpreter information.
    ([#17484](https://github.com/Microsoft/vscode-python/issues/17484))
+1. Ensure database storage extension uses to track all storages does not grow unnecessarily.
+   ([#17488](https://github.com/Microsoft/vscode-python/issues/17488))
 1. Ensure all users use new discovery code regardless of their experiment settings.
    ([#17563](https://github.com/Microsoft/vscode-python/issues/17563))
 1. Add timeout when discovery runs `conda info --json` command.
