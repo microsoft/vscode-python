@@ -84,7 +84,7 @@ export class CondaInstaller extends ModuleInstaller {
         const info = await condaLocatorService.getCondaEnvironment(pythonPath);
         const args = [flags & ModuleInstallFlags.upgrade ? 'update' : 'install'];
 
-        // Found that using conda-forge is best as packages like tensorboard, ipykenrle seem to get updated first on conda-forge
+        // Found that using conda-forge is best at packages like tensorboard & ipykernel which seem to get updated first on conda-forge
         // https://github.com/microsoft/vscode-jupyter/issues/7787 & https://github.com/microsoft/vscode-python/issues/17628
         // Do this just for the datascience packages.
         if (
