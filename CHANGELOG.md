@@ -66,6 +66,8 @@
    ([#17563](https://github.com/Microsoft/vscode-python/issues/17563))
 1. Add timeout when discovery runs `conda info --json` command.
    ([#17576](https://github.com/Microsoft/vscode-python/issues/17576))
+1. Use `conda-forge` channel when installing packages into conda environments.
+   ([#17628](https://github.com/Microsoft/vscode-python/issues/17628))
 
 ### Code Health
 
