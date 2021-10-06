@@ -1,11 +1,5 @@
 'use strict';
 
-// This line should always be right on top.
-
-if ((Reflect as any).metadata === undefined) {
-    require('reflect-metadata');
-}
-
 // Initialize source maps (this must never be moved up nor further down).
 import { initialize } from './sourceMapSupport';
 initialize(require('vscode'));

@@ -6,10 +6,6 @@
 // Always place at the top, to ensure other modules are imported first.
 require('./common/exitCIAfterTestReporter');
 
-if ((Reflect as any).metadata === undefined) {
-    require('reflect-metadata');
-}
-
 import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
