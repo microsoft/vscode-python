@@ -99,6 +99,7 @@
                 "id": "pythonWelcome",
                 "title": "Get started with Python development",
                 "description": "Your first steps to set up a Python project with all the powerful tools and features that the Python extension has to offer!",
+                "when": "workspacePlatform != webworker",
                 "steps": [
                     {
                         "id": "python.installPythonWin",
