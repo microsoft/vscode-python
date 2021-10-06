@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.10.0-rc (4 October 2021)
+## 2021.10.0 (6 October 2021)
 
 ### Enhancements
 
@@ -10,7 +10,7 @@
    ([#11995](https://github.com/Microsoft/vscode-python/issues/11995))
 1. Add support for dynamic updates in interpreter list.
    ([#17043](https://github.com/Microsoft/vscode-python/issues/17043))
-1. Query for fresh workspace envs when autoselecting interpreters in a new workspace.
+1. Query for fresh workspace envs when auto-selecting interpreters in a new workspace.
    ([#17264](https://github.com/Microsoft/vscode-python/issues/17264))
 1. Increase Microsoft Python Language Server deprecation prompt frequency and update wording.
    ([#17361](https://github.com/Microsoft/vscode-python/issues/17361))
@@ -55,7 +55,7 @@
 1. Improve pattern matching for shell detection on Windows.
    (thanks [Erik Demaine](https://github.com/edemaine/))
    ([#17426](https://github.com/Microsoft/vscode-python/issues/17426))
-1. Changed the way of searching left bracket [ in case of subsets of tests.
+1. Changed the way of searching left bracket `[` in case of subsets of tests.
    (thanks [ilexei](https://github.com/ilexei))
    ([#17461](https://github.com/Microsoft/vscode-python/issues/17461))
 1. Fix hang caused by loop in getting interpreter information.
