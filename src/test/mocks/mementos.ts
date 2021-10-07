@@ -9,6 +9,10 @@ export class MockMemento implements Memento {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private _value: Record<string, any> = {};
 
+    public keys(): string[] {
+        return Object.keys(this._value);
+    }
+
     // @ts-ignore Ignore the return value warning
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
     public get(key: any, defaultValue?: any);

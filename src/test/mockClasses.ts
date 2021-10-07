@@ -46,6 +46,8 @@ export class MockStatusBarItem implements vscode.StatusBarItem {
     public tooltip!: string;
     public color!: string;
     public command!: string;
+    public id: string = '';
+    public name: string = '';
 
     public show(): void {}
 

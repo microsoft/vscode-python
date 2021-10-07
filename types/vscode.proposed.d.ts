@@ -6,11 +6,6 @@
 declare module 'vscode' {
     //#region https://github.com/microsoft/vscode/issues/106744, Notebooks (misc)
 
-    export enum NotebookCellKind {
-        Markdown = 1,
-        Code = 2,
-    }
-
     export class NotebookCellMetadata {
         /**
          * Whether a code cell's editor is collapsed
@@ -41,24 +36,6 @@ declare module 'vscode' {
             custom?: Record<string, any> | null;
             [key: string]: any;
         }): NotebookCellMetadata;
-    }
-
-    export interface NotebookCellExecutionSummary {
-        executionOrder?: number;
-        success?: boolean;
-        startTime?: number;
-        endTime?: number;
-    }
-
-    // todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
-    export interface NotebookCell {
-        readonly index: number;
-        readonly notebook: NotebookDocument;
-        readonly kind: NotebookCellKind;
-        readonly document: TextDocument;
-        readonly metadata: NotebookCellMetadata;
-        readonly outputs: ReadonlyArray<NotebookCellOutput>;
-        readonly latestExecutionSummary: NotebookCellExecutionSummary | undefined;
     }
 
     export class NotebookDocumentMetadata {
@@ -113,8 +90,6 @@ declare module 'vscode' {
          * and won't be re-used when the same resource is opened again.
          */
         readonly isClosed: boolean;
-
-        readonly metadata: NotebookDocumentMetadata;
 
         // todo@API should we really expose this?
         readonly notebookType: string;
@@ -263,29 +238,6 @@ declare module 'vscode' {
         readonly cell: NotebookCell;
         readonly executionState: NotebookCellExecutionState;
     }
-
-    // todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
-    export class NotebookCellData {
-        // todo@API should they all be readonly?
-        kind: NotebookCellKind;
-        // todo@API better names: value? text?
-        source: string;
-        // todo@API how does language and MD relate?
-        language: string;
-        // todo@API ReadonlyArray?
-        outputs?: NotebookCellOutput[];
-        metadata?: NotebookCellMetadata;
-        latestExecutionSummary?: NotebookCellExecutionSummary;
-        constructor(
-            kind: NotebookCellKind,
-            source: string,
-            language: string,
-            outputs?: NotebookCellOutput[],
-            metadata?: NotebookCellMetadata,
-            latestExecutionSummary?: NotebookCellExecutionSummary,
-        );
-    }
-
     export class NotebookData {
         // todo@API should they all be readonly?
         cells: NotebookCellData[];
@@ -391,19 +343,6 @@ declare module 'vscode' {
         readonly metadata?: Record<string, any>;
 
         constructor(mime: string, value: unknown, metadata?: Record<string, any>);
-    }
-
-    // @jrieken
-    // todo@API think about readonly...
-    //TODO@API add execution count to cell output?
-    export class NotebookCellOutput {
-        readonly id: string;
-        readonly outputs: NotebookCellOutputItem[];
-        readonly metadata?: Record<string, any>;
-
-        constructor(outputs: NotebookCellOutputItem[], metadata?: Record<string, any>);
-
-        constructor(outputs: NotebookCellOutputItem[], id: string, metadata?: Record<string, any>);
     }
 
     //#endregion
@@ -528,19 +467,8 @@ declare module 'vscode' {
         label: string;
         description?: string;
         isPreferred?: boolean;
-
-        supportedLanguages: string[];
         hasExecutionOrder?: boolean;
         preloads?: NotebookKernelPreload[];
-
-        /**
-         * The execute handler is invoked when the run gestures in the UI are selected, e.g Run Cell, Run All,
-         * Run Selection etc.
-         */
-        readonly executeHandler: (cells: NotebookCell[], controller: NotebookController) => void;
-
-        // optional kernel interrupt command
-        interruptHandler?: (notebook: NotebookDocument) => void;
 
         // remove kernel
         dispose(): void;
@@ -751,16 +679,16 @@ declare module 'vscode' {
     }
 
     export interface QuickPick<T extends QuickPickItem> extends QuickInput {
-		/**
-		 * An optional flag to sort the final results by index of first query match in label. Defaults to true.
-		 */
-		sortByLabel: boolean;
+        /**
+         * An optional flag to sort the final results by index of first query match in label. Defaults to true.
+         */
+        sortByLabel: boolean;
 
-		/*
-		 * An optional flag that can be set to true to maintain the scroll position of the quick pick when the quick pick items are updated. Defaults to false.
-		 */
-		keepScrollPosition?: boolean;
-	}
+        /*
+         * An optional flag that can be set to true to maintain the scroll position of the quick pick when the quick pick items are updated. Defaults to false.
+         */
+        keepScrollPosition?: boolean;
+    }
 
     export enum NotebookCellExecutionState {
         Idle = 1,
@@ -853,21 +781,6 @@ declare module 'vscode' {
     //#endregion
 
     //#region https://github.com/microsoft/vscode/issues/106744, NotebookCellStatusBarItem
-
-    /**
-     * Represents the alignment of status bar items.
-     */
-    export enum NotebookCellStatusBarAlignment {
-        /**
-         * Aligned to the left side.
-         */
-        Left = 1,
-
-        /**
-         * Aligned to the right side.
-         */
-        Right = 2,
-    }
 
     export class NotebookCellStatusBarItem {
         readonly text: string;
@@ -1050,15 +963,6 @@ declare module 'vscode' {
          * order by their `completedAt` time.
          */
         export const testResults: ReadonlyArray<TestRunResult>;
-    }
-
-    /**
-     * The kind of executions that {@link TestRunProfile TestRunProfiles} control.
-     */
-    export enum TestRunProfileKind {
-        Run = 1,
-        Debug = 2,
-        Coverage = 3,
     }
 
     /**

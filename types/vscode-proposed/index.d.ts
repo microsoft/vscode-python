@@ -24,7 +24,7 @@ import {
 //#region https://github.com/microsoft/vscode/issues/106744, Notebooks (misc)
 
 export enum NotebookCellKind {
-    Markdown = 1,
+    Markup = 1,
     Code = 2,
 }
 
@@ -410,19 +410,6 @@ export class NotebookCellOutputItem {
     constructor(mime: string, value: unknown, metadata?: Record<string, any>);
 }
 
-// @jrieken
-// todo@API think about readonly...
-//TODO@API add execution count to cell output?
-export class NotebookCellOutput {
-    readonly id: string;
-    readonly outputs: NotebookCellOutputItem[];
-    readonly metadata?: Record<string, any>;
-
-    constructor(outputs: NotebookCellOutputItem[], metadata?: Record<string, any>);
-
-    constructor(outputs: NotebookCellOutputItem[], id: string, metadata?: Record<string, any>);
-}
-
 //#endregion
 
 //#region https://github.com/microsoft/vscode/issues/106744, NotebookEditorEdit
@@ -679,6 +666,41 @@ export namespace notebook {
 export interface NotebookKernelPreload {
     provides?: string | string[];
     uri: Uri;
+}
+
+/**
+ * Notebook cell output represents a result of executing a cell. It is a container type for multiple
+ * {@link NotebookCellOutputItem output items} where contained items represent the same result but
+ * use different MIME types.
+ */
+export class NotebookCellOutput {
+    /**
+     * The output items of this output. Each item must represent the same result. _Note_ that repeated
+     * MIME types per output is invalid and that the editor will just pick one of them.
+     *
+     * ```ts
+     * new vscode.NotebookCellOutput([
+     *     vscode.NotebookCellOutputItem.text('Hello', 'text/plain'),
+     *     vscode.NotebookCellOutputItem.text('<i>Hello</i>', 'text/html'),
+     *     vscode.NotebookCellOutputItem.text('_Hello_', 'text/markdown'),
+     *     vscode.NotebookCellOutputItem.text('Hey', 'text/plain'), // INVALID: repeated type, editor will pick just one
+     * ])
+     * ```
+     */
+    items: NotebookCellOutputItem[];
+
+    /**
+     * Arbitrary metadata for this cell output. Can be anything but must be JSON-stringifyable.
+     */
+    metadata?: { [key: string]: any };
+
+    /**
+     * Create new notebook output.
+     *
+     * @param items Notebook output items.
+     * @param metadata Optional metadata.
+     */
+    constructor(items: NotebookCellOutputItem[], metadata?: { [key: string]: any });
 }
 
 export interface NotebookKernel {
