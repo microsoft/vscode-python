@@ -335,7 +335,7 @@
                 "category": "Python",
                 "command": "python.execInTerminal-icon",
                 "icon": "$(play)",
-                "title": "%python.command.python.execInTerminal.title%"
+                "title": "%python.command.python.execInTerminalIcon.title%"
             },
             {
                 "category": "Python",
