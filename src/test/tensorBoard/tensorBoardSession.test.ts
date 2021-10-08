@@ -113,7 +113,11 @@ suite('TensorBoard session creation', async () => {
         errorMessageStub.resolves(installPromptSelection);
     }
     async function createSession() {
+        let message = '';
         errorMessageStub = sandbox.stub(applicationShell, 'showErrorMessage');
+        errorMessageStub.callsFake((msg) => {
+            message = msg;
+        });
         // Stub user selections
         sandbox.stub(applicationShell, 'showQuickPick').resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
 
@@ -125,7 +129,7 @@ suite('TensorBoard session creation', async () => {
 
         assert.ok(session.panel?.viewColumn === ViewColumn.One, 'Panel opened in wrong group');
         assert.ok(session.panel?.visible, 'Webview panel not shown on session creation golden path');
-        assert.ok(errorMessageStub.notCalled, 'Error message shown on session creation golden path');
+        assert.ok(errorMessageStub.notCalled, `Error message shown on session creation golden path: ${message}`);
         return session;
     }
     suite('Core functionality', async () => {
