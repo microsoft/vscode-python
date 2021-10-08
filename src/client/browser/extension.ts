@@ -11,6 +11,7 @@ import { LanguageServerType } from '../activation/types';
 import { AppinsightsKey, PVSC_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../common/constants';
 import { loadLocalizedStringsForBrowser } from '../common/utils/localizeHelpers';
 import { EventName } from '../telemetry/constants';
+import { createStatusItem } from './intellisenseStatus';
 
 interface BrowserConfig {
     distUrl: string; // URL to Pylance's dist folder.
@@ -115,6 +116,7 @@ async function runPylance(
         const disposable = languageClient.start();
 
         context.subscriptions.push(disposable);
+        context.subscriptions.push(createStatusItem());
     } catch (e) {
         console.log(e);
     }

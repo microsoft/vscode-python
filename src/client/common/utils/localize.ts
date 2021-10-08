@@ -204,6 +204,11 @@ export namespace TensorBoard {
 }
 
 export namespace LanguageService {
+    export const statusItem = {
+        name: localize('LanguageService.statusItem.name', 'Python IntelliSense Status'),
+        text: localize('LanguageService.statusItem.text', 'Partial Mode'),
+        detail: localize('LanguageService.statusItem.detail', 'Project Wide IntelliSense not available'),
+    };
     export const startingMicrosoft = localize(
         'LanguageService.startingMicrosoft',
         'Starting Microsoft Python language server.',

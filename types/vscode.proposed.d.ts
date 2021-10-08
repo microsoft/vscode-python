@@ -750,6 +750,33 @@ declare module 'vscode' {
         replaceOutputItems(items: NotebookCellOutputItem | NotebookCellOutputItem[], outputId: string): Thenable<void>;
     }
 
+    //#region https://github.com/microsoft/vscode/issues/129037
+
+    enum LanguageStatusSeverity {
+        Information = 0,
+        Warning = 1,
+        Error = 2,
+    }
+
+    interface LanguageStatusItem {
+        readonly id: string;
+        selector: DocumentSelector;
+        // todo@jrieken replace with boolean ala needsAttention
+        severity: LanguageStatusSeverity;
+        name: string | undefined;
+        text: string;
+        detail?: string;
+        command: Command | undefined;
+        accessibilityInformation?: AccessibilityInformation;
+        dispose(): void;
+    }
+
+    namespace languages {
+        export function createLanguageStatusItem(id: string, selector: DocumentSelector): LanguageStatusItem;
+    }
+
+    //#endregion
+
     export interface QuickPick<T extends QuickPickItem> extends QuickInput {
         /**
          * An optional flag to sort the final results by index of first query match in label. Defaults to true.
