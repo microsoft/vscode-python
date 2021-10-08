@@ -11,7 +11,6 @@ import {
     TestRunResult,
     TestResultState,
     TestResultSnapshot,
-    TestTag,
 } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { traceError, traceVerbose } from '../../../common/logger';
@@ -26,8 +25,9 @@ import {
     TestDataKinds,
 } from './types';
 
-export const RunTestTag = new TestTag('python-run');
-export const DebugTestTag = new TestTag('python-debug');
+// Todo: Use `TestTag` when the proposed API gets into stable.
+export const RunTestTag = { id: 'python-run' };
+export const DebugTestTag = { id: 'python-debug' };
 
 export function removeItemByIdFromChildren(
     idToRawData: Map<string, TestData>,
