@@ -18,23 +18,11 @@ export function initializeExternalDependencies(serviceContainer: IServiceContain
 
 // processes
 
-/**
- * Specialized version of the more generic shellExecute function to use only in
- * cases where we don't need to pass custom environment variables read from env
- * files or execution options.
- *
- * Also ensures to kill the processes created after execution.
- */
 export async function shellExecute(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
     const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
     return service.shellExec(command, options);
 }
 
-/**
- * Specialized version of the more generic exec function to use only in
- * cases where we don't need to pass custom environment variables read from
- * env files.
- */
 export async function exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
     const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
     return service.exec(file, args, options);

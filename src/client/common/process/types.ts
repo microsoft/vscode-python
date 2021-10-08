@@ -42,7 +42,7 @@ export const IProcessLogger = Symbol('IProcessLogger');
 export interface IProcessLogger {
     /**
      * Pass `args` as `undefined` if first argument is supposed to be a shell command.
-     * Note it is assumed that commands are always quoted and respect
+     * Note it is assumed that command args are always quoted and respect
      * `String.prototype.toCommandArgument()` prototype.
      */
     logProcess(fileOrCommand: string, args?: string[], options?: SpawnOptions): void;
