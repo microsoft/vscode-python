@@ -18,6 +18,7 @@ isort
 
 # Integrated TensorBoard tests
 tensorboard ; python_version > '2.7'
+torch-tb-profiler ; python_version > '2.7'
 
 # Python 2.7 support.
 pytest==4.6.9 ; python_version == '2.7'

@@ -248,11 +248,13 @@ export async function getTempFileWithDocumentContents(document: TextDocument, fs
     // because the language server is watching the file system for Python
     // file add/delete/change and we don't want this temp file to trigger it.
 
-    let fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}.tmp`;
+    let fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath + document.uri.fragment)}.tmp`;
     try {
         // When dealing with untitled notebooks, there's no original physical file, hence create a temp file.
         if (isNotebookCell(document.uri) && !(await fs.fileExists(document.uri.fsPath))) {
-            fileName = (await fs.createTemporaryFile(`${path.basename(document.uri.fsPath)}.tmp`)).filePath;
+            fileName = (
+                await fs.createTemporaryFile(`${path.basename(document.uri.fsPath)}-${document.uri.fragment}.tmp`)
+            ).filePath;
         }
         await fs.writeFile(fileName, document.getText());
     } catch (ex) {
