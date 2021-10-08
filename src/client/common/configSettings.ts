@@ -16,7 +16,6 @@ import {
 import { LanguageServerType } from '../activation/types';
 import './extensions';
 import { IInterpreterAutoSelectionProxyService } from '../interpreter/autoSelection/types';
-import { LogLevel } from '../logging/levels';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { sendSettingTelemetry } from '../telemetry/envFileTelemetry';
@@ -36,12 +35,10 @@ import {
     IFormattingSettings,
     IInterpreterPathService,
     ILintingSettings,
-    ILoggingSettings,
     IPythonSettings,
     ISortImportSettings,
     ITensorBoardSettings,
     ITerminalSettings,
-    LoggingLevelSettingType,
     Resource,
 } from './types';
 import { debounceSync } from './utils/decorators';
@@ -136,8 +133,6 @@ export class PythonSettings implements IPythonSettings {
     public languageServer: LanguageServerType = LanguageServerType.Microsoft;
 
     public languageServerIsDefault = true;
-
-    public logging: ILoggingSettings = { level: LogLevel.Error };
 
     protected readonly changed = new EventEmitter<void>();
 
@@ -304,15 +299,6 @@ export class PythonSettings implements IPythonSettings {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.devOptions = systemVariables.resolveAny(pythonSettings.get<any[]>('devOptions'))!;
         this.devOptions = Array.isArray(this.devOptions) ? this.devOptions : [];
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const loggingSettings = systemVariables.resolveAny(pythonSettings.get<any>('logging'))!;
-        loggingSettings.level = convertSettingTypeToLogLevel(loggingSettings.level);
-        if (this.logging) {
-            Object.assign<ILoggingSettings, ILoggingSettings>(this.logging, loggingSettings);
-        } else {
-            this.logging = loggingSettings;
-        }
 
         const lintingSettings = systemVariables.resolveAny(pythonSettings.get<ILintingSettings>('linting'))!;
         if (this.linting) {
@@ -708,24 +694,4 @@ function isValidPythonPath(pythonPath: string): boolean {
         fs.existsSync(pythonPath) &&
         path.basename(getOSType() === OSType.Windows ? pythonPath.toLowerCase() : pythonPath).startsWith('python')
     );
-}
-
-function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType | undefined): LogLevel | 'off' {
-    switch (setting) {
-        case 'info': {
-            return LogLevel.Info;
-        }
-        case 'warn': {
-            return LogLevel.Warn;
-        }
-        case 'off': {
-            return 'off';
-        }
-        case 'debug': {
-            return LogLevel.Debug;
-        }
-        default: {
-            return LogLevel.Error;
-        }
-    }
 }

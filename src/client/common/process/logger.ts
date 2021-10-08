@@ -17,22 +17,26 @@ export class ProcessLogger implements IProcessLogger {
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
     ) {}
 
-    public logProcess(file: string, args: string[], options?: SpawnOptions) {
+    public logProcess(fileOrCommand: string, args?: string[], options?: SpawnOptions) {
         if (!isTestExecution() && isCI && process.env.UITEST_DISABLE_PROCESS_LOGGING) {
             // Added to disable logging of process execution commands during UI Tests.
             // Used only during UI Tests (hence this setting need not be exposed as a valid setting).
             return;
         }
-        const argsList = args.reduce((accumulator, current, index) => {
-            let formattedArg = this.pathUtils.getDisplayName(current).toCommandArgument();
-            if (current[0] === "'" || current[0] === '"') {
-                formattedArg = `${current[0]}${this.pathUtils.getDisplayName(current.substr(1))}`;
-            }
-
+        // Note: Single quotes maybe converted to double quotes for printing purposes.
+        let commandList: string[];
+        if (!args) {
+            // It's a quoted command.
+            commandList = fileOrCommand.split('" "').map((s) => s.trimQuotes());
+        } else {
+            commandList = [fileOrCommand, ...args].map((s) => s.trimQuotes());
+        }
+        const command = commandList.reduce((accumulator, current, index) => {
+            const formattedArg = this.pathUtils.getDisplayName(current).toCommandArgument();
             return index === 0 ? formattedArg : `${accumulator} ${formattedArg}`;
         }, '');
 
-        const info = [`> ${this.pathUtils.getDisplayName(file)} ${argsList}`];
+        const info = [`> ${command}`];
         if (options && options.cwd) {
             info.push(`${Logging.currentWorkingDirectory()} ${this.pathUtils.getDisplayName(options.cwd)}`);
         }
