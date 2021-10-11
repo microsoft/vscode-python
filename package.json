@@ -1710,65 +1710,237 @@
             "commandPalette": [
                 {
                     "category": "Python",
-                    "command": "python.clearWorkspaceInterpreter",
-                    "title": "%python.command.python.clearWorkspaceInterpreter.title%"
+                    "command": "python.analysis.clearCache",
+                    "title": "%python.command.python.analysis.clearCache.title%",
+                    "when": "!virtualWorkspace"
                 },
                 {
                     "category": "Python",
-                    "command": "python.launchTensorBoard"
+                    "command": "python.analysis.restartLanguageServer",
+                    "title": "%python.command.python.analysis.restartLanguageServer.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.clearPersistentStorage",
+                    "title": "%python.command.python.clearPersistentStorage.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.clearWorkspaceInterpreter",
+                    "title": "%python.command.python.clearWorkspaceInterpreter.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.configureTests",
+                    "title": "%python.command.python.configureTests.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.createTerminal",
+                    "title": "%python.command.python.createTerminal.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.enableLinting",
+                    "title": "%python.command.python.enableLinting.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.enableSourceMapSupport",
+                    "title": "%python.command.python.enableSourceMapSupport.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.execInTerminal",
+                    "title": "%python.command.python.execInTerminal.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.execInTerminal-icon",
+                    "icon": "$(play)",
+                    "title": "%python.command.python.execInTerminal.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.debugInTerminal",
+                    "icon": "$(debug-alt)",
+                    "title": "%python.command.python.debugInTerminal.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.execSelectionInDjangoShell",
+                    "title": "%python.command.python.execSelectionInDjangoShell.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.execSelectionInTerminal",
+                    "title": "%python.command.python.execSelectionInTerminal.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.goToPythonObject",
+                    "title": "%python.command.python.goToPythonObject.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.launchTensorBoard",
+                    "title": "%python.command.python.launchTensorBoard.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.refreshTensorBoard",
+                    "enablement": "python.hasActiveTensorBoardSession",
+                    "icon": "$(refresh)",
+                    "title": "%python.command.python.refreshTensorBoard.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Test",
+                    "command": "python.refreshTests",
+                    "icon": "$(refresh)",
+                    "title": "%python.command.python.refreshTests.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Test",
+                    "command": "python.refreshingTests",
+                    "icon": {
+                        "dark": "resources/dark/discovering-tests.svg",
+                        "light": "resources/light/discovering-tests.svg"
+                    },
+                    "title": "%python.command.python.refreshingTests.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Test",
+                    "command": "python.stopRefreshingTests",
+                    "icon": "$(stop-circle)",
+                    "title": "%python.command.python.stopRefreshingTests.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.reportIssue",
+                    "title": "%python.command.python.reportIssue.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Test",
+                    "command": "testing.reRunFailTests",
+                    "icon": "$(run-errors)",
+                    "title": "%python.command.testing.rerunFailedTests.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.runLinting",
+                    "title": "%python.command.python.runLinting.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.setInterpreter",
+                    "title": "%python.command.python.setInterpreter.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.setLinter",
+                    "title": "%python.command.python.setLinter.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python Refactor",
+                    "command": "python.sortImports",
+                    "title": "%python.command.python.sortImports.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.startREPL",
+                    "title": "%python.command.python.startREPL.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.viewLanguageServerOutput",
+                    "enablement": "python.hasLanguageServerOutputChannel",
+                    "title": "%python.command.python.viewLanguageServerOutput.title%",
+                    "when": "!virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.clearWorkspaceInterpreter",
+                    "title": "%python.command.python.clearWorkspaceInterpreter.title%",
+                    "when": "!virtualWorkspace"
                 },
                 {
                     "category": "Python",
                     "command": "python.switchOffInsidersChannel",
                     "title": "%python.command.python.switchOffInsidersChannel.title%",
-                    "when": "config.python.insidersChannel != 'default'"
+                    "when": "config.python.insidersChannel != 'default' && !virtualWorkspace"
                 },
                 {
                     "category": "Python",
                     "command": "python.switchToDailyChannel",
                     "title": "%python.command.python.switchToDailyChannel.title%",
-                    "when": "config.python.insidersChannel != 'daily'"
+                    "when": "config.python.insidersChannel != 'daily' && !virtualWorkspace"
                 },
                 {
                     "category": "Python",
                     "command": "python.switchToWeeklyChannel",
                     "title": "%python.command.python.switchToWeeklyChannel.title%",
-                    "when": "config.python.insidersChannel != 'weekly'"
+                    "when": "config.python.insidersChannel != 'weekly' && !virtualWorkspace"
                 },
                 {
                     "category": "Python",
                     "command": "python.viewOutput",
-                    "title": "%python.command.python.viewOutput.title%"
+                    "title": "%python.command.python.viewOutput.title%",
+                    "when": "!virtualWorkspace"
                 }
             ],
             "editor/context": [
                 {
                     "command": "python.execInTerminal",
                     "group": "Python",
-                    "when": "resourceLangId == python"
+                    "when": "resourceLangId == python && !virtualWorkspace"
                 },
                 {
                     "command": "python.execSelectionInDjangoShell",
                     "group": "Python",
-                    "when": "editorHasSelection && editorLangId == python && python.isDjangoProject"
+                    "when": "editorHasSelection && editorLangId == python && python.isDjangoProject && !virtualWorkspace"
                 },
                 {
                     "command": "python.execSelectionInTerminal",
                     "group": "Python",
-                    "when": "editorFocus && editorLangId == python"
+                    "when": "editorFocus && editorLangId == python && !virtualWorkspace"
                 },
                 {
                     "command": "python.sortImports",
                     "group": "Refactor",
                     "title": "Refactor: Sort Imports",
-                    "when": "editorLangId == python && !notebookEditorFocused"
+                    "when": "editorLangId == python && !notebookEditorFocused && !virtualWorkspace"
                 }
             ],
             "editor/title": [
                 {
                     "command": "python.refreshTensorBoard",
                     "group": "navigation@0",
-                    "when": "python.hasActiveTensorBoardSession"
+                    "when": "python.hasActiveTensorBoardSession && !virtualWorkspace"
                 }
             ],
             "editor/title/run": [
@@ -1776,41 +1948,41 @@
                     "command": "python.execInTerminal-icon",
                     "group": "navigation@0",
                     "title": "%python.command.python.execInTerminal.title%",
-                    "when": "resourceLangId == python && !isInDiffEditor"
+                    "when": "resourceLangId == python && !isInDiffEditor && !virtualWorkspace"
                 },
                 {
                     "command": "python.debugInTerminal",
                     "group": "navigation@1",
                     "title": "%python.command.python.debugInTerminal.title%",
-                    "when": "resourceLangId == python && !isInDiffEditor"
+                    "when": "resourceLangId == python && !isInDiffEditor && !virtualWorkspace"
                 }
             ],
             "explorer/context": [
                 {
                     "command": "python.execInTerminal",
                     "group": "Python",
-                    "when": "resourceLangId == python"
+                    "when": "resourceLangId == python && !virtualWorkspace"
                 }
             ],
             "view/title": [
                 {
                     "command": "python.refreshTests",
-                    "when": "view == workbench.view.testing && !refreshingTests && inShowRefreshingTestsExperiment",
+                    "when": "view == workbench.view.testing && !refreshingTests && inShowRefreshingTestsExperiment && !virtualWorkspace",
                     "group": "navigation@0"
                 },
                 {
                     "command": "python.refreshingTests",
-                    "when": "view == workbench.view.testing && refreshingTests && inShowRefreshingTestsExperiment",
+                    "when": "view == workbench.view.testing && refreshingTests && inShowRefreshingTestsExperiment && !virtualWorkspace",
                     "group": "navigation@0"
                 },
                 {
                     "command": "python.stopRefreshingTests",
-                    "when": "view == workbench.view.testing && refreshingTests && inShowRefreshingTestsExperiment",
+                    "when": "view == workbench.view.testing && refreshingTests && inShowRefreshingTestsExperiment && !virtualWorkspace",
                     "group": "navigation@0"
                 },
                 {
                     "command": "testing.reRunFailTests",
-                    "when": "view == workbench.view.testing && hasFailedTests && inShowRunFailedTestsExperiment",
+                    "when": "view == workbench.view.testing && hasFailedTests && inShowRunFailedTestsExperiment && !virtualWorkspace",
                     "group": "navigation@1"
                 }
             ]
@@ -1818,7 +1990,8 @@
         "viewsWelcome": [
             {
                 "view": "testing",
-                "contents": "Configure a test framework to see your tests here.\n[Configure Python Tests](command:python.configureTests)"
+                "contents": "Configure a test framework to see your tests here.\n[Configure Python Tests](command:python.configureTests)",
+                "when": "!virtualWorkspace"
             }
         ],
         "yamlValidation": [
