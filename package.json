@@ -1990,7 +1990,8 @@
         "viewsWelcome": [
             {
                 "view": "testing",
-                "contents": "Configure a test framework to see your tests here.\n[Configure Python Tests](command:python.configureTests)"
+                "contents": "Configure a test framework to see your tests here.\n[Configure Python Tests](command:python.configureTests)",
+                "when": "!virtualWorkspace"
             }
         ],
         "yamlValidation": [
