@@ -46,6 +46,7 @@ import * as pythonEnvironments from './pythonEnvironments';
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
 import { setDefaultLanguageServer } from './activation/common/defaultlanguageServer';
+import { getLoggingLevel } from './logging/settings';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -111,12 +112,13 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
     await setDefaultLanguageServer(extensions, serviceManager);
 
-    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
-    // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
-    // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
-    // XXX Move this *after* abExperiments is activated?
-    setLoggingLevel(configuration.getSettings().logging.level);
+    // Note we should not trigger any extension related code which logs, until we have set logging level. So we cannot
+    // use configurations service to get level setting. Instead, we use Workspace service to query for setting as it
+    // directly queries VSCode API.
+    setLoggingLevel(getLoggingLevel());
 
+    // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
+    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const languageServerType = configuration.getSettings().languageServer;
 
     // Language feature registrations.

@@ -40,7 +40,12 @@ export type ExecutionResult<T extends string | Buffer> = {
 
 export const IProcessLogger = Symbol('IProcessLogger');
 export interface IProcessLogger {
-    logProcess(file: string, ars: string[], options?: SpawnOptions): void;
+    /**
+     * Pass `args` as `undefined` if first argument is supposed to be a shell command.
+     * Note it is assumed that command args are always quoted and respect
+     * `String.prototype.toCommandArgument()` prototype.
+     */
+    logProcess(fileOrCommand: string, args?: string[], options?: SpawnOptions): void;
 }
 
 export interface IProcessService extends IDisposable {
