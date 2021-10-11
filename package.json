@@ -1884,44 +1884,34 @@
                 },
                 {
                     "category": "Python",
-                    "command": "python.viewOutput",
-                    "icon": {
-                        "dark": "resources/dark/repl.svg",
-                        "light": "resources/light/repl.svg"
-                    },
-                    "title": "%python.command.python.viewOutput.title%",
+                    "command": "python.clearWorkspaceInterpreter",
+                    "title": "%python.command.python.clearWorkspaceInterpreter.title%",
                     "when": "!virtualWorkspace"
                 },
-                    {
-                        "category": "Python",
-                        "command": "python.clearWorkspaceInterpreter",
-                        "title": "%python.command.python.clearWorkspaceInterpreter.title%",
-                        "when": "!virtualWorkspace"
-                    },
-                    {
-                        "category": "Python",
-                        "command": "python.switchOffInsidersChannel",
-                        "title": "%python.command.python.switchOffInsidersChannel.title%",
-                        "when": "config.python.insidersChannel != 'default' && !virtualWorkspace"
-                    },
-                    {
-                        "category": "Python",
-                        "command": "python.switchToDailyChannel",
-                        "title": "%python.command.python.switchToDailyChannel.title%",
-                        "when": "config.python.insidersChannel != 'daily' && !virtualWorkspace"
-                    },
-                    {
-                        "category": "Python",
-                        "command": "python.switchToWeeklyChannel",
-                        "title": "%python.command.python.switchToWeeklyChannel.title%",
-                        "when": "config.python.insidersChannel != 'weekly' && !virtualWorkspace"
-                    },
-                    {
-                        "category": "Python",
-                        "command": "python.viewOutput",
-                        "title": "%python.command.python.viewOutput.title%",
-                        "when": "!virtualWorkspace"
-                    }
+                {
+                    "category": "Python",
+                    "command": "python.switchOffInsidersChannel",
+                    "title": "%python.command.python.switchOffInsidersChannel.title%",
+                    "when": "config.python.insidersChannel != 'default' && !virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.switchToDailyChannel",
+                    "title": "%python.command.python.switchToDailyChannel.title%",
+                    "when": "config.python.insidersChannel != 'daily' && !virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.switchToWeeklyChannel",
+                    "title": "%python.command.python.switchToWeeklyChannel.title%",
+                    "when": "config.python.insidersChannel != 'weekly' && !virtualWorkspace"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.viewOutput",
+                    "title": "%python.command.python.viewOutput.title%",
+                    "when": "!virtualWorkspace"
+                }
             ],
             "editor/context": [
                 {
