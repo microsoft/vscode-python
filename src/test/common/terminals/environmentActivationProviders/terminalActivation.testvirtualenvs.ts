@@ -198,7 +198,7 @@ suite('Activation of Environments in Terminal', () => {
                 }
                 return false;
             },
-            waitTimeForActivation,
+            waitTimeForActivation * 3,
             `${envPath} setting not propagated yet.`,
         );
 
