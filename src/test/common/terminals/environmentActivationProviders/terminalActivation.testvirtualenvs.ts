@@ -136,12 +136,6 @@ suite('Activation of Environments in Terminal', () => {
         logFile: string,
         logFileCreationWaitMs: number,
     ): Promise<string> {
-        const extension = vscode.extensions.getExtension('ms-python.python');
-        if (!extension?.isActive) {
-            await extension?.activate();
-        }
-        expect(extension?.isActive, 'Extension is not activated');
-
         let terminal: vscode.Terminal;
         const waitForTerminal = createDeferred();
         const dispose = vscode.window.onDidWriteTerminalData((e) => {
@@ -177,9 +171,31 @@ suite('Activation of Environments in Terminal', () => {
         );
         if (experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             await setGlobalInterpreterPath(envPath);
+            const p = vscode.workspace.getConfiguration('python').get<string>('defaultInterpreterPath');
+            expect(fileSystem.arePathsSame(p ?? '', envPath)).to.equal(
+                true,
+                `setGlobalInterpreterPath did not work: ${p}`,
+            );
         } else {
             await setPythonPathInWorkspaceRoot(envPath);
+            const p = vscode.workspace.getConfiguration('python').get<string>('pythonPath');
+            expect(fileSystem.arePathsSame(p ?? '', envPath)).to.equal(
+                true,
+                `setPythonPathInWorkspaceRoot did not work: ${p}`,
+            );
         }
+
+        const extension = vscode.extensions.getExtension('ms-python.python');
+        if (!extension?.isActive) {
+            await extension?.activate();
+        }
+        expect(extension?.isActive).to.equal(true, 'Extension is not activated');
+        const { execCommand } = extension?.exports.settings.getExecutionDetails();
+        expect(fileSystem.arePathsSame(execCommand[0], envPath)).to.equal(
+            true,
+            `Python not set to testing environment [actual] ${execCommand[0]} != [expected] ${envPath}`,
+        );
+
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(
             true,
