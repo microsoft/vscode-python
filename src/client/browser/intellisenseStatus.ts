@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 import { Common, LanguageService } from '../common/utils/localize';
 
 export function createStatusItem(): vscode.Disposable {
-    if (vscode.languages.createLanguageStatusItem) {
+    if ('createLanguageStatusItem' in vscode.languages) {
         const statusItem = vscode.languages.createLanguageStatusItem('python.projectStatus', {
             language: 'python',
         });
