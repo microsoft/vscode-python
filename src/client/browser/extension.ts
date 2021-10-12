@@ -9,8 +9,8 @@ import { LanguageClientMiddlewareBase } from '../activation/languageClientMiddle
 import { ILSExtensionApi } from '../activation/node/languageServerFolderService';
 import { LanguageServerType } from '../activation/types';
 import { AppinsightsKey, PVSC_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../common/constants';
-import { loadLocalizedStrings } from '../common/utils/localize';
 import { EventName } from '../telemetry/constants';
+import { loadLocalizedStrings } from './localize';
 
 interface BrowserConfig {
     distUrl: string; // URL to Pylance's dist folder.

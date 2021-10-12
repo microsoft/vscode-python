@@ -32,7 +32,7 @@ import { IApplicationShell, IWorkspaceService } from './common/application/types
 import { traceError } from './common/logger';
 import { IAsyncDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
-import { Common, loadLocalizedStrings } from './common/utils/localize';
+import { Common } from './common/utils/localize';
 import { activateComponents } from './extensionActivation';
 import { initializeStandard, initializeComponents, initializeGlobals } from './extensionInit';
 import { IServiceContainer } from './ioc/types';
@@ -99,7 +99,6 @@ async function activateUnsafe(
     //===============================================
     // activation starts here
 
-    await loadLocalizedStrings();
     // First we initialize.
     const ext = initializeGlobals(context);
     activatedServiceContainer = ext.legacyIOC.serviceContainer;
