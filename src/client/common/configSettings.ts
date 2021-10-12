@@ -41,7 +41,6 @@ import {
     ITerminalSettings,
     Resource,
 } from './types';
-import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
 import { getOSType, OSType } from './utils/platform';
 
@@ -552,9 +551,7 @@ export class PythonSettings implements IPythonSettings {
             const currentConfig = this.workspace.getConfiguration('python', this.workspaceRoot);
             this.update(currentConfig);
 
-            // If workspace config changes, then we could have a cascading effect of on change events.
-            // Let's defer the change notification.
-            this.debounceChangeNotification();
+            this.changed.fire();
         };
         this.disposables.push(this.workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
         this.disposables.push(
@@ -575,11 +572,6 @@ export class PythonSettings implements IPythonSettings {
         if (initialConfig) {
             this.update(initialConfig);
         }
-    }
-
-    @debounceSync(1)
-    protected debounceChangeNotification(): void {
-        this.changed.fire();
     }
 
     private getPythonPath(
