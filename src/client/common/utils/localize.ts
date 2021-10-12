@@ -593,11 +593,14 @@ function getString(key: string, defValue?: string) {
     // Note that we are guaranteed the following (during shipping)
     //  1. defaultCollection was initialized by the load() call above
     //  2. defaultCollection has the key (see the "keys exist" test)
-    let collection = defaultCollection!;
+    let collection = defaultCollection;
 
     // Use the current locale if the key is defined there.
     if (loadedCollection && loadedCollection.hasOwnProperty(key)) {
         collection = loadedCollection;
+    }
+    if (collection === undefined) {
+        throw new Error("Localizations haven't been loaded yet");
     }
     let result = collection[key];
     if (!result && defValue) {
