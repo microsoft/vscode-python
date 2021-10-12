@@ -170,6 +170,23 @@ suite('Activation of Environments in Terminal', () => {
             vscode.workspace.workspaceFolders![0].uri,
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
+
+        const configChanged = createDeferred();
+        const dispose = vscode.workspace.onDidChangeConfiguration((e) => {
+            if (experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
+                if (e.affectsConfiguration('python.defaultInterpreterPath')) {
+                    configChanged.resolve();
+                }
+            } else {
+                if (e.affectsConfiguration('python.pythonPath')) {
+                    configChanged.resolve();
+                }
+            }
+        });
+        await Promise.race([configChanged.promise, sleep(1000)]);
+        dispose.dispose();
+        expect(configChanged.completed).to.equal(true, 'VS Code did not fire config change event.');
+
         if (experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             await setGlobalInterpreterPath(envPath);
         } else {
