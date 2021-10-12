@@ -109,6 +109,18 @@ async function runPylance(
                     telemetryEvent.Exception,
                 );
             });
+
+            // show language status
+            const item = vscode.languages.createLanguageStatusItem('pylance.status', clientOptions.documentSelector!);
+            item.severity = vscode.LanguageStatusSeverity.Warning;
+            item.text = 'Partial Mode';
+            item.detail = 'Project Wide IntelliSense not available'; // todo tweak wording, add "continue on"-link
+            item.command = {
+                title: 'Learn More',
+                command: 'vscode.open',
+                arguments: [vscode.Uri.parse('https://github.com/microsoft/vscode-python')], // todo define proper aka.ms-link
+            };
+            context.subscriptions.push(item);
         });
 
         const disposable = languageClient.start();
