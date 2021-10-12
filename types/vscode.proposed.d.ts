@@ -751,16 +751,16 @@ declare module 'vscode' {
     }
 
     export interface QuickPick<T extends QuickPickItem> extends QuickInput {
-		/**
-		 * An optional flag to sort the final results by index of first query match in label. Defaults to true.
-		 */
-		sortByLabel: boolean;
+        /**
+         * An optional flag to sort the final results by index of first query match in label. Defaults to true.
+         */
+        sortByLabel: boolean;
 
-		/*
-		 * An optional flag that can be set to true to maintain the scroll position of the quick pick when the quick pick items are updated. Defaults to false.
-		 */
-		keepScrollPosition?: boolean;
-	}
+        /*
+         * An optional flag that can be set to true to maintain the scroll position of the quick pick when the quick pick items are updated. Defaults to false.
+         */
+        keepScrollPosition?: boolean;
+    }
 
     export enum NotebookCellExecutionState {
         Idle = 1,
@@ -1603,5 +1603,29 @@ declare module 'vscode' {
          */
         readonly messages: ReadonlyArray<TestMessage>;
     }
+
+    //#region Terminal data write event https://github.com/microsoft/vscode/issues/78502
+
+    export interface TerminalDataWriteEvent {
+        /**
+         * The {@link Terminal} for which the data was written.
+         */
+        readonly terminal: Terminal;
+        /**
+         * The data being written.
+         */
+        readonly data: string;
+    }
+
+    namespace window {
+        /**
+         * An event which fires when the terminal's child pseudo-device is written to (the shell).
+         * In other words, this provides access to the raw data stream from the process running
+         * within the terminal, including VT sequences.
+         */
+        export const onDidWriteTerminalData: Event<TerminalDataWriteEvent>;
+    }
+
+    //#endregion
 }
 //#endregion

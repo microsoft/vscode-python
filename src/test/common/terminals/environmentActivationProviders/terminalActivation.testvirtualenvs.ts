@@ -11,6 +11,7 @@ import * as vscode from 'vscode';
 import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IExperimentService } from '../../../../client/common/types';
+import { createDeferred } from '../../../../client/common/utils/async';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import {
     PYTHON_PATH,
@@ -140,11 +141,22 @@ suite('Activation of Environments in Terminal', () => {
             await extension?.activate();
         }
         expect(extension?.isActive, 'Extension is not activated');
-        const terminal = vscode.window.createTerminal();
-        await sleep(consoleInitWaitMs);
+
+        let terminal: vscode.Terminal;
+        const waitForTerminal = createDeferred();
+        const dispose = vscode.window.onDidWriteTerminalData((e) => {
+            if (e.terminal === terminal && e.data.toLowerCase().includes('activ')) {
+                waitForTerminal.resolve();
+            }
+        });
+        terminal = vscode.window.createTerminal();
+        await Promise.race([waitForTerminal.promise, sleep(consoleInitWaitMs)]);
         terminal.sendText(`python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`, true);
         await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
 
+        if (dispose) {
+            dispose.dispose();
+        }
         return fs.readFile(logFile, 'utf-8');
     }
 
