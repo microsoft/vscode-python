@@ -61,7 +61,7 @@ export async function initializeTest(): Promise<any> {
 }
 export async function closeActiveWindows(): Promise<void> {
     await closeActiveNotebooks();
-    await closeWindowsInteral();
+    await closeWindowsInternal();
 }
 export async function closeActiveNotebooks(): Promise<void> {
     if (!vscode.env.appName.toLowerCase().includes('insiders') || !isANotebookOpen()) {
@@ -76,11 +76,11 @@ export async function closeActiveNotebooks(): Promise<void> {
     // Hence keep trying.
     for (let counter = 0; counter <= 5 && isANotebookOpen(); counter += 1) {
         await sleep(counter * 100);
-        await closeWindowsInteral();
+        await closeWindowsInternal();
     }
 }
 
-async function closeWindowsInteral() {
+async function closeWindowsInternal() {
     return new Promise<void>((resolve, reject) => {
         // Attempt to fix #1301.
         // Lets not waste too much time.
