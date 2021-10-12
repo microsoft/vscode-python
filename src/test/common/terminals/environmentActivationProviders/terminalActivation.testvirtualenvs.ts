@@ -192,8 +192,15 @@ suite('Activation of Environments in Terminal', () => {
         }
         expect(extension?.isActive).to.equal(true, 'Extension is not activated');
 
-        // Wait for some time for the settings to propagate
-        await sleep(waitTimeForActivation);
+        // Wait for some time for the settings to propagate after activation
+        await waitForCondition(
+            () => {
+                const { execCommand } = extension?.exports.settings.getExecutionDetails();
+                return Promise.resolve(fileSystem.arePathsSame(execCommand[0], envPath));
+            },
+            waitTimeForActivation,
+            `${envPath} setting not propagated yet.`,
+        );
 
         const { execCommand } = extension?.exports.settings.getExecutionDetails();
         expect(fileSystem.arePathsSame(execCommand[0], envPath)).to.equal(
