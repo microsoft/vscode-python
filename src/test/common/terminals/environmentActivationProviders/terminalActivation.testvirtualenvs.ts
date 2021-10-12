@@ -172,18 +172,8 @@ suite('Activation of Environments in Terminal', () => {
         );
         if (experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             await setGlobalInterpreterPath(envPath);
-            const p = vscode.workspace.getConfiguration('python').get<string>('defaultInterpreterPath');
-            expect(fileSystem.arePathsSame(p ?? '', envPath)).to.equal(
-                true,
-                `setGlobalInterpreterPath did not work: ${p}`,
-            );
         } else {
             await setPythonPathInWorkspaceRoot(envPath);
-            const p = vscode.workspace.getConfiguration('python').get<string>('pythonPath');
-            expect(fileSystem.arePathsSame(p ?? '', envPath)).to.equal(
-                true,
-                `setPythonPathInWorkspaceRoot did not work: ${p}`,
-            );
         }
 
         const extension = vscode.extensions.getExtension('ms-python.python');
@@ -194,9 +184,19 @@ suite('Activation of Environments in Terminal', () => {
 
         // Wait for some time for the settings to propagate after activation
         await waitForCondition(
-            () => {
+            async () => {
                 const { execCommand } = extension?.exports.settings.getExecutionDetails();
-                return Promise.resolve(fileSystem.arePathsSame(execCommand[0], envPath));
+                if (fileSystem.arePathsSame(execCommand[0], envPath)) {
+                    return true;
+                }
+
+                // Try setting again
+                if (experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
+                    await setGlobalInterpreterPath(envPath);
+                } else {
+                    await setPythonPathInWorkspaceRoot(envPath);
+                }
+                return false;
             },
             waitTimeForActivation,
             `${envPath} setting not propagated yet.`,
