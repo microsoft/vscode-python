@@ -6,7 +6,7 @@ import { Common, LanguageService } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 
 export function createStatusItem(): vscode.Disposable {
-    if (vscode.languages.createLanguageStatusItem) {
+    if ('createLanguageStatusItem' in vscode.languages) {
         const statusItem = vscode.languages.createLanguageStatusItem('python.projectStatus', {
             language: 'python',
         });
