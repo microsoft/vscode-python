@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// IMPORTANT: Do not import any node fs related modules here, as they do not work in browser.
 import * as vscode from 'vscode';
 import { Common, LanguageService } from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
 
 export function createStatusItem(): vscode.Disposable {
     if (vscode.languages.createLanguageStatusItem) {
@@ -21,5 +21,6 @@ export function createStatusItem(): vscode.Disposable {
         };
         return statusItem;
     }
-    return { dispose: noop };
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    return { dispose: () => {} };
 }
