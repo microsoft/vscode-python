@@ -139,6 +139,7 @@ suite('Activation of Environments in Terminal', () => {
         if (!extension?.isActive) {
             await extension?.activate();
         }
+        expect(extension?.isActive, 'Extension is not activated');
         const terminal = vscode.window.createTerminal();
         await sleep(consoleInitWaitMs);
         terminal.sendText(`python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`, true);
