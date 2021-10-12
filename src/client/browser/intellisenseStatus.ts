@@ -3,19 +3,21 @@
 
 // IMPORTANT: Do not import any node fs related modules here, as they do not work in browser.
 import * as vscode from 'vscode';
-import { Common, LanguageService } from '../common/utils/localize';
 
 export function createStatusItem(): vscode.Disposable {
+    // TODO: Note strings are not localized here yet. Localizing strings here
+    // require us to use browser based fs APIs provided by VSCode:
+    // https://github.com/microsoft/vscode-python/issues/17712
     if ('createLanguageStatusItem' in vscode.languages) {
         const statusItem = vscode.languages.createLanguageStatusItem('python.projectStatus', {
             language: 'python',
         });
-        statusItem.name = LanguageService.statusItem.name();
+        statusItem.name = 'Python IntelliSense Status';
         statusItem.severity = vscode.LanguageStatusSeverity.Warning;
-        statusItem.text = LanguageService.statusItem.text();
-        statusItem.detail = LanguageService.statusItem.detail();
+        statusItem.text = 'Partial Mode';
+        statusItem.detail = 'Limited IntelliSense provided by Pylance';
         statusItem.command = {
-            title: Common.learnMore(),
+            title: 'Learn More',
             command: 'vscode.open',
             arguments: [vscode.Uri.parse('https://aka.ms/AAdzyh4')],
         };
