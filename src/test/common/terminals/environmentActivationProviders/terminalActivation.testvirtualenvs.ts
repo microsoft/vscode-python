@@ -145,6 +145,7 @@ suite('Activation of Environments in Terminal', () => {
         });
         terminal = vscode.window.createTerminal();
         await Promise.race([waitForTerminal.promise, sleep(consoleInitWaitMs)]);
+
         terminal.sendText(`python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`, true);
         await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
 
@@ -184,6 +185,9 @@ suite('Activation of Environments in Terminal', () => {
                 `setPythonPathInWorkspaceRoot did not work: ${p}`,
             );
         }
+
+        // Wait for some time for the settings to propagate
+        await sleep(1000);
 
         const extension = vscode.extensions.getExtension('ms-python.python');
         if (!extension?.isActive) {
