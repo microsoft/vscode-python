@@ -186,14 +186,15 @@ suite('Activation of Environments in Terminal', () => {
             );
         }
 
-        // Wait for some time for the settings to propagate
-        await sleep(1000);
-
         const extension = vscode.extensions.getExtension('ms-python.python');
         if (!extension?.isActive) {
             await extension?.activate();
         }
         expect(extension?.isActive).to.equal(true, 'Extension is not activated');
+
+        // Wait for some time for the settings to propagate
+        await sleep(waitTimeForActivation);
+
         const { execCommand } = extension?.exports.settings.getExecutionDetails();
         expect(fileSystem.arePathsSame(execCommand[0], envPath)).to.equal(
             true,
