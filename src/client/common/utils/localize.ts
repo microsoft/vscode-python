@@ -207,7 +207,7 @@ export namespace LanguageService {
     export const statusItem = {
         name: localize('LanguageService.statusItem.name', 'Python IntelliSense Status'),
         text: localize('LanguageService.statusItem.text', 'Partial Mode'),
-        detail: localize('LanguageService.statusItem.detail', 'Limited IntelliSense provided by Pylance'),
+        detail: localize('LanguageService.statusItem.detail', 'Only limited Intellisense via Pylance is supported.'),
     };
     export const startingMicrosoft = localize(
         'LanguageService.startingMicrosoft',
