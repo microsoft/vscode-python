@@ -164,7 +164,10 @@ suite('Activation of Environments in Terminal', () => {
             await setPythonPathInWorkspaceRoot(envPath);
         }
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
-        expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
+        expect(fileSystem.arePathsSame(content, envPath)).to.equal(
+            true,
+            `Environment not activated ${content} != ${envPath}`,
+        );
     }
 
     test('Should not activate', async () => {
