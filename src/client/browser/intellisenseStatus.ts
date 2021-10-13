@@ -3,7 +3,7 @@
 
 // IMPORTANT: Do not import any node fs related modules here, as they do not work in browser.
 import * as vscode from 'vscode';
-import { LanguageService } from './localize';
+import { Common, LanguageService } from './localize';
 
 export function createStatusItem(): vscode.Disposable {
     if ('createLanguageStatusItem' in vscode.languages) {
@@ -15,7 +15,7 @@ export function createStatusItem(): vscode.Disposable {
         statusItem.text = LanguageService.statusItem.text();
         statusItem.detail = LanguageService.statusItem.detail();
         statusItem.command = {
-            title: 'Learn More',
+            title: Common.learnMore(),
             command: 'vscode.open',
             arguments: [vscode.Uri.parse('https://aka.ms/AAdzyh4')],
         };
