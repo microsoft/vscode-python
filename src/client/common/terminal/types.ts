@@ -121,7 +121,6 @@ export const ITerminalActivator = Symbol('ITerminalActivator');
 export type TerminalActivationOptions = {
     resource?: Resource;
     preserveFocus?: boolean;
-    interpreter?: PythonEnvironment;
     /**
      * When sending commands to the terminal, do not display the terminal.
      *

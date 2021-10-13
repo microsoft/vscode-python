@@ -87,7 +87,6 @@ export class TerminalService implements ITerminalService, Disposable {
         await this.terminalActivator.activateEnvironmentInTerminal(this.terminal!, {
             resource: this.options?.resource,
             preserveFocus,
-            interpreter: this.options?.interpreter,
             hideFromUser: this.options?.hideFromUser,
         });
 

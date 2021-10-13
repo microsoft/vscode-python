@@ -135,6 +135,8 @@ export class TerminalHelper implements ITerminalHelper {
             .get<IInterpreterService>(IInterpreterService)
             .getInterpreterDetails(interpreter ? interpreter.path : settings.pythonPath);
 
+        console.log(interpreter ? interpreter.path : settings.pythonPath, 'DETAILS:', JSON.stringify(details));
+
         const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
         const condaService = (await inDiscoveryExperiment(experimentService))
             ? this.serviceContainer.get<IComponentAdapter>(IComponentAdapter)

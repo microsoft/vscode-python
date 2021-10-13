@@ -25,7 +25,6 @@ export class BaseTerminalActivator implements ITerminalActivator {
         const activationCommands = await this.helper.getEnvironmentActivationCommands(
             terminalShellType,
             options?.resource,
-            options?.interpreter,
         );
         console.log(`ACTIVATION COMMAND: ${activationCommands?.join(' ')}`);
         let activated = false;
