@@ -6,9 +6,6 @@ import * as vscode from 'vscode';
 import { LanguageService } from './localize';
 
 export function createStatusItem(): vscode.Disposable {
-    // TODO: Note strings are not localized here yet. Localizing strings here
-    // require us to use browser based fs APIs provided by VSCode:
-    // https://github.com/microsoft/vscode-python/issues/17712
     if ('createLanguageStatusItem' in vscode.languages) {
         const statusItem = vscode.languages.createLanguageStatusItem('python.projectStatus', {
             language: 'python',
