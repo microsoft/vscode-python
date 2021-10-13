@@ -139,7 +139,8 @@ suite('Activation of Environments in Terminal', () => {
         let terminal: vscode.Terminal;
         const waitForTerminal = createDeferred();
         const dispose = vscode.window.onDidWriteTerminalData((e) => {
-            if (e.terminal === terminal && e.data.toLowerCase().includes('activ')) {
+            if (e.terminal.processId === terminal.processId && e.data.toLowerCase().includes('activ')) {
+                console.log(`TERMINAL WRITE: ${e.data}`);
                 waitForTerminal.resolve();
             }
         });
@@ -175,6 +176,7 @@ suite('Activation of Environments in Terminal', () => {
         await setPythonPathInWorkspaceRoot(envPath);
 
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
+        console.log('COMPARING PATHS');
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(
             true,
             `Environment not activated ${content} != ${envPath}`,
