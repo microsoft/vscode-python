@@ -36,6 +36,7 @@ export class TerminalActivator implements ITerminalActivator {
         terminal: Terminal,
         options?: TerminalActivationOptions,
     ): Promise<boolean> {
+        console.log('INSIDE: TerminalActivator.activateEnvironmentInTerminalImpl');
         const settings = this.configurationService.getSettings(options?.resource);
         const activateEnvironment = settings.terminal.activateEnvironment;
         if (!activateEnvironment || options?.hideFromUser) {

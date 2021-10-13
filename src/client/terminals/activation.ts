@@ -44,10 +44,13 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
     }
 
     private async activateTerminal(terminal: Terminal): Promise<void> {
+        console.log('INSIDE: activateTerminal');
         if (this.terminalsNotToAutoActivate.has(terminal)) {
+            console.log('SKIPPED due to: terminalsNotToAutoActivate');
             return;
         }
         if ('hideFromUser' in terminal.creationOptions && terminal.creationOptions.hideFromUser) {
+            console.log('SKIPPED due to: hideFromUser');
             return;
         }
         // If we have just one workspace, then pass that as the resource.
