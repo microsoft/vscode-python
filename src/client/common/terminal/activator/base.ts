@@ -14,6 +14,7 @@ export class BaseTerminalActivator implements ITerminalActivator {
         terminal: Terminal,
         options?: TerminalActivationOptions,
     ): Promise<boolean> {
+        console.log('INSIDE: BaseTerminalActivator.activateEnvironmentInTerminal');
         if (this.activatedTerminals.has(terminal)) {
             return this.activatedTerminals.get(terminal)!;
         }
@@ -26,13 +27,16 @@ export class BaseTerminalActivator implements ITerminalActivator {
             options?.resource,
             options?.interpreter,
         );
+        console.log(`ACTIVATION COMMAND: ${activationCommands?.join(' ')}`);
         let activated = false;
         if (activationCommands) {
             for (const command of activationCommands) {
                 terminal.show(options?.preserveFocus);
                 terminal.sendText(command);
+                console.log(`ACTIVATION COMMAND (sent): ${command}`);
                 await this.waitForCommandToProcess(terminalShellType);
                 activated = true;
+                console.log(`ACTIVATED`);
             }
         }
         deferred.resolve(activated);

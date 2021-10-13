@@ -40,6 +40,7 @@ export class TerminalActivator implements ITerminalActivator {
         const settings = this.configurationService.getSettings(options?.resource);
         const activateEnvironment = settings.terminal.activateEnvironment;
         if (!activateEnvironment || options?.hideFromUser) {
+            console.log('SKIPPED ACTIVATION');
             return false;
         }
 
