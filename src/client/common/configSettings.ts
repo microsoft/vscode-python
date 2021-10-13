@@ -549,7 +549,13 @@ export class PythonSettings implements IPythonSettings {
     public initialize(): void {
         const onDidChange = () => {
             const currentConfig = this.workspace.getConfiguration('python', this.workspaceRoot);
+            console.log(`Before update [default]: ${this.defaultInterpreterPath}`);
+            console.log(`Before update [python]: ${this.pythonPath}`);
+            console.log(`Changed path [default]: ${currentConfig.get<string>('defaultInterpreterPath')}`);
+            console.log(`Changed path [python]: ${currentConfig.get<string>('pythonPath')}`);
             this.update(currentConfig);
+            console.log(`After update [default]: ${this.defaultInterpreterPath}`);
+            console.log(`After update [python]: ${this.pythonPath}`);
 
             this.changed.fire();
         };
