@@ -255,15 +255,22 @@ suite('Activation of Environments in Terminal', () => {
         if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
             this.skip();
         }
+        console.log(`STARTED: venv test`);
         await testActivation(envPaths.venvPath);
+        console.log(`DONE: venv test`);
     });
     test('Should activate with pipenv', async () => {
+        console.log(`STARTED: pipenv test`);
         await testActivation(envPaths.pipenvPath);
+        console.log(`DONE: pipenv test`);
     });
     test('Should activate with virtualenv', async () => {
+        console.log(`STARTED: virtualenv test`);
         await testActivation(envPaths.virtualEnvPath);
+        console.log(`DONE: virtualenv test`);
     });
     test('Should activate with conda', async function () {
+        console.log(`STARTED: conda test`);
         this.skip();
         // Powershell does not work with conda by default, hence use cmd.
         await terminalSettings.update(
@@ -273,5 +280,6 @@ suite('Activation of Environments in Terminal', () => {
         );
         await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
         await testActivation(envPaths.condaPath);
+        console.log(`DONE: conda test`);
     }).timeout(TEST_TIMEOUT * 2);
 });
