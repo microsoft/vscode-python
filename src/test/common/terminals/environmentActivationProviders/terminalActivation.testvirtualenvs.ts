@@ -189,15 +189,16 @@ suite('Activation of Environments in Terminal', () => {
                 }
             }
         });
-        await Promise.race([configChanged.promise, sleep(1000)]);
-        dispose.dispose();
-        expect(configChanged.completed).to.equal(true, 'VS Code did not fire config change event.');
 
         if (experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             await setGlobalInterpreterPath(envPath);
         } else {
             await setPythonPathInWorkspaceRoot(envPath);
         }
+
+        await Promise.race([configChanged.promise, sleep(1000)]);
+        dispose.dispose();
+        expect(configChanged.completed).to.equal(true, 'VS Code did not fire config change event.');
 
         // Wait for some time for the settings to propagate after activation
         await waitForCondition(
