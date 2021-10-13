@@ -29,8 +29,7 @@ export function _getAskedForCollection(): Record<string, string> {
     return askedForCollection;
 }
 
-export function shouldLoadUsingFS(): boolean {
-    // Return a pointer to function so that we refetch it on each call.
+export function shouldLoadUsingNodeFS(): boolean {
     return !loadedCollection || parseLocale() !== loadedLocale;
 }
 

@@ -4,7 +4,7 @@
 'use strict';
 
 import { FileSystem } from '../platform/fileSystem';
-import { getLocalizedString, loadLocalizedStringsUsingNodeFS, shouldLoadUsingFS } from './localizeHelpers';
+import { getLocalizedString, loadLocalizedStringsUsingNodeFS, shouldLoadUsingNodeFS } from './localizeHelpers';
 
 /* eslint-disable @typescript-eslint/no-namespace, no-shadow */
 
@@ -554,7 +554,7 @@ function localize(key: string, defValue?: string) {
 }
 
 function getString(key: string, defValue?: string) {
-    if (shouldLoadUsingFS()) {
+    if (shouldLoadUsingNodeFS()) {
         loadLocalizedStringsUsingNodeFS(new FileSystem());
     }
     return getLocalizedString(key, defValue);
