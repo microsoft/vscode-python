@@ -171,67 +171,8 @@ suite('Activation of Environments in Terminal', () => {
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
 
-        const configChanged = createDeferred();
-        const dispose = vscode.workspace.onDidChangeConfiguration((e) => {
-            if (experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
-                if (e.affectsConfiguration('python.defaultInterpreterPath')) {
-                    configChanged.resolve();
-                }
-                if (e.affectsConfiguration('defaultInterpreterPath')) {
-                    configChanged.resolve();
-                }
-            } else {
-                if (e.affectsConfiguration('python.pythonPath')) {
-                    configChanged.resolve();
-                }
-                if (e.affectsConfiguration('pythonPath')) {
-                    configChanged.resolve();
-                }
-            }
-        });
-
-        if (experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
-            await setGlobalInterpreterPath(envPath);
-        } else {
-            await setPythonPathInWorkspaceRoot(envPath);
-        }
-
-        await Promise.race([configChanged.promise, sleep(1000)]);
-        dispose.dispose();
-        expect(configChanged.completed).to.equal(true, 'VS Code did not fire config change event.');
-
-        const extension = vscode.extensions.getExtension('ms-python.python');
-        if (!extension?.isActive) {
-            await extension?.activate();
-        }
-
-        // Wait for some time for the settings to propagate after activation
-        await waitForCondition(
-            async () => {
-                const { execCommand } = extension?.exports.settings.getExecutionDetails();
-                if (fileSystem.arePathsSame(execCommand[0], envPath)) {
-                    return true;
-                }
-
-                // Try setting again
-                if (experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
-                    await setGlobalInterpreterPath(envPath);
-                } else {
-                    await setPythonPathInWorkspaceRoot(envPath);
-                }
-                return false;
-            },
-            waitTimeForActivation * 3,
-            `${envPath} setting not propagated yet.`,
-        );
-
-        expect(extension?.isActive).to.equal(true, 'Extension is not activated');
-
-        const { execCommand } = extension?.exports.settings.getExecutionDetails();
-        expect(fileSystem.arePathsSame(execCommand[0], envPath)).to.equal(
-            true,
-            `Python not set to testing environment [actual] ${execCommand[0]} != [expected] ${envPath}`,
-        );
+        await setGlobalInterpreterPath(envPath);
+        await setPythonPathInWorkspaceRoot(envPath);
 
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(
