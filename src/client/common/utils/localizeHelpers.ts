@@ -29,11 +29,6 @@ export function _getAskedForCollection(): Record<string, string> {
     return askedForCollection;
 }
 
-export function localize(key: string, defValue?: string) {
-    // Return a pointer to function so that we refetch it on each call.
-    return (): string => getString(key, defValue);
-}
-
 export function shouldLoadUsingFS(): boolean {
     // Return a pointer to function so that we refetch it on each call.
     return !loadedCollection || parseLocale() !== loadedLocale;
@@ -54,12 +49,12 @@ function parseLocale(): string {
     return vscodeConfigString ? JSON.parse(vscodeConfigString).locale : 'en-us';
 }
 
-function getString(key: string, defValue?: string) {
+export function getLocalizedString(key: string, defValue?: string) {
     // The default collection (package.nls.json) is the fallback.
     // Note that we are guaranteed the following (during shipping)
     //  1. defaultCollection was initialized by the load() call above
     //  2. defaultCollection has the key (see the "keys exist" test)
-    let collection = defaultCollection!;
+    let collection = defaultCollection;
 
     // Use the current locale if the key is defined there.
     if (loadedCollection && loadedCollection.hasOwnProperty(key)) {

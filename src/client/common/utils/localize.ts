@@ -4,7 +4,7 @@
 'use strict';
 
 import { FileSystem } from '../platform/fileSystem';
-import { loadLocalizedStringsUsingNodeFS, localize as localizeUtil, shouldLoadUsingFS } from './localizeHelpers';
+import { getLocalizedString, loadLocalizedStringsUsingNodeFS, shouldLoadUsingFS } from './localizeHelpers';
 
 /* eslint-disable @typescript-eslint/no-namespace, no-shadow */
 
@@ -549,11 +549,15 @@ export namespace MPLSDeprecation {
 }
 
 function localize(key: string, defValue?: string) {
-    // Load the current collection
+    // Return a pointer to function so that we refetch it on each call.
+    return (): string => getString(key, defValue);
+}
+
+function getString(key: string, defValue?: string) {
     if (shouldLoadUsingFS()) {
         loadLocalizedStringsUsingNodeFS(new FileSystem());
     }
-    return localizeUtil(key, defValue);
+    return getLocalizedString(key, defValue);
 }
 
 // Default to loading the current locale
