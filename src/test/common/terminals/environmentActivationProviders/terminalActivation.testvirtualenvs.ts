@@ -200,6 +200,11 @@ suite('Activation of Environments in Terminal', () => {
         dispose.dispose();
         expect(configChanged.completed).to.equal(true, 'VS Code did not fire config change event.');
 
+        const extension = vscode.extensions.getExtension('ms-python.python');
+        if (!extension?.isActive) {
+            await extension?.activate();
+        }
+
         // Wait for some time for the settings to propagate after activation
         await waitForCondition(
             async () => {
@@ -220,10 +225,6 @@ suite('Activation of Environments in Terminal', () => {
             `${envPath} setting not propagated yet.`,
         );
 
-        const extension = vscode.extensions.getExtension('ms-python.python');
-        if (!extension?.isActive) {
-            await extension?.activate();
-        }
         expect(extension?.isActive).to.equal(true, 'Extension is not activated');
 
         const { execCommand } = extension?.exports.settings.getExecutionDetails();
