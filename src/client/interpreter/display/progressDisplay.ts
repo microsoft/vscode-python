@@ -34,11 +34,11 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
     public async activate(): Promise<void> {
         if (await inDiscoveryExperiment(this.experimentService)) {
             this.pyenvs.onRefreshStart(
-                () => {
+                (refreshPromise) => {
                     this.showProgress();
-                    if (this.pyenvs.refreshPromise) {
+                    if (refreshPromise) {
                         traceInfo('Refresh promise exists, wait on it');
-                        this.pyenvs.refreshPromise
+                        refreshPromise
                             .then(() => this.hideProgress())
                             .catch((ex) => {
                                 traceError(`Refresh promise rejected: ${ex}`);

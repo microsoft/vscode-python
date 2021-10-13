@@ -3,7 +3,7 @@
 
 import { Event, EventEmitter } from 'vscode';
 import '../../../../common/extensions';
-import { traceError, traceInfo } from '../../../../common/logger';
+import { traceError, traceInfo, traceVerbose } from '../../../../common/logger';
 import { createDeferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../../telemetry';
@@ -24,13 +24,14 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     /** Keeps track of whether there are any scheduled refreshes other than the ongoing one for various queries. */
     private scheduledRefreshes = new Map<PythonLocatorQuery | undefined, boolean>();
 
-    private readonly refreshStarted = new EventEmitter<void>();
+    private readonly refreshStarted = new EventEmitter<Promise<void> | undefined>();
 
-    public get onRefreshStart(): Event<void> {
+    public get onRefreshStart(): Event<Promise<void> | undefined> {
         return this.refreshStarted.event;
     }
 
     public get refreshPromise(): Promise<void> | undefined {
+        traceVerbose(`Refresh Keys`, JSON.stringify(this.refreshPromises.keys()), this.refreshPromises.size);
         return this.refreshPromises.size > 0
             ? Promise.all(Array.from(this.refreshPromises.values())).then()
             : undefined;
@@ -92,7 +93,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         const deferred = createDeferred<void>();
         // Ensure we set this before we trigger the promise to accurately track when a refresh has started.
         this.refreshPromises.set(query, deferred.promise);
-        this.refreshStarted.fire();
+        this.refreshStarted.fire(this.refreshPromise);
         const iterator = this.locator.iterEnvs(query);
         const promise = this.addEnvsToCacheFromIterator(iterator);
         return promise

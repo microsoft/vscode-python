@@ -169,7 +169,7 @@ export interface IDiscoveryAPI {
     /**
      * Fires when the known list of environments starts refreshing, i.e when discovery starts or restarts.
      */
-    readonly onRefreshStart: Event<void>;
+    readonly onRefreshStart: Event<Promise<void> | undefined>;
     /**
      * Fires with details if the known list changes.
      */

@@ -41,7 +41,7 @@ export type PythonEnvironmentsChangedEvent = {
 
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
-    readonly onRefreshStart: Event<void>;
+    readonly onRefreshStart: Event<Promise<void> | undefined>;
     triggerRefresh(query?: PythonLocatorQuery): Promise<void>;
     readonly refreshPromise: Promise<void> | undefined;
     readonly onChanged: Event<PythonEnvironmentsChangedEvent>;
@@ -110,7 +110,7 @@ export interface ICondaLocatorService {
 
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
-    readonly onRefreshStart: Event<void>;
+    readonly onRefreshStart: Event<Promise<void> | undefined>;
     triggerRefresh(query?: PythonLocatorQuery): Promise<void>;
     readonly refreshPromise: Promise<void> | undefined;
     readonly onDidChangeInterpreters: Event<PythonEnvironmentsChangedEvent>;

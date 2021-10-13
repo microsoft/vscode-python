@@ -57,7 +57,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         });
     }
 
-    public get onRefreshStart(): Event<void> {
+    public get onRefreshStart(): Event<Promise<void> | undefined> {
         return this.pyenvs.onRefreshStart;
     }
 
