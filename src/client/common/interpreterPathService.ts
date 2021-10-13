@@ -83,6 +83,7 @@ export class InterpreterPathService implements IInterpreterPathService {
 
     public get(resource: Resource): string {
         const settings = this.inspect(resource);
+        console.log('SETTING', JSON.stringify(settings));
         return (
             settings.workspaceFolderValue ||
             settings.workspaceValue ||

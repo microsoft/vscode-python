@@ -592,6 +592,7 @@ export class PythonSettings implements IPythonSettings {
          * `pythonPath` setting, and I've checked that `pythonPath` setting is not accessed anywhere in the constructor.
          */
         const inExperiment = this.experimentsManager?.inExperimentSync(DeprecatePythonPath.experiment);
+        console.log('I should be in experiment', inExperiment);
         // Use the interpreter path service if in the experiment otherwise use the normal settings
         this.pythonPath = systemVariables.resolveAny(
             inExperiment && this.interpreterPathService
