@@ -48,7 +48,7 @@ function parseLocale(): string {
     return vscodeConfigString ? JSON.parse(vscodeConfigString).locale : 'en-us';
 }
 
-export function getLocalizedString(key: string, defValue?: string) {
+export function getLocalizedString(key: string, defValue?: string): string {
     // The default collection (package.nls.json) is the fallback.
     // Note that we are guaranteed the following (during shipping)
     //  1. defaultCollection was initialized by the load() call above
