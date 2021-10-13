@@ -131,18 +131,21 @@ export class TerminalHelper implements ITerminalHelper {
     ): Promise<string[] | undefined> {
         const settings = this.configurationService.getSettings(resource);
         console.log(`ACTIVATION TYPE: ${interpreter?.envType}`);
+        const details = await this.serviceContainer
+            .get<IInterpreterService>(IInterpreterService)
+            .getInterpreterDetails(interpreter ? interpreter.path : settings.pythonPath);
 
         const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
         const condaService = (await inDiscoveryExperiment(experimentService))
             ? this.serviceContainer.get<IComponentAdapter>(IComponentAdapter)
             : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
         // If we have a conda environment, then use that.
-        const isCondaEnvironment = interpreter
-            ? interpreter.envType === EnvironmentType.Conda
+        const isCondaEnvironment = details
+            ? details.envType === EnvironmentType.Conda
             : await condaService.isCondaEnvironment(settings.pythonPath);
         if (isCondaEnvironment) {
-            const activationCommands = interpreter
-                ? await this.conda.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
+            const activationCommands = details
+                ? await this.conda.getActivationCommandsForInterpreter(details.path, terminalShellType)
                 : await this.conda.getActivationCommands(resource, terminalShellType);
 
             if (Array.isArray(activationCommands)) {
@@ -154,8 +157,8 @@ export class TerminalHelper implements ITerminalHelper {
         const supportedProviders = providers.filter((provider) => provider.isShellSupported(terminalShellType));
 
         for (const provider of supportedProviders) {
-            const activationCommands = interpreter
-                ? await provider.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
+            const activationCommands = details
+                ? await provider.getActivationCommandsForInterpreter(details.path, terminalShellType)
                 : await provider.getActivationCommands(resource, terminalShellType);
 
             if (Array.isArray(activationCommands) && activationCommands.length > 0) {
