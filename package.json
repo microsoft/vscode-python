@@ -582,7 +582,7 @@
                 "python.defaultInterpreterPath": {
                     "default": "python",
                     "description": "Path to Python, you can use a custom version of Python by modifying this setting to include the full path. This default setting is used as a fallback if no interpreter is selected for the workspace. The extension will also not set nor change the value of this setting, it will only read from it.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.diagnostics.sourceMapsEnabled": {
