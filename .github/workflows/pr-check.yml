@@ -34,18 +34,6 @@ jobs:
           vsix_name: ${{ env.VSIX_NAME }}
           artifact_name: ${{ env.ARTIFACT_NAME_VSIX }}
 
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2.3.4
-
-      - name: Lint
-        uses: ./.github/actions/lint
-        with:
-          node_version: ${{ env.NODE_VERSION }}
-
   ### Non-smoke tests
   tests:
     name: Tests
@@ -59,10 +47,10 @@ jobs:
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the Unix case.
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
         # Run the tests on the oldest and most recent versions of Python.
         python: ['2.7', '3.9']
-        test-suite: [ts-unit, python-unit, venv, single-workspace, debugger, functional]
+        test-suite: [venv]
         exclude:
           # For fast PR turn-around, skip 2.7 under Windows.
           - os: windows-latest
