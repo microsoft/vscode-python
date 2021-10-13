@@ -177,8 +177,14 @@ suite('Activation of Environments in Terminal', () => {
                 if (e.affectsConfiguration('python.defaultInterpreterPath')) {
                     configChanged.resolve();
                 }
+                if (e.affectsConfiguration('defaultInterpreterPath')) {
+                    configChanged.resolve();
+                }
             } else {
                 if (e.affectsConfiguration('python.pythonPath')) {
+                    configChanged.resolve();
+                }
+                if (e.affectsConfiguration('pythonPath')) {
                     configChanged.resolve();
                 }
             }
