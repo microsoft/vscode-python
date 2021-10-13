@@ -1766,7 +1766,7 @@
                     "category": "Python",
                     "command": "python.execInTerminal-icon",
                     "icon": "$(play)",
-                    "title": "%python.command.python.execInTerminal.title%",
+                    "title": "%python.command.python.execInTerminalIcon.title%",
                     "when": "!virtualWorkspace"
                 },
                 {
@@ -1947,7 +1947,7 @@
                 {
                     "command": "python.execInTerminal-icon",
                     "group": "navigation@0",
-                    "title": "%python.command.python.execInTerminal.title%",
+                    "title": "%python.command.python.execInTerminalIcon.title%",
                     "when": "resourceLangId == python && !isInDiffEditor && !virtualWorkspace"
                 },
                 {
