@@ -16,6 +16,10 @@ export namespace LanguageService {
     };
 }
 
+export namespace Common {
+    export const learnMore = localize('Common.learnMore', 'Learn more');
+}
+
 function localize(key: string, defValue?: string) {
     // Return a pointer to function so that we refetch it on each call.
     return (): string => getLocalizedString(key, defValue);
