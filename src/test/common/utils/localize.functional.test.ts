@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import * as localize from '../../../client/common/utils/localize';
+import * as localizeHelpers from '../../../client/common/utils/localizeHelpers';
 
 const defaultNLSFile = path.join(EXTENSION_ROOT_DIR, 'package.nls.json');
 
@@ -26,7 +27,7 @@ suite('Localization', () => {
         setLocale('en-us');
 
         // Ensure each test starts fresh.
-        localize._resetCollections();
+        localizeHelpers._resetCollections();
     });
 
     teardown(() => {
@@ -102,7 +103,7 @@ suite('Localization', () => {
         useEveryLocalization(localize);
 
         // Now verify all of the asked for keys exist
-        const askedFor = localize._getAskedForCollection();
+        const askedFor = localizeHelpers._getAskedForCollection();
         const missing: Record<string, string> = {};
         Object.keys(askedFor).forEach((key: string) => {
             // Now check that this key exists somewhere in the nls collection
@@ -133,7 +134,7 @@ suite('Localization', () => {
         useEveryLocalization(localize);
 
         // Now verify all of the asked for keys exist
-        const askedFor = localize._getAskedForCollection();
+        const askedFor = localizeHelpers._getAskedForCollection();
         const extra: Record<string, string> = {};
         Object.keys(nlsCollection).forEach((key: string) => {
             // Now check that this key exists somewhere in the nls collection

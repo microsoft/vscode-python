@@ -9,6 +9,7 @@ import { LanguageClientMiddlewareBase } from '../activation/languageClientMiddle
 import { ILSExtensionApi } from '../activation/node/languageServerFolderService';
 import { LanguageServerType } from '../activation/types';
 import { AppinsightsKey, PVSC_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../common/constants';
+import { loadLocalizedStringsForBrowser } from '../common/utils/localizeHelpers';
 import { EventName } from '../telemetry/constants';
 
 interface BrowserConfig {
@@ -17,7 +18,7 @@ interface BrowserConfig {
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     // Run in a promise and return early so that VS Code can go activate Pylance.
-
+    await loadLocalizedStringsForBrowser();
     const pylanceExtension = vscode.extensions.getExtension<ILSExtensionApi>(PYLANCE_EXTENSION_ID);
     if (pylanceExtension) {
         runPylance(context, pylanceExtension);
