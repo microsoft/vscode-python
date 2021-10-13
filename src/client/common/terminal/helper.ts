@@ -130,6 +130,7 @@ export class TerminalHelper implements ITerminalHelper {
         providers: ITerminalActivationCommandProvider[],
     ): Promise<string[] | undefined> {
         const settings = this.configurationService.getSettings(resource);
+        console.log(`ACTIVATION TYPE: ${interpreter?.envType}`);
 
         const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
         const condaService = (await inDiscoveryExperiment(experimentService))
