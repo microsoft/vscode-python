@@ -56,6 +56,7 @@
         "Notebooks"
     ],
     "activationEvents": [
+        "onDebugInitialConfigurations",
         "onLanguage:python",
         "onDebugResolve:python",
         "onCommand:python.execInTerminal",
