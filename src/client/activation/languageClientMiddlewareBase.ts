@@ -61,6 +61,9 @@ interface SendTelemetryEventFunc {
     (eventName: EventName, measuresOrDurationMs?: Record<string, number> | number, properties?: any, ex?: Error): void;
 }
 
+// Boolean indicating if sending telemetry is allowed or not.
+let shouldSendTelemetry = true;
+
 export class LanguageClientMiddlewareBase implements Middleware {
     // These are public so that the captureTelemetryForLSPMethod decorator can access them.
     public readonly eventName: EventName | undefined;
@@ -344,12 +347,24 @@ export class LanguageClientMiddlewareBase implements Middleware {
     }
 
     private callNext(funcName: keyof Middleware, args: IArguments) {
+        // Change the 'last' argument (which is our next) in order to track if
+        // telemetry should be sent or not.
+        const changedArgs = [...args];
+        shouldSendTelemetry = false;
+        changedArgs[changedArgs.length - 1] = (...nextArgs: any) => {
+            // If the 'next' function is called, then legit request was made.
+            //
+            // This is kinda fragile. It's relying on the middleware to not do anything
+            // async.
+            shouldSendTelemetry = true;
+            return args[args.length - 1](...nextArgs);
+        };
+
         // This function uses the last argument to call the 'next' item. If we're allowing notebook
         // middleware, it calls into the notebook middleware first.
-        if (this.notebookAddon) {
+        if (this.notebookAddon && (this.notebookAddon as any)[funcName]) {
             // It would be nice to use args.callee, but not supported in strict mode
-
-            return (this.notebookAddon as any)[funcName](...args);
+            return (this.notebookAddon as any)[funcName](...changedArgs);
         }
         return args[args.length - 1](...args);
     }
@@ -396,6 +411,7 @@ function captureTelemetryForLSPMethod(
                 method: formattedMethod,
             };
 
+            let telemetryAllowed = false;
             const stopWatch = new StopWatch();
             const sendTelemetry = (result: any) => {
                 let measures: number | Record<string, number> = stopWatch.elapsedTime;
@@ -405,12 +421,20 @@ function captureTelemetryForLSPMethod(
                         ...lazyMeasures(this, result),
                     };
                 }
-                this.sendTelemetryEventFunc(eventName, measures, properties);
+                if (telemetryAllowed) {
+                    this.sendTelemetryEventFunc(eventName, measures, properties);
+                }
                 return result;
             };
 
             const result = originalMethod.apply(this, args);
 
+            // Keep track of the global flag locally so we can reset it
+            telemetryAllowed = shouldSendTelemetry;
+            // Always reset to sending.
+            shouldSendTelemetry = true;
+
+            // Then wait for the result before sending telemetry
             if (isThenable<any>(result)) {
                 return result.then(sendTelemetry);
             }
