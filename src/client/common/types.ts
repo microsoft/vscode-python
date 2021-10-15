@@ -19,7 +19,6 @@ import {
     WorkspaceEdit,
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
-import { LogLevel } from '../logging/levels';
 import type { ExtensionChannels } from './insidersBuild/types';
 import type { InterpreterUri, ModuleInstallFlags } from './installer/types';
 import { EnvironmentVariables } from './variables/types';
@@ -189,7 +188,6 @@ export interface IPythonSettings {
     readonly languageServer: LanguageServerType;
     readonly languageServerIsDefault: boolean;
     readonly defaultInterpreterPath: string;
-    readonly logging: ILoggingSettings;
     readonly tensorBoard: ITensorBoardSettings | undefined;
     initialize(): void;
 }
@@ -224,11 +222,6 @@ export interface IMypyCategorySeverity {
     readonly note: DiagnosticSeverity;
 }
 
-export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug';
-
-export interface ILoggingSettings {
-    readonly level: LogLevel | 'off';
-}
 export interface ILintingSettings {
     readonly enabled: boolean;
     readonly ignorePatterns: string[];
@@ -469,25 +462,6 @@ export interface IAsyncDisposable {
 export interface IHashFormat {
     number: number; // If hash format is a number
     string: string; // If hash format is a string
-}
-
-/**
- * Interface used to implement cryptography tools
- */
-export const ICryptoUtils = Symbol('ICryptoUtils');
-export interface ICryptoUtils {
-    /**
-     * Creates hash using the data and encoding specified
-     * @returns hash as number, or string
-     * @param data The string to hash
-     * @param hashFormat Return format of the hash, number or string
-     * @param [algorithm]
-     */
-    createHash<E extends keyof IHashFormat>(
-        data: string,
-        hashFormat: E,
-        algorithm?: 'SHA512' | 'SHA256' | 'FNV',
-    ): IHashFormat[E];
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');

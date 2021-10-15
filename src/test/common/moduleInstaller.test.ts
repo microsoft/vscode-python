@@ -31,7 +31,6 @@ import {
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
 import { DiscoveryVariants } from '../../client/common/experiments/groups';
 import { ExperimentService } from '../../client/common/experiments/service';
@@ -94,7 +93,6 @@ import {
     IAsyncDisposableRegistry,
     IBrowserService,
     IConfigurationService,
-    ICryptoUtils,
     ICurrentProcess,
     IEditorUtils,
     IExperimentService,
@@ -256,7 +254,6 @@ suite('Module Installer', () => {
                 ITerminalActivationHandler,
                 PowershellTerminalActivationFailedHandler,
             );
-            ioc.serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
             ioc.serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
 
             ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(

@@ -3,6 +3,7 @@
 
 import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
+import { PYTHON_LANGUAGE } from '../common/constants';
 import { IConfigurationService } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
@@ -76,7 +77,7 @@ export class PythonFormattingEditProvider
         // Workaround is to resolve promise to nothing here, then execute format document and force new save.
         // However, we need to know if this is 'format document' or formatting on save.
 
-        if (this.saving) {
+        if (this.saving || document.languageId !== PYTHON_LANGUAGE) {
             // We are saving after formatting (see onSaveDocument below)
             // so we do not want to format again.
             return [];

@@ -58,6 +58,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
     }
 
     public shellExec(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
+        this.emit('exec', command, undefined, options);
         return shellExec(command, options, this.env, this.processesToKill);
     }
 }

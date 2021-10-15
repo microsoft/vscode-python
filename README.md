@@ -2,6 +2,8 @@
 
 A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the language: >=3.6), including features such as IntelliSense (Pylance), linting, debugging, code navigation, code formatting, refactoring, variable explorer, test explorer, and more!
 
+**NOTE**: Support on the web -- e.g. [github.dev](http://github.dev/) -- is limited.
+
 ## Installed extensions
 
 The Python extension will automatically install the [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) and [Jupyter](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) extensions to give you the best experience when working with Python files and Jupyter notebooks. However, Pylance is an optional dependency, meaning the Python extension will remain fully functional if it fails to be installed. You can also [uninstall](https://code.visualstudio.com/docs/editor/extension-marketplace#_uninstall-an-extension) it at the expense of some features if you’re using a different language server.

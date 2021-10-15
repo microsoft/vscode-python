@@ -168,7 +168,13 @@ class VsTestResult(unittest.TextTestResult):
         super(VsTestResult, self).addUnexpectedSuccess(test)
         self.sendResult(test, "passed-unexpected")
 
-    def sendResult(self, test, outcome, trace=None):
+    def addSubTest(self, test, subtest, err):
+        super(VsTestResult, self).addSubTest(test, subtest, err)
+        self.sendResult(
+            test, "subtest-passed" if err is None else "subtest-failed", err, subtest
+        )
+
+    def sendResult(self, test, outcome, trace=None, subtest=None):
         if _channel is not None:
             tb = None
             message = None
@@ -179,13 +185,16 @@ class VsTestResult(unittest.TextTestResult):
                 formatted = formatted[1:]
                 tb = "".join(formatted)
                 message = str(trace[1])
-            _channel.send_event(
-                name="result",
-                outcome=outcome,
-                traceback=tb,
-                message=message,
-                test=test.id(),
-            )
+
+            result = {
+                "outcome": outcome,
+                "traceback": tb,
+                "message": message,
+                "test": test.id(),
+            }
+            if subtest is not None:
+                result["subtest"] = subtest.id()
+            _channel.send_event("result", **result)
 
 
 def stopTests():

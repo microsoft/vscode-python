@@ -27,7 +27,7 @@ class InputFlowAction {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InputStep<T extends any> = (input: MultiStepInput<T>, state: T) => Promise<InputStep<T> | void>;
 
-type buttonCallbackType<T extends QuickPickItem> = (quickPick: QuickPick<T>) => Promise<void>;
+type buttonCallbackType<T extends QuickPickItem> = (quickPick: QuickPick<T>) => void;
 
 type QuickInputButtonSetup = {
     /**
@@ -55,7 +55,7 @@ export interface IQuickPickParameters<T extends QuickPickItem, E = any> {
     sortByLabel?: boolean;
     acceptFilterBoxTextAsSelection?: boolean;
     onChangeItem?: {
-        callback: (event: E, quickPick: QuickPick<T>) => Promise<void>;
+        callback: (event: E, quickPick: QuickPick<T>) => void;
         event: Event<E>;
     };
 }

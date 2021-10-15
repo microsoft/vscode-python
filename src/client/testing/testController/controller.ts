@@ -23,7 +23,7 @@ import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
-import { getNodeByUri } from './common/testItemUtilities';
+import { DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
 import { ITestController, ITestFrameworkController, TestRefreshOptions } from './common/types';
 
 @injectable()
@@ -74,12 +74,19 @@ export class PythonTestController implements ITestController {
         this.refreshData = delayTrigger;
 
         this.disposables.push(
-            this.testController.createRunProfile('Run Tests', TestRunProfileKind.Run, this.runTests.bind(this), true),
+            this.testController.createRunProfile(
+                'Run Tests',
+                TestRunProfileKind.Run,
+                this.runTests.bind(this),
+                true,
+                RunTestTag,
+            ),
             this.testController.createRunProfile(
                 'Debug Tests',
                 TestRunProfileKind.Debug,
                 this.runTests.bind(this),
                 true,
+                DebugTestTag,
             ),
         );
         this.testController.resolveHandler = this.resolveChildren.bind(this);
@@ -244,6 +251,7 @@ export class PythonTestController implements ITestController {
                                 },
                                 workspace,
                                 token,
+                                this.testController,
                             );
                         }
                     }

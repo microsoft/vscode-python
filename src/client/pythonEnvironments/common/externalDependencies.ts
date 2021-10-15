@@ -4,14 +4,12 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ExecutionResult, ShellOptions, SpawnOptions } from '../../common/process/types';
+import { ExecutionResult, IProcessServiceFactory, ShellOptions, SpawnOptions } from '../../common/process/types';
 import { IExperimentService, IDisposable, IConfigurationService } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { normalizeFilename } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
-import { plainExec, shellExec } from '../../common/process/rawProcessApis';
-import { BufferDecoder } from '../../common/process/decoder';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
@@ -20,39 +18,14 @@ export function initializeExternalDependencies(serviceContainer: IServiceContain
 
 // processes
 
-/**
- * Specialized version of the more generic shellExecute function to use only in
- * cases where we don't need to pass custom environment variables read from env
- * files or execution options.
- *
- * Also ensures to kill the processes created after execution.
- */
 export async function shellExecute(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
-    const disposables = new Set<IDisposable>();
-    return shellExec(command, options, undefined, disposables).finally(() => {
-        // Ensure the process we started is cleaned up.
-        disposables.forEach((p) => {
-            try {
-                p.dispose();
-            } catch {
-                // ignore.
-            }
-        });
-    });
+    const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
+    return service.shellExec(command, options);
 }
 
-/**
- * Specialized version of the more generic exec function to use only in
- * cases where we don't need to pass custom environment variables read from
- * env files.
- */
-export async function exec(
-    file: string,
-    args: string[],
-    options: SpawnOptions = {},
-    disposables?: Set<IDisposable>,
-): Promise<ExecutionResult<string>> {
-    return plainExec(file, args, options, new BufferDecoder(), undefined, disposables);
+export async function exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
+    const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
+    return service.exec(file, args, options);
 }
 
 // filesystem

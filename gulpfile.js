@@ -173,8 +173,6 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in webpack performance recommendations:',
                 'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
                 'WARNING in ./node_modules/any-promise/register.js',
-                'WARNING in ./node_modules/log4js/lib/appenders/index.js',
-                'WARNING in ./node_modules/log4js/lib/clustering.js',
                 'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
                 'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js',
             ];

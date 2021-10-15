@@ -128,11 +128,18 @@ export async function updateResultFromJunitXml(
                     runInstance.failed(node, message);
                     runInstance.appendOutput(fixLogLines(text));
                 } else if (result.skipped) {
-                    skipped += 1;
                     const skip = result.skipped[0];
-                    const text = `${rawTestCaseNode.rawId} Skipped: [${skip.$.type}]${skip.$.message}\r\n`;
-
-                    runInstance.skipped(node);
+                    let text = '';
+                    if (skip.$.type === 'pytest.xfail') {
+                        passed += 1;
+                        // pytest.xfail ==> expected failure via @unittest.expectedFailure
+                        text = `${rawTestCaseNode.rawId} Passed: [${skip.$.type}]${skip.$.message}\r\n`;
+                        runInstance.passed(node);
+                    } else {
+                        skipped += 1;
+                        text = `${rawTestCaseNode.rawId} Skipped: [${skip.$.type}]${skip.$.message}\r\n`;
+                        runInstance.skipped(node);
+                    }
                     runInstance.appendOutput(fixLogLines(text));
                 } else {
                     passed += 1;

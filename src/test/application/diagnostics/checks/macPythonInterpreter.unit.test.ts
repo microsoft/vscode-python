@@ -174,7 +174,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 .verifiable(typemoq.Times.once());
             interpreterService
                 .setup((i) => i.getInterpreters(typemoq.It.isAny()))
-                .returns(() => Promise.resolve([{} as any]))
+                .returns(() => ({} as any))
                 .verifiable(typemoq.Times.never());
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
@@ -204,7 +204,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 .verifiable(typemoq.Times.once());
             interpreterService
                 .setup((i) => i.getInterpreters(typemoq.It.isAny()))
-                .returns(() => Promise.resolve([{} as any]))
+                .returns(() => ({} as any))
                 .verifiable(typemoq.Times.never());
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))

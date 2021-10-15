@@ -240,7 +240,12 @@ export class UnittestController implements ITestFrameworkController {
         return Promise.resolve();
     }
 
-    public runTests(testRun: ITestRun, workspace: WorkspaceFolder, token: CancellationToken): Promise<void> {
+    public runTests(
+        testRun: ITestRun,
+        workspace: WorkspaceFolder,
+        token: CancellationToken,
+        testController?: TestController,
+    ): Promise<void> {
         const settings = this.configService.getSettings(workspace.uri);
         return this.runner.runTests(
             testRun,
@@ -254,6 +259,7 @@ export class UnittestController implements ITestFrameworkController {
                 args: settings.testing.unittestArgs,
             },
             this.idToRawData,
+            testController,
         );
     }
 }
