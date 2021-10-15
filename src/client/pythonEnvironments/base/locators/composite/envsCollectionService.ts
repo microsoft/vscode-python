@@ -90,16 +90,14 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     private startRefresh(query: PythonLocatorQuery | undefined): Promise<void> {
         const stopWatch = new StopWatch();
-        const deferred = createDeferred<void>();
-        // Ensure we set this before we trigger the promise to accurately track when a refresh has started.
-        this.refreshPromises.set(query, deferred.promise);
-        this.refreshStarted.fire(this.refreshPromise);
         const iterator = this.locator.iterEnvs(query);
         const promise = this.addEnvsToCacheFromIterator(iterator);
+        // Ensure we set this before we trigger the promise to accurately track when a refresh has started.
+        this.refreshPromises.set(query, promise);
+        this.refreshStarted.fire(this.refreshPromise);
         return promise
             .then(async () => {
                 traceInfo('Will resolve deferred env collection refresh promise and delete locator query');
-                deferred.resolve();
                 const refreshp = this.refreshPromise;
                 if (!refreshp) {
                     traceError('Refresh promise is `undefined`?');
@@ -122,7 +120,6 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             })
             .catch((ex) => {
                 traceError('Failure during env collection refresh.', ex);
-                deferred.reject(ex);
             });
     }
 
