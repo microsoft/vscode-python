@@ -7,7 +7,6 @@ import {
     CodeLens,
     Command,
     CompletionItem,
-    CompletionList,
     Declaration as VDeclaration,
     Definition,
     DefinitionLink,
