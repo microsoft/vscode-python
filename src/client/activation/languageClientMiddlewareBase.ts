@@ -61,10 +61,6 @@ interface SendTelemetryEventFunc {
     (eventName: EventName, measuresOrDurationMs?: Record<string, number> | number, properties?: any, ex?: Error): void;
 }
 
-type CalledNextResult = {
-    called: boolean;
-};
-
 export class LanguageClientMiddlewareBase implements Middleware {
     private readonly eventName: EventName | undefined;
 
@@ -394,27 +390,13 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    private callNext(funcName: keyof Middleware, args: IArguments, calledNextInfo?: CalledNextResult) {
-        // Change the 'last' argument (which is our next) in order to track if
-        // telemetry should be sent or not.
-        const changedArgs = [...args];
-
-        // Track whether or not the middleware called the 'next' function (which means it actually sent a request)
-        changedArgs[changedArgs.length - 1] = (...nextArgs: any) => {
-            // If the 'next' function is called, then legit request was made.
-            if (calledNextInfo) {
-                calledNextInfo.called = true;
-            }
-            // Then call the original 'next'
-            return args[args.length - 1](...nextArgs);
-        };
-
+    private callNext(funcName: keyof Middleware, args: IArguments) {
         // This function uses the last argument to call the 'next' item. If we're allowing notebook
         // middleware, it calls into the notebook middleware first.
         let result: any;
         if (this.notebookAddon && (this.notebookAddon as any)[funcName]) {
             // It would be nice to use args.callee, but not supported in strict mode
-            result = (this.notebookAddon as any)[funcName](...changedArgs);
+            result = (this.notebookAddon as any)[funcName](...args);
         } else {
             result = args[args.length - 1](...args);
         }
@@ -431,7 +413,20 @@ export class LanguageClientMiddlewareBase implements Middleware {
     ) {
         const now = Date.now();
         const stopWatch = new StopWatch();
-        const calledNextInfo = { called: false };
+        let calledNext = false;
+
+        // Change the 'last' argument (which is our next) in order to track if
+        // telemetry should be sent or not.
+        const changedArgs = [...args];
+
+        // Track whether or not the middleware called the 'next' function (which means it actually sent a request)
+        changedArgs[changedArgs.length - 1] = (...nextArgs: any) => {
+            // If the 'next' function is called, then legit request was made.
+            calledNext = true;
+
+            // Then call the original 'next'
+            return args[args.length - 1](...nextArgs);
+        };
 
         // Check if we need to reset the event count (if we're past the globalDebounce time)
         if (now > this.nextWindow) {
@@ -448,9 +443,8 @@ export class LanguageClientMiddlewareBase implements Middleware {
             // - eventcount is not over the global limit
             // - elapsed time since we sent this event is greater than debounce time
             if (
-                lspMethod &&
                 this.eventName &&
-                calledNextInfo.called &&
+                calledNext &&
                 this.eventCount < globalLimit &&
                 debounceMilliseconds !== undefined &&
                 (!lastCapture || now - lastCapture > debounceMilliseconds)
@@ -481,7 +475,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
         };
 
         // Try to call the 'next' function in the middleware chain
-        const result = this.callNext(funcName, args, calledNextInfo);
+        const result = this.callNext(funcName, changedArgs as any);
 
         // Then wait for the result before sending telemetry
         if (isThenable<any>(result)) {
