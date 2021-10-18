@@ -4,7 +4,7 @@
 import type { TextDocument, Uri } from 'vscode';
 import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
 import { InterpreterUri } from '../installer/types';
-import { arePathsSame, isParentPath } from '../platform/fs-paths';
+import { isParentPath } from '../platform/fs-paths';
 import { Resource } from '../types';
 import { isPromise } from './async';
 import { StopWatch } from './stopWatch';
@@ -103,19 +103,19 @@ function isUri(resource?: Uri | any): resource is Uri {
  * The scheme must match, as well as path.
  *
  * @param checkParent - if `true`, match if the candidate is rooted under `uri`
+ * or if the candidate matches `uri` exactly.
  * @param checkChild - if `true`, match if `uri` is rooted under the candidate
- * @param checkExact - if `true`, match if the candidate matches `uri` exactly
+ * or if the candidate matches `uri` exactly.
  */
 export function getURIFilter(
     uri: Uri,
     opts: {
         checkParent?: boolean;
         checkChild?: boolean;
-        checkExact?: boolean;
-    } = { checkExact: true },
+    } = { checkParent: true },
 ): (u: Uri) => boolean {
     let uriPath = uri.path;
-    while (uri.path.endsWith('/')) {
+    while (uriPath.endsWith('/')) {
         uriPath = uriPath.slice(0, -1);
     }
     const uriRoot = `${uriPath}/`;
@@ -124,11 +124,8 @@ export function getURIFilter(
             return false;
         }
         let candidatePath = candidate.path;
-        while (candidate.path.endsWith('/')) {
+        while (candidatePath.endsWith('/')) {
             candidatePath = candidatePath.slice(0, -1);
-        }
-        if (opts.checkExact && arePathsSame(candidatePath, uriPath)) {
-            return true;
         }
         if (opts.checkParent && isParentPath(candidatePath, uriRoot)) {
             return true;
