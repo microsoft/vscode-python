@@ -443,7 +443,6 @@ export class LanguageClientMiddlewareBase implements Middleware {
                 this.eventName &&
                 calledNext &&
                 this.eventCount < globalLimit &&
-                debounceMilliseconds !== undefined &&
                 (!lastCapture || now - lastCapture > debounceMilliseconds)
             ) {
                 // We're sending, so update event count and last captured time
