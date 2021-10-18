@@ -482,8 +482,6 @@ export class LanguageClientMiddlewareBase implements Middleware {
         if (isThenable<any>(result)) {
             return result.then(sendTelemetry);
         }
-
-        sendTelemetry(result);
-        return result;
+        return sendTelemetry(result);
     }
 }
