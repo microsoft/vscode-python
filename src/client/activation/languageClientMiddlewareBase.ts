@@ -61,12 +61,8 @@ interface SendTelemetryEventFunc {
     (eventName: EventName, measuresOrDurationMs?: Record<string, number> | number, properties?: any, ex?: Error): void;
 }
 
-type CaptureInfo = {
-    lspMethod?: string | undefined;
-    debounceMilliseconds?: number;
-    lazyMeasures?: (this_: any, result: any) => Record<string, number>;
-    funcName: keyof Middleware;
-    args: IArguments;
+type CalledNextResult = {
+    called: boolean;
 };
 
 export class LanguageClientMiddlewareBase implements Middleware {
@@ -155,47 +151,47 @@ export class LanguageClientMiddlewareBase implements Middleware {
 
     public didChange() {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({ funcName: 'didChange', args: arguments });
+            return this.callNext('didChange', arguments);
         }
     }
 
     public didOpen() {
         // Special case, open and close happen before we connect.
-        return this.callNextAndSendTelemetry({ funcName: 'didOpen', args: arguments });
+        return this.callNext('didOpen', arguments);
     }
 
     public didClose() {
         // Special case, open and close happen before we connect.
-        return this.callNextAndSendTelemetry({ funcName: 'didClose', args: arguments });
+        return this.callNext('didClose', arguments);
     }
 
     public didSave() {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({ funcName: 'didSave', args: arguments });
+            return this.callNext('didSave', arguments);
         }
     }
 
     public willSave() {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({ funcName: 'willSave', args: arguments });
+            return this.callNext('willSave', arguments);
         }
     }
 
     public willSaveWaitUntil() {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({ funcName: 'willSaveWaitUntil', args: arguments });
+            return this.callNext('willSaveWaitUntil', arguments);
         }
     }
 
     public provideCompletionItem() {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({
-                lspMethod: 'textDocument/completion',
-                debounceMilliseconds: debounceFrequentCall,
-                lazyMeasures: LanguageClientMiddlewareBase.completionLengthMeasure,
-                funcName: 'provideCompletionItem',
-                args: arguments,
-            });
+            return this.callNextAndSendTelemetry(
+                'textDocument/completion',
+                debounceFrequentCall,
+                'provideCompletionItem',
+                arguments,
+                LanguageClientMiddlewareBase.completionLengthMeasure,
+            );
         }
     }
 
@@ -209,12 +205,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
 
     public provideHover() {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({
-                lspMethod: 'textDocument/hover',
-                debounceMilliseconds: debounceFrequentCall,
-                funcName: 'provideHover',
-                args: arguments,
-            });
+            return this.callNextAndSendTelemetry('textDocument/hover', debounceFrequentCall, 'provideHover', arguments);
         }
     }
 
@@ -224,142 +215,142 @@ export class LanguageClientMiddlewareBase implements Middleware {
             const filePath = uri.fsPath;
             const baseName = filePath ? path.basename(filePath) : undefined;
             if (!baseName || !baseName.startsWith(HiddenFilePrefix)) {
-                return this.callNextAndSendTelemetry({ funcName: 'handleDiagnostics', args: arguments });
+                return this.callNext('handleDiagnostics', arguments);
             }
         }
     }
 
     public resolveCompletionItem(): ProviderResult<CompletionItem> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({
-                lspMethod: 'completionItem/resolve',
-                debounceMilliseconds: debounceFrequentCall,
-                funcName: 'resolveCompletionItem',
-                args: arguments,
-            });
+            return this.callNextAndSendTelemetry(
+                'completionItem/resolve',
+                debounceFrequentCall,
+                'resolveCompletionItem',
+                arguments,
+            );
         }
     }
 
     public provideSignatureHelp() {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({
-                lspMethod: 'textDocument/signatureHelp',
-                debounceMilliseconds: debounceFrequentCall,
-                funcName: 'provideSignatureHelp',
-                args: arguments,
-            });
+            return this.callNextAndSendTelemetry(
+                'textDocument/signatureHelp',
+                debounceFrequentCall,
+                'provideSignatureHelp',
+                arguments,
+            );
         }
     }
 
     public provideDefinition(): ProviderResult<Definition | DefinitionLink[]> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({
-                lspMethod: 'textDocument/definition',
-                debounceMilliseconds: debounceRareCall,
-                funcName: 'provideDefinition',
-                args: arguments,
-            });
+            return this.callNextAndSendTelemetry(
+                'textDocument/definition',
+                debounceRareCall,
+                'provideDefinition',
+                arguments,
+            );
         }
     }
 
     public provideReferences(): ProviderResult<Location[]> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({
-                lspMethod: 'textDocument/references',
-                debounceMilliseconds: debounceRareCall,
-                funcName: 'provideReferences',
-                args: arguments,
-            });
+            return this.callNextAndSendTelemetry(
+                'textDocument/references',
+                debounceRareCall,
+                'provideReferences',
+                arguments,
+            );
         }
     }
 
     public provideDocumentHighlights(): ProviderResult<DocumentHighlight[]> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({ funcName: 'provideDocumentHighlights', args: arguments });
+            return this.callNext('provideDocumentHighlights', arguments);
         }
     }
 
     public provideDocumentSymbols(): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({
-                lspMethod: 'textDocument/documentSymbol',
-                debounceMilliseconds: debounceFrequentCall,
-                funcName: 'provideDocumentSymbols',
-                args: arguments,
-            });
+            return this.callNextAndSendTelemetry(
+                'textDocument/documentSymbol',
+                debounceFrequentCall,
+                'provideDocumentSymbols',
+                arguments,
+            );
         }
     }
 
     public provideWorkspaceSymbols(): ProviderResult<SymbolInformation[]> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({
-                lspMethod: 'workspace/symbol',
-                debounceMilliseconds: debounceRareCall,
-                funcName: 'provideWorkspaceSymbols',
-                args: arguments,
-            });
+            return this.callNextAndSendTelemetry(
+                'workspace/symbol',
+                debounceRareCall,
+                'provideWorkspaceSymbols',
+                arguments,
+            );
         }
     }
 
     public provideCodeActions(): ProviderResult<(Command | CodeAction)[]> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({
-                lspMethod: 'textDocument/codeAction',
-                debounceMilliseconds: debounceFrequentCall,
-                funcName: 'provideCodeActions',
-                args: arguments,
-            });
+            return this.callNextAndSendTelemetry(
+                'textDocument/codeAction',
+                debounceFrequentCall,
+                'provideCodeActions',
+                arguments,
+            );
         }
     }
 
     public provideCodeLenses(): ProviderResult<CodeLens[]> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({
-                lspMethod: 'textDocument/codeLens',
-                debounceMilliseconds: debounceFrequentCall,
-                funcName: 'provideCodeLenses',
-                args: arguments,
-            });
+            return this.callNextAndSendTelemetry(
+                'textDocument/codeLens',
+                debounceFrequentCall,
+                'provideCodeLenses',
+                arguments,
+            );
         }
     }
 
     public resolveCodeLens(): ProviderResult<CodeLens> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({
-                lspMethod: 'codeLens/resolve',
-                debounceMilliseconds: debounceFrequentCall,
-                funcName: 'resolveCodeLens',
-                args: arguments,
-            });
+            return this.callNextAndSendTelemetry(
+                'codeLens/resolve',
+                debounceFrequentCall,
+                'resolveCodeLens',
+                arguments,
+            );
         }
     }
 
     public provideDocumentFormattingEdits(): ProviderResult<TextEdit[]> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({ funcName: 'provideDocumentFormattingEdits', args: arguments });
+            return this.callNext('provideDocumentFormattingEdits', arguments);
         }
     }
 
     public provideDocumentRangeFormattingEdits(): ProviderResult<TextEdit[]> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({ funcName: 'provideDocumentRangeFormattingEdits', args: arguments });
+            return this.callNext('provideDocumentRangeFormattingEdits', arguments);
         }
     }
 
     public provideOnTypeFormattingEdits(): ProviderResult<TextEdit[]> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({ funcName: 'provideOnTypeFormattingEdits', args: arguments });
+            return this.callNext('provideOnTypeFormattingEdits', arguments);
         }
     }
 
     public provideRenameEdits(): ProviderResult<WorkspaceEdit> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({
-                lspMethod: 'textDocument/rename',
-                debounceMilliseconds: debounceRareCall,
-                funcName: 'provideRenameEdits',
-                args: arguments,
-            });
+            return this.callNextAndSendTelemetry(
+                'textDocument/rename',
+                debounceRareCall,
+                'provideRenameEdits',
+                arguments,
+            );
         }
     }
 
@@ -371,55 +362,76 @@ export class LanguageClientMiddlewareBase implements Middleware {
           }
     > {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({
-                lspMethod: 'textDocument/prepareRename',
-                debounceMilliseconds: debounceRareCall,
-                funcName: 'prepareRename',
-                args: arguments,
-            });
+            return this.callNextAndSendTelemetry(
+                'textDocument/prepareRename',
+                debounceRareCall,
+                'prepareRename',
+                arguments,
+            );
         }
     }
 
     public provideDocumentLinks(): ProviderResult<DocumentLink[]> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({ funcName: 'provideDocumentLinks', args: arguments });
+            return this.callNext('provideDocumentLinks', arguments);
         }
     }
 
     public resolveDocumentLink(): ProviderResult<DocumentLink> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({ funcName: 'resolveDocumentLink', args: arguments });
+            return this.callNext('resolveDocumentLink', arguments);
         }
     }
 
     public provideDeclaration(): ProviderResult<VDeclaration> {
         if (this.connected) {
-            return this.callNextAndSendTelemetry({
-                lspMethod: 'textDocument/declaration',
-                debounceMilliseconds: debounceRareCall,
-                funcName: 'provideDeclaration',
-                args: arguments,
-            });
+            return this.callNextAndSendTelemetry(
+                'textDocument/declaration',
+                debounceRareCall,
+                'provideDeclaration',
+                arguments,
+            );
         }
     }
 
-    private callNextAndSendTelemetry(info: CaptureInfo) {
-        const now = Date.now();
-        const stopWatch = new StopWatch();
-
+    private callNext(funcName: keyof Middleware, args: IArguments, calledNextInfo?: CalledNextResult) {
         // Change the 'last' argument (which is our next) in order to track if
         // telemetry should be sent or not.
-        const changedArgs = [...info.args];
+        const changedArgs = [...args];
 
         // Track whether or not the middleware called the 'next' function (which means it actually sent a request)
-        let calledNext = false;
         changedArgs[changedArgs.length - 1] = (...nextArgs: any) => {
             // If the 'next' function is called, then legit request was made.
-            calledNext = true;
-
+            if (calledNextInfo) {
+                calledNextInfo.called = true;
+            }
             // Then call the original 'next'
-            return info.args[info.args.length - 1](...nextArgs);
+            return args[args.length - 1](...nextArgs);
         };
+
+        // This function uses the last argument to call the 'next' item. If we're allowing notebook
+        // middleware, it calls into the notebook middleware first.
+        let result: any;
+        if (this.notebookAddon && (this.notebookAddon as any)[funcName]) {
+            // It would be nice to use args.callee, but not supported in strict mode
+            result = (this.notebookAddon as any)[funcName](...changedArgs);
+        } else {
+            result = args[args.length - 1](...args);
+        }
+
+        return result;
+    }
+
+    private callNextAndSendTelemetry(
+        lspMethod: string,
+        debounceMilliseconds: number,
+        funcName: keyof Middleware,
+        args: IArguments,
+        lazyMeasures?: (this_: any, result: any) => Record<string, number>,
+    ) {
+        const now = Date.now();
+        const stopWatch = new StopWatch();
+        const calledNextInfo = { called: false };
 
         // Check if we need to reset the event count (if we're past the globalDebounce time)
         if (now > this.nextWindow) {
@@ -427,7 +439,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
             this.nextWindow = now + globalDebounce;
             this.eventCount = 0;
         }
-        const lastCapture = info.lspMethod ? this.lastCaptured.get(info.lspMethod) : undefined;
+        const lastCapture = lspMethod ? this.lastCaptured.get(lspMethod) : undefined;
 
         const sendTelemetry = (result: any) => {
             // Skip doing anything if not allowed
@@ -436,19 +448,19 @@ export class LanguageClientMiddlewareBase implements Middleware {
             // - eventcount is not over the global limit
             // - elapsed time since we sent this event is greater than debounce time
             if (
-                info.lspMethod &&
+                lspMethod &&
                 this.eventName &&
-                calledNext &&
+                calledNextInfo.called &&
                 this.eventCount < globalLimit &&
-                info.debounceMilliseconds !== undefined &&
-                (!lastCapture || now - lastCapture > info.debounceMilliseconds)
+                debounceMilliseconds !== undefined &&
+                (!lastCapture || now - lastCapture > debounceMilliseconds)
             ) {
                 // We're sending, so update event count and last captured time
-                this.lastCaptured.set(info.lspMethod, now);
+                this.lastCaptured.set(lspMethod, now);
                 this.eventCount += 1;
 
                 // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
-                const formattedMethod = info.lspMethod.replace(/\//g, '.');
+                const formattedMethod = lspMethod.replace(/\//g, '.');
 
                 const properties = {
                     lsVersion: this.serverVersion || 'unknown',
@@ -456,10 +468,10 @@ export class LanguageClientMiddlewareBase implements Middleware {
                 };
 
                 let measures: number | Record<string, number> = stopWatch.elapsedTime;
-                if (info.lazyMeasures) {
+                if (lazyMeasures) {
                     measures = {
                         duration: measures,
-                        ...info.lazyMeasures(this, result),
+                        ...lazyMeasures(this, result),
                     };
                 }
 
@@ -468,15 +480,8 @@ export class LanguageClientMiddlewareBase implements Middleware {
             return result;
         };
 
-        // This function uses the last argument to call the 'next' item. If we're allowing notebook
-        // middleware, it calls into the notebook middleware first.
-        let result: any;
-        if (this.notebookAddon && (this.notebookAddon as any)[info.funcName]) {
-            // It would be nice to use args.callee, but not supported in strict mode
-            result = (this.notebookAddon as any)[info.funcName](...changedArgs);
-        } else {
-            result = info.args[info.args.length - 1](...info.args);
-        }
+        // Try to call the 'next' function in the middleware chain
+        const result = this.callNext(funcName, args, calledNextInfo);
 
         // Then wait for the result before sending telemetry
         if (isThenable<any>(result)) {
