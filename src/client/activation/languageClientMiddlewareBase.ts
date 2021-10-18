@@ -61,15 +61,22 @@ interface SendTelemetryEventFunc {
     (eventName: EventName, measuresOrDurationMs?: Record<string, number> | number, properties?: any, ex?: Error): void;
 }
 
+type CaptureInfo = {
+    lspMethod?: string | undefined;
+    debounceMilliseconds?: number;
+    lazyMeasures?: (this_: any, result: any) => Record<string, number>;
+    funcName: keyof Middleware;
+    args: IArguments;
+};
+
 export class LanguageClientMiddlewareBase implements Middleware {
-    // These are public so that the captureTelemetryForLSPMethod decorator can access them.
-    public readonly eventName: EventName | undefined;
+    private readonly eventName: EventName | undefined;
 
-    public readonly lastCaptured = new Map<string, number>();
+    private readonly lastCaptured = new Map<string, number>();
 
-    public nextWindow = 0;
+    private nextWindow = 0;
 
-    public eventCount = 0;
+    private eventCount = 0;
 
     public workspace = {
         configuration: async (
@@ -115,9 +122,6 @@ export class LanguageClientMiddlewareBase implements Middleware {
 
     private connected = false; // Default to not forwarding to VS code.
 
-    // Flag indicating if we should skip sending telemetry or not.
-    public skipTelemetry = false;
-
     public constructor(
         readonly serviceContainer: IServiceContainer | undefined,
         serverType: LanguageServerType,
@@ -151,46 +155,47 @@ export class LanguageClientMiddlewareBase implements Middleware {
 
     public didChange() {
         if (this.connected) {
-            return this.callNext('didChange', arguments);
+            return this.callNextAndSendTelemetry({ funcName: 'didChange', args: arguments });
         }
     }
 
     public didOpen() {
         // Special case, open and close happen before we connect.
-        return this.callNext('didOpen', arguments);
+        return this.callNextAndSendTelemetry({ funcName: 'didOpen', args: arguments });
     }
 
     public didClose() {
         // Special case, open and close happen before we connect.
-        return this.callNext('didClose', arguments);
+        return this.callNextAndSendTelemetry({ funcName: 'didClose', args: arguments });
     }
 
     public didSave() {
         if (this.connected) {
-            return this.callNext('didSave', arguments);
+            return this.callNextAndSendTelemetry({ funcName: 'didSave', args: arguments });
         }
     }
 
     public willSave() {
         if (this.connected) {
-            return this.callNext('willSave', arguments);
+            return this.callNextAndSendTelemetry({ funcName: 'willSave', args: arguments });
         }
     }
 
     public willSaveWaitUntil() {
         if (this.connected) {
-            return this.callNext('willSaveWaitUntil', arguments);
+            return this.callNextAndSendTelemetry({ funcName: 'willSaveWaitUntil', args: arguments });
         }
     }
 
-    @captureTelemetryForLSPMethod(
-        'textDocument/completion',
-        debounceFrequentCall,
-        LanguageClientMiddlewareBase.completionLengthMeasure,
-    )
     public provideCompletionItem() {
         if (this.connected) {
-            return this.callNext('provideCompletionItem', arguments);
+            return this.callNextAndSendTelemetry({
+                lspMethod: 'textDocument/completion',
+                debounceMilliseconds: debounceFrequentCall,
+                lazyMeasures: LanguageClientMiddlewareBase.completionLengthMeasure,
+                funcName: 'provideCompletionItem',
+                args: arguments,
+            });
         }
     }
 
@@ -202,10 +207,14 @@ export class LanguageClientMiddlewareBase implements Middleware {
         return { resultLength };
     }
 
-    @captureTelemetryForLSPMethod('textDocument/hover', debounceFrequentCall)
     public provideHover() {
         if (this.connected) {
-            return this.callNext('provideHover', arguments);
+            return this.callNextAndSendTelemetry({
+                lspMethod: 'textDocument/hover',
+                debounceMilliseconds: debounceFrequentCall,
+                funcName: 'provideHover',
+                args: arguments,
+            });
         }
     }
 
@@ -215,106 +224,145 @@ export class LanguageClientMiddlewareBase implements Middleware {
             const filePath = uri.fsPath;
             const baseName = filePath ? path.basename(filePath) : undefined;
             if (!baseName || !baseName.startsWith(HiddenFilePrefix)) {
-                return this.callNext('handleDiagnostics', arguments);
+                return this.callNextAndSendTelemetry({ funcName: 'handleDiagnostics', args: arguments });
             }
         }
     }
 
-    @captureTelemetryForLSPMethod('completionItem/resolve', debounceFrequentCall)
     public resolveCompletionItem(): ProviderResult<CompletionItem> {
         if (this.connected) {
-            return this.callNext('resolveCompletionItem', arguments);
+            return this.callNextAndSendTelemetry({
+                lspMethod: 'completionItem/resolve',
+                debounceMilliseconds: debounceFrequentCall,
+                funcName: 'resolveCompletionItem',
+                args: arguments,
+            });
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/signatureHelp', debounceFrequentCall)
     public provideSignatureHelp() {
         if (this.connected) {
-            return this.callNext('provideSignatureHelp', arguments);
+            return this.callNextAndSendTelemetry({
+                lspMethod: 'textDocument/signatureHelp',
+                debounceMilliseconds: debounceFrequentCall,
+                funcName: 'provideSignatureHelp',
+                args: arguments,
+            });
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/definition', debounceRareCall)
     public provideDefinition(): ProviderResult<Definition | DefinitionLink[]> {
         if (this.connected) {
-            return this.callNext('provideDefinition', arguments);
+            return this.callNextAndSendTelemetry({
+                lspMethod: 'textDocument/definition',
+                debounceMilliseconds: debounceRareCall,
+                funcName: 'provideDefinition',
+                args: arguments,
+            });
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/references', debounceRareCall)
     public provideReferences(): ProviderResult<Location[]> {
         if (this.connected) {
-            return this.callNext('provideReferences', arguments);
+            return this.callNextAndSendTelemetry({
+                lspMethod: 'textDocument/references',
+                debounceMilliseconds: debounceRareCall,
+                funcName: 'provideReferences',
+                args: arguments,
+            });
         }
     }
 
     public provideDocumentHighlights(): ProviderResult<DocumentHighlight[]> {
         if (this.connected) {
-            return this.callNext('provideDocumentHighlights', arguments);
+            return this.callNextAndSendTelemetry({ funcName: 'provideDocumentHighlights', args: arguments });
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/documentSymbol', debounceFrequentCall)
     public provideDocumentSymbols(): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
         if (this.connected) {
-            return this.callNext('provideDocumentSymbols', arguments);
+            return this.callNextAndSendTelemetry({
+                lspMethod: 'textDocument/documentSymbol',
+                debounceMilliseconds: debounceFrequentCall,
+                funcName: 'provideDocumentSymbols',
+                args: arguments,
+            });
         }
     }
 
-    @captureTelemetryForLSPMethod('workspace/symbol', debounceRareCall)
     public provideWorkspaceSymbols(): ProviderResult<SymbolInformation[]> {
         if (this.connected) {
-            return this.callNext('provideWorkspaceSymbols', arguments);
+            return this.callNextAndSendTelemetry({
+                lspMethod: 'workspace/symbol',
+                debounceMilliseconds: debounceRareCall,
+                funcName: 'provideWorkspaceSymbols',
+                args: arguments,
+            });
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/codeAction', debounceFrequentCall)
     public provideCodeActions(): ProviderResult<(Command | CodeAction)[]> {
         if (this.connected) {
-            return this.callNext('provideCodeActions', arguments);
+            return this.callNextAndSendTelemetry({
+                lspMethod: 'textDocument/codeAction',
+                debounceMilliseconds: debounceFrequentCall,
+                funcName: 'provideCodeActions',
+                args: arguments,
+            });
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/codeLens', debounceFrequentCall)
     public provideCodeLenses(): ProviderResult<CodeLens[]> {
         if (this.connected) {
-            return this.callNext('provideCodeLenses', arguments);
+            return this.callNextAndSendTelemetry({
+                lspMethod: 'textDocument/codeLens',
+                debounceMilliseconds: debounceFrequentCall,
+                funcName: 'provideCodeLenses',
+                args: arguments,
+            });
         }
     }
 
-    @captureTelemetryForLSPMethod('codeLens/resolve', debounceFrequentCall)
     public resolveCodeLens(): ProviderResult<CodeLens> {
         if (this.connected) {
-            return this.callNext('resolveCodeLens', arguments);
+            return this.callNextAndSendTelemetry({
+                lspMethod: 'codeLens/resolve',
+                debounceMilliseconds: debounceFrequentCall,
+                funcName: 'resolveCodeLens',
+                args: arguments,
+            });
         }
     }
 
     public provideDocumentFormattingEdits(): ProviderResult<TextEdit[]> {
         if (this.connected) {
-            return this.callNext('provideDocumentFormattingEdits', arguments);
+            return this.callNextAndSendTelemetry({ funcName: 'provideDocumentFormattingEdits', args: arguments });
         }
     }
 
     public provideDocumentRangeFormattingEdits(): ProviderResult<TextEdit[]> {
         if (this.connected) {
-            return this.callNext('provideDocumentRangeFormattingEdits', arguments);
+            return this.callNextAndSendTelemetry({ funcName: 'provideDocumentRangeFormattingEdits', args: arguments });
         }
     }
 
     public provideOnTypeFormattingEdits(): ProviderResult<TextEdit[]> {
         if (this.connected) {
-            return this.callNext('provideOnTypeFormattingEdits', arguments);
+            return this.callNextAndSendTelemetry({ funcName: 'provideOnTypeFormattingEdits', args: arguments });
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/rename', debounceRareCall)
     public provideRenameEdits(): ProviderResult<WorkspaceEdit> {
         if (this.connected) {
-            return this.callNext('provideRenameEdits', arguments);
+            return this.callNextAndSendTelemetry({
+                lspMethod: 'textDocument/rename',
+                debounceMilliseconds: debounceRareCall,
+                funcName: 'provideRenameEdits',
+                args: arguments,
+            });
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/prepareRename', debounceRareCall)
     public prepareRename(): ProviderResult<
         | Range
         | {
@@ -323,129 +371,119 @@ export class LanguageClientMiddlewareBase implements Middleware {
           }
     > {
         if (this.connected) {
-            return this.callNext('prepareRename', arguments);
+            return this.callNextAndSendTelemetry({
+                lspMethod: 'textDocument/prepareRename',
+                debounceMilliseconds: debounceRareCall,
+                funcName: 'prepareRename',
+                args: arguments,
+            });
         }
     }
 
     public provideDocumentLinks(): ProviderResult<DocumentLink[]> {
         if (this.connected) {
-            return this.callNext('provideDocumentLinks', arguments);
+            return this.callNextAndSendTelemetry({ funcName: 'provideDocumentLinks', args: arguments });
         }
     }
 
     public resolveDocumentLink(): ProviderResult<DocumentLink> {
         if (this.connected) {
-            return this.callNext('resolveDocumentLink', arguments);
+            return this.callNextAndSendTelemetry({ funcName: 'resolveDocumentLink', args: arguments });
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/declaration', debounceRareCall)
     public provideDeclaration(): ProviderResult<VDeclaration> {
         if (this.connected) {
-            return this.callNext('provideDeclaration', arguments);
+            return this.callNextAndSendTelemetry({
+                lspMethod: 'textDocument/declaration',
+                debounceMilliseconds: debounceRareCall,
+                funcName: 'provideDeclaration',
+                args: arguments,
+            });
         }
     }
 
-    private callNext(funcName: keyof Middleware, args: IArguments) {
+    private callNextAndSendTelemetry(info: CaptureInfo) {
+        const now = Date.now();
+        const stopWatch = new StopWatch();
+
         // Change the 'last' argument (which is our next) in order to track if
         // telemetry should be sent or not.
-        const changedArgs = [...args];
+        const changedArgs = [...info.args];
 
-        // Default to not sending telemetry.
-        this.skipTelemetry = true;
+        // Track whether or not the middleware called the 'next' function (which means it actually sent a request)
+        let calledNext = false;
         changedArgs[changedArgs.length - 1] = (...nextArgs: any) => {
             // If the 'next' function is called, then legit request was made.
-            this.skipTelemetry = false;
+            calledNext = true;
 
             // Then call the original 'next'
-            return args[args.length - 1](...nextArgs);
+            return info.args[info.args.length - 1](...nextArgs);
+        };
+
+        // Check if we need to reset the event count (if we're past the globalDebounce time)
+        if (now > this.nextWindow) {
+            // Past the end of the last window, reset.
+            this.nextWindow = now + globalDebounce;
+            this.eventCount = 0;
+        }
+        const lastCapture = info.lspMethod ? this.lastCaptured.get(info.lspMethod) : undefined;
+
+        const sendTelemetry = (result: any) => {
+            // Skip doing anything if not allowed
+            // We should have:
+            // - called the next function in the middleware (this means a request was actually sent)
+            // - eventcount is not over the global limit
+            // - elapsed time since we sent this event is greater than debounce time
+            if (
+                info.lspMethod &&
+                this.eventName &&
+                calledNext &&
+                this.eventCount < globalLimit &&
+                info.debounceMilliseconds &&
+                (!lastCapture || now - lastCapture > info.debounceMilliseconds)
+            ) {
+                // We're sending, so update event count and last captured time
+                this.lastCaptured.set(info.lspMethod, now);
+                this.eventCount += 1;
+
+                // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
+                const formattedMethod = info.lspMethod.replace(/\//g, '.');
+
+                const properties = {
+                    lsVersion: this.serverVersion || 'unknown',
+                    method: formattedMethod,
+                };
+
+                let measures: number | Record<string, number> = stopWatch.elapsedTime;
+                if (info.lazyMeasures) {
+                    measures = {
+                        duration: measures,
+                        ...info.lazyMeasures(this, result),
+                    };
+                }
+
+                this.sendTelemetryEventFunc(this.eventName, measures, properties);
+            }
+            return result;
         };
 
         // This function uses the last argument to call the 'next' item. If we're allowing notebook
         // middleware, it calls into the notebook middleware first.
-        if (this.notebookAddon && (this.notebookAddon as any)[funcName]) {
+        let result: any;
+        if (this.notebookAddon && (this.notebookAddon as any)[info.funcName]) {
             // It would be nice to use args.callee, but not supported in strict mode
-            return (this.notebookAddon as any)[funcName](...changedArgs);
+            result = (this.notebookAddon as any)[info.funcName](...changedArgs);
+        } else {
+            result = info.args[info.args.length - 1](...info.args);
         }
-        return args[args.length - 1](...args);
+
+        // Then wait for the result before sending telemetry
+        if (isThenable<any>(result)) {
+            return result.then(sendTelemetry);
+        }
+
+        sendTelemetry(result);
+        return result;
     }
-}
-
-function captureTelemetryForLSPMethod(
-    method: string,
-    debounceMilliseconds: number,
-    lazyMeasures?: (this_: any, result: any) => Record<string, number>,
-) {
-    return function (_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
-        const originalMethod = descriptor.value;
-
-        descriptor.value = function (this: LanguageClientMiddlewareBase, ...args: any[]) {
-            const { eventName } = this;
-            if (!eventName) {
-                return originalMethod.apply(this, args);
-            }
-
-            const now = Date.now();
-
-            if (now > this.nextWindow) {
-                // Past the end of the last window, reset.
-                this.nextWindow = now + globalDebounce;
-                this.eventCount = 0;
-            } else if (this.eventCount >= globalLimit) {
-                // Sent too many events in this window, don't send.
-                return originalMethod.apply(this, args);
-            }
-
-            const lastCapture = this.lastCaptured.get(method);
-            if (lastCapture && now - lastCapture < debounceMilliseconds) {
-                return originalMethod.apply(this, args);
-            }
-
-            this.lastCaptured.set(method, now);
-            this.eventCount += 1;
-
-            // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
-            const formattedMethod = method.replace(/\//g, '.');
-
-            const properties = {
-                lsVersion: this.serverVersion || 'unknown',
-                method: formattedMethod,
-            };
-
-            const stopWatch = new StopWatch();
-            let skipTelemetry = false;
-            const sendTelemetry = (result: any) => {
-                let measures: number | Record<string, number> = stopWatch.elapsedTime;
-                if (lazyMeasures) {
-                    measures = {
-                        duration: measures,
-                        ...lazyMeasures(this, result),
-                    };
-                }
-
-                // Make sure skip telemetry isn't still set
-                if (!skipTelemetry) {
-                    this.sendTelemetryEventFunc(eventName, measures, properties);
-                }
-                return result;
-            };
-
-            const result = originalMethod.apply(this, args);
-
-            // Cache skip telemetry in case result is async
-            skipTelemetry = this.skipTelemetry;
-            this.skipTelemetry = false;
-
-            // Then wait for the result before sending telemetry
-            if (isThenable<any>(result)) {
-                return result.then(sendTelemetry);
-            }
-
-            sendTelemetry(result);
-
-            return result;
-        };
-
-        return descriptor;
-    };
 }
