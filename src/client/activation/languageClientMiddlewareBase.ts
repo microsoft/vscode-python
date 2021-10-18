@@ -440,7 +440,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
                 this.eventName &&
                 calledNext &&
                 this.eventCount < globalLimit &&
-                info.debounceMilliseconds &&
+                info.debounceMilliseconds !== undefined &&
                 (!lastCapture || now - lastCapture > info.debounceMilliseconds)
             ) {
                 // We're sending, so update event count and last captured time
