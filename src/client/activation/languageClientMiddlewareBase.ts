@@ -186,17 +186,12 @@ export class LanguageClientMiddlewareBase implements Middleware {
                 debounceFrequentCall,
                 'provideCompletionItem',
                 arguments,
-                LanguageClientMiddlewareBase.completionLengthMeasure,
+                (result) => {
+                    const resultLength = Array.isArray(result) ? result.length : result.items.length;
+                    return { resultLength };
+                },
             );
         }
-    }
-
-    private static completionLengthMeasure(
-        _obj: LanguageClientMiddlewareBase,
-        result: CompletionItem[] | CompletionList,
-    ): Record<string, number> {
-        const resultLength = Array.isArray(result) ? result.length : result.items.length;
-        return { resultLength };
     }
 
     public provideHover() {
