@@ -103,8 +103,9 @@ function isUri(resource?: Uri | any): resource is Uri {
  * The scheme must match, as well as path.
  *
  * @param checkParent - if `true`, match if the candidate is rooted under `uri`
+ * or if the candidate matches `uri` exactly.
  * @param checkChild - if `true`, match if `uri` is rooted under the candidate
- * @param checkExact - if `true`, match if the candidate matches `uri` exactly
+ * or if the candidate matches `uri` exactly.
  */
 export function getURIFilter(
     uri: Uri,
