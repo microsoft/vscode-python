@@ -115,7 +115,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
 
     private connected = false; // Default to not forwarding to VS code.
 
-    // Stack of flags indicating if we should skip sending telemetry or not.
+    // Flag indicating if we should skip sending telemetry or not.
     public skipTelemetry = false;
 
     public constructor(
