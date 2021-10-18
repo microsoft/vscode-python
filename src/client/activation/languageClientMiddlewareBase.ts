@@ -393,15 +393,12 @@ export class LanguageClientMiddlewareBase implements Middleware {
     private callNext(funcName: keyof Middleware, args: IArguments) {
         // This function uses the last argument to call the 'next' item. If we're allowing notebook
         // middleware, it calls into the notebook middleware first.
-        let result: any;
         if (this.notebookAddon && (this.notebookAddon as any)[funcName]) {
             // It would be nice to use args.callee, but not supported in strict mode
-            result = (this.notebookAddon as any)[funcName](...args);
-        } else {
-            result = args[args.length - 1](...args);
+            return (this.notebookAddon as any)[funcName](...args);
         }
 
-        return result;
+        return args[args.length - 1](...args);
     }
 
     private callNextAndSendTelemetry(
