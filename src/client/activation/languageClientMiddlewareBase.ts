@@ -61,9 +61,6 @@ interface SendTelemetryEventFunc {
     (eventName: EventName, measuresOrDurationMs?: Record<string, number> | number, properties?: any, ex?: Error): void;
 }
 
-// Boolean indicating if sending telemetry is allowed or not.
-let shouldSendTelemetry = true;
-
 export class LanguageClientMiddlewareBase implements Middleware {
     // These are public so that the captureTelemetryForLSPMethod decorator can access them.
     public readonly eventName: EventName | undefined;
@@ -117,6 +114,9 @@ export class LanguageClientMiddlewareBase implements Middleware {
     protected notebookAddon: (Middleware & Disposable) | undefined;
 
     private connected = false; // Default to not forwarding to VS code.
+
+    // Stack of flags indicating if we should skip sending telemetry or not.
+    public skipTelemetry = false;
 
     public constructor(
         readonly serviceContainer: IServiceContainer | undefined,
@@ -350,13 +350,14 @@ export class LanguageClientMiddlewareBase implements Middleware {
         // Change the 'last' argument (which is our next) in order to track if
         // telemetry should be sent or not.
         const changedArgs = [...args];
-        shouldSendTelemetry = false;
+
+        // Default to not sending telemetry.
+        this.skipTelemetry = true;
         changedArgs[changedArgs.length - 1] = (...nextArgs: any) => {
             // If the 'next' function is called, then legit request was made.
-            //
-            // This is kinda fragile. It's relying on the middleware to not do anything
-            // async.
-            shouldSendTelemetry = true;
+            this.skipTelemetry = false;
+
+            // Then call the original 'next'
             return args[args.length - 1](...nextArgs);
         };
 
@@ -411,8 +412,8 @@ function captureTelemetryForLSPMethod(
                 method: formattedMethod,
             };
 
-            let telemetryAllowed = false;
             const stopWatch = new StopWatch();
+            let skipTelemetry = false;
             const sendTelemetry = (result: any) => {
                 let measures: number | Record<string, number> = stopWatch.elapsedTime;
                 if (lazyMeasures) {
@@ -421,7 +422,9 @@ function captureTelemetryForLSPMethod(
                         ...lazyMeasures(this, result),
                     };
                 }
-                if (telemetryAllowed) {
+
+                // Make sure skip telemetry isn't still set
+                if (!skipTelemetry) {
                     this.sendTelemetryEventFunc(eventName, measures, properties);
                 }
                 return result;
@@ -429,10 +432,9 @@ function captureTelemetryForLSPMethod(
 
             const result = originalMethod.apply(this, args);
 
-            // Keep track of the global flag locally so we can reset it
-            telemetryAllowed = shouldSendTelemetry;
-            // Always reset to sending.
-            shouldSendTelemetry = true;
+            // Cache skip telemetry in case result is async
+            skipTelemetry = this.skipTelemetry;
+            this.skipTelemetry = false;
 
             // Then wait for the result before sending telemetry
             if (isThenable<any>(result)) {
