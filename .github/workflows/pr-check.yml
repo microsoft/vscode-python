@@ -105,13 +105,13 @@ jobs:
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
-      - name: Install debugpy wheels (python 3.8)
+      - name: Install debugpy wheels (python 3.9)
         run: |
           python -m pip install wheel
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
         shell: bash
-        if: matrix.test-suite == 'debugger' && matrix.python == 3.8
+        if: matrix.test-suite == 'debugger' && matrix.python == 3.9
 
       - name: Install debugpy (python 2.7)
         run: |
