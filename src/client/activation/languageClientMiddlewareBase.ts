@@ -431,7 +431,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
             this.nextWindow = now + globalDebounce;
             this.eventCount = 0;
         }
-        const lastCapture = lspMethod ? this.lastCaptured.get(lspMethod) : undefined;
+        const lastCapture = this.lastCaptured.get(lspMethod);
 
         const sendTelemetry = (result: any) => {
             // Skip doing anything if not allowed
