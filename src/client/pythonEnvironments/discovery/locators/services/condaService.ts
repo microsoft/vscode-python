@@ -3,14 +3,12 @@ import * as path from 'path';
 import { parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
-import { inDiscoveryExperiment } from '../../../../common/experiments/helpers';
 import { traceDecorators, traceWarning } from '../../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../../common/process/types';
-import { IExperimentService, IConfigurationService, IDisposableRegistry } from '../../../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
-import { ICondaService, ICondaLocatorService } from '../../../../interpreter/contracts';
-import { IServiceContainer } from '../../../../ioc/types';
+import { ICondaService } from '../../../../interpreter/contracts';
 import { Conda, CondaInfo } from '../../../common/environmentManagers/conda';
 
 /**
@@ -26,8 +24,6 @@ export class CondaService implements ICondaService {
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
         @inject(IPlatformService) private platform: IPlatformService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -39,9 +35,6 @@ export class CondaService implements ICondaService {
      * Return the path to the "conda file".
      */
     public async getCondaFile(): Promise<string> {
-        if (!(await inDiscoveryExperiment(this.experimentService))) {
-            return this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService).getCondaFile();
-        }
         if (!this.condaFile) {
             this.condaFile = this.getCondaFileImpl();
         }
@@ -148,10 +141,8 @@ export class CondaService implements ICondaService {
      * The result is cached for 30s.
      */
     @cache(60_000)
+    // eslint-disable-next-line class-methods-use-this
     public async _getCondaInfo(): Promise<CondaInfo | undefined> {
-        if (!(await inDiscoveryExperiment(this.experimentService))) {
-            return this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService).getCondaInfo();
-        }
         const conda = await Conda.getConda();
         return conda?.getInfo();
     }

@@ -10,20 +10,13 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, EventEmitter } from 'vscode';
 
 import { IWorkspaceService } from '../../../../client/common/application/types';
-import { DiscoveryVariants } from '../../../../client/common/experiments/groups';
 import { FileSystemPaths, FileSystemPathUtils } from '../../../../client/common/platform/fs-paths';
 import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../../../client/common/process/types';
 import { ITerminalActivationCommandProvider } from '../../../../client/common/terminal/types';
-import {
-    IConfigurationService,
-    IExperimentService,
-    IPersistentStateFactory,
-    IPythonSettings,
-} from '../../../../client/common/types';
+import { IConfigurationService, IPersistentStateFactory, IPythonSettings } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import {
-    IComponentAdapter,
     IInterpreterLocatorService,
     IInterpreterService,
     WINDOWS_REGISTRY_SERVICE,
@@ -52,7 +45,6 @@ suite('Interpreters Conda Service', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let condaService: CondaLocatorService;
-    let pyenvs: TypeMoq.IMock<IComponentAdapter>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let config: TypeMoq.IMock<IConfigurationService>;
     let settings: TypeMoq.IMock<IPythonSettings>;
@@ -66,7 +58,6 @@ suite('Interpreters Conda Service', () => {
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let mockState: MockState;
     let terminalProvider: TypeMoq.IMock<ITerminalActivationCommandProvider>;
-    let experimentService: TypeMoq.IMock<IExperimentService>;
     setup(async () => {
         condaPathSetting = '';
         processService = TypeMoq.Mock.ofType<IProcessService>();
@@ -74,7 +65,6 @@ suite('Interpreters Conda Service', () => {
         persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         registryInterpreterLocatorService = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
-        pyenvs = TypeMoq.Mock.ofType<IComponentAdapter>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         config = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -101,14 +91,6 @@ suite('Interpreters Conda Service', () => {
         terminalProvider
             .setup((p) => p.getActivationCommandsForInterpreter!(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(['activate']));
-
-        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
-        experimentService
-            .setup((exp) => exp.inExperiment(DiscoveryVariants.discoverWithFileWatching))
-            .returns(() => Promise.resolve(false));
-        experimentService
-            .setup((exp) => exp.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
-            .returns(() => Promise.resolve(false));
 
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         serviceContainer
@@ -153,8 +135,6 @@ suite('Interpreters Conda Service', () => {
             config.object,
             disposableRegistry,
             workspaceService.object,
-            pyenvs.object,
-            experimentService.object,
             serviceContainer.object,
         );
     });
@@ -657,8 +637,6 @@ suite('Interpreters Conda Service', () => {
             config.object,
             disposableRegistry,
             workspaceService.object,
-            pyenvs.object,
-            experimentService.object,
             serviceContainer.object,
         );
 

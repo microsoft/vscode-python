@@ -45,7 +45,6 @@ import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { ILintMessage, LinterId, LintMessageSeverity } from '../../client/linters/types';
 import { deleteFile, PYTHON_PATH } from '../common';
 import { BaseTestFixture, getLinterID, getProductName, newMockDocument, throwUnknownProduct } from './common';
-import * as ExperimentHelpers from '../../client/common/experiments/helpers';
 import { DiscoveryVariants } from '../../client/common/experiments/groups';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
 
@@ -738,9 +737,6 @@ class TestFixture extends BaseTestFixture {
             .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
             .returns(() => Promise.resolve(false));
 
-        const inDiscoveryExperimentStub = sinon.stub(ExperimentHelpers, 'inDiscoveryExperiment');
-        inDiscoveryExperimentStub.resolves(false);
-
         const autoSelection = mock<IInterpreterAutoSelectionService>();
         const interpreterPathExpHelper = mock<IInterpreterPathProxyService>();
         when(interpreterPathExpHelper.get(anything())).thenReturn('selected interpreter path');
@@ -753,7 +749,6 @@ class TestFixture extends BaseTestFixture {
             condaService.object,
             decoder,
             instance(pyenvs),
-            experimentService.object,
             instance(autoSelection),
             instance(interpreterPathExpHelper),
         );

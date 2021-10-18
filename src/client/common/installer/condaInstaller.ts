@@ -3,11 +3,10 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ICondaService, ICondaLocatorService, IComponentAdapter } from '../../interpreter/contracts';
+import { ICondaService, IComponentAdapter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ModuleInstallerType } from '../../pythonEnvironments/info';
-import { inDiscoveryExperiment } from '../experiments/helpers';
-import { ExecutionInfo, IConfigurationService, IExperimentService, Product } from '../types';
+import { ExecutionInfo, IConfigurationService, Product } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller, translateProductToModule } from './moduleInstaller';
 import { InterpreterUri, ModuleInstallFlags } from './types';
@@ -77,10 +76,7 @@ export class CondaInstaller extends ModuleInstaller {
         const pythonPath = isResource(resource)
             ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
             : resource.path;
-        const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
-        const condaLocatorService = (await inDiscoveryExperiment(experimentService))
-            ? this.serviceContainer.get<IComponentAdapter>(IComponentAdapter)
-            : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const condaLocatorService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
         const info = await condaLocatorService.getCondaEnvironment(pythonPath);
         const args = [flags & ModuleInstallFlags.upgrade ? 'update' : 'install'];
 
@@ -128,10 +124,7 @@ export class CondaInstaller extends ModuleInstaller {
      * Is the provided interprter a conda environment
      */
     private async isCurrentEnvironmentACondaEnvironment(resource?: InterpreterUri): Promise<boolean> {
-        const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
-        const condaService = (await inDiscoveryExperiment(experimentService))
-            ? this.serviceContainer.get<IComponentAdapter>(IComponentAdapter)
-            : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const condaService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
         const pythonPath = isResource(resource)
             ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
             : resource.path;

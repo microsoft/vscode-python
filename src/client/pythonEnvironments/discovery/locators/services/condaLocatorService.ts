@@ -6,19 +6,12 @@ import * as path from 'path';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../../../common/application/types';
-import { inDiscoveryExperiment } from '../../../../common/experiments/helpers';
 import { traceDecorators, traceError, traceVerbose, traceWarning } from '../../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../../common/process/types';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentService,
-    IPersistentStateFactory,
-} from '../../../../common/types';
+import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
 import {
-    IComponentAdapter,
     ICondaLocatorService,
     IInterpreterLocatorService,
     WINDOWS_REGISTRY_SERVICE,
@@ -78,8 +71,6 @@ export class CondaLocatorService implements ICondaLocatorService {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
     ) {
         this.addCondaPathChangedHandler();
@@ -170,10 +161,6 @@ export class CondaLocatorService implements ICondaLocatorService {
      * @memberof CondaLocatorService
      */
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean> {
-        if (await inDiscoveryExperiment(this.experimentService)) {
-            return this.pyenvs.isCondaEnvironment(interpreterPath);
-        }
-
         const dir = path.dirname(interpreterPath);
         const { isWindows } = this.platform;
         const condaMetaDirectory = isWindows ? path.join(dir, 'conda-meta') : path.join(dir, '..', 'conda-meta');
@@ -184,10 +171,6 @@ export class CondaLocatorService implements ICondaLocatorService {
      * Return (env name, interpreter filename) for the interpreter.
      */
     public async getCondaEnvironment(interpreterPath: string): Promise<{ name: string; path: string } | undefined> {
-        if (await inDiscoveryExperiment(this.experimentService)) {
-            return this.pyenvs.getCondaEnvironment(interpreterPath);
-        }
-
         const isCondaEnv = await this.isCondaEnvironment(interpreterPath);
         if (!isCondaEnv) {
             return undefined;

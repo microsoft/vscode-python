@@ -5,15 +5,11 @@
 
 import { expect } from 'chai';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
-import { CancellationToken, Disposable, Progress, ProgressOptions } from 'vscode';
+import { CancellationToken, Progress, ProgressOptions } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
-import { ExperimentService } from '../../../client/common/experiments/service';
 import { Interpreters } from '../../../client/common/utils/localize';
-import { noop } from '../../../client/common/utils/misc';
-import { IComponentAdapter, IInterpreterLocatorProgressService } from '../../../client/interpreter/contracts';
+import { IComponentAdapter } from '../../../client/interpreter/contracts';
 import { InterpreterLocatorProgressStatubarHandler } from '../../../client/interpreter/display/progressDisplay';
-import { ServiceContainer } from '../../../client/ioc/container';
-import { IServiceContainer } from '../../../client/ioc/types';
 
 type ProgressTask<R> = (
     progress: Progress<{ message?: string; increment?: number }>,
@@ -23,36 +19,12 @@ type ProgressTask<R> = (
 suite('Interpreters - Display Progress', () => {
     let refreshingCallback: (e: void) => unknown | undefined;
     let refreshedCallback: (e: void) => unknown | undefined;
-    const progressService: IInterpreterLocatorProgressService = {
-        onRefreshing(listener: (e: void) => unknown): Disposable {
-            refreshingCallback = listener;
-            return { dispose: noop };
-        },
-        onRefreshed(listener: (e: void) => unknown): Disposable {
-            refreshedCallback = listener;
-            return { dispose: noop };
-        },
-        activate(): Promise<void> {
-            return Promise.resolve();
-        },
-    };
-    let serviceContainer: IServiceContainer;
-
-    setup(() => {
-        serviceContainer = mock(ServiceContainer);
-        when(serviceContainer.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService)).thenReturn(
-            progressService,
-        );
-    });
-
     test('Display loading message when refreshing interpreters for the first time', async () => {
         const shell = mock(ApplicationShell);
         const statusBar = new InterpreterLocatorProgressStatubarHandler(
             instance(shell),
-            instance(serviceContainer),
             [],
             instance(mock(IComponentAdapter)),
-            instance(mock(ExperimentService)),
         );
         when(shell.withProgress(anything(), anything())).thenResolve();
 
@@ -67,10 +39,8 @@ suite('Interpreters - Display Progress', () => {
         const shell = mock(ApplicationShell);
         const statusBar = new InterpreterLocatorProgressStatubarHandler(
             instance(shell),
-            instance(serviceContainer),
             [],
             instance(mock(IComponentAdapter)),
-            instance(mock(ExperimentService)),
         );
         when(shell.withProgress(anything(), anything())).thenResolve();
 
@@ -90,10 +60,8 @@ suite('Interpreters - Display Progress', () => {
         const shell = mock(ApplicationShell);
         const statusBar = new InterpreterLocatorProgressStatubarHandler(
             instance(shell),
-            instance(serviceContainer),
             [],
             instance(mock(IComponentAdapter)),
-            instance(mock(ExperimentService)),
         );
         when(shell.withProgress(anything(), anything())).thenResolve();
 

@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { IInterpreterLocatorService, IInterpreterService, PIPENV_SERVICE } from '../../interpreter/contracts';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { isPipenvEnvironmentRelatedToFolder } from '../../pythonEnvironments/common/environmentManagers/pipenv';
 import { EnvironmentType, ModuleInstallerType } from '../../pythonEnvironments/info';
 import { IWorkspaceService } from '../application/types';
-import { inDiscoveryExperiment } from '../experiments/helpers';
-import { ExecutionInfo, IExperimentService } from '../types';
+import { ExecutionInfo } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
 import { InterpreterUri, ModuleInstallFlags } from './types';
@@ -37,27 +36,17 @@ export class PipEnvInstaller extends ModuleInstaller {
     }
     public async isSupported(resource?: InterpreterUri): Promise<boolean> {
         if (isResource(resource)) {
-            const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
-            if (await inDiscoveryExperiment(experimentService)) {
-                const interpreter = await this.serviceContainer
-                    .get<IInterpreterService>(IInterpreterService)
-                    .getActiveInterpreter(resource);
-                const workspaceFolder = resource
-                    ? this.serviceContainer.get<IWorkspaceService>(IWorkspaceService).getWorkspaceFolder(resource)
-                    : undefined;
-                if (!interpreter || !workspaceFolder || interpreter.envType !== EnvironmentType.Pipenv) {
-                    return false;
-                }
-                // Install using `pipenv install` only if the active environment is related to the current folder.
-                return isPipenvEnvironmentRelatedToFolder(interpreter.path, workspaceFolder.uri.fsPath);
-            } else {
-                const pipenvs = this.serviceContainer.get<IInterpreterLocatorService>(
-                    IInterpreterLocatorService,
-                    PIPENV_SERVICE,
-                );
-                const interpreters = await pipenvs.getInterpreters(resource);
-                return interpreters.length > 0;
+            const interpreter = await this.serviceContainer
+                .get<IInterpreterService>(IInterpreterService)
+                .getActiveInterpreter(resource);
+            const workspaceFolder = resource
+                ? this.serviceContainer.get<IWorkspaceService>(IWorkspaceService).getWorkspaceFolder(resource)
+                : undefined;
+            if (!interpreter || !workspaceFolder || interpreter.envType !== EnvironmentType.Pipenv) {
+                return false;
             }
+            // Install using `pipenv install` only if the active environment is related to the current folder.
+            return isPipenvEnvironmentRelatedToFolder(interpreter.path, workspaceFolder.uri.fsPath);
         } else {
             return resource.envType === EnvironmentType.Pipenv;
         }

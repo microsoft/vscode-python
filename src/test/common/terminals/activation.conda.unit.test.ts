@@ -122,8 +122,6 @@ suite('Terminal Environment Activation conda', () => {
                 condaService.object,
                 platformService.object,
                 configService.object,
-                serviceContainer.object,
-                experimentService.object,
                 componentAdapter.object,
             ),
             instance(bash),
@@ -155,8 +153,6 @@ suite('Terminal Environment Activation conda', () => {
             condaService.object,
             platformService.object,
             configService.object,
-            serviceContainer.object,
-            experimentService.object,
             componentAdapter.object,
         );
         const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.fish);
@@ -186,8 +182,6 @@ suite('Terminal Environment Activation conda', () => {
             condaService.object,
             platformService.object,
             configService.object,
-            serviceContainer.object,
-            experimentService.object,
             componentAdapter.object,
         );
         const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
@@ -217,8 +211,6 @@ suite('Terminal Environment Activation conda', () => {
             condaService.object,
             platformService.object,
             configService.object,
-            serviceContainer.object,
-            experimentService.object,
             componentAdapter.object,
         );
         const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
@@ -296,8 +288,6 @@ suite('Terminal Environment Activation conda', () => {
                 condaService.object,
                 platformService.object,
                 configService.object,
-                serviceContainer.object,
-                experimentService.object,
                 componentAdapter.object,
             );
             const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
@@ -327,8 +317,6 @@ suite('Terminal Environment Activation conda', () => {
             condaService.object,
             platformService.object,
             configService.object,
-            serviceContainer.object,
-            experimentService.object,
             componentAdapter.object,
         ).getActivationCommands(undefined, shellType);
         let expectedActivationCommand: string[] | undefined;
@@ -666,8 +654,6 @@ suite('Terminal Environment Activation conda', () => {
                 condaSrv.object,
                 platformService.object,
                 configService.object,
-                serviceContainer.object,
-                experimentService.object,
                 componentAdapter.object,
             );
 

@@ -13,7 +13,6 @@ import { JUPYTER_EXTENSION_ID } from '../common/constants';
 import { InterpreterUri, ModuleInstallFlags } from '../common/installer/types';
 import {
     GLOBAL_MEMENTO,
-    IExperimentService,
     IExtensions,
     IInstaller,
     IMemento,
@@ -35,8 +34,6 @@ import {
 } from '../interpreter/contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './types';
-import { inDiscoveryExperiment } from '../common/experiments/helpers';
-import { isWindowsStoreInterpreter } from '../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 
 interface ILanguageServer extends Disposable {
     readonly connection: ILanguageServerConnection;
@@ -179,7 +176,6 @@ export class JupyterExtensionIntegration {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IInterpreterDisplay) private interpreterDisplay: IInterpreterDisplay,
         @inject(IComponentAdapter) private pyenvs: IComponentAdapter,
-        @inject(IExperimentService) private experimentService: IExperimentService,
     ) {}
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
@@ -198,12 +194,8 @@ export class JupyterExtensionIntegration {
                 interpreter?: PythonEnvironment,
                 allowExceptions?: boolean,
             ) => this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions),
-            isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> => {
-                if (await inDiscoveryExperiment(this.experimentService)) {
-                    return this.pyenvs.isWindowsStoreInterpreter(pythonPath);
-                }
-                return isWindowsStoreInterpreter(pythonPath);
-            },
+            isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> =>
+                this.pyenvs.isWindowsStoreInterpreter(pythonPath),
             getSuggestions: async (resource: Resource): Promise<IInterpreterQuickPickItem[]> =>
                 this.interpreterSelector.getAllSuggestions(resource),
             getKnownSuggestions: (resource: Resource): IInterpreterQuickPickItem[] =>

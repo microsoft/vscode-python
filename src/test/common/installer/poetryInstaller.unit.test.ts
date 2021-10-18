@@ -76,8 +76,6 @@ suite('Module Installer - Poetry', () => {
             instance(serviceContainer),
             instance(workspaceService),
             instance(configurationService),
-            instance(fileSystem),
-            instance(processServiceFactory),
         );
     });
 

@@ -24,12 +24,7 @@ import {
     IProcessServiceFactory,
     IPythonExecutionService,
 } from '../../../client/common/process/types';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentService,
-    IInterpreterPathProxyService,
-} from '../../../client/common/types';
+import { IConfigurationService, IDisposableRegistry, IInterpreterPathProxyService } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
@@ -43,10 +38,7 @@ import { InterpreterService } from '../../../client/interpreter/interpreterServi
 import { ServiceContainer } from '../../../client/ioc/container';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import * as ExperimentHelpers from '../../../client/common/experiments/helpers';
 import * as WindowsStoreInterpreter from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
-import { ExperimentService } from '../../../client/common/experiments/service';
-import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 import { IInterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection/types';
 
 const pythonInterpreter: PythonEnvironment = {
@@ -98,10 +90,8 @@ suite('Process - PythonExecutionFactory', () => {
             let processService: typemoq.IMock<IProcessService>;
             let interpreterService: IInterpreterService;
             let pyenvs: IComponentAdapter;
-            let experimentService: IExperimentService;
             let executionService: typemoq.IMock<IPythonExecutionService>;
             let isWindowsStoreInterpreterStub: sinon.SinonStub;
-            let inDiscoveryExperimentStub: sinon.SinonStub;
             let autoSelection: IInterpreterAutoSelectionService;
             let interpreterPathExpHelper: IInterpreterPathProxyService;
             setup(() => {
@@ -115,9 +105,6 @@ suite('Process - PythonExecutionFactory', () => {
                 autoSelection = mock<IInterpreterAutoSelectionService>();
                 interpreterPathExpHelper = mock<IInterpreterPathProxyService>();
                 when(interpreterPathExpHelper.get(anything())).thenReturn('selected interpreter path');
-                experimentService = mock(ExperimentService);
-                when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
-                when(experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching)).thenResolve(false);
 
                 pyenvs = mock<IComponentAdapter>();
                 when(pyenvs.isWindowsStoreInterpreter(anyString())).thenResolve(true);
@@ -161,15 +148,12 @@ suite('Process - PythonExecutionFactory', () => {
                     instance(condaService),
                     instance(bufferDecoder),
                     instance(pyenvs),
-                    instance(experimentService),
                     instance(autoSelection),
                     instance(interpreterPathExpHelper),
                 );
 
                 isWindowsStoreInterpreterStub = sinon.stub(WindowsStoreInterpreter, 'isWindowsStoreInterpreter');
                 isWindowsStoreInterpreterStub.resolves(true);
-
-                inDiscoveryExperimentStub = sinon.stub(ExperimentHelpers, 'inDiscoveryExperiment');
             });
 
             teardown(() => sinon.restore());
@@ -191,7 +175,6 @@ suite('Process - PythonExecutionFactory', () => {
             test('If interpreter is explicitly set, ensure we use it', async () => {
                 const pythonSettings = mock(PythonSettings);
                 when(processFactory.create(resource)).thenResolve(processService.object);
-                inDiscoveryExperimentStub.resolves(true);
                 when(activationHelper.getActivatedEnvironmentVariables(resource)).thenResolve({ x: '1' });
                 reset(interpreterPathExpHelper);
                 when(interpreterPathExpHelper.get(anything())).thenReturn('python');
@@ -295,7 +278,6 @@ suite('Process - PythonExecutionFactory', () => {
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
-                inDiscoveryExperimentStub.resolves(true);
 
                 const service = await factory.create({ resource });
 
@@ -303,7 +285,6 @@ suite('Process - PythonExecutionFactory', () => {
                 verify(processFactory.create(resource)).once();
                 verify(pythonSettings.pythonPath).once();
                 verify(pyenvs.isWindowsStoreInterpreter(pythonPath)).once();
-                sinon.assert.calledOnce(inDiscoveryExperimentStub);
                 sinon.assert.notCalled(isWindowsStoreInterpreterStub);
             });
 
@@ -314,7 +295,6 @@ suite('Process - PythonExecutionFactory', () => {
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
-                inDiscoveryExperimentStub.resolves(false);
 
                 const service = await factory.create({ resource });
 
@@ -322,7 +302,6 @@ suite('Process - PythonExecutionFactory', () => {
                 verify(processFactory.create(resource)).once();
                 verify(pythonSettings.pythonPath).once();
                 verify(pyenvs.isWindowsStoreInterpreter(pythonPath)).never();
-                sinon.assert.calledOnce(inDiscoveryExperimentStub);
                 sinon.assert.calledOnce(isWindowsStoreInterpreterStub);
                 sinon.assert.calledWith(isWindowsStoreInterpreterStub, pythonPath);
             });
