@@ -13,14 +13,9 @@ import { IPersistentState, IPersistentStateFactory } from '../../../client/commo
 import { Common } from '../../../client/common/utils/localize';
 import { PythonPathUpdaterService } from '../../../client/interpreter/configuration/pythonPathUpdaterService';
 import { IPythonPathUpdaterServiceManager } from '../../../client/interpreter/configuration/types';
-import {
-    IComponentAdapter,
-    IInterpreterHelper,
-    IInterpreterLocatorService,
-} from '../../../client/interpreter/contracts';
+import { IComponentAdapter, IInterpreterHelper } from '../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
 import { VirtualEnvironmentPrompt } from '../../../client/interpreter/virtualEnvs/virtualEnvPrompt';
-import { CacheableLocatorService } from '../../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('Virtual Environment Prompt', () => {
@@ -36,7 +31,6 @@ suite('Virtual Environment Prompt', () => {
     let persistentStateFactory: IPersistentStateFactory;
     let helper: IInterpreterHelper;
     let pythonPathUpdaterService: IPythonPathUpdaterServiceManager;
-    let locator: IInterpreterLocatorService;
     let disposable: Disposable;
     let appShell: IApplicationShell;
     let componentAdapter: IComponentAdapter;
@@ -45,7 +39,6 @@ suite('Virtual Environment Prompt', () => {
         persistentStateFactory = mock(PersistentStateFactory);
         helper = mock(InterpreterHelper);
         pythonPathUpdaterService = mock(PythonPathUpdaterService);
-        locator = mock(CacheableLocatorService);
         componentAdapter = mock<IComponentAdapter>();
         disposable = mock(Disposable);
         appShell = mock(ApplicationShell);
@@ -66,8 +59,11 @@ suite('Virtual Environment Prompt', () => {
         const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        when(locator.getInterpreters(resource)).thenResolve([interpreter1, interpreter2] as any);
+        when(componentAdapter.getWorkspaceVirtualEnvInterpreters(resource)).thenResolve([
+            interpreter1,
+            interpreter2,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ] as any);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(helper.getBestInterpreter(deepEqual([interpreter1, interpreter2] as any))).thenReturn(interpreter2 as any);
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
