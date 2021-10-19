@@ -1,35 +1,15 @@
 import { SemVer } from 'semver';
 import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
-import { IExtensionSingleActivationService } from '../activation/types';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { Resource } from '../common/types';
 import { PythonEnvSource } from '../pythonEnvironments/base/info';
 import { PythonLocatorQuery } from '../pythonEnvironments/base/locator';
-import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/common/environmentManagers/conda';
+import { CondaEnvironmentInfo } from '../pythonEnvironments/common/environmentManagers/conda';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 
-export const INTERPRETER_LOCATOR_SERVICE = 'IInterpreterLocatorService';
-export const WINDOWS_REGISTRY_SERVICE = 'WindowsRegistryService';
-export const CONDA_ENV_FILE_SERVICE = 'CondaEnvFileService';
-export const CONDA_ENV_SERVICE = 'CondaEnvService';
-export const CURRENT_PATH_SERVICE = 'CurrentPathService';
-export const KNOWN_PATH_SERVICE = 'KnownPathsService';
-export const GLOBAL_VIRTUAL_ENV_SERVICE = 'VirtualEnvService';
-export const WORKSPACE_VIRTUAL_ENV_SERVICE = 'WorkspaceVirtualEnvService';
-export const PIPENV_SERVICE = 'PipEnvService';
 export const IInterpreterVersionService = Symbol('IInterpreterVersionService');
 export interface IInterpreterVersionService {
     getVersion(pythonPath: string, defaultValue: string): Promise<string>;
-    getPipVersion(pythonPath: string): Promise<string>;
-}
-
-export const IKnownSearchPathsForInterpreters = Symbol('IKnownSearchPathsForInterpreters');
-export interface IKnownSearchPathsForInterpreters {
-    getSearchPaths(): string[];
-}
-export const IVirtualEnvironmentsSearchPathProvider = Symbol('IVirtualEnvironmentsSearchPathProvider');
-export interface IVirtualEnvironmentsSearchPathProvider {
-    getSearchPaths(resource?: Uri): Promise<string[]>;
 }
 
 export type PythonEnvironmentsChangedEvent = {
@@ -74,15 +54,6 @@ export interface IComponentAdapter {
     isWindowsStoreInterpreter(pythonPath: string): Promise<boolean>;
 }
 
-export const IInterpreterLocatorService = Symbol('IInterpreterLocatorService');
-
-export interface IInterpreterLocatorService extends Disposable {
-    readonly onLocating: Event<Promise<PythonEnvironment[]>>;
-    readonly hasInterpreters: Promise<boolean>;
-    didTriggerInterpreterSuggestions?: boolean;
-    getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
-}
-
 export const ICondaService = Symbol('ICondaService');
 /**
  * Interface carries the properties which are not available via the discovery component interface.
@@ -92,20 +63,6 @@ export interface ICondaService {
     isCondaAvailable(): Promise<boolean>;
     getCondaVersion(): Promise<SemVer | undefined>;
     getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined>;
-}
-
-export const ICondaLocatorService = Symbol('ICondaLocatorService');
-/**
- * @deprecated Use the new discovery component when in experiment, use this otherwise.
- */
-export interface ICondaLocatorService {
-    readonly condaEnvironmentsFile: string | undefined;
-    getCondaFile(): Promise<string>;
-    getCondaInfo(): Promise<CondaInfo | undefined>;
-    getCondaEnvironments(ignoreCache: boolean): Promise<CondaEnvironmentInfo[] | undefined>;
-    getInterpreterPath(condaEnvironmentPath: string): string;
-    isCondaEnvironment(interpreterPath: string): Promise<boolean>;
-    getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
 }
 
 export const IInterpreterService = Symbol('IInterpreterService');
@@ -119,7 +76,7 @@ export interface IInterpreterService {
     onDidChangeInterpreterInformation: Event<PythonEnvironment>;
     hasInterpreters(filter?: (e: PythonEnvironment) => Promise<boolean>): Promise<boolean>;
     getInterpreters(resource?: Uri): PythonEnvironment[];
-    getAllInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
+    getAllInterpreters(resource?: Uri): Promise<PythonEnvironment[]>;
     getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
     getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<undefined | PythonEnvironment>;
     refresh(resource: Resource): Promise<void>;
@@ -146,33 +103,6 @@ export interface IInterpreterHelper {
     getBestInterpreter(interpreters?: PythonEnvironment[]): PythonEnvironment | undefined;
 }
 
-export const IPipEnvService = Symbol('IPipEnvService');
-export interface IPipEnvService extends IInterpreterLocatorService {
-    executable: string;
-    isRelatedPipEnvironment(dir: string, pythonPath: string): Promise<boolean>;
-}
-
-export const IInterpreterLocatorHelper = Symbol('IInterpreterLocatorHelper');
-export interface IInterpreterLocatorHelper {
-    mergeInterpreters(interpreters: PythonEnvironment[]): Promise<PythonEnvironment[]>;
-}
-
-export const IInterpreterWatcher = Symbol('IInterpreterWatcher');
-export interface IInterpreterWatcher {
-    onDidCreate: Event<Resource>;
-}
-
-export const IInterpreterWatcherBuilder = Symbol('IInterpreterWatcherBuilder');
-export interface IInterpreterWatcherBuilder {
-    getWorkspaceVirtualEnvInterpreterWatcher(resource: Resource): Promise<IInterpreterWatcher>;
-}
-
-export const IInterpreterLocatorProgressService = Symbol('IInterpreterLocatorProgressService');
-export interface IInterpreterLocatorProgressService extends IExtensionSingleActivationService {
-    readonly onRefreshing: Event<void>;
-    readonly onRefreshed: Event<void>;
-}
-
 export const IInterpreterStatusbarVisibilityFilter = Symbol('IInterpreterStatusbarVisibilityFilter');
 /**
  * Implement this interface to control the visibility of the interpreter statusbar.
@@ -186,5 +116,3 @@ export type WorkspacePythonPath = {
     folderUri: Uri;
     configTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder;
 };
-
-export type GetInterpreterOptions = { ignoreCache?: boolean; onSuggestion?: boolean };

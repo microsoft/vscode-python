@@ -28,15 +28,8 @@ import {
     IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
-import {
-    IComponentAdapter,
-    IInterpreterDisplay,
-    IInterpreterHelper,
-    IInterpreterLocatorService,
-    INTERPRETER_LOCATOR_SERVICE,
-} from '../../client/interpreter/contracts';
+import { IComponentAdapter, IInterpreterDisplay, IInterpreterHelper } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { PYTHON_PATH } from '../common';
@@ -52,12 +45,10 @@ suite('Interpreters service', () => {
     let updater: TypeMoq.IMock<IPythonPathUpdaterServiceManager>;
     let pyenvs: TypeMoq.IMock<IComponentAdapter>;
     let helper: TypeMoq.IMock<IInterpreterHelper>;
-    let locator: TypeMoq.IMock<IInterpreterLocatorService>;
     let workspace: TypeMoq.IMock<IWorkspaceService>;
     let config: TypeMoq.IMock<WorkspaceConfiguration>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let interpreterDisplay: TypeMoq.IMock<IInterpreterDisplay>;
-    let virtualEnvMgr: TypeMoq.IMock<IVirtualEnvironmentManager>;
     let persistentStateFactory: TypeMoq.IMock<IPersistentStateFactory>;
     let pythonExecutionFactory: TypeMoq.IMock<IPythonExecutionFactory>;
     let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
@@ -76,12 +67,10 @@ suite('Interpreters service', () => {
         updater = TypeMoq.Mock.ofType<IPythonPathUpdaterServiceManager>();
         pyenvs = TypeMoq.Mock.ofType<IComponentAdapter>();
         helper = TypeMoq.Mock.ofType<IInterpreterHelper>();
-        locator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         config = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
-        virtualEnvMgr = TypeMoq.Mock.ofType<IVirtualEnvironmentManager>();
         persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
         pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
         pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
@@ -113,11 +102,6 @@ suite('Interpreters service', () => {
             updater.object,
         );
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
-        serviceManager.addSingletonInstance<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            locator.object,
-            INTERPRETER_LOCATOR_SERVICE,
-        );
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fileSystem.object);
         serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, experimentService.object);
         serviceManager.addSingletonInstance<IInterpreterPathService>(
@@ -125,10 +109,6 @@ suite('Interpreters service', () => {
             interpreterPathService.object,
         );
         serviceManager.addSingletonInstance<IInterpreterDisplay>(IInterpreterDisplay, interpreterDisplay.object);
-        serviceManager.addSingletonInstance<IVirtualEnvironmentManager>(
-            IVirtualEnvironmentManager,
-            virtualEnvMgr.object,
-        );
         serviceManager.addSingletonInstance<IPersistentStateFactory>(
             IPersistentStateFactory,
             persistentStateFactory.object,

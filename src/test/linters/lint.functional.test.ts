@@ -34,12 +34,7 @@ import {
 } from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
-import {
-    IComponentAdapter,
-    ICondaLocatorService,
-    ICondaService,
-    IInterpreterService,
-} from '../../client/interpreter/contracts';
+import { IComponentAdapter, ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { ILintMessage, LinterId, LintMessageSeverity } from '../../client/linters/types';
@@ -707,13 +702,6 @@ class TestFixture extends BaseTestFixture {
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny()))
             .returns(() => interpreterService.object);
 
-        const condaLocatorService = TypeMoq.Mock.ofType<ICondaLocatorService>();
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService)))
-            .returns(() => condaLocatorService.object);
-        condaLocatorService
-            .setup((c) => c.getCondaEnvironment(TypeMoq.It.isAnyString()))
-            .returns(() => Promise.resolve(undefined));
         const condaService = TypeMoq.Mock.ofType<ICondaService>(undefined, TypeMoq.MockBehavior.Strict);
         condaService.setup((c) => c.getCondaVersion()).returns(() => Promise.resolve(undefined));
         condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve('conda'));

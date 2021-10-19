@@ -33,7 +33,6 @@ import { InterpreterService } from '../../../client/interpreter/interpreterServi
 import { ServiceContainer } from '../../../client/ioc/container';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import * as WindowsStoreInterpreter from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { IInterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection/types';
 
 const pythonInterpreter: PythonEnvironment = {
@@ -142,9 +141,6 @@ suite('Process - PythonExecutionFactory', () => {
                     instance(autoSelection),
                     instance(interpreterPathExpHelper),
                 );
-
-                isWindowsStoreInterpreterStub = sinon.stub(WindowsStoreInterpreter, 'isWindowsStoreInterpreter');
-                isWindowsStoreInterpreterStub.resolves(true);
             });
 
             teardown(() => sinon.restore());

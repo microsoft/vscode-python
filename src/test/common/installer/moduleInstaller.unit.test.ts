@@ -48,7 +48,6 @@ import { Products } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import {
     IComponentAdapter,
-    ICondaLocatorService,
     ICondaService,
     IInterpreterService,
 } from '../../../client/interpreter/contracts';
@@ -273,10 +272,7 @@ suite('Module Installer', () => {
                             const condaService = TypeMoq.Mock.ofType<ICondaService>();
                             condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(condaExecutable));
 
-                            const condaLocatorService = TypeMoq.Mock.ofType<ICondaLocatorService>();
-                            serviceContainer
-                                .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService)))
-                                .returns(() => condaLocatorService.object);
+                            const condaLocatorService = TypeMoq.Mock.ofType<IComponentAdapter>();
                             serviceContainer
                                 .setup((c) => c.get(TypeMoq.It.isValue(IComponentAdapter)))
                                 .returns(() => condaLocatorService.object);

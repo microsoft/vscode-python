@@ -191,12 +191,6 @@ jobs:
           & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaPath
           & $condaExecPath init --all
 
-          # 2. For `interpreterLocatorService.testvirtualenvs.ts`
-
-          & $condaExecPath create -n "test_env1" -y python
-          & $condaExecPath create -p "./test_env2" -y python
-          & $condaExecPath create -p "~/test_env3" -y python
-
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
           echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
@@ -457,12 +451,6 @@ jobs:
           & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaExecPath $condaExecPath
           & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaPath
           & $condaExecPath init --all
-
-          # 2. For `interpreterLocatorService.testvirtualenvs.ts`
-
-          & $condaExecPath create -n "test_env1" -y python
-          & $condaExecPath create -p "./test_env2" -y python
-          & $condaExecPath create -p "~/test_env3" -y python
 
       - name: Run TypeScript unit tests
         run: npm run test:unittests:cover
