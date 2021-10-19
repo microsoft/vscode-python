@@ -14,11 +14,7 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { PoetryInstaller } from '../../../client/common/installer/poetryInstaller';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { ProcessService } from '../../../client/common/process/proc';
-import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
-import { ExecutionResult, IProcessServiceFactory, ShellOptions } from '../../../client/common/process/types';
+import { ExecutionResult, ShellOptions } from '../../../client/common/process/types';
 import { ExecutionInfo, IConfigurationService, IExperimentService } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
@@ -38,10 +34,8 @@ suite('Module Installer - Poetry', () => {
     let poetryInstaller: TestInstaller;
     let workspaceService: IWorkspaceService;
     let configurationService: IConfigurationService;
-    let fileSystem: IFileSystem;
     let experimentService: IExperimentService;
     let interpreterService: IInterpreterService;
-    let processServiceFactory: IProcessServiceFactory;
     let serviceContainer: ServiceContainer;
     let shellExecute: sinon.SinonStub;
 
@@ -53,8 +47,6 @@ suite('Module Installer - Poetry', () => {
         when(serviceContainer.get<IExperimentService>(IExperimentService)).thenReturn(instance(experimentService));
         workspaceService = mock(WorkspaceService);
         configurationService = mock(ConfigurationService);
-        fileSystem = mock(FileSystem);
-        processServiceFactory = mock(ProcessServiceFactory);
 
         shellExecute = sinon.stub(externalDependencies, 'shellExecute');
         shellExecute.callsFake((command: string, options: ShellOptions) => {

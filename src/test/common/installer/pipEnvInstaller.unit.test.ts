@@ -14,7 +14,7 @@ import { IExperimentService } from '../../../client/common/types';
 import { IInterpreterLocatorService, IInterpreterService, PIPENV_SERVICE } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import * as pipEnvHelper from '../../../client/pythonEnvironments/common/environmentManagers/pipenv';
-import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType } from '../../../client/pythonEnvironments/info';
 
 suite('PipEnv installer', async () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -89,21 +89,7 @@ suite('PipEnv installer', async () => {
         expect(result).to.equal(false, 'Should be false');
     });
 
-    test('If InterpreterUri is Resource, and if resource contains pipEnv interpreters, return true', async () => {
-        const resource = Uri.parse('a');
-        locatorService
-            .setup((p) => p.getInterpreters(resource))
-            .returns(() =>
-                Promise.resolve([
-                    TypeMoq.Mock.ofType<PythonEnvironment>().object,
-                    TypeMoq.Mock.ofType<PythonEnvironment>().object,
-                ]),
-            );
-        const result = await pipEnvInstaller.isSupported(resource);
-        expect(result).to.equal(true, 'Should be true');
-    });
-
-    test('When in experiment, if active environment is pipenv and is related to workspace folder, return true', async () => {
+    test('If active environment is pipenv and is related to workspace folder, return true', async () => {
         const resource = Uri.parse('a');
         experimentService.reset();
         experimentService
@@ -120,7 +106,7 @@ suite('PipEnv installer', async () => {
         expect(result).to.equal(true, 'Should be true');
     });
 
-    test('When in experiment, if active environment is not pipenv, return false', async () => {
+    test('If active environment is not pipenv, return false', async () => {
         const resource = Uri.parse('a');
         experimentService.reset();
         experimentService
@@ -137,7 +123,7 @@ suite('PipEnv installer', async () => {
         expect(result).to.equal(false, 'Should be false');
     });
 
-    test('When in experiment, if active environment is pipenv but not related to workspace folder, return false', async () => {
+    test('If active environment is pipenv but not related to workspace folder, return false', async () => {
         const resource = Uri.parse('a');
         experimentService.reset();
         experimentService
