@@ -17,7 +17,7 @@ import {
     IExperimentService,
     IPythonSettings,
 } from '../../../client/common/types';
-import { ICondaService, ICondaLocatorService } from '../../../client/interpreter/contracts';
+import { ICondaService, IComponentAdapter } from '../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CondaEnvironmentInfo } from '../../../client/pythonEnvironments/common/environmentManagers/conda';
@@ -27,7 +27,7 @@ suite('Common - Conda Installer', () => {
     let installer: CondaInstallerTest;
     let serviceContainer: IServiceContainer;
     let condaService: ICondaService;
-    let condaLocatorService: ICondaLocatorService;
+    let condaLocatorService: IComponentAdapter;
     let configService: IConfigurationService;
     let experimentService: IExperimentService;
     class CondaInstallerTest extends CondaInstaller {
@@ -39,13 +39,11 @@ suite('Common - Conda Installer', () => {
         serviceContainer = mock(ServiceContainer);
         condaService = mock(CondaService);
         experimentService = mock<IExperimentService>();
-        condaLocatorService = mock<ICondaLocatorService>();
+        condaLocatorService = mock<IComponentAdapter>();
         when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
         configService = mock(ConfigurationService);
         when(serviceContainer.get<ICondaService>(ICondaService)).thenReturn(instance(condaService));
-        when(serviceContainer.get<ICondaLocatorService>(ICondaLocatorService)).thenReturn(
-            instance(condaLocatorService),
-        );
+        when(serviceContainer.get<IComponentAdapter>(IComponentAdapter)).thenReturn(instance(condaLocatorService));
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         when(serviceContainer.get<IExperimentService>(IExperimentService)).thenReturn(instance(experimentService));
         installer = new CondaInstallerTest(instance(serviceContainer));
