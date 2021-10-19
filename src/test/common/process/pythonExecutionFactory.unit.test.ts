@@ -84,7 +84,6 @@ suite('Process - PythonExecutionFactory', () => {
             let interpreterService: IInterpreterService;
             let pyenvs: IComponentAdapter;
             let executionService: typemoq.IMock<IPythonExecutionService>;
-            let isWindowsStoreInterpreterStub: sinon.SinonStub;
             let autoSelection: IInterpreterAutoSelectionService;
             let interpreterPathExpHelper: IInterpreterPathProxyService;
             setup(() => {
@@ -256,23 +255,6 @@ suite('Process - PythonExecutionFactory', () => {
                     verify(pythonSettings.pythonPath).once();
                 }
                 assert.equal(createInvoked, false);
-            });
-
-            test("Ensure `create` returns a WindowsStorePythonProcess instance if it's a windows store intepreter path and we're in the discovery experiment", async () => {
-                const pythonPath = 'path/to/python';
-                const pythonSettings = mock(PythonSettings);
-
-                when(processFactory.create(resource)).thenResolve(processService.object);
-                when(pythonSettings.pythonPath).thenReturn(pythonPath);
-                when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
-
-                const service = await factory.create({ resource });
-
-                expect(service).to.not.equal(undefined);
-                verify(processFactory.create(resource)).once();
-                verify(pythonSettings.pythonPath).once();
-                verify(pyenvs.isWindowsStoreInterpreter(pythonPath)).once();
-                sinon.assert.notCalled(isWindowsStoreInterpreterStub);
             });
 
             test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
