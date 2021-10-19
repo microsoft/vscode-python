@@ -46,7 +46,9 @@ export async function* findInterpretersInDir(
     for await (const entry of walkSubTree(root, 1, cfg)) {
         const { filename, filetype } = entry;
         if (filetype === FileType.File || filetype === FileType.SymbolicLink) {
-            if (matchFile(filename, checkBin, ignoreErrors)) {
+            const x = matchFile(filename, checkBin, ignoreErrors);
+            traceVerbose(`Found file: ${filename} ${x}`);
+            if (x) {
                 yield entry;
             }
         }
@@ -88,15 +90,19 @@ async function* walkSubTree(
         ignoreErrors: boolean;
     },
 ): AsyncIterableIterator<DirEntry> {
+    traceVerbose(`Looking into ${subRoot}`);
     const entries = await readDirEntries(subRoot, cfg);
     for (const entry of entries) {
-        traceVerbose(`Entry in ${subRoot}: ${entry.filename}`);
+        traceVerbose(`Entry in ${subRoot}: ${entry.filename} ${entry.filetype} ${cfg.maxDepth} ${currentDepth}`);
         yield entry;
 
         const { filename, filetype } = entry;
         if (filetype === FileType.Directory) {
             if (cfg.maxDepth < 0 || currentDepth <= cfg.maxDepth) {
                 if (matchFile(filename, cfg.filterSubDir, cfg.ignoreErrors)) {
+                    traceVerbose(
+                        `Look further into: ${entry.filename} ${entry.filetype} ${cfg.maxDepth} ${currentDepth}`,
+                    );
                     yield* walkSubTree(filename, currentDepth + 1, cfg);
                 }
             }
