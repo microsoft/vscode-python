@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { traceError } from '../../../../common/logger';
+import { traceError, traceVerbose } from '../../../../common/logger';
 import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
@@ -25,6 +25,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<BasicEnvInfo> {
 
     const subDirs = getSubDirs(pyenvVersionDir, { resolveSymlinks: true });
     for await (const subDirPath of subDirs) {
+        traceVerbose(`Looking for pyenv into sub-directory: ${subDirPath}`);
         const interpreterPath = await getInterpreterPathFromDir(subDirPath);
 
         if (interpreterPath) {
@@ -33,6 +34,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<BasicEnvInfo> {
                     kind: PythonEnvKind.Pyenv,
                     executablePath: interpreterPath,
                 };
+                traceVerbose(`Found pyenv environment, ${interpreterPath}`);
             } catch (ex) {
                 traceError(`Failed to process environment: ${interpreterPath}`, ex);
             }

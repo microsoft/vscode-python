@@ -3,6 +3,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { traceVerbose } from '../../common/logger';
 import { convertFileType, DirEntry, FileType, getFileFilter, getFileType } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { logError } from '../../logging';
@@ -89,6 +90,7 @@ async function* walkSubTree(
 ): AsyncIterableIterator<DirEntry> {
     const entries = await readDirEntries(subRoot, cfg);
     for (const entry of entries) {
+        traceVerbose(`Entry in ${subRoot}: ${entry.filename}`);
         yield entry;
 
         const { filename, filetype } = entry;
@@ -345,6 +347,7 @@ export async function getInterpreterPathFromDir(
     const matchExecutable = opts.global ? looksLikeBasicGlobalPython : looksLikeBasicVirtualPython;
     const executables = findInterpretersInDir(envDir, recurseLevel, filterDir, opts.ignoreErrors);
     for await (const entry of executables) {
+        traceVerbose(`Found entry in ${envDir}: ${entry.filename}`);
         if (await matchExecutable(entry)) {
             return entry.filename;
         }
