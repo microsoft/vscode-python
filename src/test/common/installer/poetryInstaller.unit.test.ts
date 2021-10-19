@@ -106,63 +106,6 @@ suite('Module Installer - Poetry', () => {
 
         assert.equal(supported, false);
     });
-    test('Is not supported when the poetry file does not exists', async () => {
-        const uri = Uri.file(__dirname);
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
-        when(fileSystem.fileExists(anything())).thenResolve(false);
-
-        const supported = await poetryInstaller.isSupported(Uri.file(__filename));
-
-        assert.equal(supported, false);
-    });
-    test('Is not supported when the poetry is not available (with stderr)', async () => {
-        const uri = Uri.file(__dirname);
-        const processService = mock(ProcessService);
-        const settings = mock(PythonSettings);
-
-        when(configurationService.getSettings(anything())).thenReturn(instance(settings));
-        when(settings.poetryPath).thenReturn('poetry');
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
-        when(fileSystem.fileExists(anything())).thenResolve(true);
-        when(processServiceFactory.create(anything())).thenResolve(instance(processService));
-        when(processService.shellExec(anything(), anything())).thenResolve({ stderr: 'Kaboom', stdout: '' });
-
-        const supported = await poetryInstaller.isSupported(Uri.file(__filename));
-
-        assert.equal(supported, false);
-    });
-    test('Is not supported when the poetry is not available (with error running poetry)', async () => {
-        const uri = Uri.file(__dirname);
-        const processService = mock(ProcessService);
-        const settings = mock(PythonSettings);
-
-        when(configurationService.getSettings(anything())).thenReturn(instance(settings));
-        when(settings.poetryPath).thenReturn('poetry');
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
-        when(fileSystem.fileExists(anything())).thenResolve(true);
-        when(processServiceFactory.create(anything())).thenResolve(instance(processService));
-        when(processService.shellExec(anything(), anything())).thenReject(new Error('Kaboom'));
-
-        const supported = await poetryInstaller.isSupported(Uri.file(__filename));
-
-        assert.equal(supported, false);
-    });
-    test('Is supported', async () => {
-        const uri = Uri.file(__dirname);
-        const processService = mock(ProcessService);
-        const settings = mock(PythonSettings);
-
-        when(configurationService.getSettings(uri)).thenReturn(instance(settings));
-        when(settings.poetryPath).thenReturn('poetry path');
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
-        when(fileSystem.fileExists(anything())).thenResolve(true);
-        when(processServiceFactory.create(uri)).thenResolve(instance(processService));
-        when(processService.shellExec('poetry path env list', anything())).thenResolve({ stderr: '', stdout: '' });
-
-        const supported = await poetryInstaller.isSupported(Uri.file(__filename));
-
-        assert.equal(supported, true);
-    });
     test('Get Executable info', async () => {
         const uri = Uri.file(__dirname);
         const settings = mock(PythonSettings);
@@ -188,7 +131,7 @@ suite('Module Installer - Poetry', () => {
             execPath: 'poetry path',
         });
     });
-    test('When in experiment, is supported returns true if selected interpreter is related to the workspace', async () => {
+    test('Is supported returns true if selected interpreter is related to the workspace', async () => {
         const uri = Uri.file(project1);
         const settings = mock(PythonSettings);
 
@@ -207,7 +150,7 @@ suite('Module Installer - Poetry', () => {
         assert.equal(supported, true);
     });
 
-    test('When in experiment, is supported returns true if no interpreter is selected', async () => {
+    test('Is supported returns true if no interpreter is selected', async () => {
         const uri = Uri.file(project1);
         const settings = mock(PythonSettings);
 
@@ -222,7 +165,7 @@ suite('Module Installer - Poetry', () => {
         assert.equal(supported, false);
     });
 
-    test('When in experiment, is supported returns false if selected interpreter is not related to the workspace', async () => {
+    test('Is supported returns false if selected interpreter is not related to the workspace', async () => {
         const uri = Uri.file(project1);
         const settings = mock(PythonSettings);
 
@@ -241,7 +184,7 @@ suite('Module Installer - Poetry', () => {
         assert.equal(supported, false);
     });
 
-    test('When in experiment, is supported returns false if selected interpreter is not of Poetry type', async () => {
+    test('Is supported returns false if selected interpreter is not of Poetry type', async () => {
         const uri = Uri.file(project1);
         const settings = mock(PythonSettings);
 
