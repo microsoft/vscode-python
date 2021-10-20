@@ -11,7 +11,9 @@ suite('Pyenv Locator', async () => {
     const testPyenvRoot = path.join(TEST_LAYOUT_ROOT, 'pyenvhome', '.pyenv');
     const testPyenvVersionsDir = path.join(testPyenvRoot, 'versions');
     let pyenvRootOldValue: string | undefined;
-    suiteSetup(async () => {
+    suiteSetup(async function () {
+        // https://github.com/microsoft/vscode-python/issues/17798
+        return this.skip();
         pyenvRootOldValue = process.env.PYENV_ROOT;
         process.env.PYENV_ROOT = testPyenvRoot;
     });
