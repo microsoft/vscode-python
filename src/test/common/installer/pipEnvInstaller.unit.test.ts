@@ -8,9 +8,7 @@ import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
-import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 import { PipEnvInstaller } from '../../../client/common/installer/pipEnvInstaller';
-import { IExperimentService } from '../../../client/common/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import * as pipEnvHelper from '../../../client/pythonEnvironments/common/environmentManagers/pipenv';
@@ -18,7 +16,6 @@ import { EnvironmentType } from '../../../client/pythonEnvironments/info';
 
 suite('PipEnv installer', async () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-    let experimentService: TypeMoq.IMock<IExperimentService>;
     let isPipenvEnvironmentRelatedToFolder: sinon.SinonStub;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
@@ -29,13 +26,6 @@ suite('PipEnv installer', async () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
-        experimentService
-            .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
-            .returns(() => Promise.resolve(false));
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IExperimentService)))
-            .returns(() => experimentService.object);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
@@ -83,10 +73,7 @@ suite('PipEnv installer', async () => {
 
     test('If active environment is pipenv and is related to workspace folder, return true', async () => {
         const resource = Uri.parse('a');
-        experimentService.reset();
-        experimentService
-            .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
-            .returns(() => Promise.resolve(true));
+
         interpreterService
             .setup((p) => p.getActiveInterpreter(resource))
             .returns(() => Promise.resolve({ envType: EnvironmentType.Pipenv, path: interpreterPath } as any));
@@ -100,10 +87,6 @@ suite('PipEnv installer', async () => {
 
     test('If active environment is not pipenv, return false', async () => {
         const resource = Uri.parse('a');
-        experimentService.reset();
-        experimentService
-            .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
-            .returns(() => Promise.resolve(true));
         interpreterService
             .setup((p) => p.getActiveInterpreter(resource))
             .returns(() => Promise.resolve({ envType: EnvironmentType.Conda, path: interpreterPath } as any));
@@ -117,10 +100,6 @@ suite('PipEnv installer', async () => {
 
     test('If active environment is pipenv but not related to workspace folder, return false', async () => {
         const resource = Uri.parse('a');
-        experimentService.reset();
-        experimentService
-            .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
-            .returns(() => Promise.resolve(true));
         interpreterService
             .setup((p) => p.getActiveInterpreter(resource))
             .returns(() => Promise.resolve({ envType: EnvironmentType.Pipenv, path: 'some random path' } as any));

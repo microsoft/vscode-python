@@ -15,12 +15,11 @@ import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { PoetryInstaller } from '../../../client/common/installer/poetryInstaller';
 import { ExecutionResult, ShellOptions } from '../../../client/common/process/types';
-import { ExecutionInfo, IConfigurationService, IExperimentService } from '../../../client/common/types';
+import { ExecutionInfo, IConfigurationService } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { TEST_LAYOUT_ROOT } from '../../pythonEnvironments/common/commonTestConstants';
 import * as externalDependencies from '../../../client/pythonEnvironments/common/externalDependencies';
-import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 import { EnvironmentType } from '../../../client/pythonEnvironments/info';
 
 suite('Module Installer - Poetry', () => {
@@ -34,17 +33,14 @@ suite('Module Installer - Poetry', () => {
     let poetryInstaller: TestInstaller;
     let workspaceService: IWorkspaceService;
     let configurationService: IConfigurationService;
-    let experimentService: IExperimentService;
     let interpreterService: IInterpreterService;
     let serviceContainer: ServiceContainer;
     let shellExecute: sinon.SinonStub;
 
     setup(() => {
         serviceContainer = mock(ServiceContainer);
-        experimentService = mock<IExperimentService>();
         interpreterService = mock<IInterpreterService>();
         when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
-        when(serviceContainer.get<IExperimentService>(IExperimentService)).thenReturn(instance(experimentService));
         workspaceService = mock(WorkspaceService);
         configurationService = mock(ConfigurationService);
 
@@ -127,7 +123,6 @@ suite('Module Installer - Poetry', () => {
         const uri = Uri.file(project1);
         const settings = mock(PythonSettings);
 
-        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(true);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve({
             path: path.join(project1, '.venv', 'Scripts', 'python.exe'),
             envType: EnvironmentType.Poetry,
@@ -146,7 +141,6 @@ suite('Module Installer - Poetry', () => {
         const uri = Uri.file(project1);
         const settings = mock(PythonSettings);
 
-        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(true);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(undefined);
         when(configurationService.getSettings(anything())).thenReturn(instance(settings));
         when(settings.poetryPath).thenReturn('poetry');
@@ -161,7 +155,6 @@ suite('Module Installer - Poetry', () => {
         const uri = Uri.file(project1);
         const settings = mock(PythonSettings);
 
-        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(true);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve({
             path: path.join(project1, '.random', 'Scripts', 'python.exe'),
             envType: EnvironmentType.Poetry,
@@ -180,7 +173,6 @@ suite('Module Installer - Poetry', () => {
         const uri = Uri.file(project1);
         const settings = mock(PythonSettings);
 
-        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(true);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve({
             path: path.join(project1, '.venv', 'Scripts', 'python.exe'),
             envType: EnvironmentType.Pipenv,

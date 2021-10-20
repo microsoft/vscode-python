@@ -26,12 +26,7 @@ import {
     IPythonExecutionFactory,
     IPythonToolExecutionService,
 } from '../../client/common/process/types';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentService,
-    IInterpreterPathProxyService,
-} from '../../client/common/types';
+import { IConfigurationService, IDisposableRegistry, IInterpreterPathProxyService } from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IComponentAdapter, ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
@@ -40,7 +35,6 @@ import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { ILintMessage, LinterId, LintMessageSeverity } from '../../client/linters/types';
 import { deleteFile, PYTHON_PATH } from '../common';
 import { BaseTestFixture, getLinterID, getProductName, newMockDocument, throwUnknownProduct } from './common';
-import { DiscoveryVariants } from '../../client/common/experiments/groups';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
 
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
@@ -719,11 +713,6 @@ class TestFixture extends BaseTestFixture {
             disposableRegistry,
         );
         const pyenvs: IComponentAdapter = mock<IComponentAdapter>();
-
-        const experimentService = TypeMoq.Mock.ofType<IExperimentService>(undefined, TypeMoq.MockBehavior.Strict);
-        experimentService
-            .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
-            .returns(() => Promise.resolve(false));
 
         const autoSelection = mock<IInterpreterAutoSelectionService>();
         const interpreterPathExpHelper = mock<IInterpreterPathProxyService>();

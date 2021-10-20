@@ -8,7 +8,6 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
 import { TerminalManager } from '../../../client/common/application/terminalManager';
-import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 import '../../../client/common/extensions';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
@@ -25,7 +24,6 @@ import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IPythonSettings,
     ITerminalSettings,
 } from '../../../client/common/types';
@@ -45,7 +43,6 @@ suite('Terminal Environment Activation conda', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
     let condaService: TypeMoq.IMock<ICondaService>;
-    let experimentService: TypeMoq.IMock<IExperimentService>;
     let componentAdapter: TypeMoq.IMock<IComponentAdapter>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let conda: string;
@@ -59,10 +56,6 @@ suite('Terminal Environment Activation conda', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
             .returns(() => disposables);
 
-        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
-        experimentService
-            .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
-            .returns(() => Promise.resolve(false));
         componentAdapter = TypeMoq.Mock.ofType<IComponentAdapter>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
@@ -70,9 +63,6 @@ suite('Terminal Environment Activation conda', () => {
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IComponentAdapter)))
             .returns(() => componentAdapter.object);
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IExperimentService)))
-            .returns(() => experimentService.object);
         condaService = TypeMoq.Mock.ofType<ICondaService>();
         condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(conda));
         bash = mock(Bash);
