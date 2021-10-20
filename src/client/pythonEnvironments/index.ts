@@ -22,7 +22,7 @@ import { PyenvLocator } from './base/locators/lowLevel/pyenvLocator';
 import { WindowsRegistryLocator } from './base/locators/lowLevel/windowsRegistryLocator';
 import { WindowsStoreLocator } from './base/locators/lowLevel/windowsStoreLocator';
 import { getEnvironmentInfoService } from './base/info/environmentInfoService';
-import { registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './legacyIOC';
+import { registerNewDiscoveryForIOC } from './legacyIOC';
 import { PoetryLocator } from './base/locators/lowLevel/poetryLocator';
 import { createPythonEnvironments } from './api';
 import {
@@ -45,8 +45,6 @@ export async function initialize(ext: ExtensionState): Promise<IDiscoveryAPI> {
         ext.legacyIOC.serviceManager,
         api,
     );
-    // Deal with legacy IOC.
-    await registerLegacyDiscoveryForIOC(ext.legacyIOC.serviceManager);
 
     return api;
 }

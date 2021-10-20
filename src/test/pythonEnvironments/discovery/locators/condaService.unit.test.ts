@@ -6,7 +6,6 @@ import { IWorkspaceService } from '../../../../client/common/application/types';
 import { FileSystemPaths, FileSystemPathUtils } from '../../../../client/common/platform/fs-paths';
 import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../../../client/common/process/types';
-import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
 import { CondaService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaService';
 
 suite('Interpreters Conda Service', () => {
@@ -14,19 +13,13 @@ suite('Interpreters Conda Service', () => {
     let platformService: TypeMoq.IMock<IPlatformService>;
     let condaService: CondaService;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
-    let config: TypeMoq.IMock<IConfigurationService>;
-    let settings: TypeMoq.IMock<IPythonSettings>;
     let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
-    let condaPathSetting: string;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     setup(async () => {
-        condaPathSetting = '';
         processService = TypeMoq.Mock.ofType<IProcessService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        config = TypeMoq.Mock.ofType<IConfigurationService>();
-        settings = TypeMoq.Mock.ofType<IPythonSettings>();
         procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((x: any) => x.then).returns(() => undefined);
@@ -34,8 +27,6 @@ suite('Interpreters Conda Service', () => {
             .setup((p) => p.create(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(processService.object));
 
-        config.setup((c) => c.getSettings(TypeMoq.It.isValue(undefined))).returns(() => settings.object);
-        settings.setup((p) => p.condaPath).returns(() => condaPathSetting);
         fileSystem
             .setup((fs) => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((p1, p2) => {
@@ -49,7 +40,6 @@ suite('Interpreters Conda Service', () => {
             procServiceFactory.object,
             platformService.object,
             fileSystem.object,
-            config.object,
             [],
             workspaceService.object,
         );

@@ -6,13 +6,13 @@ import { IWorkspaceService } from '../../../../common/application/types';
 import { traceDecorators, traceWarning } from '../../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../../common/process/types';
-import { IConfigurationService, IDisposableRegistry } from '../../../../common/types';
+import { IDisposableRegistry } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
 import { ICondaService } from '../../../../interpreter/contracts';
 import { Conda, CondaInfo } from '../../../common/environmentManagers/conda';
 
 /**
- * A wrapper around a conda installation.
+ * Injectable version of Conda utility.
  */
 @injectable()
 export class CondaService implements ICondaService {
@@ -24,7 +24,6 @@ export class CondaService implements ICondaService {
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
         @inject(IPlatformService) private platform: IPlatformService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
     ) {
@@ -36,7 +35,7 @@ export class CondaService implements ICondaService {
      */
     public async getCondaFile(): Promise<string> {
         if (!this.condaFile) {
-            this.condaFile = this.getCondaFileImpl();
+            this.condaFile = Conda.getConda().then((conda) => conda?.command ?? 'conda');
         }
         return this.condaFile;
     }
@@ -145,19 +144,6 @@ export class CondaService implements ICondaService {
     public async _getCondaInfo(): Promise<CondaInfo | undefined> {
         const conda = await Conda.getConda();
         return conda?.getInfo();
-    }
-
-    /**
-     * Return the path to the "conda file", if there is one (in known locations).
-     */
-    private async getCondaFileImpl(): Promise<string> {
-        const settings = this.configService.getSettings();
-        const setting = settings.condaPath;
-        if (setting && setting !== '') {
-            return setting;
-        }
-        const conda = await Conda.getConda();
-        return conda?.command ?? 'conda';
     }
 
     private addCondaPathChangedHandler() {

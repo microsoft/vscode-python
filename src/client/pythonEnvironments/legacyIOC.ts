@@ -302,10 +302,7 @@ class ComponentAdapter implements IComponentAdapter {
     }
 }
 
-export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): Promise<void> {
-    serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
-}
-
 export function registerNewDiscoveryForIOC(serviceManager: IServiceManager, api: IDiscoveryAPI): void {
+    serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, new ComponentAdapter(api));
 }
