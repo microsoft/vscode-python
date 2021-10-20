@@ -10,12 +10,12 @@ import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { ICommandManager, IWorkspaceService } from '../types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { IInterpreterService, IInterpreterVersionService } from '../../../interpreter/contracts';
-import { identifyEnvironment } from '../../../pythonEnvironments/common/environmentIdentifier';
+import { IInterpreterService } from '../../../interpreter/contracts';
 import { Commands } from '../../constants';
 import { IConfigurationService, IPythonSettings } from '../../types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
+import { EnvironmentType } from '../../../pythonEnvironments/info';
 
 /**
  * Allows the user to report an issue related to the Python extension using our template.
@@ -26,7 +26,6 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IInterpreterVersionService) private readonly interpreterVersionService: IInterpreterVersionService,
         @inject(IConfigurationService) protected readonly configurationService: IConfigurationService,
     ) {}
 
@@ -65,15 +64,15 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
             }
         });
         const template = await fs.readFile(this.templatePath, 'utf8');
-        const interpreterPath = (await this.interpreterService.getActiveInterpreter())?.path || 'not-selected';
-        const pythonVersion = await this.interpreterVersionService.getVersion(interpreterPath, '');
+        const interpreter = await this.interpreterService.getActiveInterpreter();
+        const pythonVersion = interpreter?.version?.raw ?? '';
         const languageServer =
             this.workspaceService.getConfiguration('python').get<string>('languageServer') || 'Not Found';
-        const virtualEnv = await identifyEnvironment(interpreterPath);
+        const virtualEnvKind = interpreter?.envType || EnvironmentType.Unknown;
 
         await this.commandManager.executeCommand('workbench.action.openIssueReporter', {
             extensionId: 'ms-python.python',
-            issueBody: template.format(pythonVersion, virtualEnv, languageServer, userSettings),
+            issueBody: template.format(pythonVersion, virtualEnvKind, languageServer, userSettings),
         });
         sendTelemetryEvent(EventName.USE_REPORT_ISSUE_COMMAND, undefined, {});
     }

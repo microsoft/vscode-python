@@ -22,7 +22,7 @@ You can attach such things **after** you create your issue on GitHub.
 # Diagnostic data
 
 -   Python version (& distribution if applicable, e.g. Anaconda): 3.9.0
--   Type of virtual environment used (e.g. conda, venv, virtualenv, etc.): virt-venv
+-   Type of virtual environment used (e.g. conda, venv, virtualenv, etc.): Venv
 -   Value of the `python.languageServer` setting: Pylance
 
 <details>
