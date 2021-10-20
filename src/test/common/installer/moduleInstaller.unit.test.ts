@@ -239,7 +239,6 @@ suite('Module Installer', () => {
                                 .setup((c) => c.get(TypeMoq.It.isValue(IFileSystem)))
                                 .returns(() => fs.object);
 
-
                             disposables = [];
                             serviceContainer
                                 .setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
