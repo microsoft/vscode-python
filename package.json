@@ -576,7 +576,7 @@
                 "python.condaPath": {
                     "default": "",
                     "description": "Path to the conda executable to use for activation (version 4.4+).",
-                    "scope": "resource",
+                    "scope": "machine",
                     "type": "string"
                 },
                 "python.defaultInterpreterPath": {
