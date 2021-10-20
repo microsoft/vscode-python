@@ -7,11 +7,6 @@ import { PythonLocatorQuery } from '../pythonEnvironments/base/locator';
 import { CondaEnvironmentInfo } from '../pythonEnvironments/common/environmentManagers/conda';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 
-export const IInterpreterVersionService = Symbol('IInterpreterVersionService');
-export interface IInterpreterVersionService {
-    getVersion(pythonPath: string, defaultValue: string): Promise<string>;
-}
-
 export type PythonEnvironmentsChangedEvent = {
     type?: FileChangeType;
     resource?: Uri;

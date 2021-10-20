@@ -23,19 +23,12 @@ import {
     IPythonPathUpdaterServiceFactory,
     IPythonPathUpdaterServiceManager,
 } from './configuration/types';
-import {
-    IInterpreterDisplay,
-    IInterpreterHelper,
-    IInterpreterService,
-    IInterpreterVersionService,
-    IShebangCodeLensProvider,
-} from './contracts';
+import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService, IShebangCodeLensProvider } from './contracts';
 import { InterpreterDisplay } from './display';
 import { InterpreterLocatorProgressStatubarHandler } from './display/progressDisplay';
 import { ShebangCodeLensProvider } from './display/shebangCodeLensProvider';
 import { InterpreterHelper } from './helpers';
 import { InterpreterService } from './interpreterService';
-import { InterpreterVersionService } from './interpreterVersion';
 import { CondaInheritEnvPrompt } from './virtualEnvs/condaInheritEnvPrompt';
 import { VirtualEnvironmentPrompt } from './virtualEnvs/virtualEnvPrompt';
 
@@ -61,8 +54,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
     );
 
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, VirtualEnvironmentPrompt);
-
-    serviceManager.addSingleton<IInterpreterVersionService>(IInterpreterVersionService, InterpreterVersionService);
 
     serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
     serviceManager.addSingleton<IInterpreterDisplay>(IInterpreterDisplay, InterpreterDisplay);
