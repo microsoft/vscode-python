@@ -22,7 +22,7 @@ import { PythonEnvCollectionChangedEvent } from './base/watcher';
 import { asyncFilter } from '../common/utils/arrayUtils';
 import { CondaEnvironmentInfo, isCondaEnvironment } from './common/environmentManagers/conda';
 import { isWindowsStoreEnvironment } from './common/environmentManagers/windowsStoreEnv';
-import { CondaService } from './discovery/locators/services/condaService';
+import { CondaService } from './common/environmentManagers/condaService';
 
 const convertedKinds = new Map(
     Object.entries({

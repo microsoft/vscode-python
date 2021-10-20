@@ -15,7 +15,7 @@ import { ICondaService, IComponentAdapter } from '../../../client/interpreter/co
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CondaEnvironmentInfo } from '../../../client/pythonEnvironments/common/environmentManagers/conda';
-import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
+import { CondaService } from '../../../client/pythonEnvironments/common/environmentManagers/condaService';
 
 suite('Common - Conda Installer', () => {
     let installer: CondaInstallerTest;

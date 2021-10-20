@@ -31,7 +31,7 @@ import { IEnvironmentActivationService } from '../../../client/interpreter/activ
 import { IComponentAdapter, ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { ServiceContainer } from '../../../client/ioc/container';
-import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
+import { CondaService } from '../../../client/pythonEnvironments/common/environmentManagers/condaService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { IInterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection/types';
 

@@ -2,14 +2,14 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
-import { IWorkspaceService } from '../../../../common/application/types';
-import { traceDecorators, traceWarning } from '../../../../common/logger';
-import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
-import { IProcessServiceFactory } from '../../../../common/process/types';
-import { IDisposableRegistry } from '../../../../common/types';
-import { cache } from '../../../../common/utils/decorators';
-import { ICondaService } from '../../../../interpreter/contracts';
-import { Conda, CondaInfo } from '../../../common/environmentManagers/conda';
+import { IWorkspaceService } from '../../../common/application/types';
+import { traceDecorators, traceWarning } from '../../../common/logger';
+import { IFileSystem, IPlatformService } from '../../../common/platform/types';
+import { IProcessServiceFactory } from '../../../common/process/types';
+import { IDisposableRegistry } from '../../../common/types';
+import { cache } from '../../../common/utils/decorators';
+import { ICondaService } from '../../../interpreter/contracts';
+import { Conda, CondaInfo } from './conda';
 
 /**
  * Injectable version of Conda utility.

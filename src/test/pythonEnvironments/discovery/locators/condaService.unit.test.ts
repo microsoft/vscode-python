@@ -6,7 +6,7 @@ import { IWorkspaceService } from '../../../../client/common/application/types';
 import { FileSystemPaths, FileSystemPathUtils } from '../../../../client/common/platform/fs-paths';
 import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../../../client/common/process/types';
-import { CondaService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaService';
+import { CondaService } from '../../../../client/pythonEnvironments/common/environmentManagers/condaService';
 
 suite('Interpreters Conda Service', () => {
     let processService: TypeMoq.IMock<IProcessService>;
