@@ -95,7 +95,9 @@ suite('Windows Store Locator', async () => {
         return items.some((item) => externalDeps.arePathsSame(item.executablePath, executable));
     }
 
-    suiteSetup(async () => {
+    suiteSetup(async function () {
+        // Enable once this is done: https://github.com/microsoft/vscode-python/issues/17797
+        return this.skip();
         process.env.LOCALAPPDATA = testLocalAppData;
         await windowsStoreEnvs.cleanUp();
     });
