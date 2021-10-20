@@ -1,9 +1,11 @@
 # Changelog
 
-## 2021.10.2 (19 October 2021)
+## 2021.10.2 (20 October 2021)
 
 ### Fixes
 
+1. Ensure we filter out unsupported features in web scenario using `shellExecutionSupported` context key.
+   ([#17811](https://github.com/Microsoft/vscode-python/issues/17811))
 1. Fix unresponsive extension issues caused by discovery component.
    ([#11924](https://github.com/Microsoft/vscode-python/issues/11924))
 1. Update debugpy to 1.5.1 to ensure user-unhandled exception setting is false by default.
