@@ -112,7 +112,7 @@ suite('Activation of Environments in Terminal', () => {
             defaultShell.Linux,
             vscode.ConfigurationTarget.Global,
         );
-        await pythonSettings.update('condaPath', undefined, vscode.ConfigurationTarget.Workspace);
+        await pythonSettings.update('condaPath', undefined, vscode.ConfigurationTarget.Global);
         if (experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             await resetGlobalInterpreterPathSetting();
         } else {
@@ -204,7 +204,7 @@ suite('Activation of Environments in Terminal', () => {
             'Command Prompt',
             vscode.ConfigurationTarget.Global,
         );
-        await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
+        await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Global);
         await testActivation(envPaths.condaPath);
     }).timeout(TEST_TIMEOUT * 2);
 });
