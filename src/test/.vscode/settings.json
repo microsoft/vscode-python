@@ -1,5 +1,5 @@
 {
-    "python.linting.pylintEnabled": true,
+    "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": false,
     "python.testing.pytestArgs": [],
     "python.testing.unittestArgs": ["-s=./tests", "-p=test_*.py", "-v", "-s", ".", "-p", "*test*.py"],
@@ -17,5 +17,5 @@
     // and that slows down tests significantly. We have other tests on CI for testing
     // downloading of LS with this setting enabled.
     "python.languageServer": "Jedi",
-    "python.pythonPath": "python"
+    "python.pythonPath": "C:\\GIT\\s p\\vscode-python\\.venv\\Scripts\\python.exe"
 }
