@@ -12,7 +12,6 @@ import { IApplicationEnvironment, IWorkspaceService } from '../application/types
 import { PVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { GLOBAL_MEMENTO, IExperimentService, IMemento, IOutputChannel } from '../types';
 import { Experiments } from '../utils/localize';
-import { DiscoveryVariants } from './groups';
 import { ExperimentationTelemetry } from './telemetry';
 
 const EXP_MEMENTO_KEY = 'VSCode.ABExp.FeatureData';
@@ -109,11 +108,6 @@ export class ExperimentService implements IExperimentService {
     }
 
     public inExperimentSync(experiment: string): boolean {
-        if (experiment === DiscoveryVariants.discoveryWithoutFileWatching) {
-            // Enable discovery experiment for all users.
-            return true;
-        }
-
         if (!this.experimentationService) {
             return false;
         }

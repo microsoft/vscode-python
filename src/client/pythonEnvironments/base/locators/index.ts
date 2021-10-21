@@ -73,7 +73,7 @@ export class WorkspaceLocators<I = PythonEnvInfo> extends LazyResourceBasedLocat
             if (query?.searchLocations !== undefined) {
                 const root = this.roots[key];
                 // Match any related search location.
-                const filter = getURIFilter(root, { checkParent: true, checkChild: true, checkExact: true });
+                const filter = getURIFilter(root, { checkParent: true, checkChild: true });
                 // Ignore any requests for global envs.
                 if (!query.searchLocations.roots.some(filter)) {
                     // This workspace folder did not match the query, so skip it!

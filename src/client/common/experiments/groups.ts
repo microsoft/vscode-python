@@ -22,12 +22,6 @@ export enum NativeTensorBoard {
     experiment = 'pythonTensorboardExperiment',
 }
 
-// Experiment to control which environment discovery mechanism can be used
-export enum DiscoveryVariants {
-    discoverWithFileWatching = 'pythonDiscoveryModule',
-    discoveryWithoutFileWatching = 'pythonDiscoveryModuleWithoutWatcher',
-}
-
 // Feature gate to control whether we install the PyTorch profiler package
 // torch.profiler release is being delayed till end of March. This allows us
 // to turn on the profiler plugin install functionality between releases

@@ -4,72 +4,25 @@
 import { injectable } from 'inversify';
 import { intersection } from 'lodash';
 import * as vscode from 'vscode';
-import { DiscoveryVariants } from '../common/experiments/groups';
-import { traceError, traceVerbose } from '../common/logger';
+import { traceVerbose } from '../common/logger';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { Resource } from '../common/types';
-import {
-    CONDA_ENV_FILE_SERVICE,
-    CONDA_ENV_SERVICE,
-    CURRENT_PATH_SERVICE,
-    GLOBAL_VIRTUAL_ENV_SERVICE,
-    IComponentAdapter,
-    ICondaService,
-    ICondaLocatorService,
-    IInterpreterLocatorHelper,
-    IInterpreterLocatorProgressService,
-    IInterpreterLocatorService,
-    IInterpreterWatcher,
-    IInterpreterWatcherBuilder,
-    IKnownSearchPathsForInterpreters,
-    INTERPRETER_LOCATOR_SERVICE,
-    IVirtualEnvironmentsSearchPathProvider,
-    KNOWN_PATH_SERVICE,
-    PIPENV_SERVICE,
-    WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE,
-    PythonEnvironmentsChangedEvent,
-} from '../interpreter/contracts';
-import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
-import { VirtualEnvironmentManager } from '../interpreter/virtualEnvs';
-import { IVirtualEnvironmentManager } from '../interpreter/virtualEnvs/types';
+import { IComponentAdapter, ICondaService, PythonEnvironmentsChangedEvent } from '../interpreter/contracts';
 import { IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from './base/info';
 import { IDiscoveryAPI, PythonLocatorQuery } from './base/locator';
 import { isMacDefaultPythonPath } from './base/locators/lowLevel/macDefaultLocator';
-import { inExperiment, isParentPath } from './common/externalDependencies';
-import { PythonInterpreterLocatorService } from './discovery/locators';
-import { InterpreterLocatorHelper } from './discovery/locators/helpers';
-import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
-import { CondaEnvironmentInfo, isCondaEnvironment } from './common/environmentManagers/conda';
-import { CondaEnvFileService } from './discovery/locators/services/condaEnvFileService';
-import { CondaEnvService } from './discovery/locators/services/condaEnvService';
-import { CondaService } from './discovery/locators/services/condaService';
-import { CondaLocatorService } from './discovery/locators/services/condaLocatorService';
-import { CurrentPathService, PythonInPathCommandProvider } from './discovery/locators/services/currentPathService';
-import {
-    GlobalVirtualEnvironmentsSearchPathProvider,
-    GlobalVirtualEnvService,
-} from './discovery/locators/services/globalVirtualEnvService';
-import { InterpreterWatcherBuilder } from './discovery/locators/services/interpreterWatcherBuilder';
-import { KnownPathsService, KnownSearchPathsForInterpreters } from './discovery/locators/services/KnownPathsService';
-import { PipEnvService } from './discovery/locators/services/pipEnvService';
-import { PipEnvServiceHelper } from './discovery/locators/services/pipEnvServiceHelper';
-import { WindowsRegistryService } from './discovery/locators/services/windowsRegistryService';
-import { isWindowsStoreEnvironment } from './common/environmentManagers/windowsStoreEnv';
-import {
-    WorkspaceVirtualEnvironmentsSearchPathProvider,
-    WorkspaceVirtualEnvService,
-} from './discovery/locators/services/workspaceVirtualEnvService';
-import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
+import { isParentPath } from './common/externalDependencies';
 import { EnvironmentType, PythonEnvironment } from './info';
 import { toSemverLikeVersion } from './base/info/pythonVersion';
 import { PythonVersion } from './info/pythonVersion';
-import { IExtensionSingleActivationService } from '../activation/types';
 import { EnvironmentInfoServiceQueuePriority, getEnvironmentInfoService } from './base/info/environmentInfoService';
 import { createDeferred } from '../common/utils/async';
 import { PythonEnvCollectionChangedEvent } from './base/watcher';
 import { asyncFilter } from '../common/utils/arrayUtils';
+import { CondaEnvironmentInfo, isCondaEnvironment } from './common/environmentManagers/conda';
+import { isWindowsStoreEnvironment } from './common/environmentManagers/windowsStoreEnv';
+import { CondaService } from './common/environmentManagers/condaService';
 
 const convertedKinds = new Map(
     Object.entries({
@@ -125,14 +78,6 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     // We do not worry about using distro.defaultDisplayName.
 
     return env;
-}
-
-export async function isComponentEnabled(): Promise<boolean> {
-    const results = await Promise.all([
-        inExperiment(DiscoveryVariants.discoverWithFileWatching),
-        inExperiment(DiscoveryVariants.discoveryWithoutFileWatching),
-    ]);
-    return results.includes(true);
 }
 @injectable()
 class ComponentAdapter implements IComponentAdapter {
@@ -357,98 +302,7 @@ class ComponentAdapter implements IComponentAdapter {
     }
 }
 
-export async function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): Promise<void> {
-    const inExp = await isComponentEnabled().catch((ex) => {
-        // This is mainly to support old tests, where IExperimentService was registered
-        // out of sequence / or not registered, so this throws an error. But we do not
-        // care about that error as we don't care about IExperimentService in old tests.
-        // But if this fails in other cases, it's a major error. Hence log it anyways.
-        traceError('Failed to not register old code when in Discovery experiment', ex);
-        return false;
-    });
-    if (!inExp) {
-        serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
-        serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            PythonInterpreterLocatorService,
-            INTERPRETER_LOCATOR_SERVICE,
-        );
-        serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            CondaEnvFileService,
-            CONDA_ENV_FILE_SERVICE,
-        );
-        serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            CondaEnvService,
-            CONDA_ENV_SERVICE,
-        );
-        serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            GlobalVirtualEnvService,
-            GLOBAL_VIRTUAL_ENV_SERVICE,
-        );
-        serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
-            IVirtualEnvironmentsSearchPathProvider,
-            GlobalVirtualEnvironmentsSearchPathProvider,
-            'global',
-        );
-        serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            KnownPathsService,
-            KNOWN_PATH_SERVICE,
-        );
-        serviceManager.addSingleton<IKnownSearchPathsForInterpreters>(
-            IKnownSearchPathsForInterpreters,
-            KnownSearchPathsForInterpreters,
-        );
-        serviceManager.addSingleton<IInterpreterLocatorProgressService>(
-            IInterpreterLocatorProgressService,
-            InterpreterLocatorProgressService,
-        );
-        serviceManager.addBinding(IInterpreterLocatorProgressService, IExtensionSingleActivationService);
-        serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            WorkspaceVirtualEnvService,
-            WORKSPACE_VIRTUAL_ENV_SERVICE,
-        );
-        serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
-            IVirtualEnvironmentsSearchPathProvider,
-            WorkspaceVirtualEnvironmentsSearchPathProvider,
-            'workspace',
-        );
-        serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
-        serviceManager.add<IInterpreterWatcher>(
-            IInterpreterWatcher,
-            WorkspaceVirtualEnvWatcherService,
-            WORKSPACE_VIRTUAL_ENV_SERVICE,
-        );
-        serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            CurrentPathService,
-            CURRENT_PATH_SERVICE,
-        );
-        serviceManager.addSingleton<IPythonInPathCommandProvider>(
-            IPythonInPathCommandProvider,
-            PythonInPathCommandProvider,
-        );
-        serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            WindowsRegistryService,
-            WINDOWS_REGISTRY_SERVICE,
-        );
-        serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
-        serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            PipEnvService,
-            PIPENV_SERVICE,
-        );
-        serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
-        serviceManager.addSingleton<ICondaLocatorService>(ICondaLocatorService, CondaLocatorService);
-    }
-    serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
-}
-
 export function registerNewDiscoveryForIOC(serviceManager: IServiceManager, api: IDiscoveryAPI): void {
+    serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, new ComponentAdapter(api));
 }

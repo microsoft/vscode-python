@@ -13,9 +13,7 @@ import { traceDecorators } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { IDisposable, IExperimentService, IInterpreterPathService, Resource } from '../common/types';
 import { Deferred } from '../common/utils/async';
-import { addItemsToRunAfterActivation } from '../common/utils/runAfterActivation';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
-import { IInterpreterService } from '../interpreter/contracts';
 import { sendActivationTelemetry } from '../telemetry/envFileTelemetry';
 import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
 
@@ -34,7 +32,6 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @multiInject(IExtensionSingleActivationService)
         private readonly singleActivationServices: IExtensionSingleActivationService[],
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
         @inject(IApplicationDiagnostics) private readonly appDiagnostics: IApplicationDiagnostics,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -75,11 +72,6 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         if (this.experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             await this.interpreterPathService.copyOldInterpreterStorageValuesToNew(resource);
         }
-
-        // Get latest interpreter list in the background.
-        addItemsToRunAfterActivation(() => {
-            this.interpreterService.getInterpreters(resource).ignoreErrors();
-        });
 
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
 

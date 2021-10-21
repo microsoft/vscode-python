@@ -3,35 +3,23 @@ import * as path from 'path';
 import { parse } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { IWorkspaceService } from '../../../../client/common/application/types';
-
-import { DiscoveryVariants } from '../../../../client/common/experiments/groups';
 import { FileSystemPaths, FileSystemPathUtils } from '../../../../client/common/platform/fs-paths';
 import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../../../client/common/process/types';
-import { IConfigurationService, IExperimentService, IPythonSettings } from '../../../../client/common/types';
-import { IServiceContainer } from '../../../../client/ioc/types';
-import { CondaService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaService';
+import { CondaService } from '../../../../client/pythonEnvironments/common/environmentManagers/condaService';
 
 suite('Interpreters Conda Service', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let condaService: CondaService;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
-    let config: TypeMoq.IMock<IConfigurationService>;
-    let settings: TypeMoq.IMock<IPythonSettings>;
-    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
-    let condaPathSetting: string;
-    let experimentService: TypeMoq.IMock<IExperimentService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     setup(async () => {
-        condaPathSetting = '';
         processService = TypeMoq.Mock.ofType<IProcessService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        config = TypeMoq.Mock.ofType<IConfigurationService>();
-        settings = TypeMoq.Mock.ofType<IPythonSettings>();
         procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((x: any) => x.then).returns(() => undefined);
@@ -39,29 +27,6 @@ suite('Interpreters Conda Service', () => {
             .setup((p) => p.create(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(processService.object));
 
-        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
-        experimentService
-            .setup((exp) => exp.inExperiment(DiscoveryVariants.discoverWithFileWatching))
-            .returns(() => Promise.resolve(false));
-        experimentService
-            .setup((exp) => exp.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
-            .returns(() => Promise.resolve(false));
-
-        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IProcessServiceFactory), TypeMoq.It.isAny()))
-            .returns(() => procServiceFactory.object);
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny()))
-            .returns(() => platformService.object);
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny()))
-            .returns(() => fileSystem.object);
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
-            .returns(() => config.object);
-        config.setup((c) => c.getSettings(TypeMoq.It.isValue(undefined))).returns(() => settings.object);
-        settings.setup((p) => p.condaPath).returns(() => condaPathSetting);
         fileSystem
             .setup((fs) => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((p1, p2) => {
@@ -75,9 +40,6 @@ suite('Interpreters Conda Service', () => {
             procServiceFactory.object,
             platformService.object,
             fileSystem.object,
-            serviceContainer.object,
-            experimentService.object,
-            config.object,
             [],
             workspaceService.object,
         );

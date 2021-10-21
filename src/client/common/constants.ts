@@ -14,6 +14,12 @@ export const PYTHON = [
     { scheme: InteractiveInputScheme, language: PYTHON_LANGUAGE },
 ];
 
+export const PYTHON_NOTEBOOKS = [
+    { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
+    { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE },
+    { scheme: InteractiveInputScheme, language: PYTHON_LANGUAGE },
+];
+
 export const PVSC_EXTENSION_ID = 'ms-python.python';
 export const CODE_RUNNER_EXTENSION_ID = 'formulahendry.code-runner';
 export const PYLANCE_EXTENSION_ID = 'ms-python.vscode-pylance';

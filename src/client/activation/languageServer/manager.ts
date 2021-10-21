@@ -124,7 +124,6 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
         options.middleware = this.middleware = new LanguageClientMiddleware(
             this.serviceContainer,
             LanguageServerType.Microsoft,
-            () => this.languageServerProxy?.languageClient,
             this.lsVersion,
         );
 

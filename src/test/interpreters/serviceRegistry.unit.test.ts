@@ -30,7 +30,6 @@ import {
     IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterService,
-    IInterpreterVersionService,
     IShebangCodeLensProvider,
 } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
@@ -38,7 +37,6 @@ import { InterpreterLocatorProgressStatubarHandler } from '../../client/interpre
 import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
 import { registerTypes } from '../../client/interpreter/serviceRegistry';
 import { CondaInheritEnvPrompt } from '../../client/interpreter/virtualEnvs/condaInheritEnvPrompt';
 import { VirtualEnvironmentPrompt } from '../../client/interpreter/virtualEnvs/virtualEnvPrompt';
@@ -55,8 +53,6 @@ suite('Interpreters - Service Registry', () => {
             [IExtensionSingleActivationService, SetShebangInterpreterCommand],
 
             [IExtensionActivationService, VirtualEnvironmentPrompt],
-
-            [IInterpreterVersionService, InterpreterVersionService],
 
             [IInterpreterService, InterpreterService],
             [IInterpreterDisplay, InterpreterDisplay],

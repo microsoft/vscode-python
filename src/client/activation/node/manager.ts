@@ -120,7 +120,6 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         options.middleware = this.middleware = new LanguageClientMiddleware(
             this.serviceContainer,
             LanguageServerType.Node,
-            () => this.languageServerProxy?.languageClient,
             this.lsVersion,
         );
 

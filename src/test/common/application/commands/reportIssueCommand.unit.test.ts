@@ -14,10 +14,7 @@ import { CommandManager } from '../../../../client/common/application/commandMan
 import { ReportIssueCommandHandler } from '../../../../client/common/application/commands/reportIssueCommand';
 import { ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
-import { IInterpreterService, IInterpreterVersionService } from '../../../../client/interpreter/contracts';
-import { InterpreterVersionService } from '../../../../client/interpreter/interpreterVersion';
-import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import * as EnvIdentifier from '../../../../client/pythonEnvironments/common/environmentIdentifier';
+import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { MockWorkspaceConfiguration } from '../../../mocks/mockWorkspaceConfig';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
@@ -27,32 +24,33 @@ import { AllCommands } from '../../../../client/common/application/commands';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
 import { IConfigurationService } from '../../../../client/common/types';
 import { EventName } from '../../../../client/telemetry/constants';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 suite('Report Issue Command', () => {
     let reportIssueCommandHandler: ReportIssueCommandHandler;
     let cmdManager: ICommandManager;
     let workspaceService: IWorkspaceService;
-    let interpreterVersionService: IInterpreterVersionService;
     let interpreterService: IInterpreterService;
     let configurationService: IConfigurationService;
-    let identifyEnvironmentStub: sinon.SinonStub;
     let getPythonOutputContentStub: sinon.SinonStub;
 
     setup(async () => {
-        interpreterVersionService = mock(InterpreterVersionService);
         workspaceService = mock(WorkspaceService);
         cmdManager = mock(CommandManager);
         interpreterService = mock(InterpreterService);
         configurationService = mock(ConfigurationService);
 
         when(cmdManager.executeCommand('workbench.action.openIssueReporter', anything())).thenResolve();
-        when(interpreterVersionService.getVersion(anything(), anything())).thenResolve('3.9.0');
         when(workspaceService.getConfiguration('python')).thenReturn(
             new MockWorkspaceConfiguration({
                 languageServer: LanguageServerType.Node,
             }),
         );
-        when(interpreterService.getActiveInterpreter(anything())).thenResolve(undefined);
+        const interpreter = ({
+            envType: EnvironmentType.Venv,
+            version: { raw: '3.9.0' },
+        } as unknown) as PythonEnvironment;
+        when(interpreterService.getActiveInterpreter()).thenResolve(interpreter);
         when(configurationService.getSettings()).thenReturn({
             experiments: {
                 enabled: true,
@@ -64,8 +62,6 @@ suite('Report Issue Command', () => {
             venvPath: 'path',
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
-        identifyEnvironmentStub = sinon.stub(EnvIdentifier, 'identifyEnvironment');
-        identifyEnvironmentStub.resolves(PythonEnvKind.Venv);
 
         cmdManager = mock(CommandManager);
 
@@ -75,15 +71,13 @@ suite('Report Issue Command', () => {
             instance(cmdManager),
             instance(workspaceService),
             instance(interpreterService),
-            instance(interpreterVersionService),
             instance(configurationService),
         );
         await reportIssueCommandHandler.activate();
     });
 
     teardown(() => {
-        identifyEnvironmentStub.restore();
-        getPythonOutputContentStub.restore();
+        sinon.restore();
     });
 
     test('Test if issue body is filled', async () => {

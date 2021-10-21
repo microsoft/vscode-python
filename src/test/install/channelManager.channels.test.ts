@@ -3,51 +3,28 @@
 
 import * as assert from 'assert';
 import { Container } from 'inversify';
-import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { IApplicationShell } from '../../client/common/application/types';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { IModuleInstaller } from '../../client/common/installer/types';
 import { Product } from '../../client/common/types';
-import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterAutoSelectionService,
     IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
-import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
-import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
-
-const info: PythonEnvironment = {
-    architecture: Architecture.Unknown,
-    companyDisplayName: '',
-    displayName: '',
-    envName: '',
-    path: '',
-    envType: EnvironmentType.Unknown,
-    version: new SemVer('0.0.0-alpha'),
-    sysPrefix: '',
-    sysVersion: '',
-};
 
 suite('Installation - installation channels', () => {
     let serviceManager: ServiceManager;
     let serviceContainer: IServiceContainer;
-    let pipEnv: TypeMoq.IMock<IInterpreterLocatorService>;
 
     setup(() => {
         const cont = new Container();
         serviceManager = new ServiceManager(cont);
         serviceContainer = new ServiceContainer(cont);
-        pipEnv = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
-        serviceManager.addSingletonInstance<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            pipEnv.object,
-            PIPENV_SERVICE,
-        );
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,
             MockAutoSelectionService,
@@ -83,13 +60,6 @@ suite('Installation - installation channels', () => {
         mockInstaller(false, '2');
         mockInstaller(true, '3');
         const pipenvInstaller = mockInstaller(true, 'pipenv', 10);
-
-        const interpreter: PythonEnvironment = {
-            ...info,
-            path: 'pipenv',
-            envType: EnvironmentType.VirtualEnv,
-        };
-        pipEnv.setup((x) => x.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([interpreter]));
 
         const cm = new InstallationChannelManager(serviceContainer);
         const channels = await cm.getInstallationChannels();

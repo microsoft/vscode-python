@@ -7,13 +7,11 @@ import { expect } from 'chai';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
 import { CancellationToken, Disposable, Progress, ProgressOptions } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
-import { ExperimentService } from '../../../client/common/experiments/service';
+import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { Interpreters } from '../../../client/common/utils/localize';
-import { noop } from '../../../client/common/utils/misc';
-import { IComponentAdapter, IInterpreterLocatorProgressService } from '../../../client/interpreter/contracts';
+import { IComponentAdapter } from '../../../client/interpreter/contracts';
 import { InterpreterLocatorProgressStatubarHandler } from '../../../client/interpreter/display/progressDisplay';
-import { ServiceContainer } from '../../../client/ioc/container';
-import { IServiceContainer } from '../../../client/ioc/types';
+import { noop } from '../../core';
 
 type ProgressTask<R> = (
     progress: Progress<{ message?: string; increment?: number }>,
@@ -22,38 +20,26 @@ type ProgressTask<R> = (
 
 suite('Interpreters - Display Progress', () => {
     let refreshingCallback: (e: void) => unknown | undefined;
-    let refreshedCallback: (e: void) => unknown | undefined;
-    const progressService: IInterpreterLocatorProgressService = {
-        onRefreshing(listener: (e: void) => unknown): Disposable {
-            refreshingCallback = listener;
-            return { dispose: noop };
-        },
-        onRefreshed(listener: (e: void) => unknown): Disposable {
-            refreshedCallback = listener;
-            return { dispose: noop };
-        },
-        activate(): Promise<void> {
-            return Promise.resolve();
-        },
-    };
-    let serviceContainer: IServiceContainer;
-
+    let refreshDeferred: Deferred<void>;
+    let componentAdapter: IComponentAdapter;
     setup(() => {
-        serviceContainer = mock(ServiceContainer);
-        when(serviceContainer.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService)).thenReturn(
-            progressService,
-        );
+        refreshDeferred = createDeferred<void>();
+        componentAdapter = {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onRefreshStart(listener: (e: void) => any): Disposable {
+                refreshingCallback = listener;
+                return { dispose: noop };
+            },
+            refreshPromise: refreshDeferred.promise,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any;
     });
-
-    test('Display loading message when refreshing interpreters for the first time', async () => {
+    teardown(() => {
+        refreshDeferred.resolve();
+    });
+    test('Display discovering message when refreshing interpreters for the first time', async () => {
         const shell = mock(ApplicationShell);
-        const statusBar = new InterpreterLocatorProgressStatubarHandler(
-            instance(shell),
-            instance(serviceContainer),
-            [],
-            instance(mock(IComponentAdapter)),
-            instance(mock(ExperimentService)),
-        );
+        const statusBar = new InterpreterLocatorProgressStatubarHandler(instance(shell), [], componentAdapter);
         when(shell.withProgress(anything(), anything())).thenResolve();
 
         await statusBar.activate();
@@ -65,13 +51,7 @@ suite('Interpreters - Display Progress', () => {
 
     test('Display refreshing message when refreshing interpreters for the second time', async () => {
         const shell = mock(ApplicationShell);
-        const statusBar = new InterpreterLocatorProgressStatubarHandler(
-            instance(shell),
-            instance(serviceContainer),
-            [],
-            instance(mock(IComponentAdapter)),
-            instance(mock(ExperimentService)),
-        );
+        const statusBar = new InterpreterLocatorProgressStatubarHandler(instance(shell), [], componentAdapter);
         when(shell.withProgress(anything(), anything())).thenResolve();
 
         await statusBar.activate();
@@ -88,13 +68,7 @@ suite('Interpreters - Display Progress', () => {
 
     test('Progress message is hidden when loading has completed', async () => {
         const shell = mock(ApplicationShell);
-        const statusBar = new InterpreterLocatorProgressStatubarHandler(
-            instance(shell),
-            instance(serviceContainer),
-            [],
-            instance(mock(IComponentAdapter)),
-            instance(mock(ExperimentService)),
-        );
+        const statusBar = new InterpreterLocatorProgressStatubarHandler(instance(shell), [], componentAdapter);
         when(shell.withProgress(anything(), anything())).thenResolve();
 
         await statusBar.activate();
@@ -106,7 +80,7 @@ suite('Interpreters - Display Progress', () => {
 
         expect(options.title).to.be.equal(Interpreters.discovering());
 
-        refreshedCallback(undefined);
+        refreshDeferred.resolve();
         // Promise must resolve when refreshed callback is invoked.
         // When promise resolves, the progress message is hidden by VSC.
         await promise;

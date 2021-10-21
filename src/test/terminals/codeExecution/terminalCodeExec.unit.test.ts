@@ -209,7 +209,7 @@ suite('Terminal - Code Execution', () => {
                 await ensureWeWetCurrentDirectoryAndQuoteBeforeExecutingFile(true);
             });
 
-            async function ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(
+            async function ensureWeSetCurrentDirectoryBeforeExecutingFileInWorkspaceDirectory(
                 isWindows: boolean,
             ): Promise<void> {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
@@ -224,13 +224,13 @@ suite('Terminal - Code Execution', () => {
 
                 await executor.executeFile(file);
 
-                terminalService.verify(async (t) => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
+                terminalService.verify(async (t) => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.once());
             }
-            test('Ensure we do not set current directory before executing file if in the same directory (non windows)', async () => {
-                await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(false);
+            test('Ensure we set current directory before executing file if in the same directory as the current workspace (non windows)', async () => {
+                await ensureWeSetCurrentDirectoryBeforeExecutingFileInWorkspaceDirectory(false);
             });
-            test('Ensure we do not set current directory before executing file if in the same directory (windows)', async () => {
-                await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(true);
+            test('Ensure we set current directory before executing file if in the same directory as the current workspace (windows)', async () => {
+                await ensureWeSetCurrentDirectoryBeforeExecutingFileInWorkspaceDirectory(true);
             });
 
             async function ensureWeSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(

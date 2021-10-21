@@ -55,7 +55,6 @@ function getSearchLocationFilters(query: PythonLocatorQuery): ((u: Uri) => boole
     return query.searchLocations.roots.map((loc) =>
         getURIFilter(loc, {
             checkParent: true,
-            checkExact: true,
         }),
     );
 }

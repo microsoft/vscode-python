@@ -1,12 +1,8 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, window } from 'vscode';
-import { inDiscoveryExperiment } from '../../common/experiments/helpers';
 import { traceError } from '../../common/logger';
-import { IPythonExecutionFactory } from '../../common/process/types';
-import { IExperimentService } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PythonInterpreterTelemetry } from '../../telemetry/types';
@@ -18,9 +14,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
     constructor(
         @inject(IPythonPathUpdaterServiceFactory)
         private readonly pythonPathSettingsUpdaterFactory: IPythonPathUpdaterServiceFactory,
-        @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
         @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {}
 
     public async updatePythonPath(
@@ -58,20 +52,9 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
             trigger,
         };
         if (!failed && pythonPath) {
-            if (await inDiscoveryExperiment(this.experimentService)) {
-                const interpreterInfo = await this.pyenvs.getInterpreterInformation(pythonPath);
-                if (interpreterInfo) {
-                    telemetryProperties.pythonVersion = interpreterInfo.version?.raw;
-                }
-            } else {
-                const processService = await this.executionFactory.create({ pythonPath });
-                const info = await processService
-                    .getInterpreterInformation()
-                    .catch<InterpreterInformation | undefined>(() => undefined);
-
-                if (info && info.version) {
-                    telemetryProperties.pythonVersion = info.version.raw;
-                }
+            const interpreterInfo = await this.pyenvs.getInterpreterInformation(pythonPath);
+            if (interpreterInfo) {
+                telemetryProperties.pythonVersion = interpreterInfo.version?.raw;
             }
         }
 

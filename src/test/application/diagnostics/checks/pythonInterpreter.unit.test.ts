@@ -139,7 +139,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .verifiable(typemoq.Times.once());
             interpreterService
                 .setup((i) => i.getInterpreters(undefined))
-                .returns(() => Promise.resolve([]))
+                .returns(() => [])
                 .verifiable(typemoq.Times.once());
 
             const diagnostics = await diagnosticService.diagnose(undefined);
@@ -379,7 +379,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             try {
                 await diagnosticService.handle([diagnostic]);
             } catch (err) {
-                expect(err.message).to.be.equal(
+                expect((err as Error).message).to.be.equal(
                     "Invalid diagnostic for 'InvalidPythonInterpreterService'",
                     'Error message is different',
                 );

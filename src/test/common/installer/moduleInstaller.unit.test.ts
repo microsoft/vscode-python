@@ -21,7 +21,6 @@ import {
 } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
-import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
 import { ModuleInstaller } from '../../../client/common/installer/moduleInstaller';
 import { PipEnvInstaller, pipenvName } from '../../../client/common/installer/pipEnvInstaller';
@@ -38,7 +37,6 @@ import {
     ExecutionInfo,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IOutputChannel,
     IPythonSettings,
     Product,
@@ -46,12 +44,7 @@ import {
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Products } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
-import {
-    IComponentAdapter,
-    ICondaLocatorService,
-    ICondaService,
-    IInterpreterService,
-} from '../../../client/interpreter/contracts';
+import { IComponentAdapter, ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, ModuleInstallerType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
@@ -230,7 +223,6 @@ suite('Module Installer', () => {
                         let configService: TypeMoq.IMock<IConfigurationService>;
                         let fs: TypeMoq.IMock<IFileSystem>;
                         let pythonSettings: TypeMoq.IMock<IPythonSettings>;
-                        let experimentService: TypeMoq.IMock<IExperimentService>;
                         let interpreterService: TypeMoq.IMock<IInterpreterService>;
                         let installer: IModuleInstaller;
                         const condaExecutable = 'my.exe';
@@ -247,17 +239,6 @@ suite('Module Installer', () => {
                                 .setup((c) => c.get(TypeMoq.It.isValue(IFileSystem)))
                                 .returns(() => fs.object);
 
-                            experimentService = TypeMoq.Mock.ofType<IExperimentService>();
-                            experimentService
-                                .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
-                                .returns(() => Promise.resolve(false));
-                            experimentService
-                                .setup((e) => e.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
-                                .returns(() => Promise.resolve(false));
-                            serviceContainer
-                                .setup((c) => c.get(TypeMoq.It.isValue(IExperimentService)))
-                                .returns(() => experimentService.object);
-
                             disposables = [];
                             serviceContainer
                                 .setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
@@ -273,10 +254,7 @@ suite('Module Installer', () => {
                             const condaService = TypeMoq.Mock.ofType<ICondaService>();
                             condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(condaExecutable));
 
-                            const condaLocatorService = TypeMoq.Mock.ofType<ICondaLocatorService>();
-                            serviceContainer
-                                .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService)))
-                                .returns(() => condaLocatorService.object);
+                            const condaLocatorService = TypeMoq.Mock.ofType<IComponentAdapter>();
                             serviceContainer
                                 .setup((c) => c.get(TypeMoq.It.isValue(IComponentAdapter)))
                                 .returns(() => condaLocatorService.object);

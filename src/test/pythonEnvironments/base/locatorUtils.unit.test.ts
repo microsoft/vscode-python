@@ -37,7 +37,7 @@ const envL2 = createLocatedEnv('/conda/envs/envL2', '3.8.3', PythonEnvKind.Conda
 const locatedEnvs = [envL1, envL2];
 
 const envS1 = createNamedEnv('env S1', '3.9', PythonEnvKind.OtherVirtual, `${homeDir}/some-dir/bin/python`);
-setSearchLocation(envS1, homeDir);
+setSearchLocation(envS1, `${homeDir}/`); // Have a search location ending in '/'
 const envS2 = createNamedEnv('env S2', '3.9', PythonEnvKind.OtherVirtual, `${homeDir}/some-dir2/bin/python`);
 setSearchLocation(envS2, homeDir);
 const envS3 = createNamedEnv('env S2', '3.9', PythonEnvKind.OtherVirtual, `${workspaceRoot.fsPath}/p/python`);
@@ -168,6 +168,20 @@ suite('Python envs locator utils - getQueryFilter', () => {
             const expected = [envS3, envSL2];
             const searchLocations = {
                 roots: [workspaceRoot],
+                doNotIncludeNonRooted: true,
+            };
+            const query: PythonLocatorQuery = { searchLocations };
+
+            const filter = getQueryFilter(query);
+            const filtered = envs.filter(filter);
+
+            assert.deepEqual(filtered, expected);
+        });
+
+        test("match multiple (one location) uri path ending in '/'", () => {
+            const expected = [envS3, envSL2];
+            const searchLocations = {
+                roots: [Uri.file(`${workspaceRoot.path}/`)],
                 doNotIncludeNonRooted: true,
             };
             const query: PythonLocatorQuery = { searchLocations };

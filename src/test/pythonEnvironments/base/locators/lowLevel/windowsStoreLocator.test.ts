@@ -4,9 +4,7 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as sinon from 'sinon';
 import { Uri } from 'vscode';
-import { DiscoveryVariants } from '../../../../../client/common/experiments/groups';
 import { traceWarning } from '../../../../../client/common/logger';
 import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, Deferred, sleep } from '../../../../../client/common/utils/async';
@@ -77,7 +75,6 @@ class WindowsStoreEnvs {
 }
 
 suite('Windows Store Locator', async () => {
-    let inExperimentStub: sinon.SinonStub;
     const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
     const testStoreAppRoot = path.join(testLocalAppData, 'Microsoft', 'WindowsApps');
     const windowsStoreEnvs = new WindowsStoreEnvs(testStoreAppRoot);
@@ -98,14 +95,11 @@ suite('Windows Store Locator', async () => {
         return items.some((item) => externalDeps.arePathsSame(item.executablePath, executable));
     }
 
-    suiteSetup(async () => {
+    suiteSetup(async function () {
+        // Enable once this is done: https://github.com/microsoft/vscode-python/issues/17797
+        return this.skip();
         process.env.LOCALAPPDATA = testLocalAppData;
         await windowsStoreEnvs.cleanUp();
-    });
-
-    setup(() => {
-        inExperimentStub = sinon.stub(externalDeps, 'inExperiment');
-        inExperimentStub.withArgs(DiscoveryVariants.discoverWithFileWatching).resolves(true);
     });
 
     async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
@@ -117,7 +111,6 @@ suite('Windows Store Locator', async () => {
     }
 
     teardown(async () => {
-        sinon.restore();
         await windowsStoreEnvs.cleanUp();
         await locator.dispose();
     });

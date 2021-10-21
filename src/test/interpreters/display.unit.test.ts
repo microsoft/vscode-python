@@ -117,9 +117,7 @@ suite('Interpreters Display', () => {
             path: path.join('user', 'development', 'env', 'bin', 'python'),
         };
         setupWorkspaceFolder(resource, workspaceFolder);
-        interpreterService
-            .setup((i) => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder)))
-            .returns(() => Promise.resolve([]));
+        interpreterService.setup((i) => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder))).returns(() => []);
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
             .returns(() => Promise.resolve(activeInterpreter));
@@ -142,9 +140,7 @@ suite('Interpreters Display', () => {
             .setup((p) => p.getDisplayName(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => activeInterpreter.path);
         setupWorkspaceFolder(resource, workspaceFolder);
-        interpreterService
-            .setup((i) => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder)))
-            .returns(() => Promise.resolve([]));
+        interpreterService.setup((i) => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder))).returns(() => []);
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
             .returns(() => Promise.resolve(activeInterpreter));
@@ -185,7 +181,7 @@ suite('Interpreters Display', () => {
 
         interpreterService
             .setup((i) => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder)))
-            .returns(() => Promise.resolve([{} as any]));
+            .returns(() => [{} as any]);
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
             .returns(() => Promise.resolve(undefined));
@@ -243,9 +239,7 @@ suite('Interpreters Display', () => {
                 path: path.join('user', 'development', 'env', 'bin', 'python'),
             };
             setupWorkspaceFolder(resource, workspaceFolder);
-            interpreterService
-                .setup((i) => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder)))
-                .returns(() => Promise.resolve([]));
+            interpreterService.setup((i) => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder))).returns(() => []);
             interpreterService
                 .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
                 .returns(() => Promise.resolve(activeInterpreter));

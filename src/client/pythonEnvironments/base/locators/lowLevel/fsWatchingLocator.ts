@@ -4,13 +4,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { DiscoveryVariants } from '../../../../common/experiments/groups';
 import { traceError, traceVerbose } from '../../../../common/logger';
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
 import { logError } from '../../../../logging';
 import { getEnvironmentDirFromPath } from '../../../common/commonUtils';
-import { inExperiment } from '../../../common/externalDependencies';
 import {
     PythonEnvStructure,
     resolvePythonExeGlobs,
@@ -91,12 +89,8 @@ export abstract class FSWatchingLocator<I = PythonEnvInfo> extends LazyResourceB
     protected async initWatchers(): Promise<void> {
         // Enable all workspace watchers.
         if (this.watcherKind === FSWatcherKind.Global) {
-            // Enable global watchers only if the experiment allows it.
-            const enableGlobalWatchers = await inExperiment(DiscoveryVariants.discoverWithFileWatching);
-            if (!enableGlobalWatchers) {
-                traceVerbose('Watcher disabled');
-                return;
-            }
+            // Do not allow global watchers for now
+            return;
         }
 
         // Start the FS watchers.

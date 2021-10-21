@@ -97,7 +97,9 @@ export class PytestRunner implements ITestsRunner {
             if (!rawData) {
                 throw new Error(`Trying to run unknown node: ${testNode.id}`);
             }
-            testArgs.push(rawData.rawId);
+            if (testNode.id !== options.workspaceFolder.fsPath) {
+                testArgs.push(rawData.rawId);
+            }
 
             runInstance.appendOutput(`Running test with arguments: ${testArgs.join(' ')}\r\n`);
             runInstance.appendOutput(`Current working directory: ${options.cwd}\r\n`);

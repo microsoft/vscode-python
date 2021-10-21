@@ -9,12 +9,10 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 
-import { IComponentAdapter, ICondaLocatorService, ICondaService } from '../../../interpreter/contracts';
+import { IComponentAdapter, ICondaService } from '../../../interpreter/contracts';
 import { IPlatformService } from '../../platform/types';
-import { IConfigurationService, IExperimentService } from '../../types';
+import { IConfigurationService } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
-import { IServiceContainer } from '../../../ioc/types';
-import { inDiscoveryExperiment } from '../../experiments/helpers';
 
 // Version number of conda that requires we call activate with 'conda activate' instead of just 'activate'
 const CondaRequiredMajor = 4;
@@ -30,8 +28,6 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IPlatformService) private platform: IPlatformService,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IExperimentService) private experimentService: IExperimentService,
         @inject(IComponentAdapter) private pyenvs: IComponentAdapter,
     ) {}
 
@@ -62,10 +58,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         pythonPath: string,
         targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
-        const condaLocatorService = (await inDiscoveryExperiment(this.experimentService))
-            ? this.pyenvs
-            : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
-        const envInfo = await condaLocatorService.getCondaEnvironment(pythonPath);
+        const envInfo = await this.pyenvs.getCondaEnvironment(pythonPath);
         if (!envInfo) {
             return undefined;
         }

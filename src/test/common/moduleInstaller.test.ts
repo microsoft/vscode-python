@@ -1,6 +1,5 @@
 import { expect, should as chaiShould, use as chaiUse } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import * as path from 'path';
 import { SemVer } from 'semver';
 import { instance, mock } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
@@ -32,7 +31,6 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { EditorUtils } from '../../client/common/editor';
-import { DiscoveryVariants } from '../../client/common/experiments/groups';
 import { ExperimentService } from '../../client/common/experiments/service';
 import {
     ExtensionInsidersDailyChannelRule,
@@ -66,7 +64,7 @@ import { PlatformService } from '../../client/common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { ProcessLogger } from '../../client/common/process/logger';
-import { IProcessLogger, IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
+import { IProcessLogger, IProcessServiceFactory } from '../../client/common/process/types';
 import { TerminalActivator } from '../../client/common/terminal/activator';
 import { PowershellTerminalActivationFailedHandler } from '../../client/common/terminal/activator/powershellFailedHandler';
 import { Bash } from '../../client/common/terminal/environmentActivationProviders/bash';
@@ -111,21 +109,13 @@ import {
 import { IMultiStepInputFactory, MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { Architecture } from '../../client/common/utils/platform';
 import { Random } from '../../client/common/utils/random';
-import {
-    ICondaService,
-    ICondaLocatorService,
-    IInterpreterLocatorService,
-    IInterpreterService,
-    INTERPRETER_LOCATOR_SERVICE,
-    PIPENV_SERVICE,
-    IComponentAdapter,
-} from '../../client/interpreter/contracts';
+import { ICondaService, IInterpreterService, IComponentAdapter } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { JupyterExtensionDependencyManager } from '../../client/jupyter/jupyterExtensionDependencyManager';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
-import { getExtensionSettings, PYTHON_PATH, rootWorkspaceUri } from '../common';
+import { PYTHON_PATH, rootWorkspaceUri } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
@@ -151,12 +141,10 @@ suite('Module Installer', () => {
         let ioc: UnitTestIocContainer;
         let mockTerminalService: TypeMoq.IMock<ITerminalService>;
         let condaService: TypeMoq.IMock<ICondaService>;
-        let condaLocatorService: TypeMoq.IMock<ICondaLocatorService>;
-        let experimentService: TypeMoq.IMock<IExperimentService>;
+        let condaLocatorService: TypeMoq.IMock<IComponentAdapter>;
         let interpreterService: TypeMoq.IMock<IInterpreterService>;
         let mockTerminalFactory: TypeMoq.IMock<ITerminalServiceFactory>;
 
-        const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
         suiteSetup(initializeTest);
         setup(async () => {
             chaiShould();
@@ -213,15 +201,7 @@ suite('Module Installer', () => {
 
             await ioc.registerMockInterpreterTypes();
             condaService = TypeMoq.Mock.ofType<ICondaService>();
-            condaLocatorService = TypeMoq.Mock.ofType<ICondaLocatorService>();
-            experimentService = TypeMoq.Mock.ofType<IExperimentService>();
-            experimentService
-                .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
-                .returns(() => Promise.resolve(false));
-            ioc.serviceManager.addSingletonInstance<ICondaLocatorService>(
-                ICondaLocatorService,
-                condaLocatorService.object,
-            );
+            condaLocatorService = TypeMoq.Mock.ofType<IComponentAdapter>();
             ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, condaService.object);
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
             ioc.serviceManager.rebindInstance<IInterpreterService>(IInterpreterService, interpreterService.object);
@@ -339,34 +319,10 @@ suite('Module Installer', () => {
                 ConfigurationTarget.Workspace,
             );
         }
-        async function getCurrentPythonPath(): Promise<string> {
-            const { pythonPath } = getExtensionSettings(workspaceUri);
-            if (path.basename(pythonPath) === pythonPath) {
-                const pythonProc = await ioc.serviceContainer
-                    .get<IPythonExecutionFactory>(IPythonExecutionFactory)
-                    .create({ resource: workspaceUri });
-                return pythonProc.getExecutablePath().catch(() => pythonPath);
-            }
-            return pythonPath;
-        }
         test('Ensure pip is supported and conda is not', async () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
                 IModuleInstaller,
                 new MockModuleInstaller('mock', true),
-            );
-            const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
-            mockInterpreterLocator
-                .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve([]));
-            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                mockInterpreterLocator.object,
-                INTERPRETER_LOCATOR_SERVICE,
-            );
-            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                TypeMoq.Mock.ofType<IInterpreterLocatorService>().object,
-                PIPENV_SERVICE,
             );
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
 
@@ -402,34 +358,6 @@ suite('Module Installer', () => {
                 IModuleInstaller,
                 new MockModuleInstaller('mock', true),
             );
-            const pythonPath = await getCurrentPythonPath();
-            const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
-            mockInterpreterLocator
-                .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
-                .returns(() =>
-                    Promise.resolve([
-                        {
-                            ...info,
-                            architecture: Architecture.Unknown,
-                            companyDisplayName: '',
-                            displayName: '',
-                            envName: '',
-                            path: pythonPath,
-                            envType: EnvironmentType.Conda,
-                            version: new SemVer('1.0.0'),
-                        },
-                    ]),
-                );
-            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                mockInterpreterLocator.object,
-                INTERPRETER_LOCATOR_SERVICE,
-            );
-            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                TypeMoq.Mock.ofType<IInterpreterLocatorService>().object,
-                PIPENV_SERVICE,
-            );
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
 
             const processService = (await ioc.serviceContainer
@@ -463,14 +391,11 @@ suite('Module Installer', () => {
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
             serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ICondaService))).returns(() => condaService.object);
             serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService)))
+                .setup((c) => c.get(TypeMoq.It.isValue(IComponentAdapter)))
                 .returns(() => condaLocatorService.object);
             serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(IComponentAdapter)))
                 .returns(() => condaLocatorService.object);
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(IExperimentService)))
-                .returns(() => experimentService.object);
             condaService.setup((c) => c.isCondaAvailable()).returns(() => Promise.resolve(true));
             condaLocatorService
                 .setup((c) => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath)))
@@ -494,12 +419,6 @@ suite('Module Installer', () => {
             serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(IComponentAdapter)))
                 .returns(() => condaLocatorService.object);
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService)))
-                .returns(() => condaLocatorService.object);
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(IExperimentService)))
-                .returns(() => experimentService.object);
             condaService.setup((c) => c.isCondaAvailable()).returns(() => Promise.resolve(true));
             condaLocatorService
                 .setup((c) => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath)))
@@ -511,22 +430,6 @@ suite('Module Installer', () => {
 
         const resourceTestNameSuffix = resource ? ' with a resource' : ' without a resource';
         test(`Validate pip install arguments ${resourceTestNameSuffix}`, async () => {
-            const interpreterPath = await getCurrentPythonPath();
-            const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
-            mockInterpreterLocator
-                .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve([{ ...info, path: interpreterPath, envType: EnvironmentType.Unknown }]));
-            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                mockInterpreterLocator.object,
-                INTERPRETER_LOCATOR_SERVICE,
-            );
-            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                TypeMoq.Mock.ofType<IInterpreterLocatorService>().object,
-                PIPENV_SERVICE,
-            );
-
             const interpreter: PythonEnvironment = {
                 ...info,
                 envType: EnvironmentType.Unknown,
@@ -566,22 +469,6 @@ suite('Module Installer', () => {
         });
 
         test(`Validate Conda install arguments ${resourceTestNameSuffix}`, async () => {
-            const interpreterPath = await getCurrentPythonPath();
-            const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
-            mockInterpreterLocator
-                .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve([{ ...info, path: interpreterPath, envType: EnvironmentType.Conda }]));
-            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                mockInterpreterLocator.object,
-                INTERPRETER_LOCATOR_SERVICE,
-            );
-            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                TypeMoq.Mock.ofType<IInterpreterLocatorService>().object,
-                PIPENV_SERVICE,
-            );
-
             const moduleName = 'xyz';
 
             const moduleInstallers = ioc.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
@@ -607,18 +494,6 @@ suite('Module Installer', () => {
         });
 
         test(`Validate pipenv install arguments ${resourceTestNameSuffix}`, async () => {
-            const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
-            mockInterpreterLocator
-                .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
-                .returns(() =>
-                    Promise.resolve([{ ...info, path: 'interpreterPath', envType: EnvironmentType.VirtualEnv }]),
-                );
-            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                mockInterpreterLocator.object,
-                PIPENV_SERVICE,
-            );
-
             const moduleName = 'xyz';
             const moduleInstallers = ioc.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
             const pipInstaller = moduleInstallers.find((item) => item.displayName === 'pipenv')!;

@@ -142,12 +142,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
 
         const options = await this.analysisOptions.getAnalysisOptions();
-        this.middleware = new LanguageClientMiddleware(
-            this.serviceContainer,
-            LanguageServerType.Jedi,
-            () => this.languageServerProxy?.languageClient,
-            this.lsVersion,
-        );
+        this.middleware = new LanguageClientMiddleware(this.serviceContainer, LanguageServerType.Jedi, this.lsVersion);
         options.middleware = this.middleware;
 
         // Make sure the middleware is connected if we restart and we we're already connected.

@@ -73,7 +73,7 @@ suite('Debugging - Adapter Factory', () => {
         appShell = mock(ApplicationShell);
 
         when(interpreterService.getInterpreterDetails(pythonPath)).thenResolve(interpreter);
-        when(interpreterService.getInterpreters(anything())).thenResolve([interpreter]);
+        when(interpreterService.getInterpreters(anything())).thenReturn([interpreter]);
 
         factory = new DebugAdapterDescriptorFactory(instance(interpreterService), instance(appShell));
     });
@@ -130,7 +130,7 @@ suite('Debugging - Adapter Factory', () => {
     });
 
     test('Display a message if no python interpreter is set', async () => {
-        when(interpreterService.getInterpreters(anything())).thenResolve([]);
+        when(interpreterService.getInterpreters(anything())).thenReturn([]);
         const session = createSession({});
 
         const promise = factory.createDebugAdapterDescriptor(session, nodeExecutable);

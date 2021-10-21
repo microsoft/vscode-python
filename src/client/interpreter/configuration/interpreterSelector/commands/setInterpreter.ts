@@ -81,7 +81,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         // If the list is refreshing, it's crucial to maintain sorting order at all
         // times so that the visible items do not change.
         const preserveOrderWhenFiltering = !!this.interpreterService.refreshPromise;
-        const suggestions = await this.getItems(state.workspace);
+        const suggestions = this.getItems(state.workspace);
         state.path = undefined;
         const currentInterpreterPathDisplay = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
@@ -101,20 +101,23 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                     iconPath: getIcon(REFRESH_BUTTON_ICON),
                     tooltip: InterpreterQuickPickList.refreshInterpreterList(),
                 },
-                callback: () => this.interpreterService.triggerRefresh(),
+                callback: () => this.interpreterService.triggerRefresh().ignoreErrors(),
             },
             onChangeItem: {
                 event: this.interpreterService.onDidChangeInterpreters,
-                callback: async (event: PythonEnvironmentsChangedEvent, quickPick) => {
+                // It's essential that each callback is handled synchronously, as result of the previous
+                // callback influences the input for the next one. Input here is the quickpick itself.
+                callback: (event: PythonEnvironmentsChangedEvent, quickPick) => {
                     if (this.interpreterService.refreshPromise) {
                         quickPick.busy = true;
-                        this.interpreterService.refreshPromise.then(async () => {
+                        this.interpreterService.refreshPromise.then(() => {
+                            // Items are in the final state as all previous callbacks have finished executing.
                             quickPick.busy = false;
                             // Ensure we set a recommended item after refresh has finished.
-                            await this.updateQuickPickItems(quickPick, {}, state.workspace);
+                            this.updateQuickPickItems(quickPick, {}, state.workspace);
                         });
                     }
-                    await this.updateQuickPickItems(quickPick, event, state.workspace);
+                    this.updateQuickPickItems(quickPick, event, state.workspace);
                 },
             },
         });
@@ -132,14 +135,14 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         return undefined;
     }
 
-    private async getItems(resource: Resource) {
+    private getItems(resource: Resource) {
         const suggestions: QuickPickType[] = [this.manualEntrySuggestion];
         const defaultInterpreterPathSuggestion = this.getDefaultInterpreterPathSuggestion(resource);
         if (defaultInterpreterPathSuggestion) {
             suggestions.push(defaultInterpreterPathSuggestion);
         }
-        const interpreterSuggestions = await this.interpreterSelector.getSuggestions(resource);
-        await this.setRecommendedItem(interpreterSuggestions, resource);
+        const interpreterSuggestions = this.interpreterSelector.getSuggestions(resource);
+        this.setRecommendedItem(interpreterSuggestions, resource);
         suggestions.push(...interpreterSuggestions);
         return suggestions;
     }
@@ -177,14 +180,14 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     /**
      * Updates quickpick using the change event received.
      */
-    private async updateQuickPickItems(
+    private updateQuickPickItems(
         quickPick: QuickPick<QuickPickType>,
         event: PythonEnvironmentsChangedEvent,
         resource: Resource,
     ) {
         // Active items are reset once we replace the current list with updated items, so save it.
         const activeItemBeforeUpdate = quickPick.activeItems.length > 0 ? quickPick.activeItems[0] : undefined;
-        quickPick.items = await this.getUpdatedItems(quickPick.items, event, resource);
+        quickPick.items = this.getUpdatedItems(quickPick.items, event, resource);
         // Ensure we maintain the same active item as before.
         const activeItem = activeItemBeforeUpdate
             ? quickPick.items.find((item) => {
@@ -204,11 +207,11 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     /**
      * Prepare updated items to replace the quickpick list with.
      */
-    private async getUpdatedItems(
+    private getUpdatedItems(
         items: readonly QuickPickType[],
         event: PythonEnvironmentsChangedEvent,
         resource: Resource,
-    ): Promise<QuickPickType[]> {
+    ): QuickPickType[] {
         const updatedItems = [...items.values()];
         const env = event.old ?? event.new;
         let envIndex = -1;
@@ -231,12 +234,12 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         if (envIndex !== -1 && event.new === undefined) {
             updatedItems.splice(envIndex, 1);
         }
-        await this.setRecommendedItem(updatedItems, resource);
+        this.setRecommendedItem(updatedItems, resource);
         return updatedItems;
     }
 
-    private async setRecommendedItem(items: QuickPickType[], resource: Resource) {
-        const interpreterSuggestions = await this.interpreterSelector.getSuggestions(resource);
+    private setRecommendedItem(items: QuickPickType[], resource: Resource) {
+        const interpreterSuggestions = this.interpreterSelector.getSuggestions(resource);
         if (!this.interpreterService.refreshPromise && interpreterSuggestions.length > 0) {
             // List is in the final state, so first suggestion is the recommended one.
             const recommended = cloneDeep(interpreterSuggestions[0]);
@@ -276,7 +279,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             // User entered text in the filter box to enter path to python, store it
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'enter' });
             state.path = selection;
-            await this.sendInterpreterEntryTelemetry(selection, state.workspace, suggestions);
+            this.sendInterpreterEntryTelemetry(selection, state.workspace, suggestions);
         } else if (selection && selection.label === InterpreterQuickPickList.browsePath.label()) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'browse' });
             const filtersKey = 'Executables';
@@ -290,7 +293,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             });
             if (uris && uris.length > 0) {
                 state.path = uris[0].fsPath;
-                await this.sendInterpreterEntryTelemetry(state.path!, state.workspace, suggestions);
+                this.sendInterpreterEntryTelemetry(state.path!, state.workspace, suggestions);
             }
         }
     }
@@ -324,11 +327,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
      * @param selection Intepreter path that was either entered manually or picked by browsing through the filesystem.
      */
     // eslint-disable-next-line class-methods-use-this
-    private async sendInterpreterEntryTelemetry(
-        selection: string,
-        workspace: Resource,
-        suggestions: QuickPickType[],
-    ): Promise<void> {
+    private sendInterpreterEntryTelemetry(selection: string, workspace: Resource, suggestions: QuickPickType[]): void {
         let interpreterPath = path.normalize(untildify(selection));
 
         if (!path.isAbsolute(interpreterPath)) {

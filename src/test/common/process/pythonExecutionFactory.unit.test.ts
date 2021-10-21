@@ -24,29 +24,15 @@ import {
     IProcessServiceFactory,
     IPythonExecutionService,
 } from '../../../client/common/process/types';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentService,
-    IInterpreterPathProxyService,
-} from '../../../client/common/types';
+import { IConfigurationService, IDisposableRegistry, IInterpreterPathProxyService } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import {
-    IComponentAdapter,
-    ICondaLocatorService,
-    ICondaService,
-    IInterpreterService,
-} from '../../../client/interpreter/contracts';
+import { IComponentAdapter, ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { ServiceContainer } from '../../../client/ioc/container';
-import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
+import { CondaService } from '../../../client/pythonEnvironments/common/environmentManagers/condaService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import * as ExperimentHelpers from '../../../client/common/experiments/helpers';
-import * as WindowsStoreInterpreter from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
-import { ExperimentService } from '../../../client/common/experiments/service';
-import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 import { IInterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection/types';
 
 const pythonInterpreter: PythonEnvironment = {
@@ -93,15 +79,11 @@ suite('Process - PythonExecutionFactory', () => {
             let processFactory: IProcessServiceFactory;
             let configService: IConfigurationService;
             let condaService: ICondaService;
-            let condaLocatorService: ICondaLocatorService;
             let processLogger: IProcessLogger;
             let processService: typemoq.IMock<IProcessService>;
             let interpreterService: IInterpreterService;
             let pyenvs: IComponentAdapter;
-            let experimentService: IExperimentService;
             let executionService: typemoq.IMock<IPythonExecutionService>;
-            let isWindowsStoreInterpreterStub: sinon.SinonStub;
-            let inDiscoveryExperimentStub: sinon.SinonStub;
             let autoSelection: IInterpreterAutoSelectionService;
             let interpreterPathExpHelper: IInterpreterPathProxyService;
             setup(() => {
@@ -110,14 +92,10 @@ suite('Process - PythonExecutionFactory', () => {
                 processFactory = mock(ProcessServiceFactory);
                 configService = mock(ConfigurationService);
                 condaService = mock(CondaService);
-                condaLocatorService = mock<ICondaLocatorService>();
                 processLogger = mock(ProcessLogger);
                 autoSelection = mock<IInterpreterAutoSelectionService>();
                 interpreterPathExpHelper = mock<IInterpreterPathProxyService>();
                 when(interpreterPathExpHelper.get(anything())).thenReturn('selected interpreter path');
-                experimentService = mock(ExperimentService);
-                when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
-                when(experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching)).thenResolve(false);
 
                 pyenvs = mock<IComponentAdapter>();
                 when(pyenvs.isWindowsStoreInterpreter(anyString())).thenResolve(true);
@@ -147,9 +125,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(
                     instance(interpreterService),
                 );
-                when(serviceContainer.get<ICondaLocatorService>(ICondaLocatorService)).thenReturn(
-                    instance(condaLocatorService),
-                );
+                when(serviceContainer.get<IComponentAdapter>(IComponentAdapter)).thenReturn(instance(pyenvs));
                 when(serviceContainer.tryGet<IInterpreterService>(IInterpreterService)).thenReturn(
                     instance(interpreterService),
                 );
@@ -161,15 +137,9 @@ suite('Process - PythonExecutionFactory', () => {
                     instance(condaService),
                     instance(bufferDecoder),
                     instance(pyenvs),
-                    instance(experimentService),
                     instance(autoSelection),
                     instance(interpreterPathExpHelper),
                 );
-
-                isWindowsStoreInterpreterStub = sinon.stub(WindowsStoreInterpreter, 'isWindowsStoreInterpreter');
-                isWindowsStoreInterpreterStub.resolves(true);
-
-                inDiscoveryExperimentStub = sinon.stub(ExperimentHelpers, 'inDiscoveryExperiment');
             });
 
             teardown(() => sinon.restore());
@@ -191,7 +161,6 @@ suite('Process - PythonExecutionFactory', () => {
             test('If interpreter is explicitly set, ensure we use it', async () => {
                 const pythonSettings = mock(PythonSettings);
                 when(processFactory.create(resource)).thenResolve(processService.object);
-                inDiscoveryExperimentStub.resolves(true);
                 when(activationHelper.getActivatedEnvironmentVariables(resource)).thenResolve({ x: '1' });
                 reset(interpreterPathExpHelper);
                 when(interpreterPathExpHelper.get(anything())).thenReturn('python');
@@ -288,45 +257,6 @@ suite('Process - PythonExecutionFactory', () => {
                 assert.equal(createInvoked, false);
             });
 
-            test("Ensure `create` returns a WindowsStorePythonProcess instance if it's a windows store intepreter path and we're in the discovery experiment", async () => {
-                const pythonPath = 'path/to/python';
-                const pythonSettings = mock(PythonSettings);
-
-                when(processFactory.create(resource)).thenResolve(processService.object);
-                when(pythonSettings.pythonPath).thenReturn(pythonPath);
-                when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
-                inDiscoveryExperimentStub.resolves(true);
-
-                const service = await factory.create({ resource });
-
-                expect(service).to.not.equal(undefined);
-                verify(processFactory.create(resource)).once();
-                verify(pythonSettings.pythonPath).once();
-                verify(pyenvs.isWindowsStoreInterpreter(pythonPath)).once();
-                sinon.assert.calledOnce(inDiscoveryExperimentStub);
-                sinon.assert.notCalled(isWindowsStoreInterpreterStub);
-            });
-
-            test("Ensure `create` returns a WindowsStorePythonProcess instance if it's a windows store intepreter path and we're not in the discovery experiment", async () => {
-                const pythonPath = 'path/to/python';
-                const pythonSettings = mock(PythonSettings);
-
-                when(processFactory.create(resource)).thenResolve(processService.object);
-                when(pythonSettings.pythonPath).thenReturn(pythonPath);
-                when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
-                inDiscoveryExperimentStub.resolves(false);
-
-                const service = await factory.create({ resource });
-
-                expect(service).to.not.equal(undefined);
-                verify(processFactory.create(resource)).once();
-                verify(pythonSettings.pythonPath).once();
-                verify(pyenvs.isWindowsStoreInterpreter(pythonPath)).never();
-                sinon.assert.calledOnce(inDiscoveryExperimentStub);
-                sinon.assert.calledOnce(isWindowsStoreInterpreterStub);
-                sinon.assert.calledWith(isWindowsStoreInterpreterStub, pythonPath);
-            });
-
             test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
                 return this.skip();
 
@@ -338,7 +268,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
                 when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
-                when(condaLocatorService.getCondaEnvironment(pythonPath)).thenResolve({
+                when(pyenvs.getCondaEnvironment(pythonPath)).thenResolve({
                     name: 'foo',
                     path: 'path/to/foo/env',
                 });
@@ -350,7 +280,7 @@ suite('Process - PythonExecutionFactory', () => {
                 verify(processFactory.create(resource)).once();
                 verify(pythonSettings.pythonPath).once();
                 verify(condaService.getCondaVersion()).once();
-                verify(condaLocatorService.getCondaEnvironment(pythonPath)).once();
+                verify(pyenvs.getCondaEnvironment(pythonPath)).once();
                 verify(condaService.getCondaFile()).once();
             });
 
@@ -371,7 +301,7 @@ suite('Process - PythonExecutionFactory', () => {
                 verify(processFactory.create(resource)).once();
                 verify(pythonSettings.pythonPath).once();
                 verify(condaService.getCondaVersion()).once();
-                verify(condaLocatorService.getCondaEnvironment(pythonPath)).once();
+                verify(pyenvs.getCondaEnvironment(pythonPath)).once();
                 verify(condaService.getCondaFile()).once();
             });
 
@@ -388,7 +318,7 @@ suite('Process - PythonExecutionFactory', () => {
                 });
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
                 when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
-                when(condaLocatorService.getCondaEnvironment(anyString())).thenResolve({
+                when(pyenvs.getCondaEnvironment(anyString())).thenResolve({
                     name: 'foo',
                     path: 'path/to/foo/env',
                 });
@@ -400,9 +330,9 @@ suite('Process - PythonExecutionFactory', () => {
                 verify(condaService.getCondaFile()).once();
                 if (!interpreter) {
                     verify(pythonSettings.pythonPath).once();
-                    verify(condaLocatorService.getCondaEnvironment(pythonPath)).once();
+                    verify(pyenvs.getCondaEnvironment(pythonPath)).once();
                 } else {
-                    verify(condaLocatorService.getCondaEnvironment(interpreter!.path)).once();
+                    verify(pyenvs.getCondaEnvironment(interpreter!.path)).once();
                 }
             });
 
@@ -441,7 +371,7 @@ suite('Process - PythonExecutionFactory', () => {
 
             test('Ensure `createCondaExecutionService` creates a CondaExecutionService instance if there is a conda environment', async () => {
                 const pythonPath = 'path/to/python';
-                when(condaLocatorService.getCondaEnvironment(pythonPath)).thenResolve({
+                when(pyenvs.getCondaEnvironment(pythonPath)).thenResolve({
                     name: 'foo',
                     path: 'path/to/foo/env',
                 });
@@ -452,14 +382,14 @@ suite('Process - PythonExecutionFactory', () => {
 
                 expect(result).to.not.equal(undefined);
                 verify(condaService.getCondaVersion()).once();
-                verify(condaLocatorService.getCondaEnvironment(pythonPath)).once();
+                verify(pyenvs.getCondaEnvironment(pythonPath)).once();
                 verify(condaService.getCondaFile()).once();
             });
 
             test('Ensure `createCondaExecutionService` instantiates a ProcessService instance if the process argument is undefined', async () => {
                 const pythonPath = 'path/to/python';
                 when(processFactory.create(resource)).thenResolve(processService.object);
-                when(condaLocatorService.getCondaEnvironment(pythonPath)).thenResolve({
+                when(pyenvs.getCondaEnvironment(pythonPath)).thenResolve({
                     name: 'foo',
                     path: 'path/to/foo/env',
                 });
@@ -471,13 +401,13 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(result).to.not.equal(undefined);
                 verify(processFactory.create(resource)).once();
                 verify(condaService.getCondaVersion()).once();
-                verify(condaLocatorService.getCondaEnvironment(pythonPath)).once();
+                verify(pyenvs.getCondaEnvironment(pythonPath)).once();
                 verify(condaService.getCondaFile()).once();
             });
 
             test('Ensure `createCondaExecutionService` returns undefined if there is no conda environment', async () => {
                 const pythonPath = 'path/to/python';
-                when(condaLocatorService.getCondaEnvironment(pythonPath)).thenResolve(undefined);
+                when(pyenvs.getCondaEnvironment(pythonPath)).thenResolve(undefined);
                 when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
 
                 const result = await factory.createCondaExecutionService(pythonPath, processService.object);
@@ -487,7 +417,7 @@ suite('Process - PythonExecutionFactory', () => {
                     'createCondaExecutionService should return undefined if not in a conda environment',
                 );
                 verify(condaService.getCondaVersion()).once();
-                verify(condaLocatorService.getCondaEnvironment(pythonPath)).once();
+                verify(pyenvs.getCondaEnvironment(pythonPath)).once();
                 verify(condaService.getCondaFile()).once();
             });
 
@@ -502,7 +432,7 @@ suite('Process - PythonExecutionFactory', () => {
                     'createCondaExecutionService should return undefined if not in a conda environment',
                 );
                 verify(condaService.getCondaVersion()).once();
-                verify(condaLocatorService.getCondaEnvironment(pythonPath)).once();
+                verify(pyenvs.getCondaEnvironment(pythonPath)).once();
                 verify(condaService.getCondaFile()).once();
             });
         });
