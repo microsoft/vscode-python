@@ -28,7 +28,7 @@ export function execModule(name: string, moduleArgs: string[]): string[] {
 }
 
 export function getVersion(): [string[], (out: string) => string] {
-    const args = ['--version'];
+    const args = ['-I', '--version'];
 
     function parse(out: string): string {
         return out.trim();
