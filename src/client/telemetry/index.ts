@@ -1240,12 +1240,6 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
-     * Telemetry sent when the client makes a request to the language server
-     *
-     * This event also has a measure, "resultLength", which records the number of completions provided.
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: unknown;
-    /**
      * Telemetry event sent when the experiments service is initialized for the first time.
      */
     [EventName.PYTHON_EXPERIMENTS_INIT_PERFORMANCE]: unknown;
@@ -1658,10 +1652,4 @@ export interface IEventNamePropertyMapping {
      * on the machine currently running TensorBoard.
      */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND]: never | undefined;
-    /**
-     * Telemetry event sent when the prompt about the MPLS deprecation is displayed.
-     */
-    [EventName.MPLS_DEPRECATION_PROMPT]: {
-        switchTo: LanguageServerType | undefined;
-    };
 }

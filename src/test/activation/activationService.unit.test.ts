@@ -13,7 +13,6 @@ import {
     ILanguageServerFolderService,
     LanguageServerType,
 } from '../../client/activation/types';
-import { LSNotSupportedDiagnosticServiceId } from '../../client/application/diagnostics/checks/lsNotSupported';
 import { IDiagnostic, IDiagnosticsService } from '../../client/application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
@@ -37,7 +36,7 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 suite('Language Server Activation - ActivationService', () => {
-    [LanguageServerType.Jedi, LanguageServerType.Microsoft].forEach((languageServerType) => {
+    [LanguageServerType.Jedi].forEach((languageServerType) => {
         suite(
             `Test activation - ${
                 languageServerType === LanguageServerType.Jedi ? 'Jedi is enabled' : 'Jedi is disabled'
@@ -133,14 +132,6 @@ suite('Language Server Activation - ActivationService', () => {
                     serviceContainer
                         .setup((c) => c.get(TypeMoq.It.isValue(IExtensions)))
                         .returns(() => extensionsMock.object);
-                    serviceContainer
-                        .setup((s) =>
-                            s.get(
-                                TypeMoq.It.isValue(IDiagnosticsService),
-                                TypeMoq.It.isValue(LSNotSupportedDiagnosticServiceId),
-                            ),
-                        )
-                        .returns(() => lsNotSupportedDiagnosticService.object);
                 });
 
                 async function testActivation(
@@ -160,7 +151,7 @@ suite('Language Server Activation - ActivationService', () => {
                         lsSupported &&
                         activatorName !== LanguageServerType.Jedi
                     ) {
-                        activatorName = LanguageServerType.Microsoft;
+                        activatorName = LanguageServerType.Node;
                     }
 
                     let diagnostics: IDiagnostic[];
@@ -227,7 +218,7 @@ suite('Language Server Activation - ActivationService', () => {
                     // Toggle the value in the setting and invoke the callback.
                     languageServerType =
                         languageServerType === LanguageServerType.Jedi
-                            ? LanguageServerType.Microsoft
+                            ? LanguageServerType.Node
                             : LanguageServerType.Jedi;
                     await callbackHandler(event.object);
 
@@ -237,7 +228,7 @@ suite('Language Server Activation - ActivationService', () => {
                 }
 
                 test('LS is supported', async () => {
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
+                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
                     const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(
                         serviceContainer.object,
@@ -247,7 +238,7 @@ suite('Language Server Activation - ActivationService', () => {
                     await testActivation(activationService, activator, true);
                 });
                 test('LS is not supported', async () => {
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
+                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
                     const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(
                         serviceContainer.object,
@@ -258,7 +249,7 @@ suite('Language Server Activation - ActivationService', () => {
                 });
 
                 test('Activator must be activated', async () => {
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
+                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
                     const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(
                         serviceContainer.object,
@@ -268,7 +259,7 @@ suite('Language Server Activation - ActivationService', () => {
                     await testActivation(activationService, activator);
                 });
                 test('Activator must be deactivated', async () => {
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
+                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
                     const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(
                         serviceContainer.object,
@@ -304,7 +295,7 @@ suite('Language Server Activation - ActivationService', () => {
                         .returns(() => TypeMoq.Mock.ofType<Disposable>().object)
                         .verifiable(TypeMoq.Times.once());
 
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
+                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
                     const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(
                         serviceContainer.object,
@@ -380,7 +371,7 @@ suite('Language Server Activation - ActivationService', () => {
                         .setup((l) => l.handle(TypeMoq.It.isValue([])))
                         .returns(() => Promise.resolve());
 
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
+                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
                     const activationService = new LanguageServerExtensionActivationService(
                         serviceContainer.object,
                         stateFactory.object,
@@ -450,7 +441,7 @@ suite('Language Server Activation - ActivationService', () => {
                         .setup((l) => l.handle(TypeMoq.It.isValue(diagnostics)))
                         .returns(() => Promise.resolve());
 
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
+                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
                     const activationService = new LanguageServerExtensionActivationService(
                         serviceContainer.object,
                         stateFactory.object,
@@ -470,7 +461,7 @@ suite('Language Server Activation - ActivationService', () => {
                 });
                 if (languageServerType !== LanguageServerType.Jedi) {
                     test('Revert to jedi when LS activation fails', async () => {
-                        pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
+                        pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
                         const activatorLS = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                         const activatorJedi = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                         const activationService = new LanguageServerExtensionActivationService(
@@ -488,7 +479,7 @@ suite('Language Server Activation - ActivationService', () => {
                             .setup((c) =>
                                 c.get(
                                     TypeMoq.It.isValue(ILanguageServerActivator),
-                                    TypeMoq.It.isValue(LanguageServerType.Microsoft),
+                                    TypeMoq.It.isValue(LanguageServerType.Node),
                                 ),
                             )
                             .returns(() => activatorLS.object)
@@ -541,7 +532,7 @@ suite('Language Server Activation - ActivationService', () => {
                             .setup((c) =>
                                 c.get(
                                     TypeMoq.It.isValue(ILanguageServerActivator),
-                                    TypeMoq.It.isValue(LanguageServerType.Microsoft),
+                                    TypeMoq.It.isValue(LanguageServerType.Node),
                                 ),
                             )
                             .returns(() => activator.object)
@@ -558,7 +549,7 @@ suite('Language Server Activation - ActivationService', () => {
                         workspaceService.verifyAll();
                     }
                     test('Activator is disposed if activated workspace is removed and LS is "Microsoft"', async () => {
-                        pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
+                        pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
                         let workspaceFoldersChangedHandler!: Function;
                         workspaceService
                             .setup((w) => w.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -660,7 +651,6 @@ suite('Language Server Activation - ActivationService', () => {
         let cmdManager: TypeMoq.IMock<ICommandManager>;
         let workspaceService: TypeMoq.IMock<IWorkspaceService>;
         let platformService: TypeMoq.IMock<IPlatformService>;
-        let lsNotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
         let stateFactory: TypeMoq.IMock<IPersistentStateFactory>;
         let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
         let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
@@ -678,7 +668,6 @@ suite('Language Server Activation - ActivationService', () => {
             state = TypeMoq.Mock.ofType<IPersistentState<boolean | undefined>>();
             configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
             const extensionsMock = TypeMoq.Mock.ofType<IExtensions>();
-            lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
 
             workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
             workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
@@ -709,14 +698,6 @@ suite('Language Server Activation - ActivationService', () => {
                 .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService)))
                 .returns(() => interpreterService.object);
             serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IExtensions))).returns(() => extensionsMock.object);
-            serviceContainer
-                .setup((s) =>
-                    s.get(
-                        TypeMoq.It.isValue(IDiagnosticsService),
-                        TypeMoq.It.isValue(LSNotSupportedDiagnosticServiceId),
-                    ),
-                )
-                .returns(() => lsNotSupportedDiagnosticService.object);
         });
 
         const values: { ls: LanguageServerType; expected: LanguageServerType; outputString: string }[] = [
@@ -795,7 +776,6 @@ suite('Language Server Activation - ActivationService', () => {
         let cmdManager: TypeMoq.IMock<ICommandManager>;
         let workspaceService: TypeMoq.IMock<IWorkspaceService>;
         let platformService: TypeMoq.IMock<IPlatformService>;
-        let lsNotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
         let stateFactory: TypeMoq.IMock<IPersistentStateFactory>;
         let state: TypeMoq.IMock<IPersistentState<LanguageServerType | undefined>>;
         let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
@@ -819,7 +799,6 @@ suite('Language Server Activation - ActivationService', () => {
                 path: '',
                 version: new SemVer('1.2.3'),
             };
-            lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
             workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
             workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
@@ -864,14 +843,6 @@ suite('Language Server Activation - ActivationService', () => {
                 .setup((c) => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
                 .returns(() => langFolderServiceMock.object);
             serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IExtensions))).returns(() => extensionsMock.object);
-            serviceContainer
-                .setup((s) =>
-                    s.get(
-                        TypeMoq.It.isValue(IDiagnosticsService),
-                        TypeMoq.It.isValue(LSNotSupportedDiagnosticServiceId),
-                    ),
-                )
-                .returns(() => lsNotSupportedDiagnosticService.object);
         });
 
         test('Track current LS usage for first usage', async () => {
@@ -903,7 +874,7 @@ suite('Language Server Activation - ActivationService', () => {
                 .returns(() => LanguageServerType.Jedi)
                 .verifiable(TypeMoq.Times.exactly(2));
             state
-                .setup((s) => s.updateValue(TypeMoq.It.isValue(LanguageServerType.Microsoft)))
+                .setup((s) => s.updateValue(TypeMoq.It.isValue(LanguageServerType.Node)))
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
 
@@ -911,7 +882,7 @@ suite('Language Server Activation - ActivationService', () => {
                 serviceContainer.object,
                 stateFactory.object,
             );
-            await activationService.sendTelemetryForChosenLanguageServer(LanguageServerType.Microsoft);
+            await activationService.sendTelemetryForChosenLanguageServer(LanguageServerType.Node);
 
             state.verifyAll();
         });
@@ -919,7 +890,7 @@ suite('Language Server Activation - ActivationService', () => {
             state.reset();
             state
                 .setup((s) => s.value)
-                .returns(() => LanguageServerType.Microsoft)
+                .returns(() => LanguageServerType.Node)
                 .verifiable(TypeMoq.Times.exactly(2));
             state
                 .setup((s) => s.updateValue(TypeMoq.It.isValue(LanguageServerType.Jedi)))
@@ -962,7 +933,6 @@ suite('Language Server Activation - ActivationService', () => {
         let cmdManager: TypeMoq.IMock<ICommandManager>;
         let workspaceService: TypeMoq.IMock<IWorkspaceService>;
         let platformService: TypeMoq.IMock<IPlatformService>;
-        let lsNotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
         let stateFactory: TypeMoq.IMock<IPersistentStateFactory>;
         let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
         let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
@@ -986,7 +956,6 @@ suite('Language Server Activation - ActivationService', () => {
                 path: '',
                 version: new SemVer('1.2.3'),
             };
-            lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
             workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
             workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
@@ -1031,14 +1000,6 @@ suite('Language Server Activation - ActivationService', () => {
                 .setup((c) => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
                 .returns(() => langFolderServiceMock.object);
             serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IExtensions))).returns(() => extensionsMock.object);
-            serviceContainer
-                .setup((s) =>
-                    s.get(
-                        TypeMoq.It.isValue(IDiagnosticsService),
-                        TypeMoq.It.isValue(LSNotSupportedDiagnosticServiceId),
-                    ),
-                )
-                .returns(() => lsNotSupportedDiagnosticService.object);
         });
         const value = [undefined, true, false]; // Possible values of settings
         const index = [0, 1, 2]; // Index associated with each value

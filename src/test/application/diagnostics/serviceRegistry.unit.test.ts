@@ -4,7 +4,7 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
-import { IExtensionSingleActivationService, LanguageServerType } from '../../../client/activation/types';
+import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { ApplicationDiagnostics } from '../../../client/application/diagnostics/applicationDiagnostics';
 import {
     EnvironmentPathVariableDiagnosticsService,
@@ -22,10 +22,6 @@ import {
     JediPython27NotSupportedDiagnosticService,
     JediPython27NotSupportedDiagnosticServiceId,
 } from '../../../client/application/diagnostics/checks/jediPython27NotSupported';
-import {
-    LSNotSupportedDiagnosticService,
-    LSNotSupportedDiagnosticServiceId,
-} from '../../../client/application/diagnostics/checks/lsNotSupported';
 import {
     InvalidMacPythonInterpreterService,
     InvalidMacPythonInterpreterServiceId,
@@ -71,7 +67,7 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
         serviceManager = mock(ServiceManager);
     });
     test('Register Classes', () => {
-        registerTypes(instance(serviceManager), LanguageServerType.Microsoft);
+        registerTypes(instance(serviceManager));
 
         verify(
             serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService),
@@ -123,13 +119,6 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
                 IDiagnosticsService,
                 JediPython27NotSupportedDiagnosticService,
                 JediPython27NotSupportedDiagnosticServiceId,
-            ),
-        );
-        verify(
-            serviceManager.addSingleton<IDiagnosticsService>(
-                IDiagnosticsService,
-                LSNotSupportedDiagnosticService,
-                LSNotSupportedDiagnosticServiceId,
             ),
         );
         verify(

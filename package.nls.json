@@ -166,7 +166,7 @@
     "Testing.configureTests": "Configure Test Framework",
     "Testing.testNotConfigured": "No test framework configured.",
     "Common.openOutputPanel": "Show output",
-    "LanguageService.statusItem.name":"Python IntelliSense Status",
+    "LanguageService.statusItem.name": "Python IntelliSense Status",
     "LanguageService.statusItem.text": "Partial Mode",
     "LanguageService.statusItem.detail": "Limited IntelliSense provided by Pylance",
     "LanguageService.lsFailedToStart": "We encountered an issue starting the language server. Reverting to Jedi language engine. Check the Python output panel for details.",
@@ -177,7 +177,6 @@
     "LanguageService.extractionCompletedOutputMessage": "Language server download complete",
     "LanguageService.extractionDoneOutputMessage": "done",
     "LanguageService.reloadVSCodeIfSeachPathHasChanged": "Search paths have changed for this Python interpreter. Please reload the extension to ensure that the IntelliSense works correctly",
-    "LanguageService.startingMicrosoft": "Starting Microsoft Python language server.",
     "LanguageService.startingPylance": "Starting Pylance language server.",
     "LanguageService.startingJedi": "Starting Jedi language server.",
     "LanguageService.startingNone": "Editor support is inactive since language server is set to None.",
@@ -220,7 +219,5 @@
     "TensorBoard.launchNativeTensorBoardSessionCodeLens": "▶ Launch TensorBoard Session",
     "TensorBoard.enterRemoteUrl": "Enter remote URL",
     "TensorBoard.enterRemoteUrlDetail": "Enter a URL pointing to a remote directory containing your TensorBoard log files",
-    "MPLSDeprecation.bannerMessage": "The Microsoft Python Language Server is reaching end of life at the beginning of November. If you do not select a new language server, you will have your setting automatically updated at deprecation. Read more about this in our [September release blog post](https://aka.ms/pvsc-september-2021). Please switch your language server to a supported value:",
-    "MPLSDeprecation.switchToPylance": "Switch to Pylance (recommended)",
-    "MPLSDeprecation.switchToJedi": "Switch to Jedi (open source)"
+    "SwitchToDefaultLS.bannerMessage": "The Microsoft Python Language Server has reached end of life. Your language server has been set to the default for Python in VS Code, Pylance. If you’d like to change your language server, you can learn about how to do so [here](https://devblogs.microsoft.com/python/python-in-visual-studio-code-may-2021-release/#configuring-your-language-server). Read Pylance’s license [here](https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license)."
 }

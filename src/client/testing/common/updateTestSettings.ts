@@ -109,7 +109,8 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         //   - If missing, do nothing.
         //   - `true`, then set to `languageServer: Jedi`.
         //   - `false` and `languageServer` is present, do nothing.
-        //   - `false` and `languageServer` is NOT present, set `languageServer` to `Microsoft`.
+        //   - `false` and `languageServer` is NOT present, set `languageServer` to `None`.
+        // There is no other language server so set it to None.
         // `jediEnabled` is NOT removed since JSONC parser may also remove comments.
         const jediEnabledPath = ['python.jediEnabled'];
         const languageServerPath = ['python.languageServer'];
@@ -142,11 +143,12 @@ export class UpdateTestSettingService implements IExtensionActivationService {
                 );
             }
 
-            // `jediEnabled` is false. if languageServer is missing, set it to Microsoft.
+            // `jediEnabled` is false, and Pylance(Node) is missing then.
+            // Then set it back to jedi.
             if (!languageServerNode) {
                 return applyEdits(
                     fileContent,
-                    modify(fileContent, languageServerPath, LanguageServerType.Microsoft, modificationOptions),
+                    modify(fileContent, languageServerPath, LanguageServerType.None, modificationOptions),
                 );
             }
         } catch {}

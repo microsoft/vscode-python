@@ -5,11 +5,11 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { LanguageServerOutputChannel } from '../../../client/activation/languageServer/outputChannel';
-import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
-import { IOutputChannel } from '../../../client/common/types';
-import { sleep } from '../../../client/common/utils/async';
-import { OutputChannelNames } from '../../../client/common/utils/localize';
+import { LanguageServerOutputChannel } from '../../client/activation/common/outputChannel';
+import { IApplicationShell, ICommandManager } from '../../client/common/application/types';
+import { IOutputChannel } from '../../client/common/types';
+import { sleep } from '../../client/common/utils/async';
+import { OutputChannelNames } from '../../client/common/utils/localize';
 
 suite('Language Server Output Channel', () => {
     let appShell: TypeMoq.IMock<IApplicationShell>;
@@ -28,7 +28,7 @@ suite('Language Server Output Channel', () => {
             .setup((a) => a.createOutputChannel(OutputChannelNames.languageServer()))
             .returns(() => output.object)
             .verifiable(TypeMoq.Times.once());
-        const channel = languageServerOutputChannel.channel;
+        const { channel } = languageServerOutputChannel;
         appShell.verifyAll();
         expect(channel).to.not.equal(undefined, 'Channel should not be undefined');
     });
@@ -39,7 +39,7 @@ suite('Language Server Output Channel', () => {
             .setup((a) => a.createOutputChannel(TypeMoq.It.isAny()))
             .returns(() => output.object)
             .verifiable(TypeMoq.Times.never());
-        const channel = languageServerOutputChannel.channel;
+        const { channel } = languageServerOutputChannel;
         appShell.verifyAll();
         expect(channel).to.not.equal(undefined, 'Channel should not be undefined');
     });
@@ -62,8 +62,8 @@ suite('Language Server Output Channel', () => {
             .setup((c) => c.registerCommand(TypeMoq.It.isValue('python.viewLanguageServerOutput'), TypeMoq.It.isAny()))
             .verifiable(TypeMoq.Times.once());
 
-        // Doesn't matter how many times we access channel propery.
-        let channel = languageServerOutputChannel.channel;
+        // Doesn't matter how many times we access channel property.
+        let { channel } = languageServerOutputChannel;
         channel = languageServerOutputChannel.channel;
         channel = languageServerOutputChannel.channel;
 
@@ -74,7 +74,9 @@ suite('Language Server Output Channel', () => {
         expect(channel).to.not.equal(undefined, 'Channel should not be undefined');
     });
     test('Display panel when invoking command python.viewLanguageServerOutput', async () => {
-        let cmdCallback: Function | undefined;
+        let cmdCallback: () => unknown | undefined = () => {
+            /* no-op */
+        };
         appShell
             .setup((a) => a.createOutputChannel(TypeMoq.It.isAny()))
             .returns(() => output.object)
@@ -91,11 +93,13 @@ suite('Language Server Output Channel', () => {
             .verifiable(TypeMoq.Times.once());
         commandManager
             .setup((c) => c.registerCommand(TypeMoq.It.isValue('python.viewLanguageServerOutput'), TypeMoq.It.isAny()))
-            .callback((_: string, callback: Function) => (cmdCallback = callback))
+            .callback((_: string, callback: () => unknown) => {
+                cmdCallback = callback;
+            })
             .verifiable(TypeMoq.Times.once());
         output.setup((o) => o.show(true)).verifiable(TypeMoq.Times.never());
-        // Doesn't matter how many times we access channel propery.
-        let channel = languageServerOutputChannel.channel;
+        // Doesn't matter how many times we access channel property.
+        let { channel } = languageServerOutputChannel;
         channel = languageServerOutputChannel.channel;
         channel = languageServerOutputChannel.channel;
 

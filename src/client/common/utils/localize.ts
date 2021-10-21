@@ -204,10 +204,6 @@ export namespace TensorBoard {
 }
 
 export namespace LanguageService {
-    export const startingMicrosoft = localize(
-        'LanguageService.startingMicrosoft',
-        'Starting Microsoft Python language server.',
-    );
     export const startingPylance = localize('LanguageService.startingPylance', 'Starting Pylance language server.');
     export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi language server.');
     export const startingNone = localize(
@@ -539,13 +535,11 @@ export namespace Python27Support {
     );
 }
 
-export namespace MPLSDeprecation {
+export namespace SwitchToDefaultLS {
     export const bannerMessage = localize(
-        'MPLSDeprecation.bannerMessage',
-        'The Microsoft Python Language Server is reaching end of life at the beginning of November. If you do not select a new language server, you will have your setting automatically updated at deprecation. Read more about this in our [September release blog post](https://aka.ms/pvsc-september-2021). Please switch your language server to a supported value:',
+        'SwitchToDefaultLS.bannerMessage',
+        'The Microsoft Python Language Server has reached end of life. Your language server has been set to the default for Python in VS Code, Pylance.\n\nIf you’d like to change your language server, you can learn about how to do so [here](https://devblogs.microsoft.com/python/python-in-visual-studio-code-may-2021-release/#configuring-your-language-server).\n\nRead Pylance’s license [here](https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license).',
     );
-    export const switchToPylance = localize('MPLSDeprecation.switchToPylance', 'Switch to Pylance (recommended)');
-    export const switchToJedi = localize('MPLSDeprecation.switchToJedi', 'Switch to Jedi (open source)');
 }
 
 function localize(key: string, defValue?: string) {

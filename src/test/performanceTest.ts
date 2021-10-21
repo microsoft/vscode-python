@@ -50,7 +50,7 @@ class TestRunner {
         const languageServerLogFiles: string[] = [];
 
         for (let i = 0; i < timesToLoadEachVersion; i += 1) {
-            await this.enableLanguageServer(false);
+            await this.enableLanguageServer();
 
             const devLogFile = path.join(logFilesPath, `dev_loadtimes${i}.txt`);
             console.log(`Start Performance Tests: Counter ${i}, for Dev version with Jedi`);
@@ -61,22 +61,13 @@ class TestRunner {
             console.log(`Start Performance Tests: Counter ${i}, for Release version with Jedi`);
             await this.capturePerfTimes(Version.Release, releaseLogFile);
             releaseLogFiles.push(releaseLogFile);
-
-            // Language server.
-            await this.enableLanguageServer(true);
-            const languageServerLogFile = path.join(logFilesPath, `languageServer_loadtimes${i}.txt`);
-            console.log(`Start Performance Tests: Counter ${i}, for Release version with language server`);
-            await this.capturePerfTimes(Version.Release, languageServerLogFile);
-            languageServerLogFiles.push(languageServerLogFile);
         }
 
         console.log('Compare Performance Results');
         await this.runPerfTest(devLogFiles, releaseLogFiles, languageServerLogFiles);
     }
-    private async enableLanguageServer(enable: boolean) {
-        const settings = `{ "python.languageServer": "${
-            enable ? LanguageServerType.Microsoft : LanguageServerType.Jedi
-        }" }`;
+    private async enableLanguageServer() {
+        const settings = `{ "python.languageServer": "${LanguageServerType.Jedi}" }`;
         await fs.writeFile(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'performance', 'settings.json'), settings);
     }
 

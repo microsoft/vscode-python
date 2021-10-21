@@ -130,7 +130,7 @@ export class PythonSettings implements IPythonSettings {
 
     public experiments!: IExperiments;
 
-    public languageServer: LanguageServerType = LanguageServerType.Microsoft;
+    public languageServer: LanguageServerType = LanguageServerType.Node;
 
     public languageServerIsDefault = true;
 
@@ -279,6 +279,7 @@ export class PythonSettings implements IPythonSettings {
         if (
             !userLS ||
             userLS === 'Default' ||
+            userLS === 'Microsoft' ||
             !Object.values(LanguageServerType).includes(userLS as LanguageServerType)
         ) {
             this.languageServer = this.defaultLS?.defaultLSType ?? LanguageServerType.None;

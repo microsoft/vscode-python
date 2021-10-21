@@ -198,7 +198,7 @@ suite('Python Settings', async () => {
         const values = [
             { ls: LanguageServerType.Jedi, expected: LanguageServerType.Jedi },
             { ls: LanguageServerType.JediLSP, expected: LanguageServerType.Jedi },
-            { ls: LanguageServerType.Microsoft, expected: LanguageServerType.Microsoft },
+            { ls: LanguageServerType.Microsoft, expected: LanguageServerType.Node },
             { ls: LanguageServerType.Node, expected: LanguageServerType.Node },
             { ls: LanguageServerType.None, expected: LanguageServerType.None },
         ];

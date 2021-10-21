@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { LanguageServerType } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { IApplicationDiagnostics } from '../types';
 import { ApplicationDiagnostics } from './applicationDiagnostics';
@@ -23,7 +22,6 @@ import {
     JediPython27NotSupportedDiagnosticService,
     JediPython27NotSupportedDiagnosticServiceId,
 } from './checks/jediPython27NotSupported';
-import { LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId } from './checks/lsNotSupported';
 import {
     InvalidMacPythonInterpreterService,
     InvalidMacPythonInterpreterServiceId,
@@ -49,7 +47,7 @@ import {
 } from './promptHandler';
 import { IDiagnosticFilterService, IDiagnosticHandlerService, IDiagnosticsService } from './types';
 
-export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType): void {
+export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService);
     serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(
         IDiagnosticHandlerService,
@@ -112,12 +110,4 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
 
     serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory);
     serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics);
-
-    if (languageServerType === LanguageServerType.Microsoft) {
-        serviceManager.addSingleton<IDiagnosticsService>(
-            IDiagnosticsService,
-            LSNotSupportedDiagnosticService,
-            LSNotSupportedDiagnosticServiceId,
-        );
-    }
 }

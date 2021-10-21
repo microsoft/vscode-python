@@ -15,7 +15,12 @@ import { IDisposable, IExperimentService, IInterpreterPathService, Resource } fr
 import { Deferred } from '../common/utils/async';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
 import { sendActivationTelemetry } from '../telemetry/envFileTelemetry';
-import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
+import {
+    IExtensionActivationManager,
+    IExtensionActivationService,
+    IExtensionSingleActivationService,
+    ISwitchToDefaultLSNotification,
+} from './types';
 
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {
@@ -39,6 +44,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
         @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
+        @inject(ISwitchToDefaultLSNotification) private readonly switchToDefaultLS: ISwitchToDefaultLSNotification,
     ) {}
 
     public dispose(): void {
@@ -54,6 +60,10 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
 
     public async activate(): Promise<void> {
         await this.initialize();
+
+        // Make any language server settings updates id needed and notify
+        this.switchToDefaultLS.showPrompt().ignoreErrors();
+
         // Activate all activation services together.
         await Promise.all([
             Promise.all(this.singleActivationServices.map((item) => item.activate())),

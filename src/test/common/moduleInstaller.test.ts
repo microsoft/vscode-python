@@ -55,8 +55,6 @@ import { InterpreterPathService } from '../../client/common/interpreterPathServi
 import { BrowserService } from '../../client/common/net/browser';
 import { FileDownloader } from '../../client/common/net/fileDownloader';
 import { HttpClient } from '../../client/common/net/httpClient';
-import { NugetService } from '../../client/common/nuget/nugetService';
-import { INugetService } from '../../client/common/nuget/types';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { PathUtils } from '../../client/common/platform/pathUtils';
@@ -228,7 +226,6 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
             ioc.serviceManager.addSingleton<IFileDownloader>(IFileDownloader, FileDownloader);
             ioc.serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
-            ioc.serviceManager.addSingleton<INugetService>(INugetService, NugetService);
             ioc.serviceManager.addSingleton<ITerminalActivator>(ITerminalActivator, TerminalActivator);
             ioc.serviceManager.addSingleton<ITerminalActivationHandler>(
                 ITerminalActivationHandler,

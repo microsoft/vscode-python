@@ -6,7 +6,7 @@
 import { CodeActionKind, debug, DebugConfigurationProvider, languages, OutputChannel, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
-import { IExtensionActivationManager, ILanguageServerExtension } from './activation/types';
+import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
@@ -122,7 +122,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const languageServerType = configuration.getSettings().languageServer;
 
     // Language feature registrations.
-    appRegisterTypes(serviceManager, languageServerType);
+    appRegisterTypes(serviceManager);
     providersRegisterTypes(serviceManager);
     activationRegisterTypes(serviceManager, languageServerType);
 
@@ -142,7 +142,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
 
     serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
-    serviceContainer.get<ILanguageServerExtension>(ILanguageServerExtension).register();
 
     // "activate" everything else
 

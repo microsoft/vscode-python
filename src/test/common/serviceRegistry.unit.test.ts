@@ -49,8 +49,6 @@ import { ProductInstaller } from '../../client/common/installer/productInstaller
 import { InterpreterPathService } from '../../client/common/interpreterPathService';
 import { BrowserService } from '../../client/common/net/browser';
 import { HttpClient } from '../../client/common/net/httpClient';
-import { NugetService } from '../../client/common/nuget/nugetService';
-import { INugetService } from '../../client/common/nuget/types';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
@@ -125,7 +123,6 @@ suite('Common - Service Registry', () => {
             [IBrowserService, BrowserService],
             [IHttpClient, HttpClient],
             [IEditorUtils, EditorUtils],
-            [INugetService, NugetService],
             [ITerminalActivator, TerminalActivator],
             [ITerminalActivationHandler, PowershellTerminalActivationFailedHandler],
             [ITerminalHelper, TerminalHelper],

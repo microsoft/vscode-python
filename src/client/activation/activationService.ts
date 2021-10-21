@@ -4,8 +4,6 @@ import '../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
-import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/checks/lsNotSupported';
-import { IDiagnosticsService } from '../application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { traceError } from '../common/logger';
@@ -231,21 +229,6 @@ export class LanguageServerExtensionActivationService
     ): Promise<RefCountedLanguageServer> {
         let serverType = this.getCurrentLanguageServerType();
 
-        if (serverType === LanguageServerType.Microsoft) {
-            const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
-                IDiagnosticsService,
-                LSNotSupportedDiagnosticServiceId,
-            );
-            const diagnostic = await lsNotSupportedDiagnosticService.diagnose(undefined);
-            lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
-            if (diagnostic.length) {
-                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, {
-                    supported: false,
-                });
-                serverType = LanguageServerType.Jedi;
-            }
-        }
-
         // If the interpreter is Python 2 and the LS setting is explicitly set to Jedi, turn it off.
         // If set to Default, use Pylance.
         if (interpreter && (interpreter.version?.major ?? 0) < 3) {
@@ -288,9 +271,6 @@ export class LanguageServerExtensionActivationService
         switch (serverType) {
             case LanguageServerType.Jedi:
                 outputLine = LanguageService.startingJedi();
-                break;
-            case LanguageServerType.Microsoft:
-                outputLine = LanguageService.startingMicrosoft();
                 break;
             case LanguageServerType.Node:
                 outputLine = LanguageService.startingPylance();

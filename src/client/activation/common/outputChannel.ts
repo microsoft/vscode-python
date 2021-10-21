@@ -13,19 +13,22 @@ import { ILanguageServerOutputChannel } from '../types';
 @injectable()
 export class LanguageServerOutputChannel implements ILanguageServerOutputChannel {
     public output: IOutputChannel | undefined;
+
     private registered = false;
+
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
     ) {}
 
-    public get channel() {
+    public get channel(): IOutputChannel {
         if (!this.output) {
             this.output = this.appShell.createOutputChannel(OutputChannelNames.languageServer());
             this.registerCommand().ignoreErrors();
         }
         return this.output;
     }
+
     private async registerCommand() {
         if (this.registered) {
             return;
