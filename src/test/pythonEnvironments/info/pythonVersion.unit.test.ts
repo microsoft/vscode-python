@@ -53,7 +53,7 @@ suite('getPythonVersion()', () => {
         const pythonPath = pathJoin('a', 'b', 'python');
         const expected = 'Output from the Procecss';
         const mock = Mock.ofType<IDeps>(undefined, MockBehavior.Strict);
-        mock.setup((p) => p.exec(TypeMoqIt.isValue(pythonPath), TypeMoqIt.isValue(['--version'])))
+        mock.setup((p) => p.exec(TypeMoqIt.isValue(pythonPath), TypeMoqIt.isValue(['-I', '--version'])))
             // Fake the process stdout.
             .returns(() => Promise.resolve({ stdout: expected }));
         const exec = (c: string, a: string[]) => mock.object.exec(c, a);
@@ -67,7 +67,7 @@ suite('getPythonVersion()', () => {
     test('Must return the default value when Python path is invalid', async () => {
         const pythonPath = pathJoin('a', 'b', 'python');
         const mock = Mock.ofType<IDeps>(undefined, MockBehavior.Strict);
-        mock.setup((p) => p.exec(TypeMoqIt.isValue(pythonPath), TypeMoqIt.isValue(['--version'])))
+        mock.setup((p) => p.exec(TypeMoqIt.isValue(pythonPath), TypeMoqIt.isValue(['-I', '--version'])))
             // Fake the process stdout.
             .returns(() => Promise.reject(new Error()));
         const exec = (c: string, a: string[]) => mock.object.exec(c, a);
