@@ -3,8 +3,6 @@
 
 'use strict';
 
-//tslint:disable:no-require-imports no-require-imports no-var-requires no-any no-unnecessary-class max-func-body-length match-default-export-name
-
 import { expect } from 'chai';
 import * as path from 'path';
 import rewiremock from 'rewiremock';

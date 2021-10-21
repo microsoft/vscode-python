@@ -16,8 +16,6 @@ import '../../../client/common/extensions';
 import { IConfigurationService, IDisposable, IPythonSettings } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
 
-//tslint:disable:no-require-imports no-require-imports no-var-requires no-any no-unnecessary-class max-func-body-length
-
 suite('Language Server - LanguageServer', () => {
     let clientFactory: ILanguageClientFactory;
     let server: DotNetLanguageServerProxy;

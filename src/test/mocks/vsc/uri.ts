@@ -6,8 +6,6 @@
 
 'use strict';
 
-/* tslint:disable */
-
 import * as pathImport from 'path';
 import { CharCode } from './charCode';
 

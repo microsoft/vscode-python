@@ -587,7 +587,7 @@ function getMessages(product: Product): ILintMessage[] {
         }
         default: {
             throwUnknownProduct(product);
-            return []; // to quiet tslint
+            return [];
         }
     }
 }

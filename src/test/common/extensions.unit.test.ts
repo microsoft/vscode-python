@@ -73,7 +73,6 @@ suite('String Extensions', () => {
         expect(formatString.format('one', 'two', 'three')).to.be.equal(expectedString);
     });
     test('String should remove quotes', () => {
-        //tslint:disable:no-multiline-string
         const quotedString = `'foo is "bar" is foo' is bar'`;
         const quotedString2 = `foo is "bar" is foo' is bar'`;
         const quotedString3 = `foo is "bar" is foo' is bar`;
@@ -85,7 +84,6 @@ suite('String Extensions', () => {
         expect(quotedString4.trimQuotes()).to.be.equal(expectedString);
     });
     test('String should replace all substrings with new substring', () => {
-        //tslint:disable:no-multiline-string
         const oldString = `foo \\ foo \\ foo`;
         const expectedString = `foo \\\\ foo \\\\ foo`;
         const oldString2 = `\\ foo \\ foo`;

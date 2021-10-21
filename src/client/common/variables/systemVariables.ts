@@ -10,8 +10,6 @@ import { IDocumentManager, IWorkspaceService } from '../application/types';
 import * as Types from '../utils/sysTypes';
 import { IStringDictionary, ISystemVariables } from './types';
 
-/* tslint:disable:rule1 no-any no-unnecessary-callback-wrapper jsdoc-format no-for-in prefer-const no-increment-decrement */
-
 abstract class AbstractSystemVariables implements ISystemVariables {
     public resolve(value: string): string;
     public resolve(value: string[]): string[];
