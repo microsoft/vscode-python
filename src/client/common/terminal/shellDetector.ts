@@ -57,6 +57,7 @@ export class ShellDetector {
                 `${detector}. Shell identified as ${shell} ${terminal ? `(Terminal name is ${terminal.name})` : ''}`,
             );
             if (shell && shell !== TerminalShellType.other) {
+                telemetryProperties.failed = false;
                 break;
             }
         }

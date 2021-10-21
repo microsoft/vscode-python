@@ -51,15 +51,16 @@ suite('Shell Detectors', () => {
     shellPathsAndIdentification.set('/usr/bin/xonsh', TerminalShellType.xonsh);
     shellPathsAndIdentification.set('/usr/bin/xonshx', TerminalShellType.other);
 
-    const telemetryProperties: ShellIdentificationTelemetry = {
-        failed: true,
-        shellIdentificationSource: 'default',
-        terminalProvided: false,
-        hasCustomShell: undefined,
-        hasShellInEnv: undefined,
-    };
+    let telemetryProperties: ShellIdentificationTelemetry;
 
     setup(() => {
+        telemetryProperties = {
+            failed: true,
+            shellIdentificationSource: 'default',
+            terminalProvided: false,
+            hasCustomShell: undefined,
+            hasShellInEnv: undefined,
+        };
         platformService = mock(PlatformService);
         workspaceService = mock(WorkspaceService);
         currentProcess = mock(CurrentProcess);
@@ -122,6 +123,7 @@ suite('Shell Detectors', () => {
             undefined,
             'Should be undefined when vscode.env.shell is undefined',
         );
+        expect(telemetryProperties.failed).to.equal(false);
     });
     test('Identify shell based on VSC Settings', async () => {
         const shellDetector = new SettingsShellDetector(instance(workspaceService), instance(platformService));
