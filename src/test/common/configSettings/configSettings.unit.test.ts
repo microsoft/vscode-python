@@ -14,7 +14,6 @@ import { LanguageServerType } from '../../../client/activation/types';
 import { PythonSettings } from '../../../client/common/configSettings';
 import {
     IAnalysisSettings,
-    IAutoCompleteSettings,
     IExperiments,
     IFormattingSettings,
     ILintingSettings,
@@ -100,7 +99,6 @@ suite('Python Settings', async () => {
         config.setup((c) => c.get<IAnalysisSettings>('analysis')).returns(() => sourceSettings.analysis);
         config.setup((c) => c.get<ISortImportSettings>('sortImports')).returns(() => sourceSettings.sortImports);
         config.setup((c) => c.get<IFormattingSettings>('formatting')).returns(() => sourceSettings.formatting);
-        config.setup((c) => c.get<IAutoCompleteSettings>('autoComplete')).returns(() => sourceSettings.autoComplete);
         config.setup((c) => c.get<ITestingSettings>('testing')).returns(() => sourceSettings.testing);
         config.setup((c) => c.get<ITerminalSettings>('terminal')).returns(() => sourceSettings.terminal);
         config.setup((c) => c.get<IExperiments>('experiments')).returns(() => sourceSettings.experiments);

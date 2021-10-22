@@ -175,7 +175,6 @@ export interface IPythonSettings {
     readonly linting: ILintingSettings;
     readonly formatting: IFormattingSettings;
     readonly testing: ITestingSettings;
-    readonly autoComplete: IAutoCompleteSettings;
     readonly terminal: ITerminalSettings;
     readonly sortImports: ISortImportSettings;
     readonly envFile: string;
@@ -266,12 +265,6 @@ export interface IFormattingSettings {
     yapfPath: string;
     readonly yapfArgs: string[];
 }
-export interface IAutoCompleteSettings {
-    readonly addBrackets: boolean;
-    readonly extraPaths: string[];
-    readonly showAdvancedMembers: boolean;
-    readonly typeshedPaths: string[];
-}
 
 export interface ITerminalSettings {
     readonly executeInFileDir: boolean;
@@ -301,17 +294,10 @@ enum AnalysisSettingsLogLevel {
     Warning = 'Warning',
 }
 
-export type LanguageServerDownloadChannels = 'stable' | 'beta' | 'daily';
 export interface IAnalysisSettings {
-    readonly downloadChannel?: LanguageServerDownloadChannels;
     readonly typeshedPaths: string[];
-    readonly cacheFolderPath: string | null;
-    readonly errors: string[];
-    readonly warnings: string[];
-    readonly information: string[];
-    readonly disabled: string[];
-    readonly traceLogging: boolean;
     readonly logLevel: AnalysisSettingsLogLevel;
+    readonly extraPaths: string[];
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

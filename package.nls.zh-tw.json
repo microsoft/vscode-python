@@ -23,7 +23,6 @@
     "python.command.python.viewLanguageServerOutput.title": "顯示語言伺服器輸出",
     "python.command.python.configureTests.title": "設定測試",
     "python.command.python.enableSourceMapSupport.title": "啟用供偵錯延伸模組的原始碼映射 (Source Map) 支援",
-    "python.command.python.analysis.clearCache.title": "清除模組分析快取",
     "python.snippet.launch.module.default": "請輸入-模組-名稱",
     "python.snippet.launch.attachpid.label": "Python: 使用處理程序 ID 連結",
     "LanguageService.lsFailedToStart": "啟動語言伺服器時遇到問題。改回使用替代方案 \"Jedi\"。請檢查 Python 輸出面板以取得更多資訊。",

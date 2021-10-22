@@ -311,15 +311,6 @@ type FailedEventType = { failed: true };
 // Map all events to their properties
 export interface IEventNamePropertyMapping {
     /**
-     * Telemetry event sent with details 'python.autoComplete.addBrackets' setting
-     */
-    [EventName.COMPLETION_ADD_BRACKETS]: {
-        /**
-         * Carries boolean `true` if 'python.autoComplete.addBrackets' is set to true, `false` otherwise
-         */
-        enabled: boolean;
-    };
-    /**
      * Telemetry event sent when debug in terminal button was used to debug current file.
      */
     [EventName.DEBUG_IN_TERMINAL_BUTTON]: never | undefined;

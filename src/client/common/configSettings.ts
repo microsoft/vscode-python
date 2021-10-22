@@ -28,7 +28,6 @@ import { ExtensionChannels } from './insidersBuild/types';
 import { IS_WINDOWS } from './platform/constants';
 import {
     IAnalysisSettings,
-    IAutoCompleteSettings,
     IDefaultLanguageServer,
     IExperiments,
     IExperimentService,
@@ -108,8 +107,6 @@ export class PythonSettings implements IPythonSettings {
 
     public formatting!: IFormattingSettings;
 
-    public autoComplete!: IAutoCompleteSettings;
-
     public tensorBoard: ITensorBoardSettings | undefined;
 
     public testing!: ITestingSettings;
@@ -186,9 +183,6 @@ export class PythonSettings implements IPythonSettings {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const config = workspace.getConfiguration('editor', resource || (null as any));
             const formatOnType = config ? config.get('formatOnType', false) : false;
-            sendTelemetryEvent(EventName.COMPLETION_ADD_BRACKETS, undefined, {
-                enabled: settings.autoComplete ? settings.autoComplete.addBrackets : false,
-            });
             sendTelemetryEvent(EventName.FORMAT_ON_TYPE, undefined, { enabled: formatOnType });
         }
 
@@ -432,24 +426,6 @@ export class PythonSettings implements IPythonSettings {
             systemVariables.resolveAny(this.formatting.blackPath),
             workspaceRoot,
         );
-
-        const autoCompleteSettings = systemVariables.resolveAny(
-            pythonSettings.get<IAutoCompleteSettings>('autoComplete'),
-        )!;
-        if (this.autoComplete) {
-            Object.assign<IAutoCompleteSettings, IAutoCompleteSettings>(this.autoComplete, autoCompleteSettings);
-        } else {
-            this.autoComplete = autoCompleteSettings;
-        }
-        // Support for travis.
-        this.autoComplete = this.autoComplete
-            ? this.autoComplete
-            : {
-                  extraPaths: [],
-                  addBrackets: false,
-                  showAdvancedMembers: false,
-                  typeshedPaths: [],
-              };
 
         const testSettings = systemVariables.resolveAny(pythonSettings.get<ITestingSettings>('testing'))!;
         if (this.testing) {

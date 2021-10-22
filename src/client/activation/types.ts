@@ -69,12 +69,6 @@ export enum LanguageServerType {
     None = 'None',
 }
 
-export const DotNetLanguageServerFolder = 'languageServer';
-
-interface LanguageServerCommandHandler {
-    clearAnalysisCache(): void;
-}
-
 /**
  * This interface is a subset of the vscode-protocol connection interface.
  * It's the minimum set of functions needed in order to talk to a language server.
@@ -93,7 +87,6 @@ interface ILanguageServer
         CodeLensProvider,
         DocumentSymbolProvider,
         SignatureHelpProvider,
-        Partial<LanguageServerCommandHandler>,
         IDisposable {
     readonly connection?: ILanguageServerConnection;
     readonly capabilities?: lsp.ServerCapabilities;

@@ -288,11 +288,6 @@
         "commands": [
             {
                 "category": "Python",
-                "command": "python.analysis.clearCache",
-                "title": "%python.command.python.analysis.clearCache.title%"
-            },
-            {
-                "category": "Python",
                 "command": "python.analysis.restartLanguageServer",
                 "title": "%python.command.python.analysis.restartLanguageServer.title%"
             },
@@ -460,44 +455,6 @@
         ],
         "configuration": {
             "properties": {
-                "python.analysis.cacheFolderPath": {
-                    "description": "Path to a writable folder where analyzer can cache its data. Change requires restart.",
-                    "scope": "resource",
-                    "type": "string"
-                },
-                "python.analysis.diagnosticPublishDelay": {
-                    "default": 1000,
-                    "description": "Delay before diagnostic messages are transferred to the problems list (in milliseconds).",
-                    "scope": "resource",
-                    "type": "integer"
-                },
-                "python.analysis.disabled": {
-                    "default": [],
-                    "description": "List of suppressed diagnostic messages.",
-                    "items": {
-                        "type": "string"
-                    },
-                    "scope": "resource",
-                    "type": "array"
-                },
-                "python.analysis.errors": {
-                    "default": [],
-                    "description": "List of diagnostics messages to be shown as errors.",
-                    "items": {
-                        "type": "string"
-                    },
-                    "scope": "resource",
-                    "type": "array"
-                },
-                "python.analysis.information": {
-                    "default": [],
-                    "description": "List of diagnostics messages to be shown as information.",
-                    "items": {
-                        "type": "string"
-                    },
-                    "scope": "resource",
-                    "type": "array"
-                },
                 "python.analysis.logLevel": {
                     "default": "Error",
                     "description": "Defines type of log messages language server writes into the output window.",
@@ -510,18 +467,6 @@
                     "scope": "resource",
                     "type": "string"
                 },
-                "python.analysis.memory.keepLibraryAst": {
-                    "default": false,
-                    "description": "Allows code analysis to keep parser trees in memory. Increases memory consumption but may improve performance with large library analysis.",
-                    "scope": "resource",
-                    "type": "boolean"
-                },
-                "python.analysis.symbolsHierarchyDepthLimit": {
-                    "default": 10,
-                    "description": "Limits depth of the symbol tree in the document outline.",
-                    "scope": "resource",
-                    "type": "integer"
-                },
                 "python.analysis.typeshedPaths": {
                     "default": [],
                     "description": "Paths to Typeshed stub folders. Default is Typeshed installed with the language server. Change requires restart.",
@@ -531,47 +476,11 @@
                     "scope": "resource",
                     "type": "array"
                 },
-                "python.analysis.warnings": {
-                    "default": [],
-                    "description": "List of diagnostics messages to be shown as warnings.",
-                    "items": {
-                        "type": "string"
-                    },
-                    "scope": "resource",
-                    "type": "array"
-                },
-                "python.autoComplete.addBrackets": {
-                    "default": false,
-                    "description": "Automatically add brackets for functions.",
-                    "scope": "resource",
-                    "type": "boolean"
-                },
-                "python.autoComplete.extraPaths": {
+                "python.analysis.extraPaths": {
                     "default": [],
                     "description": "List of paths to libraries and the like that need to be imported by auto complete engine. E.g. when using Google App SDK, the paths are not in system path, hence need to be added into this list.",
                     "scope": "resource",
                     "type": "array"
-                },
-                "python.autoComplete.showAdvancedMembers": {
-                    "default": true,
-                    "description": "Controls appearance of methods with double underscores in the completion list.",
-                    "scope": "resource",
-                    "type": "boolean"
-                },
-                "python.autoComplete.typeshedPaths": {
-                    "default": [],
-                    "description": "Specifies paths to local typeshed repository clone(s) for the Python language server.",
-                    "items": {
-                        "type": "string"
-                    },
-                    "scope": "resource",
-                    "type": "array"
-                },
-                "python.autoUpdateLanguageServer": {
-                    "default": true,
-                    "description": "Automatically update the language server.",
-                    "scope": "application",
-                    "type": "boolean"
                 },
                 "python.condaPath": {
                     "default": "",
@@ -1705,12 +1614,6 @@
         ],
         "menus": {
             "commandPalette": [
-                {
-                    "category": "Python",
-                    "command": "python.analysis.clearCache",
-                    "title": "%python.command.python.analysis.clearCache.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
-                },
                 {
                     "category": "Python",
                     "command": "python.analysis.restartLanguageServer",

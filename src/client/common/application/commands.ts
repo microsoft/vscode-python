@@ -43,7 +43,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.ClearStorage]: [];
     [Commands.ReportIssue]: [];
     [Commands.RefreshTensorBoard]: [];
-    [LSCommands.ClearAnalyisCache]: [];
     [LSCommands.RestartLS]: [];
 }
 
