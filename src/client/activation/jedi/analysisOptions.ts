@@ -39,8 +39,8 @@ export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
     protected async getInitializationOptions() {
         const pythonSettings = this.configurationService.getSettings(this.resource);
         const workspacePath = this.getWorkspaceFolder()?.uri.fsPath;
-        const extraPaths = pythonSettings.analysis
-            ? pythonSettings.analysis.extraPaths.map((extraPath) => {
+        const extraPaths = pythonSettings.autoComplete
+            ? pythonSettings.autoComplete.extraPaths.map((extraPath) => {
                   if (path.isAbsolute(extraPath)) {
                       return extraPath;
                   }

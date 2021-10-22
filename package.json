@@ -455,28 +455,7 @@
         ],
         "configuration": {
             "properties": {
-                "python.analysis.logLevel": {
-                    "default": "Error",
-                    "description": "Defines type of log messages language server writes into the output window.",
-                    "enum": [
-                        "Error",
-                        "Information",
-                        "Trace",
-                        "Warning"
-                    ],
-                    "scope": "resource",
-                    "type": "string"
-                },
-                "python.analysis.typeshedPaths": {
-                    "default": [],
-                    "description": "Paths to Typeshed stub folders. Default is Typeshed installed with the language server. Change requires restart.",
-                    "items": {
-                        "type": "string"
-                    },
-                    "scope": "resource",
-                    "type": "array"
-                },
-                "python.analysis.extraPaths": {
+                "python.autoComplete.extraPaths": {
                     "default": [],
                     "description": "List of paths to libraries and the like that need to be imported by auto complete engine. E.g. when using Google App SDK, the paths are not in system path, hence need to be added into this list.",
                     "scope": "resource",

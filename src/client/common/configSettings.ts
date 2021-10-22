@@ -27,7 +27,7 @@ import { DeprecatePythonPath } from './experiments/groups';
 import { ExtensionChannels } from './insidersBuild/types';
 import { IS_WINDOWS } from './platform/constants';
 import {
-    IAnalysisSettings,
+    IAutoCompleteSettings,
     IDefaultLanguageServer,
     IExperiments,
     IExperimentService,
@@ -107,6 +107,8 @@ export class PythonSettings implements IPythonSettings {
 
     public formatting!: IFormattingSettings;
 
+    public autoComplete!: IAutoCompleteSettings;
+
     public tensorBoard: ITensorBoardSettings | undefined;
 
     public testing!: ITestingSettings;
@@ -118,8 +120,6 @@ export class PythonSettings implements IPythonSettings {
     public disableInstallationChecks = false;
 
     public globalModuleInstallation = false;
-
-    public analysis!: IAnalysisSettings;
 
     public autoUpdateLanguageServer = true;
 
@@ -287,6 +287,15 @@ export class PythonSettings implements IPythonSettings {
             this.languageServerIsDefault = false;
         }
 
+        const autoCompleteSettings = systemVariables.resolveAny(
+            pythonSettings.get<IAutoCompleteSettings>('autoComplete'),
+        )!;
+        if (this.autoComplete) {
+            Object.assign<IAutoCompleteSettings, IAutoCompleteSettings>(this.autoComplete, autoCompleteSettings);
+        } else {
+            this.autoComplete = autoCompleteSettings;
+        }
+
         const envFileSetting = pythonSettings.get<string>('envFile');
         this.envFile = systemVariables.resolveAny(envFileSetting)!;
         sendSettingTelemetry(this.workspace, envFileSetting);
@@ -300,13 +309,6 @@ export class PythonSettings implements IPythonSettings {
             Object.assign<ILintingSettings, ILintingSettings>(this.linting, lintingSettings);
         } else {
             this.linting = lintingSettings;
-        }
-
-        const analysisSettings = systemVariables.resolveAny(pythonSettings.get<IAnalysisSettings>('analysis'))!;
-        if (this.analysis) {
-            Object.assign<IAnalysisSettings, IAnalysisSettings>(this.analysis, analysisSettings);
-        } else {
-            this.analysis = analysisSettings;
         }
 
         this.disableInstallationChecks = pythonSettings.get<boolean>('disableInstallationCheck') === true;

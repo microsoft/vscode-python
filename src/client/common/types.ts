@@ -175,12 +175,12 @@ export interface IPythonSettings {
     readonly linting: ILintingSettings;
     readonly formatting: IFormattingSettings;
     readonly testing: ITestingSettings;
+    readonly autoComplete: IAutoCompleteSettings;
     readonly terminal: ITerminalSettings;
     readonly sortImports: ISortImportSettings;
     readonly envFile: string;
     readonly disableInstallationChecks: boolean;
     readonly globalModuleInstallation: boolean;
-    readonly analysis: IAnalysisSettings;
     readonly autoUpdateLanguageServer: boolean;
     readonly onDidChange: Event<void>;
     readonly experiments: IExperiments;
@@ -288,15 +288,7 @@ export interface IExperiments {
     readonly optOutFrom: string[];
 }
 
-enum AnalysisSettingsLogLevel {
-    Information = 'Information',
-    Error = 'Error',
-    Warning = 'Warning',
-}
-
-export interface IAnalysisSettings {
-    readonly typeshedPaths: string[];
-    readonly logLevel: AnalysisSettingsLogLevel;
+export interface IAutoCompleteSettings {
     readonly extraPaths: string[];
 }
 

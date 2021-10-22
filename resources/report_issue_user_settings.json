@@ -68,9 +68,7 @@
         "extraPaths": "placeholder",
         "useLibraryCodeForTypes": true,
         "typeCheckingMode": true,
-        "typeshedPaths": "placeholder",
         "memory": true,
-        "logLevel": true,
         "symbolsHierarchyDepthLimit": false
     },
     "sortImports": {
