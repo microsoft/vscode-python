@@ -25,14 +25,10 @@ src/test/unittests.ts
 src/test/vscode-mock.ts
 
 src/test/interpreters/mocks.ts
-src/test/interpreters/interpreterVersion.unit.test.ts
-src/test/interpreters/virtualEnvs/index.unit.test.ts
 src/test/interpreters/virtualEnvs/condaInheritEnvPrompt.unit.test.ts
-src/test/interpreters/virtualEnvManager.unit.test.ts
 src/test/interpreters/pythonPathUpdaterFactory.unit.test.ts
 src/test/interpreters/activation/service.unit.test.ts
 src/test/interpreters/helpers.unit.test.ts
-src/test/interpreters/currentPathService.unit.test.ts
 src/test/interpreters/display.unit.test.ts
 
 src/test/terminals/codeExecution/terminalCodeExec.unit.test.ts
@@ -46,16 +42,6 @@ src/test/providers/codeActionProvider/main.unit.test.ts
 src/test/providers/shebangCodeLenseProvider.unit.test.ts
 
 src/test/activation/activationService.unit.test.ts
-src/test/activation/languageServer/downloadChannelRules.unit.test.ts
-src/test/activation/languageServer/languageServer.unit.test.ts
-src/test/activation/languageServer/languageServerFolderService.unit.test.ts
-src/test/activation/languageServer/languageServerPackageRepository.unit.test.ts
-src/test/activation/languageServer/manager.unit.test.ts
-src/test/activation/languageServer/analysisOptions.unit.test.ts
-src/test/activation/languageServer/languageServerExtension.unit.test.ts
-src/test/activation/languageServer/languageClientFactory.unit.test.ts
-src/test/activation/languageServer/outputChannel.unit.test.ts
-src/test/activation/languageServer/languageServerPackageService.unit.test.ts
 src/test/activation/activeResource.unit.test.ts
 src/test/activation/node/languageServerChangeHandler.unit.test.ts
 src/test/activation/node/activator.unit.test.ts
@@ -77,7 +63,6 @@ src/test/testing/common/debugLauncher.unit.test.ts
 src/test/testing/common/services/configSettingService.unit.test.ts
 
 src/test/common/exitCIAfterTestReporter.ts
-src/test/common/crypto.unit.test.ts
 src/test/common/net/fileDownloader.unit.test.ts
 src/test/common/net/httpClient.unit.test.ts
 src/test/common/terminals/activator/index.unit.test.ts
@@ -106,7 +91,6 @@ src/test/common/configSettings/configSettings.unit.test.ts
 src/test/common/serviceRegistry.unit.test.ts
 src/test/common/extensions.unit.test.ts
 src/test/common/variables/envVarsService.unit.test.ts
-src/test/common/nuget/azureBobStoreRepository.unit.test.ts
 src/test/common/helpers.test.ts
 src/test/common/application/commands/reloadCommand.unit.test.ts
 src/test/common/installer/channelManager.unit.test.ts
@@ -121,12 +105,10 @@ src/test/common/process/processFactory.unit.test.ts
 src/test/common/process/pythonToolService.unit.test.ts
 src/test/common/process/proc.observable.test.ts
 src/test/common/process/pythonProc.simple.multiroot.test.ts
-src/test/common/process/execFactory.test.ts
 src/test/common/process/logger.unit.test.ts
 src/test/common/process/proc.exec.test.ts
 src/test/common/process/pythonProcess.unit.test.ts
 src/test/common/process/proc.unit.test.ts
-src/test/common/asyncDump.ts
 src/test/common/interpreterPathService.unit.test.ts
 src/test/common/insidersBuild/insidersExtensionPrompt.unit.test.ts
 src/test/common/insidersBuild/downloadChannelService.unit.test.ts
@@ -163,13 +145,10 @@ src/test/telemetry/envFileTelemetry.unit.test.ts
 
 src/test/linters/pylint.unit.test.ts
 src/test/linters/lint.unit.test.ts
-src/test/linters/linter.availability.unit.test.ts
 src/test/linters/common.ts
 src/test/linters/lintengine.test.ts
 src/test/linters/lint.multilinter.test.ts
 src/test/linters/lint.test.ts
-src/test/linters/linterinfo.unit.test.ts
-src/test/linters/lint.manager.unit.test.ts
 src/test/linters/linterCommands.unit.test.ts
 src/test/linters/linterManager.unit.test.ts
 
@@ -182,7 +161,6 @@ src/test/application/diagnostics/checks/updateTestSettings.unit.test.ts
 src/test/application/diagnostics/checks/powerShellActivation.unit.test.ts
 src/test/application/diagnostics/checks/invalidPythonPathInDebugger.unit.test.ts
 src/test/application/diagnostics/checks/envPathVariable.unit.test.ts
-src/test/application/diagnostics/checks/lsNotSupported.unit.test.ts
 src/test/application/diagnostics/applicationDiagnostics.unit.test.ts
 src/test/application/diagnostics/promptHandler.unit.test.ts
 src/test/application/diagnostics/sourceMapSupportService.unit.test.ts
@@ -200,8 +178,6 @@ src/client/interpreter/configuration/services/workspaceUpdaterService.ts
 src/client/interpreter/configuration/services/workspaceFolderUpdaterService.ts
 src/client/interpreter/helpers.ts
 src/client/interpreter/virtualEnvs/condaInheritEnvPrompt.ts
-src/client/interpreter/virtualEnvs/types.ts
-src/client/interpreter/virtualEnvs/index.ts
 src/client/interpreter/activation/service.ts
 src/client/interpreter/display/shebangCodeLensProvider.ts
 src/client/interpreter/display/index.ts
@@ -216,7 +192,6 @@ src/client/terminals/codeExecution/codeExecutionManager.ts
 src/client/terminals/codeExecution/djangoContext.ts
 
 src/client/providers/serviceRegistry.ts
-src/client/providers/completionSource.ts
 src/client/providers/formatProvider.ts
 src/client/providers/importSortProvider.ts
 src/client/providers/replProvider.ts
@@ -226,28 +201,12 @@ src/client/providers/codeActionProvider/pythonCodeActionProvider.ts
 src/client/providers/linterProvider.ts
 src/client/providers/terminalProvider.ts
 
-src/client/activation/languageServer/manager.ts
-src/client/activation/languageServer/languageServerExtension.ts
-src/client/activation/languageServer/languageServerProxy.ts
-src/client/activation/languageServer/languageClientFactory.ts
-src/client/activation/languageServer/platformData.ts
-src/client/activation/languageServer/languageServerCompatibilityService.ts
-src/client/activation/languageServer/languageServerPackageRepository.ts
-src/client/activation/languageServer/languageServerFolderService.ts
-src/client/activation/languageServer/outputChannel.ts
-src/client/activation/languageServer/languageServerPackageService.ts
-src/client/activation/languageServer/analysisOptions.ts
-src/client/activation/languageServer/activator.ts
 src/client/activation/commands.ts
 src/client/activation/progress.ts
 src/client/activation/extensionSurvey.ts
 src/client/activation/common/languageServerChangeHandler.ts
 src/client/activation/common/activatorBase.ts
-src/client/activation/common/languageServerFolderService.ts
-src/client/activation/common/languageServerPackageService.ts
-src/client/activation/common/packageRepository.ts
 src/client/activation/common/analysisOptions.ts
-src/client/activation/common/downloadChannelRules.ts
 src/client/activation/refCountedLanguageServer.ts
 src/client/activation/languageClientMiddleware.ts
 src/client/activation/node/manager.ts
@@ -328,21 +287,11 @@ src/client/common/utils/misc.ts
 src/client/common/utils/cacheUtils.ts
 src/client/common/utils/workerPool.ts
 src/client/common/extensions.ts
-src/client/common/dotnet/compatibilityService.ts
-src/client/common/dotnet/serviceRegistry.ts
-src/client/common/dotnet/services/unknownOsCompatibilityService.ts
-src/client/common/dotnet/services/macCompatibilityService.ts
-src/client/common/dotnet/services/linuxCompatibilityService.ts
-src/client/common/dotnet/services/windowsCompatibilityService.ts
 src/client/common/logger.ts
 src/client/common/variables/serviceRegistry.ts
 src/client/common/variables/environment.ts
 src/client/common/variables/types.ts
 src/client/common/variables/systemVariables.ts
-src/client/common/nuget/azureBlobStoreNugetRepository.ts
-src/client/common/nuget/nugetRepository.ts
-src/client/common/nuget/types.ts
-src/client/common/nuget/nugetService.ts
 src/client/common/cancellation.ts
 src/client/common/interpreterPathService.ts
 src/client/common/application/applicationShell.ts
@@ -419,7 +368,6 @@ src/client/debugger/extension/helpers/protocolParser.ts
 
 src/client/linters/pydocstyle.ts
 src/client/linters/serviceRegistry.ts
-src/client/linters/linterAvailability.ts
 src/client/linters/lintingEngine.ts
 src/client/linters/prospector.ts
 src/client/linters/linterInfo.ts
@@ -444,4 +392,3 @@ src/client/application/diagnostics/commands/ignore.ts
 src/client/application/diagnostics/commands/factory.ts
 src/client/application/diagnostics/commands/execVSCCommand.ts
 src/client/application/diagnostics/commands/launchBrowser.ts
-
