@@ -144,7 +144,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
             }
 
             // `jediEnabled` is false, and Pylance(Node) is missing then.
-            // Then set it back to jedi.
+            // Then set it to None.
             if (!languageServerNode) {
                 return applyEdits(
                     fileContent,
