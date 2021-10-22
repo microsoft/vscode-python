@@ -246,7 +246,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
         {
             testTitle: 'jediEnabled: false, no languageServer setting',
             contents: '{ "python.jediEnabled": false }',
-            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft"}',
+            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "None"}',
         },
         {
             testTitle: 'jediEnabled: false, languageServer is Microsoft',

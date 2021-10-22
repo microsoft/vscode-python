@@ -29,11 +29,9 @@ import {
     Resource,
 } from '../../client/common/types';
 import { LanguageService } from '../../client/common/utils/localize';
-import { noop } from '../../client/common/utils/misc';
-import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
-import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 suite('Language Server Activation - ActivationService', () => {
     [LanguageServerType.Jedi].forEach((languageServerType) => {
@@ -53,7 +51,6 @@ suite('Language Server Activation - ActivationService', () => {
                 let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
                 let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
                 let interpreterService: TypeMoq.IMock<IInterpreterService>;
-                let interpreterChangedHandler!: Function;
                 let output: TypeMoq.IMock<IOutputChannel>;
 
                 setup(() => {
@@ -81,10 +78,7 @@ suite('Language Server Activation - ActivationService', () => {
                     const disposable = TypeMoq.Mock.ofType<IDisposable>();
                     interpreterService
                         .setup((i) => i.onDidChangeInterpreter(TypeMoq.It.isAny()))
-                        .returns((cb) => {
-                            interpreterChangedHandler = cb;
-                            return disposable.object;
-                        });
+                        .returns(() => disposable.object);
                     langFolderServiceMock
                         .setup((l) => l.getCurrentLanguageServerDirectory())
                         .returns(() => Promise.resolve(folderVer));
@@ -218,7 +212,7 @@ suite('Language Server Activation - ActivationService', () => {
                     // Toggle the value in the setting and invoke the callback.
                     languageServerType =
                         languageServerType === LanguageServerType.Jedi
-                            ? LanguageServerType.Node
+                            ? LanguageServerType.None
                             : LanguageServerType.Jedi;
                     await callbackHandler(event.object);
 
@@ -326,138 +320,6 @@ suite('Language Server Activation - ActivationService', () => {
                     event.verifyAll();
                     appShell.verifyAll();
                     cmdManager.verifyAll();
-                });
-                test('More than one LS is created for multiple interpreters if LS is "Microsoft"', async () => {
-                    const interpreter1: PythonEnvironment = {
-                        path: '/foo/bar/python',
-                        sysPrefix: '1',
-                        envName: '1',
-                        sysVersion: '3.1.1.1',
-                        architecture: Architecture.x64,
-                        envType: EnvironmentType.Unknown,
-                    };
-                    const interpreter2: PythonEnvironment = {
-                        path: '/foo/baz/python',
-                        sysPrefix: '1',
-                        envName: '2',
-                        sysVersion: '3.1.1.1',
-                        architecture: Architecture.x64,
-                        envType: EnvironmentType.Unknown,
-                    };
-                    const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
-                    const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
-                    activator
-                        .setup((a) => a.start(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter1)))
-                        .returns(() => Promise.resolve())
-                        .verifiable(TypeMoq.Times.once());
-                    activator
-                        .setup((a) => a.start(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter2)))
-                        .returns(() => Promise.resolve())
-                        .verifiable(TypeMoq.Times.once());
-                    activator.setup((a) => a.deactivate()).verifiable(TypeMoq.Times.never());
-                    activator.setup((a) => a.activate()).verifiable(TypeMoq.Times.never());
-                    activator
-                        .setup((a) => a.dispose())
-                        .returns(noop)
-                        .verifiable(TypeMoq.Times.exactly(2));
-                    serviceContainer
-                        .setup((c) => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isAny()))
-                        .returns(() => activator.object);
-
-                    lsNotSupportedDiagnosticService
-                        .setup((l) => l.diagnose(undefined))
-                        .returns(() => Promise.resolve([]));
-                    lsNotSupportedDiagnosticService
-                        .setup((l) => l.handle(TypeMoq.It.isValue([])))
-                        .returns(() => Promise.resolve());
-
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
-                    const activationService = new LanguageServerExtensionActivationService(
-                        serviceContainer.object,
-                        stateFactory.object,
-                    );
-                    const ls1 = await activationService.get(folder1.uri, interpreter1);
-                    const ls2 = await activationService.get(folder1.uri, interpreter2);
-                    expect(ls1).not.to.be.equal(ls2, 'Interpreter does not create new LS');
-                    const ls3 = await activationService.get(undefined, interpreter1);
-                    expect(ls1).to.be.equal(ls3, 'Interpreter does return same LS');
-                    ls3.dispose();
-                    ls1.dispose();
-                    ls2.dispose();
-                    activator.verifyAll();
-                });
-                test('Changing interpreter will activate a new LS if it is "Microsoft"', async () => {
-                    const interpreter1: PythonEnvironment = {
-                        path: '/foo/bar/python',
-                        sysPrefix: '1',
-                        envName: '1',
-                        sysVersion: '3.1.1.1',
-                        architecture: Architecture.x64,
-                        envType: EnvironmentType.Unknown,
-                    };
-                    const interpreter2: PythonEnvironment = {
-                        path: '/foo/baz/python',
-                        sysPrefix: '1',
-                        envName: '2',
-                        sysVersion: '3.1.1.1',
-                        architecture: Architecture.x64,
-                        envType: EnvironmentType.Unknown,
-                    };
-                    let getActiveCount = 0;
-                    interpreterService
-                        .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-                        .returns(() => {
-                            if (getActiveCount % 2 === 0) {
-                                getActiveCount += 1;
-                                return Promise.resolve(interpreter1);
-                            }
-                            getActiveCount += 1;
-                            return Promise.resolve(interpreter2);
-                        });
-                    const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
-                    const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
-                    activator
-                        .setup((a) => a.start(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter1)))
-                        .returns(() => Promise.resolve())
-                        .verifiable(TypeMoq.Times.once());
-                    activator
-                        .setup((a) => a.start(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter2)))
-                        .returns(() => Promise.resolve())
-                        .verifiable(TypeMoq.Times.once());
-                    let connectCount = 0;
-                    activator
-                        .setup((a) => a.activate())
-                        .returns(() => {
-                            connectCount = connectCount + 1;
-                        });
-                    serviceContainer
-                        .setup((c) => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isAny()))
-                        .returns(() => activator.object);
-                    const diagnostics: IDiagnostic[] = [TypeMoq.It.isAny()];
-                    lsNotSupportedDiagnosticService
-                        .setup((l) => l.diagnose(undefined))
-                        .returns(() => Promise.resolve(diagnostics));
-                    lsNotSupportedDiagnosticService
-                        .setup((l) => l.handle(TypeMoq.It.isValue(diagnostics)))
-                        .returns(() => Promise.resolve());
-
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
-                    const activationService = new LanguageServerExtensionActivationService(
-                        serviceContainer.object,
-                        stateFactory.object,
-                    );
-                    await activationService.activate(folder1.uri);
-                    await interpreterChangedHandler();
-                    activator.verifyAll();
-
-                    // Hold onto the second item and switch two more times. Verify that
-                    // reconnect happens
-                    const server = await activationService.get(folder1.uri);
-                    await interpreterChangedHandler();
-                    expect(connectCount).to.be.equal(3, 'Reconnect is not happening');
-                    await interpreterChangedHandler();
-                    expect(connectCount).to.be.equal(4, 'Reconnect is not happening');
-                    server.dispose();
                 });
                 if (languageServerType !== LanguageServerType.Jedi) {
                     test('Revert to jedi when LS activation fails', async () => {
