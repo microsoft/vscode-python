@@ -595,11 +595,12 @@ export class PythonSettings implements IPythonSettings {
          */
         const inExperiment = this.experimentsManager?.inExperimentSync(DeprecatePythonPath.experiment);
         // Use the interpreter path service if in the experiment otherwise use the normal settings
-        this.pythonPath = systemVariables.resolveAny(
+        const p = systemVariables.resolveAny(
             inExperiment && this.interpreterPathService
                 ? this.interpreterPathService.get(this.workspaceRoot)
                 : pythonSettings.get<string>('pythonPath'),
         )!;
+        this.pythonPath = p;
         if (
             !process.env.CI_DISABLE_AUTO_SELECTION &&
             (this.pythonPath.length === 0 || this.pythonPath === 'python') &&
