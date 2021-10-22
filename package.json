@@ -1764,7 +1764,7 @@
                     "command": "python.execInTerminal-icon",
                     "icon": "$(play)",
                     "title": "%python.command.python.execInTerminalIcon.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
+                    "when": "false"
                 },
                 {
                     "category": "Python",
