@@ -714,7 +714,7 @@
                         "off",
                         "weekly"
                     ],
-                    "scope": "application",
+                    "scope": "machine",
                     "type": "string"
                 },
                 "python.languageServer": {
