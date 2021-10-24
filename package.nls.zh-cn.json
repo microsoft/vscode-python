@@ -212,4 +212,7 @@
     "TensorBoard.launchNativeTensorBoardSessionCodeLens": "▶ 启动 TensorBoard 会话",
     "TensorBoard.enterRemoteUrl": "输入远程 URL",
     "TensorBoard.enterRemoteUrlDetail": "输入指向 TensorBoard 远程日志文件夹的 URL"
+    "MPLSDeprecation.bannerMessage": "Microsoft Python 语言服务器将于11月初结束使用。如果您不选择新的语言服务器，您的设置将在弃用时自动更新。在我们的[9月发布博文](https://aka.ms/pvsc-september-2021)中了解更多相关信息。请将您的语言服务器切换到受支持的值:",
+    "MPLSDeprecation.switchToPylance": "切换到 Pylance (推荐)",
+    "MPLSDeprecation.switchToJedi": "切换到 Jedi (开源)"
 }
