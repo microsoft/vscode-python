@@ -39,6 +39,10 @@ import {
     PythonPathDeprecatedDiagnosticServiceId,
 } from '../../../client/application/diagnostics/checks/pythonPathDeprecated';
 import {
+    SwitchToDefaultLanguageServerDiagnosticService,
+    SwitchToDefaultLanguageServerDiagnosticServiceId,
+} from '../../../client/application/diagnostics/checks/switchToDefaultLS';
+import {
     UpgradeCodeRunnerDiagnosticService,
     UpgradeCodeRunnerDiagnosticServiceId,
 } from '../../../client/application/diagnostics/checks/upgradeCodeRunner';
@@ -140,6 +144,13 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
                 IDiagnosticsService,
                 PythonPathDeprecatedDiagnosticService,
                 PythonPathDeprecatedDiagnosticServiceId,
+            ),
+        );
+        verify(
+            serviceManager.addSingleton<IDiagnosticsService>(
+                IDiagnosticsService,
+                SwitchToDefaultLanguageServerDiagnosticService,
+                SwitchToDefaultLanguageServerDiagnosticServiceId,
             ),
         );
         verify(

@@ -29,20 +29,14 @@ import {
     ILanguageServerManager,
     ILanguageServerOutputChannel,
     ILanguageServerProxy,
-    ISwitchToDefaultLSNotification,
     LanguageServerType,
 } from './types';
 import { JediLanguageServerActivator } from './jedi/activator';
-import { SwitchToDefaultLSNotification } from './common/switchToDefaultLSNotification';
 
 export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType): void {
     serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
     serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
-    serviceManager.addSingleton<ISwitchToDefaultLSNotification>(
-        ISwitchToDefaultLSNotification,
-        SwitchToDefaultLSNotification,
-    );
     serviceManager.add<ILanguageServerActivator>(
         ILanguageServerActivator,
         NoLanguageServerExtensionActivator,

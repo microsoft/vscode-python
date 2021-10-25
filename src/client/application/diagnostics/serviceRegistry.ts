@@ -36,6 +36,10 @@ import {
     PythonPathDeprecatedDiagnosticService,
     PythonPathDeprecatedDiagnosticServiceId,
 } from './checks/pythonPathDeprecated';
+import {
+    SwitchToDefaultLanguageServerDiagnosticService,
+    SwitchToDefaultLanguageServerDiagnosticServiceId,
+} from './checks/switchToDefaultLS';
 import { UpgradeCodeRunnerDiagnosticService, UpgradeCodeRunnerDiagnosticServiceId } from './checks/upgradeCodeRunner';
 import { DiagnosticsCommandFactory } from './commands/factory';
 import { IDiagnosticsCommandFactory } from './commands/types';
@@ -106,6 +110,12 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IDiagnosticsService,
         JediPython27NotSupportedDiagnosticService,
         JediPython27NotSupportedDiagnosticServiceId,
+    );
+
+    serviceManager.addSingleton<IDiagnosticsService>(
+        IDiagnosticsService,
+        SwitchToDefaultLanguageServerDiagnosticService,
+        SwitchToDefaultLanguageServerDiagnosticServiceId,
     );
 
     serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory);

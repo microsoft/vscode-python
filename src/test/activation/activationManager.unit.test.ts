@@ -10,11 +10,7 @@ import * as typemoq from 'typemoq';
 import { TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
-import {
-    IExtensionActivationService,
-    IExtensionSingleActivationService,
-    ISwitchToDefaultLSNotification,
-} from '../../client/activation/types';
+import { IExtensionActivationService, IExtensionSingleActivationService } from '../../client/activation/types';
 import { IApplicationDiagnostics } from '../../client/application/types';
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
@@ -55,7 +51,6 @@ suite('Activation Manager', () => {
         let activationService1: IExtensionActivationService;
         let activationService2: IExtensionActivationService;
         let fileSystem: IFileSystem;
-        let defaultLSNotification: typemoq.IMock<ISwitchToDefaultLSNotification>;
         setup(() => {
             experiments = mock(ExperimentService);
             interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
@@ -67,8 +62,6 @@ suite('Activation Manager', () => {
             activationService1 = mock(LanguageServerExtensionActivationService);
             activationService2 = mock(LanguageServerExtensionActivationService);
             fileSystem = mock(FileSystem);
-            defaultLSNotification = typemoq.Mock.ofType<ISwitchToDefaultLSNotification>();
-            defaultLSNotification.setup((d) => d.showPrompt()).returns(() => Promise.resolve());
             interpreterPathService
                 .setup((i) => i.onDidChange(typemoq.It.isAny()))
                 .returns(() => typemoq.Mock.ofType<IDisposable>().object);
@@ -83,7 +76,6 @@ suite('Activation Manager', () => {
                 instance(activeResourceService),
                 instance(experiments),
                 interpreterPathService.object,
-                defaultLSNotification.object,
             );
 
             sinon.stub(EnvFileTelemetry, 'sendActivationTelemetry').resolves();
@@ -409,7 +401,6 @@ suite('Activation Manager', () => {
         let initialize: sinon.SinonStub;
         let activateWorkspace: sinon.SinonStub;
         let managerTest: ExtensionActivationManager;
-        let defaultLSNotification: typemoq.IMock<ISwitchToDefaultLSNotification>;
         const resource = Uri.parse('a');
         let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
         let experiments: IExperimentService;
@@ -430,8 +421,6 @@ suite('Activation Manager', () => {
             initialize.resolves();
             activateWorkspace = sinon.stub(ExtensionActivationManager.prototype, 'activateWorkspace');
             activateWorkspace.resolves();
-            defaultLSNotification = typemoq.Mock.ofType<ISwitchToDefaultLSNotification>();
-            defaultLSNotification.setup((d) => d.showPrompt()).returns(() => Promise.resolve());
             interpreterPathService
                 .setup((i) => i.onDidChange(typemoq.It.isAny()))
                 .returns(() => typemoq.Mock.ofType<IDisposable>().object);
@@ -446,7 +435,6 @@ suite('Activation Manager', () => {
                 instance(activeResourceService),
                 instance(experiments),
                 interpreterPathService.object,
-                defaultLSNotification.object,
             );
         });
 

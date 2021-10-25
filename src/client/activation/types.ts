@@ -180,8 +180,3 @@ export const IExtensionSingleActivationService = Symbol('IExtensionSingleActivat
 export interface IExtensionSingleActivationService {
     activate(): Promise<void>;
 }
-
-export const ISwitchToDefaultLSNotification = Symbol('ISwitchToDefaultLSNotification');
-export interface ISwitchToDefaultLSNotification {
-    showPrompt(): Promise<void>;
-}

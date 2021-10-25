@@ -4,7 +4,6 @@ import { instance, mock, verify } from 'ts-mockito';
 
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
-import { SwitchToDefaultLSNotification } from '../../client/activation/common/switchToDefaultLSNotification';
 import { ExtensionSurveyPrompt } from '../../client/activation/extensionSurvey';
 import { LanguageServerOutputChannel } from '../../client/activation/common/outputChannel';
 import { NoLanguageServerExtensionActivator } from '../../client/activation/none/activator';
@@ -20,7 +19,6 @@ import {
     ILanguageServerManager,
     ILanguageServerOutputChannel,
     ILanguageServerProxy,
-    ISwitchToDefaultLSNotification,
     LanguageServerType,
 } from '../../client/activation/types';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -64,12 +62,6 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
             serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
                 ExtensionSurveyPrompt,
-            ),
-        ).once();
-        verify(
-            serviceManager.addSingleton<ISwitchToDefaultLSNotification>(
-                ISwitchToDefaultLSNotification,
-                SwitchToDefaultLSNotification,
             ),
         ).once();
 
