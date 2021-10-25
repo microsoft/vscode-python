@@ -32,6 +32,7 @@ import {
     LanguageServerType,
 } from './types';
 import { JediLanguageServerActivator } from './jedi/activator';
+import { LoadLanguageServerExtension } from './common/loadLanguageServerExtension';
 
 export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType): void {
     serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
@@ -49,6 +50,10 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         ExtensionSurveyPrompt,
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        LoadLanguageServerExtension,
     );
 
     if (languageServerType === LanguageServerType.Node) {

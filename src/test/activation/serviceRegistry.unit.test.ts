@@ -34,6 +34,7 @@ import { JediLanguageServerAnalysisOptions } from '../../client/activation/jedi/
 import { JediLanguageClientFactory } from '../../client/activation/jedi/languageClientFactory';
 import { JediLanguageServerProxy } from '../../client/activation/jedi/languageServerProxy';
 import { JediLanguageServerManager } from '../../client/activation/jedi/manager';
+import { LoadLanguageServerExtension } from '../../client/activation/common/loadLanguageServerExtension';
 
 suite('Unit Tests - Language Server Activation Service Registry', () => {
     let serviceManager: IServiceManager;
@@ -64,7 +65,12 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
                 ExtensionSurveyPrompt,
             ),
         ).once();
-
+        verify(
+            serviceManager.addSingleton<IExtensionSingleActivationService>(
+                IExtensionSingleActivationService,
+                LoadLanguageServerExtension,
+            ),
+        ).once();
         verify(
             serviceManager.add<ILanguageServerActivator>(
                 ILanguageServerActivator,
