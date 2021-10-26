@@ -21,7 +21,6 @@ import { PosixKnownPathsLocator } from './base/locators/lowLevel/posixKnownPaths
 import { PyenvLocator } from './base/locators/lowLevel/pyenvLocator';
 import { WindowsRegistryLocator } from './base/locators/lowLevel/windowsRegistryLocator';
 import { WindowsStoreLocator } from './base/locators/lowLevel/windowsStoreLocator';
-import { getEnvironmentInfoService } from './base/info/environmentInfoService';
 import { registerNewDiscoveryForIOC } from './legacyIOC';
 import { PoetryLocator } from './base/locators/lowLevel/poetryLocator';
 import { createPythonEnvironments } from './api';
@@ -86,16 +85,9 @@ async function createLocator(
         createWorkspaceLocator(ext),
     );
 
-    // Create the env info service used by ResolvingLocator and CachingLocator.
-    const envInfoService = getEnvironmentInfoService(ext.disposables);
-
     // Build the stack of composite locators.
     locators = new PythonEnvsReducer(locators);
-    const resolvingLocator = new PythonEnvsResolver(
-        locators,
-        // These are shared.
-        envInfoService,
-    );
+    const resolvingLocator = new PythonEnvsResolver(locators);
     const caching = new EnvsCollectionService(
         await createCollectionCache(ext),
         // This is shared.
