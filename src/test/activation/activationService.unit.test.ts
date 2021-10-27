@@ -410,7 +410,7 @@ suite('Language Server Activation - ActivationService', () => {
                         serviceContainer.verifyAll();
                         workspaceService.verifyAll();
                     }
-                    test('Activator is disposed if activated workspace is removed and LS is "Microsoft"', async () => {
+                    test('Activator is disposed if activated workspace is removed and LS is "Pylance"', async () => {
                         pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
                         let workspaceFoldersChangedHandler!: Function;
                         workspaceService
