@@ -92,6 +92,10 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         }
         const fileDirPath = path.dirname(file.fsPath);
         if (fileDirPath.length > 0) {
+            if (this.platformService.isWindows && /[a-z]\:/i.test(fileDirPath)) {
+                const drive = fileDirPath.replace(/\:.*/g, '');
+                await this.getTerminalService(file).sendText(`${drive}:`);
+            }
             await this.getTerminalService(file).sendText(`cd ${fileDirPath.fileToCommandArgument()}`);
         }
     }
