@@ -11,9 +11,11 @@ import {
     TestRunResult,
     TestResultState,
     TestResultSnapshot,
+    TestItemCollection,
 } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { traceError, traceVerbose } from '../../../common/logger';
+import { asyncForEach } from '../../../common/utils/arrayUtils';
 import {
     RawDiscoveredTests,
     RawTest,
@@ -28,6 +30,14 @@ import {
 // Todo: Use `TestTag` when the proposed API gets into stable.
 export const RunTestTag = { id: 'python-run' };
 export const DebugTestTag = { id: 'python-debug' };
+
+function testItemCollectionToArray(collection: TestItemCollection): TestItem[] {
+    const items: TestItem[] = [];
+    collection.forEach((c) => {
+        items.push(c);
+    });
+    return items;
+}
 
 export function removeItemByIdFromChildren(
     idToRawData: Map<string, TestData>,
@@ -293,14 +303,14 @@ function updateTestCaseItem(
     item.tags = [RunTestTag, DebugTestTag];
 }
 
-function updateTestItemFromRawDataInternal(
+async function updateTestItemFromRawDataInternal(
     item: TestItem,
     testController: TestController,
     idToRawData: Map<string, TestData>,
     testRoot: string,
     rawDataSet: RawDiscoveredTests[],
     token?: CancellationToken,
-): void {
+): Promise<void> {
     if (token?.isCancellationRequested) {
         return;
     }
@@ -334,9 +344,10 @@ function updateTestItemFromRawDataInternal(
     if (rawId === nodeRawData[0].root || rawId === nodeRawData[0].rootid) {
         // This is a test root node, we need to update the entire tree
         // The update children and remove any child that does not have raw data.
-        item.children.forEach((c) =>
-            updateTestItemFromRawData(c, testController, idToRawData, testRoot, nodeRawData, token),
-        );
+
+        await asyncForEach(testItemCollectionToArray(item.children), async (c) => {
+            await updateTestItemFromRawData(c, testController, idToRawData, testRoot, nodeRawData, token);
+        });
 
         // Create child nodes that are new.
         // We only need to look at rawData.parents. Since at this level we either have folder or file.
@@ -344,16 +355,17 @@ function updateTestItemFromRawDataInternal(
         const existingNodes: string[] = [];
         item.children.forEach((c) => existingNodes.push(idToRawData.get(c.id)?.rawId ?? ''));
 
-        rawChildNodes
-            .filter((r) => !existingNodes.includes(r.id))
-            .forEach((r) => {
+        await asyncForEach(
+            rawChildNodes.filter((r) => !existingNodes.includes(r.id)),
+            async (r) => {
                 const childItem =
                     r.kind === 'file'
                         ? createFolderOrFileTestItem(testController, idToRawData, testRoot, r as RawTestFile)
                         : createFolderOrFileTestItem(testController, idToRawData, testRoot, r as RawTestFolder);
                 item.children.add(childItem);
-                updateTestItemFromRawData(childItem, testController, idToRawData, testRoot, nodeRawData, token);
-            });
+                await updateTestItemFromRawData(childItem, testController, idToRawData, testRoot, nodeRawData, token);
+            },
+        );
 
         return;
     }
@@ -382,9 +394,9 @@ function updateTestItemFromRawDataInternal(
         }
 
         // The update children and remove any child that does not have raw data.
-        item.children.forEach((c) =>
-            updateTestItemFromRawData(c, testController, idToRawData, testRoot, nodeRawData, token),
-        );
+        await asyncForEach(testItemCollectionToArray(item.children), async (c) => {
+            await updateTestItemFromRawData(c, testController, idToRawData, testRoot, nodeRawData, token);
+        });
 
         // Create child nodes that are new.
         // Get the existing child node ids so we can skip them
@@ -395,9 +407,9 @@ function updateTestItemFromRawDataInternal(
         // The current node is potentially a parent of one of these "parent" nodes or it is a parent
         // of test case nodes. We will handle Test case nodes after handling parents.
         const rawChildNodes = nodeRawData[0].parents.filter((p) => p.parentid === rawId);
-        rawChildNodes
-            .filter((r) => !existingNodes.includes(r.id))
-            .forEach((r) => {
+        await asyncForEach(
+            rawChildNodes.filter((r) => !existingNodes.includes(r.id)),
+            async (r) => {
                 let childItem;
                 switch (r.kind) {
                     case 'file':
@@ -428,9 +440,17 @@ function updateTestItemFromRawDataInternal(
                 if (childItem) {
                     item.children.add(childItem);
                     // This node can potentially have children. So treat it like a new node and update it.
-                    updateTestItemFromRawData(childItem, testController, idToRawData, testRoot, nodeRawData, token);
+                    await updateTestItemFromRawData(
+                        childItem,
+                        testController,
+                        idToRawData,
+                        testRoot,
+                        nodeRawData,
+                        token,
+                    );
                 }
-            });
+            },
+        );
 
         // Now we will look at test case nodes. Create any test case node that does not already exist.
         const rawTestCaseNodes = nodeRawData[0].tests.filter((p) => p.parentid === rawId);
@@ -466,16 +486,16 @@ function updateTestItemFromRawDataInternal(
     }
 }
 
-export function updateTestItemFromRawData(
+export async function updateTestItemFromRawData(
     item: TestItem,
     testController: TestController,
     idToRawData: Map<string, TestData>,
     testRoot: string,
     rawDataSet: RawDiscoveredTests[],
     token?: CancellationToken,
-): void {
+): Promise<void> {
     item.busy = true;
-    updateTestItemFromRawDataInternal(item, testController, idToRawData, testRoot, rawDataSet, token);
+    await updateTestItemFromRawDataInternal(item, testController, idToRawData, testRoot, rawDataSet, token);
     item.busy = false;
 }
 

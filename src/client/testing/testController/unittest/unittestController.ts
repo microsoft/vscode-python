@@ -70,7 +70,7 @@ export class UnittestController implements ITestFrameworkController {
                     }
 
                     if (rawTestData.tests.length > 0) {
-                        updateTestItemFromRawData(
+                        await updateTestItemFromRawData(
                             item,
                             testController,
                             this.idToRawData,
@@ -85,7 +85,7 @@ export class UnittestController implements ITestFrameworkController {
                 } else {
                     const workspaceNode = getWorkspaceNode(item, this.idToRawData);
                     if (workspaceNode) {
-                        updateTestItemFromRawData(
+                        await updateTestItemFromRawData(
                             item,
                             testController,
                             this.idToRawData,

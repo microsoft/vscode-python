@@ -10,6 +10,7 @@ import { IWorkspaceService } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
 import { runAdapter } from '../../../common/process/internal/scripts/testing_tools';
 import { IConfigurationService } from '../../../common/types';
+import { asyncForEach } from '../../../common/utils/arrayUtils';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
@@ -77,7 +78,7 @@ export class PytestController implements ITestFrameworkController {
                     // This is the workspace root node
                     if (rawTestData.length === 1) {
                         if (rawTestData[0].tests.length > 0) {
-                            updateTestItemFromRawData(
+                            await updateTestItemFromRawData(
                                 item,
                                 testController,
                                 this.idToRawData,
@@ -97,7 +98,7 @@ export class PytestController implements ITestFrameworkController {
                         let subRootWithNoData: string[] = [];
                         item.children.forEach((c) => subRootWithNoData.push(c.id));
 
-                        rawTestData.forEach((data) => {
+                        await asyncForEach(rawTestData, async (data) => {
                             let subRootId = data.root;
                             let rawId;
                             if (data.root === root) {
@@ -122,7 +123,7 @@ export class PytestController implements ITestFrameworkController {
 
                                 // We found data for a node. Remove its id from the no-data list.
                                 subRootWithNoData = subRootWithNoData.filter((s) => s !== subRootId);
-                                updateTestItemFromRawData(
+                                await updateTestItemFromRawData(
                                     subRootItem,
                                     testController,
                                     this.idToRawData,
@@ -142,7 +143,7 @@ export class PytestController implements ITestFrameworkController {
                 } else {
                     const workspaceNode = getWorkspaceNode(item, this.idToRawData);
                     if (workspaceNode) {
-                        updateTestItemFromRawData(
+                        await updateTestItemFromRawData(
                             item,
                             testController,
                             this.idToRawData,
