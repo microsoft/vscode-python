@@ -1,28 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import * as path from 'path';
-import {
-    CancellationToken,
-    CodeAction,
-    CodeLens,
-    Command,
-    CompletionItem,
-    Declaration as VDeclaration,
-    Definition,
-    DefinitionLink,
-    Diagnostic,
-    Disposable,
-    DocumentHighlight,
-    DocumentLink,
-    DocumentSymbol,
-    Location,
-    ProviderResult,
-    Range,
-    SymbolInformation,
-    TextEdit,
-    Uri,
-    WorkspaceEdit,
-} from 'vscode';
+import { CancellationToken, Diagnostic, Disposable, Uri } from 'vscode';
 import {
     ConfigurationParams,
     ConfigurationRequest,
@@ -33,7 +12,7 @@ import {
 
 import { HiddenFilePrefix } from '../common/constants';
 import { IConfigurationService } from '../common/types';
-import { isThenable } from '../common/utils/async';
+import { createDeferred, isThenable } from '../common/utils/async';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
@@ -109,9 +88,13 @@ export class LanguageClientMiddlewareBase implements Middleware {
         },
     };
 
+    private get connected(): Promise<boolean> {
+        return this.connectedPromise.promise;
+    }
+
     protected notebookAddon: (Middleware & Disposable) | undefined;
 
-    private connected = false; // Default to not forwarding to VS code.
+    private connectedPromise = createDeferred<boolean>();
 
     public constructor(
         readonly serviceContainer: IServiceContainer | undefined,
@@ -135,17 +118,16 @@ export class LanguageClientMiddlewareBase implements Middleware {
     }
 
     public connect() {
-        this.connected = true;
+        this.connectedPromise.resolve(true);
     }
 
     public disconnect() {
-        this.connected = false;
+        this.connectedPromise = createDeferred<boolean>();
+        this.connectedPromise.resolve(false);
     }
 
     public didChange() {
-        if (this.connected) {
-            return this.callNext('didChange', arguments);
-        }
+        return this.callNext('didChange', arguments);
     }
 
     public didOpen() {
@@ -159,25 +141,19 @@ export class LanguageClientMiddlewareBase implements Middleware {
     }
 
     public didSave() {
-        if (this.connected) {
-            return this.callNext('didSave', arguments);
-        }
+        return this.callNext('didSave', arguments);
     }
 
     public willSave() {
-        if (this.connected) {
-            return this.callNext('willSave', arguments);
-        }
+        return this.callNext('willSave', arguments);
     }
 
     public willSaveWaitUntil() {
-        if (this.connected) {
-            return this.callNext('willSaveWaitUntil', arguments);
-        }
+        return this.callNext('willSaveWaitUntil', arguments);
     }
 
-    public provideCompletionItem() {
-        if (this.connected) {
+    public async provideCompletionItem() {
+        if (await this.connected) {
             return this.callNextAndSendTelemetry(
                 'textDocument/completion',
                 debounceFrequentCall,
@@ -191,14 +167,14 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    public provideHover() {
-        if (this.connected) {
+    public async provideHover() {
+        if (await this.connected) {
             return this.callNextAndSendTelemetry('textDocument/hover', debounceFrequentCall, 'provideHover', arguments);
         }
     }
 
-    public handleDiagnostics(uri: Uri, _diagnostics: Diagnostic[], _next: HandleDiagnosticsSignature) {
-        if (this.connected) {
+    public async handleDiagnostics(uri: Uri, _diagnostics: Diagnostic[], _next: HandleDiagnosticsSignature) {
+        if (await this.connected) {
             // Skip sending if this is a special file.
             const filePath = uri.fsPath;
             const baseName = filePath ? path.basename(filePath) : undefined;
@@ -208,8 +184,8 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    public resolveCompletionItem(): ProviderResult<CompletionItem> {
-        if (this.connected) {
+    public async resolveCompletionItem() {
+        if (await this.connected) {
             return this.callNextAndSendTelemetry(
                 'completionItem/resolve',
                 debounceFrequentCall,
@@ -219,8 +195,8 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    public provideSignatureHelp() {
-        if (this.connected) {
+    public async provideSignatureHelp() {
+        if (await this.connected) {
             return this.callNextAndSendTelemetry(
                 'textDocument/signatureHelp',
                 debounceFrequentCall,
@@ -230,8 +206,8 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    public provideDefinition(): ProviderResult<Definition | DefinitionLink[]> {
-        if (this.connected) {
+    public async provideDefinition() {
+        if (await this.connected) {
             return this.callNextAndSendTelemetry(
                 'textDocument/definition',
                 debounceRareCall,
@@ -241,8 +217,8 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    public provideReferences(): ProviderResult<Location[]> {
-        if (this.connected) {
+    public async provideReferences() {
+        if (await this.connected) {
             return this.callNextAndSendTelemetry(
                 'textDocument/references',
                 debounceRareCall,
@@ -252,14 +228,14 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    public provideDocumentHighlights(): ProviderResult<DocumentHighlight[]> {
-        if (this.connected) {
+    public async provideDocumentHighlights() {
+        if (await this.connected) {
             return this.callNext('provideDocumentHighlights', arguments);
         }
     }
 
-    public provideDocumentSymbols(): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
-        if (this.connected) {
+    public async provideDocumentSymbols() {
+        if (await this.connected) {
             return this.callNextAndSendTelemetry(
                 'textDocument/documentSymbol',
                 debounceFrequentCall,
@@ -269,8 +245,8 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    public provideWorkspaceSymbols(): ProviderResult<SymbolInformation[]> {
-        if (this.connected) {
+    public async provideWorkspaceSymbols() {
+        if (await this.connected) {
             return this.callNextAndSendTelemetry(
                 'workspace/symbol',
                 debounceRareCall,
@@ -280,8 +256,8 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    public provideCodeActions(): ProviderResult<(Command | CodeAction)[]> {
-        if (this.connected) {
+    public async provideCodeActions() {
+        if (await this.connected) {
             return this.callNextAndSendTelemetry(
                 'textDocument/codeAction',
                 debounceFrequentCall,
@@ -291,8 +267,8 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    public provideCodeLenses(): ProviderResult<CodeLens[]> {
-        if (this.connected) {
+    public async provideCodeLenses() {
+        if (await this.connected) {
             return this.callNextAndSendTelemetry(
                 'textDocument/codeLens',
                 debounceFrequentCall,
@@ -302,8 +278,8 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    public resolveCodeLens(): ProviderResult<CodeLens> {
-        if (this.connected) {
+    public async resolveCodeLens() {
+        if (await this.connected) {
             return this.callNextAndSendTelemetry(
                 'codeLens/resolve',
                 debounceFrequentCall,
@@ -313,26 +289,26 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    public provideDocumentFormattingEdits(): ProviderResult<TextEdit[]> {
-        if (this.connected) {
+    public async provideDocumentFormattingEdits() {
+        if (await this.connected) {
             return this.callNext('provideDocumentFormattingEdits', arguments);
         }
     }
 
-    public provideDocumentRangeFormattingEdits(): ProviderResult<TextEdit[]> {
-        if (this.connected) {
+    public async provideDocumentRangeFormattingEdits() {
+        if (await this.connected) {
             return this.callNext('provideDocumentRangeFormattingEdits', arguments);
         }
     }
 
-    public provideOnTypeFormattingEdits(): ProviderResult<TextEdit[]> {
-        if (this.connected) {
+    public async provideOnTypeFormattingEdits() {
+        if (await this.connected) {
             return this.callNext('provideOnTypeFormattingEdits', arguments);
         }
     }
 
-    public provideRenameEdits(): ProviderResult<WorkspaceEdit> {
-        if (this.connected) {
+    public async provideRenameEdits() {
+        if (await this.connected) {
             return this.callNextAndSendTelemetry(
                 'textDocument/rename',
                 debounceRareCall,
@@ -342,14 +318,8 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    public prepareRename(): ProviderResult<
-        | Range
-        | {
-              range: Range;
-              placeholder: string;
-          }
-    > {
-        if (this.connected) {
+    public async prepareRename() {
+        if (await this.connected) {
             return this.callNextAndSendTelemetry(
                 'textDocument/prepareRename',
                 debounceRareCall,
@@ -359,20 +329,20 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    public provideDocumentLinks(): ProviderResult<DocumentLink[]> {
-        if (this.connected) {
+    public async provideDocumentLinks() {
+        if (await this.connected) {
             return this.callNext('provideDocumentLinks', arguments);
         }
     }
 
-    public resolveDocumentLink(): ProviderResult<DocumentLink> {
-        if (this.connected) {
+    public async resolveDocumentLink() {
+        if (await this.connected) {
             return this.callNext('resolveDocumentLink', arguments);
         }
     }
 
-    public provideDeclaration(): ProviderResult<VDeclaration> {
-        if (this.connected) {
+    public async provideDeclaration() {
+        if (await this.connected) {
             return this.callNextAndSendTelemetry(
                 'textDocument/declaration',
                 debounceRareCall,
@@ -382,80 +352,80 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
     }
 
-    public provideTypeDefinition() {
-        if (this.connected) {
+    public async provideTypeDefinition() {
+        if (await this.connected) {
             return this.callNext('provideTypeDefinition', arguments);
         }
     }
 
-    public provideImplementation() {
-        if (this.connected) {
+    public async provideImplementation() {
+        if (await this.connected) {
             return this.callNext('provideImplementation', arguments);
         }
     }
 
-    public provideDocumentColors() {
-        if (this.connected) {
+    public async provideDocumentColors() {
+        if (await this.connected) {
             return this.callNext('provideDocumentColors', arguments);
         }
     }
 
-    public provideColorPresentations() {
-        if (this.connected) {
+    public async provideColorPresentations() {
+        if (await this.connected) {
             return this.callNext('provideColorPresentations', arguments);
         }
     }
 
-    public provideFoldingRanges() {
-        if (this.connected) {
+    public async provideFoldingRanges() {
+        if (await this.connected) {
             return this.callNext('provideFoldingRanges', arguments);
         }
     }
 
-    public provideSelectionRanges() {
-        if (this.connected) {
+    public async provideSelectionRanges() {
+        if (await this.connected) {
             return this.callNext('provideSelectionRanges', arguments);
         }
     }
 
-    public prepareCallHierarchy() {
-        if (this.connected) {
+    public async prepareCallHierarchy() {
+        if (await this.connected) {
             return this.callNext('prepareCallHierarchy', arguments);
         }
     }
 
-    public provideCallHierarchyIncomingCalls() {
-        if (this.connected) {
+    public async provideCallHierarchyIncomingCalls() {
+        if (await this.connected) {
             return this.callNext('provideCallHierarchyIncomingCalls', arguments);
         }
     }
 
-    public provideCallHierarchyOutgoingCalls() {
-        if (this.connected) {
+    public async provideCallHierarchyOutgoingCalls() {
+        if (await this.connected) {
             return this.callNext('provideCallHierarchyOutgoingCalls', arguments);
         }
     }
 
-    public provideDocumentSemanticTokens() {
-        if (this.connected) {
+    public async provideDocumentSemanticTokens() {
+        if (await this.connected) {
             return this.callNext('provideDocumentSemanticTokens', arguments);
         }
     }
 
-    public provideDocumentSemanticTokensEdits() {
-        if (this.connected) {
+    public async provideDocumentSemanticTokensEdits() {
+        if (await this.connected) {
             return this.callNext('provideDocumentSemanticTokensEdits', arguments);
         }
     }
 
-    public provideDocumentRangeSemanticTokens() {
-        if (this.connected) {
+    public async provideDocumentRangeSemanticTokens() {
+        if (await this.connected) {
             return this.callNext('provideDocumentRangeSemanticTokens', arguments);
         }
     }
 
-    public provideLinkedEditingRange() {
-        if (this.connected) {
+    public async provideLinkedEditingRange() {
+        if (await this.connected) {
             return this.callNext('provideLinkedEditingRange', arguments);
         }
     }
