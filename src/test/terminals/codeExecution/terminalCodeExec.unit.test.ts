@@ -167,7 +167,7 @@ suite('Terminal - Code Execution', () => {
                 const file = Uri.file(path.join('d:', 'path', 'to', 'file', 'one.py'));
                 terminalSettings.setup((t) => t.executeInFileDir).returns(() => true);
                 workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
-                workspaceFolder.setup((w) => w.uri).returns(() => Uri.file(path.join('d:', 'path', 'to')));
+                workspaceFolder.setup((w) => w.uri).returns(() => Uri.file(path.join('c:', 'path', 'to')));
                 platform.setup((p) => p.isWindows).returns(() => true);
                 settings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
