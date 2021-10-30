@@ -158,9 +158,21 @@ def parse_item(
     # Skip plugin generated tests
     if kind is None:
         return None, None
-    (nodeid, parents, fileid, testfunc, parameterized) = _parse_node_id(
-        item.nodeid, kind
-    )
+
+    if kind == "function" and item.originalname and item.originalname != item.name:
+        # split out parametrized decorations `node[params]`) before parsing
+        # and manually attach parametrized portion back in when done.
+        parameterized = item.name[len(item.originalname) :]
+        (parentid, parents, fileid, testfunc, _) = _parse_node_id(
+            item.nodeid[: -len(parameterized)], kind
+        )
+        nodeid = "{}{}".format(parentid, parameterized)
+        parents = [(parentid, item.originalname, kind)] + parents
+    else:
+        (nodeid, parents, fileid, testfunc, parameterized) = _parse_node_id(
+            item.nodeid, kind
+        )
+
     # Note: testfunc does not necessarily match item.function.__name__.
     # This can result from importing a test function from another module.
 
@@ -434,32 +446,6 @@ def _parse_node_id(
     )
 
 
-def _find_left_bracket(nodeid):
-    """Return tuple of part before final bracket open, separator [, and the remainder.
-    Notes:
-        Testcase names in case of parametrized tests are wrapped in [<test-case-name>].
-    Examples:
-        dirname[sometext]/dirname/testfile.py::testset::testname[testcase]
-        => ('dirname[sometext]/dirname/testfile.py::testset::testname', '[', 'testcase]')
-        dirname/dirname/testfile.py::testset::testname[testcase]
-        => ('dirname/dirname/testfile.py::testset::testname', '[', 'testcase]')
-        dirname/dirname/testfile.py::testset::testname[testcase[x]]
-        => ('dirname/dirname/testfile.py::testset::testname', '[', 'testcase[x]]')
-    """
-    if not nodeid.endswith("]"):
-        return nodeid, "", ""
-    bracketcount = 0
-    for index, char in enumerate(nodeid[::-1]):
-        if char == "]":
-            bracketcount += 1
-        elif char == "[":
-            bracketcount -= 1
-        if bracketcount == 0:
-            n = len(nodeid) - 1 - index
-            return nodeid[:n], nodeid[n], nodeid[n + 1 :]
-    return nodeid, "", ""
-
-
 def _iter_nodes(
     testid,
     kind,
@@ -472,16 +458,6 @@ def _iter_nodes(
     nodeid, testid = _normalize_test_id(testid, kind)
     if len(nodeid) > len(testid):
         testid = "." + _pathsep + testid
-
-    if kind == "function" and nodeid.endswith("]"):
-        funcid, sep, parameterized = _find_left_bracket(nodeid)
-        if not sep:
-            raise should_never_reach_here(
-                nodeid,
-                # ...
-            )
-        yield (nodeid, sep + parameterized, "subtest")
-        nodeid = funcid
 
     parentid, _, name = nodeid.rpartition("::")
     if not parentid:
