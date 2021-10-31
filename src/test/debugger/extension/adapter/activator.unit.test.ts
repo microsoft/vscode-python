@@ -9,7 +9,7 @@ import { IExtensionSingleActivationService } from '../../../../client/activation
 import { DebugService } from '../../../../client/common/application/debugService';
 import { IDebugService } from '../../../../client/common/application/types';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
-import { IDisposableRegistry, IPythonSettings } from '../../../../client/common/types';
+import { IConfigurationService, IDisposableRegistry, IPythonSettings } from '../../../../client/common/types';
 import { DebugAdapterActivator } from '../../../../client/debugger/extension/adapter/activator';
 import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/adapter/factory';
 import { DebugSessionLoggingFactory } from '../../../../client/debugger/extension/adapter/logging';
@@ -32,22 +32,27 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
     let debuggerPromptFactory: IOutdatedDebuggerPromptFactory;
     let disposableRegistry: IDisposableRegistry;
     let attachFactory: IAttachProcessProviderFactory;
+    let configService: IConfigurationService;
 
     setup(() => {
-        const configurationService = mock(ConfigurationService);
-
-        when(configurationService.getSettings(undefined)).thenReturn(({
-            experiments: { enabled: true },
-        } as any) as IPythonSettings);
         attachFactory = mock(AttachProcessProviderFactory);
 
         debugService = mock(DebugService);
+        when(debugService.onDidStartDebugSession).thenReturn(() => noop as any);
+
+        configService = mock(ConfigurationService);
+        when(configService.getSettings(undefined)).thenReturn(({
+            experiments: { enabled: true },
+        } as any) as IPythonSettings);
+
         descriptorFactory = mock(DebugAdapterDescriptorFactory);
         loggingFactory = mock(DebugSessionLoggingFactory);
         debuggerPromptFactory = mock(OutdatedDebuggerPromptFactory);
         disposableRegistry = [];
+
         activator = new DebugAdapterActivator(
             instance(debugService),
+            instance(configService),
             instance(descriptorFactory),
             instance(loggingFactory),
             instance(debuggerPromptFactory),
@@ -72,9 +77,10 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
         const disposable = { dispose: noop };
         when(debugService.registerDebugAdapterTrackerFactory(anything(), anything())).thenReturn(disposable);
         when(debugService.registerDebugAdapterDescriptorFactory(anything(), anything())).thenReturn(disposable);
+        when(debugService.onDidStartDebugSession).thenReturn(() => disposable);
 
         await activator.activate();
 
-        assert.deepEqual(disposableRegistry, [disposable, disposable, disposable]);
+        assert.deepEqual(disposableRegistry, [disposable, disposable, disposable, disposable]);
     });
 });

@@ -1045,6 +1045,12 @@
                     "scope": "resource",
                     "type": "boolean"
                 },
+                "python.terminal.focusAfterLaunch": {
+                    "default": false,
+                    "description": "When launching a python process, whether to focus on the terminal.",
+                    "scope": "resource",
+                    "type": "boolean"
+                },
                 "python.terminal.launchArgs": {
                     "default": [],
                     "description": "Python launch arguments to use when executing a file in the terminal.",

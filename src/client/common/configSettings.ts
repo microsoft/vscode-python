@@ -484,6 +484,7 @@ export class PythonSettings implements IPythonSettings {
             ? this.terminal
             : {
                   executeInFileDir: true,
+                  focusAfterLaunch: false,
                   launchArgs: [],
                   activateEnvironment: true,
                   activateEnvInCurrentTerminal: false,
