@@ -29,16 +29,6 @@ export enum TorchProfiler {
     experiment = 'PythonPyTorchProfiler',
 }
 
-// Experiment to show the run failed tests button
-export enum ShowRunFailedTests {
-    experiment = 'pythonRunFailedTestsButtonDisplayed',
-}
-
-// Experiment to show the run failed tests button
-export enum ShowRefreshTests {
-    experiment = 'pythonRefreshTestsButtonDisplayed',
-}
-
 // Experiment to cache debug configuration
 export enum CacheDebugConfig {
     experiment = 'pythonRememberDebugConfig',

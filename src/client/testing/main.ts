@@ -5,7 +5,7 @@ import { ConfigurationChangeEvent, Disposable, Uri, tests, TestResultState, Work
 import { IApplicationShell, ICommandManager, IContextKeyManager, IWorkspaceService } from '../common/application/types';
 import * as constants from '../common/constants';
 import '../common/extensions';
-import { IDisposableRegistry, IExperimentService, Product } from '../common/types';
+import { IDisposableRegistry, Product } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { EventName } from '../telemetry/constants';
@@ -18,7 +18,6 @@ import { IExtensionActivationService } from '../activation/types';
 import { ITestController } from './testController/common/types';
 import { traceVerbose } from '../common/logger';
 import { DelayedTrigger, IDelayedTrigger } from '../common/utils/delayTrigger';
-import { ShowRefreshTests, ShowRunFailedTests } from '../common/experiments/groups';
 import { ExtensionContextKey } from '../common/application/contextKeys';
 import { checkForFailedTests, updateTestResultMap } from './testController/common/testItemUtilities';
 import { Testing } from '../common/utils/localize';
@@ -112,17 +111,6 @@ export class UnitTestManagementService implements IExtensionActivationService {
                 }
             });
         }
-
-        // Enable buttons based on experiment
-        const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
-        await this.context.setContext(
-            ExtensionContextKey.InShowRunFailedTestsExperiment,
-            await experiments.inExperiment(ShowRunFailedTests.experiment),
-        );
-        await this.context.setContext(
-            ExtensionContextKey.InShowRefreshingTestsExperiment,
-            await experiments.inExperiment(ShowRefreshTests.experiment),
-        );
     }
 
     private async updateTestUIButtons() {

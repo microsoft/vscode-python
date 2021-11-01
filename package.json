@@ -506,8 +506,6 @@
                             "pythonDeprecatePythonPath",
                             "pythonSurveyNotification",
                             "pythonTensorboardExperiment",
-                            "pythonRunFailedTestsButtonDisplayed",
-                            "pythonRefreshTestsButtonDisplayed",
                             "pythonRememberDebugConfig"
                         ]
                     },
@@ -523,8 +521,6 @@
                             "pythonDeprecatePythonPath",
                             "pythonSurveyNotification",
                             "pythonTensorboardExperiment",
-                            "pythonRunFailedTestsButtonDisplayed",
-                            "pythonRefreshTestsButtonDisplayed",
                             "pythonRememberDebugConfig"
                         ]
                     },
@@ -1846,22 +1842,22 @@
             "view/title": [
                 {
                     "command": "python.refreshTests",
-                    "when": "view == workbench.view.testing && !refreshingTests && inShowRefreshingTestsExperiment && !virtualWorkspace && shellExecutionSupported",
+                    "when": "view == workbench.view.testing && !refreshingTests && !virtualWorkspace && shellExecutionSupported",
                     "group": "navigation@0"
                 },
                 {
                     "command": "python.refreshingTests",
-                    "when": "view == workbench.view.testing && refreshingTests && inShowRefreshingTestsExperiment && !virtualWorkspace && shellExecutionSupported",
+                    "when": "view == workbench.view.testing && refreshingTests && !virtualWorkspace && shellExecutionSupported",
                     "group": "navigation@0"
                 },
                 {
                     "command": "python.stopRefreshingTests",
-                    "when": "view == workbench.view.testing && refreshingTests && inShowRefreshingTestsExperiment && !virtualWorkspace && shellExecutionSupported",
+                    "when": "view == workbench.view.testing && refreshingTests && !virtualWorkspace && shellExecutionSupported",
                     "group": "navigation@0"
                 },
                 {
                     "command": "testing.reRunFailTests",
-                    "when": "view == workbench.view.testing && hasFailedTests && inShowRunFailedTestsExperiment && !virtualWorkspace && shellExecutionSupported",
+                    "when": "view == workbench.view.testing && hasFailedTests && !virtualWorkspace && shellExecutionSupported",
                     "group": "navigation@1"
                 }
             ]
