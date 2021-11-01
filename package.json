@@ -505,8 +505,7 @@
                             "All",
                             "pythonDeprecatePythonPath",
                             "pythonSurveyNotification",
-                            "pythonTensorboardExperiment",
-                            "pythonRememberDebugConfig"
+                            "pythonTensorboardExperiment"
                         ]
                     },
                     "scope": "machine",
@@ -520,8 +519,7 @@
                             "All",
                             "pythonDeprecatePythonPath",
                             "pythonSurveyNotification",
-                            "pythonTensorboardExperiment",
-                            "pythonRememberDebugConfig"
+                            "pythonTensorboardExperiment"
                         ]
                     },
                     "scope": "machine",

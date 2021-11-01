@@ -28,8 +28,3 @@ export enum NativeTensorBoard {
 export enum TorchProfiler {
     experiment = 'PythonPyTorchProfiler',
 }
-
-// Experiment to cache debug configuration
-export enum CacheDebugConfig {
-    experiment = 'pythonRememberDebugConfig',
-}
