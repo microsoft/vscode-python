@@ -1763,12 +1763,6 @@
                 },
                 {
                     "category": "Python",
-                    "command": "python.clearWorkspaceInterpreter",
-                    "title": "%python.command.python.clearWorkspaceInterpreter.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "category": "Python",
                     "command": "python.switchOffInsidersChannel",
                     "title": "%python.command.python.switchOffInsidersChannel.title%",
                     "when": "config.python.insidersChannel != 'default' && !virtualWorkspace && shellExecutionSupported"
