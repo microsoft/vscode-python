@@ -1,5 +1,133 @@
 # Changelog
 
+## 2021.11.0-rc (1 November 2021)
+
+### Enhancements
+
+1. Improve setting description for enabling A/B tests. (Thanks [Thi Le](https://github.com/thi-lee))
+   ([#7793](https://github.com/Microsoft/vscode-python/issues/7793))
+1. Support `expectedFailure` when running `unittest` tests using `pytest`.
+   ([#8427](https://github.com/Microsoft/vscode-python/issues/8427))
+1. Support environment variable substitution in `python` property for `launch.json`.
+   ([#12289](https://github.com/Microsoft/vscode-python/issues/12289))
+1. Update homebrew instructions to install python 3.
+   (thanks [Carolinekung2 ](https://github.com/Carolinekung2))
+   ([#17590](https://github.com/Microsoft/vscode-python/issues/17590))
+
+### Fixes
+
+1. Reworded message for A/B testing in the output channel to "Experiment 'X' is active/inactive".
+   (Thanks [Vidushi Gupta](https://github.com/Vidushi-Gupta) for the contribution)
+   ([#6352](https://github.com/Microsoft/vscode-python/issues/6352))
+1. Change text to "Select at workspace level" instead of "Entire workspace" when selecting or clearing interpreters in a multiroot folder scenario.
+   (Thanks [Quynh Do](https://github.com/quynhd07))
+   ([#10737](https://github.com/Microsoft/vscode-python/issues/10737))
+1. Fix unresponsive extension issues caused by discovery component.
+   ([#11924](https://github.com/Microsoft/vscode-python/issues/11924))
+1. Remove duplicate 'Run Python file' commands in command palette.
+   ([#14562](https://github.com/Microsoft/vscode-python/issues/14562))
+1. Change drive first before changing directory in windows, to anticipate running file outside working directory with different storage drive. (thanks [afikrim](https://github.com/afikrim))
+   ([#14730](https://github.com/Microsoft/vscode-python/issues/14730))
+1. Support installing Insiders extension in remote sessions.
+   ([#15145](https://github.com/Microsoft/vscode-python/issues/15145))
+1. If the executeInFileDir setting is enabled, always change to the script directory before running the script, even if the script is in the Workspace folder. (thanks (acash715)[https://github.com/acash715])
+   ([#15181](https://github.com/Microsoft/vscode-python/issues/15181))
+1. replaceAll for replacing separators. (thanks [Aliva Das](https://github.com/IceJinx33))
+   ([#15288](https://github.com/Microsoft/vscode-python/issues/15288))
+1. When activating environment, creating new Integrated Terminal doesn't take selected workspace into account. (Thanks [Vidushi Gupta](https://github.com/Vidushi-Gupta) for the contribution)
+   ([#15522](https://github.com/Microsoft/vscode-python/issues/15522))
+1. Fix truncated mypy errors by setting `--no-pretty`.
+   (thanks [Peter Lithammer](https://github.com/lithammer))
+   ([#16836](https://github.com/Microsoft/vscode-python/issues/16836))
+1. Renamed the commands in the Run/Debug button of the editor title. (thanks (Analía Bannura)[https://github.com/analiabs] and (Anna Arsentieva)[https://github.com/arsentieva])
+   ([#17019](https://github.com/Microsoft/vscode-python/issues/17019))
+1. Fix for `pytest` run all tests when using `pytest.ini`.
+   ([#17546](https://github.com/Microsoft/vscode-python/issues/17546))
+1. Ensures test node is updated when `unittest` sub-tests are used.
+   ([#17561](https://github.com/Microsoft/vscode-python/issues/17561))
+1. Update debugpy to 1.5.1 to ensure user-unhandled exception setting is false by default.
+   ([#17789](https://github.com/Microsoft/vscode-python/issues/17789))
+1. Ensure we filter out unsupported features in web scenario using `shellExecutionSupported` context key.
+   ([#17811](https://github.com/Microsoft/vscode-python/issues/17811))
+1. Remove `python.condaPath` from workspace scope.
+   ([#17819](https://github.com/Microsoft/vscode-python/issues/17819))
+1. Make updateTestItemFromRawData async to prevent blocking the extension.
+   ([#17823](https://github.com/Microsoft/vscode-python/issues/17823))
+1. Semantic colorization can sometimes require reopening or scrolling of a file.
+   ([#17878](https://github.com/Microsoft/vscode-python/issues/17878))
+
+### Code Health
+
+1. Remove TSLint comments since we use ESLint.
+   ([#4060](https://github.com/Microsoft/vscode-python/issues/4060))
+1. Remove unused SHA512 hashing code.
+   ([#7333](https://github.com/Microsoft/vscode-python/issues/7333))
+1. Remove unused packages.
+   ([#16840](https://github.com/Microsoft/vscode-python/issues/16840))
+1. Remove old discovery code and discovery experiments.
+   ([#17795](https://github.com/Microsoft/vscode-python/issues/17795))
+1. Do not query for version and kind if it's not needed when reporting an issue.
+   ([#17815](https://github.com/Microsoft/vscode-python/issues/17815))
+1. Remove Microsoft Python Language Server support from the extension.
+   ([#17834](https://github.com/Microsoft/vscode-python/issues/17834))
+1. Bump `packaging` from 21.0 to 21.2.
+   ([#17886](https://github.com/Microsoft/vscode-python/issues/17886))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [poetry](https://pypi.org/project/poetry/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2021.10.1 (13 October 2021)
 
 ### Enhancements
