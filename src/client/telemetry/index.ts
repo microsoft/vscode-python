@@ -355,8 +355,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debug_session.start" : {
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "console" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
     [EventName.DEBUG_SESSION_START]: {
@@ -384,8 +384,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debug_session.error" : {
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "console" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
 
        }
      */
@@ -414,8 +414,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debug_session.stop" : {
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "console" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
     [EventName.DEBUG_SESSION_STOP]: {
@@ -443,8 +443,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debug_session.user_code_running" : {
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "console" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
     [EventName.DEBUG_SESSION_USER_CODE_RUNNING]: {
@@ -622,7 +622,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debugger.attach_to_child_process" : {
-          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
@@ -753,7 +753,7 @@ export interface IEventNamePropertyMapping {
           "condaversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "terminal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
           "workspacefoldercount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "haspython3" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "usinguserdefinedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -1063,8 +1063,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "platform.info" : {
-          "failuretype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "osversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "failuretype" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+          "osversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
     [EventName.PLATFORM_INFO]: {
@@ -1145,7 +1145,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "select_interpreter_entered_exists" : {
-          "discovered" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "discovered" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
     [EventName.SELECT_INTERPRETER_ENTERED_EXISTS]: {
@@ -1187,7 +1187,7 @@ export interface IEventNamePropertyMapping {
     /* __GDPR__
        "python_interpreter_activation_environment_variables" : {
           "hasenvvars" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
     [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: {
@@ -1210,7 +1210,7 @@ export interface IEventNamePropertyMapping {
     /* __GDPR__
        "python_interpreter_activation_for_running_code" : {
           "hascommands" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
           "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
@@ -1254,7 +1254,7 @@ export interface IEventNamePropertyMapping {
     /* __GDPR__
        "python_interpreter_activation_for_terminal" : {
           "hascommands" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
           "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
@@ -1328,7 +1328,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "pipenv_interpreter_discovery" : {
-          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
     [EventName.PIPENV_INTERPRETER_DISCOVERY]: never | undefined;
@@ -1463,7 +1463,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.downloaded" : {
-          "success" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "success" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
           "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "usedssl" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "lsname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
@@ -1556,8 +1556,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.platform_supported" : {
-          "supported" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "failuretype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "supported" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+          "failuretype" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED]: {
@@ -1591,7 +1591,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.startup" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: {
@@ -1613,7 +1613,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.request" : {
-          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
 
@@ -1741,7 +1741,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "jedi_language_server.request" : {
-          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
     [EventName.JEDI_LANGUAGE_SERVER_REQUEST]: unknown;
@@ -1826,7 +1826,7 @@ export interface IEventNamePropertyMapping {
        "unittest.configuring" : {
           "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
     [EventName.UNITTEST_CONFIGURING]: {
@@ -2037,7 +2037,7 @@ export interface IEventNamePropertyMapping {
     */
     /* __GDPR__
       "terminal_shell_identification" : {
-         "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+         "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
          "terminalprovided" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
          "shellidentificationsource" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
          "hascustomshell" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -2150,7 +2150,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.session_duration" : {
-          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
     [EventName.TENSORBOARD_SESSION_DURATION]: never | undefined;
@@ -2168,7 +2168,7 @@ export interface IEventNamePropertyMapping {
     /* __GDPR__
        "tensorboard.entrypoint_shown" : {
           "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "trigger": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
     [EventName.TENSORBOARD_ENTRYPOINT_SHOWN]: {
@@ -2216,10 +2216,10 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.package_install_result" : {
-          "wasprofilerpluginattempted" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "wastensorboardattempted" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "wasprofilerplugininstalled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "wastensorboardinstalled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "wasprofilerpluginattempted" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+          "wastensorboardattempted" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+          "wasprofilerplugininstalled" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+          "wastensorboardinstalled" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
      */
 
