@@ -641,11 +641,11 @@ export interface IEventNamePropertyMapping {
     /* __GDPR__
        "debugger.configuration.prompts" : {
           "configurationtype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "autodetecteddjangomangepypath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "autodetecteddjangomanagepypath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "autodetectedpyramidinipath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "autodetectedfastpimainpypath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "autodetectedfastapimainpypath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "autodetectedflaskapppypath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "manuallyenteredvalue" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "manuallyenteredavalue" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
 
