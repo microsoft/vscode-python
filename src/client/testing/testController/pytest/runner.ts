@@ -89,7 +89,7 @@ export class PytestRunner implements ITestsRunner {
             // if user has provided `--rootdir` then use that, otherwise add `cwd`
             if (testArgs.filter((a) => a.startsWith('--rootdir')).length === 0) {
                 // Make sure root dir is set so pytest can find the relative paths
-                testArgs.splice(0, 0, '--rootdir', options.workspaceFolder.fsPath);
+                testArgs.splice(0, 0, '--rootdir', options.cwd);
             }
 
             // Positional arguments control the tests to be run.
