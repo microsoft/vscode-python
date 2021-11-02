@@ -10,13 +10,6 @@ export enum DeprecatePythonPath {
     experiment = 'pythonDeprecatePythonPath',
 }
 
-// Experiment to show a prompt asking users to join python mailing list.
-export enum JoinMailingListPromptVariants {
-    variant1 = 'pythonJoinMailingListVar1',
-    variant2 = 'pythonJoinMailingListVar2',
-    variant3 = 'pythonJoinMailingListVar3',
-}
-
 // Feature flag for 'Python: Launch TensorBoard' feature
 export enum NativeTensorBoard {
     experiment = 'pythonTensorboardExperiment',
