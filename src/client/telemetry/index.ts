@@ -314,7 +314,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent with details 'python.autoComplete.addBrackets' setting
      */
     /* __GDPR__
-       "completion_add_brackets" : {
+       "completion.add_brackets" : {
           "enabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
@@ -337,7 +337,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event captured when debug adapter executable is created
      */
     /* __GDPR__
-       "debug_adapter_using_wheels_path" : {
+       "debug_adapter.using_wheels_path" : {
           "usingwheels" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
@@ -639,7 +639,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry sent after building configuration for debugger
      */
     /* __GDPR__
-       "debugger.configuration_prompts" : {
+       "debugger.configuration.prompts" : {
           "configurationtype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "autodetecteddjangomangepypath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "autodetectedpyramidinipath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -692,7 +692,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when providing completion provider in launch.json. It is sent just *after* inserting the completion.
      */
     /* __GDPR__
-       "debugger.configuration_prompts_in_launch_json" : {
+       "debugger.configuration.prompts.in.launch.json" : {
           "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
@@ -800,7 +800,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when substituting Environment variables to calculate value of variables
      */
     /* __GDPR__
-       "envfile.variable_substitution" : {
+       "envfile_variable_substitution" : {
           "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
@@ -809,7 +809,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when an environment file is detected in the workspace.
      */
     /* __GDPR__
-       "envfile.workspace" : {
+       "envfile_workspace" : {
           "hascustomenvpath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
@@ -825,7 +825,7 @@ export interface IEventNamePropertyMapping {
      *
      */
     /* __GDPR__
-       "execution.code" : {
+       "execution_code" : {
           "scope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
@@ -851,7 +851,7 @@ export interface IEventNamePropertyMapping {
      *
      */
     /* __GDPR__
-       "execution.django" : {
+       "execution_django" : {
           "scope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
@@ -868,7 +868,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent with details when formatting a document
      */
     /* __GDPR__
-       "format" : {
+       "format.format" : {
           "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "hascustomargs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "formatselection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
@@ -892,7 +892,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent with the value of setting 'Format on type'
      */
     /* __GDPR__
-       "format_on_type" : {
+       "format.format_on_type" : {
           "enabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
@@ -1062,7 +1062,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent after fetching the OS version
      */
     /* __GDPR__
-       "platform_info" : {
+       "platform.info" : {
           "failuretype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "osversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
@@ -1518,7 +1518,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.extracted" : {
-          "success" : { "classification": "SystemMetaData", "purpose": "PerfomanceAndHealth" },
+          "success" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
           "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "usedssl" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "lsname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
@@ -1622,7 +1622,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the experiments service is initialized for the first time.
      */
     /* __GDPR__
-       "python_" : {
+       "python_experiments_init_performance" : {
           "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
@@ -1867,7 +1867,10 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "terminal.create" : {
-          "propertyName" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+         "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+         "triggeredby" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+         "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+         "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
     [EventName.TERMINAL_CREATE]: {
@@ -1960,7 +1963,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when cancelling discovering tests
      */
     /* __GDPR__
-       "unittest.discovering.stop" : {
+       "unittest.discovery.stop" : {
           "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
@@ -2201,7 +2204,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when we find an active integrated terminal running tensorboard.
      */
     /* __GDPR__
-       "tensorboard.detected_in_integrated_terminal" : {
+       "tensorboard_detected_in_integrated_terminal" : {
           "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
@@ -2233,7 +2236,7 @@ export interface IEventNamePropertyMapping {
      * `from torch import profiler`.
      */
     /* __GDPR__
-       "tensorboard.torch_profiler_importer" : {
+       "tensorboard.torch_profiler_import" : {
           "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
@@ -2244,7 +2247,7 @@ export interface IEventNamePropertyMapping {
      * PyTorch profiler TensorBoard plugin.
      */
     /* __GDPR__
-       "tensorboard.jump_to_source_request" : {
+       "tensorboard_jump_to_source_request" : {
           "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
@@ -2256,7 +2259,7 @@ export interface IEventNamePropertyMapping {
      * on the machine currently running TensorBoard.
      */
     /* __GDPR__
-       "tensorboard.jump_to_source_file_not_found" : {
+       "tensorboard_jump_to_source_file_not_found" : {
           "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
