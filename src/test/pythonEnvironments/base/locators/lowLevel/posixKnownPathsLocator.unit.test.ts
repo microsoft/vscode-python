@@ -84,7 +84,7 @@ suite('Posix Known Path Locator', () => {
         assert.strictEqual(globalPython2Envs.length, 0);
     });
 
-    test('iterEnvs(): Return Python 2 installs when not macOS Monterey', async function () {
+    test('iterEnvs(): Return Python 2 installs when not on macOS Monterey', async function () {
         if (osUtils.getOSType() === osUtils.OSType.Windows) {
             this.skip();
         }
