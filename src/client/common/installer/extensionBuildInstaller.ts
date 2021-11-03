@@ -5,9 +5,9 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
+import { traceDecoratorError } from '../../logging';
 import { IApplicationShell, ICommandManager } from '../application/types';
 import { Octicons, PVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { traceDecorators } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { IFileDownloader, IOutputChannel } from '../types';
 import { ExtensionChannels } from '../utils/localize';
@@ -24,7 +24,7 @@ export class StableBuildInstaller implements IExtensionBuildInstaller {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
     ) {}
 
-    @traceDecorators.error('Installing stable build of extension failed')
+    @traceDecoratorError('Installing stable build of extension failed')
     public async install(): Promise<void> {
         this.output.append(ExtensionChannels.installingStableMessage());
         await this.appShell.withProgressCustomIcon(Octicons.Installing, async (progress) => {
@@ -47,7 +47,7 @@ export class InsidersBuildInstaller implements IExtensionBuildInstaller {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
     ) {}
 
-    @traceDecorators.error('Installing insiders build of extension failed')
+    @traceDecoratorError('Installing insiders build of extension failed')
     public async install(): Promise<void> {
         const vsixFilePath = await this.downloadInsiders();
         this.output.append(ExtensionChannels.installingInsidersMessage());
@@ -61,7 +61,7 @@ export class InsidersBuildInstaller implements IExtensionBuildInstaller {
         await this.fs.deleteFile(vsixFilePath);
     }
 
-    @traceDecorators.error('Downloading insiders build of extension failed')
+    @traceDecoratorError('Downloading insiders build of extension failed')
     public async downloadInsiders(): Promise<string> {
         this.output.appendLine(ExtensionChannels.startingDownloadOutputMessage());
         const downloadOptions = {

@@ -9,10 +9,10 @@ import * as path from 'path';
 import { IExtensionActivationService, LanguageServerType } from '../../activation/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
-import { traceDecorators, traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
+import { traceDecoratorError, traceError } from '../../logging';
 
 // TODO: rename the class since it is not used just for test settings
 @injectable()
@@ -25,7 +25,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
     public async activate(resource: Resource): Promise<void> {
         this.updateTestSettings(resource).ignoreErrors();
     }
-    @traceDecorators.error('Failed to update test settings')
+    @traceDecoratorError('Failed to update test settings')
     public async updateTestSettings(resource: Resource): Promise<void> {
         const filesToBeFixed = await this.getFilesToBeFixed(resource);
         await Promise.all(filesToBeFixed.map((file) => this.fixSettingInFile(file)));

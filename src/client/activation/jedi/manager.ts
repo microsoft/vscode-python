@@ -7,7 +7,6 @@ import '../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 
 import { ICommandManager } from '../../common/application/types';
-import { traceDecorators, traceVerbose } from '../../common/logger';
 import { IDisposable, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { EXTENSION_ROOT_DIR } from '../../constants';
@@ -23,6 +22,7 @@ import {
     ILanguageServerProxy,
     LanguageServerType,
 } from '../types';
+import { traceDecoratorError, traceDecoratorVerbose, traceVerbose } from '../../logging';
 
 @injectable()
 export class JediLanguageServerManager implements ILanguageServerManager {
@@ -75,7 +75,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         return this.languageServerProxy;
     }
 
-    @traceDecorators.error('Failed to start language server')
+    @traceDecoratorError('Failed to start language server')
     public async start(resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void> {
         if (this.languageProxy) {
             throw new Error('Language server already started');
@@ -121,8 +121,8 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         this.restartLanguageServer().ignoreErrors();
     }
 
-    @traceDecorators.error('Failed to restart language server')
-    @traceDecorators.verbose('Restarting language server')
+    @traceDecoratorError('Failed to restart language server')
+    @traceDecoratorVerbose('Restarting language server')
     protected async restartLanguageServer(): Promise<void> {
         if (this.languageProxy) {
             this.languageProxy.dispose();
@@ -137,7 +137,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         undefined,
         JediLanguageServerManager.versionTelemetryProps,
     )
-    @traceDecorators.verbose('Starting language server')
+    @traceDecoratorVerbose('Starting language server')
     protected async startLanguageServer(): Promise<void> {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
 

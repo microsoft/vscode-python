@@ -5,12 +5,12 @@ import { inject, injectable, multiInject, named } from 'inversify';
 import { Terminal, Uri } from 'vscode';
 import { IComponentAdapter, IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { traceDecoratorError, traceError } from '../../logging';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITerminalManager } from '../application/types';
 import '../extensions';
-import { traceDecorators, traceError } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { IConfigurationService, Resource } from '../types';
 import { OSType } from '../utils/platform';
@@ -100,7 +100,7 @@ export class TerminalHelper implements ITerminalHelper {
         ).ignoreErrors();
         return promise;
     }
-    @traceDecorators.error('Failed to capture telemetry')
+    @traceDecoratorError('Failed to capture telemetry')
     protected async sendTelemetry(
         terminalShellType: TerminalShellType,
         eventName: EventName,

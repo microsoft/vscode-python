@@ -5,10 +5,10 @@ import { inject, injectable, optional } from 'inversify';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { traceDecorators, traceError } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IBrowserService, IPersistentStateFactory } from '../../common/types';
 import { Common, Interpreters } from '../../common/utils/localize';
+import { traceDecoratorError, traceError } from '../../logging';
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -32,7 +32,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         this.initializeInBackground(resource).ignoreErrors();
     }
 
-    @traceDecorators.error('Failed to intialize conda inherit env prompt')
+    @traceDecoratorError('Failed to intialize conda inherit env prompt')
     public async initializeInBackground(resource: Uri): Promise<void> {
         const show = await this.shouldShowPrompt(resource);
         if (!show) {
@@ -41,7 +41,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         await this.promptAndUpdate();
     }
 
-    @traceDecorators.error('Failed to display conda inherit env prompt')
+    @traceDecoratorError('Failed to display conda inherit env prompt')
     public async promptAndUpdate() {
         const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(
             condaInheritEnvPromptKey,
@@ -70,7 +70,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         }
     }
 
-    @traceDecorators.error('Failed to check whether to display prompt for conda inherit env setting')
+    @traceDecoratorError('Failed to check whether to display prompt for conda inherit env setting')
     public async shouldShowPrompt(resource: Uri): Promise<boolean> {
         if (this.hasPromptBeenShownInCurrentSession) {
             return false;

@@ -5,8 +5,8 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter } from 'vscode';
+import { traceDecoratorError } from '../../logging';
 import { IWorkspaceService } from '../application/types';
-import { traceDecorators } from '../logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IPythonSettings } from '../types';
 import { ExtensionChannels, IExtensionChannelService } from './types';
 
@@ -39,7 +39,7 @@ export class ExtensionChannelService implements IExtensionChannelService {
         return !settings.globalValue;
     }
 
-    @traceDecorators.error('Updating channel failed')
+    @traceDecoratorError('Updating channel failed')
     public async updateChannel(value: ExtensionChannels): Promise<void> {
         await this.configService.updateSetting(insidersChannelSetting, value, undefined, ConfigurationTarget.Global);
     }

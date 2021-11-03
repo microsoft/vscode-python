@@ -12,7 +12,6 @@ import {
 
 import { ChildProcess } from 'child_process';
 import { DeprecatePythonPath } from '../../common/experiments/groups';
-import { traceDecorators, traceError } from '../../common/logger';
 import { IExperimentService, IInterpreterPathService, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
@@ -22,6 +21,7 @@ import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 import { killPid } from '../../common/process/rawProcessApis';
+import { traceDecoratorError, traceDecoratorVerbose, traceError } from '../../logging';
 
 @injectable()
 export class JediLanguageServerProxy implements ILanguageServerProxy {
@@ -47,7 +47,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         };
     }
 
-    @traceDecorators.verbose('Stopping language server')
+    @traceDecoratorVerbose('Stopping language server')
     public dispose(): void {
         if (this.languageClient) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,7 +81,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         this.disposed = true;
     }
 
-    @traceDecorators.error('Failed to start language server')
+    @traceDecoratorError('Failed to start language server')
     @captureTelemetry(
         EventName.JEDI_LANGUAGE_SERVER_ENABLED,
         undefined,

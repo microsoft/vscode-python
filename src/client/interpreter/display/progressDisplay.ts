@@ -7,10 +7,10 @@ import { inject, injectable } from 'inversify';
 import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
-import { traceDecorators } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Interpreters } from '../../common/utils/localize';
+import { traceDecoratorVerbose } from '../../logging';
 import { IComponentAdapter } from '../contracts';
 
 // The parts of IComponentAdapter used here.
@@ -39,14 +39,14 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
         );
     }
 
-    @traceDecorators.verbose('Display locator refreshing progress')
+    @traceDecoratorVerbose('Display locator refreshing progress')
     private showProgress(): void {
         if (!this.deferred) {
             this.createProgress();
         }
     }
 
-    @traceDecorators.verbose('Hide locator refreshing progress')
+    @traceDecoratorVerbose('Hide locator refreshing progress')
     private hideProgress(): void {
         if (this.deferred) {
             this.deferred.resolve();

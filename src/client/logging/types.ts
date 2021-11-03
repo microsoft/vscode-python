@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+/* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug';
@@ -22,7 +23,7 @@ export interface ILogging {
 }
 
 export type TraceDecoratorType = (
-    _: Record<string, unknown>,
+    _: Object,
     __: string,
     descriptor: TypedPropertyDescriptor<any>,
 ) => TypedPropertyDescriptor<any>;

@@ -4,10 +4,10 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { traceDecoratorError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager } from '../application/types';
-import { traceDecorators } from '../logger';
 import { IPersistentState, IPersistentStateFactory } from '../types';
 import { Common, ExtensionChannels, ExtensionSurveyBanner } from '../utils/localize';
 import { noop } from '../utils/misc';
@@ -30,7 +30,7 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         );
     }
 
-    @traceDecorators.error('Error in prompting to install insiders')
+    @traceDecoratorError('Error in prompting to install insiders')
     public async promptToInstallInsiders(): Promise<void> {
         const prompts = [
             ExtensionChannels.yesWeekly(),
@@ -59,7 +59,7 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         }
     }
 
-    @traceDecorators.error('Error in prompting to reload')
+    @traceDecoratorError('Error in prompting to reload')
     public async promptToReload(): Promise<void> {
         const selection = await this.appShell.showInformationMessage(
             ExtensionChannels.reloadToUseInsidersMessage(),

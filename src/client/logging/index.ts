@@ -112,7 +112,7 @@ type LogInfo = {
 
 // Return a decorator that traces the decorated function.
 function traceDecorator(log: (c: CallInfo, t: TraceInfo) => void): TraceDecoratorType {
-    return function (_: Record<string, unknown>, __: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
 
         descriptor.value = function (...args: unknown[]) {
