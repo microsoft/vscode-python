@@ -46,7 +46,19 @@ def _get_statements(selection):
     # Therefore, to retrieve the end line of each block in a version-agnostic way we need to do
     # `end = next_block.lineno - 1`
     # for all blocks except the last one, which will will just run until the last line.
-    ends = [node.lineno - 1 for node in tree.body[1:]] + [len(lines)]
+    ends = []
+    for node in tree.body[1:]:
+        endLine = node.lineno - 1
+        # Special handling of decorators:
+        # Decorators are not counted in the value returned by lineno,
+        # and instead are stored in the decorator_list attribute.
+        # Also, not all AST objects can have decorators.
+        if hasattr(node, "decorator_list"):
+            endLine -= len(node.decorator_list)
+        ends += [endLine]
+    ends += [len(lines)]
+
+    # ends = [node.lineno - 1 for node in tree.body[1:]] + [len(lines)]
     for node, end in zip(tree.body, ends):
         # Given this selection:
         # 1: if (m > 0 and
@@ -56,6 +68,10 @@ def _get_statements(selection):
         #
         # The first block would have lineno = 1,and the second block lineno = 4
         start = node.lineno - 1
+
+        # Special handling of decorators similar to what's above.
+        if hasattr(node, "decorator_list"):
+            start -= len(node.decorator_list)
         block = "\n".join(lines[start:end])
 
         # If the block is multiline, add an extra newline character at its end.
