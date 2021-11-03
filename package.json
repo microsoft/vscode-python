@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2021.11.0-dev",
+    "version": "2021.12.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -505,10 +505,7 @@
                             "All",
                             "pythonDeprecatePythonPath",
                             "pythonSurveyNotification",
-                            "pythonTensorboardExperiment",
-                            "pythonRunFailedTestsButtonDisplayed",
-                            "pythonRefreshTestsButtonDisplayed",
-                            "pythonRememberDebugConfig"
+                            "pythonTensorboardExperiment"
                         ]
                     },
                     "scope": "machine",
@@ -522,10 +519,7 @@
                             "All",
                             "pythonDeprecatePythonPath",
                             "pythonSurveyNotification",
-                            "pythonTensorboardExperiment",
-                            "pythonRunFailedTestsButtonDisplayed",
-                            "pythonRefreshTestsButtonDisplayed",
-                            "pythonRememberDebugConfig"
+                            "pythonTensorboardExperiment"
                         ]
                     },
                     "scope": "machine",
@@ -1763,12 +1757,6 @@
                 },
                 {
                     "category": "Python",
-                    "command": "python.clearWorkspaceInterpreter",
-                    "title": "%python.command.python.clearWorkspaceInterpreter.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "category": "Python",
                     "command": "python.switchOffInsidersChannel",
                     "title": "%python.command.python.switchOffInsidersChannel.title%",
                     "when": "config.python.insidersChannel != 'default' && !virtualWorkspace && shellExecutionSupported"
@@ -1846,22 +1834,22 @@
             "view/title": [
                 {
                     "command": "python.refreshTests",
-                    "when": "view == workbench.view.testing && !refreshingTests && inShowRefreshingTestsExperiment && !virtualWorkspace && shellExecutionSupported",
+                    "when": "view == workbench.view.testing && !refreshingTests && !virtualWorkspace && shellExecutionSupported",
                     "group": "navigation@0"
                 },
                 {
                     "command": "python.refreshingTests",
-                    "when": "view == workbench.view.testing && refreshingTests && inShowRefreshingTestsExperiment && !virtualWorkspace && shellExecutionSupported",
+                    "when": "view == workbench.view.testing && refreshingTests && !virtualWorkspace && shellExecutionSupported",
                     "group": "navigation@0"
                 },
                 {
                     "command": "python.stopRefreshingTests",
-                    "when": "view == workbench.view.testing && refreshingTests && inShowRefreshingTestsExperiment && !virtualWorkspace && shellExecutionSupported",
+                    "when": "view == workbench.view.testing && refreshingTests && !virtualWorkspace && shellExecutionSupported",
                     "group": "navigation@0"
                 },
                 {
                     "command": "testing.reRunFailTests",
-                    "when": "view == workbench.view.testing && hasFailedTests && inShowRunFailedTestsExperiment && !virtualWorkspace && shellExecutionSupported",
+                    "when": "view == workbench.view.testing && hasFailedTests && !virtualWorkspace && shellExecutionSupported",
                     "group": "navigation@1"
                 }
             ]
