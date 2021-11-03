@@ -1,6 +1,6 @@
 import '../../common/extensions';
+import { traceError, traceVerbose } from '../../logging';
 import { isTestExecution } from '../constants';
-import { traceError, traceVerbose } from '../logger';
 import { createDeferred, Deferred } from './async';
 import { getCacheKeyFromFunctionArgs, getGlobalCacheStore } from './cacheUtils';
 import { StopWatch } from './stopWatch';

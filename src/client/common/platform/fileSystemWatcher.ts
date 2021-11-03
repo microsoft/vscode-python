@@ -6,7 +6,7 @@
 import * as chokidar from 'chokidar';
 import * as path from 'path';
 import { RelativePattern, workspace } from 'vscode';
-import { traceError, traceVerbose } from '../logger';
+import { traceError, traceVerbose } from '../../logging';
 import { Disposables, IDisposable } from '../utils/resourceLifecycle';
 import { normCasePath } from './fs-paths';
 

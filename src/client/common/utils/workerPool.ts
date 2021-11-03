@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { traceError } from '../logger';
+import { traceError } from '../../logging';
 import { createDeferred, Deferred } from './async';
 
 interface IWorker {

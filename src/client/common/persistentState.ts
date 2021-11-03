@@ -6,9 +6,9 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
+import { traceError, traceVerbose } from '../logging';
 import { ICommandManager } from './application/types';
 import { Commands } from './constants';
-import { traceError, traceVerbose } from './logger';
 import {
     GLOBAL_MEMENTO,
     IExtensionContext,

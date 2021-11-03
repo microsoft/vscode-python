@@ -6,8 +6,6 @@ import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
 import { InterpreterUri } from '../installer/types';
 import { isParentPath } from '../platform/fs-paths';
 import { Resource } from '../types';
-import { isPromise } from './async';
-import { StopWatch } from './stopWatch';
 
 export function noop() {}
 

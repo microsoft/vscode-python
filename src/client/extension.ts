@@ -29,7 +29,6 @@ import { ProgressLocation, ProgressOptions, window } from 'vscode';
 
 import { buildApi, IExtensionApi } from './api';
 import { IApplicationShell, IWorkspaceService } from './common/application/types';
-import { traceError } from './common/logger';
 import { IAsyncDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
@@ -40,6 +39,7 @@ import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 import { IStartupDurations } from './types';
 import { runAfterActivation } from './common/utils/runAfterActivation';
 import { IInterpreterService } from './interpreter/contracts';
+import { traceError } from './logging';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -61,7 +61,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
     } catch (ex) {
         // We want to completely handle the error
         // before notifying VS Code.
-        await handleError(ex, durations);
+        await handleError(ex as Error, durations);
         throw ex; // re-raise
     }
     // Send the "success" telemetry only if activation did not fail.

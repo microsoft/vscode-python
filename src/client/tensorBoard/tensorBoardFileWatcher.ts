@@ -6,8 +6,8 @@ import { FileSystemWatcher, RelativePattern, WorkspaceFolder, WorkspaceFoldersCh
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IWorkspaceService } from '../common/application/types';
 import { NativeTensorBoard } from '../common/experiments/groups';
-import { traceError } from '../common/logger';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
+import { traceError } from '../logging';
 import { TensorBoardEntrypointTrigger } from './constants';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 

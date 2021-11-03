@@ -3,9 +3,9 @@
 
 import { Event, EventEmitter } from 'vscode';
 import '../../../../common/extensions';
-import { traceError } from '../../../../common/logger';
 import { createDeferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
+import { traceError } from '../../../../logging';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { PythonEnvInfo } from '../../info';

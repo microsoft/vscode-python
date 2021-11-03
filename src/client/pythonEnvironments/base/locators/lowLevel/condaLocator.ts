@@ -5,7 +5,7 @@ import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../locator';
 import { getInterpreterPathFromDir } from '../../../common/commonUtils';
 import { Conda } from '../../../common/environmentManagers/conda';
-import { traceError, traceVerbose } from '../../../../common/logger';
+import { traceError, traceVerbose } from '../../../../logging';
 
 export class CondaEnvironmentLocator extends Locator<BasicEnvInfo> {
     // eslint-disable-next-line class-methods-use-this

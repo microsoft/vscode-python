@@ -1,9 +1,9 @@
 import * as path from 'path';
 import { CancellationToken, OutputChannel, TextDocument } from 'vscode';
 import '../common/extensions';
-import { traceError } from '../common/logger';
 import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import { traceError } from '../logging';
 import { BaseLinter } from './baseLinter';
 import { ILintMessage } from './types';
 

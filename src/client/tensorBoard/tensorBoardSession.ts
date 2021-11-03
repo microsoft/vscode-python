@@ -25,7 +25,6 @@ import {
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';
-import { traceError, traceInfo } from '../common/logger';
 import { tensorboardLauncher } from '../common/process/internal/scripts';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../common/process/types';
 import {
@@ -46,6 +45,7 @@ import { ImportTracker } from '../telemetry/importTracker';
 import { TensorBoardPromptSelection, TensorBoardSessionStartResult } from './constants';
 import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
 import { ModuleInstallFlags } from '../common/installer/types';
+import { traceError, traceInfo } from '../logging';
 
 enum Messages {
     JumpToSource = 'jump_to_source',

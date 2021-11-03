@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+/* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { createWriteStream } from 'fs-extra';
 import { isPromise } from 'rxjs/internal-compatibility';
 import { Disposable } from 'vscode';
 import { StopWatch } from '../common/utils/stopWatch';
-import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { FileLogger } from './fileLogger';
 import { Arguments, ILogging, LoggingLevelSettingType, LogLevel, TraceDecoratorType, TraceOptions } from './types';
@@ -209,12 +209,11 @@ function logResult(logInfo: LogInfo, traced: TraceInfo, call?: CallInfo) {
         }
     } else {
         logTo(LogLevel.Error, [formatted, traced.err]);
-
         sendTelemetryEvent(('ERROR' as unknown) as EventName, undefined, undefined, traced.err);
     }
 }
 
-function logTo(logLevel: LogLevel, ...args: Arguments): void {
+export function logTo(logLevel: LogLevel, ...args: Arguments): void {
     switch (logLevel) {
         case LogLevel.Error:
             traceError(...args);

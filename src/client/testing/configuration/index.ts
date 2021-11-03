@@ -3,9 +3,9 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { traceError } from '../../common/logger';
 import { IConfigurationService, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestConfiguringTelemetry } from '../../telemetry/types';

@@ -14,8 +14,8 @@ import {
     TestItemCollection,
 } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { traceError, traceVerbose } from '../../../common/logger';
 import { asyncForEach } from '../../../common/utils/arrayUtils';
+import { traceError, traceVerbose } from '../../../logging';
 import {
     RawDiscoveredTests,
     RawTest,

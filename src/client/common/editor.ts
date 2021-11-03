@@ -5,8 +5,8 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { Position, Range, TextDocument, TextEdit, Uri, WorkspaceEdit } from 'vscode';
 import { IFileSystem } from '../common/platform/types';
+import { traceError } from '../logging';
 import { WrappedError } from './errors/errorUtils';
-import { traceError } from './logger';
 import { IEditorUtils } from './types';
 import { isNotebookCell } from './utils/misc';
 

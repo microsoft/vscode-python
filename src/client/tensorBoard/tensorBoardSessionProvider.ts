@@ -8,7 +8,6 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common
 import { Commands } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { TorchProfiler } from '../common/experiments/groups';
-import { traceError, traceInfo } from '../common/logger';
 import { IProcessServiceFactory } from '../common/process/types';
 import {
     IDisposableRegistry,
@@ -20,6 +19,7 @@ import {
 import { TensorBoard } from '../common/utils/localize';
 import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
 import { IInterpreterService } from '../interpreter/contracts';
+import { traceError, traceInfo } from '../logging';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from './constants';

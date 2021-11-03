@@ -3,7 +3,6 @@
 
 import { cloneDeep } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
-import { traceVerbose } from '../../../../common/logger';
 import { identifyEnvironment } from '../../../common/environmentIdentifier';
 import { IEnvironmentInfoService } from '../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
@@ -19,6 +18,7 @@ import {
 } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
 import { resolveBasicEnv } from './resolverUtils';
+import { traceVerbose } from '../../../../logging';
 
 /**
  * Calls environment info service which runs `interpreterInfo.py` script on environments received

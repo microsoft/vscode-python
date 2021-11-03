@@ -27,10 +27,10 @@ import {
     getWorkspaceNode,
     updateTestItemFromRawData,
 } from '../common/testItemUtilities';
-import { traceError } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { unittestDiscovery } from '../../../common/process/internal/scripts/testing_tools';
+import { traceError } from '../../../logging';
 
 @injectable()
 export class UnittestController implements ITestFrameworkController {

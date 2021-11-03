@@ -12,7 +12,6 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { traceError, traceInfo } from '../logger';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import {
     IConfigurationService,
@@ -36,6 +35,7 @@ import {
     IProductService,
     ModuleInstallFlags,
 } from './types';
+import { traceError, traceInfo } from '../../logging';
 
 export { Product } from '../types';
 

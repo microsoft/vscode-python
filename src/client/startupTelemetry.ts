@@ -4,7 +4,6 @@
 import { IWorkspaceService } from './common/application/types';
 import { isTestExecution } from './common/constants';
 import { DeprecatePythonPath } from './common/experiments/groups';
-import { traceError } from './common/logger';
 import { ITerminalHelper } from './common/terminal/types';
 import {
     IConfigurationService,
@@ -17,6 +16,7 @@ import { IStopWatch } from './common/utils/stopWatch';
 import { IInterpreterAutoSelectionService } from './interpreter/autoSelection/types';
 import { ICondaService, IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
+import { traceError } from './logging';
 import { EnvironmentType, PythonEnvironment } from './pythonEnvironments/info';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';

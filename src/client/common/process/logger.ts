@@ -4,8 +4,8 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
+import { traceInfo } from '../../logging';
 import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { traceInfo } from '../logger';
 import { IOutputChannel, IPathUtils } from '../types';
 import { Logging } from '../utils/localize';
 import { IProcessLogger, SpawnOptions } from './types';

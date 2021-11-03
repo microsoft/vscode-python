@@ -6,9 +6,9 @@
 import * as path from 'path';
 import { WorkspaceConfiguration } from 'vscode';
 import './common/extensions';
-import { traceError } from './common/logger';
 import { FileSystem } from './common/platform/fileSystem';
 import { EXTENSION_ROOT_DIR } from './constants';
+import { traceError } from './logging';
 
 type VSCode = typeof import('vscode');
 

@@ -3,13 +3,13 @@
 
 import * as os from 'os';
 import { gte } from 'semver';
-import { traceError } from '../../../../common/logger';
 import { PythonEnvKind, PythonEnvSource } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../locator';
 import { commonPosixBinPaths, getPythonBinFromPosixPaths } from '../../../common/posixUtils';
 import { isPyenvShimDir } from '../../../common/environmentManagers/pyenv';
 import { getOSType, OSType } from '../../../../common/utils/platform';
 import { isMacDefaultPythonPath } from './macDefaultLocator';
+import { traceError } from '../../../../logging';
 
 export class PosixKnownPathsLocator extends Locator<BasicEnvInfo> {
     private kind: PythonEnvKind = PythonEnvKind.OtherGlobal;

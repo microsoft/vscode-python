@@ -16,11 +16,11 @@ import { ITestConfigurationService, ITestsHelper } from './common/types';
 import { ITestingService } from './types';
 import { IExtensionActivationService } from '../activation/types';
 import { ITestController } from './testController/common/types';
-import { traceVerbose } from '../common/logger';
 import { DelayedTrigger, IDelayedTrigger } from '../common/utils/delayTrigger';
 import { ExtensionContextKey } from '../common/application/contextKeys';
 import { checkForFailedTests, updateTestResultMap } from './testController/common/testItemUtilities';
 import { Testing } from '../common/utils/localize';
+import { traceVerbose } from '../logging';
 
 @injectable()
 export class TestingService implements ITestingService {

@@ -4,7 +4,6 @@ import * as path from 'path';
 import { CancellationToken, CancellationTokenSource, TextDocument, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
 import { Commands, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { traceError } from '../common/logger';
 import * as internalScripts from '../common/process/internal/scripts';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../common/process/types';
 import {
@@ -18,6 +17,7 @@ import { createDeferred, createDeferredFromPromise, Deferred } from '../common/u
 import { Common, Diagnostics } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { IServiceContainer } from '../ioc/types';
+import { traceError } from '../logging';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { ISortImportsEditingProvider } from './types';

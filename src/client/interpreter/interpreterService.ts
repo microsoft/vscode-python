@@ -3,7 +3,6 @@ import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import '../common/extensions';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { DeprecatePythonPath } from '../common/experiments/groups';
-import { traceError } from '../common/logger';
 import { IPythonExecutionFactory } from '../common/process/types';
 import {
     IConfigurationService,
@@ -20,6 +19,7 @@ import {
     PythonEnvironmentsChangedEvent,
 } from './contracts';
 import { PythonLocatorQuery } from '../pythonEnvironments/base/locator';
+import { traceError } from '../logging';
 
 type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
 

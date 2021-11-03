@@ -6,8 +6,8 @@ import * as path from 'path';
 import { Disposable } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
-import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
+import { traceError } from '../../logging';
 
 @injectable()
 export class DjangoContextInitializer implements Disposable {

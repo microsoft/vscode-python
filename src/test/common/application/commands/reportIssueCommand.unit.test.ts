@@ -18,7 +18,6 @@ import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { MockWorkspaceConfiguration } from '../../../mocks/mockWorkspaceConfig';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
-import * as Logging from '../../../../client/logging/_global';
 import { Commands } from '../../../../client/common/constants';
 import { AllCommands } from '../../../../client/common/application/commands';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
@@ -32,7 +31,6 @@ suite('Report Issue Command', () => {
     let workspaceService: IWorkspaceService;
     let interpreterService: IInterpreterService;
     let configurationService: IConfigurationService;
-    let getPythonOutputContentStub: sinon.SinonStub;
 
     setup(async () => {
         workspaceService = mock(WorkspaceService);
@@ -65,8 +63,6 @@ suite('Report Issue Command', () => {
 
         cmdManager = mock(CommandManager);
 
-        getPythonOutputContentStub = sinon.stub(Logging, 'getPythonOutputChannelContent');
-        getPythonOutputContentStub.resolves('Python Output');
         reportIssueCommandHandler = new ReportIssueCommandHandler(
             instance(cmdManager),
             instance(workspaceService),

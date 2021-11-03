@@ -1,8 +1,8 @@
 import { OutputChannel, Uri } from 'vscode';
-import { traceError, traceWarning } from '../../common/logger';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { ExecutionInfo, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { traceError, traceWarn } from '../../logging';
 import { ILinterManager } from '../types';
 import { BaseErrorHandler } from './baseErrorHandler';
 
@@ -27,7 +27,7 @@ export class NotInstalledErrorHandler extends BaseErrorHandler {
         const info = linterManager.getLinterInfo(execInfo.product!);
         const customError = `Linter '${info.id}' is not installed. Please install it or select another linter".`;
         this.outputChannel.appendLine(`\n${customError}\n${error}`);
-        traceWarning(customError, error);
+        traceWarn(customError, error);
         return true;
     }
 }

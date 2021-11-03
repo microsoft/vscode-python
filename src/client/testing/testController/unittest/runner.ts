@@ -3,10 +3,10 @@
 
 import { injectable, inject, named } from 'inversify';
 import { Location, TestController, TestItem, TestMessage, TestRun, TestRunProfileKind } from 'vscode';
-import { traceError, traceInfo } from '../../../common/logger';
 import * as internalScripts from '../../../common/process/internal/scripts';
 import { IOutputChannel } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
+import { traceError, traceInfo } from '../../../logging';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import { ITestRunner, ITestDebugLauncher, IUnitTestSocketServer, LaunchOptions, Options } from '../../common/types';
 import { TEST_OUTPUT_CHANNEL } from '../../constants';

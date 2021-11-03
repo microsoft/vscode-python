@@ -8,7 +8,6 @@ import { LanguageServerType } from '../activation/types';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
-import { traceError, traceInfo } from '../common/logger';
 import type { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { isPromise } from '../common/utils/async';
@@ -24,6 +23,7 @@ import {
 } from '../tensorBoard/constants';
 import { EventName, PlatformErrors } from './constants';
 import type { LinterTrigger, TestTool } from './types';
+import { traceError, traceInfo } from '../logging';
 
 /**
  * Checks whether telemetry is supported.
