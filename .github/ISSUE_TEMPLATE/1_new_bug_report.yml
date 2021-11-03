@@ -40,7 +40,7 @@ body:
     attributes:
       label: Language server
       description: 'The value of the `python.languageServer` setting'
-      options: ['Default', 'Pylance', 'Jedi', 'Disabled']
+      options: ['Default', 'Pylance', 'Jedi', 'None or Disabled']
     validations:
       required: true
   - type: textarea
