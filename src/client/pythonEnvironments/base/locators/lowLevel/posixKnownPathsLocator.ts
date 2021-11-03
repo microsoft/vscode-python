@@ -9,6 +9,7 @@ import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../locator';
 import { commonPosixBinPaths, getPythonBinFromPosixPaths } from '../../../common/posixUtils';
 import { isPyenvShimDir } from '../../../common/environmentManagers/pyenv';
 import { getOSType, OSType } from '../../../../common/utils/platform';
+import { isMacDefaultPythonPath } from './macDefaultLocator';
 
 export class PosixKnownPathsLocator extends Locator<BasicEnvInfo> {
     private kind: PythonEnvKind = PythonEnvKind.OtherGlobal;
@@ -16,6 +17,7 @@ export class PosixKnownPathsLocator extends Locator<BasicEnvInfo> {
     public iterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         // Flag to remove system installs of Python 2 from the list of discovered interpreters
         // If on macOS Monterey or later.
+        // See https://github.com/microsoft/vscode-python/issues/17870.
         let isMacPython2Deprecated = false;
         if (getOSType() === OSType.OSX && gte(os.release(), '21.0.0')) {
             isMacPython2Deprecated = true;
@@ -30,13 +32,7 @@ export class PosixKnownPathsLocator extends Locator<BasicEnvInfo> {
 
             // Filter out MacOS system installs of Python 2 if necessary.
             if (isMacPython2Deprecated) {
-                pythonBinaries = pythonBinaries.filter((binary) => {
-                    if (binary.startsWith('/usr/bin/python')) {
-                        return binary.startsWith('/usr/bin/python3');
-                    }
-
-                    return true;
-                });
+                pythonBinaries = pythonBinaries.filter((binary) => !isMacDefaultPythonPath(binary));
             }
 
             for (const bin of pythonBinaries) {

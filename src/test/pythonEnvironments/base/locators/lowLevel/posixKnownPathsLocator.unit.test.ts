@@ -14,6 +14,7 @@ import { PosixKnownPathsLocator } from '../../../../../client/pythonEnvironments
 import { createBasicEnv } from '../../common';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertBasicEnvsEqual } from '../envTestUtils';
+import { isMacDefaultPythonPath } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/macDefaultLocator';
 
 suite('Posix Known Path Locator', () => {
     let getPathEnvVar: sinon.SinonStub;
@@ -61,7 +62,7 @@ suite('Posix Known Path Locator', () => {
     });
 
     test('iterEnvs(): Do not return Python 2 installs when on macOS Monterey', async function () {
-        if (osUtils.getOSType() === osUtils.OSType.Windows) {
+        if (osUtils.getOSType() !== osUtils.OSType.OSX) {
             this.skip();
         }
 
@@ -73,19 +74,13 @@ suite('Posix Known Path Locator', () => {
 
         const actualEnvs = await getEnvs(locator.iterEnvs());
 
-        const globalPython2Envs = actualEnvs.filter((env) => {
-            if (env.executablePath.startsWith('/usr/bin/python')) {
-                return !env.executablePath.startsWith('/usr/bin/python3');
-            }
-
-            return false;
-        });
+        const globalPython2Envs = actualEnvs.filter((env) => isMacDefaultPythonPath(env.executablePath));
 
         assert.strictEqual(globalPython2Envs.length, 0);
     });
 
     test('iterEnvs(): Return Python 2 installs when not on macOS Monterey', async function () {
-        if (osUtils.getOSType() === osUtils.OSType.Windows) {
+        if (osUtils.getOSType() !== osUtils.OSType.OSX) {
             this.skip();
         }
 
@@ -97,13 +92,7 @@ suite('Posix Known Path Locator', () => {
 
         const actualEnvs = await getEnvs(locator.iterEnvs());
 
-        const globalPython2Envs = actualEnvs.filter((env) => {
-            if (env.executablePath.startsWith('/usr/bin/python')) {
-                return !env.executablePath.startsWith('/usr/bin/python3');
-            }
-
-            return false;
-        });
+        const globalPython2Envs = actualEnvs.filter((env) => isMacDefaultPythonPath(env.executablePath));
 
         assert.notStrictEqual(globalPython2Envs.length, 0);
     });
