@@ -23,7 +23,6 @@ import {
 } from '../tensorBoard/constants';
 import { EventName, PlatformErrors } from './constants';
 import type { LinterTrigger, TestTool } from './types';
-import { traceError, traceInfo } from '../logging';
 
 /**
  * Checks whether telemetry is supported.
@@ -137,7 +136,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                         break;
                 }
             } catch (exception) {
-                traceError(`Failed to serialize ${prop} for ${eventName}`, exception);
+                console.error(`Failed to serialize ${prop} for ${eventName}`, exception);
             }
         });
     }
@@ -161,7 +160,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     }
 
     if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
-        traceInfo(
+        console.info(
             `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
                 customProperties,
             )} `,

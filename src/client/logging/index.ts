@@ -8,6 +8,7 @@ import { createWriteStream } from 'fs-extra';
 import { isPromise } from 'rxjs/internal-compatibility';
 import { Disposable } from 'vscode';
 import { StopWatch } from '../common/utils/stopWatch';
+import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { FileLogger } from './fileLogger';
 import { Arguments, ILogging, LoggingLevelSettingType, LogLevel, TraceDecoratorType, TraceOptions } from './types';
