@@ -50,10 +50,11 @@ def _get_statements(selection):
     for node in tree.body[1:]:
         endLine = node.lineno - 1
         # Special handling of decorators:
-        # Decorators are not counted in the value returned by lineno,
-        # and instead are stored in the decorator_list attribute.
+        # In Python 3, decorators are not taken into account in the value returned by lineno,
+        # and we have to use the length of the decorator_list array to compute the actual start line.
+        # In Python 2.7, lineno takes into account decorators, so this offset check is unnecessary.
         # Also, not all AST objects can have decorators.
-        if hasattr(node, "decorator_list"):
+        if hasattr(node, "decorator_list") and sys.version_info >= (3,):
             endLine -= len(node.decorator_list)
         ends += [endLine]
     ends += [len(lines)]
@@ -70,7 +71,7 @@ def _get_statements(selection):
         start = node.lineno - 1
 
         # Special handling of decorators similar to what's above.
-        if hasattr(node, "decorator_list"):
+        if hasattr(node, "decorator_list") and sys.version_info >= (3,):
             start -= len(node.decorator_list)
         block = "\n".join(lines[start:end])
 
