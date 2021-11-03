@@ -2,7 +2,6 @@ name: General Bug Report
 description: "Issue with the Python extension, not supporting/sibling extensions (you may also use the `Python: Report Issue` command)"
 labels: ["bug", "classify"]
 body:
-body:
   - type: input
     attributes:
       label: VS Code version
