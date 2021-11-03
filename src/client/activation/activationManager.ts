@@ -9,7 +9,6 @@ import { IApplicationDiagnostics } from '../application/types';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { DeprecatePythonPath } from '../common/experiments/groups';
-import { traceDecorators } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { IDisposable, IExperimentService, IInterpreterPathService, Resource } from '../common/types';
 import { Deferred } from '../common/utils/async';
