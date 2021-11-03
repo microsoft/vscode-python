@@ -1,12 +1,11 @@
 name: General Bug Report
-description: "Issue with the Python extension, not supporting/sibling extensions (you may also use the `Python: Report Issue` command)"
-labels: ["bug", "classify"]
-body:
+description: 'Issue with the Python extension, not supporting/sibling extensions (you may also use the `Python: Report Issue` command)'
+labels: ['bug', 'classify']
 body:
   - type: input
     attributes:
       label: VS Code version
-      description: "Can be found via the `Help: About` command"
+      description: 'Can be found via the `Help: About` command'
     validations:
       required: true
   - type: input
@@ -40,8 +39,8 @@ body:
   - type: dropdown
     attributes:
       label: Language server
-      description: "The value of the `python.languageServer` setting"
-      options : ['Default', 'Pylance', 'Jedi', 'Disabled']
+      description: 'The value of the `python.languageServer` setting'
+      options: ['Default', 'Pylance', 'Jedi', 'Disabled']
     validations:
       required: true
   - type: textarea
