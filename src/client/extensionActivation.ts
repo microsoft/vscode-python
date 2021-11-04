@@ -26,7 +26,7 @@ import { IInterpreterService } from './interpreter/contracts';
 import { getLanguageConfiguration } from './language/languageConfiguration';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
-import { initializeFileLogging, setLoggingLevel } from './logging';
+import { setLoggingLevel } from './logging';
 import { PythonCodeActionProvider } from './providers/codeActionProvider/pythonCodeActionProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { ReplProvider } from './providers/replProvider';
@@ -89,10 +89,6 @@ export async function activateComponents(
 async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const { context, legacyIOC } = ext;
     const { serviceManager, serviceContainer } = legacyIOC;
-
-    // File logger using fs-extra to create file and log to it
-    // It should not use any other service
-    initializeFileLogging(context.subscriptions);
 
     // register "services"
 

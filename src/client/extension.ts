@@ -9,8 +9,6 @@ if ((Reflect as any).metadata === undefined) {
 // Initialize source maps (this must never be moved up nor further down).
 import { initialize } from './sourceMapSupport';
 initialize(require('vscode'));
-// Initialize the logger first.
-require('./common/logger');
 
 //===============================================
 // We start tracking the extension's startup time at this point.  The
@@ -21,6 +19,11 @@ const durations = {} as IStartupDurations;
 import { StopWatch } from './common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
+
+// Initialize file logging here. This should not depend on too many things.
+import { initializeFileLogging, traceError } from './logging';
+const logDispose: { dispose: () => void }[] = [];
+initializeFileLogging(logDispose);
 
 //===============================================
 // loading starts here
@@ -39,7 +42,6 @@ import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 import { IStartupDurations } from './types';
 import { runAfterActivation } from './common/utils/runAfterActivation';
 import { IInterpreterService } from './interpreter/contracts';
-import { traceError } from './logging';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -92,6 +94,9 @@ async function activateUnsafe(
     startupStopWatch: StopWatch,
     startupDurations: IStartupDurations,
 ): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
+    // Add anything that we got from initializing logs to dispose.
+    context.subscriptions.push(...logDispose);
+
     const activationDeferred = createDeferred<void>();
     displayProgress(activationDeferred.promise);
     startupDurations.startActivateTime = startupStopWatch.elapsedTime;
