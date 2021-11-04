@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.11.0-rc (1 November 2021)
+## 2021.11.0 (4 November 2021)
 
 ### Enhancements
 
