@@ -4,4 +4,4 @@
 # 2) pip-compile --generate-hashes requirements.in
 
 # Sort Imports
-isort==5.9.3
+isort==5.10.0
