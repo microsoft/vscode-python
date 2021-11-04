@@ -57,11 +57,14 @@ abstract class BaseInstaller {
 
     private readonly productService: IProductService;
 
+    protected readonly persistentStateFactory: IPersistentStateFactory;
+
     constructor(protected serviceContainer: IServiceContainer, protected outputChannel: OutputChannel) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.productService = serviceContainer.get<IProductService>(IProductService);
+        this.persistentStateFactory = serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }
 
     public promptToInstall(
@@ -219,6 +222,8 @@ abstract class BaseInstaller {
     }
 }
 
+const doNotDisplayFormatterPromptStateKey = 'FORMATTER_NOT_INSTALLED_KEY';
+
 export class FormatterInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(
         product: Product,
@@ -226,6 +231,15 @@ export class FormatterInstaller extends BaseInstaller {
         cancel?: CancellationToken,
         _flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse> {
+        const neverShowAgain = this.persistentStateFactory.createGlobalPersistentState(
+            doNotDisplayFormatterPromptStateKey,
+            false,
+        );
+
+        if (neverShowAgain.value) {
+            return InstallerResponse.Ignore;
+        }
+
         // Hard-coded on purpose because the UI won't necessarily work having
         // another formatter.
         const formatters = [Product.autopep8, Product.black, Product.yapf];
@@ -235,7 +249,7 @@ export class FormatterInstaller extends BaseInstaller {
         const useOptions = formatterNames.map((name) => Products.useFormatter().format(name));
         const yesChoice = Common.bannerLabelYes();
 
-        const options = [...useOptions];
+        const options = [...useOptions, Common.doNotShowAgain()];
         let message = Products.formatterNotInstalled().format(productName);
         if (this.isExecutableAModule(product, resource)) {
             options.splice(0, 0, yesChoice);
@@ -248,6 +262,12 @@ export class FormatterInstaller extends BaseInstaller {
         if (item === yesChoice) {
             return this.install(product, resource, cancel);
         }
+
+        if (item === Common.doNotShowAgain()) {
+            neverShowAgain.updateValue(true);
+            return InstallerResponse.Ignore;
+        }
+
         if (typeof item === 'string') {
             for (const formatter of formatters) {
                 const formatterName = ProductNames.get(formatter)!;
