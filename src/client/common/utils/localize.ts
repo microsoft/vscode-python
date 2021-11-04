@@ -386,6 +386,15 @@ export namespace ExtensionSurveyBanner {
 
 export namespace Products {
     export const installingModule = localize('products.installingModule', 'Installing {0}');
+    export const formatterNotInstalled = localize(
+        'products.formatterNotInstalled',
+        'Formatter {0} is not installed. Install?',
+    );
+    export const useFormatter = localize('products.useFormatter', 'Use {0}');
+    export const invalidFormatterPath = localize(
+        'products.invalidFormatterPath',
+        'Path to the {0} formatter is invalid ({1})',
+    );
 }
 export namespace DebugConfigStrings {
     export const selectConfiguration = {

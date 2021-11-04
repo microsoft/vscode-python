@@ -23,7 +23,7 @@ import {
     Product,
     ProductType,
 } from '../types';
-import { Common, Installer, Linters } from '../utils/localize';
+import { Common, Installer, Linters, Products } from '../utils/localize';
 import { isResource, noop } from '../utils/misc';
 import { translateProductToModule } from './moduleInstaller';
 import { ProductNames } from './productNames';
@@ -232,16 +232,16 @@ export class FormatterInstaller extends BaseInstaller {
         const formatterNames = formatters.map((formatter) => ProductNames.get(formatter)!);
         const productName = ProductNames.get(product)!;
         formatterNames.splice(formatterNames.indexOf(productName), 1);
-        const useOptions = formatterNames.map((name) => `Use ${name}`);
-        const yesChoice = 'Yes';
+        const useOptions = formatterNames.map((name) => Products.useFormatter().format(name));
+        const yesChoice = Common.bannerLabelYes();
 
         const options = [...useOptions];
-        let message = `Formatter ${productName} is not installed. Install?`;
+        let message = Products.formatterNotInstalled().format(productName);
         if (this.isExecutableAModule(product, resource)) {
             options.splice(0, 0, yesChoice);
         } else {
             const executable = this.getExecutableNameFromSettings(product, resource);
-            message = `Path to the ${productName} formatter is invalid (${executable})`;
+            message = Products.invalidFormatterPath().format(productName, executable);
         }
 
         const item = await this.appShell.showErrorMessage(message, ...options);
