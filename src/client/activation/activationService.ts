@@ -3,14 +3,12 @@
 import '../common/extensions';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import {
     IConfigurationService,
     IDisposableRegistry,
     IExtensions,
-    IOutputChannel,
     IPersistentStateFactory,
     IPythonSettings,
     Resource,
@@ -31,7 +29,7 @@ import {
     LanguageServerType,
 } from './types';
 import { StopWatch } from '../common/utils/stopWatch';
-import { traceError } from '../logging';
+import { traceError, traceLog } from '../logging';
 
 const languageServerSetting: keyof IPythonSettings = 'languageServer';
 const workspacePathNameForGlobalWorkspaces = '';
@@ -40,6 +38,24 @@ interface IActivatedServer {
     key: string;
     server: ILanguageServerActivator;
     jedi: boolean;
+}
+
+function logStartup(serverType: LanguageServerType): void {
+    let outputLine;
+    switch (serverType) {
+        case LanguageServerType.Jedi:
+            outputLine = LanguageService.startingJedi();
+            break;
+        case LanguageServerType.Node:
+            outputLine = LanguageService.startingPylance();
+            break;
+        case LanguageServerType.None:
+            outputLine = LanguageService.startingNone();
+            break;
+        default:
+            throw new Error('Unknown language server type in activator.');
+    }
+    traceLog(outputLine);
 }
 
 @injectable()
@@ -52,8 +68,6 @@ export class LanguageServerExtensionActivationService
     private readonly workspaceService: IWorkspaceService;
 
     private readonly configurationService: IConfigurationService;
-
-    private readonly output: OutputChannel;
 
     private readonly interpreterService: IInterpreterService;
 
@@ -68,8 +82,6 @@ export class LanguageServerExtensionActivationService
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-
         const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         disposables.push(this);
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
@@ -235,7 +247,7 @@ export class LanguageServerExtensionActivationService
 
         this.sendTelemetryForChosenLanguageServer(serverType).ignoreErrors();
 
-        await this.logStartup(serverType);
+        logStartup(serverType);
         let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
         try {
             await server.start(resource, interpreter);
@@ -244,7 +256,7 @@ export class LanguageServerExtensionActivationService
                 throw ex;
             }
             traceError(ex);
-            this.output.appendLine(LanguageService.lsFailedToStart());
+            traceLog(LanguageService.lsFailedToStart());
             serverType = LanguageServerType.Jedi;
             server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
             await server.start(resource, interpreter);
@@ -258,24 +270,6 @@ export class LanguageServerExtensionActivationService
             // Dispose of the actual server.
             server.dispose();
         });
-    }
-
-    private async logStartup(serverType: LanguageServerType): Promise<void> {
-        let outputLine;
-        switch (serverType) {
-            case LanguageServerType.Jedi:
-                outputLine = LanguageService.startingJedi();
-                break;
-            case LanguageServerType.Node:
-                outputLine = LanguageService.startingPylance();
-                break;
-            case LanguageServerType.None:
-                outputLine = LanguageService.startingNone();
-                break;
-            default:
-                throw new Error('Unknown language server type in activator.');
-        }
-        this.output.appendLine(outputLine);
     }
 
     private async onDidChangeConfiguration(event: ConfigurationChangeEvent): Promise<void> {
