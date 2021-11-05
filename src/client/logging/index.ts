@@ -49,6 +49,10 @@ export function initializeFileLogging(disposables: Disposable[]): void {
     }
 }
 
+export function traceLog(...args: Arguments): void {
+    loggers.forEach((l) => l.traceLog(...args));
+}
+
 export function traceError(...args: Arguments): void {
     if (globalLoggingLevel >= LogLevel.Error) {
         loggers.forEach((l) => l.traceError(...args));
