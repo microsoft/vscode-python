@@ -3,12 +3,28 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import { expect } from 'chai';
+import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { IApplicationShell } from '../../../client/common/application/types';
-import { DataScienceInstaller } from '../../../client/common/installer/productInstaller';
-import { IInstallationChannelManager, IModuleInstaller, InterpreterUri } from '../../../client/common/installer/types';
-import { InstallerResponse, IOutputChannel, Product } from '../../../client/common/types';
+import { DataScienceInstaller, FormatterInstaller } from '../../../client/common/installer/productInstaller';
+import { ProductNames } from '../../../client/common/installer/productNames';
+import {
+    IInstallationChannelManager,
+    IModuleInstaller,
+    InterpreterUri,
+    IProductPathService,
+    IProductService,
+} from '../../../client/common/installer/types';
+import {
+    InstallerResponse,
+    IOutputChannel,
+    IPersistentStateFactory,
+    Product,
+    ProductType,
+} from '../../../client/common/types';
+import { Common, Products } from '../../../client/common/utils/localize';
 import { Architecture } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, ModuleInstallerType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
@@ -227,5 +243,245 @@ suite('DataScienceInstaller install', async () => {
 
         const result = await dataScienceInstaller.install(Product.torchProfilerInstallName, testEnvironment);
         expect(result).to.equal(InstallerResponse.Installed, 'Should be Installed');
+    });
+});
+
+suite('Formatter installer', async () => {
+    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
+    // let outputChannel: TypeMoq.IMock<IOutputChannel>;
+    let appShell: TypeMoq.IMock<IApplicationShell>;
+    let persistentStateFactory: TypeMoq.IMock<IPersistentStateFactory>;
+    let productPathService: TypeMoq.IMock<IProductPathService>;
+    // let isExecutableAsModuleStub: sinon.SinonStub;
+
+    // constructor(protected serviceContainer: IServiceContainer, protected outputChannel: OutputChannel) {
+    //     this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+    //     this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+    //     this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    //     this.productService = serviceContainer.get<IProductService>(IProductService);
+    //     this.persistentStateFactory = serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+    // }
+
+    setup(() => {
+        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        // outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
+        appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        productPathService = TypeMoq.Mock.ofType<IProductPathService>();
+
+        const installStub = sinon.stub(FormatterInstaller.prototype, 'install');
+        installStub.returns(Promise.resolve(InstallerResponse.Installed));
+
+        const productService = TypeMoq.Mock.ofType<IProductService>();
+        productService.setup((p) => p.getProductType(TypeMoq.It.isAny())).returns(() => ProductType.Formatter);
+
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
+        serviceContainer
+            .setup((c) => c.get(TypeMoq.It.isValue(IPersistentStateFactory)))
+            .returns(() => persistentStateFactory.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IProductService))).returns(() => productService.object);
+        serviceContainer
+            .setup((c) => c.get(TypeMoq.It.isValue(IProductPathService), ProductType.Formatter))
+            .returns(() => productPathService.object);
+    });
+
+    teardown(() => {
+        sinon.restore();
+    });
+
+    // - if black not installed, offer autopep8 and yapf options
+    // - if autopep8 not installed, offer black and yapf options
+    // - if yapf not installed, offer black and autopep8 options
+    // - if not executable as a module, display error message
+    // - if never show again was set to true earlier, ignore
+    // if never show again is selected, ignore
+
+    test('If black is not installed, offer autopep8 and yapf as options', async () => {
+        const messageOptions = [
+            Common.bannerLabelYes(),
+            Products.useFormatter().format(ProductNames.get(Product.autopep8)!),
+            Products.useFormatter().format(ProductNames.get(Product.yapf)!),
+            Common.doNotShowAgain(),
+        ];
+
+        appShell
+            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), ...messageOptions))
+            .returns(() => Promise.resolve(Common.bannerLabelYes()))
+            .verifiable(TypeMoq.Times.once());
+        productPathService
+            .setup((p) => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.once());
+        persistentStateFactory
+            .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAnyString(), false))
+            .returns(() => ({
+                value: false,
+                updateValue: () => Promise.resolve(),
+            }));
+
+        const formatterInstaller = new FormatterInstaller(serviceContainer.object, {} as IOutputChannel);
+        const result = await formatterInstaller.promptToInstall(Product.black);
+
+        appShell.verifyAll();
+        productPathService.verifyAll();
+        assert.strictEqual(result, InstallerResponse.Installed);
+    });
+
+    test('If autopep8 is not installed, offer black and yapf as options', async () => {
+        const messageOptions = [
+            Common.bannerLabelYes(),
+            Products.useFormatter().format(ProductNames.get(Product.black)!),
+            Products.useFormatter().format(ProductNames.get(Product.yapf)!),
+            Common.doNotShowAgain(),
+        ];
+
+        appShell
+            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), ...messageOptions))
+            .returns(() => Promise.resolve(Common.bannerLabelYes()))
+            .verifiable(TypeMoq.Times.once());
+        productPathService
+            .setup((p) => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.once());
+        persistentStateFactory
+            .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAnyString(), false))
+            .returns(() => ({
+                value: false,
+                updateValue: () => Promise.resolve(),
+            }));
+
+        const formatterInstaller = new FormatterInstaller(serviceContainer.object, {} as IOutputChannel);
+        const result = await formatterInstaller.promptToInstall(Product.autopep8);
+
+        appShell.verifyAll();
+        productPathService.verifyAll();
+        assert.strictEqual(result, InstallerResponse.Installed);
+    });
+
+    test('If yapf is not installed, offer autopep8 and black as options', async () => {
+        const messageOptions = [
+            Common.bannerLabelYes(),
+            Products.useFormatter().format(ProductNames.get(Product.autopep8)!),
+            Products.useFormatter().format(ProductNames.get(Product.black)!),
+            Common.doNotShowAgain(),
+        ];
+
+        appShell
+            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), ...messageOptions))
+            .returns(() => Promise.resolve(Common.bannerLabelYes()))
+            .verifiable(TypeMoq.Times.once());
+        productPathService
+            .setup((p) => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.once());
+        persistentStateFactory
+            .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAnyString(), false))
+            .returns(() => ({
+                value: false,
+                updateValue: () => Promise.resolve(),
+            }));
+
+        const formatterInstaller = new FormatterInstaller(serviceContainer.object, {} as IOutputChannel);
+        const result = await formatterInstaller.promptToInstall(Product.yapf);
+
+        appShell.verifyAll();
+        productPathService.verifyAll();
+        assert.strictEqual(result, InstallerResponse.Installed);
+    });
+
+    test('If the formatter is not executable as a module, display an error message', async () => {
+        const messageOptions = [
+            Products.useFormatter().format(ProductNames.get(Product.autopep8)!),
+            Products.useFormatter().format(ProductNames.get(Product.yapf)!),
+            Common.doNotShowAgain(),
+        ];
+
+        appShell
+            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), ...messageOptions))
+            .returns(() => Promise.resolve(Common.bannerLabelYes()))
+            .verifiable(TypeMoq.Times.once());
+        productPathService
+            .setup((p) => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => false)
+            .verifiable(TypeMoq.Times.once());
+        productPathService
+            .setup((p) => p.getExecutableNameFromSettings(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => 'foo');
+        persistentStateFactory
+            .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAnyString(), false))
+            .returns(() => ({
+                value: false,
+                updateValue: () => Promise.resolve(),
+            }));
+
+        const formatterInstaller = new FormatterInstaller(serviceContainer.object, {} as IOutputChannel);
+        await formatterInstaller.promptToInstall(Product.black);
+
+        appShell.verifyAll();
+        productPathService.verifyAll();
+    });
+
+    test('If "Do not show again" has been selected earlier, do not display the prompt', async () => {
+        const messageOptions = [
+            Common.bannerLabelYes(),
+            Products.useFormatter().format(ProductNames.get(Product.autopep8)!),
+            Products.useFormatter().format(ProductNames.get(Product.yapf)!),
+            Common.doNotShowAgain(),
+        ];
+
+        appShell
+            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), ...messageOptions))
+            .returns(() => Promise.resolve(Common.bannerLabelYes()))
+            .verifiable(TypeMoq.Times.never());
+        persistentStateFactory
+            .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAnyString(), false))
+            .returns(() => ({
+                value: true,
+                updateValue: () => Promise.resolve(),
+            }));
+
+        const formatterInstaller = new FormatterInstaller(serviceContainer.object, {} as IOutputChannel);
+        const result = await formatterInstaller.promptToInstall(Product.black);
+
+        appShell.verifyAll();
+        assert.strictEqual(result, InstallerResponse.Ignore);
+    });
+
+    test('If "Do not show again" is selected, do not install the formatter and do not show the prompt again', async () => {
+        let value = false;
+        const messageOptions = [
+            Common.bannerLabelYes(),
+            Products.useFormatter().format(ProductNames.get(Product.autopep8)!),
+            Products.useFormatter().format(ProductNames.get(Product.yapf)!),
+            Common.doNotShowAgain(),
+        ];
+
+        appShell
+            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), ...messageOptions))
+            .returns(() => Promise.resolve(Common.doNotShowAgain()))
+            .verifiable(TypeMoq.Times.once());
+        productPathService
+            .setup((p) => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.once());
+
+        persistentStateFactory
+            .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAnyString(), false))
+            .returns(() => ({
+                value,
+                updateValue: (newValue) => {
+                    value = newValue;
+                    return Promise.resolve();
+                },
+            }));
+
+        const formatterInstaller = new FormatterInstaller(serviceContainer.object, {} as IOutputChannel);
+        const result = await formatterInstaller.promptToInstall(Product.black);
+        const resultTwo = await formatterInstaller.promptToInstall(Product.black);
+
+        appShell.verifyAll();
+        productPathService.verifyAll();
+        assert.strictEqual(result, InstallerResponse.Ignore);
+        assert.strictEqual(resultTwo, InstallerResponse.Ignore);
     });
 });
