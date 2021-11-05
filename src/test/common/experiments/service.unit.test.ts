@@ -7,6 +7,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
+import { Disposable } from 'vscode-jsonrpc';
 import * as tasClient from 'vscode-tas-client';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
@@ -14,6 +15,8 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { Channel } from '../../../client/common/constants';
 import { ExperimentService } from '../../../client/common/experiments/service';
 import { Experiments } from '../../../client/common/utils/localize';
+import { registerLogger } from '../../../client/logging';
+import { OutputChannelLogger } from '../../../client/logging/outputChannelLogger';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
 import { PVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
@@ -27,17 +30,20 @@ suite('Experimentation service', () => {
     let appEnvironment: IApplicationEnvironment;
     let globalMemento: MockMemento;
     let outputChannel: MockOutputChannel;
+    let disposeLogger: Disposable;
 
     setup(() => {
         appEnvironment = mock(ApplicationEnvironment);
         workspaceService = mock(WorkspaceService);
         globalMemento = new MockMemento();
         outputChannel = new MockOutputChannel('');
+        disposeLogger = registerLogger(new OutputChannelLogger(outputChannel));
     });
 
     teardown(() => {
         sinon.restore();
         Telemetry._resetSharedProperties();
+        disposeLogger.dispose();
     });
 
     function configureSettings(enabled: boolean, optInto: string[], optOutFrom: string[]) {
@@ -72,7 +78,7 @@ suite('Experimentation service', () => {
             configureApplicationEnvironment('stable', extensionVersion);
 
             // eslint-disable-next-line no-new
-            new ExperimentService(instance(workspaceService), instance(appEnvironment), globalMemento, outputChannel);
+            new ExperimentService(instance(workspaceService), instance(appEnvironment), globalMemento);
 
             sinon.assert.calledWithExactly(
                 getExperimentationServiceStub,
@@ -91,7 +97,7 @@ suite('Experimentation service', () => {
             configureApplicationEnvironment('insiders', extensionVersion);
 
             // eslint-disable-next-line no-new
-            new ExperimentService(instance(workspaceService), instance(appEnvironment), globalMemento, outputChannel);
+            new ExperimentService(instance(workspaceService), instance(appEnvironment), globalMemento);
 
             sinon.assert.calledWithExactly(
                 getExperimentationServiceStub,
@@ -113,7 +119,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
 
             assert.deepEqual(experimentService._optInto, ['Foo - experiment']);
@@ -128,7 +133,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
 
             assert.deepEqual(experimentService._optOutFrom, ['Foo - experiment']);
@@ -143,12 +147,7 @@ suite('Experimentation service', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             when(globalMemento.get(anything(), anything())).thenReturn({ features: experiments } as any);
 
-            new ExperimentService(
-                instance(workspaceService),
-                instance(appEnvironment),
-                instance(globalMemento),
-                outputChannel,
-            );
+            new ExperimentService(instance(workspaceService), instance(appEnvironment), instance(globalMemento));
             const output = `${Experiments.inGroup().format('pythonExperiment')}\n`;
 
             assert.strictEqual(outputChannel.output, output);
@@ -189,7 +188,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -205,7 +203,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -221,7 +218,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -236,7 +232,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -252,7 +247,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -268,7 +262,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -284,7 +277,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -300,7 +292,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -316,7 +307,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -346,7 +336,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -361,7 +350,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -376,7 +364,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -391,7 +378,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -427,7 +413,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
 
             await experimentService.activate();
@@ -461,7 +446,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
 
             await experimentService.activate();
@@ -494,7 +478,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
 
             await experimentService.activate();
@@ -527,7 +510,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
 
             await experimentService.activate();
@@ -550,7 +532,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
 
             await experimentService.activate();
@@ -582,7 +563,6 @@ suite('Experimentation service', () => {
                 instance(workspaceService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
             );
 
             await experimentService.activate();
