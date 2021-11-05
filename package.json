@@ -383,7 +383,7 @@
             {
                 "category": "Test",
                 "command": "python.stopRefreshingTests",
-                "icon": "$(stop-circle)",
+                "icon": "$(beaker-stop)",
                 "title": "%python.command.python.stopRefreshingTests.title%"
             },
             {
@@ -1701,7 +1701,7 @@
                 {
                     "category": "Test",
                     "command": "python.stopRefreshingTests",
-                    "icon": "$(stop-circle)",
+                    "icon": "$(beaker-stop)",
                     "title": "%python.command.python.stopRefreshingTests.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported"
                 },
