@@ -3,7 +3,7 @@
 
 import { cloneDeep, isEqual, uniq } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
-import { traceVerbose } from '../../../../common/logger';
+import { traceVerbose } from '../../../../logging';
 import { PythonEnvKind } from '../../info';
 import { areSameEnv } from '../../info/env';
 import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';

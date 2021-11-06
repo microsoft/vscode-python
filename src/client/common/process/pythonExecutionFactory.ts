@@ -27,7 +27,7 @@ import {
 } from './types';
 import { IInterpreterAutoSelectionService } from '../../interpreter/autoSelection/types';
 import { sleep } from '../utils/async';
-import { traceError } from '../logger';
+import { traceError } from '../../logging';
 
 // Minimum version number of conda required to be able to use 'conda run'
 export const CONDA_RUN_VERSION = '4.6.0';

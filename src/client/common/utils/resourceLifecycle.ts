@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { logWarning } from '../../logging';
+import { traceWarn } from '../../logging';
 
 /**
  * An object that can be disposed, like vscode.Disposable.
@@ -26,7 +26,7 @@ async function disposeAll(disposables: IDisposable[]): Promise<void> {
             try {
                 await d.dispose();
             } catch (err) {
-                logWarning(`dispose() #${index} failed (${err})`);
+                traceWarn(`dispose() #${index} failed (${err})`);
             }
         }),
     );

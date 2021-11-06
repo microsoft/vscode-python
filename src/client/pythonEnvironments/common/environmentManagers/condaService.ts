@@ -3,12 +3,12 @@ import * as path from 'path';
 import { parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
-import { traceDecorators, traceWarning } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IDisposableRegistry } from '../../../common/types';
 import { cache } from '../../../common/utils/decorators';
 import { ICondaService } from '../../../interpreter/contracts';
+import { traceDecoratorVerbose, traceWarn } from '../../../logging';
 import { Conda, CondaInfo } from './conda';
 
 /**
@@ -83,7 +83,7 @@ export class CondaService implements ICondaService {
             return version;
         }
         // Use a bogus version, at least to indicate the fact that a version was returned.
-        traceWarning(`Unable to parse Version of Conda, ${versionString}`);
+        traceWarn(`Unable to parse Version of Conda, ${versionString}`);
         return new SemVer('0.0.1');
     }
 
@@ -95,7 +95,7 @@ export class CondaService implements ICondaService {
      * The only way this can change is if user installs conda into this same environment.
      * Generally we expect that to happen the other way, the user creates a conda environment with conda in it.
      */
-    @traceDecorators.verbose('Get Conda File from interpreter')
+    @traceDecoratorVerbose('Get Conda File from interpreter')
     @cache(120_000)
     public async getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined> {
         const condaExe = this.platform.isWindows ? 'conda.exe' : 'conda';

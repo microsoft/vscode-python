@@ -505,10 +505,7 @@
                             "All",
                             "pythonDeprecatePythonPath",
                             "pythonSurveyNotification",
-                            "pythonTensorboardExperiment",
-                            "pythonRunFailedTestsButtonDisplayed",
-                            "pythonRefreshTestsButtonDisplayed",
-                            "pythonRememberDebugConfig"
+                            "pythonTensorboardExperiment"
                         ]
                     },
                     "scope": "machine",
@@ -522,10 +519,7 @@
                             "All",
                             "pythonDeprecatePythonPath",
                             "pythonSurveyNotification",
-                            "pythonTensorboardExperiment",
-                            "pythonRunFailedTestsButtonDisplayed",
-                            "pythonRefreshTestsButtonDisplayed",
-                            "pythonRememberDebugConfig"
+                            "pythonTensorboardExperiment"
                         ]
                     },
                     "scope": "machine",
@@ -1840,22 +1834,22 @@
             "view/title": [
                 {
                     "command": "python.refreshTests",
-                    "when": "view == workbench.view.testing && !refreshingTests && inShowRefreshingTestsExperiment && !virtualWorkspace && shellExecutionSupported",
+                    "when": "view == workbench.view.testing && !refreshingTests && !virtualWorkspace && shellExecutionSupported",
                     "group": "navigation@0"
                 },
                 {
                     "command": "python.refreshingTests",
-                    "when": "view == workbench.view.testing && refreshingTests && inShowRefreshingTestsExperiment && !virtualWorkspace && shellExecutionSupported",
+                    "when": "view == workbench.view.testing && refreshingTests && !virtualWorkspace && shellExecutionSupported",
                     "group": "navigation@0"
                 },
                 {
                     "command": "python.stopRefreshingTests",
-                    "when": "view == workbench.view.testing && refreshingTests && inShowRefreshingTestsExperiment && !virtualWorkspace && shellExecutionSupported",
+                    "when": "view == workbench.view.testing && refreshingTests && !virtualWorkspace && shellExecutionSupported",
                     "group": "navigation@0"
                 },
                 {
                     "command": "testing.reRunFailTests",
-                    "when": "view == workbench.view.testing && hasFailedTests && inShowRunFailedTestsExperiment && !virtualWorkspace && shellExecutionSupported",
+                    "when": "view == workbench.view.testing && hasFailedTests && !virtualWorkspace && shellExecutionSupported",
                     "group": "navigation@1"
                 }
             ]
@@ -1956,7 +1950,6 @@
         "vscode-languageserver-protocol": "3.16.0",
         "vscode-tas-client": "^0.1.22",
         "winreg": "^1.2.4",
-        "winston": "^3.2.1",
         "xml2js": "^0.4.19"
     },
     "devDependencies": {

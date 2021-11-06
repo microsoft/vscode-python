@@ -9,8 +9,6 @@ if ((Reflect as any).metadata === undefined) {
 // Initialize source maps (this must never be moved up nor further down).
 import { initialize } from './sourceMapSupport';
 initialize(require('vscode'));
-// Initialize the logger first.
-require('./common/logger');
 
 //===============================================
 // We start tracking the extension's startup time at this point.  The
@@ -22,6 +20,11 @@ import { StopWatch } from './common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
 
+// Initialize file logging here. This should not depend on too many things.
+import { initializeFileLogging, traceError } from './logging';
+const logDispose: { dispose: () => void }[] = [];
+initializeFileLogging(logDispose);
+
 //===============================================
 // loading starts here
 
@@ -29,7 +32,6 @@ import { ProgressLocation, ProgressOptions, window } from 'vscode';
 
 import { buildApi, IExtensionApi } from './api';
 import { IApplicationShell, IWorkspaceService } from './common/application/types';
-import { traceError } from './common/logger';
 import { IAsyncDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
@@ -61,7 +63,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
     } catch (ex) {
         // We want to completely handle the error
         // before notifying VS Code.
-        await handleError(ex, durations);
+        await handleError(ex as Error, durations);
         throw ex; // re-raise
     }
     // Send the "success" telemetry only if activation did not fail.
@@ -92,6 +94,9 @@ async function activateUnsafe(
     startupStopWatch: StopWatch,
     startupDurations: IStartupDurations,
 ): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
+    // Add anything that we got from initializing logs to dispose.
+    context.subscriptions.push(...logDispose);
+
     const activationDeferred = createDeferred<void>();
     displayProgress(activationDeferred.promise);
     startupDurations.startActivateTime = startupStopWatch.elapsedTime;

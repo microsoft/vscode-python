@@ -4,7 +4,6 @@
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { uniq } from 'lodash';
-import { traceError, traceWarning } from '../../../../common/logger';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, UNKNOWN_PYTHON_VERSION, virtualEnvKinds } from '../../info';
 import { buildEnvInfo, comparePythonVersionSpecificity, getEnvDisplayString, getEnvMatcher } from '../../info/env';
 import {
@@ -20,6 +19,7 @@ import { getPythonVersionFromPath as parsePythonVersionFromPath, parseVersion } 
 import { getRegistryInterpreters, getRegistryInterpretersSync } from '../../../common/windowsUtils';
 import { BasicEnvInfo } from '../../locator';
 import { parseVersionFromExecutable } from '../../info/executable';
+import { traceError, traceWarn } from '../../../../logging';
 
 function getResolvers(): Map<PythonEnvKind, (executablePath: string) => Promise<PythonEnvInfo>> {
     const resolvers = new Map<PythonEnvKind, (_: string) => Promise<PythonEnvInfo>>();
@@ -98,7 +98,7 @@ async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
         env.distro.org = data.distroOrgName ?? env.distro.org;
         env.source = uniq(env.source.concat(PythonEnvSource.WindowsRegistry));
     } else {
-        traceWarning('Expected registry to find the interpreter as source was set');
+        traceWarn('Expected registry to find the interpreter as source was set');
     }
 }
 
@@ -132,7 +132,7 @@ async function resolveSimpleEnv(executablePath: string, kind: PythonEnvKind): Pr
 async function resolveCondaEnv(executablePath: string): Promise<PythonEnvInfo> {
     const conda = await Conda.getConda();
     if (conda === undefined) {
-        traceWarning(`${executablePath} identified as Conda environment even though Conda is not installed`);
+        traceWarn(`${executablePath} identified as Conda environment even though Conda is not installed`);
     }
     const envs = (await conda?.getEnvList()) ?? [];
     const matchEnv = getEnvMatcher(executablePath);

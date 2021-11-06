@@ -3,10 +3,10 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
+import { traceVerbose } from '../../logging';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
 import { PythonSettings } from '../configSettings';
-import { traceVerbose } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { ICurrentProcess, IDisposableRegistry } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';

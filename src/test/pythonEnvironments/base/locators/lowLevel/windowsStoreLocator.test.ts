@@ -5,7 +5,6 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { traceWarning } from '../../../../../client/common/logger';
 import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, Deferred, sleep } from '../../../../../client/common/utils/async';
 import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
@@ -15,6 +14,7 @@ import * as externalDeps from '../../../../../client/pythonEnvironments/common/e
 import { WindowsStoreLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsStoreLocator';
 import { TEST_TIMEOUT } from '../../../../constants';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
+import { traceWarn } from '../../../../../client/logging';
 
 class WindowsStoreEnvs {
     private executables: string[] = [];
@@ -58,7 +58,7 @@ class WindowsStoreEnvs {
                 try {
                     await fs.remove(filename);
                 } catch (err) {
-                    traceWarning(`Failed to clean up ${filename}`);
+                    traceWarn(`Failed to clean up ${filename}`);
                 }
             }),
         );
@@ -67,7 +67,7 @@ class WindowsStoreEnvs {
                 try {
                     await fs.rmdir(dir);
                 } catch (err) {
-                    traceWarning(`Failed to clean up ${dir}`);
+                    traceWarn(`Failed to clean up ${dir}`);
                 }
             }),
         );

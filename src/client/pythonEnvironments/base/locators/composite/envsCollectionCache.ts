@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Event } from 'vscode';
-import { traceInfo } from '../../../../common/logger';
+import { traceInfo } from '../../../../logging';
 import { pathExists } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
 import { areSameEnv } from '../../info/env';

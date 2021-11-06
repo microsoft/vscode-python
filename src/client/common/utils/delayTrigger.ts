@@ -3,7 +3,7 @@
 
 import { clearTimeout, setTimeout } from 'timers';
 import { Disposable } from 'vscode';
-import { traceVerbose } from '../logger';
+import { traceVerbose } from '../../logging';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

@@ -12,7 +12,6 @@ import {
 } from 'vscode-languageclient/node';
 
 import { DeprecatePythonPath } from '../../common/experiments/groups';
-import { traceDecorators, traceError } from '../../common/logger';
 import { IConfigurationService, IExperimentService, IInterpreterPathService, Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -23,6 +22,7 @@ import { EventName } from '../../telemetry/constants';
 import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerFolderService, ILanguageServerProxy } from '../types';
+import { traceDecoratorError, traceDecoratorVerbose, traceError } from '../../logging';
 
 namespace InExperiment {
     export const Method = 'python/inExperiment';
@@ -74,7 +74,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         };
     }
 
-    @traceDecorators.verbose('Stopping language server')
+    @traceDecoratorVerbose('Stopping language server')
     public dispose() {
         if (this.languageClient) {
             // Do not await on this.
@@ -96,7 +96,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         this.disposed = true;
     }
 
-    @traceDecorators.error('Failed to start language server')
+    @traceDecoratorError('Failed to start language server')
     @captureTelemetry(
         EventName.LANGUAGE_SERVER_ENABLED,
         undefined,

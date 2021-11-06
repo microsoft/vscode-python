@@ -6,7 +6,6 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { traceError } from '../common/logger';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -32,6 +31,7 @@ import {
     LanguageServerType,
 } from './types';
 import { StopWatch } from '../common/utils/stopWatch';
+import { traceError } from '../logging';
 
 const languageServerSetting: keyof IPythonSettings = 'languageServer';
 const workspacePathNameForGlobalWorkspaces = '';

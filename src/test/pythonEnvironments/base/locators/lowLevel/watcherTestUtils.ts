@@ -4,11 +4,11 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { traceWarning } from '../../../../../client/common/logger';
 import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, Deferred, sleep } from '../../../../../client/common/utils/async';
 import { getOSType, OSType } from '../../../../../client/common/utils/platform';
 import { IDisposable } from '../../../../../client/common/utils/resourceLifecycle';
+import { traceWarn } from '../../../../../client/logging';
 import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
 import { BasicEnvInfo, ILocator } from '../../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
@@ -79,7 +79,7 @@ class Venvs {
         try {
             await fs.remove(filename);
         } catch (err) {
-            traceWarning(`Failed to clean up ${filename}`);
+            traceWarn(`Failed to clean up ${filename}`);
         }
     }
 

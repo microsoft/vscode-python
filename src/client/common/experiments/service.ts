@@ -142,6 +142,22 @@ export class ExperimentService implements IExperimentService {
     }
 
     private logExperiments() {
+        const telemetrySettings = this.workspaceService.getConfiguration('telemetry');
+        let experimentsDisabled = false;
+        if (telemetrySettings && telemetrySettings.get<boolean>('enableTelemetry') === false) {
+            this.output.appendLine('Telemetry is disabled');
+            experimentsDisabled = true;
+        }
+
+        if (telemetrySettings && telemetrySettings.get<string>('telemetryLevel') === 'off') {
+            this.output.appendLine('Telemetry level is off');
+            experimentsDisabled = true;
+        }
+
+        if (experimentsDisabled) {
+            this.output.appendLine('Experiments are disabled, logging experiments for info.');
+        }
+
         if (this._optOutFrom.includes('All')) {
             // We prioritize opt out first
             this.output.appendLine(Experiments.optedOutOf().format('All'));

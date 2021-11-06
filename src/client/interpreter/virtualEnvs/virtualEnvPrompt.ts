@@ -5,10 +5,10 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Disposable, Uri } from 'vscode';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
-import { traceDecorators } from '../../common/logger';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { Common, Interpreters } from '../../common/utils/localize';
+import { traceDecoratorError } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -33,7 +33,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         this.disposableRegistry.push(disposable);
     }
 
-    @traceDecorators.error('Error in event handler for detection of new environment')
+    @traceDecoratorError('Error in event handler for detection of new environment')
     protected async handleNewEnvironment(resource: Uri): Promise<void> {
         // Wait for a while, to ensure environment gets created and is accessible (as this is slow on Windows)
         await sleep(1000);

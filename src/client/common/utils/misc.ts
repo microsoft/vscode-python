@@ -6,8 +6,6 @@ import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
 import { InterpreterUri } from '../installer/types';
 import { isParentPath } from '../platform/fs-paths';
 import { Resource } from '../types';
-import { isPromise } from './async';
-import { StopWatch } from './stopWatch';
 
 export function noop() {}
 
@@ -24,44 +22,6 @@ type DeepReadonlyObject<T> = {
     readonly [P in NonFunctionPropertyNames<T>]: DeepReadonly<T[P]>;
 };
 type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T];
-
-// Information about a traced function/method call.
-export type TraceInfo = {
-    elapsed: number; // milliseconds
-    // Either returnValue or err will be set.
-
-    returnValue?: any;
-    err?: Error;
-};
-
-// Call run(), call log() with the trace info, and return the result.
-export function tracing<T>(log: (t: TraceInfo) => void, run: () => T): T {
-    const timer = new StopWatch();
-    try {
-        const result = run();
-
-        // If method being wrapped returns a promise then wait for it.
-        if (isPromise(result)) {
-            (result as Promise<void>)
-                .then((data) => {
-                    log({ elapsed: timer.elapsedTime, returnValue: data });
-                    return data;
-                })
-                .catch((ex) => {
-                    log({ elapsed: timer.elapsedTime, err: ex });
-
-                    // TODO(GH-11645) Re-throw the error like we do
-                    // in the non-Promise case.
-                });
-        } else {
-            log({ elapsed: timer.elapsedTime, returnValue: result });
-        }
-        return result;
-    } catch (ex) {
-        log({ elapsed: timer.elapsedTime, err: ex });
-        throw ex;
-    }
-}
 
 /**
  * Checking whether something is a Resource (Uri/undefined).

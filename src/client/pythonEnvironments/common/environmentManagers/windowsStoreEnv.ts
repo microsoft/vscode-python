@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { traceWarning } from '../../../common/logger';
 import { getEnvironmentVariable } from '../../../common/utils/platform';
+import { traceWarn } from '../../../logging';
 import { pathExists } from '../externalDependencies';
 
 /**
@@ -114,7 +114,7 @@ export async function isWindowsStoreEnvironment(interpreterPath: string): Promis
         // Program Files store path is a forbidden path. Only admins and system has access this path.
         // We should never have to look at this path or even execute python from this path.
         if (isForbiddenStorePath(pythonPathToCompare)) {
-            traceWarning('isWindowsStoreEnvironment called with Program Files store path.');
+            traceWarn('isWindowsStoreEnvironment called with Program Files store path.');
             return true;
         }
     }

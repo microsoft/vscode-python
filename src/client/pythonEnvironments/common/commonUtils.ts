@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { convertFileType, DirEntry, FileType, getFileFilter, getFileType } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
-import { logError } from '../../logging';
+import { traceError } from '../../logging';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
 import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
@@ -122,7 +122,7 @@ async function readDirEntries(
                 return [];
             }
             if (ignoreErrors) {
-                logError(`readdir() failed for "${dirname}" (${err})`);
+                traceError(`readdir() failed for "${dirname}" (${err})`);
                 return [];
             }
             throw err; // re-throw
@@ -147,7 +147,7 @@ async function readDirEntries(
             return [];
         }
         if (ignoreErrors) {
-            logError(`readdir() failed for "${dirname}" (${err})`);
+            traceError(`readdir() failed for "${dirname}" (${err})`);
             return [];
         }
         throw err; // re-throw
@@ -187,7 +187,7 @@ function matchFile(
         return filterFile(filename);
     } catch (err) {
         if (ignoreErrors) {
-            logError(`filter failed for "${filename}" (${err})`);
+            traceError(`filter failed for "${filename}" (${err})`);
             return false;
         }
         throw err; // re-throw

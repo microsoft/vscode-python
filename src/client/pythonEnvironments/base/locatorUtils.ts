@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { traceVerbose } from '../../common/logger';
 import { createDeferred } from '../../common/utils/async';
 import { getURIFilter } from '../../common/utils/misc';
+import { traceVerbose } from '../../logging';
 import { PythonEnvInfo } from './info';
 import { IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from './locator';
 

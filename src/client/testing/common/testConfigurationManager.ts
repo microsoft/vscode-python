@@ -1,11 +1,11 @@
 import * as path from 'path';
 import { OutputChannel, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
-import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IInstaller, IOutputChannel } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
+import { traceInfo } from '../../logging';
 import { TEST_OUTPUT_CHANNEL } from '../constants';
 import { UNIT_TEST_PRODUCTS } from './constants';
 import { ITestConfigSettingsService, ITestConfigurationManager, UnitTestProduct } from './types';

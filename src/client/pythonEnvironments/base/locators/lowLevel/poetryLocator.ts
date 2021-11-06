@@ -4,7 +4,6 @@
 'use strict';
 
 import * as path from 'path';
-import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
@@ -14,6 +13,7 @@ import { pathExists } from '../../../common/externalDependencies';
 import { isPoetryEnvironment, localPoetryEnvDirName, Poetry } from '../../../common/environmentManagers/poetry';
 import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
+import { traceError, traceVerbose } from '../../../../logging';
 
 /**
  * Gets all default virtual environment locations to look for in a workspace.

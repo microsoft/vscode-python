@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { traceError } from '../../../../common/logger';
 import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
 import { getInterpreterPathFromDir } from '../../../common/commonUtils';
 import { getSubDirs } from '../../../common/externalDependencies';
 import { getPyenvDir } from '../../../common/environmentManagers/pyenv';
+import { traceError } from '../../../../logging';
 
 function getPyenvVersionsDir(): string {
     return path.join(getPyenvDir(), 'versions');

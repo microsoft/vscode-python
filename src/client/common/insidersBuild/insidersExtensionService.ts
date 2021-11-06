@@ -11,11 +11,11 @@ import { IServiceContainer } from '../../ioc/types';
 import { IApplicationEnvironment, ICommandManager } from '../application/types';
 import { Commands, isTestExecution } from '../constants';
 import { IExtensionBuildInstaller, INSIDERS_INSTALLER } from '../installer/types';
-import { traceDecorators } from '../logger';
 import { IDisposable, IDisposableRegistry } from '../types';
 import { ExtensionChannels, IExtensionChannelRule, IExtensionChannelService, IInsiderExtensionPrompt } from './types';
 import { UIKind } from 'vscode';
 import { sleep } from '../utils/async';
+import { traceDecoratorError } from '../../logging';
 
 @injectable()
 export class InsidersExtensionService implements IExtensionSingleActivationService {
@@ -71,7 +71,7 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
 
     // Everything past here is the "channel handler" implementation.
 
-    @traceDecorators.error('Handling channel failed')
+    @traceDecoratorError('Handling channel failed')
     public async handleChannel(installChannel: ExtensionChannels, didChannelChange: boolean = false): Promise<void> {
         const channelRule = this.serviceContainer.get<IExtensionChannelRule>(IExtensionChannelRule, installChannel);
         const shouldInstall = await channelRule.shouldLookForInsidersBuild(didChannelChange);

@@ -9,11 +9,11 @@ import { IApplicationDiagnostics } from '../application/types';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { DeprecatePythonPath } from '../common/experiments/groups';
-import { traceDecorators } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { IDisposable, IExperimentService, IInterpreterPathService, Resource } from '../common/types';
 import { Deferred } from '../common/utils/async';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
+import { traceDecoratorError } from '../logging';
 import { sendActivationTelemetry } from '../telemetry/envFileTelemetry';
 import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
 
@@ -62,7 +62,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         ]);
     }
 
-    @traceDecorators.error('Failed to activate a workspace')
+    @traceDecoratorError('Failed to activate a workspace')
     public async activateWorkspace(resource: Resource): Promise<void> {
         const key = this.getWorkspaceKey(resource);
         if (this.activatedWorkspaces.has(key)) {

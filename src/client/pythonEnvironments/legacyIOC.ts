@@ -4,7 +4,6 @@
 import { injectable } from 'inversify';
 import { intersection } from 'lodash';
 import * as vscode from 'vscode';
-import { traceVerbose } from '../common/logger';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { Resource } from '../common/types';
 import { IComponentAdapter, ICondaService, PythonEnvironmentsChangedEvent } from '../interpreter/contracts';
@@ -23,6 +22,7 @@ import { asyncFilter } from '../common/utils/arrayUtils';
 import { CondaEnvironmentInfo, isCondaEnvironment } from './common/environmentManagers/conda';
 import { isWindowsStoreEnvironment } from './common/environmentManagers/windowsStoreEnv';
 import { CondaService } from './common/environmentManagers/condaService';
+import { traceVerbose } from '../logging';
 
 const convertedKinds = new Map(
     Object.entries({
@@ -126,7 +126,7 @@ class ComponentAdapter implements IComponentAdapter {
             if (!workspaceFolder || !e.searchLocation) {
                 return;
             }
-            traceVerbose(`Recieved event ${JSON.stringify(e)} file change event`);
+            traceVerbose(`Received event ${JSON.stringify(e)} file change event`);
             if (
                 e.type === FileChangeType.Created &&
                 isParentPath(e.searchLocation.fsPath, workspaceFolder.uri.fsPath)

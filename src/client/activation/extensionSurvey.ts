@@ -9,10 +9,10 @@ import { env, UIKind } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import { ShowExtensionSurveyPrompt } from '../common/experiments/groups';
 import '../common/extensions';
-import { traceDecorators } from '../common/logger';
 import { IPlatformService } from '../common/platform/types';
 import { IBrowserService, IExperimentService, IPersistentStateFactory, IRandom } from '../common/types';
 import { Common, ExtensionSurveyBanner } from '../common/utils/localize';
+import { traceDecoratorError } from '../logging';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IExtensionSingleActivationService } from './types';
@@ -51,7 +51,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         setTimeout(() => this.showSurvey().ignoreErrors(), this.waitTimeToShowSurvey);
     }
 
-    @traceDecorators.error('Failed to check whether to display prompt for extension survey')
+    @traceDecoratorError('Failed to check whether to display prompt for extension survey')
     public shouldShowBanner(): boolean {
         if (env.uiKind === UIKind?.Web) {
             return false;
@@ -79,7 +79,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         return true;
     }
 
-    @traceDecorators.error('Failed to display prompt for extension survey')
+    @traceDecoratorError('Failed to display prompt for extension survey')
     public async showSurvey() {
         const prompts = [
             ExtensionSurveyBanner.bannerLabelYes(),

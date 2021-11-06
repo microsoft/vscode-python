@@ -5,10 +5,10 @@
 
 import * as minimatch from 'minimatch';
 import * as path from 'path';
-import { traceVerbose } from '../../common/logger';
 import { FileChangeType, watchLocationForPattern } from '../../common/platform/fileSystemWatcher';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IDisposable } from '../../common/utils/resourceLifecycle';
+import { traceVerbose } from '../../logging';
 
 const [executable, binName] = getOSType() === OSType.Windows ? ['python.exe', 'Scripts'] : ['python', 'bin'];
 

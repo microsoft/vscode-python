@@ -28,7 +28,7 @@ class TestNormalizationScript(object):
             """\
             def show_something():
                 print("Something")
-            
+
             """
         )
         result = normalizeSelection.normalize_lines(src)
@@ -54,7 +54,7 @@ class TestNormalizationScript(object):
             result = x + y + z
             if result == 42:
                 print("The answer to life, the universe, and everything")
-            
+
             """
         )
         result = normalizeSelection.normalize_lines(src)
@@ -119,7 +119,7 @@ class TestNormalizationScript(object):
 
     def test_multiLineWithIndent(self):
         src = """\
-           
+
         if (x > 0
             and condition == True):
             print('foo')
@@ -135,7 +135,7 @@ class TestNormalizationScript(object):
             print('foo')
         else:
             print('bar')
-        
+
         """
         )
 
@@ -156,7 +156,7 @@ class TestNormalizationScript(object):
             def show_something():
                 # A comment
                 print("Something")
-            
+
             """
         )
         result = normalizeSelection.normalize_lines(src)
@@ -177,5 +177,41 @@ class TestNormalizationScript(object):
             """
         )
         expected = src + "\n\n"
+        result = normalizeSelection.normalize_lines(src)
+        assert result == expected
+
+    def test_decorators(self):
+        src = textwrap.dedent(
+            """\
+            def foo(func):
+
+                def wrapper():
+                    print('before')
+                    func()
+                    print('after')
+
+                return wrapper
+
+
+            @foo
+            def show_something():
+                print("Something")
+            """
+        )
+        expected = textwrap.dedent(
+            """\
+            def foo(func):
+                def wrapper():
+                    print('before')
+                    func()
+                    print('after')
+                return wrapper
+
+            @foo
+            def show_something():
+                print("Something")
+
+            """
+        )
         result = normalizeSelection.normalize_lines(src)
         assert result == expected

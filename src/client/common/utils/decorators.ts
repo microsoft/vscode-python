@@ -1,9 +1,8 @@
 import '../../common/extensions';
+import { traceError, traceVerbose } from '../../logging';
 import { isTestExecution } from '../constants';
-import { traceError, traceVerbose } from '../logger';
 import { createDeferred, Deferred } from './async';
 import { getCacheKeyFromFunctionArgs, getGlobalCacheStore } from './cacheUtils';
-import { TraceInfo, tracing } from './misc';
 import { StopWatch } from './stopWatch';
 
 const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
@@ -214,44 +213,5 @@ export function swallowExceptions(scopeName?: string) {
                 traceError(errorMessage, error);
             }
         };
-    };
-}
-
-// Information about a function/method call.
-export type CallInfo = {
-    kind: string; // "Class", etc.
-    name: string;
-
-    args: any[];
-};
-
-export type TraceDecoratorType = (
-    _: Object,
-    __: string,
-    descriptor: TypedPropertyDescriptor<any>,
-) => TypedPropertyDescriptor<any>;
-
-// Return a decorator that traces the decorated function.
-export function trace(log: (c: CallInfo, t: TraceInfo) => void): TraceDecoratorType {
-    return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
-        const originalMethod = descriptor.value;
-
-        descriptor.value = function (...args: any[]) {
-            const call = {
-                kind: 'Class',
-                name: _ && _.constructor ? _.constructor.name : '',
-                args,
-            };
-
-            const scope = this;
-            return tracing(
-                // "log()"
-                (t) => log(call, t),
-                // "run()"
-                () => originalMethod.apply(scope, args),
-            );
-        };
-
-        return descriptor;
     };
 }

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { traceError } from '../../../common/logger';
 import { getEnvironmentVariable } from '../../../common/utils/platform';
+import { traceError } from '../../../logging';
 import { arePathsSame, normCasePath, pathExists, readFile } from '../externalDependencies';
 
 function getSearchHeight() {
