@@ -448,16 +448,17 @@ def _find_left_bracket(nodeid):
     """
     if not nodeid.endswith("]"):
         return nodeid, "", ""
-    bracketcount = 0
-    for index, char in enumerate(nodeid[::-1]):
-        if char == "]":
-            bracketcount += 1
-        elif char == "[":
-            bracketcount -= 1
-        if bracketcount == 0:
-            n = len(nodeid) - 1 - index
-            return nodeid[:n], nodeid[n], nodeid[n + 1 :]
-    return nodeid, "", ""
+
+    testname_testcase = nodeid.split("::")[-1]
+    nodeid_base = nodeid[: -len(testname_testcase)]
+    open_bracket_n = testname_testcase.find("[")
+
+    if open_bracket_n == -1:
+        return nodeid, "", ""
+
+    n = open_bracket_n + len(nodeid_base)
+    return nodeid[:n], nodeid[n], nodeid[n + 1 :]
+    
 
 
 def _iter_nodes(
