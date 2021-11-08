@@ -1915,7 +1915,6 @@
     "dependencies": {
         "@vscode/jupyter-lsp-middleware": "^0.2.15",
         "arch": "^2.1.0",
-        "azure-storage": "^2.10.4",
         "chokidar": "^3.4.3",
         "diff-match-patch": "^1.0.0",
         "fs-extra": "^9.1.0",
