@@ -3,6 +3,7 @@
 
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { getArchitectureDisplayName } from '../../../common/platform/registry';
 import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
@@ -29,6 +30,7 @@ export function buildEnvInfo(init?: {
     source?: PythonEnvSource[];
     display?: string;
     sysPrefix?: string;
+    searchLocation?: Uri;
 }): PythonEnvInfo {
     const env = {
         name: init?.name ?? '',
@@ -90,6 +92,7 @@ function updateEnv(
         executable?: string;
         location?: string;
         version?: PythonVersion;
+        searchLocation?: Uri;
     },
 ): void {
     if (updates.kind !== undefined) {
@@ -103,6 +106,9 @@ function updateEnv(
     }
     if (updates.version !== undefined) {
         env.version = updates.version;
+    }
+    if (updates.searchLocation !== undefined) {
+        env.searchLocation = updates.searchLocation;
     }
 }
 

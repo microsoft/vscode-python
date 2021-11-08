@@ -52,7 +52,7 @@ export interface IEnvsCollectionCache {
     validateCache(): Promise<void>;
 }
 
-type PythonEnvCompleteInfo = { hasCompleteInfo?: boolean } & PythonEnvInfo;
+export type PythonEnvCompleteInfo = { hasCompleteInfo?: boolean } & PythonEnvInfo;
 
 interface IPersistentStorage {
     load(): Promise<PythonEnvInfo[] | undefined>;

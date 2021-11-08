@@ -62,6 +62,10 @@ export function assertEnvsEqual(
     actualEnvs: (PythonEnvInfo | undefined)[],
     expectedEnvs: (PythonEnvInfo | undefined)[],
 ): void {
+    actualEnvs = actualEnvs.sort((a, b) => (a && b ? a.executable.filename.localeCompare(b.executable.filename) : 0));
+    expectedEnvs = expectedEnvs.sort((a, b) =>
+        a && b ? a.executable.filename.localeCompare(b.executable.filename) : 0,
+    );
     assert.deepStrictEqual(actualEnvs.length, expectedEnvs.length, 'Number of envs');
     zip(actualEnvs, expectedEnvs).forEach((value) => {
         const [actual, expected] = value;
