@@ -87,7 +87,7 @@ export class SimpleLocator<I = PythonEnvInfo> extends Locator<I> {
         public callbacks: {
             resolve?: null | ((env: PythonEnvInfo) => Promise<PythonEnvInfo | undefined>);
             before?: Promise<void>;
-            after?: Promise<void>;
+            after?(): Promise<void>;
             onUpdated?: Event<PythonEnvUpdatedEvent<I> | null>;
             beforeEach?(e: I): Promise<void>;
             afterEach?(e: I): Promise<void>;
@@ -137,7 +137,7 @@ export class SimpleLocator<I = PythonEnvInfo> extends Locator<I> {
                 }
             }
             if (callbacks?.after !== undefined) {
-                await callbacks.after;
+                await callbacks.after();
             }
             deferred.resolve();
         })();

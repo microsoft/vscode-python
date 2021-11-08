@@ -2,11 +2,13 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
+import { cloneDeep } from 'lodash';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { EventEmitter, Uri } from 'vscode';
 import { createDeferred, createDeferredFromPromise, sleep } from '../../../../../client/common/utils/async';
 import { PythonEnvInfo } from '../../../../../client/pythonEnvironments/base/info';
 import { buildEnvInfo } from '../../../../../client/pythonEnvironments/base/info/env';
+import { PythonEnvUpdatedEvent } from '../../../../../client/pythonEnvironments/base/locator';
 import {
     createCollectionCache,
     PythonEnvCompleteInfo,
@@ -21,8 +23,8 @@ suite('Python envs locator - Environments Collection', async () => {
     let collectionService: EnvsCollectionService;
     let storage: PythonEnvInfo[];
 
-    function createEnv(executable: string, searchLocation?: Uri) {
-        return buildEnvInfo({ executable, searchLocation });
+    function createEnv(executable: string, searchLocation?: Uri, name?: string) {
+        return buildEnvInfo({ executable, searchLocation, name });
     }
 
     function getLocatorEnvs() {
@@ -52,6 +54,26 @@ suite('Python envs locator - Environments Collection', async () => {
         return [...getValidCachedEnvs(), envCached3];
     }
 
+    function getExpectedEnvs() {
+        const fakeLocalAppDataPath = path.join(TEST_LAYOUT_ROOT, 'storeApps');
+        const envCached1 = createEnv(path.join(fakeLocalAppDataPath, 'Microsoft', 'WindowsApps', 'python.exe'));
+        const env1 = createEnv(path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'), undefined, 'nameUpdated');
+        const env2 = createEnv(
+            path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project1', '.venv', 'Scripts', 'python.exe'),
+            Uri.file(TEST_LAYOUT_ROOT),
+            'nameUpdated',
+        );
+        const env3 = createEnv(
+            path.join(TEST_LAYOUT_ROOT, 'pyenv2', '.pyenv', 'pyenv-win', 'versions', '3.6.9', 'bin', 'python.exe'),
+            undefined,
+            'nameUpdated',
+        );
+        return [envCached1, env1, env2, env3].map((e: PythonEnvCompleteInfo) => {
+            e.hasCompleteInfo = true;
+            return e;
+        });
+    }
+
     setup(async () => {
         storage = [];
         const parentLocator = new SimpleLocator(getLocatorEnvs());
@@ -79,23 +101,38 @@ suite('Python envs locator - Environments Collection', async () => {
     });
 
     test('triggerRefresh() refreshes the collection and storage with any new environments', async () => {
+        const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | null>();
+        const locatedEnvs = getLocatorEnvs();
+        const parentLocator = new SimpleLocator(locatedEnvs, {
+            onUpdated: onUpdated.event,
+            after: async () => {
+                locatedEnvs.forEach((env, index) => {
+                    const update = cloneDeep(env);
+                    update.name = `nameUpdated`;
+                    onUpdated.fire({ index, update });
+                });
+                onUpdated.fire(null);
+            },
+        });
+        const cache = await createCollectionCache({
+            load: async () => getCachedEnvs(),
+            store: async (e) => {
+                storage = e;
+            },
+        });
+        collectionService = new EnvsCollectionService(cache, parentLocator);
+
         await collectionService.triggerRefresh();
         const envs = collectionService.getEnvs();
-        let expected = [...getLocatorEnvs(), ...getValidCachedEnvs()].map((e: PythonEnvCompleteInfo) => {
-            e.hasCompleteInfo = true;
-            return e;
-        });
-        // Remove duplicates
-        expected = expected.filter(
-            (v, i, a) => a.findIndex((t) => t.executable.filename === v.executable.filename) === i,
-        );
+
+        const expected = getExpectedEnvs();
         assertEnvsEqual(envs, expected);
         assertEnvsEqual(storage, expected);
     });
 
     test('refreshPromise() correctly indicates the status of the refresh', async () => {
         const deferred = createDeferred();
-        const parentLocator = new SimpleLocator(getLocatorEnvs(), { after: deferred.promise });
+        const parentLocator = new SimpleLocator(getLocatorEnvs(), { after: () => deferred.promise });
         const cache = await createCollectionCache({
             load: async () => getCachedEnvs(),
             store: async () => noop(),
