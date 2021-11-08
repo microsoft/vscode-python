@@ -128,7 +128,7 @@ jobs:
           TEST_FILES_SUFFIX: testvirtualenvs
           PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
         shell: pwsh
-        if: matrix.test-suite == 'venv'
+        if: matrix.test-suite == 'venv' && matrix.python != 2.7
         run: |
           python -m pip install pipenv
           python -m pipenv run python ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} pipenvPath
