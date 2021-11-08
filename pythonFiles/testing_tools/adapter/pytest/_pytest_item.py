@@ -458,7 +458,6 @@ def _find_left_bracket(nodeid):
 
     n = open_bracket_n + len(nodeid_base)
     return nodeid[:n], nodeid[n], nodeid[n + 1 :]
-    
 
 
 def _iter_nodes(
