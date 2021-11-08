@@ -12,6 +12,9 @@ import { ModuleInstaller, translateProductToModule } from './moduleInstaller';
 import { InterpreterUri, ModuleInstallFlags } from './types';
 import * as path from 'path';
 import { _SCRIPTS_DIR } from '../process/internal/scripts/constants';
+import { ProductNames } from './productNames';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 
 @injectable()
 export class PipInstaller extends ModuleInstaller {
@@ -41,9 +44,29 @@ export class PipInstaller extends ModuleInstaller {
         flags: ModuleInstallFlags = 0,
     ): Promise<ExecutionInfo> {
         if (moduleName === translateProductToModule(Product.pip)) {
-            // First check if `ensurepip` is available, if not, then install pip using the script file.
+            const version = isResource(resource)
+                ? ''
+                : `${resource.version?.major || ''}.${resource.version?.minor || ''}.${resource.version?.patch || ''}`;
+
+            sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
+                installer: 'unavailable',
+                requiredInstaller: ModuleInstallerType.Pip,
+                productName: ProductNames.get(Product.pip),
+                version: version,
+                envType: isResource(resource) ? undefined : resource.envType,
+            });
+
+            // If `ensurepip` is available, if not, then install pip using the script file.
             const installer = this.serviceContainer.get<IInstaller>(IInstaller);
             if (await installer.isInstalled(Product.ensurepip, resource)) {
+                sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
+                    installer: 'unavailable',
+                    requiredInstaller: ModuleInstallerType.Pip,
+                    productName: ProductNames.get(Product.ensurepip),
+                    version: version,
+                    envType: isResource(resource) ? undefined : resource.envType,
+                });
+
                 return {
                     args: [],
                     moduleName: 'ensurepip',
