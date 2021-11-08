@@ -6,10 +6,12 @@ import { IServiceContainer } from '../../ioc/types';
 import { ModuleInstallerType } from '../../pythonEnvironments/info';
 import { IWorkspaceService } from '../application/types';
 import { IPythonExecutionFactory } from '../process/types';
-import { ExecutionInfo, Product } from '../types';
+import { ExecutionInfo, IInstaller, Product } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller, translateProductToModule } from './moduleInstaller';
 import { InterpreterUri, ModuleInstallFlags } from './types';
+import * as path from 'path';
+import { _SCRIPTS_DIR } from '../process/internal/scripts/constants';
 
 @injectable()
 export class PipInstaller extends ModuleInstaller {
@@ -35,13 +37,21 @@ export class PipInstaller extends ModuleInstaller {
     }
     protected async getExecutionInfo(
         moduleName: string,
-        _resource?: InterpreterUri,
+        resource?: InterpreterUri,
         flags: ModuleInstallFlags = 0,
     ): Promise<ExecutionInfo> {
         if (moduleName === translateProductToModule(Product.pip)) {
+            // First check if `ensurepip` is available, if not, then install pip using the script file.
+            const installer = this.serviceContainer.get<IInstaller>(IInstaller);
+            if (await installer.isInstalled(Product.ensurepip, resource)) {
+                return {
+                    args: [],
+                    moduleName: 'ensurepip',
+                };
+            }
+            // Return script to install pip.
             return {
-                args: [],
-                moduleName: 'ensurepip',
+                args: [path.join(_SCRIPTS_DIR, 'get-pip.py')],
             };
         }
 

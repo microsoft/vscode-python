@@ -104,6 +104,7 @@ export enum Product {
     torchProfilerInstallName = 25,
     torchProfilerImportName = 26,
     pip = 27,
+    ensurepip = 28,
 }
 
 export const IInstaller = Symbol('IInstaller');
