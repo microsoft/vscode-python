@@ -15,6 +15,7 @@ import { _SCRIPTS_DIR } from '../process/internal/scripts/constants';
 import { ProductNames } from './productNames';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { IInterpreterService } from '../../interpreter/contracts';
 
 @injectable()
 export class PipInstaller extends ModuleInstaller {
@@ -73,7 +74,12 @@ export class PipInstaller extends ModuleInstaller {
                 };
             }
             // Return script to install pip.
+            const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+            const interpreter = isResource(resource)
+                ? await interpreterService.getActiveInterpreter(resource)
+                : resource;
             return {
+                execPath: interpreter ? interpreter.path : 'python',
                 args: [path.join(_SCRIPTS_DIR, 'get-pip.py')],
             };
         }
