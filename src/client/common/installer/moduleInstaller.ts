@@ -74,6 +74,9 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                     } else {
                         await terminalService.sendCommand(pythonPath, args, token);
                     }
+                } else if (name === translateProductToModule(Product.pip)) {
+                    // Pip should always be installed into the specified environment.
+                    await terminalService.sendCommand(pythonPath, args, token);
                 } else {
                     await terminalService.sendCommand(pythonPath, args.concat(['--user']), token);
                 }
@@ -199,6 +202,8 @@ export function translateProductToModule(product: Product): string {
             return 'torch-tb-profiler';
         case Product.torchProfilerImportName:
             return 'torch_tb_profiler';
+        case Product.pip:
+            return 'pip';
         default: {
             throw new Error(`Product ${product} cannot be installed as a Python Module.`);
         }

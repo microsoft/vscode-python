@@ -418,12 +418,64 @@ export class DataScienceInstaller extends BaseInstaller {
         const interpreter = interpreterUri as PythonEnvironment;
 
         // Get a list of known installation channels, pip, conda, etc.
-        const channels: IModuleInstaller[] = await this.serviceContainer
+        let channels: IModuleInstaller[] = await this.serviceContainer
             .get<IInstallationChannelManager>(IInstallationChannelManager)
             .getInstallationChannels(interpreter);
 
         // Pick an installerModule based on whether the interpreter is conda or not. Default is pip.
         const moduleName = translateProductToModule(product);
+        const version = `${interpreter.version?.major || ''}.${interpreter.version?.minor || ''}.${
+            interpreter.version?.patch || ''
+        }`;
+
+        // If this is a non-conda environment & pip isn't installed, we need to install pip.
+        // The prompt would have been disabled prior to this point, so we can assume that.
+        if (
+            flags &&
+            flags & ModuleInstallFlags.installPipIfRequired &&
+            interpreter.envType !== EnvironmentType.Conda &&
+            !channels.some((channel) => channel.type === ModuleInstallerType.Pip)
+        ) {
+            const installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
+            const pipInstaller = installers.find((installer) => installer.type === ModuleInstallerType.Pip);
+            if (pipInstaller) {
+                traceInfo(`Installing pip as its not available to install ${moduleName}.`);
+                await pipInstaller
+                    .installModule(Product.pip, interpreter, cancel)
+                    .catch((ex) =>
+                        traceError(
+                            `Error in installing the module '${moduleName} as Pip could not be installed', ${ex}`,
+                        ),
+                    );
+
+                await this.isInstalled(Product.pip, interpreter)
+                    .then((isInstalled) => {
+                        sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
+                            installer: pipInstaller.displayName,
+                            requiredInstaller: ModuleInstallerType.Pip,
+                            version,
+                            envType: interpreter.envType,
+                            isInstalled,
+                            productName: ProductNames.get(Product.pip),
+                        });
+                    })
+                    .catch(noop);
+
+                // Refresh the list of channels (pip may be avaialble now).
+                channels = await this.serviceContainer
+                    .get<IInstallationChannelManager>(IInstallationChannelManager)
+                    .getInstallationChannels(interpreter);
+            } else {
+                sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
+                    installer: 'unavailable',
+                    requiredInstaller: ModuleInstallerType.Pip,
+                    productName: ProductNames.get(Product.pip),
+                    version,
+                    envType: interpreter.envType,
+                });
+                traceError(`Unable to install pip when its required.`);
+            }
+        }
 
         const isAvailableThroughConda = !UnsupportedChannelsForProduct.get(product)?.has(EnvironmentType.Conda);
         let requiredInstaller = ModuleInstallerType.Unknown;
@@ -449,10 +501,6 @@ export class DataScienceInstaller extends BaseInstaller {
         }
         const installerModule: IModuleInstaller | undefined = channels.find((v) => v.type === requiredInstaller);
 
-        const version = `${interpreter.version?.major || ''}.${interpreter.version?.minor || ''}.${
-            interpreter.version?.patch || ''
-        }`;
-
         if (!installerModule) {
             this.appShell.showErrorMessage(Installer.couldNotInstallLibrary().format(moduleName)).then(noop, noop);
             sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
@@ -471,7 +519,7 @@ export class DataScienceInstaller extends BaseInstaller {
 
         return this.isInstalled(product, interpreter).then((isInstalled) => {
             sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
-                installer: installerModule?.displayName || '',
+                installer: installerModule.displayName || '',
                 requiredInstaller,
                 version,
                 envType: interpreter.envType,

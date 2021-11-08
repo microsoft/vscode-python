@@ -82,4 +82,5 @@ export enum ModuleInstallFlags {
     upgrade = 1,
     updateDependencies = 2,
     reInstall = 4,
+    installPipIfRequired = 8,
 }

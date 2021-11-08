@@ -6,9 +6,9 @@ import { IServiceContainer } from '../../ioc/types';
 import { ModuleInstallerType } from '../../pythonEnvironments/info';
 import { IWorkspaceService } from '../application/types';
 import { IPythonExecutionFactory } from '../process/types';
-import { ExecutionInfo } from '../types';
+import { ExecutionInfo, Product } from '../types';
 import { isResource } from '../utils/misc';
-import { ModuleInstaller } from './moduleInstaller';
+import { ModuleInstaller, translateProductToModule } from './moduleInstaller';
 import { InterpreterUri, ModuleInstallFlags } from './types';
 
 @injectable()
@@ -38,6 +38,13 @@ export class PipInstaller extends ModuleInstaller {
         _resource?: InterpreterUri,
         flags: ModuleInstallFlags = 0,
     ): Promise<ExecutionInfo> {
+        if (moduleName === translateProductToModule(Product.pip)) {
+            return {
+                args: [],
+                moduleName: 'ensurepip',
+            };
+        }
+
         const args: string[] = [];
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const proxy = workspaceService.getConfiguration('http').get('proxy', '');

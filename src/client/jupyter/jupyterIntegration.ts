@@ -51,6 +51,7 @@ enum JupyterProductToInstall {
     kernelspec = 'kernelspec',
     nbconvert = 'nbconvert',
     pandas = 'pandas',
+    pip = 'pip',
 }
 
 const ProductMapping: { [key in JupyterProductToInstall]: Product } = {
@@ -60,6 +61,7 @@ const ProductMapping: { [key in JupyterProductToInstall]: Product } = {
     [JupyterProductToInstall.nbconvert]: Product.nbconvert,
     [JupyterProductToInstall.notebook]: Product.notebook,
     [JupyterProductToInstall.pandas]: Product.pandas,
+    [JupyterProductToInstall.pip]: Product.pip,
 };
 
 type PythonApiForJupyterExtension = {
@@ -115,6 +117,8 @@ type PythonApiForJupyterExtension = {
         product: JupyterProductToInstall,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
+        reInstallAndUpdate?: boolean,
+        installPipIfRequired?: boolean,
     ): Promise<InstallerResponse>;
     /**
      * IInstaller
@@ -210,15 +214,19 @@ export class JupyterExtensionIntegration {
                 resource?: InterpreterUri,
                 cancel?: CancellationToken,
                 reInstallAndUpdate?: boolean,
-            ): Promise<InstallerResponse> =>
-                this.installer.install(
-                    ProductMapping[product],
-                    resource,
-                    cancel,
+                installPipIfRequired?: boolean,
+            ): Promise<InstallerResponse> => {
+                let flags =
                     reInstallAndUpdate === true
                         ? ModuleInstallFlags.updateDependencies | ModuleInstallFlags.reInstall
-                        : undefined,
-                ),
+                        : undefined;
+                if (installPipIfRequired === true) {
+                    flags = flags
+                        ? flags | ModuleInstallFlags.installPipIfRequired
+                        : ModuleInstallFlags.installPipIfRequired;
+                }
+                return this.installer.install(ProductMapping[product], resource, cancel, flags);
+            },
             isProductVersionCompatible: async (
                 product: Product,
                 semVerRequirement: string,
