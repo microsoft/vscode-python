@@ -341,6 +341,7 @@ suite('Python envs locator - Environments Collection', async () => {
         );
 
         refreshDeferred.resolve();
+        await sleep(1);
 
         await collectionService.refreshPromise; // Wait for refresh to finish
 
@@ -352,6 +353,7 @@ suite('Python envs locator - Environments Collection', async () => {
          * * Same with the fourth event.
          */
         expect(refreshCount).to.equal(2);
+        expect(events.length).to.equal(downstreamEvents.length, 'All 4 events should also be fired by the collection');
         assert.deepStrictEqual(
             events.sort((a, b) => (a.type && b.type ? a.type?.localeCompare(b.type) : 0)),
             downstreamEvents.sort((a, b) => (a.type && b.type ? a.type?.localeCompare(b.type) : 0)),
