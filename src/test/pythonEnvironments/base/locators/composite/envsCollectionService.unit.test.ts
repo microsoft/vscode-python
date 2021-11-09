@@ -123,6 +123,33 @@ suite('Python envs locator - Environments Collection', async () => {
         );
     });
 
+    test('getEnvs() triggers a refresh in background if cache is empty and no refresh is going on', async () => {
+        const parentLocator = new SimpleLocator(getLocatorEnvs());
+        const cache = await createCollectionCache({
+            load: async () => [],
+            store: async (envs) => {
+                storage = envs;
+            },
+        });
+        collectionService = new EnvsCollectionService(cache, parentLocator);
+
+        let envs = collectionService.getEnvs();
+
+        assertEnvsEqual(envs, []);
+        expect(collectionService.refreshPromise).to.not.equal(undefined);
+
+        await collectionService.refreshPromise;
+        envs = collectionService.getEnvs();
+
+        assertEnvsEqual(
+            envs,
+            getLocatorEnvs().map((e: PythonEnvCompleteInfo) => {
+                e.hasCompleteInfo = true;
+                return e;
+            }),
+        );
+    });
+
     test('triggerRefresh() refreshes the collection and storage with any new environments', async () => {
         const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | null>();
         const locatedEnvs = getLocatorEnvs();
