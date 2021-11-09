@@ -1,7 +1,0 @@
-[
-    {
-        "eventPrefix": "ms-python.python/",
-        "sourceDirs": ["src/client/telemetry"],
-        "applyEndpoints": true
-    }
-]
