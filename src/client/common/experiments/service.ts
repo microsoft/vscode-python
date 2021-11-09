@@ -155,7 +155,7 @@ export class ExperimentService implements IExperimentService {
         }
 
         if (experimentsDisabled) {
-            this.output.appendLine('Experiments are disabled, logging experiments for info.');
+            this.output.appendLine('Experiments are disabled, only manually opted experiments are active.');
         }
 
         if (this._optOutFrom.includes('All')) {
