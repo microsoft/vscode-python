@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { EventEmitter, Uri } from 'vscode';
+import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, createDeferredFromPromise, sleep } from '../../../../../client/common/utils/async';
-import { PythonEnvInfo } from '../../../../../client/pythonEnvironments/base/info';
+import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
 import { buildEnvInfo } from '../../../../../client/pythonEnvironments/base/info/env';
 import { PythonEnvUpdatedEvent } from '../../../../../client/pythonEnvironments/base/locator';
 import {
@@ -14,6 +15,7 @@ import {
     PythonEnvCompleteInfo,
 } from '../../../../../client/pythonEnvironments/base/locators/composite/envsCollectionCache';
 import { EnvsCollectionService } from '../../../../../client/pythonEnvironments/base/locators/composite/envsCollectionService';
+import { PythonEnvCollectionChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import { noop } from '../../../../core';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { SimpleLocator } from '../../common';
@@ -22,6 +24,26 @@ import { assertEnvEqual, assertEnvsEqual } from '../envTestUtils';
 suite('Python envs locator - Environments Collection', async () => {
     let collectionService: EnvsCollectionService;
     let storage: PythonEnvInfo[];
+    const updatedName = 'updatedName';
+
+    function applyChangeEventToEnvList(envs: PythonEnvInfo[], event: PythonEnvCollectionChangedEvent) {
+        const env = event.old ?? event.new;
+        let envIndex = -1;
+        if (env) {
+            envIndex = envs.findIndex((item) => item.executable.filename === env.executable.filename);
+        }
+        if (event.new) {
+            if (envIndex === -1) {
+                envs.push(event.new);
+            } else {
+                envs[envIndex] = event.new;
+            }
+        }
+        if (envIndex !== -1 && event.new === undefined) {
+            envs.splice(envIndex, 1);
+        }
+        return envs;
+    }
 
     function createEnv(executable: string, searchLocation?: Uri, name?: string) {
         return buildEnvInfo({ executable, searchLocation, name });
@@ -36,7 +58,8 @@ suite('Python envs locator - Environments Collection', async () => {
         const env3 = createEnv(
             path.join(TEST_LAYOUT_ROOT, 'pyenv2', '.pyenv', 'pyenv-win', 'versions', '3.6.9', 'bin', 'python.exe'),
         );
-        return [env1, env2, env3];
+        const env4 = createEnv(path.join(TEST_LAYOUT_ROOT, 'virtualhome', '.venvs', 'win1', 'python.exe')); // Path is valid but it's an invalid env
+        return [env1, env2, env3, env4];
     }
 
     function getValidCachedEnvs() {
@@ -57,16 +80,16 @@ suite('Python envs locator - Environments Collection', async () => {
     function getExpectedEnvs() {
         const fakeLocalAppDataPath = path.join(TEST_LAYOUT_ROOT, 'storeApps');
         const envCached1 = createEnv(path.join(fakeLocalAppDataPath, 'Microsoft', 'WindowsApps', 'python.exe'));
-        const env1 = createEnv(path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'), undefined, 'nameUpdated');
+        const env1 = createEnv(path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'), undefined, updatedName);
         const env2 = createEnv(
             path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project1', '.venv', 'Scripts', 'python.exe'),
             Uri.file(TEST_LAYOUT_ROOT),
-            'nameUpdated',
+            updatedName,
         );
         const env3 = createEnv(
             path.join(TEST_LAYOUT_ROOT, 'pyenv2', '.pyenv', 'pyenv-win', 'versions', '3.6.9', 'bin', 'python.exe'),
             undefined,
-            'nameUpdated',
+            updatedName,
         );
         return [envCached1, env1, env2, env3].map((e: PythonEnvCompleteInfo) => {
             e.hasCompleteInfo = true;
@@ -108,9 +131,11 @@ suite('Python envs locator - Environments Collection', async () => {
             after: async () => {
                 locatedEnvs.forEach((env, index) => {
                     const update = cloneDeep(env);
-                    update.name = `nameUpdated`;
+                    update.name = updatedName;
                     onUpdated.fire({ index, update });
                 });
+                onUpdated.fire({ index: locatedEnvs.length - 1, update: undefined });
+                // It turns out the last env is invalid, ensure it does not appear in the final result.
                 onUpdated.fire(null);
             },
         });
@@ -128,6 +153,47 @@ suite('Python envs locator - Environments Collection', async () => {
         const expected = getExpectedEnvs();
         assertEnvsEqual(envs, expected);
         assertEnvsEqual(storage, expected);
+    });
+
+    test('Ensure correct events are fired when collection changes on refresh', async () => {
+        const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | null>();
+        const locatedEnvs = getLocatorEnvs();
+        const cachedEnvs = getCachedEnvs();
+        const parentLocator = new SimpleLocator(locatedEnvs, {
+            onUpdated: onUpdated.event,
+            after: async () => {
+                locatedEnvs.forEach((env, index) => {
+                    const update = cloneDeep(env);
+                    update.name = updatedName;
+                    onUpdated.fire({ index, update });
+                });
+                onUpdated.fire({ index: locatedEnvs.length - 1, update: undefined });
+                // It turns out the last env is invalid, ensure it does not appear in the final result.
+                onUpdated.fire(null);
+            },
+        });
+        const cache = await createCollectionCache({
+            load: async () => cachedEnvs,
+            store: async (e) => {
+                storage = e;
+            },
+        });
+        collectionService = new EnvsCollectionService(cache, parentLocator);
+
+        const events: PythonEnvCollectionChangedEvent[] = [];
+        collectionService.onChanged((e) => {
+            events.push(e);
+        });
+
+        await collectionService.triggerRefresh();
+
+        let envs = cachedEnvs;
+        // Ensure when all the events are applied to the original list in sequence, the final list is as expected.
+        events.forEach((e) => {
+            envs = applyChangeEventToEnvList(envs, e);
+        });
+        const expected = getExpectedEnvs();
+        assertEnvsEqual(envs, expected);
     });
 
     test('refreshPromise() correctly indicates the status of the refresh', async () => {
@@ -217,5 +283,79 @@ suite('Python envs locator - Environments Collection', async () => {
         collectionService = new EnvsCollectionService(cache, parentLocator);
         const resolved = await collectionService.resolveEnv(env.executable.filename);
         assertEnvEqual(resolved, resolvedViaLocator);
+    });
+
+    test('resolveEnv() adds env to cache after resolving using downstream locator', async () => {
+        const resolvedViaLocator = buildEnvInfo({ executable: 'Resolved via locator' });
+        const parentLocator = new SimpleLocator([], {
+            resolve: async (e: PythonEnvInfo) => {
+                if (resolvedViaLocator.executable.filename === e.executable.filename) {
+                    return resolvedViaLocator;
+                }
+                return undefined;
+            },
+        });
+        const cache = await createCollectionCache({
+            load: async () => [],
+            store: async () => noop(),
+        });
+        collectionService = new EnvsCollectionService(cache, parentLocator);
+        const resolved: PythonEnvCompleteInfo | undefined = await collectionService.resolveEnv(
+            resolvedViaLocator.executable.filename,
+        );
+        const envs = collectionService.getEnvs();
+        expect(resolved?.hasCompleteInfo).to.equal(true);
+        assertEnvsEqual(envs, [resolved]);
+    });
+
+    test('Ensure events from downstream locators do not trigger new refreshes if a refresh is already scheduled', async () => {
+        const refreshDeferred = createDeferred();
+        let refreshCount = 0;
+        const parentLocator = new SimpleLocator([], {
+            after: () => {
+                refreshCount += 1;
+                return refreshDeferred.promise;
+            },
+        });
+        const cache = await createCollectionCache({
+            load: async () => [],
+            store: async () => noop(),
+        });
+        collectionService = new EnvsCollectionService(cache, parentLocator);
+        const events: PythonEnvCollectionChangedEvent[] = [];
+        collectionService.onChanged((e) => {
+            events.push(e);
+        });
+
+        const downstreamEvents = [
+            { type: FileChangeType.Created, searchLocation: Uri.file('folder1s') },
+            { type: FileChangeType.Changed },
+            { type: FileChangeType.Deleted, kind: PythonEnvKind.Venv },
+            { type: FileChangeType.Deleted, kind: PythonEnvKind.VirtualEnv },
+        ]; // Total of 4 events
+        await Promise.all(
+            downstreamEvents.map(async (event) => {
+                parentLocator.fire(event);
+                await sleep(1); // Wait for refreshes to be initialized via change events
+            }),
+        );
+
+        refreshDeferred.resolve();
+
+        await collectionService.refreshPromise; // Wait for refresh to finish
+
+        /**
+         * We expect 2 refreshes to be triggered in total, explanation:
+         * * First event triggers a refresh.
+         * * Second event schedules a refresh to happen once the first refresh is finished.
+         * * Third event is received. A fresh refresh is already scheduled to take place so no need to schedule another refresh.
+         * * Same with the fourth event.
+         */
+        expect(refreshCount).to.equal(2);
+        assert.deepStrictEqual(
+            events.sort((a, b) => (a.type && b.type ? a.type?.localeCompare(b.type) : 0)),
+            downstreamEvents.sort((a, b) => (a.type && b.type ? a.type?.localeCompare(b.type) : 0)),
+            'All 4 events should also be fired by the collection',
+        );
     });
 });
