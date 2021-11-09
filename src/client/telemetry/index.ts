@@ -1579,6 +1579,9 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when the user use the report issue command.
      */
+    /* __GDPR__
+      "use_report_issue_command" : { }
+     */
     [EventName.USE_REPORT_ISSUE_COMMAND]: unknown;
     /**
      * Telemetry event sent once on session start with details on which experiments are opted into and opted out from.
