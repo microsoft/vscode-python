@@ -48,31 +48,33 @@ export class PipInstaller extends ModuleInstaller {
             const version = isResource(resource)
                 ? ''
                 : `${resource.version?.major || ''}.${resource.version?.minor || ''}.${resource.version?.patch || ''}`;
+            const envType = isResource(resource) ? undefined : resource.envType;
 
             sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
                 installer: 'unavailable',
                 requiredInstaller: ModuleInstallerType.Pip,
                 productName: ProductNames.get(Product.pip),
-                version: version,
-                envType: isResource(resource) ? undefined : resource.envType,
+                version,
+                envType,
             });
 
             // If `ensurepip` is available, if not, then install pip using the script file.
             const installer = this.serviceContainer.get<IInstaller>(IInstaller);
             if (await installer.isInstalled(Product.ensurepip, resource)) {
-                sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
-                    installer: 'unavailable',
-                    requiredInstaller: ModuleInstallerType.Pip,
-                    productName: ProductNames.get(Product.ensurepip),
-                    version: version,
-                    envType: isResource(resource) ? undefined : resource.envType,
-                });
-
                 return {
                     args: [],
                     moduleName: 'ensurepip',
                 };
             }
+
+            sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
+                installer: 'unavailable',
+                requiredInstaller: ModuleInstallerType.Pip,
+                productName: ProductNames.get(Product.ensurepip),
+                version,
+                envType,
+            });
+
             // Return script to install pip.
             const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
             const interpreter = isResource(resource)
