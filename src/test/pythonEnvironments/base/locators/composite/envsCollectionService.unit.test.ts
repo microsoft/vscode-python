@@ -231,7 +231,7 @@ suite('Python envs locator - Environments Collection', async () => {
         );
     });
 
-    test('onRefreshStarted() fires if refresh is triggered ', async () => {
+    test('onRefreshStarted() fires if refresh is triggered', async () => {
         let isFired = false;
         collectionService.onRefreshStart(() => {
             isFired = true;
@@ -349,7 +349,7 @@ suite('Python envs locator - Environments Collection', async () => {
          * We expect 2 refreshes to be triggered in total, explanation:
          * * First event triggers a refresh.
          * * Second event schedules a refresh to happen once the first refresh is finished.
-         * * Third event is received. A fresh refresh is already scheduled to take place so no need to schedule another refresh.
+         * * Third event is received. A fresh refresh is already scheduled to take place so no need to schedule another one.
          * * Same with the fourth event.
          */
         expect(refreshCount).to.equal(2);
@@ -357,7 +357,6 @@ suite('Python envs locator - Environments Collection', async () => {
         assert.deepStrictEqual(
             events.sort((a, b) => (a.type && b.type ? a.type?.localeCompare(b.type) : 0)),
             downstreamEvents.sort((a, b) => (a.type && b.type ? a.type?.localeCompare(b.type) : 0)),
-            'All 4 events should also be fired by the collection',
         );
     });
 });

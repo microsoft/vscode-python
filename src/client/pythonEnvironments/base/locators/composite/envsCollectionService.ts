@@ -21,7 +21,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     /** Keeps track of ongoing refreshes for various queries. */
     private refreshPromises = new Map<PythonLocatorQuery | undefined, Promise<void>>();
 
-    /** Keeps track of whether there are any scheduled refreshes other than the ongoing one for various queries. */
+    /** Keeps track of scheduled refreshes other than the ongoing one for various queries. */
     private scheduledRefreshes = new Map<PythonLocatorQuery | undefined, Promise<void>>();
 
     private readonly refreshStarted = new EventEmitter<void>();
