@@ -9,7 +9,6 @@ import { TerminalManager } from '../../../client/common/application/terminalMana
 import { ITerminalManager } from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
@@ -25,10 +24,10 @@ import {
     ITerminalActivationCommandProvider,
     TerminalShellType,
 } from '../../../client/common/terminal/types';
-import { IConfigurationService, IExperimentService } from '../../../client/common/types';
+import { IConfigurationService } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Architecture, OSType } from '../../../client/common/utils/platform';
-import { ICondaLocatorService } from '../../../client/interpreter/contracts';
+import { IComponentAdapter } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
@@ -37,8 +36,7 @@ suite('Terminal Service helpers', () => {
     let helper: TerminalHelper;
     let terminalManager: ITerminalManager;
     let platformService: IPlatformService;
-    let condaService: ICondaLocatorService;
-    let experimentService: IExperimentService;
+    let condaService: IComponentAdapter;
     let serviceContainer: IServiceContainer;
     let configurationService: IConfigurationService;
     let condaActivationProvider: ITerminalActivationCommandProvider;
@@ -62,12 +60,9 @@ suite('Terminal Service helpers', () => {
         mockDetector = mock(TerminalNameShellDetector);
         terminalManager = mock(TerminalManager);
         platformService = mock(PlatformService);
-        experimentService = mock<IExperimentService>();
-        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
         serviceContainer = mock<IServiceContainer>();
-        condaService = mock<ICondaLocatorService>();
-        when(serviceContainer.get<IExperimentService>(IExperimentService)).thenReturn(instance(experimentService));
-        when(serviceContainer.get<ICondaLocatorService>(ICondaLocatorService)).thenReturn(instance(condaService));
+        condaService = mock<IComponentAdapter>();
+        when(serviceContainer.get<IComponentAdapter>(IComponentAdapter)).thenReturn(instance(condaService));
         configurationService = mock(ConfigurationService);
         condaActivationProvider = mock(CondaActivationCommandProvider);
         bashActivationProvider = mock(Bash);

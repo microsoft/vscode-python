@@ -17,8 +17,7 @@ import {
 } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
 import * as lsp from 'vscode-languageserver-protocol';
-import type { NugetPackage } from '../common/nuget/types';
-import type { IDisposable, IOutputChannel, LanguageServerDownloadChannels, Resource } from '../common/types';
+import type { IDisposable, IOutputChannel, Resource } from '../common/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 
 export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
@@ -70,12 +69,6 @@ export enum LanguageServerType {
     None = 'None',
 }
 
-export const DotNetLanguageServerFolder = 'languageServer';
-
-interface LanguageServerCommandHandler {
-    clearAnalysisCache(): void;
-}
-
 /**
  * This interface is a subset of the vscode-protocol connection interface.
  * It's the minimum set of functions needed in order to talk to a language server.
@@ -94,7 +87,6 @@ interface ILanguageServer
         CodeLensProvider,
         DocumentSymbolProvider,
         SignatureHelpProvider,
-        Partial<LanguageServerCommandHandler>,
         IDisposable {
     readonly connection?: ILanguageServerConnection;
     readonly capabilities?: lsp.ServerCapabilities;
@@ -117,31 +109,8 @@ export const ILanguageServerFolderService = Symbol('ILanguageServerFolderService
 
 export interface ILanguageServerFolderService {
     getLanguageServerFolderName(resource: Resource): Promise<string>;
-    getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined>;
     getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined>;
     skipDownload(): Promise<boolean>;
-}
-
-export const ILanguageServerDownloader = Symbol('ILanguageServerDownloader');
-
-export interface ILanguageServerDownloader {
-    downloadLanguageServer(destinationFolder: string, resource: Resource): Promise<void>;
-}
-
-export const ILanguageServerPackageService = Symbol('ILanguageServerPackageService');
-export interface ILanguageServerPackageService {
-    getNugetPackageName(): string;
-    getLatestNugetPackageVersion(resource: Resource, minVersion?: string): Promise<NugetPackage>;
-    getLanguageServerDownloadChannel(): LanguageServerDownloadChannels;
-}
-
-export const IDownloadChannelRule = Symbol('IDownloadChannelRule');
-export interface IDownloadChannelRule {
-    shouldLookForNewLanguageServer(currentFolder?: FolderVersionPair): Promise<boolean>;
-}
-export const ILanguageServerCompatibilityService = Symbol('ILanguageServerCompatibilityService');
-export interface ILanguageServerCompatibilityService {
-    isSupported(): Promise<boolean>;
 }
 
 export const ILanguageClientFactory = Symbol('ILanguageClientFactory');
@@ -166,12 +135,7 @@ export interface ILanguageServerManager extends IDisposable {
     connect(): void;
     disconnect(): void;
 }
-export const ILanguageServerExtension = Symbol('ILanguageServerExtension');
-export interface ILanguageServerExtension extends IDisposable {
-    readonly invoked: Event<void>;
-    loadExtensionArgs?: unknown;
-    register(): void;
-}
+
 export const ILanguageServerProxy = Symbol('ILanguageServerProxy');
 export interface ILanguageServerProxy extends IDisposable {
     /**
@@ -191,19 +155,6 @@ export interface ILanguageServerProxy extends IDisposable {
      * @memberof ILanguageServerProxy
      */
     loadExtension(args?: unknown): void;
-}
-
-export enum PlatformName {
-    Windows32Bit = 'win-x86',
-    Windows64Bit = 'win-x64',
-    Mac64Bit = 'osx-x64',
-    Linux64Bit = 'linux-x64',
-}
-export const IPlatformData = Symbol('IPlatformData');
-export interface IPlatformData {
-    readonly platformName: PlatformName;
-    readonly engineDllName: string;
-    readonly engineExecutableName: string;
 }
 
 export const ILanguageServerOutputChannel = Symbol('ILanguageServerOutputChannel');
@@ -228,9 +179,4 @@ export const IExtensionSingleActivationService = Symbol('IExtensionSingleActivat
  */
 export interface IExtensionSingleActivationService {
     activate(): Promise<void>;
-}
-
-export const IMPLSDeprecationPrompt = Symbol('IMPLSDeprecationPrompt');
-export interface IMPLSDeprecationPrompt {
-    showPrompt(): Promise<void>;
 }

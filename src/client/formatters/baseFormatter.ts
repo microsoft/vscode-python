@@ -4,12 +4,12 @@ import { IApplicationShell, IWorkspaceService } from '../common/application/type
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
 import { isNotInstalledError } from '../common/helpers';
-import { traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { IPythonToolExecutionService } from '../common/process/types';
 import { IDisposableRegistry, IInstaller, IOutputChannel, Product } from '../common/types';
 import { isNotebookCell } from '../common/utils/misc';
 import { IServiceContainer } from '../ioc/types';
+import { traceError } from '../logging';
 import { getTempFileWithDocumentContents, getTextEditsFromPatch } from './../common/editor';
 import { IFormatterHelper } from './types';
 

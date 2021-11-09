@@ -5,10 +5,10 @@
 
 import { inject, injectable, multiInject } from 'inversify';
 import { Terminal } from 'vscode';
+import { traceVerbose } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import '../extensions';
-import { traceVerbose } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { OSType } from '../utils/platform';
 import { IShellDetector, ShellIdentificationTelemetry, TerminalShellType } from './types';
@@ -57,6 +57,7 @@ export class ShellDetector {
                 `${detector}. Shell identified as ${shell} ${terminal ? `(Terminal name is ${terminal.name})` : ''}`,
             );
             if (shell && shell !== TerminalShellType.other) {
+                telemetryProperties.failed = false;
                 break;
             }
         }

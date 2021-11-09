@@ -4,24 +4,17 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { Uri } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { isPoetryEnvironmentRelatedToFolder } from '../../pythonEnvironments/common/environmentManagers/poetry';
 import { EnvironmentType, ModuleInstallerType } from '../../pythonEnvironments/info';
 import { IWorkspaceService } from '../application/types';
-import { inDiscoveryExperiment } from '../experiments/helpers';
-import { traceError } from '../logger';
-import { IFileSystem } from '../platform/types';
-import { IProcessServiceFactory } from '../process/types';
-import { ExecutionInfo, IConfigurationService, IExperimentService } from '../types';
+import { ExecutionInfo, IConfigurationService } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
 import { InterpreterUri } from './types';
 
 export const poetryName = 'poetry';
-const poetryFile = 'poetry.lock';
 
 @injectable()
 export class PoetryInstaller extends ModuleInstaller {
@@ -49,8 +42,6 @@ export class PoetryInstaller extends ModuleInstaller {
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IProcessServiceFactory) private readonly processFactory: IProcessServiceFactory,
     ) {
         super(serviceContainer);
     }
@@ -59,45 +50,22 @@ export class PoetryInstaller extends ModuleInstaller {
         if (!resource) {
             return false;
         }
-        const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
-        if (await inDiscoveryExperiment(experimentService)) {
-            if (!isResource(resource)) {
-                return false;
-            }
-            const interpreter = await this.serviceContainer
-                .get<IInterpreterService>(IInterpreterService)
-                .getActiveInterpreter(resource);
-            const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
-            if (!interpreter || !workspaceFolder || interpreter.envType !== EnvironmentType.Poetry) {
-                return false;
-            }
-            // Install using poetry CLI only if the active poetry environment is related to the current folder.
-            return isPoetryEnvironmentRelatedToFolder(
-                interpreter.path,
-                workspaceFolder.uri.fsPath,
-                this.configurationService.getSettings(resource).poetryPath,
-            );
-        }
-        const workspaceFolder = this.workspaceService.getWorkspaceFolder(isResource(resource) ? resource : undefined);
-        if (!workspaceFolder) {
+        if (!isResource(resource)) {
             return false;
         }
-        if (!(await this.fs.fileExists(path.join(workspaceFolder.uri.fsPath, poetryFile)))) {
+        const interpreter = await this.serviceContainer
+            .get<IInterpreterService>(IInterpreterService)
+            .getActiveInterpreter(resource);
+        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
+        if (!interpreter || !workspaceFolder || interpreter.envType !== EnvironmentType.Poetry) {
             return false;
         }
-        return this.isPoetryAvailable(workspaceFolder.uri);
-    }
-
-    protected async isPoetryAvailable(workfolder: Uri): Promise<boolean> {
-        try {
-            const processService = await this.processFactory.create(workfolder);
-            const execPath = this.configurationService.getSettings(workfolder).poetryPath;
-            const result = await processService.shellExec(`${execPath} env list`, { cwd: workfolder.fsPath });
-            return result && (result.stderr || '').trim().length === 0;
-        } catch (error) {
-            traceError(`${poetryFile} exists but Poetry not found`, error);
-            return false;
-        }
+        // Install using poetry CLI only if the active poetry environment is related to the current folder.
+        return isPoetryEnvironmentRelatedToFolder(
+            interpreter.path,
+            workspaceFolder.uri.fsPath,
+            this.configurationService.getSettings(resource).poetryPath,
+        );
     }
 
     protected async getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo> {

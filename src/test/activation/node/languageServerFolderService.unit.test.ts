@@ -43,7 +43,6 @@ suite('Node Language Server Folder Service', () => {
 
         await expect(folderService.getCurrentLanguageServerDirectory()).to.eventually.rejected;
         await expect(folderService.getLanguageServerFolderName(resource)).to.eventually.rejected;
-        await expect(folderService.getLatestLanguageServerVersion(resource)).to.eventually.rejected;
     });
 
     suite('Valid configuration', () => {
@@ -82,11 +81,6 @@ suite('Node Language Server Folder Service', () => {
         test('getLanguageServerFolderName', async () => {
             const folderName = await folderService.getLanguageServerFolderName(resource);
             expect(folderName).to.be.equal(lsPath);
-        });
-
-        test('getLatestLanguageServerVersion', async () => {
-            const pkg = await folderService.getLatestLanguageServerVersion(resource);
-            expect(pkg).to.equal(undefined, 'expected latest version to be undefined');
         });
 
         test('Method getCurrentLanguageServerDirectory()', async () => {

@@ -3,7 +3,7 @@
 
 import { EventEmitter } from 'events';
 import { Container, decorate, injectable, interfaces } from 'inversify';
-import { traceWarning } from '../common/logger';
+import { traceWarn } from '../logging';
 import { Abstract, IServiceContainer, Newable } from './types';
 
 // This needs to be done once, hence placed in a common location.
@@ -13,7 +13,7 @@ import { Abstract, IServiceContainer, Newable } from './types';
 try {
     decorate(injectable(), EventEmitter);
 } catch (ex) {
-    traceWarning('Failed to decorate EventEmitter for DI (possibly already decorated by another Extension)', ex);
+    traceWarn('Failed to decorate EventEmitter for DI (possibly already decorated by another Extension)', ex);
 }
 
 @injectable()

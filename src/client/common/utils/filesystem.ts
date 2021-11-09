@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { logError } from '../../logging';
+import { traceError } from '../../logging';
 import { getOSType, OSType } from './platform';
 
 /**
@@ -68,7 +68,7 @@ export async function getFileType(
             return undefined;
         }
         if (opts.ignoreErrors) {
-            logError(`lstat() failed for "${filename}" (${err})`);
+            traceError(`lstat() failed for "${filename}" (${err})`);
             return FileType.Unknown;
         }
         throw err; // re-throw

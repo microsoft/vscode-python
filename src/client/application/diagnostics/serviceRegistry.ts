@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { LanguageServerType } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { IApplicationDiagnostics } from '../types';
 import { ApplicationDiagnostics } from './applicationDiagnostics';
@@ -23,7 +22,6 @@ import {
     JediPython27NotSupportedDiagnosticService,
     JediPython27NotSupportedDiagnosticServiceId,
 } from './checks/jediPython27NotSupported';
-import { LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId } from './checks/lsNotSupported';
 import {
     InvalidMacPythonInterpreterService,
     InvalidMacPythonInterpreterServiceId,
@@ -38,6 +36,10 @@ import {
     PythonPathDeprecatedDiagnosticService,
     PythonPathDeprecatedDiagnosticServiceId,
 } from './checks/pythonPathDeprecated';
+import {
+    SwitchToDefaultLanguageServerDiagnosticService,
+    SwitchToDefaultLanguageServerDiagnosticServiceId,
+} from './checks/switchToDefaultLS';
 import { UpgradeCodeRunnerDiagnosticService, UpgradeCodeRunnerDiagnosticServiceId } from './checks/upgradeCodeRunner';
 import { DiagnosticsCommandFactory } from './commands/factory';
 import { IDiagnosticsCommandFactory } from './commands/types';
@@ -49,7 +51,7 @@ import {
 } from './promptHandler';
 import { IDiagnosticFilterService, IDiagnosticHandlerService, IDiagnosticsService } from './types';
 
-export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType): void {
+export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService);
     serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(
         IDiagnosticHandlerService,
@@ -110,14 +112,12 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         JediPython27NotSupportedDiagnosticServiceId,
     );
 
+    serviceManager.addSingleton<IDiagnosticsService>(
+        IDiagnosticsService,
+        SwitchToDefaultLanguageServerDiagnosticService,
+        SwitchToDefaultLanguageServerDiagnosticServiceId,
+    );
+
     serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory);
     serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics);
-
-    if (languageServerType === LanguageServerType.Microsoft) {
-        serviceManager.addSingleton<IDiagnosticsService>(
-            IDiagnosticsService,
-            LSNotSupportedDiagnosticService,
-            LSNotSupportedDiagnosticServiceId,
-        );
-    }
 }

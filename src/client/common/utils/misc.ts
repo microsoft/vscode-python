@@ -4,10 +4,8 @@
 import type { TextDocument, Uri } from 'vscode';
 import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
 import { InterpreterUri } from '../installer/types';
-import { arePathsSame, isParentPath } from '../platform/fs-paths';
+import { isParentPath } from '../platform/fs-paths';
 import { Resource } from '../types';
-import { isPromise } from './async';
-import { StopWatch } from './stopWatch';
 
 export function noop() {}
 
@@ -24,44 +22,6 @@ type DeepReadonlyObject<T> = {
     readonly [P in NonFunctionPropertyNames<T>]: DeepReadonly<T[P]>;
 };
 type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T];
-
-// Information about a traced function/method call.
-export type TraceInfo = {
-    elapsed: number; // milliseconds
-    // Either returnValue or err will be set.
-
-    returnValue?: any;
-    err?: Error;
-};
-
-// Call run(), call log() with the trace info, and return the result.
-export function tracing<T>(log: (t: TraceInfo) => void, run: () => T): T {
-    const timer = new StopWatch();
-    try {
-        const result = run();
-
-        // If method being wrapped returns a promise then wait for it.
-        if (isPromise(result)) {
-            (result as Promise<void>)
-                .then((data) => {
-                    log({ elapsed: timer.elapsedTime, returnValue: data });
-                    return data;
-                })
-                .catch((ex) => {
-                    log({ elapsed: timer.elapsedTime, err: ex });
-
-                    // TODO(GH-11645) Re-throw the error like we do
-                    // in the non-Promise case.
-                });
-        } else {
-            log({ elapsed: timer.elapsedTime, returnValue: result });
-        }
-        return result;
-    } catch (ex) {
-        log({ elapsed: timer.elapsedTime, err: ex });
-        throw ex;
-    }
-}
 
 /**
  * Checking whether something is a Resource (Uri/undefined).
@@ -103,19 +63,19 @@ function isUri(resource?: Uri | any): resource is Uri {
  * The scheme must match, as well as path.
  *
  * @param checkParent - if `true`, match if the candidate is rooted under `uri`
+ * or if the candidate matches `uri` exactly.
  * @param checkChild - if `true`, match if `uri` is rooted under the candidate
- * @param checkExact - if `true`, match if the candidate matches `uri` exactly
+ * or if the candidate matches `uri` exactly.
  */
 export function getURIFilter(
     uri: Uri,
     opts: {
         checkParent?: boolean;
         checkChild?: boolean;
-        checkExact?: boolean;
-    } = { checkExact: true },
+    } = { checkParent: true },
 ): (u: Uri) => boolean {
     let uriPath = uri.path;
-    while (uri.path.endsWith('/')) {
+    while (uriPath.endsWith('/')) {
         uriPath = uriPath.slice(0, -1);
     }
     const uriRoot = `${uriPath}/`;
@@ -124,11 +84,8 @@ export function getURIFilter(
             return false;
         }
         let candidatePath = candidate.path;
-        while (candidate.path.endsWith('/')) {
+        while (candidatePath.endsWith('/')) {
             candidatePath = candidatePath.slice(0, -1);
-        }
-        if (opts.checkExact && arePathsSame(candidatePath, uriPath)) {
-            return true;
         }
         if (opts.checkParent && isParentPath(candidatePath, uriRoot)) {
             return true;

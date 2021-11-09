@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_WARNINGS } from '../../common/constants';
-import { LogOptions, traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
@@ -22,6 +21,15 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterService } from '../contracts';
 import { IEnvironmentActivationService } from './types';
+import { TraceOptions } from '../../logging/types';
+import {
+    traceDecoratorError,
+    traceDecoratorVerbose,
+    traceError,
+    traceInfo,
+    traceVerbose,
+    traceWarn,
+} from '../../logging';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const CACHE_DURATION = 10 * 60 * 1000;
@@ -117,7 +125,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     public dispose(): void {
         this.disposables.forEach((d) => d.dispose());
     }
-    @traceDecorators.verbose('getActivatedEnvironmentVariables', LogOptions.Arguments)
+    @traceDecoratorVerbose('getActivatedEnvironmentVariables', TraceOptions.Arguments)
     @captureTelemetry(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false }, true)
     public async getActivatedEnvironmentVariables(
         resource: Resource,
@@ -217,7 +225,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     }
                     if (result.stderr) {
                         if (returnedEnv) {
-                            traceWarning('Got env variables but with errors', result.stderr);
+                            traceWarn('Got env variables but with errors', result.stderr);
                         } else {
                             throw new Error(`StdErr from ShellExec, ${result.stderr} for ${command}`);
                         }
@@ -262,8 +270,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         // Replace 'source ' with '. ' as that works in shell exec
         return commands.map((cmd) => cmd.replace(/^source\s+/, '. '));
     }
-    @traceDecorators.error('Failed to parse Environment variables')
-    @traceDecorators.verbose('parseEnvironmentOutput', LogOptions.None)
+    @traceDecoratorError('Failed to parse Environment variables')
+    @traceDecoratorVerbose('parseEnvironmentOutput', TraceOptions.None)
     protected parseEnvironmentOutput(output: string, parse: (out: string) => NodeJS.ProcessEnv | undefined) {
         output = output.substring(output.indexOf(ENVIRONMENT_PREFIX) + ENVIRONMENT_PREFIX.length);
         const js = output.substring(output.indexOf('{')).trim();

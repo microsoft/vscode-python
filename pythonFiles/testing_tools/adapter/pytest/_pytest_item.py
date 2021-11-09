@@ -158,9 +158,21 @@ def parse_item(
     # Skip plugin generated tests
     if kind is None:
         return None, None
-    (nodeid, parents, fileid, testfunc, parameterized) = _parse_node_id(
-        item.nodeid, kind
-    )
+
+    if kind == "function" and item.originalname and item.originalname != item.name:
+        # split out parametrized decorations `node[params]`) before parsing
+        # and manually attach parametrized portion back in when done.
+        parameterized = item.name[len(item.originalname) :]
+        (parentid, parents, fileid, testfunc, _) = _parse_node_id(
+            item.nodeid[: -len(parameterized)], kind
+        )
+        nodeid = "{}{}".format(parentid, parameterized)
+        parents = [(parentid, item.originalname, kind)] + parents
+    else:
+        (nodeid, parents, fileid, testfunc, parameterized) = _parse_node_id(
+            item.nodeid, kind
+        )
+
     # Note: testfunc does not necessarily match item.function.__name__.
     # This can result from importing a test function from another module.
 
@@ -446,16 +458,6 @@ def _iter_nodes(
     nodeid, testid = _normalize_test_id(testid, kind)
     if len(nodeid) > len(testid):
         testid = "." + _pathsep + testid
-
-    if kind == "function" and nodeid.endswith("]"):
-        funcid, sep, parameterized = nodeid.partition("[")
-        if not sep:
-            raise should_never_reach_here(
-                nodeid,
-                # ...
-            )
-        yield (nodeid, sep + parameterized, "subtest")
-        nodeid = funcid
 
     parentid, _, name = nodeid.rpartition("::")
     if not parentid:

@@ -8,7 +8,6 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
-import { NugetPackage } from '../../common/nuget/types';
 import { IExtensions, Resource } from '../../common/types';
 import { FolderVersionPair, ILanguageServerFolderService } from '../types';
 
@@ -36,13 +35,6 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
         if (lsf) {
             assert.ok(path.isAbsolute(lsf.path));
             return lsf.path;
-        }
-        throw new Error(`${PYLANCE_EXTENSION_ID} not installed`);
-    }
-
-    public async getLatestLanguageServerVersion(_resource: Resource): Promise<NugetPackage | undefined> {
-        if (await this.lsExtensionApi()) {
-            return undefined;
         }
         throw new Error(`${PYLANCE_EXTENSION_ID} not installed`);
     }

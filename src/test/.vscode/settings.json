@@ -13,9 +13,7 @@
     "python.linting.mypyEnabled": false,
     "python.linting.banditEnabled": false,
     "python.formatting.provider": "yapf",
-    // Do not set this to "Microsoft", else it will result in LS being downloaded on CI
-    // and that slows down tests significantly. We have other tests on CI for testing
-    // downloading of LS with this setting enabled.
+    // Don't set this to `Pylance`, for CI we want to use the LS that ships with the extension.
     "python.languageServer": "Jedi",
     "python.pythonPath": "C:\\GIT\\s p\\vscode-python\\.venv\\Scripts\\python.exe"
 }

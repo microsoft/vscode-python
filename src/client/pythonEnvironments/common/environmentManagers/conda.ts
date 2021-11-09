@@ -1,6 +1,5 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { traceVerbose } from '../../../common/logger';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
 import { arePathsSame, exec, getPythonSetting, pathExists, readFile } from '../externalDependencies';
 
@@ -9,9 +8,9 @@ import { parseVersion } from '../../base/info/pythonVersion';
 
 import { getRegistryInterpreters } from '../windowsUtils';
 import { EnvironmentType, PythonEnvironment } from '../../info';
-import { IDisposable } from '../../../common/types';
 import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
+import { traceVerbose } from '../../../logging';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 
@@ -353,19 +352,8 @@ export class Conda {
     @cache(30_000, true, 10_000)
     // eslint-disable-next-line class-methods-use-this
     private async getInfoCached(command: string): Promise<CondaInfo> {
-        const disposables = new Set<IDisposable>();
-        const result = await exec(command, ['info', '--json'], {}, disposables);
+        const result = await exec(command, ['info', '--json'], { timeout: 50000 });
         traceVerbose(`conda info --json: ${result.stdout}`);
-
-        // Ensure the process we started is cleaned up.
-        disposables.forEach((p) => {
-            try {
-                p.dispose();
-            } catch {
-                // ignore.
-            }
-        });
-
         return JSON.parse(result.stdout);
     }
 

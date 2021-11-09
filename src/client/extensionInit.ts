@@ -23,10 +23,11 @@ import { ExtensionState } from './components';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from './ioc/types';
-import { addOutputChannelLogging } from './logging';
 import * as pythonEnvironments from './pythonEnvironments';
 import { TEST_OUTPUT_CHANNEL } from './testing/constants';
 import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
+import { registerLogger } from './logging';
+import { OutputChannelLogger } from './logging/outputChannelLogger';
 
 // The code in this module should do nothing more complex than register
 // objects to DI and simple init (e.g. no side effects).  That implies
@@ -51,7 +52,8 @@ export function initializeGlobals(
     serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, context);
 
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
-    addOutputChannelLogging(standardOutputChannel);
+    context.subscriptions.push(registerLogger(new OutputChannelLogger(standardOutputChannel)));
+
     const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);

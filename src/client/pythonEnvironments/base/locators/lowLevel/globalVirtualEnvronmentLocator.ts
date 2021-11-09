@@ -3,7 +3,6 @@
 
 import { uniq } from 'lodash';
 import * as path from 'path';
-import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
 import { PythonEnvKind } from '../../info';
@@ -19,6 +18,7 @@ import {
 } from '../../../common/environmentManagers/simplevirtualenvs';
 import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
+import { traceError, traceVerbose } from '../../../../logging';
 
 const DEFAULT_SEARCH_DEPTH = 2;
 /**

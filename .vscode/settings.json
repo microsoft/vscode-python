@@ -11,7 +11,7 @@
         "**/node_modules": true,
         ".vscode-test": false,
         ".vscode test": false,
-        "**/.mypy_cache/**": true,
+        "**/.mypy_cache/**": true
     },
     "search.exclude": {
         "out": true, // set this to false to include "out" folder in search results
@@ -54,8 +54,6 @@
         "source.fixAll.eslint": true
     },
     "python.languageServer": "Pylance",
-    "python.analysis.logLevel": "Trace",
-    "python.analysis.downloadChannel": "beta",
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
     "cucumberautocomplete.skipDocStringsFormat": true,

@@ -10,7 +10,7 @@ docopt==0.6.2
     # via -r news/requirements.in
 iniconfig==1.0.1
     # via pytest
-packaging==21.0
+packaging==21.2
     # via pytest
 pluggy==0.13.1
     # via pytest

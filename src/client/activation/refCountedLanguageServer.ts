@@ -21,7 +21,6 @@ import {
 } from 'vscode';
 
 import { Resource } from '../common/types';
-import { noop } from '../common/utils/misc';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { ILanguageServerActivator, LanguageServerType } from './types';
 
@@ -58,10 +57,6 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
 
     public deactivate() {
         this.impl.deactivate();
-    }
-
-    public clearAnalysisCache() {
-        this.impl.clearAnalysisCache ? this.impl.clearAnalysisCache() : noop();
     }
 
     public get connection() {

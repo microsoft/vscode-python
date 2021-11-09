@@ -7,10 +7,11 @@ import * as path from 'path';
 import * as util from 'util';
 import { CancellationToken, TestItem, Uri, TestController, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
-import { traceError } from '../../../common/logger';
 import { runAdapter } from '../../../common/process/internal/scripts/testing_tools';
 import { IConfigurationService } from '../../../common/types';
+import { asyncForEach } from '../../../common/utils/arrayUtils';
 import { createDeferred, Deferred } from '../../../common/utils/async';
+import { traceError } from '../../../logging';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { PYTEST_PROVIDER } from '../../common/constants';
@@ -48,7 +49,11 @@ export class PytestController implements ITestFrameworkController {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
     ) {}
 
-    public async resolveChildren(testController: TestController, item: TestItem): Promise<void> {
+    public async resolveChildren(
+        testController: TestController,
+        item: TestItem,
+        token?: CancellationToken,
+    ): Promise<void> {
         const workspace = this.workspaceService.getWorkspaceFolder(item.uri);
         if (workspace) {
             // if we are still discovering then wait
@@ -73,7 +78,14 @@ export class PytestController implements ITestFrameworkController {
                     // This is the workspace root node
                     if (rawTestData.length === 1) {
                         if (rawTestData[0].tests.length > 0) {
-                            updateTestItemFromRawData(item, testController, this.idToRawData, item.id, rawTestData);
+                            await updateTestItemFromRawData(
+                                item,
+                                testController,
+                                this.idToRawData,
+                                item.id,
+                                rawTestData,
+                                token,
+                            );
                         } else {
                             this.idToRawData.delete(item.id);
                             testController.items.delete(item.id);
@@ -86,7 +98,7 @@ export class PytestController implements ITestFrameworkController {
                         let subRootWithNoData: string[] = [];
                         item.children.forEach((c) => subRootWithNoData.push(c.id));
 
-                        rawTestData.forEach((data) => {
+                        await asyncForEach(rawTestData, async (data) => {
                             let subRootId = data.root;
                             let rawId;
                             if (data.root === root) {
@@ -111,12 +123,13 @@ export class PytestController implements ITestFrameworkController {
 
                                 // We found data for a node. Remove its id from the no-data list.
                                 subRootWithNoData = subRootWithNoData.filter((s) => s !== subRootId);
-                                updateTestItemFromRawData(
+                                await updateTestItemFromRawData(
                                     subRootItem,
                                     testController,
                                     this.idToRawData,
                                     root, // All the file paths are based on workspace root.
                                     [data],
+                                    token,
                                 );
                             } else {
                                 // This means there are no tests under this node
@@ -130,12 +143,13 @@ export class PytestController implements ITestFrameworkController {
                 } else {
                     const workspaceNode = getWorkspaceNode(item, this.idToRawData);
                     if (workspaceNode) {
-                        updateTestItemFromRawData(
+                        await updateTestItemFromRawData(
                             item,
                             testController,
                             this.idToRawData,
                             workspaceNode.id,
                             rawTestData,
+                            token,
                         );
                     }
                 }
@@ -163,7 +177,10 @@ export class PytestController implements ITestFrameworkController {
             const settings = this.configService.getSettings(workspace.uri);
             const options: TestDiscoveryOptions = {
                 workspaceFolder: workspace.uri,
-                cwd: settings.testing.cwd ?? workspace.uri.fsPath,
+                cwd:
+                    settings.testing.cwd && settings.testing.cwd.length > 0
+                        ? settings.testing.cwd
+                        : workspace.uri.fsPath,
                 args: settings.testing.pytestArgs,
                 ignoreCache: true,
                 token,
@@ -237,16 +254,16 @@ export class PytestController implements ITestFrameworkController {
                 if (uri.fsPath === workspace.uri.fsPath) {
                     // this is a workspace level refresh
                     // This is an existing workspace test node. Just update the children
-                    await this.resolveChildren(testController, workspaceNode);
+                    await this.resolveChildren(testController, workspaceNode, token);
                 } else {
                     // This is a child node refresh
                     const testNode = getNodeByUri(workspaceNode, uri);
                     if (testNode) {
                         // We found the node to update
-                        await this.resolveChildren(testController, testNode);
+                        await this.resolveChildren(testController, testNode, token);
                     } else {
                         // update the entire workspace tree
-                        await this.resolveChildren(testController, workspaceNode);
+                        await this.resolveChildren(testController, workspaceNode, token);
                     }
                 }
             } else if (rawTestData.length > 0) {
@@ -259,7 +276,7 @@ export class PytestController implements ITestFrameworkController {
                 });
                 testController.items.add(newItem);
 
-                await this.resolveChildren(testController, newItem);
+                await this.resolveChildren(testController, newItem, token);
             }
         }
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: 'pytest', failed: false });
@@ -272,7 +289,10 @@ export class PytestController implements ITestFrameworkController {
             testRun,
             {
                 workspaceFolder: workspace.uri,
-                cwd: settings.testing.cwd ?? workspace.uri.fsPath,
+                cwd:
+                    settings.testing.cwd && settings.testing.cwd.length > 0
+                        ? settings.testing.cwd
+                        : workspace.uri.fsPath,
                 token,
                 args: settings.testing.pytestArgs,
             },

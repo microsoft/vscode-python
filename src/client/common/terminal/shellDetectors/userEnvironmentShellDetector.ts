@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Terminal } from 'vscode';
-import { traceVerbose } from '../../logger';
+import { traceVerbose } from '../../../logging';
 import { IPlatformService } from '../../platform/types';
 import { ICurrentProcess } from '../../types';
 import { OSType } from '../../utils/platform';

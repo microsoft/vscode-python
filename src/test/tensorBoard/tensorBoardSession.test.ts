@@ -16,7 +16,6 @@ import { IServiceManager } from '../../client/ioc/types';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../client/tensorBoard/constants';
 import { TensorBoardSession } from '../../client/tensorBoard/tensorBoardSession';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../initialize';
-import * as ExperimentHelpers from '../../client/common/experiments/helpers';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { Architecture } from '../../client/common/utils/platform';
 import { PythonEnvironment, EnvironmentType } from '../../client/pythonEnvironments/info';
@@ -70,9 +69,8 @@ suite('TensorBoard session creation', async () => {
     setup(async () => {
         sandbox = sinon.createSandbox();
         ({ serviceManager } = await initialize());
-        sandbox.stub(ExperimentHelpers, 'inDiscoveryExperiment').resolves(true);
-        experimentService = serviceManager.get<IExperimentService>(IExperimentService);
 
+        experimentService = serviceManager.get<IExperimentService>(IExperimentService);
         const interpreterService = serviceManager.get<IInterpreterService>(IInterpreterService);
         sandbox.stub(interpreterService, 'getActiveInterpreter').resolves(interpreter);
 

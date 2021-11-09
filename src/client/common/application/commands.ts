@@ -43,7 +43,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.ClearStorage]: [];
     [Commands.ReportIssue]: [];
     [Commands.RefreshTensorBoard]: [];
-    [LSCommands.ClearAnalyisCache]: [];
     [LSCommands.RestartLS]: [];
 }
 
@@ -68,7 +67,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['setContext']: [string, boolean] | ['python.vscode.channel', Channel];
     ['python.reloadVSCode']: [string];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
-    ['python._loadLanguageServerExtension']: Record<string, unknown>[];
+    ['python._loadLanguageServerExtension']: [];
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
     ['vscode.open']: [Uri];
     ['notebook.execute']: [];

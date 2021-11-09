@@ -7,7 +7,7 @@ import * as path from 'path';
 import { uniq } from 'lodash';
 import { getSearchPathEntries } from '../../common/utils/exec';
 import { resolveSymbolicLink } from './externalDependencies';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceError, traceInfo } from '../../logging';
 
 /**
  * Determine if the given filename looks like the simplest Python executable.

@@ -76,7 +76,7 @@ export class LanguageServerChangeHandler implements Disposable {
     }
 
     public async handleLanguageServerChange(lsType: LanguageServerType | undefined): Promise<void> {
-        if (this.currentLsType === lsType) {
+        if (this.currentLsType === lsType || lsType === LanguageServerType.Microsoft) {
             return;
         }
         // VS Code has to be reloaded when language server type changes. In case of Pylance

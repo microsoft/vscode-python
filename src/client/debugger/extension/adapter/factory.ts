@@ -13,9 +13,9 @@ import {
     WorkspaceFolder,
 } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
-import { traceVerbose } from '../../../common/logger';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
+import { traceVerbose } from '../../../logging';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';

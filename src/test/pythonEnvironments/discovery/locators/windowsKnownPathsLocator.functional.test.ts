@@ -69,15 +69,12 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
     suiteSetup(async function () {
         if (!IS_WINDOWS) {
             if (!process.env.PVSC_TEST_FORCE) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
-            // tslint:disable:no-require-imports
             // eslint-disable-next-line global-require
             const sinon = require('sinon');
             // eslint-disable-next-line global-require
             const platformAPI = require('../../../../../client/common/utils/platform');
-            // tslint:enable:no-require-imports
             const stub = sinon.stub(platformAPI, 'getOSType');
             stub.returns(OSType.Windows);
         }
@@ -97,7 +94,6 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
             try {
                 run();
             } catch (err) {
-                // tslint:disable-next-line:no-console
                 console.log(err);
             }
         });

@@ -13,7 +13,6 @@ import { JUPYTER_EXTENSION_ID } from '../common/constants';
 import { InterpreterUri, ModuleInstallFlags } from '../common/installer/types';
 import {
     GLOBAL_MEMENTO,
-    IExperimentService,
     IExtensions,
     IInstaller,
     IMemento,
@@ -31,11 +30,10 @@ import {
     IInterpreterDisplay,
     IInterpreterService,
     IInterpreterStatusbarVisibilityFilter,
+    PythonEnvironmentsChangedEvent,
 } from '../interpreter/contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './types';
-import { inDiscoveryExperiment } from '../common/experiments/helpers';
-import { isWindowsStoreInterpreter } from '../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 
 interface ILanguageServer extends Disposable {
     readonly connection: ILanguageServerConnection;
@@ -72,6 +70,19 @@ type PythonApiForJupyterExtension = {
     /**
      * IInterpreterService
      */
+    readonly refreshPromise: Promise<void> | undefined;
+    /**
+     * IInterpreterService
+     */
+    readonly onDidChangeInterpreters: Event<PythonEnvironmentsChangedEvent>;
+    /**
+     * Equivalent to getInterpreters() in IInterpreterService
+     */
+    getKnownInterpreters(resource?: Uri): PythonEnvironment[];
+    /**
+     * @deprecated Use `getKnownInterpreters`, `onDidChangeInterpreters`, and `refreshPromise` instead.
+     * Equivalent to getAllInterpreters() in IInterpreterService
+     */
     getInterpreters(resource?: Uri): Promise<PythonEnvironment[]>;
     /**
      * IInterpreterService
@@ -91,6 +102,11 @@ type PythonApiForJupyterExtension = {
         allowExceptions?: boolean,
     ): Promise<NodeJS.ProcessEnv | undefined>;
     isWindowsStoreInterpreter(pythonPath: string): Promise<boolean>;
+    suggestionToQuickPickItem(suggestion: PythonEnvironment, workspaceUri?: Uri | undefined): IInterpreterQuickPickItem;
+    getKnownSuggestions(resource: Resource): IInterpreterQuickPickItem[];
+    /**
+     * @deprecated Use `getKnownSuggestions` and `suggestionToQuickPickItem` instead.
+     */
     getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]>;
     /**
      * IInstaller
@@ -160,7 +176,6 @@ export class JupyterExtensionIntegration {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IInterpreterDisplay) private interpreterDisplay: IInterpreterDisplay,
         @inject(IComponentAdapter) private pyenvs: IComponentAdapter,
-        @inject(IExperimentService) private experimentService: IExperimentService,
     ) {}
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
@@ -170,20 +185,26 @@ export class JupyterExtensionIntegration {
             getActiveInterpreter: async (resource?: Uri) => this.interpreterService.getActiveInterpreter(resource),
             getInterpreterDetails: async (pythonPath: string) =>
                 this.interpreterService.getInterpreterDetails(pythonPath),
+            refreshPromise: this.interpreterService.refreshPromise,
+            onDidChangeInterpreters: this.interpreterService.onDidChangeInterpreters,
+            getKnownInterpreters: (resource: Uri | undefined) => this.pyenvs.getInterpreters(resource),
             getInterpreters: async (resource: Uri | undefined) => this.interpreterService.getAllInterpreters(resource),
             getActivatedEnvironmentVariables: async (
                 resource: Resource,
                 interpreter?: PythonEnvironment,
                 allowExceptions?: boolean,
             ) => this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions),
-            isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> => {
-                if (await inDiscoveryExperiment(this.experimentService)) {
-                    return this.pyenvs.isWindowsStoreInterpreter(pythonPath);
-                }
-                return isWindowsStoreInterpreter(pythonPath);
-            },
+            isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> =>
+                this.pyenvs.isWindowsStoreInterpreter(pythonPath),
             getSuggestions: async (resource: Resource): Promise<IInterpreterQuickPickItem[]> =>
                 this.interpreterSelector.getAllSuggestions(resource),
+            getKnownSuggestions: (resource: Resource): IInterpreterQuickPickItem[] =>
+                this.interpreterSelector.getSuggestions(resource),
+            suggestionToQuickPickItem: (
+                suggestion: PythonEnvironment,
+                workspaceUri?: Uri | undefined,
+            ): IInterpreterQuickPickItem =>
+                this.interpreterSelector.suggestionToQuickPickItem(suggestion, workspaceUri),
             install: async (
                 product: JupyterProductToInstall,
                 resource?: InterpreterUri,

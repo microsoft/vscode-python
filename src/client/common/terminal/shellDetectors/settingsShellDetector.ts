@@ -5,8 +5,8 @@
 
 import { inject, injectable } from 'inversify';
 import { Terminal } from 'vscode';
+import { traceVerbose } from '../../../logging';
 import { IWorkspaceService } from '../../application/types';
-import { traceVerbose } from '../../logger';
 import { IPlatformService } from '../../platform/types';
 import { OSType } from '../../utils/platform';
 import { ShellIdentificationTelemetry, TerminalShellType } from '../types';

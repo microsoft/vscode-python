@@ -46,8 +46,13 @@ export class JediPython27NotSupportedDiagnosticService extends BaseDiagnosticsSe
 
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        const { languageServer } = this.configurationService.getSettings(resource);
 
-        if (interpreter && (interpreter.version?.major ?? 0) < 3) {
+        await this.updateLanguageServerSetting(resource);
+
+        // We don't need to check for JediLSP here, because we retrieve the setting from the configuration service,
+        // Which already switched the JediLSP option to Jedi.
+        if (interpreter && (interpreter.version?.major ?? 0) < 3 && languageServer === LanguageServerType.Jedi) {
             return [new JediPython27NotSupportedDiagnostic(Python27Support.jediMessage(), resource)];
         }
 
@@ -63,8 +68,6 @@ export class JediPython27NotSupportedDiagnosticService extends BaseDiagnosticsSe
             return;
         }
 
-        this.updateLanguageServerSetting(diagnostic.resource);
-
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
         const options = [
             {
@@ -79,7 +82,7 @@ export class JediPython27NotSupportedDiagnosticService extends BaseDiagnosticsSe
         await this.messageService.handle(diagnostic, { commandPrompts: options });
     }
 
-    private updateLanguageServerSetting(resource: Resource): void {
+    private async updateLanguageServerSetting(resource: Resource): Promise<void | undefined> {
         // Update settings.json value to Jedi if it's JediLSP.
         const settings = this.workspaceService
             .getConfiguration('python', resource)
@@ -95,6 +98,11 @@ export class JediPython27NotSupportedDiagnosticService extends BaseDiagnosticsSe
             return;
         }
 
-        this.configurationService.updateSetting('languageServer', LanguageServerType.Jedi, resource, configTarget);
+        await this.configurationService.updateSetting(
+            'languageServer',
+            LanguageServerType.Jedi,
+            resource,
+            configTarget,
+        );
     }
 }

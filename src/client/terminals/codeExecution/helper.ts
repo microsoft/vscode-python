@@ -7,13 +7,13 @@ import { Position, Range, TextEditor, Uri } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceError } from '../../common/logger';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { createDeferred } from '../../common/utils/async';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
+import { traceError } from '../../logging';
 
 @injectable()
 export class CodeExecutionHelper implements ICodeExecutionHelper {

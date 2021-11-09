@@ -8,28 +8,21 @@ import { instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
 import { InterpreterUri } from '../../../client/common/installer/types';
-import {
-    ExecutionInfo,
-    IConfigurationService,
-    IExperimentService,
-    IPythonSettings,
-} from '../../../client/common/types';
-import { ICondaService, ICondaLocatorService } from '../../../client/interpreter/contracts';
+import { ExecutionInfo, IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { ICondaService, IComponentAdapter } from '../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CondaEnvironmentInfo } from '../../../client/pythonEnvironments/common/environmentManagers/conda';
-import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
+import { CondaService } from '../../../client/pythonEnvironments/common/environmentManagers/condaService';
 
 suite('Common - Conda Installer', () => {
     let installer: CondaInstallerTest;
     let serviceContainer: IServiceContainer;
     let condaService: ICondaService;
-    let condaLocatorService: ICondaLocatorService;
+    let condaLocatorService: IComponentAdapter;
     let configService: IConfigurationService;
-    let experimentService: IExperimentService;
     class CondaInstallerTest extends CondaInstaller {
         public async getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo> {
             return super.getExecutionInfo(moduleName, resource);
@@ -38,16 +31,11 @@ suite('Common - Conda Installer', () => {
     setup(() => {
         serviceContainer = mock(ServiceContainer);
         condaService = mock(CondaService);
-        experimentService = mock<IExperimentService>();
-        condaLocatorService = mock<ICondaLocatorService>();
-        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
+        condaLocatorService = mock<IComponentAdapter>();
         configService = mock(ConfigurationService);
         when(serviceContainer.get<ICondaService>(ICondaService)).thenReturn(instance(condaService));
-        when(serviceContainer.get<ICondaLocatorService>(ICondaLocatorService)).thenReturn(
-            instance(condaLocatorService),
-        );
+        when(serviceContainer.get<IComponentAdapter>(IComponentAdapter)).thenReturn(instance(condaLocatorService));
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
-        when(serviceContainer.get<IExperimentService>(IExperimentService)).thenReturn(instance(experimentService));
         installer = new CondaInstallerTest(instance(serviceContainer));
     });
     test('Name and priority', async () => {

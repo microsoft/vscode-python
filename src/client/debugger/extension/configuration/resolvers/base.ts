@@ -112,13 +112,20 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         if (!debugConfiguration) {
             return;
         }
+        const systemVariables: SystemVariables = new SystemVariables(
+            undefined,
+            workspaceFolder?.fsPath,
+            this.workspaceService,
+        );
         if (debugConfiguration.pythonPath === '${command:python.interpreterPath}' || !debugConfiguration.pythonPath) {
             const pythonPath = this.configurationService.getSettings(workspaceFolder).pythonPath;
             debugConfiguration.pythonPath = pythonPath;
             this.pythonPathSource = PythonPathSource.settingsJson;
         } else {
+            debugConfiguration.pythonPath = systemVariables.resolveAny(debugConfiguration.pythonPath);
             this.pythonPathSource = PythonPathSource.launchJson;
         }
+        debugConfiguration.python = systemVariables.resolveAny(debugConfiguration.python);
     }
 
     protected debugOption(debugOptions: DebugOptions[], debugOption: DebugOptions) {

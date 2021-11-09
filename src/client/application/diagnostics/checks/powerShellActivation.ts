@@ -5,10 +5,10 @@
 import { inject, injectable } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import '../../../common/extensions';
-import { traceError } from '../../../common/logger';
 import { useCommandPromptAsDefaultShell } from '../../../common/terminal/commandPrompt';
 import { IConfigurationService, ICurrentProcess, IDisposableRegistry, Resource } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
+import { traceError } from '../../../logging';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';

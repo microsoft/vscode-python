@@ -24,7 +24,6 @@ function Uri(filename: string): vscode.Uri {
 }
 
 function createDummyStat(filetype: FileType): FileStat {
-    //tslint:disable-next-line:no-any
     return { type: filetype } as any;
 }
 
@@ -91,7 +90,6 @@ suite('Raw FileSystem', () => {
         const stat = TypeMoq.Mock.ofType<fsextra.Stats>(undefined, TypeMoq.MockBehavior.Strict);
         // This is necessary because passing "mock.object" to
         // Promise.resolve() triggers the lookup.
-        //tslint:disable-next-line:no-any
         stat.setup((s: any) => s.then)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.atLeast(0));
@@ -174,7 +172,6 @@ suite('Raw FileSystem', () => {
                     size: 10,
                     ctime: 101,
                     mtime: 102,
-                    //tslint:disable-next-line:no-any
                 } as any;
                 const old = createMockLegacyStat();
                 setupStatFileType(old, testData.filetype);
@@ -687,7 +684,6 @@ suite('Raw FileSystem', () => {
                 size: 10,
                 ctime: 101,
                 mtime: 102,
-                //tslint:disable-next-line:no-any
             } as any;
             const lstat = createMockLegacyStat();
             setupStatFileType(lstat, FileType.Unknown);
@@ -712,7 +708,6 @@ suite('Raw FileSystem', () => {
                     size: 10,
                     ctime: 101,
                     mtime: 102,
-                    //tslint:disable-next-line:no-any
                 } as any;
                 const lstat = createMockLegacyStat();
                 lstat
@@ -742,7 +737,6 @@ suite('Raw FileSystem', () => {
                     size: 10,
                     ctime: 101,
                     mtime: 102,
-                    //tslint:disable-next-line:no-any
                 } as any;
                 const lstat = createMockLegacyStat();
                 lstat
@@ -800,7 +794,6 @@ suite('Raw FileSystem', () => {
     suite('createReadStream', () => {
         test('wraps the low-level function', () => {
             const filename = 'x/y/z/spam.py';
-            //tslint:disable-next-line:no-any
             const expected = {} as any;
             raw.setup((r) => r.createReadStream(filename)) // expect the specific filename
                 .returns(() => expected);
@@ -824,7 +817,6 @@ suite('Raw FileSystem', () => {
     suite('createWriteStream', () => {
         test('wraps the low-level function', () => {
             const filename = 'x/y/z/spam.py';
-            //tslint:disable-next-line:no-any
             const expected = {} as any;
             raw.setup((r) => r.createWriteStream(filename)) // expect the specific filename
                 .returns(() => expected);
@@ -880,7 +872,6 @@ suite('FileSystemUtils', () => {
         const stat = TypeMoq.Mock.ofType<FileStat>(undefined, TypeMoq.MockBehavior.Strict);
         // This is necessary because passing "mock.object" to
         // Promise.resolve() triggers the lookup.
-        //tslint:disable-next-line:no-any
         stat.setup((s: any) => s.then)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.atLeast(0));

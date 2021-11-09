@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
 import { pathExists } from '../../../common/externalDependencies';
@@ -13,6 +12,7 @@ import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { FSWatcherKind, FSWatchingLocator } from './fsWatchingLocator';
 import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
+import { traceVerbose } from '../../../../logging';
 
 /**
  * Default number of levels of sub-directories to recurse when looking for interpreters.

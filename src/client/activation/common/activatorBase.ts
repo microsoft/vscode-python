@@ -24,11 +24,11 @@ import * as vscodeLanguageClient from 'vscode-languageclient/node';
 
 import { injectable } from 'inversify';
 import { IWorkspaceService } from '../../common/application/types';
-import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILanguageServerActivator, ILanguageServerManager } from '../types';
+import { traceDecoratorError } from '../../logging';
 
 /**
  * Starts the language server managers per workspaces (currently one for first workspace).
@@ -47,7 +47,7 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         protected readonly configurationService: IConfigurationService,
     ) {}
 
-    @traceDecorators.error('Failed to activate language server')
+    @traceDecoratorError('Failed to activate language server')
     public async start(resource: Resource, interpreter?: PythonEnvironment): Promise<void> {
         if (!resource) {
             resource = this.workspace.hasWorkspaceFolders ? this.workspace.workspaceFolders![0].uri : undefined;

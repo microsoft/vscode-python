@@ -73,7 +73,6 @@ suite('String Extensions', () => {
         expect(formatString.format('one', 'two', 'three')).to.be.equal(expectedString);
     });
     test('String should remove quotes', () => {
-        //tslint:disable:no-multiline-string
         const quotedString = `'foo is "bar" is foo' is bar'`;
         const quotedString2 = `foo is "bar" is foo' is bar'`;
         const quotedString3 = `foo is "bar" is foo' is bar`;
@@ -83,6 +82,20 @@ suite('String Extensions', () => {
         expect(quotedString2.trimQuotes()).to.be.equal(expectedString);
         expect(quotedString3.trimQuotes()).to.be.equal(expectedString);
         expect(quotedString4.trimQuotes()).to.be.equal(expectedString);
+    });
+    test('String should replace all substrings with new substring', () => {
+        const oldString = `foo \\ foo \\ foo`;
+        const expectedString = `foo \\\\ foo \\\\ foo`;
+        const oldString2 = `\\ foo \\ foo`;
+        const expectedString2 = `\\\\ foo \\\\ foo`;
+        const oldString3 = `\\ foo \\`;
+        const expectedString3 = `\\\\ foo \\\\`;
+        const oldString4 = `foo foo`;
+        const expectedString4 = `foo foo`;
+        expect(oldString.replaceAll('\\', '\\\\')).to.be.equal(expectedString);
+        expect(oldString2.replaceAll('\\', '\\\\')).to.be.equal(expectedString2);
+        expect(oldString3.replaceAll('\\', '\\\\')).to.be.equal(expectedString3);
+        expect(oldString4.replaceAll('\\', '\\\\')).to.be.equal(expectedString4);
     });
 });
 

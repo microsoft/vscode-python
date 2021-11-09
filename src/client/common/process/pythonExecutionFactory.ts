@@ -5,14 +5,13 @@ import { gte } from 'semver';
 
 import { Uri } from 'vscode';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { IComponentAdapter, ICondaLocatorService, ICondaService } from '../../interpreter/contracts';
+import { IComponentAdapter, ICondaService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { CondaEnvironmentInfo } from '../../pythonEnvironments/common/environmentManagers/conda';
-import { inDiscoveryExperiment } from '../experiments/helpers';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IFileSystem } from '../platform/types';
-import { IConfigurationService, IDisposableRegistry, IExperimentService, IInterpreterPathProxyService } from '../types';
+import { IConfigurationService, IDisposableRegistry, IInterpreterPathProxyService } from '../types';
 import { ProcessService } from './proc';
 import { createCondaEnv, createPythonEnv, createWindowsStoreEnv } from './pythonEnvironment';
 import { createPythonProcessService } from './pythonProcess';
@@ -26,10 +25,9 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService,
 } from './types';
-import { isWindowsStoreInterpreter } from '../../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { IInterpreterAutoSelectionService } from '../../interpreter/autoSelection/types';
 import { sleep } from '../utils/async';
-import { traceError } from '../logger';
+import { traceError } from '../../logging';
 
 // Minimum version number of conda required to be able to use 'conda run'
 export const CONDA_RUN_VERSION = '4.6.0';
@@ -50,7 +48,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
         @inject(IInterpreterPathProxyService) private readonly interpreterPathExpHelper: IInterpreterPathProxyService,
     ) {
@@ -82,15 +79,11 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                     );
                 }
             }
+            pythonPath = this.configService.getSettings(options.resource).pythonPath;
         }
-        pythonPath = this.configService.getSettings(options.resource).pythonPath;
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
-        processService.on('exec', this.logger.logProcess.bind(this.logger));
 
-        const windowsStoreInterpreterCheck = (await inDiscoveryExperiment(this.experimentService))
-            ? // Class methods may depend on other properties which belong to the class, so bind the correct context.
-              this.pyenvs.isWindowsStoreInterpreter.bind(this.pyenvs)
-            : isWindowsStoreInterpreter;
+        const windowsStoreInterpreterCheck = this.pyenvs.isWindowsStoreInterpreter.bind(this.pyenvs);
 
         return createPythonService(
             pythonPath,
@@ -137,9 +130,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processServicePromise = processService
             ? Promise.resolve(processService)
             : this.processServiceFactory.create(resource);
-        const condaLocatorService = (await inDiscoveryExperiment(this.experimentService))
-            ? this.serviceContainer.get<IComponentAdapter>(IComponentAdapter)
-            : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const condaLocatorService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
         const [condaVersion, condaEnvironment, condaFile, procService] = await Promise.all([
             this.condaService.getCondaVersion(),
             condaLocatorService.getCondaEnvironment(pythonPath),

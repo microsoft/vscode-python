@@ -5,8 +5,8 @@
 
 import { inject } from 'inversify';
 import { Terminal } from 'vscode';
+import { traceVerbose } from '../../../logging';
 import { IApplicationEnvironment } from '../../application/types';
-import { traceVerbose } from '../../logger';
 import { ShellIdentificationTelemetry, TerminalShellType } from '../types';
 import { BaseShellDetector } from './baseShellDetector';
 
@@ -36,6 +36,7 @@ export class VSCEnvironmentShellDetector extends BaseShellDetector {
         traceVerbose(`Terminal shell path '${shellPath}' identified as shell '${shell}'`);
         telemetryProperties.shellIdentificationSource =
             shell === TerminalShellType.other ? telemetryProperties.shellIdentificationSource : 'vscode';
+        telemetryProperties.failed = shell === TerminalShellType.other ? false : true;
         return shell;
     }
 }

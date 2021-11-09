@@ -591,7 +591,7 @@ class TestFixture extends BaseTestFixture {
             }
             default: {
                 throwUnknownProduct(product);
-                return []; // to quiet tslint
+                return [];
             }
         }
         this.setMessages(messages, product);

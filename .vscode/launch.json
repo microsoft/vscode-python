@@ -79,7 +79,9 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
             "env": {
-                "VSC_PYTHON_CI_TEST_GREP": "Smoke Test"
+                "VSC_PYTHON_CI_TEST_GREP": "Smoke Test",
+                "VSC_PYTHON_SMOKE_TEST": "1",
+                "TEST_FILES_SUFFIX": "smoke.test"
             },
             "stopOnEntry": false,
             "sourceMaps": true,

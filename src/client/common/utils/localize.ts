@@ -3,9 +3,8 @@
 
 'use strict';
 
-import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../../constants';
 import { FileSystem } from '../platform/fileSystem';
+import { getLocalizedString, loadLocalizedStringsUsingNodeFS, shouldLoadUsingNodeFS } from './localizeHelpers';
 
 /* eslint-disable @typescript-eslint/no-namespace, no-shadow */
 
@@ -205,10 +204,6 @@ export namespace TensorBoard {
 }
 
 export namespace LanguageService {
-    export const startingMicrosoft = localize(
-        'LanguageService.startingMicrosoft',
-        'Starting Microsoft Python language server.',
-    );
     export const startingPylance = localize('LanguageService.startingPylance', 'Starting Pylance language server.');
     export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi language server.');
     export const startingNone = localize(
@@ -257,8 +252,8 @@ export namespace Http {
     export const downloadingFileProgress = localize('downloading.file.progress', '{0}{1} of {2} KB ({3}%)');
 }
 export namespace Experiments {
-    export const inGroup = localize('Experiments.inGroup', "User belongs to experiment group '{0}'");
-    export const optedOutOf = localize('Experiments.optedOutOf', "User opted out of experiment group '{0}'");
+    export const inGroup = localize('Experiments.inGroup', "Experiment '{0}' is active");
+    export const optedOutOf = localize('Experiments.optedOutOf', "Experiment '{0}' is inactive");
 }
 export namespace Interpreters {
     export const discovering = localize('Interpreters.DiscoveringInterpreters', 'Discovering Python Interpreters');
@@ -271,7 +266,7 @@ export namespace Interpreters {
         'Interpreters.environmentPromptMessage',
         'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?',
     );
-    export const entireWorkspace = localize('Interpreters.entireWorkspace', 'Entire workspace');
+    export const entireWorkspace = localize('Interpreters.entireWorkspace', 'Select at workspace level');
     export const selectInterpreterTip = localize(
         'Interpreters.selectInterpreterTip',
         'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar',
@@ -391,6 +386,15 @@ export namespace ExtensionSurveyBanner {
 
 export namespace Products {
     export const installingModule = localize('products.installingModule', 'Installing {0}');
+    export const formatterNotInstalled = localize(
+        'products.formatterNotInstalled',
+        'Formatter {0} is not installed. Install?',
+    );
+    export const useFormatter = localize('products.useFormatter', 'Use {0}');
+    export const invalidFormatterPath = localize(
+        'products.invalidFormatterPath',
+        'Path to the {0} formatter is invalid ({1})',
+    );
 }
 export namespace DebugConfigStrings {
     export const selectConfiguration = {
@@ -540,112 +544,24 @@ export namespace Python27Support {
     );
 }
 
-export namespace MPLSDeprecation {
+export namespace SwitchToDefaultLS {
     export const bannerMessage = localize(
-        'MPLSDeprecation.bannerMessage',
-        'The Microsoft Python Language Server is reaching end of life at the beginning of November. If you do not select a new language server, you will have your setting automatically updated at deprecation. Read more about this in our [September release blog post](https://aka.ms/pvsc-september-2021). Please switch your language server to a supported value:',
+        'SwitchToDefaultLS.bannerMessage',
+        'The Microsoft Python Language Server has reached end of life. Your language server has been set to the default for Python in VS Code, Pylance.\n\nIf you’d like to change your language server, you can learn about how to do so [here](https://devblogs.microsoft.com/python/python-in-visual-studio-code-may-2021-release/#configuring-your-language-server).\n\nRead Pylance’s license [here](https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license).',
     );
-    export const switchToPylance = localize('MPLSDeprecation.switchToPylance', 'Switch to Pylance (recommended)');
-    export const switchToJedi = localize('MPLSDeprecation.switchToJedi', 'Switch to Jedi (open source)');
 }
 
-// Skip using vscode-nls and instead just compute our strings based on key values. Key values
-// can be loaded out of the nls.<locale>.json files
-let loadedCollection: Record<string, string> | undefined;
-let defaultCollection: Record<string, string> | undefined;
-let askedForCollection: Record<string, string> = {};
-let loadedLocale: string;
-
-// This is exported only for testing purposes.
-export function _resetCollections(): void {
-    loadedLocale = '';
-    loadedCollection = undefined;
-    askedForCollection = {};
-}
-
-// This is exported only for testing purposes.
-export function _getAskedForCollection(): Record<string, string> {
-    return askedForCollection;
-}
-
-// Return the effective set of all localization strings, by key.
-//
-// This should not be used for direct lookup.
-export function getCollectionJSON(): string {
-    // Load the current collection
-    if (!loadedCollection || parseLocale() !== loadedLocale) {
-        load();
-    }
-
-    // Combine the default and loaded collections
-    return JSON.stringify({ ...defaultCollection, ...loadedCollection });
-}
-
-export function localize(key: string, defValue?: string) {
+function localize(key: string, defValue?: string) {
     // Return a pointer to function so that we refetch it on each call.
     return (): string => getString(key, defValue);
 }
 
-function parseLocale(): string {
-    // Attempt to load from the vscode locale. If not there, use english
-    const vscodeConfigString = process.env.VSCODE_NLS_CONFIG;
-    return vscodeConfigString ? JSON.parse(vscodeConfigString).locale : 'en-us';
-}
-
 function getString(key: string, defValue?: string) {
-    // Load the current collection
-    if (!loadedCollection || parseLocale() !== loadedLocale) {
-        load();
+    if (shouldLoadUsingNodeFS()) {
+        loadLocalizedStringsUsingNodeFS(new FileSystem());
     }
-
-    // The default collection (package.nls.json) is the fallback.
-    // Note that we are guaranteed the following (during shipping)
-    //  1. defaultCollection was initialized by the load() call above
-    //  2. defaultCollection has the key (see the "keys exist" test)
-    let collection = defaultCollection!;
-
-    // Use the current locale if the key is defined there.
-    if (loadedCollection && loadedCollection.hasOwnProperty(key)) {
-        collection = loadedCollection;
-    }
-    let result = collection[key];
-    if (!result && defValue) {
-        // This can happen during development if you haven't fixed up the nls file yet or
-        // if for some reason somebody broke the functional test.
-        result = defValue;
-    }
-    askedForCollection[key] = result;
-
-    return result;
-}
-
-function load() {
-    const fs = new FileSystem();
-
-    // Figure out our current locale.
-    loadedLocale = parseLocale();
-
-    // Find the nls file that matches (if there is one)
-    const nlsFile = path.join(EXTENSION_ROOT_DIR, `package.nls.${loadedLocale}.json`);
-    if (fs.fileExistsSync(nlsFile)) {
-        const contents = fs.readFileSync(nlsFile);
-        loadedCollection = JSON.parse(contents);
-    } else {
-        // If there isn't one, at least remember that we looked so we don't try to load a second time
-        loadedCollection = {};
-    }
-
-    // Get the default collection if necessary. Strings may be in the default or the locale json
-    if (!defaultCollection) {
-        const defaultNlsFile = path.join(EXTENSION_ROOT_DIR, 'package.nls.json');
-        if (fs.fileExistsSync(defaultNlsFile)) {
-            const contents = fs.readFileSync(defaultNlsFile);
-            defaultCollection = JSON.parse(contents);
-        } else {
-            defaultCollection = {};
-        }
-    }
+    return getLocalizedString(key, defValue);
 }
 
 // Default to loading the current locale
-load();
+loadLocalizedStringsUsingNodeFS(new FileSystem());

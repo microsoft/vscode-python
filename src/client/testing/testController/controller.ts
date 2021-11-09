@@ -17,13 +17,13 @@ import {
     EventEmitter,
 } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { traceVerbose } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
+import { traceVerbose } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
-import { getNodeByUri } from './common/testItemUtilities';
+import { DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
 import { ITestController, ITestFrameworkController, TestRefreshOptions } from './common/types';
 
 @injectable()
@@ -74,12 +74,19 @@ export class PythonTestController implements ITestController {
         this.refreshData = delayTrigger;
 
         this.disposables.push(
-            this.testController.createRunProfile('Run Tests', TestRunProfileKind.Run, this.runTests.bind(this), true),
+            this.testController.createRunProfile(
+                'Run Tests',
+                TestRunProfileKind.Run,
+                this.runTests.bind(this),
+                true,
+                RunTestTag,
+            ),
             this.testController.createRunProfile(
                 'Debug Tests',
                 TestRunProfileKind.Debug,
                 this.runTests.bind(this),
                 true,
+                DebugTestTag,
             ),
         );
         this.testController.resolveHandler = this.resolveChildren.bind(this);
@@ -163,10 +170,10 @@ export class PythonTestController implements ITestController {
             traceVerbose(`Testing: Resolving item ${item.id}`);
             const settings = this.configSettings.getSettings(item.uri);
             if (settings.testing.pytestEnabled) {
-                return this.pytest.resolveChildren(this.testController, item);
+                return this.pytest.resolveChildren(this.testController, item, this.refreshCancellation.token);
             }
             if (settings.testing.unittestEnabled) {
-                return this.unittest.resolveChildren(this.testController, item);
+                return this.unittest.resolveChildren(this.testController, item, this.refreshCancellation.token);
             }
         } else {
             traceVerbose('Testing: Refreshing all test data');
@@ -244,6 +251,7 @@ export class PythonTestController implements ITestController {
                                 },
                                 workspace,
                                 token,
+                                this.testController,
                             );
                         }
                     }

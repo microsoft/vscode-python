@@ -6,10 +6,10 @@
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter, Uri } from 'vscode';
+import { traceError } from '../logging';
 import { IWorkspaceService } from './application/types';
 import { PythonSettings } from './configSettings';
 import { isTestExecution } from './constants';
-import { traceError } from './logger';
 import { FileSystemPaths } from './platform/fs-paths';
 import {
     IDisposable,

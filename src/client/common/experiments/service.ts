@@ -12,7 +12,6 @@ import { IApplicationEnvironment, IWorkspaceService } from '../application/types
 import { PVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { GLOBAL_MEMENTO, IExperimentService, IMemento, IOutputChannel } from '../types';
 import { Experiments } from '../utils/localize';
-import { DiscoveryVariants } from './groups';
 import { ExperimentationTelemetry } from './telemetry';
 
 const EXP_MEMENTO_KEY = 'VSCode.ABExp.FeatureData';
@@ -127,11 +126,6 @@ export class ExperimentService implements IExperimentService {
             return true;
         }
 
-        if (experiment === DiscoveryVariants.discoveryWithoutFileWatching) {
-            // Enable discovery experiment for all users.
-            return true;
-        }
-
         // If getTreatmentVariable returns undefined,
         // it means that the value for this experiment was not found on the server.
         const treatmentVariable = this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment);
@@ -148,6 +142,22 @@ export class ExperimentService implements IExperimentService {
     }
 
     private logExperiments() {
+        const telemetrySettings = this.workspaceService.getConfiguration('telemetry');
+        let experimentsDisabled = false;
+        if (telemetrySettings && telemetrySettings.get<boolean>('enableTelemetry') === false) {
+            this.output.appendLine('Telemetry is disabled');
+            experimentsDisabled = true;
+        }
+
+        if (telemetrySettings && telemetrySettings.get<string>('telemetryLevel') === 'off') {
+            this.output.appendLine('Telemetry level is off');
+            experimentsDisabled = true;
+        }
+
+        if (experimentsDisabled) {
+            this.output.appendLine('Experiments are disabled, only manually opted experiments are active.');
+        }
+
         if (this._optOutFrom.includes('All')) {
             // We prioritize opt out first
             this.output.appendLine(Experiments.optedOutOf().format('All'));
@@ -166,8 +176,6 @@ export class ExperimentService implements IExperimentService {
             return;
         }
 
-        const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
-
         // Log experiments that users manually opt out, these are experiments which are added using the exp framework.
         this._optOutFrom
             .filter((exp) => exp !== 'All' && exp.toLowerCase().startsWith('python'))
@@ -182,18 +190,21 @@ export class ExperimentService implements IExperimentService {
                 this.output.appendLine(Experiments.inGroup().format(exp));
             });
 
-        // Log experiments that users are added to by the exp framework
-        experiments.features.forEach((exp) => {
-            // Filter out experiment groups that are not from the Python extension.
-            // Filter out experiment groups that are not already opted out or opted into.
-            if (
-                exp.toLowerCase().startsWith('python') &&
-                !this._optOutFrom.includes(exp) &&
-                !this._optInto.includes(exp)
-            ) {
-                this.output.appendLine(Experiments.inGroup().format(exp));
-            }
-        });
+        if (!experimentsDisabled) {
+            const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
+            // Log experiments that users are added to by the exp framework
+            experiments.features.forEach((exp) => {
+                // Filter out experiment groups that are not from the Python extension.
+                // Filter out experiment groups that are not already opted out or opted into.
+                if (
+                    exp.toLowerCase().startsWith('python') &&
+                    !this._optOutFrom.includes(exp) &&
+                    !this._optInto.includes(exp)
+                ) {
+                    this.output.appendLine(Experiments.inGroup().format(exp));
+                }
+            });
+        }
     }
 }
 

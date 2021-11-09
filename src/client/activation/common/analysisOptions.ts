@@ -4,10 +4,10 @@ import { Disposable, Event, EventEmitter, WorkspaceFolder } from 'vscode';
 import { DocumentFilter, LanguageClientOptions, RevealOutputChannelOn } from 'vscode-languageclient/node';
 
 import { PYTHON, PYTHON_LANGUAGE } from '../../common/constants';
-import { traceDecorators } from '../../common/logger';
 import { IOutputChannel, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
+import { traceDecoratorError } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILanguageServerAnalysisOptions, ILanguageServerOutputChannel } from '../types';
 
@@ -29,7 +29,7 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
         this.didChange.dispose();
     }
 
-    @traceDecorators.error('Failed to get analysis options')
+    @traceDecoratorError('Failed to get analysis options')
     public async getAnalysisOptions(): Promise<LanguageClientOptions> {
         const workspaceFolder = this.getWorkspaceFolder();
         const documentSelector = this.getDocumentFilters(workspaceFolder);

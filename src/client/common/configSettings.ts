@@ -16,7 +16,6 @@ import {
 import { LanguageServerType } from '../activation/types';
 import './extensions';
 import { IInterpreterAutoSelectionProxyService } from '../interpreter/autoSelection/types';
-import { LogLevel } from '../logging/levels';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { sendSettingTelemetry } from '../telemetry/envFileTelemetry';
@@ -28,7 +27,6 @@ import { DeprecatePythonPath } from './experiments/groups';
 import { ExtensionChannels } from './insidersBuild/types';
 import { IS_WINDOWS } from './platform/constants';
 import {
-    IAnalysisSettings,
     IAutoCompleteSettings,
     IDefaultLanguageServer,
     IExperiments,
@@ -36,12 +34,10 @@ import {
     IFormattingSettings,
     IInterpreterPathService,
     ILintingSettings,
-    ILoggingSettings,
     IPythonSettings,
     ISortImportSettings,
     ITensorBoardSettings,
     ITerminalSettings,
-    LoggingLevelSettingType,
     Resource,
 } from './types';
 import { debounceSync } from './utils/decorators';
@@ -125,19 +121,15 @@ export class PythonSettings implements IPythonSettings {
 
     public globalModuleInstallation = false;
 
-    public analysis!: IAnalysisSettings;
-
     public autoUpdateLanguageServer = true;
 
     public insidersChannel!: ExtensionChannels;
 
     public experiments!: IExperiments;
 
-    public languageServer: LanguageServerType = LanguageServerType.Microsoft;
+    public languageServer: LanguageServerType = LanguageServerType.Node;
 
     public languageServerIsDefault = true;
-
-    public logging: ILoggingSettings = { level: LogLevel.Error };
 
     protected readonly changed = new EventEmitter<void>();
 
@@ -191,9 +183,6 @@ export class PythonSettings implements IPythonSettings {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const config = workspace.getConfiguration('editor', resource || (null as any));
             const formatOnType = config ? config.get('formatOnType', false) : false;
-            sendTelemetryEvent(EventName.COMPLETION_ADD_BRACKETS, undefined, {
-                enabled: settings.autoComplete ? settings.autoComplete.addBrackets : false,
-            });
             sendTelemetryEvent(EventName.FORMAT_ON_TYPE, undefined, { enabled: formatOnType });
         }
 
@@ -284,6 +273,7 @@ export class PythonSettings implements IPythonSettings {
         if (
             !userLS ||
             userLS === 'Default' ||
+            userLS === 'Microsoft' ||
             !Object.values(LanguageServerType).includes(userLS as LanguageServerType)
         ) {
             this.languageServer = this.defaultLS?.defaultLSType ?? LanguageServerType.None;
@@ -297,6 +287,15 @@ export class PythonSettings implements IPythonSettings {
             this.languageServerIsDefault = false;
         }
 
+        const autoCompleteSettings = systemVariables.resolveAny(
+            pythonSettings.get<IAutoCompleteSettings>('autoComplete'),
+        )!;
+        if (this.autoComplete) {
+            Object.assign<IAutoCompleteSettings, IAutoCompleteSettings>(this.autoComplete, autoCompleteSettings);
+        } else {
+            this.autoComplete = autoCompleteSettings;
+        }
+
         const envFileSetting = pythonSettings.get<string>('envFile');
         this.envFile = systemVariables.resolveAny(envFileSetting)!;
         sendSettingTelemetry(this.workspace, envFileSetting);
@@ -305,27 +304,11 @@ export class PythonSettings implements IPythonSettings {
         this.devOptions = systemVariables.resolveAny(pythonSettings.get<any[]>('devOptions'))!;
         this.devOptions = Array.isArray(this.devOptions) ? this.devOptions : [];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const loggingSettings = systemVariables.resolveAny(pythonSettings.get<any>('logging'))!;
-        loggingSettings.level = convertSettingTypeToLogLevel(loggingSettings.level);
-        if (this.logging) {
-            Object.assign<ILoggingSettings, ILoggingSettings>(this.logging, loggingSettings);
-        } else {
-            this.logging = loggingSettings;
-        }
-
         const lintingSettings = systemVariables.resolveAny(pythonSettings.get<ILintingSettings>('linting'))!;
         if (this.linting) {
             Object.assign<ILintingSettings, ILintingSettings>(this.linting, lintingSettings);
         } else {
             this.linting = lintingSettings;
-        }
-
-        const analysisSettings = systemVariables.resolveAny(pythonSettings.get<IAnalysisSettings>('analysis'))!;
-        if (this.analysis) {
-            Object.assign<IAnalysisSettings, IAnalysisSettings>(this.analysis, analysisSettings);
-        } else {
-            this.analysis = analysisSettings;
         }
 
         this.disableInstallationChecks = pythonSettings.get<boolean>('disableInstallationCheck') === true;
@@ -445,24 +428,6 @@ export class PythonSettings implements IPythonSettings {
             systemVariables.resolveAny(this.formatting.blackPath),
             workspaceRoot,
         );
-
-        const autoCompleteSettings = systemVariables.resolveAny(
-            pythonSettings.get<IAutoCompleteSettings>('autoComplete'),
-        )!;
-        if (this.autoComplete) {
-            Object.assign<IAutoCompleteSettings, IAutoCompleteSettings>(this.autoComplete, autoCompleteSettings);
-        } else {
-            this.autoComplete = autoCompleteSettings;
-        }
-        // Support for travis.
-        this.autoComplete = this.autoComplete
-            ? this.autoComplete
-            : {
-                  extraPaths: [],
-                  addBrackets: false,
-                  showAdvancedMembers: false,
-                  typeshedPaths: [],
-              };
 
         const testSettings = systemVariables.resolveAny(pythonSettings.get<ITestingSettings>('testing'))!;
         if (this.testing) {
@@ -708,24 +673,4 @@ function isValidPythonPath(pythonPath: string): boolean {
         fs.existsSync(pythonPath) &&
         path.basename(getOSType() === OSType.Windows ? pythonPath.toLowerCase() : pythonPath).startsWith('python')
     );
-}
-
-function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType | undefined): LogLevel | 'off' {
-    switch (setting) {
-        case 'info': {
-            return LogLevel.Info;
-        }
-        case 'warn': {
-            return LogLevel.Warn;
-        }
-        case 'off': {
-            return 'off';
-        }
-        case 'debug': {
-            return LogLevel.Debug;
-        }
-        default: {
-            return LogLevel.Error;
-        }
-    }
 }

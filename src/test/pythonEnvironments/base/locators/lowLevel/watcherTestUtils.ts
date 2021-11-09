@@ -4,13 +4,11 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as sinon from 'sinon';
-import { DiscoveryVariants } from '../../../../../client/common/experiments/groups';
-import { traceWarning } from '../../../../../client/common/logger';
 import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, Deferred, sleep } from '../../../../../client/common/utils/async';
 import { getOSType, OSType } from '../../../../../client/common/utils/platform';
 import { IDisposable } from '../../../../../client/common/utils/resourceLifecycle';
+import { traceWarn } from '../../../../../client/logging';
 import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
 import { BasicEnvInfo, ILocator } from '../../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
@@ -81,7 +79,7 @@ class Venvs {
         try {
             await fs.remove(filename);
         } catch (err) {
-            traceWarning(`Failed to clean up ${filename}`);
+            traceWarn(`Failed to clean up ${filename}`);
         }
     }
 
@@ -138,7 +136,6 @@ export function testLocatorWatcher(
     },
 ): void {
     let locator: ILocator<BasicEnvInfo> & IDisposable;
-    let inExperimentStub: sinon.SinonStub;
     const venvs = new Venvs(root);
 
     async function waitForChangeToBeDetected(deferred: Deferred<void>) {
@@ -157,12 +154,6 @@ export function testLocatorWatcher(
     suiteSetup(async () => {
         await venvs.cleanUp();
     });
-
-    setup(() => {
-        inExperimentStub = sinon.stub(externalDeps, 'inExperiment');
-        inExperimentStub.withArgs(DiscoveryVariants.discoverWithFileWatching).resolves(true);
-    });
-
     async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
         locator = options?.arg ? await createLocatorFactoryFunc(options.arg) : await createLocatorFactoryFunc();
         locator.onChanged(onChanged);
@@ -172,7 +163,6 @@ export function testLocatorWatcher(
     }
 
     teardown(async () => {
-        sinon.restore();
         if (locator) {
             await locator.dispose();
         }

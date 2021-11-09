@@ -1,16 +1,10 @@
-<!-- Please search existing issues to avoid creating duplicates;
-     https://github.com/microsoft/vscode-python/issues?q=is%3Aopen+is%3Aissue+label%3Atype-bug
--->
+<!-- Please search for existing issues at https://github.com/microsoft/vscode-python/issues?is%3Aissue+label%3Abug -->
 
 # Behaviour
 
-[**NOTE**: If you suspect that your issue is related to the Microsoft Python Language Server (`python.languageServer: 'Microsoft'`), please download our new language server [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) from the VS Code marketplace to see if that fixes your issue]
-
-## Expected
-
 XXX
 
-## Actual
+## Expected vs. Actual Behaviour
 
 XXX
 
@@ -28,23 +22,8 @@ You can attach such things **after** you create your issue on GitHub.
 # Diagnostic data
 
 -   Python version (& distribution if applicable, e.g. Anaconda): 3.9.0
--   Type of virtual environment used (e.g. conda, venv, virtualenv, etc.): virt-venv
+-   Type of virtual environment used (e.g. conda, venv, virtualenv, etc.): Venv
 -   Value of the `python.languageServer` setting: Pylance
-
-<details>
-
-<summary>"Python" channel in the OUTPUT panel</summary>
-
-<p>
-
-<!-- Run the "Python: Show Output" command to see the requested output. --->
-
-```
-Python Output
-```
-
-</p>
-</details>
 
 <details>
 

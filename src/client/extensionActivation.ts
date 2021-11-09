@@ -6,7 +6,7 @@
 import { CodeActionKind, debug, DebugConfigurationProvider, languages, OutputChannel, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
-import { IExtensionActivationManager, ILanguageServerExtension } from './activation/types';
+import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
@@ -46,6 +46,7 @@ import * as pythonEnvironments from './pythonEnvironments';
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
 import { setDefaultLanguageServer } from './activation/common/defaultlanguageServer';
+import { getLoggingLevel } from './logging/settings';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -111,16 +112,17 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
     await setDefaultLanguageServer(extensions, serviceManager);
 
-    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
-    // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
-    // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
-    // XXX Move this *after* abExperiments is activated?
-    setLoggingLevel(configuration.getSettings().logging.level);
+    // Note we should not trigger any extension related code which logs, until we have set logging level. So we cannot
+    // use configurations service to get level setting. Instead, we use Workspace service to query for setting as it
+    // directly queries VSCode API.
+    setLoggingLevel(getLoggingLevel());
 
+    // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
+    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const languageServerType = configuration.getSettings().languageServer;
 
     // Language feature registrations.
-    appRegisterTypes(serviceManager, languageServerType);
+    appRegisterTypes(serviceManager);
     providersRegisterTypes(serviceManager);
     activationRegisterTypes(serviceManager, languageServerType);
 
@@ -140,7 +142,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
 
     serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
-    serviceContainer.get<ILanguageServerExtension>(ILanguageServerExtension).register();
 
     // "activate" everything else
 

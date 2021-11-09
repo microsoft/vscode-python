@@ -5,9 +5,9 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
-import { traceError } from '../common/logger';
 import { IConfigurationService, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import { traceError } from '../logging';
 import { Bandit } from './bandit';
 import { Flake8 } from './flake8';
 import { LinterInfo } from './linterInfo';

@@ -3,13 +3,12 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ICondaService, ICondaLocatorService, IComponentAdapter } from '../../interpreter/contracts';
+import { ICondaService, IComponentAdapter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ModuleInstallerType } from '../../pythonEnvironments/info';
-import { inDiscoveryExperiment } from '../experiments/helpers';
-import { ExecutionInfo, IConfigurationService, IExperimentService } from '../types';
+import { ExecutionInfo, IConfigurationService, Product } from '../types';
 import { isResource } from '../utils/misc';
-import { ModuleInstaller } from './moduleInstaller';
+import { ModuleInstaller, translateProductToModule } from './moduleInstaller';
 import { InterpreterUri, ModuleInstallFlags } from './types';
 
 /**
@@ -77,16 +76,25 @@ export class CondaInstaller extends ModuleInstaller {
         const pythonPath = isResource(resource)
             ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
             : resource.path;
-        const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
-        const condaLocatorService = (await inDiscoveryExperiment(experimentService))
-            ? this.serviceContainer.get<IComponentAdapter>(IComponentAdapter)
-            : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const condaLocatorService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
         const info = await condaLocatorService.getCondaEnvironment(pythonPath);
         const args = [flags & ModuleInstallFlags.upgrade ? 'update' : 'install'];
 
-        // Temporarily ensure tensorboard is installed from the conda-forge
-        // channel since 2.4.1 is not yet available in the default index
-        if (moduleName === 'tensorboard') {
+        // Found that using conda-forge is best at packages like tensorboard & ipykernel which seem to get updated first on conda-forge
+        // https://github.com/microsoft/vscode-jupyter/issues/7787 & https://github.com/microsoft/vscode-python/issues/17628
+        // Do this just for the datascience packages.
+        if (
+            [
+                Product.tensorboard,
+                Product.ipykernel,
+                Product.pandas,
+                Product.nbconvert,
+                Product.jupyter,
+                Product.notebook,
+            ]
+                .map(translateProductToModule)
+                .includes(moduleName)
+        ) {
             args.push('-c', 'conda-forge');
         }
         if (info && info.name) {
@@ -116,10 +124,7 @@ export class CondaInstaller extends ModuleInstaller {
      * Is the provided interprter a conda environment
      */
     private async isCurrentEnvironmentACondaEnvironment(resource?: InterpreterUri): Promise<boolean> {
-        const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
-        const condaService = (await inDiscoveryExperiment(experimentService))
-            ? this.serviceContainer.get<IComponentAdapter>(IComponentAdapter)
-            : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const condaService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
         const pythonPath = isResource(resource)
             ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
             : resource.path;

@@ -68,16 +68,7 @@
         "extraPaths": "placeholder",
         "useLibraryCodeForTypes": true,
         "typeCheckingMode": true,
-        "diagnosticSeverityOverrides": false,
-        "diagnosticPublishDelay": false,
-        "errors": true,
-        "warnings": true,
-        "information": true,
-        "disabled": true,
-        "typeshedPaths": "placeholder",
-        "cacheFolderPath": "placeholder",
         "memory": true,
-        "logLevel": true,
         "symbolsHierarchyDepthLimit": false
     },
     "sortImports": {
@@ -92,12 +83,6 @@
         "blackPath": "placeholder",
         "yapfArgs": "placeholder",
         "yapfPath": "placeholder"
-    },
-    "autoComplete": {
-        "addBrackets": true,
-        "extraPaths": "placeholder",
-        "showAdvancedMembers": true,
-        "typeshedPaths": "placeholder"
     },
     "testing": {
         "cwd": "placeholder",

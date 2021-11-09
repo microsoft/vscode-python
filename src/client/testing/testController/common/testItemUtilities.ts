@@ -11,8 +11,11 @@ import {
     TestRunResult,
     TestResultState,
     TestResultSnapshot,
+    TestItemCollection,
 } from 'vscode';
-import { traceError, traceVerbose } from '../../../common/logger';
+import { CancellationToken } from 'vscode-jsonrpc';
+import { asyncForEach } from '../../../common/utils/arrayUtils';
+import { traceError, traceVerbose } from '../../../logging';
 import {
     RawDiscoveredTests,
     RawTest,
@@ -23,6 +26,18 @@ import {
     TestData,
     TestDataKinds,
 } from './types';
+
+// Todo: Use `TestTag` when the proposed API gets into stable.
+export const RunTestTag = { id: 'python-run' };
+export const DebugTestTag = { id: 'python-debug' };
+
+function testItemCollectionToArray(collection: TestItemCollection): TestItem[] {
+    const items: TestItem[] = [];
+    collection.forEach((c) => {
+        items.push(c);
+    });
+    return items;
+}
 
 export function removeItemByIdFromChildren(
     idToRawData: Map<string, TestData>,
@@ -42,6 +57,7 @@ export function createErrorTestItem(
     const testItem = testController.createTestItem(options.id, options.label);
     testItem.canResolveChildren = false;
     testItem.error = options.error;
+    testItem.tags = [RunTestTag, DebugTestTag];
     return testItem;
 }
 
@@ -57,6 +73,7 @@ export function createWorkspaceRootTestItem(
         rawId: options.rawId ?? options.id,
         kind: TestDataKinds.Workspace,
     });
+    testItem.tags = [RunTestTag, DebugTestTag];
     return testItem;
 }
 
@@ -124,6 +141,7 @@ function createFolderOrFileTestItem(
         kind: TestDataKinds.FolderOrFile,
         parentId,
     });
+    testItem.tags = [RunTestTag, DebugTestTag];
     return testItem;
 }
 
@@ -150,6 +168,7 @@ function updateFolderOrFileTestItem(
         kind: TestDataKinds.FolderOrFile,
         parentId,
     });
+    item.tags = [RunTestTag, DebugTestTag];
 }
 
 function createCollectionTestItem(
@@ -183,6 +202,7 @@ function createCollectionTestItem(
         kind: TestDataKinds.Collection,
         parentId,
     });
+    testItem.tags = [RunTestTag, DebugTestTag];
     return testItem;
 }
 
@@ -212,6 +232,7 @@ function updateCollectionTestItem(
         kind: TestDataKinds.Collection,
         parentId,
     });
+    item.tags = [RunTestTag, DebugTestTag];
 }
 
 function createTestCaseItem(
@@ -248,6 +269,7 @@ function createTestCaseItem(
         kind: TestDataKinds.Case,
         parentId,
     });
+    testItem.tags = [RunTestTag, DebugTestTag];
     return testItem;
 }
 
@@ -278,15 +300,21 @@ function updateTestCaseItem(
         kind: TestDataKinds.Case,
         parentId,
     });
+    item.tags = [RunTestTag, DebugTestTag];
 }
 
-function updateTestItemFromRawDataInternal(
+async function updateTestItemFromRawDataInternal(
     item: TestItem,
     testController: TestController,
     idToRawData: Map<string, TestData>,
     testRoot: string,
     rawDataSet: RawDiscoveredTests[],
-): void {
+    token?: CancellationToken,
+): Promise<void> {
+    if (token?.isCancellationRequested) {
+        return;
+    }
+
     const rawId = idToRawData.get(item.id)?.rawId;
     if (!rawId) {
         traceError(`Unknown node id: ${item.id}`);
@@ -316,7 +344,10 @@ function updateTestItemFromRawDataInternal(
     if (rawId === nodeRawData[0].root || rawId === nodeRawData[0].rootid) {
         // This is a test root node, we need to update the entire tree
         // The update children and remove any child that does not have raw data.
-        item.children.forEach((c) => updateTestItemFromRawData(c, testController, idToRawData, testRoot, nodeRawData));
+
+        await asyncForEach(testItemCollectionToArray(item.children), async (c) => {
+            await updateTestItemFromRawData(c, testController, idToRawData, testRoot, nodeRawData, token);
+        });
 
         // Create child nodes that are new.
         // We only need to look at rawData.parents. Since at this level we either have folder or file.
@@ -324,16 +355,17 @@ function updateTestItemFromRawDataInternal(
         const existingNodes: string[] = [];
         item.children.forEach((c) => existingNodes.push(idToRawData.get(c.id)?.rawId ?? ''));
 
-        rawChildNodes
-            .filter((r) => !existingNodes.includes(r.id))
-            .forEach((r) => {
+        await asyncForEach(
+            rawChildNodes.filter((r) => !existingNodes.includes(r.id)),
+            async (r) => {
                 const childItem =
                     r.kind === 'file'
                         ? createFolderOrFileTestItem(testController, idToRawData, testRoot, r as RawTestFile)
                         : createFolderOrFileTestItem(testController, idToRawData, testRoot, r as RawTestFolder);
                 item.children.add(childItem);
-                updateTestItemFromRawData(childItem, testController, idToRawData, testRoot, nodeRawData);
-            });
+                await updateTestItemFromRawData(childItem, testController, idToRawData, testRoot, nodeRawData, token);
+            },
+        );
 
         return;
     }
@@ -362,7 +394,9 @@ function updateTestItemFromRawDataInternal(
         }
 
         // The update children and remove any child that does not have raw data.
-        item.children.forEach((c) => updateTestItemFromRawData(c, testController, idToRawData, testRoot, nodeRawData));
+        await asyncForEach(testItemCollectionToArray(item.children), async (c) => {
+            await updateTestItemFromRawData(c, testController, idToRawData, testRoot, nodeRawData, token);
+        });
 
         // Create child nodes that are new.
         // Get the existing child node ids so we can skip them
@@ -373,9 +407,9 @@ function updateTestItemFromRawDataInternal(
         // The current node is potentially a parent of one of these "parent" nodes or it is a parent
         // of test case nodes. We will handle Test case nodes after handling parents.
         const rawChildNodes = nodeRawData[0].parents.filter((p) => p.parentid === rawId);
-        rawChildNodes
-            .filter((r) => !existingNodes.includes(r.id))
-            .forEach((r) => {
+        await asyncForEach(
+            rawChildNodes.filter((r) => !existingNodes.includes(r.id)),
+            async (r) => {
                 let childItem;
                 switch (r.kind) {
                     case 'file':
@@ -406,9 +440,17 @@ function updateTestItemFromRawDataInternal(
                 if (childItem) {
                     item.children.add(childItem);
                     // This node can potentially have children. So treat it like a new node and update it.
-                    updateTestItemFromRawData(childItem, testController, idToRawData, testRoot, nodeRawData);
+                    await updateTestItemFromRawData(
+                        childItem,
+                        testController,
+                        idToRawData,
+                        testRoot,
+                        nodeRawData,
+                        token,
+                    );
                 }
-            });
+            },
+        );
 
         // Now we will look at test case nodes. Create any test case node that does not already exist.
         const rawTestCaseNodes = nodeRawData[0].tests.filter((p) => p.parentid === rawId);
@@ -444,15 +486,16 @@ function updateTestItemFromRawDataInternal(
     }
 }
 
-export function updateTestItemFromRawData(
+export async function updateTestItemFromRawData(
     item: TestItem,
     testController: TestController,
     idToRawData: Map<string, TestData>,
     testRoot: string,
     rawDataSet: RawDiscoveredTests[],
-): void {
+    token?: CancellationToken,
+): Promise<void> {
     item.busy = true;
-    updateTestItemFromRawDataInternal(item, testController, idToRawData, testRoot, rawDataSet);
+    await updateTestItemFromRawDataInternal(item, testController, idToRawData, testRoot, rawDataSet, token);
     item.busy = false;
 }
 
@@ -464,7 +507,7 @@ export function getUri(node: TestItem): Uri | undefined {
 }
 
 export function getTestCaseNodes(testNode: TestItem, collection: TestItem[] = []): TestItem[] {
-    if (!testNode.canResolveChildren) {
+    if (!testNode.canResolveChildren && testNode.tags.length > 0) {
         collection.push(testNode);
     }
 
@@ -539,4 +582,10 @@ export function checkForFailedTests(resultMap: Map<string, TestResultState>): bo
             (state) => state === TestResultState.Failed || state === TestResultState.Errored,
         ) !== undefined
     );
+}
+
+export function clearAllChildren(testNode: TestItem): void {
+    const ids: string[] = [];
+    testNode.children.forEach((c) => ids.push(c.id));
+    ids.forEach(testNode.children.delete);
 }

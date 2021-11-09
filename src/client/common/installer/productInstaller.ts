@@ -12,7 +12,6 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { traceError, traceInfo } from '../logger';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import {
     IConfigurationService,
@@ -24,7 +23,7 @@ import {
     Product,
     ProductType,
 } from '../types';
-import { Common, Installer, Linters } from '../utils/localize';
+import { Common, Installer, Linters, Products } from '../utils/localize';
 import { isResource, noop } from '../utils/misc';
 import { translateProductToModule } from './moduleInstaller';
 import { ProductNames } from './productNames';
@@ -36,6 +35,7 @@ import {
     IProductService,
     ModuleInstallFlags,
 } from './types';
+import { traceError, traceInfo } from '../../logging';
 
 export { Product } from '../types';
 
@@ -57,11 +57,14 @@ abstract class BaseInstaller {
 
     private readonly productService: IProductService;
 
+    protected readonly persistentStateFactory: IPersistentStateFactory;
+
     constructor(protected serviceContainer: IServiceContainer, protected outputChannel: OutputChannel) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.productService = serviceContainer.get<IProductService>(IProductService);
+        this.persistentStateFactory = serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }
 
     public promptToInstall(
@@ -219,6 +222,8 @@ abstract class BaseInstaller {
     }
 }
 
+const doNotDisplayFormatterPromptStateKey = 'FORMATTER_NOT_INSTALLED_KEY';
+
 export class FormatterInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(
         product: Product,
@@ -226,28 +231,43 @@ export class FormatterInstaller extends BaseInstaller {
         cancel?: CancellationToken,
         _flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse> {
+        const neverShowAgain = this.persistentStateFactory.createGlobalPersistentState(
+            doNotDisplayFormatterPromptStateKey,
+            false,
+        );
+
+        if (neverShowAgain.value) {
+            return InstallerResponse.Ignore;
+        }
+
         // Hard-coded on purpose because the UI won't necessarily work having
         // another formatter.
         const formatters = [Product.autopep8, Product.black, Product.yapf];
         const formatterNames = formatters.map((formatter) => ProductNames.get(formatter)!);
         const productName = ProductNames.get(product)!;
         formatterNames.splice(formatterNames.indexOf(productName), 1);
-        const useOptions = formatterNames.map((name) => `Use ${name}`);
-        const yesChoice = 'Yes';
+        const useOptions = formatterNames.map((name) => Products.useFormatter().format(name));
+        const yesChoice = Common.bannerLabelYes();
 
-        const options = [...useOptions];
-        let message = `Formatter ${productName} is not installed. Install?`;
+        const options = [...useOptions, Common.doNotShowAgain()];
+        let message = Products.formatterNotInstalled().format(productName);
         if (this.isExecutableAModule(product, resource)) {
             options.splice(0, 0, yesChoice);
         } else {
             const executable = this.getExecutableNameFromSettings(product, resource);
-            message = `Path to the ${productName} formatter is invalid (${executable})`;
+            message = Products.invalidFormatterPath().format(productName, executable);
         }
 
         const item = await this.appShell.showErrorMessage(message, ...options);
         if (item === yesChoice) {
             return this.install(product, resource, cancel);
         }
+
+        if (item === Common.doNotShowAgain()) {
+            neverShowAgain.updateValue(true);
+            return InstallerResponse.Ignore;
+        }
+
         if (typeof item === 'string') {
             for (const formatter of formatters) {
                 const formatterName = ProductNames.get(formatter)!;

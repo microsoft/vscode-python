@@ -283,7 +283,6 @@ export async function ensureFSTree(
                     throw Error(`unsupported file kind ${kind}`);
                 }
             } catch (err) {
-                // tslint:disable-next-line:no-console
                 console.log('FAILED:', err);
                 throw err;
             }

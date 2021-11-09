@@ -10,7 +10,7 @@ import { ICondaService, IInterpreterService } from '../../client/interpreter/con
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
 import { ISortImportsEditingProvider } from '../../client/providers/types';
-import { CondaService } from '../../client/pythonEnvironments/discovery/locators/services/condaService';
+import { CondaService } from '../../client/pythonEnvironments/common/environmentManagers/condaService';
 import { updateSetting } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_TIMEOUT } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';

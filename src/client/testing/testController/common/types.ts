@@ -59,14 +59,24 @@ export interface ITestRun {
 
 export const ITestFrameworkController = Symbol('ITestFrameworkController');
 export interface ITestFrameworkController {
-    resolveChildren(testController: TestController, item: TestItem): Promise<void>;
+    resolveChildren(testController: TestController, item: TestItem, token?: CancellationToken): Promise<void>;
     refreshTestData(testController: TestController, resource?: Uri, token?: CancellationToken): Promise<void>;
-    runTests(testRun: ITestRun, workspace: WorkspaceFolder, token: CancellationToken): Promise<void>;
+    runTests(
+        testRun: ITestRun,
+        workspace: WorkspaceFolder,
+        token: CancellationToken,
+        testController?: TestController,
+    ): Promise<void>;
 }
 
 export const ITestsRunner = Symbol('ITestsRunner');
 export interface ITestsRunner {
-    runTests(testRun: ITestRun, options: TestRunOptions, idToRawData: Map<string, TestData>): Promise<void>;
+    runTests(
+        testRun: ITestRun,
+        options: TestRunOptions,
+        idToRawData: Map<string, TestData>,
+        testController?: TestController,
+    ): Promise<void>;
 }
 
 export type TestRunOptions = {

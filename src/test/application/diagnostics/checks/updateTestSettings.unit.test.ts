@@ -246,12 +246,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
         {
             testTitle: 'jediEnabled: false, no languageServer setting',
             contents: '{ "python.jediEnabled": false }',
-            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft"}',
-        },
-        {
-            testTitle: 'jediEnabled: false, languageServer is Microsoft',
-            contents: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft" }',
-            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft"}',
+            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "None"}',
         },
         {
             testTitle: 'jediEnabled: false, languageServer is None',
@@ -262,11 +257,6 @@ suite('Application Diagnostics - Check Test Settings', () => {
             testTitle: 'jediEnabled: false, languageServer is Jedi',
             contents: '{ "python.jediEnabled": false, "python.languageServer": "Jedi" }',
             expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Jedi"}',
-        },
-        {
-            testTitle: 'jediEnabled not present, languageServer is Microsoft',
-            contents: '{ "python.languageServer": "Microsoft" }',
-            expectedContent: '{ "python.languageServer": "Microsoft" }',
         },
     ].forEach((item) => {
         test(item.testTitle, async () => {

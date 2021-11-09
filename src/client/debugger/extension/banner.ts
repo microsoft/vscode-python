@@ -7,9 +7,9 @@ import { inject, injectable } from 'inversify';
 import { Disposable, env, UIKind } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../common/application/types';
 import '../../common/extensions';
-import { traceError } from '../../common/logger';
 import { IBrowserService, IDisposableRegistry, IPersistentStateFactory, IRandom } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { traceError } from '../../logging';
 import { DebuggerTypeName } from '../constants';
 import { IDebuggerBanner } from './types';
 

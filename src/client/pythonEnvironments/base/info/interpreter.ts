@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 import { PythonExecutableInfo, PythonVersion } from '.';
-import { traceError, traceInfo } from '../../../common/logger';
 import {
     interpreterInfo as getInterpreterInfoCommand,
     InterpreterInfoJson,
 } from '../../../common/process/internal/scripts';
 import { Architecture } from '../../../common/utils/platform';
+import { traceError, traceInfo } from '../../../logging';
 import { shellExecute } from '../../common/externalDependencies';
 import { copyPythonExecInfo, PythonExecInfo } from '../../exec';
 import { parseVersion } from './pythonVersion';
@@ -73,7 +73,7 @@ export async function getInterpreterInfo(python: PythonExecInfo): Promise<Interp
     const argv = [info.command, ...info.args];
 
     // Concat these together to make a set of quoted strings
-    const quoted = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '\\\\')}"`), '');
+    const quoted = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c}"`), '');
 
     // Try shell execing the command, followed by the arguments. This will make node kill the process if it
     // takes too long.

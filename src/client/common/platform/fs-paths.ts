@@ -134,9 +134,9 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
     }
 
     public getDisplayName(filename: string, cwd?: string): string {
-        if (cwd && filename.startsWith(cwd)) {
+        if (cwd && isParentPath(filename, cwd)) {
             return `.${this.paths.sep}${this.raw.relative(cwd, filename)}`;
-        } else if (filename.startsWith(this.home)) {
+        } else if (isParentPath(filename, this.home)) {
             return `~${this.paths.sep}${this.raw.relative(this.home, filename)}`;
         } else {
             return filename;
@@ -154,6 +154,12 @@ export function normCasePath(filePath: string): string {
  * @param parentPath The potential parent path to check for
  */
 export function isParentPath(filePath: string, parentPath: string): boolean {
+    if (!parentPath.endsWith(nodepath.sep)) {
+        parentPath += nodepath.sep;
+    }
+    if (!filePath.endsWith(nodepath.sep)) {
+        filePath += nodepath.sep;
+    }
     return normCasePath(filePath).startsWith(normCasePath(parentPath));
 }
 

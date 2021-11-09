@@ -30,7 +30,6 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { PipEnvExecutionPath } from '../../client/common/configuration/executionSettings/pipEnvExecution';
-import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
 import {
     ExtensionInsidersDailyChannelRule,
@@ -50,8 +49,6 @@ import { ProductInstaller } from '../../client/common/installer/productInstaller
 import { InterpreterPathService } from '../../client/common/interpreterPathService';
 import { BrowserService } from '../../client/common/net/browser';
 import { HttpClient } from '../../client/common/net/httpClient';
-import { NugetService } from '../../client/common/nuget/nugetService';
-import { INugetService } from '../../client/common/nuget/types';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
@@ -82,7 +79,6 @@ import {
     IAsyncDisposableRegistry,
     IBrowserService,
     IConfigurationService,
-    ICryptoUtils,
     ICurrentProcess,
     IEditorUtils,
     IExtensions,
@@ -127,10 +123,8 @@ suite('Common - Service Registry', () => {
             [IBrowserService, BrowserService],
             [IHttpClient, HttpClient],
             [IEditorUtils, EditorUtils],
-            [INugetService, NugetService],
             [ITerminalActivator, TerminalActivator],
             [ITerminalActivationHandler, PowershellTerminalActivationFailedHandler],
-            [ICryptoUtils, CryptoUtils],
             [ITerminalHelper, TerminalHelper],
             [ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, TerminalActivationProviders.pyenv],
             [ITerminalActivationCommandProvider, Bash, TerminalActivationProviders.bashCShellFish],

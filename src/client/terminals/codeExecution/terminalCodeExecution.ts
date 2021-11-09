@@ -91,8 +91,17 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             return;
         }
         const fileDirPath = path.dirname(file.fsPath);
-        const wkspace = this.workspace.getWorkspaceFolder(file);
-        if ((!wkspace || fileDirPath !== wkspace.uri.fsPath) && fileDirPath.length > 0) {
+        if (fileDirPath.length > 0) {
+            if (this.platformService.isWindows && /[a-z]\:/i.test(fileDirPath)) {
+                const currentDrive =
+                    typeof this.workspace.rootPath === 'string'
+                        ? this.workspace.rootPath.replace(/\:.*/g, '')
+                        : undefined;
+                const fileDrive = fileDirPath.replace(/\:.*/g, '');
+                if (fileDrive !== currentDrive) {
+                    await this.getTerminalService(file).sendText(`${fileDrive}:`);
+                }
+            }
             await this.getTerminalService(file).sendText(`cd ${fileDirPath.fileToCommandArgument()}`);
         }
     }

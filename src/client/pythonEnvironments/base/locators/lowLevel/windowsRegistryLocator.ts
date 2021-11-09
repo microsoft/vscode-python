@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { traceError } from '../../../../common/logger';
 import { PythonEnvKind, PythonEnvSource } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../locator';
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
+import { traceError } from '../../../../logging';
 
 export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
     // eslint-disable-next-line class-methods-use-this

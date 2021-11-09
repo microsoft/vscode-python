@@ -7,10 +7,10 @@ import * as vscode from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
-import { traceError } from '../common/logger';
 import { IPythonToolExecutionService } from '../common/process/types';
 import { ExecutionInfo, IConfigurationService, IPythonSettings, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import { traceError } from '../logging';
 import { ErrorHandler } from './errorHandlers/errorHandler';
 import { ILinter, ILinterInfo, ILinterManager, ILintMessage, LinterId, LintMessageSeverity } from './types';
 

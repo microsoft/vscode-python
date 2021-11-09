@@ -3,9 +3,9 @@
 
 import { Event, EventEmitter } from 'vscode';
 import '../../../../common/extensions';
-import { traceError } from '../../../../common/logger';
 import { createDeferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
+import { traceError } from '../../../../logging';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { PythonEnvInfo } from '../../info';
@@ -21,8 +21,8 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     /** Keeps track of ongoing refreshes for various queries. */
     private refreshPromises = new Map<PythonLocatorQuery | undefined, Promise<void>>();
 
-    /** Keeps track of whether there are any scheduled refreshes other than the ongoing one for various queries. */
-    private scheduledRefreshes = new Map<PythonLocatorQuery | undefined, boolean>();
+    /** Keeps track of scheduled refreshes other than the ongoing one for various queries. */
+    private scheduledRefreshes = new Map<PythonLocatorQuery | undefined, Promise<void>>();
 
     private readonly refreshStarted = new EventEmitter<void>();
 
@@ -40,14 +40,14 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         super();
         this.locator.onChanged((event) => {
             const query = undefined; // We can also form a query based on the event, but skip that for simplicity.
-            const isNewRefreshScheduled = this.scheduledRefreshes.get(query);
-            if (isNewRefreshScheduled) {
-                // If there is already a new refresh scheduled for the query, no need to start another one.
-                return;
+            let scheduledRefresh = this.scheduledRefreshes.get(query);
+            // If there is no refresh scheduled for the query, start a new one.
+            if (!scheduledRefresh) {
+                scheduledRefresh = this.scheduleNewRefresh(query);
             }
-            this.scheduleNewRefresh(query).then(() => {
+            scheduledRefresh.then(() => {
                 // Once refresh of cache is complete, notify changes.
-                this.fire({ type: event.type, searchLocation: event.searchLocation });
+                this.fire(event);
             });
         });
         this.cache.onChanged((e) => {
@@ -65,7 +65,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         }
         const resolved = await this.locator.resolveEnv(executablePath);
         if (resolved) {
-            this.cache.addEnv(resolved);
+            this.cache.addEnv(resolved, true);
         }
         return resolved;
     }
@@ -73,7 +73,8 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     public getEnvs(query?: PythonLocatorQuery): PythonEnvInfo[] {
         const cachedEnvs = this.cache.getAllEnvs();
         if (cachedEnvs.length === 0 && this.refreshPromises.size === 0) {
-            traceError('Refresh should have already been triggered when activating discovery component');
+            // We expect a refresh to already be triggered when activating discovery component.
+            traceError('No python is installed or a refresh has not already been triggered');
             this.triggerRefresh().ignoreErrors();
         }
         return query ? cachedEnvs.filter(getQueryFilter(query)) : cachedEnvs;
@@ -159,13 +160,18 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
      * Ensure we trigger a fresh refresh for the query after the current refresh (if any) is done.
      */
     private async scheduleNewRefresh(query?: PythonLocatorQuery): Promise<void> {
-        this.scheduledRefreshes.set(query, true);
-        const refreshPromise = this.getRefreshPromiseForQuery(query) ?? Promise.resolve();
-        const nextRefreshPromise = refreshPromise.then(() => {
-            // No more scheduled refreshes for this query as we're about to start the scheduled one.
-            this.scheduledRefreshes.set(query, false);
-            this.startRefresh(query);
-        });
+        const refreshPromise = this.getRefreshPromiseForQuery(query);
+        let nextRefreshPromise: Promise<void>;
+        if (!refreshPromise) {
+            nextRefreshPromise = this.startRefresh(query);
+        } else {
+            nextRefreshPromise = refreshPromise.then(() => {
+                // No more scheduled refreshes for this query as we're about to start the scheduled one.
+                this.scheduledRefreshes.delete(query);
+                this.startRefresh(query);
+            });
+            this.scheduledRefreshes.set(query, nextRefreshPromise);
+        }
         return nextRefreshPromise;
     }
 }

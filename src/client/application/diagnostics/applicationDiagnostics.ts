@@ -6,9 +6,9 @@
 import { inject, injectable, named } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
-import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IOutputChannel, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { traceError, traceInfo, traceWarn } from '../../logging';
 import { IApplicationDiagnostics } from '../types';
 import { IDiagnostic, IDiagnosticsService, ISourceMapSupportService } from './types';
 
@@ -59,7 +59,7 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
                     break;
                 }
                 case DiagnosticSeverity.Warning: {
-                    traceWarning(message);
+                    traceWarn(message);
                     this.outputChannel.appendLine(message);
                     break;
                 }

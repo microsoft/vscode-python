@@ -40,7 +40,7 @@ suite('Language Server - Change Handler', () => {
         handler?.dispose();
     });
 
-    [undefined, LanguageServerType.None, LanguageServerType.Microsoft, LanguageServerType.Node].forEach(async (t) => {
+    [undefined, LanguageServerType.None, LanguageServerType.Jedi, LanguageServerType.Node].forEach(async (t) => {
         test(`Handler should do nothing if language server is ${t} and did not change`, async () => {
             handler = makeHandler(t);
             await handler.handleLanguageServerChange(t);
@@ -52,7 +52,7 @@ suite('Language Server - Change Handler', () => {
         });
     });
 
-    [LanguageServerType.None, LanguageServerType.Microsoft, LanguageServerType.Node].forEach(async (t) => {
+    [LanguageServerType.None, LanguageServerType.Jedi, LanguageServerType.Node].forEach(async (t) => {
         test(`Handler should prompt for reload when language server type changes to ${t}, Pylance is installed ans user clicks Reload`, async () => {
             when(extensions.getExtension(PYLANCE_EXTENSION_ID)).thenReturn(instance(pylanceExtension));
             when(
@@ -69,7 +69,7 @@ suite('Language Server - Change Handler', () => {
         });
     });
 
-    [LanguageServerType.None, LanguageServerType.Microsoft, LanguageServerType.Node].forEach(async (t) => {
+    [LanguageServerType.None, LanguageServerType.Jedi, LanguageServerType.Node].forEach(async (t) => {
         test(`Handler should not prompt for reload when language server type changes to ${t}, Pylance is installed ans user does not clicks Reload`, async () => {
             when(extensions.getExtension(PYLANCE_EXTENSION_ID)).thenReturn(instance(pylanceExtension));
             when(

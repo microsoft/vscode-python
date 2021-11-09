@@ -4,7 +4,6 @@
 import { IWorkspaceService } from './common/application/types';
 import { isTestExecution } from './common/constants';
 import { DeprecatePythonPath } from './common/experiments/groups';
-import { traceError } from './common/logger';
 import { ITerminalHelper } from './common/terminal/types';
 import {
     IConfigurationService,
@@ -17,7 +16,8 @@ import { IStopWatch } from './common/utils/stopWatch';
 import { IInterpreterAutoSelectionService } from './interpreter/autoSelection/types';
 import { ICondaService, IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
-import { PythonEnvironment } from './pythonEnvironments/info';
+import { traceError } from './logging';
+import { EnvironmentType, PythonEnvironment } from './pythonEnvironments/info';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
 import { EditorLoadTelemetry } from './telemetry/types';
@@ -124,6 +124,9 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         .catch<PythonEnvironment | undefined>(() => undefined);
     const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
     const interpreterType = interpreter ? interpreter.envType : undefined;
+    if (interpreterType === EnvironmentType.Unknown) {
+        traceError('Active interpreter type is detected as Unknown', JSON.stringify(interpreter));
+    }
     const usingUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
     const usingGlobalInterpreter = isUsingGlobalInterpreterInWorkspace(settings.pythonPath, serviceContainer);
 

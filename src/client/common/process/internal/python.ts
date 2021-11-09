@@ -27,16 +27,6 @@ export function execModule(name: string, moduleArgs: string[]): string[] {
     return args;
 }
 
-export function getVersion(): [string[], (out: string) => string] {
-    const args = ['--version'];
-
-    function parse(out: string): string {
-        return out.trim();
-    }
-
-    return [args, parse];
-}
-
 export function getSysPrefix(): [string[], (out: string) => string] {
     const args = ['-c', 'import sys;print(sys.prefix)'];
 

@@ -1,16 +1,10 @@
-<!-- Please search existing issues to avoid creating duplicates;
-     https://github.com/microsoft/vscode-python/issues?q=is%3Aopen+is%3Aissue+label%3Atype-bug
--->
+<!-- Please search for existing issues at https://github.com/microsoft/vscode-python/issues?is%3Aissue+label%3Abug -->
 
 # Behaviour
 
-[**NOTE**: If you suspect that your issue is related to the Microsoft Python Language Server (`python.languageServer: 'Microsoft'`), please download our new language server [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) from the VS Code marketplace to see if that fixes your issue]
-
-## Expected
-
 XXX
 
-## Actual
+## Expected vs. Actual Behaviour
 
 XXX
 
@@ -33,27 +27,12 @@ You can attach such things **after** you create your issue on GitHub.
 
 <details>
 
-<summary>"Python" channel in the OUTPUT panel</summary>
-
-<p>
-
-<!-- Run the "Python: Show Output" command to see the requested output. --->
-
-```
-{3}
-```
-
-</p>
-</details>
-
-<details>
-
 <summary>User Settings</summary>
 
 <p>
 
 ```
-{4}
+{3}
 ```
 
 </p>

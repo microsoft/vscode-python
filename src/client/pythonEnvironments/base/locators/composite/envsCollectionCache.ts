@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Event } from 'vscode';
-import { traceInfo } from '../../../../common/logger';
+import { traceInfo } from '../../../../logging';
 import { pathExists } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
 import { areSameEnv } from '../../info/env';
@@ -32,7 +32,7 @@ export interface IEnvsCollectionCache {
     /**
      * Adds environment to cache.
      */
-    addEnv(env: PythonEnvInfo): void;
+    addEnv(env: PythonEnvInfo, hasCompleteInfo?: boolean): void;
 
     /**
      * Return cached environment information for a given interpreter path if it exists and
@@ -52,10 +52,10 @@ export interface IEnvsCollectionCache {
     validateCache(): Promise<void>;
 }
 
-type PythonEnvCompleteInfo = { hasCompleteInfo?: boolean } & PythonEnvInfo;
+export type PythonEnvCompleteInfo = { hasCompleteInfo?: boolean } & PythonEnvInfo;
 
 interface IPersistentStorage {
-    load(): Promise<PythonEnvInfo[] | undefined>;
+    load(): Promise<PythonEnvInfo[]>;
     store(envs: PythonEnvInfo[]): Promise<void>;
 }
 
@@ -81,8 +81,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         const invalidIndexes = areEnvsValid.map((isValid, index) => (isValid ? -1 : index)).filter((i) => i !== -1);
         invalidIndexes.forEach((index) => {
             const env = this.envs.splice(index, 1)[0];
-            // Ensure we fire events for any envs removed from collection.
-            this.fire({ old: env, update: undefined });
+            this.fire({ old: env, new: undefined });
         });
     }
 
@@ -90,11 +89,14 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         return this.envs;
     }
 
-    public addEnv(env: PythonEnvInfo): void {
+    public addEnv(env: PythonEnvCompleteInfo, hasCompleteInfo?: boolean): void {
         const found = this.envs.find((e) => areSameEnv(e, env));
         if (!found) {
+            if (hasCompleteInfo) {
+                env.hasCompleteInfo = true;
+            }
             this.envs.push(env);
-            this.fire({ update: env });
+            this.fire({ new: env });
         }
     }
 
@@ -106,7 +108,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             } else {
                 this.envs[index] = newValue;
             }
-            this.fire({ old: oldValue, update: newValue });
+            this.fire({ old: oldValue, new: newValue });
         }
     }
 
@@ -116,7 +118,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
     }
 
     public async clearAndReloadFromStorage(): Promise<void> {
-        this.envs = (await this.persistentStorage.load()) ?? this.envs;
+        this.envs = await this.persistentStorage.load();
     }
 
     public async flush(): Promise<void> {

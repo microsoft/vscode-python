@@ -20,7 +20,6 @@ exports.nodeModulesToExternalize = [
     'unicode/category/Mc',
     'unicode/category/Nd',
     'unicode/category/Pc',
-    'azure-storage',
     'request',
     'request-progress',
     'source-map-support',

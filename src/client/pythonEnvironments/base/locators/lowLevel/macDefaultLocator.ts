@@ -12,5 +12,8 @@ export function isMacDefaultPythonPath(pythonPath: string): boolean {
     if (getOSType() !== OSType.OSX) {
         return false;
     }
-    return pythonPath === 'python' || pythonPath === '/usr/bin/python';
+
+    const defaultPaths = ['python', '/usr/bin/python'];
+
+    return defaultPaths.includes(pythonPath) || pythonPath.startsWith('/usr/bin/python2');
 }

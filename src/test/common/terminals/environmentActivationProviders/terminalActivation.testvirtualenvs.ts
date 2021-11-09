@@ -112,7 +112,7 @@ suite('Activation of Environments in Terminal', () => {
             defaultShell.Linux,
             vscode.ConfigurationTarget.Global,
         );
-        await pythonSettings.update('condaPath', undefined, vscode.ConfigurationTarget.Workspace);
+        await pythonSettings.update('condaPath', undefined, vscode.ConfigurationTarget.Global);
         if (experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
             await resetGlobalInterpreterPathSetting();
         } else {
@@ -182,12 +182,18 @@ suite('Activation of Environments in Terminal', () => {
         if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
             this.skip();
         }
+        // https://github.com/microsoft/vscode-python/issues/17666
+        this.skip();
         await testActivation(envPaths.venvPath);
     });
-    test('Should activate with pipenv', async () => {
+    test('Should activate with pipenv', async function () {
+        // https://github.com/microsoft/vscode-python/issues/17666
+        this.skip();
         await testActivation(envPaths.pipenvPath);
     });
-    test('Should activate with virtualenv', async () => {
+    test('Should activate with virtualenv', async function () {
+        // https://github.com/microsoft/vscode-python/issues/17666
+        this.skip();
         await testActivation(envPaths.virtualEnvPath);
     });
     test('Should activate with conda', async function () {
@@ -198,7 +204,7 @@ suite('Activation of Environments in Terminal', () => {
             'Command Prompt',
             vscode.ConfigurationTarget.Global,
         );
-        await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
+        await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Global);
         await testActivation(envPaths.condaPath);
     }).timeout(TEST_TIMEOUT * 2);
 });

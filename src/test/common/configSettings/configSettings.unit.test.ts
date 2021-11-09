@@ -13,12 +13,10 @@ import { WorkspaceConfiguration } from 'vscode';
 import { LanguageServerType } from '../../../client/activation/types';
 import { PythonSettings } from '../../../client/common/configSettings';
 import {
-    IAnalysisSettings,
     IAutoCompleteSettings,
     IExperiments,
     IFormattingSettings,
     ILintingSettings,
-    ILoggingSettings,
     ISortImportSettings,
     ITerminalSettings,
 } from '../../../client/common/types';
@@ -97,9 +95,7 @@ suite('Python Settings', async () => {
         config.setup((c) => c.get<any[]>('devOptions')).returns(() => sourceSettings.devOptions);
 
         // complex settings
-        config.setup((c) => c.get<ILoggingSettings>('logging')).returns(() => sourceSettings.logging);
         config.setup((c) => c.get<ILintingSettings>('linting')).returns(() => sourceSettings.linting);
-        config.setup((c) => c.get<IAnalysisSettings>('analysis')).returns(() => sourceSettings.analysis);
         config.setup((c) => c.get<ISortImportSettings>('sortImports')).returns(() => sourceSettings.sortImports);
         config.setup((c) => c.get<IFormattingSettings>('formatting')).returns(() => sourceSettings.formatting);
         config.setup((c) => c.get<IAutoCompleteSettings>('autoComplete')).returns(() => sourceSettings.autoComplete);
@@ -198,15 +194,15 @@ suite('Python Settings', async () => {
 
     suite('languageServer settings', async () => {
         const values = [
-            { ls: LanguageServerType.Jedi, expected: LanguageServerType.Jedi },
-            { ls: LanguageServerType.JediLSP, expected: LanguageServerType.Jedi },
-            { ls: LanguageServerType.Microsoft, expected: LanguageServerType.Microsoft },
-            { ls: LanguageServerType.Node, expected: LanguageServerType.Node },
-            { ls: LanguageServerType.None, expected: LanguageServerType.None },
+            { ls: LanguageServerType.Jedi, expected: LanguageServerType.Jedi, default: false },
+            { ls: LanguageServerType.JediLSP, expected: LanguageServerType.Jedi, default: false },
+            { ls: LanguageServerType.Microsoft, expected: LanguageServerType.None, default: true },
+            { ls: LanguageServerType.Node, expected: LanguageServerType.Node, default: false },
+            { ls: LanguageServerType.None, expected: LanguageServerType.None, default: false },
         ];
 
-        values.forEach(({ ls, expected }) => {
-            testLanguageServer(ls, expected, false);
+        values.forEach((v) => {
+            testLanguageServer(v.ls, v.expected, v.default);
         });
 
         testLanguageServer('invalid' as LanguageServerType, LanguageServerType.None, true);

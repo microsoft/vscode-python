@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { traceWarning } from '../../../common/logger';
+import { traceWarn } from '../../../logging';
 
 export function getOptionValues(args: string[], option: string): string[] {
     const values: string[] = [];
@@ -36,13 +36,13 @@ export function getPositionalArguments(
             nonPositionalIndexes.push(index);
         } else if (arg.startsWith('-')) {
             // Ok this is an unknown option, lets treat this as one without values.
-            traceWarning(
+            traceWarn(
                 `Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`,
             );
             nonPositionalIndexes.push(index);
         } else if (arg.indexOf('=') > 0) {
             // Ok this is an unknown option with a value
-            traceWarning(
+            traceWarn(
                 `Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`,
             );
             nonPositionalIndexes.push(index);

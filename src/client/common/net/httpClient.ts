@@ -8,8 +8,8 @@ import { parse, ParseError } from 'jsonc-parser';
 import type * as requestTypes from 'request';
 import { IHttpClient } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { traceError } from '../../logging';
 import { IWorkspaceService } from '../application/types';
-import { traceError } from '../logger';
 
 @injectable()
 export class HttpClient implements IHttpClient {

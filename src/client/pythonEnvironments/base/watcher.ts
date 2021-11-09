@@ -36,7 +36,7 @@ export type PythonEnvCollectionChangedEvent = BasicPythonEnvCollectionChangedEve
 
 export type BasicPythonEnvCollectionChangedEvent = {
     old?: PythonEnvInfo;
-    update?: PythonEnvInfo | undefined;
+    new?: PythonEnvInfo | undefined;
 };
 
 /**

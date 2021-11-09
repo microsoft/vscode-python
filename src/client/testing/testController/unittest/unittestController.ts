@@ -27,10 +27,10 @@ import {
     getWorkspaceNode,
     updateTestItemFromRawData,
 } from '../common/testItemUtilities';
-import { traceError } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { unittestDiscovery } from '../../../common/process/internal/scripts/testing_tools';
+import { traceError } from '../../../logging';
 
 @injectable()
 export class UnittestController implements ITestFrameworkController {
@@ -47,7 +47,11 @@ export class UnittestController implements ITestFrameworkController {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
     ) {}
 
-    public async resolveChildren(testController: TestController, item: TestItem): Promise<void> {
+    public async resolveChildren(
+        testController: TestController,
+        item: TestItem,
+        token?: CancellationToken,
+    ): Promise<void> {
         const workspace = this.workspaceService.getWorkspaceFolder(item.uri);
         if (workspace) {
             // if we are still discovering then wait
@@ -66,7 +70,14 @@ export class UnittestController implements ITestFrameworkController {
                     }
 
                     if (rawTestData.tests.length > 0) {
-                        updateTestItemFromRawData(item, testController, this.idToRawData, item.id, [rawTestData]);
+                        await updateTestItemFromRawData(
+                            item,
+                            testController,
+                            this.idToRawData,
+                            item.id,
+                            [rawTestData],
+                            token,
+                        );
                     } else {
                         this.idToRawData.delete(item.id);
                         testController.items.delete(item.id);
@@ -74,9 +85,14 @@ export class UnittestController implements ITestFrameworkController {
                 } else {
                     const workspaceNode = getWorkspaceNode(item, this.idToRawData);
                     if (workspaceNode) {
-                        updateTestItemFromRawData(item, testController, this.idToRawData, workspaceNode.id, [
-                            rawTestData,
-                        ]);
+                        await updateTestItemFromRawData(
+                            item,
+                            testController,
+                            this.idToRawData,
+                            workspaceNode.id,
+                            [rawTestData],
+                            token,
+                        );
                     }
                 }
             } else {
@@ -103,7 +119,10 @@ export class UnittestController implements ITestFrameworkController {
             const settings = this.configService.getSettings(workspace.uri);
             const options: TestDiscoveryOptions = {
                 workspaceFolder: workspace.uri,
-                cwd: settings.testing.cwd ?? workspace.uri.fsPath,
+                cwd:
+                    settings.testing.cwd && settings.testing.cwd.length > 0
+                        ? settings.testing.cwd
+                        : workspace.uri.fsPath,
                 args: settings.testing.unittestArgs,
                 ignoreCache: true,
                 token,
@@ -191,16 +210,16 @@ export class UnittestController implements ITestFrameworkController {
                 if (uri.fsPath === workspace.uri.fsPath) {
                     // this is a workspace level refresh
                     // This is an existing workspace test node. Just update the children
-                    await this.resolveChildren(testController, workspaceNode);
+                    await this.resolveChildren(testController, workspaceNode, token);
                 } else {
                     // This is a child node refresh
                     const testNode = getNodeByUri(workspaceNode, uri);
                     if (testNode) {
                         // We found the node to update
-                        await this.resolveChildren(testController, testNode);
+                        await this.resolveChildren(testController, testNode, token);
                     } else {
                         // update the entire workspace tree
-                        await this.resolveChildren(testController, workspaceNode);
+                        await this.resolveChildren(testController, workspaceNode, token);
                     }
                 }
             } else if (rawTestData.tests.length > 0) {
@@ -214,24 +233,33 @@ export class UnittestController implements ITestFrameworkController {
                 });
                 testController.items.add(newItem);
 
-                await this.resolveChildren(testController, newItem);
+                await this.resolveChildren(testController, newItem, token);
             }
         }
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: 'unittest', failed: false });
         return Promise.resolve();
     }
 
-    public runTests(testRun: ITestRun, workspace: WorkspaceFolder, token: CancellationToken): Promise<void> {
+    public runTests(
+        testRun: ITestRun,
+        workspace: WorkspaceFolder,
+        token: CancellationToken,
+        testController?: TestController,
+    ): Promise<void> {
         const settings = this.configService.getSettings(workspace.uri);
         return this.runner.runTests(
             testRun,
             {
                 workspaceFolder: workspace.uri,
-                cwd: settings.testing.cwd ?? workspace.uri.fsPath,
+                cwd:
+                    settings.testing.cwd && settings.testing.cwd.length > 0
+                        ? settings.testing.cwd
+                        : workspace.uri.fsPath,
                 token,
                 args: settings.testing.unittestArgs,
             },
             this.idToRawData,
+            testController,
         );
     }
 }
@@ -330,7 +358,7 @@ function testDiscoveryParser(
                     parents.push({
                         id: fileId,
                         name: pyFileName,
-                        parentid: folders.length === 0 ? testDir : `./${folders.join('/')}`,
+                        parentid: folders.length === 0 ? '.' : `./${folders.join('/')}`,
                         kind: 'file',
                         relpath: relPath,
                     } as RawTestParent);
@@ -338,7 +366,7 @@ function testDiscoveryParser(
 
                 const folderParts = [];
                 for (const folder of folders) {
-                    const parentId = folderParts.length === 0 ? testDir : `./${folderParts.join('/')}`;
+                    const parentId = folderParts.length === 0 ? '.' : `./${folderParts.join('/')}`;
                     folderParts.push(folder);
                     const pathId = `./${folderParts.join('/')}`;
                     const rawFolder = parents.find((f) => f.id === pathId);
@@ -357,7 +385,7 @@ function testDiscoveryParser(
     }
 
     return Promise.resolve({
-        rootid: testDir,
+        rootid: '.',
         root: path.isAbsolute(testDir) ? testDir : path.resolve(cwd, testDir),
         parents,
         tests,

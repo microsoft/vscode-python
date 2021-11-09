@@ -4,7 +4,7 @@
 import { uniqBy } from 'lodash';
 import * as path from 'path';
 import { isTestExecution } from '../../common/constants';
-import { traceError, traceVerbose } from '../../common/logger';
+import { traceError, traceVerbose } from '../../logging';
 import {
     HKCU,
     HKLM,

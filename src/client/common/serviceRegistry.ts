@@ -5,7 +5,6 @@ import {
     IAsyncDisposableRegistry,
     IBrowserService,
     IConfigurationService,
-    ICryptoUtils,
     ICurrentProcess,
     IEditorUtils,
     IExperimentService,
@@ -59,7 +58,6 @@ import { WorkspaceService } from './application/workspace';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { ConfigurationService } from './configuration/service';
 import { PipEnvExecutionPath } from './configuration/executionSettings/pipEnvExecution';
-import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
 import { ExperimentService } from './experiments/service';
 import {
@@ -81,8 +79,6 @@ import { InterpreterPathService } from './interpreterPathService';
 import { BrowserService } from './net/browser';
 import { FileDownloader } from './net/fileDownloader';
 import { HttpClient } from './net/httpClient';
-import { NugetService } from './nuget/nugetService';
-import { INugetService } from './nuget/types';
 import { PersistentStateFactory } from './persistentState';
 import { IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
@@ -155,13 +151,11 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
     serviceManager.addSingleton<IFileDownloader>(IFileDownloader, FileDownloader);
     serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
-    serviceManager.addSingleton<INugetService>(INugetService, NugetService);
     serviceManager.addSingleton<ITerminalActivator>(ITerminalActivator, TerminalActivator);
     serviceManager.addSingleton<ITerminalActivationHandler>(
         ITerminalActivationHandler,
         PowershellTerminalActivationFailedHandler,
     );
-    serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);

@@ -1,8 +1,8 @@
 import { OutputChannel, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
-import { traceError } from '../../common/logger';
 import { ExecutionInfo, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { traceError } from '../../logging';
 import { ILinterManager, LinterId } from '../types';
 import { BaseErrorHandler } from './baseErrorHandler';
 

@@ -163,6 +163,40 @@ suite('Terminal - Code Execution', () => {
                     .returns(() => terminalService.object);
             });
 
+            async function ensureWeSetCurrentDriveBeforeChangingDirectory(_isWindows: boolean): Promise<void> {
+                const file = Uri.file(path.join('d:', 'path', 'to', 'file', 'one.py'));
+                terminalSettings.setup((t) => t.executeInFileDir).returns(() => true);
+                workspace.setup((w) => w.rootPath).returns(() => path.join('c:', 'path', 'to'));
+                workspaceFolder.setup((w) => w.uri).returns(() => Uri.file(path.join('c:', 'path', 'to')));
+                platform.setup((p) => p.isWindows).returns(() => true);
+                settings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
+                terminalSettings.setup((t) => t.launchArgs).returns(() => []);
+
+                await executor.executeFile(file);
+                terminalService.verify(async (t) => t.sendText(TypeMoq.It.isValue('d:')), TypeMoq.Times.once());
+            }
+            test('Ensure we set current drive before changing directory on windows', async () => {
+                await ensureWeSetCurrentDriveBeforeChangingDirectory(true);
+            });
+
+            async function ensureWeDoNotChangeDriveIfDriveLetterSameAsFileDriveLetter(
+                _isWindows: boolean,
+            ): Promise<void> {
+                const file = Uri.file(path.join('c:', 'path', 'to', 'file', 'one.py'));
+                terminalSettings.setup((t) => t.executeInFileDir).returns(() => true);
+                workspace.setup((w) => w.rootPath).returns(() => path.join('c:', 'path', 'to'));
+                workspaceFolder.setup((w) => w.uri).returns(() => Uri.file(path.join('c:', 'path', 'to')));
+                platform.setup((p) => p.isWindows).returns(() => true);
+                settings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
+                terminalSettings.setup((t) => t.launchArgs).returns(() => []);
+
+                await executor.executeFile(file);
+                terminalService.verify(async (t) => t.sendText(TypeMoq.It.isValue('c:')), TypeMoq.Times.never());
+            }
+            test('Ensure we do not change drive if current drive letter is same as the file drive letter on windows', async () => {
+                await ensureWeDoNotChangeDriveIfDriveLetterSameAsFileDriveLetter(true);
+            });
+
             async function ensureWeSetCurrentDirectoryBeforeExecutingAFile(_isWindows: boolean): Promise<void> {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file', 'one.py'));
                 terminalSettings.setup((t) => t.executeInFileDir).returns(() => true);
@@ -209,7 +243,7 @@ suite('Terminal - Code Execution', () => {
                 await ensureWeWetCurrentDirectoryAndQuoteBeforeExecutingFile(true);
             });
 
-            async function ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(
+            async function ensureWeSetCurrentDirectoryBeforeExecutingFileInWorkspaceDirectory(
                 isWindows: boolean,
             ): Promise<void> {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
@@ -224,13 +258,13 @@ suite('Terminal - Code Execution', () => {
 
                 await executor.executeFile(file);
 
-                terminalService.verify(async (t) => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
+                terminalService.verify(async (t) => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.once());
             }
-            test('Ensure we do not set current directory before executing file if in the same directory (non windows)', async () => {
-                await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(false);
+            test('Ensure we set current directory before executing file if in the same directory as the current workspace (non windows)', async () => {
+                await ensureWeSetCurrentDirectoryBeforeExecutingFileInWorkspaceDirectory(false);
             });
-            test('Ensure we do not set current directory before executing file if in the same directory (windows)', async () => {
-                await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(true);
+            test('Ensure we set current directory before executing file if in the same directory as the current workspace (windows)', async () => {
+                await ensureWeSetCurrentDirectoryBeforeExecutingFileInWorkspaceDirectory(true);
             });
 
             async function ensureWeSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(

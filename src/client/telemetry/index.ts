@@ -8,7 +8,6 @@ import { LanguageServerType } from '../activation/types';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
-import { traceError, traceInfo } from '../common/logger';
 import type { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { isPromise } from '../common/utils/async';
@@ -137,7 +136,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                         break;
                 }
             } catch (exception) {
-                traceError(`Failed to serialize ${prop} for ${eventName}`, exception);
+                console.error(`Failed to serialize ${prop} for ${eventName}`, exception);
             }
         });
     }
@@ -161,7 +160,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     }
 
     if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
-        traceInfo(
+        console.info(
             `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
                 customProperties,
             )} `,
@@ -310,20 +309,6 @@ type FailedEventType = { failed: true };
 
 // Map all events to their properties
 export interface IEventNamePropertyMapping {
-    /**
-     * Telemetry event sent with details 'python.autoComplete.addBrackets' setting
-     */
-    /* __GDPR__
-       "completion.add_brackets" : {
-          "enabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
-       }
-     */
-    [EventName.COMPLETION_ADD_BRACKETS]: {
-        /**
-         * Carries boolean `true` if 'python.autoComplete.addBrackets' is set to true, `false` otherwise
-         */
-        enabled: boolean;
-    };
     /**
      * Telemetry event sent when debug in terminal button was used to debug current file.
      */
@@ -1585,22 +1570,16 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
-     * Telemetry sent when the client makes a request to the language server
-     *
-     * This event also has a measure, "resultLength", which records the number of completions provided.
-     */
-    /* __GDPR__
-       "python_language_server.request" : { }
-     */
-
-    [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: unknown;
-    /**
      * Telemetry event sent when the experiments service is initialized for the first time.
      */
     /* __GDPR__
        "python_experiments_init_performance" : { }
      */
     [EventName.PYTHON_EXPERIMENTS_INIT_PERFORMANCE]: unknown;
+    /**
+     * Telemetry event sent when the user use the report issue command.
+     */
+    [EventName.USE_REPORT_ISSUE_COMMAND]: unknown;
     /**
      * Telemetry event sent once on session start with details on which experiments are opted into and opted out from.
      */
@@ -2206,15 +2185,4 @@ export interface IEventNamePropertyMapping {
        "tensorboard_jump_to_source_file_not_found" : { }
      */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND]: never | undefined;
-    /**
-     * Telemetry event sent when the prompt about the MPLS deprecation is displayed.
-     */
-    /* __GDPR__
-       "mpls_deprecation_prompt" : {
-          "switchto" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
-       }
-     */
-    [EventName.MPLS_DEPRECATION_PROMPT]: {
-        switchTo: LanguageServerType | undefined;
-    };
 }

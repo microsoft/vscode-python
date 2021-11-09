@@ -4,11 +4,8 @@ import '../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
-import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/checks/lsNotSupported';
-import { IDiagnosticsService } from '../application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { traceError } from '../common/logger';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -20,13 +17,11 @@ import {
 } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { LanguageService } from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { Commands } from './commands';
 import { LanguageServerChangeHandler } from './common/languageServerChangeHandler';
 import { RefCountedLanguageServer } from './refCountedLanguageServer';
 import {
@@ -36,6 +31,7 @@ import {
     LanguageServerType,
 } from './types';
 import { StopWatch } from '../common/utils/stopWatch';
+import { traceError } from '../logging';
 
 const languageServerSetting: keyof IPythonSettings = 'languageServer';
 const workspacePathNameForGlobalWorkspaces = '';
@@ -74,15 +70,11 @@ export class LanguageServerExtensionActivationService
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
 
-        const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         disposables.push(this);
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
         disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
         disposables.push(this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this)));
-        disposables.push(
-            commandManager.registerCommand(Commands.ClearAnalyisCache, this.onClearAnalysisCaches.bind(this)),
-        );
 
         this.languageServerChangeHandler = new LanguageServerChangeHandler(
             this.getCurrentLanguageServerType(),
@@ -231,21 +223,6 @@ export class LanguageServerExtensionActivationService
     ): Promise<RefCountedLanguageServer> {
         let serverType = this.getCurrentLanguageServerType();
 
-        if (serverType === LanguageServerType.Microsoft) {
-            const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
-                IDiagnosticsService,
-                LSNotSupportedDiagnosticServiceId,
-            );
-            const diagnostic = await lsNotSupportedDiagnosticService.diagnose(undefined);
-            lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
-            if (diagnostic.length) {
-                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, {
-                    supported: false,
-                });
-                serverType = LanguageServerType.Jedi;
-            }
-        }
-
         // If the interpreter is Python 2 and the LS setting is explicitly set to Jedi, turn it off.
         // If set to Default, use Pylance.
         if (interpreter && (interpreter.version?.major ?? 0) < 3) {
@@ -289,9 +266,6 @@ export class LanguageServerExtensionActivationService
             case LanguageServerType.Jedi:
                 outputLine = LanguageService.startingJedi();
                 break;
-            case LanguageServerType.Microsoft:
-                outputLine = LanguageService.startingMicrosoft();
-                break;
             case LanguageServerType.Node:
                 outputLine = LanguageService.startingPylance();
                 break;
@@ -333,10 +307,5 @@ export class LanguageServerExtensionActivationService
         interpreter = interpreter || (await this.interpreterService.getActiveInterpreter(resource));
         const interperterPortion = interpreter ? `${interpreter.path}-${interpreter.envName}` : '';
         return `${resourcePortion}-${interperterPortion}`;
-    }
-
-    private async onClearAnalysisCaches() {
-        const values = await Promise.all([...this.cache.values()]);
-        values.forEach((v) => (v.clearAnalysisCache ? v.clearAnalysisCache() : noop()));
     }
 }

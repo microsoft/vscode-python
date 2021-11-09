@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-//tslint:disable:max-func-body-length match-default-export-name no-any
 import { expect } from 'chai';
 import rewiremock from 'rewiremock';
 import * as TypeMoq from 'typemoq';

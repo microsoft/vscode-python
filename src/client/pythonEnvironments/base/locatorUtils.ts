@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { traceVerbose } from '../../common/logger';
 import { createDeferred } from '../../common/utils/async';
 import { getURIFilter } from '../../common/utils/misc';
+import { traceVerbose } from '../../logging';
 import { PythonEnvInfo } from './info';
 import { IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from './locator';
 
@@ -55,7 +55,6 @@ function getSearchLocationFilters(query: PythonLocatorQuery): ((u: Uri) => boole
     return query.searchLocations.roots.map((loc) =>
         getURIFilter(loc, {
             checkParent: true,
-            checkExact: true,
         }),
     );
 }
