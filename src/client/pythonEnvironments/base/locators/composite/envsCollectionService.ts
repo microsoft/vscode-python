@@ -41,7 +41,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         this.locator.onChanged((event) => {
             const query = undefined; // We can also form a query based on the event, but skip that for simplicity.
             let scheduledRefresh = this.scheduledRefreshes.get(query);
-            // If there is already a new refresh scheduled for the query, no need to start another one.
+            // If there is no refresh scheduled for the query, start a new one.
             if (!scheduledRefresh) {
                 scheduledRefresh = this.scheduleNewRefresh(query);
             }

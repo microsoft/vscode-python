@@ -231,7 +231,7 @@ suite('Python envs locator - Environments Collection', async () => {
         );
     });
 
-    test('onRefreshStarted() fires if refresh is triggered', async () => {
+    test('onRefreshStart() is fired if refresh is triggered', async () => {
         let isFired = false;
         collectionService.onRefreshStart(() => {
             isFired = true;
