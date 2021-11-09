@@ -204,6 +204,8 @@ export function translateProductToModule(product: Product): string {
             return 'torch_tb_profiler';
         case Product.pip:
             return 'pip';
+        case Product.ensurepip:
+            return 'ensurepip';
         default: {
             throw new Error(`Product ${product} cannot be installed as a Python Module.`);
         }
