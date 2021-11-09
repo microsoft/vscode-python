@@ -109,6 +109,17 @@
                 "Type": "pip"
             },
             "DevelopmentDependency": false
+        },
+        {
+            "Component": {
+                "Other": {
+                    "Name": "get-pip.py",
+                    "Version": "21.3.1",
+                    "DownloadUrl": "https://github.com/pypa/get-pip/blob/main/public/get-pip.py"
+                },
+                "Type": "other"
+            },
+            "DevelopmentDependency": false
         }
     ]
 }
