@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { TestDiscoveryOptions, TestFilter } from '../../common/types';
-import { getOptionValues, getPositionalArguments, filterArguments } from '../common/argumentsHelper';
+import { getPositionalArguments, filterArguments } from '../common/argumentsHelper';
 
 const OptionsWithArguments = [
     '-c',
@@ -135,11 +135,6 @@ const OptionsWithoutArguments = [
 ];
 
 export function pytestGetTestFolders(args: string[]): string[] {
-    const testDirs = getOptionValues(args, '--rootdir');
-    if (testDirs.length > 0) {
-        return testDirs;
-    }
-
     const positionalArgs = getPositionalArguments(args, OptionsWithArguments, OptionsWithoutArguments);
     // Positional args in pytest are files or directories.
     // Remove files from the args, and what's left are test directories.
