@@ -97,7 +97,7 @@ export class PytestRunner implements ITestsRunner {
             if (!rawData) {
                 throw new Error(`Trying to run unknown node: ${testNode.id}`);
             }
-            if (testNode.id !== options.workspaceFolder.fsPath) {
+            if (testNode.id !== options.cwd) {
                 testArgs.push(rawData.rawId);
             }
 
