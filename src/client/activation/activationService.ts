@@ -238,13 +238,6 @@ export class LanguageServerExtensionActivationService
         }
 
         this.sendTelemetryForChosenLanguageServer(serverType).ignoreErrors();
-
-        if (this.workspaceService.isVirtualWorkspace && serverType !== LanguageServerType.Node) {
-            // Only Node is supported when using virtual workspaces.
-            this.output.appendLine(LanguageService.virtualWorkspaceMessage());
-            serverType = LanguageServerType.None;
-        }
-
         await this.logStartup(serverType);
         let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
         try {
