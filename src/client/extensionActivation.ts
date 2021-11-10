@@ -130,7 +130,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     // "initialize" "services"
 
-    serviceContainer.get<ILanguageServerExtension>(ILanguageServerExtension).register();
     const disposables = serviceManager.get<IDisposableRegistry>(IDisposableRegistry);
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
