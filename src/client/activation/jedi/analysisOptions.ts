@@ -21,9 +21,9 @@ export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         @inject(IEnvironmentVariablesProvider) envVarsProvider: IEnvironmentVariablesProvider,
         @inject(ILanguageServerOutputChannel) lsOutputChannel: ILanguageServerOutputChannel,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IWorkspaceService) workspace: IWorkspaceService,
     ) {
-        super(envVarsProvider, lsOutputChannel);
+        super(envVarsProvider, lsOutputChannel, workspace);
         this.resource = undefined;
     }
 

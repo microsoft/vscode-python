@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { Disposable, Event, EventEmitter, WorkspaceFolder } from 'vscode';
 import { DocumentFilter, LanguageClientOptions, RevealOutputChannelOn } from 'vscode-languageclient/node';
+import { IWorkspaceService } from '../../common/application/types';
 
 import { PYTHON, PYTHON_LANGUAGE } from '../../common/constants';
 import { IOutputChannel, Resource } from '../../common/types';
@@ -15,7 +16,10 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
     protected readonly didChange = new EventEmitter<void>();
     private readonly output: IOutputChannel;
 
-    protected constructor(lsOutputChannel: ILanguageServerOutputChannel) {
+    protected constructor(
+        lsOutputChannel: ILanguageServerOutputChannel,
+        protected readonly workspace: IWorkspaceService,
+    ) {
         this.output = lsOutputChannel.channel;
     }
 
@@ -51,7 +55,7 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
     }
 
     protected getDocumentFilters(_workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
-        return PYTHON;
+        return this.workspace.isVirtualWorkspace ? [{ language: PYTHON_LANGUAGE }] : PYTHON;
     }
 
     protected async getInitializationOptions(): Promise<any> {
@@ -66,8 +70,9 @@ export abstract class LanguageServerAnalysisOptionsWithEnv extends LanguageServe
     protected constructor(
         private readonly envVarsProvider: IEnvironmentVariablesProvider,
         lsOutputChannel: ILanguageServerOutputChannel,
+        workspace: IWorkspaceService,
     ) {
-        super(lsOutputChannel);
+        super(lsOutputChannel, workspace);
     }
 
     public async initialize(_resource: Resource, _interpreter: PythonEnvironment | undefined) {
