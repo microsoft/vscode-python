@@ -243,9 +243,6 @@ export class LanguageServerExtensionActivationService
         try {
             await server.start(resource, interpreter);
         } catch (ex) {
-            if (this.workspaceService.isVirtualWorkspace) {
-                throw ex;
-            }
             if (serverType === LanguageServerType.Jedi) {
                 throw ex;
             }
