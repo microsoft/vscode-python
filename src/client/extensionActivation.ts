@@ -44,6 +44,9 @@ import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
 import { setDefaultLanguageServer } from './activation/common/defaultlanguageServer';
 import { getLoggingLevel } from './logging/settings';
+import { DebugService } from './common/application/debugService';
+import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
+import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -135,6 +138,9 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
     languages.setLanguageConfiguration(PYTHON_LANGUAGE, getLanguageConfiguration());
     if (!workspaceService.isVirtualWorkspace) {
+        const handlers = serviceManager.getAll<IDebugSessionEventHandlers>(IDebugSessionEventHandlers);
+        const dispatcher = new DebugSessionEventDispatcher(handlers, DebugService.instance, disposables);
+        dispatcher.registerEventHandlers();
         const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();
 
