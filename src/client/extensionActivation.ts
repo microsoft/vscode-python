@@ -138,8 +138,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
         const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();
 
-        serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
-
         const outputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
         cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
