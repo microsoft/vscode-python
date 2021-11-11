@@ -538,7 +538,7 @@
                 "python.formatting.autopep8Path": {
                     "default": "autopep8",
                     "description": "Path to autopep8, you can use a custom version of autopep8 by modifying this setting to include the full path.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.formatting.blackArgs": {
@@ -553,7 +553,7 @@
                 "python.formatting.blackPath": {
                     "default": "black",
                     "description": "Path to Black, you can use a custom version of Black by modifying this setting to include the full path.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.formatting.provider": {
@@ -580,7 +580,7 @@
                 "python.formatting.yapfPath": {
                     "default": "yapf",
                     "description": "Path to yapf, you can use a custom version of yapf by modifying this setting to include the full path.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.globalModuleInstallation": {
@@ -636,7 +636,7 @@
                 "python.linting.banditPath": {
                     "default": "bandit",
                     "description": "Path to bandit, you can use a custom version of bandit by modifying this setting to include the full path.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.linting.cwd": {
@@ -705,7 +705,7 @@
                 "python.linting.flake8Path": {
                     "default": "flake8",
                     "description": "Path to flake8, you can use a custom version of flake8 by modifying this setting to include the full path.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.linting.ignorePatterns": {
@@ -779,7 +779,7 @@
                 "python.linting.mypyPath": {
                     "default": "mypy",
                     "description": "Path to mypy, you can use a custom version of mypy by modifying this setting to include the full path.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.linting.prospectorArgs": {
@@ -800,7 +800,7 @@
                 "python.linting.prospectorPath": {
                     "default": "prospector",
                     "description": "Path to Prospector, you can use a custom version of prospector by modifying this setting to include the full path.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.linting.pycodestyleArgs": {
@@ -845,7 +845,7 @@
                 "python.linting.pycodestylePath": {
                     "default": "pycodestyle",
                     "description": "Path to pycodestyle, you can use a custom version of pycodestyle by modifying this setting to include the full path.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.linting.pydocstyleArgs": {
@@ -866,7 +866,7 @@
                 "python.linting.pydocstylePath": {
                     "default": "pydocstyle",
                     "description": "Path to pydocstyle, you can use a custom version of pydocstyle by modifying this setting to include the full path.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.linting.pylamaArgs": {
@@ -887,7 +887,7 @@
                 "python.linting.pylamaPath": {
                     "default": "pylama",
                     "description": "Path to pylama, you can use a custom version of pylama by modifying this setting to include the full path.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.linting.pylintArgs": {
@@ -968,7 +968,7 @@
                 "python.linting.pylintPath": {
                     "default": "pylint",
                     "description": "Path to Pylint, you can use a custom version of pylint by modifying this setting to include the full path.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.logging.level": {
@@ -987,19 +987,19 @@
                 "python.pipenvPath": {
                     "default": "pipenv",
                     "description": "Path to the pipenv executable to use for activation.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.poetryPath": {
                     "default": "poetry",
                     "description": "Path to the poetry executable.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.pythonPath": {
                     "default": "python",
                     "description": "(DEPRECATED: Note this setting is not used when in pythonDeprecatePythonPath experiment) Path to Python, you can use a custom version of Python by modifying this setting to include the full path.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.sortImports.args": {
@@ -1014,7 +1014,7 @@
                 "python.sortImports.path": {
                     "default": "",
                     "description": "Path to isort script, default using inner version",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.tensorBoard.logDirectory": {
@@ -1088,7 +1088,7 @@
                 "python.testing.pytestPath": {
                     "default": "pytest",
                     "description": "Path to pytest (pytest), you can use a custom version of pytest by modifying this setting to include the full path.",
-                    "scope": "resource",
+                    "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.testing.unittestArgs": {
