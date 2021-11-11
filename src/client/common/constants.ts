@@ -12,6 +12,7 @@ export const PYTHON = [
     { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
     { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE },
     { scheme: InteractiveInputScheme, language: PYTHON_LANGUAGE },
+    { scheme: 'vscode-vfs', language: PYTHON_LANGUAGE },
 ];
 
 export const PYTHON_NOTEBOOKS = [

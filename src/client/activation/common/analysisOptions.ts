@@ -3,7 +3,7 @@
 import { Disposable, Event, EventEmitter, WorkspaceFolder } from 'vscode';
 import { DocumentFilter, LanguageClientOptions, RevealOutputChannelOn } from 'vscode-languageclient/node';
 
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { PYTHON, PYTHON_LANGUAGE } from '../../common/constants';
 import { IOutputChannel, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
@@ -51,7 +51,7 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
     }
 
     protected getDocumentFilters(_workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
-        return [{ language: PYTHON_LANGUAGE }];
+        return PYTHON;
     }
 
     protected async getInitializationOptions(): Promise<any> {
