@@ -67,7 +67,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             await this.activateWorkspace(this.activeResourceService.getActiveResource());
         } else {
             await Promise.all([
-                Promise.all(this.singleActivationServices.map((item) => item.activate())),
+                ...this.singleActivationServices.map((item) => item.activate()),
                 this.activateWorkspace(this.activeResourceService.getActiveResource()),
             ]);
         }
