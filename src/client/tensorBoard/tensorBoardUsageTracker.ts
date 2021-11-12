@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { TextEditor } from 'vscode';
-import { IExtensionSingleActivationService } from '../activation/types';
+import { ComponentId, IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import { NativeTensorBoard } from '../common/experiments/groups';
@@ -20,6 +20,8 @@ const testExecution = isTestExecution();
 // contains a valid TensorBoard import.
 @injectable()
 export class TensorBoardUsageTracker implements IExtensionSingleActivationService {
+    public readonly componentId = ComponentId.other;
+
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,

@@ -4,7 +4,7 @@
 import * as path from 'path';
 import { inject, injectable } from 'inversify';
 import { DebugConfiguration, Uri } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
+import { ComponentId, IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDebugService } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import { IDisposableRegistry } from '../../common/types';
@@ -15,6 +15,8 @@ import { DebugPurpose, LaunchRequestArguments } from '../types';
 
 @injectable()
 export class DebugCommands implements IExtensionSingleActivationService {
+    public readonly componentId = ComponentId.other;
+
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDebugService) private readonly debugService: IDebugService,

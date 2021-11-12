@@ -58,7 +58,7 @@ export const IExtensionActivationService = Symbol('IExtensionActivationService')
  * @interface IExtensionActivationService
  */
 export interface IExtensionActivationService {
-    componentId?: ComponentId;
+    componentId: ComponentId;
     activate(resource: Resource): Promise<void>;
 }
 
@@ -173,6 +173,7 @@ export enum ComponentId {
     other = 0,
     interpreter = 1,
     languageServer = 2,
+    common = 3,
 }
 
 export const IExtensionSingleActivationService = Symbol('IExtensionSingleActivationService');
@@ -185,6 +186,6 @@ export const IExtensionSingleActivationService = Symbol('IExtensionSingleActivat
  * @interface IExtensionSingleActivationService
  */
 export interface IExtensionSingleActivationService {
-    componentId?: ComponentId;
+    componentId: ComponentId;
     activate(): Promise<void>;
 }

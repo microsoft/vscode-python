@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { ICommandManager } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
-import { IExtensionSingleActivationService } from '../types';
+import { ComponentId, IExtensionSingleActivationService } from '../types';
 
 // This command is currently used by IntelliCode. This was used to
 // trigger MPLS. Since we no longer have MPLS we are going to set
@@ -13,6 +13,8 @@ import { IExtensionSingleActivationService } from '../types';
 
 @injectable()
 export class LoadLanguageServerExtension implements IExtensionSingleActivationService {
+    public readonly componentId = ComponentId.languageServer;
+
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,

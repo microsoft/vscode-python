@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { FileSystemWatcher, RelativePattern, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
-import { IExtensionSingleActivationService } from '../activation/types';
+import { ComponentId, IExtensionSingleActivationService } from '../activation/types';
 import { IWorkspaceService } from '../common/application/types';
 import { NativeTensorBoard } from '../common/experiments/groups';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
@@ -13,6 +13,8 @@ import { TensorBoardPrompt } from './tensorBoardPrompt';
 
 @injectable()
 export class TensorBoardFileWatcher implements IExtensionSingleActivationService {
+    public readonly componentId = ComponentId.other;
+
     private fileSystemWatchers = new Map<WorkspaceFolder, FileSystemWatcher[]>();
 
     private globPatterns = ['*tfevents*', '*/*tfevents*', '*/*/*tfevents*'];

@@ -63,7 +63,9 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         // Activate all activation services together.
 
         const singleActivationServices = this.workspaceService.isVirtualWorkspace
-            ? this.singleActivationServices.filter((s) => s.componentId === ComponentId.interpreter)
+            ? this.singleActivationServices.filter((s) =>
+                  [ComponentId.interpreter, ComponentId.languageServer, ComponentId.common].includes(s.componentId),
+              )
             : this.singleActivationServices;
 
         await Promise.all([
@@ -88,8 +90,8 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
 
         await this.autoSelection.autoSelectInterpreter(resource);
         const activationServices = this.workspaceService.isVirtualWorkspace
-            ? this.activationServices.filter(
-                  (s) => s.componentId === ComponentId.interpreter || s.componentId === ComponentId.languageServer,
+            ? this.activationServices.filter((s) =>
+                  [ComponentId.interpreter, ComponentId.languageServer, ComponentId.common].includes(s.componentId),
               )
             : this.activationServices;
         await Promise.all(activationServices.map((item) => item.activate(resource)));

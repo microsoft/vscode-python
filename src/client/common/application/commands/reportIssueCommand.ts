@@ -7,7 +7,7 @@ import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { inject, injectable } from 'inversify';
-import { IExtensionSingleActivationService } from '../../../activation/types';
+import { ComponentId, IExtensionSingleActivationService } from '../../../activation/types';
 import { ICommandManager, IWorkspaceService } from '../types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
@@ -22,6 +22,8 @@ import { EnvironmentType } from '../../../pythonEnvironments/info';
  */
 @injectable()
 export class ReportIssueCommandHandler implements IExtensionSingleActivationService {
+    public readonly componentId = ComponentId.common;
+
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,

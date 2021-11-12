@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { applyEdits, findNodeAtLocation, getNodeValue, ModificationOptions, modify, parseTree } from 'jsonc-parser';
 import * as path from 'path';
-import { IExtensionActivationService, LanguageServerType } from '../../activation/types';
+import { ComponentId, IExtensionActivationService, LanguageServerType } from '../../activation/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
@@ -17,6 +17,7 @@ import { traceDecoratorError, traceError } from '../../logging';
 // TODO: rename the class since it is not used just for test settings
 @injectable()
 export class UpdateTestSettingService implements IExtensionActivationService {
+    public readonly componentId = ComponentId.other;
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationEnvironment) private readonly application: IApplicationEnvironment,

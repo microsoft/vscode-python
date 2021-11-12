@@ -15,7 +15,7 @@ import { Common, ExtensionSurveyBanner } from '../common/utils/localize';
 import { traceDecoratorError } from '../logging';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { IExtensionSingleActivationService } from './types';
+import { ComponentId, IExtensionSingleActivationService } from './types';
 
 // persistent state names, exported to make use of in testing
 export enum extensionSurveyStateKeys {
@@ -28,6 +28,7 @@ const WAIT_TIME_TO_SHOW_SURVEY = 1000 * 60 * 60 * 3; // 3 hours
 
 @injectable()
 export class ExtensionSurveyPrompt implements IExtensionSingleActivationService {
+    public readonly componentId = ComponentId.common;
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IBrowserService) private browserService: IBrowserService,

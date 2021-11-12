@@ -14,7 +14,7 @@ import { selectTestWorkspace } from './common/testUtils';
 import { TestSettingsPropertyNames } from './configuration/types';
 import { ITestConfigurationService, ITestsHelper } from './common/types';
 import { ITestingService } from './types';
-import { IExtensionActivationService } from '../activation/types';
+import { ComponentId, IExtensionActivationService } from '../activation/types';
 import { ITestController } from './testController/common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../common/utils/delayTrigger';
 import { ExtensionContextKey } from '../common/application/contextKeys';
@@ -35,6 +35,7 @@ export class TestingService implements ITestingService {
 @injectable()
 export class UnitTestManagementService implements IExtensionActivationService {
     private activatedOnce: boolean = false;
+    public readonly componentId = ComponentId.other;
     private readonly disposableRegistry: Disposable[];
     private workspaceService: IWorkspaceService;
     private context: IContextKeyManager;

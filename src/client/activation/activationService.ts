@@ -50,7 +50,7 @@ export class LanguageServerExtensionActivationService
 
     private activatedServer?: IActivatedServer;
 
-    public readonly componentId? = ComponentId.languageServer;
+    public readonly componentId = ComponentId.languageServer;
 
     private readonly workspaceService: IWorkspaceService;
 

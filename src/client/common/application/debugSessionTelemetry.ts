@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, ProviderResult } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
-import { IExtensionSingleActivationService } from '../../activation/types';
+import { ComponentId, IExtensionSingleActivationService } from '../../activation/types';
 import { AttachRequestArguments, ConsoleType, LaunchRequestArguments, TriggerType } from '../../debugger/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -62,6 +62,7 @@ class TelemetryTracker implements DebugAdapterTracker {
 
 @injectable()
 export class DebugSessionTelemetry implements DebugAdapterTrackerFactory, IExtensionSingleActivationService {
+    public readonly componentId = ComponentId.common;
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IDebugService) debugService: IDebugService,
