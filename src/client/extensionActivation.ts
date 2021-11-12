@@ -70,11 +70,6 @@ export async function activateComponents(
     // https://github.com/microsoft/vscode-python/issues/15380
     // These will go away eventually once everything is refactored into components.
     const legacyActivationResult = await activateLegacy(ext);
-    const workspaceService = ext.legacyIOC.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    if (workspaceService.isVirtualWorkspace) {
-        // Nothing other than Pylance is activated when using virtual workspaces.
-        return [legacyActivationResult];
-    }
     const promises: Promise<ActivationResult>[] = [
         // More component activations will go here
         pythonEnvironments.activate(components.pythonEnvs, ext),
@@ -122,8 +117,9 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     // directly queries VSCode API.
     setLoggingLevel(getLoggingLevel());
 
-    // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
+    // Settings are dependent on Experiment service, so we need to initialize it after experiments are activated.
+    serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().initialize();
     const languageServerType = configuration.getSettings().languageServer;
 
     // Language feature registrations.
@@ -137,12 +133,12 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
     languages.setLanguageConfiguration(PYTHON_LANGUAGE, getLanguageConfiguration());
+    const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
+    interpreterManager.initialize();
     if (!workspaceService.isVirtualWorkspace) {
         const handlers = serviceManager.getAll<IDebugSessionEventHandlers>(IDebugSessionEventHandlers);
         const dispatcher = new DebugSessionEventDispatcher(handlers, DebugService.instance, disposables);
         dispatcher.registerEventHandlers();
-        const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
-        interpreterManager.initialize();
 
         const outputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
@@ -193,9 +189,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
     context.subscriptions.push(manager);
-
-    // Settings are dependent on Experiment service, so we need to initialize it after experiments are activated.
-    serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().initialize();
 
     const activationPromise = manager.activate();
 

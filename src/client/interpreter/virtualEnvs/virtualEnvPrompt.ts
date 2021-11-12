@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Disposable, Uri } from 'vscode';
-import { IExtensionActivationService } from '../../activation/types';
+import { ComponentId, IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
 import { sleep } from '../../common/utils/async';
@@ -18,6 +18,8 @@ import { IComponentAdapter, IInterpreterHelper } from '../contracts';
 const doNotDisplayPromptStateKey = 'MESSAGE_KEY_FOR_VIRTUAL_ENV';
 @injectable()
 export class VirtualEnvironmentPrompt implements IExtensionActivationService {
+    public readonly componentId = ComponentId.interpreter;
+
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper,

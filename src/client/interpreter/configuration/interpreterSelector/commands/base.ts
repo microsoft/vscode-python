@@ -6,7 +6,7 @@
 import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, QuickPickItem, Uri } from 'vscode';
-import { IExtensionSingleActivationService } from '../../../../activation/types';
+import { ComponentId, IExtensionSingleActivationService } from '../../../../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { IDisposable, Resource } from '../../../../common/types';
 import { Interpreters } from '../../../../common/utils/localize';
@@ -14,6 +14,7 @@ import { IPythonPathUpdaterServiceManager } from '../../types';
 
 @injectable()
 export abstract class BaseInterpreterSelectorCommand implements IExtensionSingleActivationService, IDisposable {
+    public readonly componentId = ComponentId.interpreter;
     protected disposables: Disposable[] = [];
     constructor(
         @unmanaged() protected readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,

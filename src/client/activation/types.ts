@@ -58,6 +58,7 @@ export const IExtensionActivationService = Symbol('IExtensionActivationService')
  * @interface IExtensionActivationService
  */
 export interface IExtensionActivationService {
+    componentId?: ComponentId;
     activate(resource: Resource): Promise<void>;
 }
 
@@ -103,9 +104,6 @@ export const ILanguageServerCache = Symbol('ILanguageServerCache');
 export interface ILanguageServerCache {
     get(resource: Resource, interpreter?: PythonEnvironment): Promise<ILanguageServer>;
 }
-
-export const ILanguageServerActivation = Symbol('ILanguageServerActivation');
-export interface ILanguageServerActivation extends IExtensionActivationService {}
 
 export type FolderVersionPair = { path: string; version: SemVer };
 export const ILanguageServerFolderService = Symbol('ILanguageServerFolderService');
@@ -171,6 +169,12 @@ export interface ILanguageServerOutputChannel {
     readonly channel: IOutputChannel;
 }
 
+export enum ComponentId {
+    other = 0,
+    interpreter = 1,
+    languageServer = 2,
+}
+
 export const IExtensionSingleActivationService = Symbol('IExtensionSingleActivationService');
 /**
  * Classes implementing this interface will have their `activate` methods
@@ -181,5 +185,6 @@ export const IExtensionSingleActivationService = Symbol('IExtensionSingleActivat
  * @interface IExtensionSingleActivationService
  */
 export interface IExtensionSingleActivationService {
+    componentId?: ComponentId;
     activate(): Promise<void>;
 }
