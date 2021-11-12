@@ -30,6 +30,8 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
 
     private readonly disposables: IDisposable[] = [];
 
+    private readonly componentsToActivate: ComponentId[] | undefined;
+
     private docOpenedHandler?: IDisposable;
 
     constructor(
@@ -44,7 +46,11 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
         @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
-    ) {}
+    ) {
+        this.componentsToActivate = this.workspaceService.isVirtualWorkspace
+            ? [ComponentId.interpreter, ComponentId.languageServer, ComponentId.common]
+            : undefined;
+    }
 
     public dispose(): void {
         while (this.disposables.length > 0) {
@@ -62,11 +68,9 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
 
         // Activate all activation services together.
 
-        const singleActivationServices = this.workspaceService.isVirtualWorkspace
-            ? this.singleActivationServices.filter((s) =>
-                  [ComponentId.interpreter, ComponentId.languageServer, ComponentId.common].includes(s.componentId),
-              )
-            : this.singleActivationServices;
+        const singleActivationServices = this.singleActivationServices.filter((s) =>
+            this.componentsToActivate ? this.componentsToActivate.includes(s.componentId) : true,
+        );
 
         await Promise.all([
             ...singleActivationServices.map((item) => item.activate()),
@@ -89,11 +93,9 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
 
         await this.autoSelection.autoSelectInterpreter(resource);
-        const activationServices = this.workspaceService.isVirtualWorkspace
-            ? this.activationServices.filter((s) =>
-                  [ComponentId.interpreter, ComponentId.languageServer, ComponentId.common].includes(s.componentId),
-              )
-            : this.activationServices;
+        const activationServices = this.activationServices.filter((s) =>
+            this.componentsToActivate ? this.componentsToActivate.includes(s.componentId) : true,
+        );
         await Promise.all(activationServices.map((item) => item.activate(resource)));
         await this.appDiagnostics.performPreStartupHealthCheck(resource);
     }
