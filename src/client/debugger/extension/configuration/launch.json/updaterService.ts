@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { createScanner, parse, SyntaxKind } from 'jsonc-parser';
 import { CancellationToken, DebugConfiguration, Position, Range, TextDocument, WorkspaceEdit } from 'vscode';
-import {  IExtensionSingleActivationService } from '../../../../activation/types';
+import { IExtensionSingleActivationService } from '../../../../activation/types';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
 import { IDisposableRegistry } from '../../../../common/types';
 import { noop } from '../../../../common/utils/misc';
