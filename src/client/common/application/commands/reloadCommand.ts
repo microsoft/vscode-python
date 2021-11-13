@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ComponentId, IExtensionSingleActivationService } from '../../../activation/types';
+import { IExtensionSingleActivationService } from '../../../activation/types';
 import { Common } from '../../utils/localize';
 import { noop } from '../../utils/misc';
 import { IApplicationShell, ICommandManager } from '../types';
@@ -14,7 +14,7 @@ import { IApplicationShell, ICommandManager } from '../types';
  */
 @injectable()
 export class ReloadVSCodeCommandHandler implements IExtensionSingleActivationService {
-    public readonly componentId = ComponentId.common;
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,

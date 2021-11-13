@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
-import { ComponentId, IExtensionSingleActivationService } from '../../activation/types';
+import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -16,7 +16,7 @@ import { IComponentAdapter } from '../contracts';
 // The parts of IComponentAdapter used here.
 @injectable()
 export class InterpreterLocatorProgressStatubarHandler implements IExtensionSingleActivationService {
-    public readonly componentId = ComponentId.interpreter;
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
 
     private deferred: Deferred<void> | undefined;
 

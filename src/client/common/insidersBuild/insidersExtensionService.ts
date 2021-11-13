@@ -6,7 +6,7 @@
 import '../extensions';
 
 import { inject, injectable, named } from 'inversify';
-import { ComponentId, IExtensionSingleActivationService } from '../../../client/activation/types';
+import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationEnvironment, ICommandManager } from '../application/types';
 import { Commands, isTestExecution } from '../constants';
@@ -19,7 +19,7 @@ import { traceDecoratorError } from '../../logging';
 
 @injectable()
 export class InsidersExtensionService implements IExtensionSingleActivationService {
-    public readonly componentId = ComponentId.common;
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
     constructor(
         @inject(IExtensionChannelService) private readonly extensionChannelService: IExtensionChannelService,
         @inject(IInsiderExtensionPrompt) private readonly insidersPrompt: IInsiderExtensionPrompt,

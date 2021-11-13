@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ConfigurationChangeEvent, Disposable, TextDocument, Uri, workspace } from 'vscode';
-import { ComponentId, IExtensionActivationService } from '../activation/types';
+import { IExtensionActivationService } from '../activation/types';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
@@ -18,7 +18,7 @@ import { ILinterManager, ILintingEngine } from '../linters/types';
 
 @injectable()
 export class LinterProvider implements IExtensionActivationService, Disposable {
-    public readonly componentId = ComponentId.other;
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
     private interpreterService: IInterpreterService;
     private documents: IDocumentManager;
     private configuration: IConfigurationService;

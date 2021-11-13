@@ -3,13 +3,13 @@
 
 import { inject, injectable } from 'inversify';
 import * as vscodeTypes from 'vscode';
-import { ComponentId, IExtensionSingleActivationService } from '../../activation/types';
+import { IExtensionSingleActivationService } from '../../activation/types';
 import { IDisposableRegistry } from '../../common/types';
 import { LaunchJsonCodeActionProvider } from './launchJsonCodeActionProvider';
 
 @injectable()
 export class CodeActionProviderService implements IExtensionSingleActivationService {
-    public readonly componentId = ComponentId.other;
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
     constructor(@inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry) {}
     public async activate(): Promise<void> {
         const vscode = require('vscode') as typeof vscodeTypes;

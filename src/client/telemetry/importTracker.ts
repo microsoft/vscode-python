@@ -8,7 +8,7 @@ import * as path from 'path';
 import { clearTimeout, setTimeout } from 'timers';
 import { TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '.';
-import { ComponentId, IExtensionSingleActivationService } from '../activation/types';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
@@ -47,7 +47,7 @@ const testExecution = isTestExecution();
 
 @injectable()
 export class ImportTracker implements IExtensionSingleActivationService {
-    public readonly componentId = ComponentId.common;
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
 
     private pendingChecks = new Map<string, NodeJS.Timer>();
 

@@ -16,7 +16,7 @@ import {
     Uri,
     EventEmitter,
 } from 'vscode';
-import { ComponentId, IExtensionSingleActivationService } from '../../activation/types';
+import { IExtensionSingleActivationService } from '../../activation/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
@@ -29,7 +29,7 @@ import { ITestController, ITestFrameworkController, TestRefreshOptions } from '.
 
 @injectable()
 export class PythonTestController implements ITestController, IExtensionSingleActivationService {
-    public readonly componentId = ComponentId.other;
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
 
     private readonly testController: TestController;
 

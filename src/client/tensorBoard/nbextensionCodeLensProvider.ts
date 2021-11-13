@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { once } from 'lodash';
 import { CancellationToken, CodeLens, Command, languages, Position, Range, TextDocument } from 'vscode';
-import { ComponentId, IExtensionSingleActivationService } from '../activation/types';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { Commands, NotebookCellScheme, PYTHON_LANGUAGE } from '../common/constants';
 import { NativeTensorBoard } from '../common/experiments/groups';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
@@ -16,7 +16,7 @@ import { containsNotebookExtension } from './helpers';
 
 @injectable()
 export class TensorBoardNbextensionCodeLensProvider implements IExtensionSingleActivationService {
-    public readonly componentId = ComponentId.other;
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
 
     private sendTelemetryOnce = once(
         sendTelemetryEvent.bind(this, EventName.TENSORBOARD_ENTRYPOINT_SHOWN, undefined, {

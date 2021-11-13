@@ -25,7 +25,6 @@ import { EventName } from '../telemetry/constants';
 import { LanguageServerChangeHandler } from './common/languageServerChangeHandler';
 import { RefCountedLanguageServer } from './refCountedLanguageServer';
 import {
-    ComponentId,
     IExtensionActivationService,
     ILanguageServerActivator,
     ILanguageServerCache,
@@ -50,7 +49,7 @@ export class LanguageServerExtensionActivationService
 
     private activatedServer?: IActivatedServer;
 
-    public readonly componentId = ComponentId.languageServer;
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: true, virtualWorkspace: true };
 
     private readonly workspaceService: IWorkspaceService;
 

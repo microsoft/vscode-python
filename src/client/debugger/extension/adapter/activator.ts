@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ComponentId, IExtensionSingleActivationService } from '../../../activation/types';
+import { IExtensionSingleActivationService } from '../../../activation/types';
 import { IDebugService } from '../../../common/application/types';
 import { IDisposableRegistry } from '../../../common/types';
 import { DebuggerTypeName } from '../../constants';
@@ -13,7 +13,7 @@ import { IDebugAdapterDescriptorFactory, IDebugSessionLoggingFactory, IOutdatedD
 
 @injectable()
 export class DebugAdapterActivator implements IExtensionSingleActivationService {
-    public readonly componentId = ComponentId.other;
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
     constructor(
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IDebugAdapterDescriptorFactory) private descriptorFactory: IDebugAdapterDescriptorFactory,

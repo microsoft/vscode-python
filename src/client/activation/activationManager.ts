@@ -15,12 +15,7 @@ import { Deferred } from '../common/utils/async';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
 import { traceDecoratorError } from '../logging';
 import { sendActivationTelemetry } from '../telemetry/envFileTelemetry';
-import {
-    ComponentId,
-    IExtensionActivationManager,
-    IExtensionActivationService,
-    IExtensionSingleActivationService,
-} from './types';
+import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
 
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {
@@ -29,8 +24,6 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     protected readonly isInterpreterSetForWorkspacePromises = new Map<string, Deferred<void>>();
 
     private readonly disposables: IDisposable[] = [];
-
-    private readonly componentsToActivate: ComponentId[] | undefined;
 
     private docOpenedHandler?: IDisposable;
 
@@ -47,9 +40,14 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
     ) {
-        this.componentsToActivate = this.workspaceService.isVirtualWorkspace
-            ? [ComponentId.interpreter, ComponentId.languageServer, ComponentId.common]
-            : undefined;
+        if (this.workspaceService.isVirtualWorkspace) {
+            this.activationServices = this.activationServices.filter(
+                (service) => service.supportedWorkspaceTypes.virtualWorkspace,
+            );
+            this.singleActivationServices = this.singleActivationServices.filter(
+                (service) => service.supportedWorkspaceTypes.virtualWorkspace,
+            );
+        }
     }
 
     public dispose(): void {
@@ -68,12 +66,8 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
 
         // Activate all activation services together.
 
-        const singleActivationServices = this.singleActivationServices.filter((s) =>
-            this.componentsToActivate ? this.componentsToActivate.includes(s.componentId) : true,
-        );
-
         await Promise.all([
-            ...singleActivationServices.map((item) => item.activate()),
+            ...this.singleActivationServices.map((item) => item.activate()),
             this.activateWorkspace(this.activeResourceService.getActiveResource()),
         ]);
     }
@@ -93,10 +87,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
 
         await this.autoSelection.autoSelectInterpreter(resource);
-        const activationServices = this.activationServices.filter((s) =>
-            this.componentsToActivate ? this.componentsToActivate.includes(s.componentId) : true,
-        );
-        await Promise.all(activationServices.map((item) => item.activate(resource)));
+        await Promise.all(this.activationServices.map((item) => item.activate(resource)));
         await this.appDiagnostics.performPreStartupHealthCheck(resource);
     }
 

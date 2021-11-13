@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ViewColumn } from 'vscode';
-import { ComponentId, IExtensionSingleActivationService } from '../activation/types';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
@@ -29,7 +29,7 @@ const PREFERRED_VIEWGROUP = 'PythonTensorBoardWebviewPreferredViewGroup';
 
 @injectable()
 export class TensorBoardSessionProvider implements IExtensionSingleActivationService {
-    public readonly componentId = ComponentId.other;
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
 
     private knownSessions: TensorBoardSession[] = [];
 

@@ -3,7 +3,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { ConfigurationTarget, Uri } from 'vscode';
-import { ComponentId, IExtensionActivationService } from '../../activation/types';
+import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { IPlatformService } from '../../common/platform/types';
 import { IBrowserService, IPersistentStateFactory } from '../../common/types';
@@ -18,7 +18,7 @@ export const condaInheritEnvPromptKey = 'CONDA_INHERIT_ENV_PROMPT_KEY';
 
 @injectable()
 export class CondaInheritEnvPrompt implements IExtensionActivationService {
-    public readonly componentId = ComponentId.interpreter;
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
     constructor(
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,

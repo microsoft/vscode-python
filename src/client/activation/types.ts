@@ -58,7 +58,7 @@ export const IExtensionActivationService = Symbol('IExtensionActivationService')
  * @interface IExtensionActivationService
  */
 export interface IExtensionActivationService {
-    componentId: ComponentId;
+    supportedWorkspaceTypes: { untrustedWorkspace: boolean; virtualWorkspace: boolean };
     activate(resource: Resource): Promise<void>;
 }
 
@@ -169,13 +169,6 @@ export interface ILanguageServerOutputChannel {
     readonly channel: IOutputChannel;
 }
 
-export enum ComponentId {
-    other = 0,
-    interpreter = 1,
-    languageServer = 2,
-    common = 3,
-}
-
 export const IExtensionSingleActivationService = Symbol('IExtensionSingleActivationService');
 /**
  * Classes implementing this interface will have their `activate` methods
@@ -186,6 +179,6 @@ export const IExtensionSingleActivationService = Symbol('IExtensionSingleActivat
  * @interface IExtensionSingleActivationService
  */
 export interface IExtensionSingleActivationService {
-    componentId: ComponentId;
+    supportedWorkspaceTypes: { untrustedWorkspace: boolean; virtualWorkspace: boolean };
     activate(): Promise<void>;
 }

@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { createScanner, parse, SyntaxKind } from 'jsonc-parser';
 import { CancellationToken, DebugConfiguration, Position, Range, TextDocument, WorkspaceEdit } from 'vscode';
-import { ComponentId, IExtensionSingleActivationService } from '../../../../activation/types';
+import {  IExtensionSingleActivationService } from '../../../../activation/types';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
 import { IDisposableRegistry } from '../../../../common/types';
 import { noop } from '../../../../common/utils/misc';
@@ -146,7 +146,7 @@ export class LaunchJsonUpdaterServiceHelper {
 
 @injectable()
 export class LaunchJsonUpdaterService implements IExtensionSingleActivationService {
-    public readonly componentId = ComponentId.other;
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
