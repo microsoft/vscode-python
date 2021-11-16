@@ -105,7 +105,7 @@ jobs:
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
-      - name: Install debugpy wheels (python 3.x)
+      - name: Install debugpy wheels (Python ${{ matrix.python }})
         run: |
           python -m pip install wheel
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
@@ -113,7 +113,7 @@ jobs:
         shell: bash
         if: matrix.test-suite == 'debugger' && matrix.python != 2.7
 
-      - name: Install debugpy (python 2.7)
+      - name: Install debugpy wheel (Python 2.7)
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
         shell: bash
