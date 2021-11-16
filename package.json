@@ -12,7 +12,7 @@
         },
         "virtualWorkspaces": {
             "supported": "limited",
-            "description": "Limited support on the web."
+            "description": "Only Partial IntelliSense supported."
         }
     },
     "languageServerVersion": "0.5.30",
