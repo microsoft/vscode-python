@@ -729,12 +729,16 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "editor.load" : {
+          "codeloadingtime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "condaversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "terminal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
           "workspacefoldercount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "haspython3" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "startactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "totalactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "totalnonblockingactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "usinguserdefinedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "usingglobalinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
