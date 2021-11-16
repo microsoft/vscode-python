@@ -1410,7 +1410,7 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent with details after selected Language server has finished activating. This event
-     * is sent with `durationMs` specifying the total duration of time that the given language server took
+     * is sent with `duration` specifying the total duration of time that the given language server took
      * to activate.
      */
     /* __GDPR__
@@ -2053,11 +2053,11 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent after we have attempted to create a tensorboard program instance
      * by spawning a daemon to run the tensorboard_launcher.py script. The event is sent with
-     * `durationMs` which should never exceed 60_000ms. Depending on the value of `result`, `durationMs` means:
+     * `duration` which should never exceed 60_000ms. Depending on the value of `result`, `duration` means:
      * 1. 'success' --> the total amount of time taken for the execObservable daemon to report successful TB session launch
      * 2. 'canceled' --> the total amount of time that the user waited for the daemon to start before canceling launch
      * 3. 'error' --> 60_000ms, i.e. we timed out waiting for the daemon to launch
-     * In the first two cases durationMs should not be more than 60_000ms.
+     * In the first two cases, `duration` should not be more than 60_000ms.
      */
     /* __GDPR__
        "tensorboard.session_daemon_startup_duration" : {
@@ -2069,7 +2069,7 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent after the webview framing the TensorBoard website has been successfully shown.
-     * This event is sent with `durationMs` which represents the total time to create a TensorBoardSession.
+     * This event is sent with `duration` which represents the total time to create a TensorBoardSession.
      * Note that this event is only sent if an integrated TensorBoard session is successfully created in full.
      * This includes checking whether the tensorboard package is installed and installing it if it's not already
      * installed, requesting the user to select a log directory, starting the tensorboard
@@ -2081,7 +2081,7 @@ export interface IEventNamePropertyMapping {
     [EventName.TENSORBOARD_SESSION_E2E_STARTUP_DURATION]: never | undefined;
     /**
      * Telemetry event sent after the user has closed a TensorBoard webview panel. This event is
-     * sent with `durationMs` specifying the total duration of time that the TensorBoard session
+     * sent with `duration` specifying the total duration of time that the TensorBoard session
      * ran for before the user terminated the session.
      */
     /* __GDPR__
