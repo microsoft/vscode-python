@@ -338,6 +338,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debug_session.start" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
           "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
@@ -367,6 +368,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debug_session.error" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
           "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
 
@@ -397,6 +399,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debug_session.stop" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
           "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
@@ -426,6 +429,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debug_session.user_code_running" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
           "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
        }
@@ -1132,6 +1136,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
           "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
@@ -1300,7 +1305,9 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when pipenv interpreter discovery is executed.
      */
     /* __GDPR__
-       "pipenv_interpreter_discovery" : { }
+       "pipenv_interpreter_discovery" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.PIPENV_INTERPRETER_DISCOVERY]: never | undefined;
     /**
@@ -1419,6 +1426,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.startup_duration" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "languageservertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
@@ -1577,7 +1585,9 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the experiments service is initialized for the first time.
      */
     /* __GDPR__
-       "python_experiments_init_performance" : { }
+       "python_experiments_init_performance" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.PYTHON_EXPERIMENTS_INIT_PERFORMANCE]: unknown;
     /**
@@ -2065,6 +2075,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.session_daemon_startup_duration" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "result" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
@@ -2080,7 +2091,9 @@ export interface IEventNamePropertyMapping {
      * program instance in a daemon, and showing the TensorBoard UI in a webpanel, in that order.
      */
     /* __GDPR__
-       "tensorboard.session_e2e_startup_duration" : { }
+       "tensorboard.session_e2e_startup_duration" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.TENSORBOARD_SESSION_E2E_STARTUP_DURATION]: never | undefined;
     /**
@@ -2089,7 +2102,9 @@ export interface IEventNamePropertyMapping {
      * ran for before the user terminated the session.
      */
     /* __GDPR__
-       "tensorboard.session_duration" : { }
+       "tensorboard.session_duration" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.TENSORBOARD_SESSION_DURATION]: never | undefined;
     /**
