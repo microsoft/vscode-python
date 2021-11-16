@@ -1129,7 +1129,7 @@ export interface IEventNamePropertyMapping {
     /* __GDPR__
        "python_interpreter" : {
           "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
           "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
@@ -1556,7 +1556,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.startup" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: {
@@ -2102,7 +2102,7 @@ export interface IEventNamePropertyMapping {
     /* __GDPR__
        "tensorboard.entrypoint_shown" : {
           "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "trigger": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
     [EventName.TENSORBOARD_ENTRYPOINT_SHOWN]: {
