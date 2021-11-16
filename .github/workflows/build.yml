@@ -85,7 +85,7 @@ jobs:
         # entry to lower the number of runners used, macOS runners are expensive,
         # and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest, windows-latest]
-        python: ['2.7', '3.x']
+        python: ['2.7', '3.9']
         test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
     steps:
       - name: Checkout
