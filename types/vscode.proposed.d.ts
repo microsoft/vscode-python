@@ -982,6 +982,18 @@ declare module 'vscode' {
         export const onDidChangeTestResults: Event<void>;
     }
 
+    export namespace workspace {
+        /**
+         * When true, the user has explicitly trusted the contents of the workspace.
+         */
+        export const isTrusted: boolean;
+
+        /**
+         * Event that fires when the current workspace has been trusted.
+         */
+        export const onDidGrantWorkspaceTrust: Event<void>;
+    }
+
     export interface TestObserver {
         /**
          * List of tests returned by test provider for files in the workspace.

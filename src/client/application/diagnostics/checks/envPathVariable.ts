@@ -43,7 +43,13 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
-        super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer, disposableRegistry, true);
+        super(
+            [DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic],
+            serviceContainer,
+            disposableRegistry,
+            true,
+            true,
+        );
         this.platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
             IDiagnosticHandlerService,

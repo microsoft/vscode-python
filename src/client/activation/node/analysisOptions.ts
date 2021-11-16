@@ -18,6 +18,7 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
     protected async getInitializationOptions() {
         return {
             experimentationSupport: true,
+            trustedWorkspaceSupport: true,
         };
     }
 }

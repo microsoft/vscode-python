@@ -43,7 +43,7 @@ export class UpgradeCodeRunnerDiagnosticService extends BaseDiagnosticsService {
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IExtensions) private readonly extensions: IExtensions,
     ) {
-        super([DiagnosticCodes.UpgradeCodeRunnerDiagnostic], serviceContainer, disposableRegistry, true);
+        super([DiagnosticCodes.UpgradeCodeRunnerDiagnostic], serviceContainer, disposableRegistry, true, true);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
 

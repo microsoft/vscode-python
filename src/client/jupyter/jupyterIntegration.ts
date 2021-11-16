@@ -9,6 +9,7 @@ import { dirname } from 'path';
 import { CancellationToken, Disposable, Event, Extension, Memento, Uri } from 'vscode';
 import * as lsp from 'vscode-languageserver-protocol';
 import { ILanguageServerCache, ILanguageServerConnection } from '../activation/types';
+import { IWorkspaceService } from '../common/application/types';
 import { JUPYTER_EXTENSION_ID } from '../common/constants';
 import { InterpreterUri, ModuleInstallFlags } from '../common/installer/types';
 import {
@@ -180,9 +181,13 @@ export class JupyterExtensionIntegration {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IInterpreterDisplay) private interpreterDisplay: IInterpreterDisplay,
         @inject(IComponentAdapter) private pyenvs: IComponentAdapter,
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
     ) {}
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
+        if (!this.workspaceService.isTrusted) {
+            return undefined;
+        }
         // Forward python parts
         jupyterExtensionApi.registerPythonApi({
             onDidChangeInterpreter: this.interpreterService.onDidChangeInterpreter,

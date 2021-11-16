@@ -27,6 +27,7 @@ export const IDiagnosticsService = Symbol('IDiagnosticsService');
 
 export interface IDiagnosticsService {
     readonly runInBackground: boolean;
+    readonly runInUntrustedWorkspace: boolean;
     diagnose(resource: Resource): Promise<IDiagnostic[]>;
     canHandle(diagnostic: IDiagnostic): Promise<boolean>;
     handle(diagnostics: IDiagnostic[]): Promise<void>;

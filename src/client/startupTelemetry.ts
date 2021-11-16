@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { IWorkspaceService } from './common/application/types';
+import { WorkspaceService } from './common/application/workspace';
 import { isTestExecution } from './common/constants';
 import { DeprecatePythonPath } from './common/experiments/groups';
 import { ITerminalHelper } from './common/terminal/types';
@@ -32,6 +33,10 @@ export async function sendStartupTelemetry(
     if (isTestExecution()) {
         return;
     }
+    const workspaceService = new WorkspaceService();
+    if (!workspaceService.isTrusted) {
+        return;
+    }
 
     try {
         await activatedPromise;
@@ -48,6 +53,10 @@ export async function sendErrorTelemetry(
     durations: IStartupDurations,
     serviceContainer?: IServiceContainer,
 ) {
+    const workspaceService = new WorkspaceService();
+    if (!workspaceService.isTrusted) {
+        return;
+    }
     try {
         let props: any = {};
         if (serviceContainer) {

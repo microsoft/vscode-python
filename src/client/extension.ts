@@ -133,11 +133,13 @@ async function activateUnsafe(
     setTimeout(async () => {
         if (activatedServiceContainer) {
             const workspaceService = activatedServiceContainer.get<IWorkspaceService>(IWorkspaceService);
-            const interpreterManager = activatedServiceContainer.get<IInterpreterService>(IInterpreterService);
-            const workspaces = workspaceService.workspaceFolders ?? [];
-            await interpreterManager
-                .refresh(workspaces.length > 0 ? workspaces[0].uri : undefined)
-                .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
+            if (workspaceService.isTrusted) {
+                const interpreterManager = activatedServiceContainer.get<IInterpreterService>(IInterpreterService);
+                const workspaces = workspaceService.workspaceFolders ?? [];
+                await interpreterManager
+                    .refresh(workspaces.length > 0 ? workspaces[0].uri : undefined)
+                    .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
+            }
         }
 
         runAfterActivation();

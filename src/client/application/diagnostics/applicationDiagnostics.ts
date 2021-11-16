@@ -5,6 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
+import { IWorkspaceService } from '../../common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { IOutputChannel, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -26,7 +27,11 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
         if (isTestExecution()) {
             return;
         }
-        const services = this.serviceContainer.getAll<IDiagnosticsService>(IDiagnosticsService);
+        let services = this.serviceContainer.getAll<IDiagnosticsService>(IDiagnosticsService);
+        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        if (!workspaceService.isTrusted) {
+            services = services.filter((item) => item.runInUntrustedWorkspace);
+        }
         // Perform these validation checks in the foreground.
         await this.runDiagnostics(
             services.filter((item) => !item.runInBackground),
