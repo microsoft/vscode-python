@@ -30,7 +30,7 @@ initializeFileLogging(logDispose);
 
 import { ProgressLocation, ProgressOptions, window } from 'vscode';
 
-import { buildApi, IExtensionApi } from './api';
+import { buildApi } from './api';
 import { IApplicationShell, IWorkspaceService } from './common/application/types';
 import { IAsyncDisposableRegistry, IDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
@@ -42,6 +42,8 @@ import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 import { IStartupDurations } from './types';
 import { runAfterActivation } from './common/utils/runAfterActivation';
 import { IInterpreterService } from './interpreter/contracts';
+import { IExtensionApi, IProposedExtensionAPI } from './apiTypes';
+import { buildProposedApi } from './proposedApi';
 import { WorkspaceService } from './common/application/workspace';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
@@ -106,7 +108,7 @@ async function activateUnsafe(
     context: IExtensionContext,
     startupStopWatch: StopWatch,
     startupDurations: IStartupDurations,
-): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
+): Promise<[IExtensionApi & IProposedExtensionAPI, Promise<void>, IServiceContainer]> {
     // Add anything that we got from initializing logs to dispose.
     context.subscriptions.push(...logDispose);
 
@@ -158,7 +160,8 @@ async function activateUnsafe(
     });
 
     const api = buildApi(activationPromise, ext.legacyIOC.serviceManager, ext.legacyIOC.serviceContainer);
-    return [api, activationPromise, ext.legacyIOC.serviceContainer];
+    const proposedApi = buildProposedApi(components.pythonEnvs, ext.legacyIOC.serviceContainer);
+    return [{ ...api, ...proposedApi }, activationPromise, ext.legacyIOC.serviceContainer];
 }
 
 function displayProgress(promise: Promise<any>) {

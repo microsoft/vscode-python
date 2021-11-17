@@ -23,6 +23,7 @@ import { PythonLocatorQuery } from '../pythonEnvironments/base/locator';
 import { traceError } from '../logging';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { InterpreterStatusBarPosition } from '../common/experiments/groups';
+import { reportActiveInterpreterChanged } from '../proposedApi';
 
 type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
 
@@ -176,6 +177,10 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (this._pythonPathSetting === '' || this._pythonPathSetting !== pySettings.pythonPath) {
             this._pythonPathSetting = pySettings.pythonPath;
             this.didChangeInterpreterEmitter.fire();
+            reportActiveInterpreterChanged({
+                interpreterPath: pySettings.pythonPath === '' ? undefined : pySettings.pythonPath,
+                resource,
+            });
             const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
             interpreterDisplay.refresh().catch((ex) => traceError('Python Extension: display.refresh', ex));
         }
