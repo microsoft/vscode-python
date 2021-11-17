@@ -8,7 +8,7 @@ import * as glob from 'glob';
 import * as path from 'path';
 import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
-import { IExtensionApi } from '../client/api';
+import type { IExtensionApi } from '../client/apiTypes';
 import { IProcessService } from '../client/common/process/types';
 import { IDisposable, IPythonSettings, Resource } from '../client/common/types';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
@@ -527,7 +527,7 @@ export async function retryIfFail<T>(fn: () => Promise<T>, timeoutMs: number = 6
             // Capture result, if no exceptions return that.
             return result;
         } catch (ex) {
-            lastEx = ex;
+            lastEx = ex as Error | undefined;
         }
         await sleep(10);
     }
