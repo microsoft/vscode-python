@@ -639,15 +639,15 @@ export interface IEventNamePropertyMapping {
         /**
          * The conda version if selected
          */
-        condaVersion: string | undefined;
+        condaVersion?: string | undefined;
         /**
          * The python interpreter version if selected
          */
-        pythonVersion: string | undefined;
+        pythonVersion?: string | undefined;
         /**
          * The type of interpreter (conda, virtualenv, pipenv etc.)
          */
-        interpreterType: EnvironmentType | undefined;
+        interpreterType?: EnvironmentType | undefined;
         /**
          * The type of terminal shell created: powershell, cmd, zsh, bash etc.
          *
@@ -661,15 +661,15 @@ export interface IEventNamePropertyMapping {
         /**
          * If interpreters found for the main workspace contains a python3 interpreter
          */
-        hasPython3: boolean;
+        hasPython3?: boolean;
         /**
          * If user has defined an interpreter in settings.json
          */
-        usingUserDefinedInterpreter: boolean;
+        usingUserDefinedInterpreter?: boolean;
         /**
          * If global interpreter is being used
          */
-        usingGlobalInterpreter: boolean;
+        usingGlobalInterpreter?: boolean;
     };
     /**
      * Telemetry event sent when substituting Environment variables to calculate value of variables

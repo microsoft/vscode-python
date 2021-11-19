@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { IWorkspaceService } from './common/application/types';
-import { WorkspaceService } from './common/application/workspace';
 import { isTestExecution } from './common/constants';
 import { DeprecatePythonPath } from './common/experiments/groups';
 import { ITerminalHelper } from './common/terminal/types';
@@ -33,10 +32,6 @@ export async function sendStartupTelemetry(
     if (isTestExecution()) {
         return;
     }
-    const workspaceService = new WorkspaceService();
-    if (!workspaceService.isTrusted) {
-        return;
-    }
 
     try {
         await activatedPromise;
@@ -53,10 +48,6 @@ export async function sendErrorTelemetry(
     durations: IStartupDurations,
     serviceContainer?: IServiceContainer,
 ) {
-    const workspaceService = new WorkspaceService();
-    if (!workspaceService.isTrusted) {
-        return;
-    }
     try {
         let props: any = {};
         if (serviceContainer) {
@@ -104,11 +95,15 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     // TODO: If any one of these parts fails we send no info.  We should
     // be able to partially populate as much as possible instead
     // (through granular try-catch statements).
+    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
     const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
     const terminalShellType = terminalHelper.identifyTerminalShell();
+    if (!workspaceService.isTrusted) {
+        return { workspaceFolderCount, terminal: terminalShellType };
+    }
     const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const mainWorkspaceUri = workspaceService.hasWorkspaceFolders
         ? workspaceService.workspaceFolders![0].uri
@@ -121,7 +116,6 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
             .catch<string>(() => ''),
         interpreterService.hasInterpreters(async (item) => item.version?.major === 3),
     ]);
-    const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
     // If an unknown type environment can be found from windows registry or path env var,
     // consider them as global type instead of unknown. Such types can only be known after
     // windows registry is queried. So wait for the refresh of windows registry locator to
