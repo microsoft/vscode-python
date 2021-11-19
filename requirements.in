@@ -5,3 +5,6 @@
 
 # Sort Imports
 isort==5.10.0
+
+# Test adapter
+json-rpc==1.13.0
