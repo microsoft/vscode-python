@@ -171,6 +171,7 @@
     "LanguageService.lsFailedToStart": "We encountered an issue starting the language server. Reverting to Jedi language engine. Check the Python output panel for details.",
     "LanguageService.lsFailedToDownload": "We encountered an issue downloading the language server. Reverting to Jedi language engine. Check the Python output panel for details.",
     "LanguageService.lsFailedToExtract": "We encountered an issue extracting the language server. Reverting to Jedi language engine. Check the Python output panel for details.",
+    "LanguageService.untrustedWorkspaceMessage": "Only Pylance is supported in untrusted workspaces, setting language server to None.",
     "LanguageService.downloadFailedOutputMessage": "Language server download failed",
     "LanguageService.extractionFailedOutputMessage": "Language server extraction failed",
     "LanguageService.extractionCompletedOutputMessage": "Language server download complete",

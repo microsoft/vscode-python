@@ -210,6 +210,10 @@ export namespace LanguageService {
         'LanguageService.startingNone',
         'Editor support is inactive since language server is set to None.',
     );
+    export const untrustedWorkspaceMessage = localize(
+        'LanguageService.untrustedWorkspaceMessage',
+        'Only Pylance is supported in untrusted workspaces, setting language server to None.',
+    );
 
     export const reloadAfterLanguageServerChange = localize(
         'LanguageService.reloadAfterLanguageServerChange',

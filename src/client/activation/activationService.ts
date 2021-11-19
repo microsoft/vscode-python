@@ -237,6 +237,14 @@ export class LanguageServerExtensionActivationService
             }
         }
 
+        if (
+            !this.workspaceService.isTrusted &&
+            serverType !== LanguageServerType.Node &&
+            serverType !== LanguageServerType.None
+        ) {
+            this.output.appendLine(LanguageService.untrustedWorkspaceMessage());
+            serverType = LanguageServerType.None;
+        }
         this.sendTelemetryForChosenLanguageServer(serverType).ignoreErrors();
         await this.logStartup(serverType);
         let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
