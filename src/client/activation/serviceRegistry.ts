@@ -33,8 +33,10 @@ import {
 } from './types';
 import { JediLanguageServerActivator } from './jedi/activator';
 import { LoadLanguageServerExtension } from './common/loadLanguageServerExtension';
+import { PartialModeStatusItem } from './partialModeStatus';
 
 export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType): void {
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, PartialModeStatusItem);
     serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
     serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);

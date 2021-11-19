@@ -167,6 +167,7 @@
     "Common.openOutputPanel": "Show output",
     "LanguageService.statusItem.name": "Python IntelliSense Status",
     "LanguageService.statusItem.text": "Partial Mode",
+    "LanguageService.virtualWorkspaceStatusItem.detail": "Only limited IntelliSense is supported",
     "LanguageService.statusItem.detail": "Limited IntelliSense provided by Pylance",
     "LanguageService.lsFailedToStart": "We encountered an issue starting the language server. Reverting to Jedi language engine. Check the Python output panel for details.",
     "LanguageService.lsFailedToDownload": "We encountered an issue downloading the language server. Reverting to Jedi language engine. Check the Python output panel for details.",
