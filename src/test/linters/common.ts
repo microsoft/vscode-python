@@ -92,6 +92,7 @@ export class LintingSettings {
     public mypyCategorySeverity: IMypyCategorySeverity;
     public prospectorPath: string;
     public pylintPath: string;
+    public pylintErrorRangeEnabled: boolean;
     public pycodestylePath: string;
     public pylamaPath: string;
     public flake8Path: string;
@@ -163,6 +164,7 @@ export class LintingSettings {
             refactor: DiagnosticSeverity.Hint,
             warning: DiagnosticSeverity.Warning,
         };
+        this.pylintErrorRangeEnabled = false;
     }
 }
 

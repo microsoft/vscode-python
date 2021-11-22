@@ -230,6 +230,7 @@ export interface ILintingSettings {
     readonly prospectorArgs: string[];
     readonly pylintEnabled: boolean;
     readonly pylintArgs: string[];
+    readonly pylintErrorRangeEnabled: boolean;
     readonly pycodestyleEnabled: boolean;
     readonly pycodestyleArgs: string[];
     readonly pylamaEnabled: boolean;

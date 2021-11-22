@@ -25,6 +25,8 @@ interface IRegexGroup {
     code: string;
     message: string;
     type: string;
+    endLine: number | undefined;
+    endColumn: number | undefined;
 }
 
 function matchNamedRegEx(data: string, regex: string): IRegexGroup | undefined {
@@ -49,8 +51,16 @@ export function parseLine(
     }
 
     match.line = Number(<any>match.line);
-
     match.column = Number(<any>match.column);
+
+    match.endLine = Number(<any>match.endLine);
+    match.endColumn = Number(<any>match.endColumn);
+
+    if (isNaN(match.endColumn)) {
+        match.endColumn = undefined;
+    } else {
+        match.endColumn = match.endColumn <= 0 ? 0 : match.endColumn - colOffset;
+    }
 
     return {
         code: match.code,
@@ -59,6 +69,8 @@ export function parseLine(
         line: match.line,
         type: match.type,
         provider: linterID,
+        endLine: isNaN(match.endLine) ? undefined : match.endLine,
+        endColumn: match.endColumn,
     };
 }
 

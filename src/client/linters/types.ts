@@ -60,6 +60,8 @@ export interface ILinterManager {
 export interface ILintMessage {
     line: number;
     column: number;
+    endLine?: number | undefined;
+    endColumn?: number | undefined;
     code: string | undefined;
     message: string;
     type: string;
