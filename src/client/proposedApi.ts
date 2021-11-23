@@ -74,7 +74,6 @@ export function buildProposedApi(
                             },
                         };
                     }
-                    return undefined;
                 }
 
                 const interpreter = await pyenvs.getInterpreterDetails(interpreterPath);
