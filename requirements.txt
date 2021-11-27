@@ -8,7 +8,3 @@ isort==5.10.0 \
     --hash=sha256:1a18ccace2ed8910bd9458b74a3ecbafd7b2f581301b0ab65cfdd4338272d76f \
     --hash=sha256:e52ff6d38012b131628cf0f26c51e7bd3a7c81592eefe3ac71411e692f1b9345
     # via -r requirements.in
-json-rpc==1.13.0 \
-    --hash=sha256:84b45058e5ba95f49c7b6afcf7e03ab86bee89bf2c01f3ad8dd41fe114fc1f84 \
-    --hash=sha256:def0dbcf5b7084fc31d677f2f5990d988d06497f2f47f13024274cfb2d5d7589
-    # via -r requirements.in
