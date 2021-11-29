@@ -99,8 +99,7 @@ except:
     payload["status"] = "error"
     payload["errors"] = [traceback.format_exc()]
 
-if len(tests):
-    payload["tests"] = tests
+payload["tests"] = tests
 
 if len(loader_errors):
     payload["errors"] = loader_errors
