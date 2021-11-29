@@ -78,6 +78,7 @@ export namespace Common {
     export const canceled = localize('Common.canceled', 'Canceled');
     export const cancel = localize('Common.cancel', 'Cancel');
     export const ok = localize('Common.ok', 'Ok');
+    export const error = localize('Common.error', 'Error');
     export const gotIt = localize('Common.gotIt', 'Got it!');
     export const install = localize('Common.install', 'Install');
     export const loadingExtension = localize('Common.loadingPythonExtension', 'Python extension loading...');
@@ -528,6 +529,12 @@ export namespace DebugConfigStrings {
 export namespace Testing {
     export const configureTests = localize('Testing.configureTests', 'Configure Test Framework');
     export const testNotConfigured = localize('Testing.testNotConfigured', 'No test framework configured.');
+    export const cancelUnittestDiscovery = localize(
+        'Testing.cancelUnittestDiscovery',
+        'Canceled unittest test discovery',
+    );
+    export const errorUnittestDiscovery = localize('Testing.errorUnittestDiscovery', 'Unittest test discovery error');
+    export const seePythonOutput = localize('Testing.seePythonOutput', '(see Output > Python)');
 }
 
 export namespace OutdatedDebugger {
