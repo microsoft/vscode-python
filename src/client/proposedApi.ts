@@ -43,7 +43,7 @@ function getVersionString2(env: PythonEnvironment): string[] {
 }
 
 export function buildProposedApi(
-    pythonEnvironments: IDiscoveryAPI,
+    discoveryApi: IDiscoveryAPI,
     serviceContainer: IServiceContainer,
 ): IProposedExtensionAPI {
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -61,9 +61,7 @@ export function buildProposedApi(
                 options?: InterpreterDetailsOptions,
             ): Promise<InterpreterDetails | undefined> {
                 if (options?.useCache) {
-                    const interpreter = pythonEnvironments
-                        .getEnvs()
-                        .find((v) => v.executable.filename === interpreterPath);
+                    const interpreter = discoveryApi.getEnvs().find((v) => v.executable.filename === interpreterPath);
                     if (interpreter) {
                         return {
                             path: interpreterPath,
@@ -90,19 +88,19 @@ export function buildProposedApi(
                 return undefined;
             },
             getInterpreterPaths(): Promise<string[] | undefined> {
-                const paths = pythonEnvironments.getEnvs().map((e) => e.executable.filename);
+                const paths = discoveryApi.getEnvs().map((e) => e.executable.filename);
                 return Promise.resolve(paths);
             },
             setActiveInterpreter(interpreterPath: string, resource?: Resource): Promise<void> {
                 return interpreterPathService.update(resource, ConfigurationTarget.Workspace, interpreterPath);
             },
             async refreshInterpreters(): Promise<string[] | undefined> {
-                await pythonEnvironments.triggerRefresh(undefined);
-                const paths = pythonEnvironments.getEnvs().map((e) => e.executable.filename);
+                await discoveryApi.triggerRefresh(undefined);
+                const paths = discoveryApi.getEnvs().map((e) => e.executable.filename);
                 return Promise.resolve(paths);
             },
             getRefreshPromise(): Promise<void> | undefined {
-                return pythonEnvironments.refreshPromise;
+                return discoveryApi.refreshPromise;
             },
             onDidInterpretersChanged: onDidInterpretersChangedEvent.event,
             onDidActiveInterpreterChanged: onDidActiveInterpreterChangedEvent.event,
