@@ -194,7 +194,7 @@ PYTHON=${BINDIR}/python3\n\
                 verifyAll();
             });
 
-            test('Ensure path variables variables in target are left untouched', async () => {
+            test('Ensure path variables in target are left untouched', async () => {
                 const vars1 = { ONE: '1', TWO: 'TWO' };
                 const vars2 = { ONE: 'ONE', THREE: '3', PYTHONPATH: 'PYTHONPATH' };
 
@@ -209,6 +209,24 @@ PYTHON=${BINDIR}/python3\n\
                 expect(vars2).to.have.property('THREE', '3', 'Variable not merged');
                 expect(vars2).to.have.property('PYTHONPATH', 'PYTHONPATH', 'Incorrect value');
                 expect(vars2).to.have.property(pathVariable, 'PATH', 'Incorrect value');
+                verifyAll();
+            });
+
+            test('Ensure path variables in target are overwritten', async () => {
+                const source = { ONE: '1', TWO: 'TWO' };
+                const target = { ONE: 'ONE', THREE: '3', PYTHONPATH: 'PYTHONPATH' };
+
+                (target as any)[pathVariable] = 'PATH';
+
+                variablesService.mergeVariables(source, target, { overwrite: true });
+
+                expect(Object.keys(source)).lengthOf(2, 'Source variables modified');
+                expect(Object.keys(target)).lengthOf(5, 'Variables not merged');
+                expect(target).to.have.property('ONE', '1', 'Expected to be overwritten');
+                expect(target).to.have.property('TWO', 'TWO', 'Incorrect value');
+                expect(target).to.have.property('THREE', '3', 'Variable not merged');
+                expect(target).to.have.property('PYTHONPATH', 'PYTHONPATH', 'Incorrect value');
+                expect(target).to.have.property(pathVariable, 'PATH', 'Incorrect value');
                 verifyAll();
             });
         });

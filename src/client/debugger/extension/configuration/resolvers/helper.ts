@@ -28,7 +28,10 @@ export class DebugEnvironmentVariablesHelper implements IDebugEnvironmentVariabl
             args.env && Object.keys(args.env).length > 0 ? ({ ...args.env } as any) : ({} as any);
         const envFileVars = await this.envParser.parseFile(args.envFile, debugLaunchEnvVars);
         const env = envFileVars ? { ...envFileVars } : {};
-        this.envParser.mergeVariables(debugLaunchEnvVars, env);
+
+        // "overwrite: true" to ensure that debug-configuration env variable values
+        // take precedence over env file.
+        this.envParser.mergeVariables(debugLaunchEnvVars, env, { overwrite: true });
 
         // Append the PYTHONPATH and PATH variables.
         this.envParser.appendPath(env, debugLaunchEnvVars[pathVariableName]);

@@ -103,6 +103,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         // set the "env" debug configuration argument. This expansion should be
         // done here before handing of the environment settings to the debug adapter
         debugConfiguration.env = await this.debugEnvHelper.getEnvironmentVariables(debugConfiguration);
+
         if (typeof debugConfiguration.stopOnEntry !== 'boolean') {
             debugConfiguration.stopOnEntry = false;
         }
