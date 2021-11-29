@@ -1,29 +1,53 @@
 import getopt
 import inspect
-import json
 import os
+import requests
 import sys
 import traceback
 import unittest
 
-from jsonrpc import JSONRPCResponseManager, dispatcher
-
 sys.path.insert(0, os.getcwd())
 
-# Get arguments: -v, -s, -p, -t in that order
+# Get arguments
 argv = sys.argv[1:]
-opts, args = getopt.getopt(argv, "vs:p:t:")
+index = argv.index("--")
 
-pattern = "test*.py"
-top_level_dir = None
+script_args, _ = getopt.getopt(argv[:index], "", ["port="])
+unittest_args, _ = getopt.getopt(
+    argv[index + 1 :],
+    "vs:p:t:",
+    ["start-directory=", "pattern=", "top-level-directory="],
+)
 
-for opt in opts:
-    if opt[0] == "-s":
-        start_dir = opt[1]
-    elif opt[0] == "-p":
-        pattern = opt[1]
-    elif opt[0] == "-t":
-        top_level_dir = opt[1]
+
+# Parse command-line arguments that should be processed by the script,
+# for example the port number that it needs to connect to.
+def parse_script_args(args):
+    # The port is passed to the discovery.py script when it is executed,
+    # defaults to 45454 if it can't be parsed.
+    port = 45454
+    for opt in args:
+        if opt[0] == "--port":
+            port = opt[1]
+    return port
+
+
+# Parse command-line arguments that should be forwarded to unittest.
+# Unittest arguments are: -v, -s, -p, -t, in that order.
+def parse_unittest_args(args):
+    pattern = "test*.py"
+    top_level_dir = None
+
+    for opt in args:
+        if opt[0] == "-s":
+            start_dir = opt[1]
+        elif opt[0] == "-p":
+            pattern = opt[1]
+        elif opt[0] == "-t":
+            top_level_dir = opt[1]
+
+    return start_dir, pattern, top_level_dir
+
 
 # Helper functions
 def get_test_cases(suite):
@@ -52,7 +76,8 @@ def get_source_line(obj):
 
 
 # Test discovery
-payload = {"command": " ".join(sys.argv[:]), "cwd": os.getcwd()}
+start_dir, pattern, top_level_dir = parse_unittest_args(unittest_args)
+payload = {"cwd": os.path.abspath(start_dir)}
 tests = []
 
 try:
@@ -80,24 +105,21 @@ if len(tests):
 if len(loader_errors):
     payload["errors"] = loader_errors
 
-print(json.dumps(payload))
-# Send payload with results
-# r = requests.post("http://localhost:8080/", json=payload)
-# print(r.text)
+# Connect to the TypeScript side and send payload.
+port = parse_script_args(script_args)
+requests.post(f"http://localhost:{port}", json=payload)
 
 
 # Message formatting:
 #
 # Successful discovery:
 # {
-#     "command": <script execution command>
-#     "cwd": <current working directory>
+#     "cwd": <test discovery directory>
 #     "status": "success",
 #     "tests":[
 #         {
 #           "id": <test id>,
 #           "lineno": <source line>,
-#           "params": <parameters> # In case of subtests
 #         },
 #         ...
 #     ]
@@ -105,8 +127,7 @@ print(json.dumps(payload))
 #
 # Error:
 # {
-#     "command": <script execution command string>
-#     "cwd": <current working directory>
+#     "cwd": <test discovery directory>
 #     "errors": [list of errors]
 #     "status": "error",
 # }
