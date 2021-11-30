@@ -9,7 +9,7 @@ export const IEnvironmentVariablesService = Symbol('IEnvironmentVariablesService
 
 export interface IEnvironmentVariablesService {
     parseFile(filePath?: string, baseVars?: EnvironmentVariables): Promise<EnvironmentVariables | undefined>;
-    mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables): void;
+    mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables, options?: { overwrite?: boolean }): void;
     appendPythonPath(vars: EnvironmentVariables, ...pythonPaths: string[]): void;
     appendPath(vars: EnvironmentVariables, ...paths: string[]): void;
 }

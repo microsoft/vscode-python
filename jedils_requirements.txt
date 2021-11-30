@@ -22,9 +22,9 @@ jedi==0.18.0 \
     --hash=sha256:18456d83f65f400ab0c2d3319e48520420ef43b23a086fdc05dff34132f0fb93 \
     --hash=sha256:92550a404bad8afed881a137ec9a461fed49eca661414be45059329614ed0707
     # via jedi-language-server
-jedi-language-server==0.34.8 \
-    --hash=sha256:527f51213ad7265f133383c8049692103a678d52d99f60bab4e7c9302da175fa \
-    --hash=sha256:8cd2d5cc453ce3314c1cf4001d9590ae259b20b4ad6481ea2648a43162ba1566
+jedi-language-server==0.34.11 \
+    --hash=sha256:1a30400455240445e22cdd9ee2c87e06b2405e088096ec2d30ebafaec5423190 \
+    --hash=sha256:3eb2a009552a139e201081beca774eb642fc2548aef2a17230a40545c502d1bc
     # via -r jedils_requirements.in
 parso==0.8.2 \
     --hash=sha256:12b83492c6239ce32ff5eed6d3639d6a536170723c6f3f1506869f1ace413398 \
@@ -62,9 +62,9 @@ pygls==0.11.3 \
     # via
     #   -r jedils_requirements.in
     #   jedi-language-server
-typeguard==2.13.0 \
-    --hash=sha256:04e38f92eb59410c9375d3be23df65e0a7643f2e8bcbd421423d808d2f9e99df \
-    --hash=sha256:0bc44d1ff865b522eda969627868b0e001c8329296ce50aededbea03febc79ee
+typeguard==2.13.2 \
+    --hash=sha256:4f7da3d80dda5e42d6973f11f33da3542b8bf86edc12ba926b2dbad62adf3fcf \
+    --hash=sha256:7e50071590ab997509aa0977609eb5cf9d73d84c1f416cb4fab78b77a9d15326
     # via pygls
 typing-extensions==4.0.0 \
     --hash=sha256:2cdf80e4e04866a9b3689a51869016d36db0814d84b8d8a568d22781d45d27ed \
