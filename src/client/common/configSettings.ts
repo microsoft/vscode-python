@@ -362,7 +362,6 @@ export class PythonSettings implements IPythonSettings {
                       refactor: DiagnosticSeverity.Hint,
                       warning: DiagnosticSeverity.Warning,
                   },
-                  pylintErrorRangeEnabled: false,
                   pycodestyleCategorySeverity: {
                       E: DiagnosticSeverity.Error,
                       W: DiagnosticSeverity.Warning,

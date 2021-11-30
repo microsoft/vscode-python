@@ -124,7 +124,6 @@ suite('Linting - Pylint', () => {
             refactor: DiagnosticSeverity.Hint,
             warning: DiagnosticSeverity.Warning,
         };
-        lintSettings.pylintErrorRangeEnabled = false;
 
         const settings = TypeMoq.Mock.ofType<IPythonSettings>();
         settings.setup((x) => x.linting).returns(() => lintSettings);

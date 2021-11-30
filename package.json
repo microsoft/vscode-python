@@ -957,12 +957,6 @@
                     "scope": "machine-overridable",
                     "type": "string"
                 },
-                "python.linting.pylintErrorRangeEnabled": {
-                    "default": false,
-                    "description": "Weather to enable error ranges for pylint messages. Requires pylint version 2.12.0 or newer.",
-                    "scope": "resource",
-                    "type": "boolean"
-                },
                 "python.logging.level": {
                     "default": "error",
                     "description": "The logging level the extension logs at, defaults to 'error'",

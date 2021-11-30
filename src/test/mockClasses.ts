@@ -78,7 +78,6 @@ export class MockLintingSettings implements ILintingSettings {
     public mypyCategorySeverity!: IMypyCategorySeverity;
     public prospectorPath!: string;
     public pylintPath!: string;
-    public pylintErrorRangeEnabled!: boolean;
     public pycodestylePath!: string;
     public pylamaPath!: string;
     public flake8Path!: string;
