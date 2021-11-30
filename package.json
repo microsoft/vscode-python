@@ -551,7 +551,8 @@
                         "yapf"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "tags": ["experimental"]
                 },
                 "python.formatting.yapfArgs": {
                     "default": [],
