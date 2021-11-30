@@ -27,12 +27,7 @@ suite('Pylint - Function runLinter()', () => {
     const doc = {
         uri: vscode.Uri.file('path/to/doc'),
     };
-    const args = [
-        "--msg-template='{line},{column},{category},{symbol}:{msg}'",
-        '--reports=n',
-        '--output-format=text',
-        doc.uri.fsPath,
-    ];
+    const args = ['--reports=n', '--output-format=json', doc.uri.fsPath];
     class PylintTest extends Pylint {
         public async run(
             _args: string[],

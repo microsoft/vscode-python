@@ -18,7 +18,14 @@ import {
 import { ProductType } from '../../client/common/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { ILintMessage, LintMessageSeverity } from '../../client/linters/types';
-import { BaseTestFixture, getLinterID, getProductName, linterMessageAsLine, throwUnknownProduct } from './common';
+import {
+    BaseTestFixture,
+    getLinterID,
+    getProductName,
+    linterMessageAsLine,
+    pylintLinterMessagesAsOutput,
+    throwUnknownProduct,
+} from './common';
 
 const pylintMessagesToBeReturned: ILintMessage[] = [
     {
@@ -604,6 +611,10 @@ class TestFixture extends BaseTestFixture {
             return;
         }
 
+        if (product && getLinterID(product) == 'pylint') {
+            this.setStdout(pylintLinterMessagesAsOutput(messages));
+            return;
+        }
         const lines: string[] = [];
         for (const msg of messages) {
             if (msg.provider === '' && product) {
