@@ -8,12 +8,11 @@
     },
     "capabilities": {
         "untrustedWorkspaces": {
-            "supported": "limited",
-            "description": "Only Partial IntelliSense with Pylance is supported. Cannot execute Python with untrusted files."
+            "supported": false
         },
         "virtualWorkspaces": {
-            "supported": "limited",
-            "description": "Only Partial IntelliSense supported."
+            "supported": false,
+            "description": "Limited support on the web."
         }
     },
     "languageServerVersion": "0.5.30",
@@ -57,7 +56,6 @@
         "Notebooks"
     ],
     "activationEvents": [
-        "onDebugInitialConfigurations",
         "onLanguage:python",
         "onDebugResolve:python",
         "onCommand:python.execInTerminal",
@@ -203,7 +201,11 @@
                         "title": "Open an existing Python project",
                         "description": "If you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFileFolder)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
                         "media": {
-                            "svg": "resources/walkthrough/open-folder.svg",
+                            "image": {
+                                "light": "resources/walkthrough/open-folder-light.png",
+                                "dark": "resources/walkthrough/open-folder-dark.png",
+                                "hc": "resources/walkthrough/open-folder-hc.png"
+                            },
                             "altText": "Open a folder"
                         },
                         "completionEvents": [
@@ -216,7 +218,11 @@
                         "title": "Open an existing Python project",
                         "description": "To start, open a Python folder/project.\nIf you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFolder)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
                         "media": {
-                            "svg": "resources/walkthrough/open-folder.svg",
+                            "image": {
+                                "light": "resources/walkthrough/open-folder-light.png",
+                                "dark": "resources/walkthrough/open-folder-dark.png",
+                                "hc": "resources/walkthrough/open-folder-hc.png"
+                            },
                             "altText": "Open a folder"
                         },
                         "completionEvents": [
@@ -229,7 +235,11 @@
                         "title": "Create a new Jupyter Notebook",
                         "description": "To create a new Jupyter Notebook, you can right click in the file explorer and create a new file with an .ipynb extension anytime.\n \nAlternatively, you can open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create New Blank Notebook``.\n[Create new Jupyter Notebook](command:toSide:jupyter.createnewnotebook)",
                         "media": {
-                            "svg": "resources/walkthrough/create-notebook.svg",
+                            "image": {
+                                "light": "resources/walkthrough/new-notebook-light.png",
+                                "dark": "resources/walkthrough/new-notebook-dark.png",
+                                "hc": "resources/walkthrough/new-notebook-hc.png"
+                            },
                             "altText": "Creating a new Jupyter notebook"
                         },
                         "completionEvents": [
@@ -241,7 +251,11 @@
                         "title": "Open the Python Interactive Window",
                         "description": "The Python Interactive Window is a Python shell where you can execute and view the results of your Python code. You can create cells on a Python file by typing ``#%%``.\n \nTo open the interactive window anytime, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create Interactive Window``.\n[Open Interactive Window](command:toSide:jupyter.createnewinteractive)",
                         "media": {
-                            "svg": "resources/walkthrough/interactive-window.svg",
+                            "image": {
+                                "dark": "resources/walkthrough/interactive-window-dark.png",
+                                "light": "resources/walkthrough/interactive-window-light.png",
+                                "hc": "resources/walkthrough/interactive-window-hc.png"
+                            },
                             "altText": "Opening python interactive window"
                         },
                         "completionEvents": [
@@ -369,7 +383,7 @@
             {
                 "category": "Test",
                 "command": "python.stopRefreshingTests",
-                "icon": "$(beaker-stop)",
+                "icon": "$(stop-circle)",
                 "title": "%python.command.python.stopRefreshingTests.title%"
             },
             {
@@ -523,7 +537,7 @@
                 "python.formatting.autopep8Path": {
                     "default": "autopep8",
                     "description": "Path to autopep8, you can use a custom version of autopep8 by modifying this setting to include the full path.",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.formatting.blackArgs": {
@@ -538,7 +552,7 @@
                 "python.formatting.blackPath": {
                     "default": "black",
                     "description": "Path to Black, you can use a custom version of Black by modifying this setting to include the full path.",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.formatting.provider": {
@@ -551,7 +565,10 @@
                         "yapf"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "tags": [
+                        "experimental"
+                    ]
                 },
                 "python.formatting.yapfArgs": {
                     "default": [],
@@ -565,7 +582,7 @@
                 "python.formatting.yapfPath": {
                     "default": "yapf",
                     "description": "Path to yapf, you can use a custom version of yapf by modifying this setting to include the full path.",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.globalModuleInstallation": {
@@ -621,7 +638,7 @@
                 "python.linting.banditPath": {
                     "default": "bandit",
                     "description": "Path to bandit, you can use a custom version of bandit by modifying this setting to include the full path.",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.linting.cwd": {
@@ -690,7 +707,7 @@
                 "python.linting.flake8Path": {
                     "default": "flake8",
                     "description": "Path to flake8, you can use a custom version of flake8 by modifying this setting to include the full path.",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.linting.ignorePatterns": {
@@ -764,7 +781,7 @@
                 "python.linting.mypyPath": {
                     "default": "mypy",
                     "description": "Path to mypy, you can use a custom version of mypy by modifying this setting to include the full path.",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.linting.prospectorArgs": {
@@ -785,7 +802,7 @@
                 "python.linting.prospectorPath": {
                     "default": "prospector",
                     "description": "Path to Prospector, you can use a custom version of prospector by modifying this setting to include the full path.",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.linting.pycodestyleArgs": {
@@ -830,7 +847,7 @@
                 "python.linting.pycodestylePath": {
                     "default": "pycodestyle",
                     "description": "Path to pycodestyle, you can use a custom version of pycodestyle by modifying this setting to include the full path.",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.linting.pydocstyleArgs": {
@@ -851,7 +868,7 @@
                 "python.linting.pydocstylePath": {
                     "default": "pydocstyle",
                     "description": "Path to pydocstyle, you can use a custom version of pydocstyle by modifying this setting to include the full path.",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.linting.pylamaArgs": {
@@ -872,7 +889,7 @@
                 "python.linting.pylamaPath": {
                     "default": "pylama",
                     "description": "Path to pylama, you can use a custom version of pylama by modifying this setting to include the full path.",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.linting.pylintArgs": {
@@ -953,7 +970,7 @@
                 "python.linting.pylintPath": {
                     "default": "pylint",
                     "description": "Path to Pylint, you can use a custom version of pylint by modifying this setting to include the full path.",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.logging.level": {
@@ -972,19 +989,19 @@
                 "python.pipenvPath": {
                     "default": "pipenv",
                     "description": "Path to the pipenv executable to use for activation.",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.poetryPath": {
                     "default": "poetry",
                     "description": "Path to the poetry executable.",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.pythonPath": {
                     "default": "python",
                     "description": "(DEPRECATED: Note this setting is not used when in pythonDeprecatePythonPath experiment) Path to Python, you can use a custom version of Python by modifying this setting to include the full path.",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.sortImports.args": {
@@ -999,7 +1016,7 @@
                 "python.sortImports.path": {
                     "default": "",
                     "description": "Path to isort script, default using inner version",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.tensorBoard.logDirectory": {
@@ -1073,7 +1090,7 @@
                 "python.testing.pytestPath": {
                     "default": "pytest",
                     "description": "Path to pytest (pytest), you can use a custom version of pytest by modifying this setting to include the full path.",
-                    "scope": "machine-overridable",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.testing.unittestArgs": {
@@ -1687,7 +1704,7 @@
                 {
                     "category": "Test",
                     "command": "python.stopRefreshingTests",
-                    "icon": "$(beaker-stop)",
+                    "icon": "$(stop-circle)",
                     "title": "%python.command.python.stopRefreshingTests.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported"
                 },
@@ -1901,6 +1918,7 @@
     "dependencies": {
         "@vscode/jupyter-lsp-middleware": "^0.2.15",
         "arch": "^2.1.0",
+        "azure-storage": "^2.10.4",
         "chokidar": "^3.4.3",
         "diff-match-patch": "^1.0.0",
         "fs-extra": "^9.1.0",
@@ -2013,7 +2031,6 @@
         "uuid": "^3.3.2",
         "vsce": "^1.96.1",
         "vscode-debugadapter-testsupport": "^1.27.0",
-        "vscode-telemetry-extractor": "^1.9.5",
         "webpack": "^4.33.0",
         "webpack-bundle-analyzer": "^3.6.0",
         "webpack-cli": "^3.1.2",
