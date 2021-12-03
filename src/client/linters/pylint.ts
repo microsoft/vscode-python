@@ -63,9 +63,9 @@ export class Pylint extends BaseLinter {
     protected async parseMessages(
         output: string,
         _document: vscode.TextDocument,
-        _tolen: vscode.CancellationToken,
+        _token: vscode.CancellationToken,
         _: string,
-    ) {
+    ): Promise<ILintMessage[]> {
         const messages: ILintMessage[] = [];
         try {
             const parsedOutput: IJsonMessage[] = JSON.parse(output);

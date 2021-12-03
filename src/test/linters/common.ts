@@ -45,18 +45,14 @@ export function linterMessageAsLine(msg: ILintMessage): string {
 }
 
 function pylintMessageAsString(msg: ILintMessage, trailingComma: boolean = true): string {
-    let endLineString: string | undefined = undefined;
-    if (msg.endLine !== undefined) {
-        endLineString = `,
-        "endLine": ${msg.endLine},
-        "endColumn": ${msg.endColumn}`;
-    }
     return `    {
         "type": "${msg.type}",
         "line": ${msg.line},
         "column": ${msg.column},
         "symbol": "${msg.code}",
-        "message": "${msg.message}"${endLineString ? endLineString : ''}
+        "message": "${msg.message}",
+        "endLine": ${msg.endLine ? msg.endLine : null},
+        "endColumn": ${msg.endColumn ? msg.endColumn : null}
     }${trailingComma ? ',' : ''}`;
 }
 
