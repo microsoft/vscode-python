@@ -162,6 +162,8 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
         type: 'warning',
+        endLine: undefined,
+        endColumn: undefined,
     },
     {
         line: 61,
@@ -171,6 +173,8 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
         type: 'warning',
+        endLine: 61,
+        endColumn: undefined,
     },
     {
         line: 72,
@@ -180,6 +184,8 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
         type: 'warning',
+        endLine: 72,
+        endColumn: 28,
     },
     {
         line: 75,
@@ -189,6 +195,8 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
         type: 'warning',
+        endLine: 75,
+        endColumn: 28,
     },
     {
         line: 77,
@@ -198,6 +206,8 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
         type: 'warning',
+        endLine: 77,
+        endColumn: 24,
     },
     {
         line: 83,
@@ -207,6 +217,8 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
         type: 'warning',
+        endLine: 83,
+        endColumn: 24,
     },
 ];
 const flake8MessagesToBeReturned: ILintMessage[] = [
