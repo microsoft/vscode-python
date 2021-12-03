@@ -255,7 +255,7 @@ export class LanguageServerExtensionActivationService
             serverType !== LanguageServerType.Node &&
             serverType !== LanguageServerType.None
         ) {
-            this.output.appendLine(LanguageService.untrustedWorkspaceMessage());
+            traceLog(LanguageService.untrustedWorkspaceMessage());
             serverType = LanguageServerType.None;
         }
         this.sendTelemetryForChosenLanguageServer(serverType).ignoreErrors();
