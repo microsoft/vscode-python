@@ -25,8 +25,7 @@ class MockPythonToolExecService extends PythonToolExecutionService {
     public flake8Msg =
         '1,1,W,W391:blank line at end of file\ns:142:13), <anonymous>:1\n1,7,E,E999:SyntaxError: invalid syntax\n';
 
-    public pylintMsg = `
-[
+    public pylintMsg = `[
     {
         "type": "error",
         "module": "print",
