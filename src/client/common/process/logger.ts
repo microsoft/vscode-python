@@ -3,21 +3,17 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
-import { traceInfo } from '../../logging';
+import { inject, injectable } from 'inversify';
+import { traceLog } from '../../logging';
 import { IWorkspaceService } from '../application/types';
-import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { IOutputChannel } from '../types';
+import { isCI, isTestExecution } from '../constants';
 import { Logging } from '../utils/localize';
 import { getOSType, getUserHomeDir, OSType } from '../utils/platform';
 import { IProcessLogger, SpawnOptions } from './types';
 
 @injectable()
 export class ProcessLogger implements IProcessLogger {
-    constructor(
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-    ) {}
+    constructor(@inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {}
 
     public logProcess(fileOrCommand: string, args?: string[], options?: SpawnOptions) {
         if (!isTestExecution() && isCI && process.env.UITEST_DISABLE_PROCESS_LOGGING) {
@@ -34,8 +30,7 @@ export class ProcessLogger implements IProcessLogger {
         }
 
         info.forEach((line) => {
-            traceInfo(line);
-            this.outputChannel.appendLine(line);
+            traceLog(line);
         });
     }
 

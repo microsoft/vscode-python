@@ -766,11 +766,7 @@ suite('Linting Functional Tests', () => {
     ) {
         const doc = fixture.makeDocument(pythonFile);
         await fixture.linterManager.setActiveLintersAsync([product], doc.uri);
-        const linter = await fixture.linterManager.createLinter(
-            product,
-            fixture.outputChannel.object,
-            fixture.serviceContainer.object,
-        );
+        const linter = await fixture.linterManager.createLinter(product, fixture.serviceContainer.object);
 
         const messages = await linter.lint(doc, new CancellationTokenSource().token);
 
@@ -832,11 +828,7 @@ suite('Linting Functional Tests', () => {
     ) {
         const doc = fixture.makeDocument(pythonFile);
         await fixture.linterManager.setActiveLintersAsync([product], doc.uri);
-        const linter = await fixture.linterManager.createLinter(
-            product,
-            fixture.outputChannel.object,
-            fixture.serviceContainer.object,
-        );
+        const linter = await fixture.linterManager.createLinter(product, fixture.serviceContainer.object);
 
         const messages = await linter.lint(doc, new CancellationTokenSource().token);
 

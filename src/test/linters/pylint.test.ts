@@ -9,7 +9,6 @@ import * as TypeMoq from 'typemoq';
 import {
     CancellationTokenSource,
     DiagnosticSeverity,
-    OutputChannel,
     TextDocument,
     Uri,
     WorkspaceConfiguration,
@@ -92,8 +91,7 @@ suite('Linting - Pylint', () => {
 
     test('Negative column numbers should be treated 0', async () => {
         const fileFolder = '/user/a/b/c';
-        const outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
-        const pylinter = new Pylint(outputChannel.object, serviceContainer);
+        const pylinter = new Pylint(serviceContainer);
 
         const document = TypeMoq.Mock.ofType<TextDocument>();
         document.setup((x) => x.uri).returns(() => Uri.file(path.join(fileFolder, 'test.py')));

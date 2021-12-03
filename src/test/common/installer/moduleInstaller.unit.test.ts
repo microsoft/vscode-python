@@ -12,14 +12,7 @@ import { SemVer } from 'semver';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import {
-    CancellationTokenSource,
-    Disposable,
-    OutputChannel,
-    ProgressLocation,
-    Uri,
-    WorkspaceConfiguration,
-} from 'vscode';
+import { CancellationTokenSource, Disposable, ProgressLocation, Uri, WorkspaceConfiguration } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
@@ -722,9 +715,8 @@ function getModuleNamesForTesting(): { name: string; value: Product; moduleName:
         .map((product) => {
             let moduleName = '';
             const mockSvc = TypeMoq.Mock.ofType<IServiceContainer>().object;
-            const mockOutChnl = TypeMoq.Mock.ofType<OutputChannel>().object;
             try {
-                const prodInstaller = new ProductInstaller(mockSvc, mockOutChnl);
+                const prodInstaller = new ProductInstaller(mockSvc);
                 moduleName = prodInstaller.translateProductToModuleName(product.value);
                 return { name: product.name, value: product.value, moduleName };
             } catch {

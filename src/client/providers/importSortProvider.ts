@@ -3,16 +3,10 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { CancellationToken, CancellationTokenSource, TextDocument, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
-import { Commands, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { Commands, PYTHON_LANGUAGE } from '../common/constants';
 import * as internalScripts from '../common/process/internal/scripts';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../common/process/types';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IEditorUtils,
-    IOutputChannel,
-    IPersistentStateFactory,
-} from '../common/types';
+import { IConfigurationService, IDisposableRegistry, IEditorUtils, IPersistentStateFactory } from '../common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../common/utils/async';
 import { Common, Diagnostics } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -37,7 +31,6 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     private readonly documentManager: IDocumentManager;
     private readonly configurationService: IConfigurationService;
     private readonly editorUtils: IEditorUtils;
-    private readonly output: IOutputChannel;
 
     public constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.shell = serviceContainer.get<IApplicationShell>(IApplicationShell);
@@ -46,7 +39,6 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         this.pythonExecutionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.editorUtils = serviceContainer.get<IEditorUtils>(IEditorUtils);
-        this.output = serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.persistentStateFactory = serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }
 
@@ -127,11 +119,10 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             }
             await this.documentManager.applyEdit(changes);
         } catch (error) {
-            const message = typeof error === 'string' ? error : error.message ? error.message : error;
-            const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-            outputChannel.appendLine(error);
+            const message =
+                typeof error === 'string' ? error : (error as Error).message ? (error as Error).message : error;
             traceError(`Failed to format imports for '${uri.fsPath}'.`, error);
-            this.shell.showErrorMessage(message).then(noop, noop);
+            this.shell.showErrorMessage(message as string).then(noop, noop);
         }
     }
 
@@ -149,7 +140,8 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             Common.doNotShowAgain(),
         );
         if (selection === Common.openOutputPanel()) {
-            this.output.show(true);
+            const cmdManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+            await cmdManager.executeCommand(Commands.ViewOutput);
         } else if (selection === Common.doNotShowAgain()) {
             await neverShowAgain.updateValue(true);
         }

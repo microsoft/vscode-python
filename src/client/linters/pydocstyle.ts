@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { CancellationToken, OutputChannel, TextDocument } from 'vscode';
+import { CancellationToken, TextDocument } from 'vscode';
 import '../common/extensions';
 import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -9,8 +9,8 @@ import { BaseLinter } from './baseLinter';
 import { ILintMessage, LintMessageSeverity } from './types';
 
 export class PyDocStyle extends BaseLinter {
-    constructor(outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
-        super(Product.pydocstyle, outputChannel, serviceContainer);
+    constructor(serviceContainer: IServiceContainer) {
+        super(Product.pydocstyle, serviceContainer);
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {

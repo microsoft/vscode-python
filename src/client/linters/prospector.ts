@@ -1,9 +1,9 @@
 import * as path from 'path';
-import { CancellationToken, OutputChannel, TextDocument } from 'vscode';
+import { CancellationToken, TextDocument } from 'vscode';
 import '../common/extensions';
 import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { traceError } from '../logging';
+import { traceError, traceLog } from '../logging';
 import { BaseLinter } from './baseLinter';
 import { ILintMessage } from './types';
 
@@ -25,8 +25,8 @@ interface IProspectorLocation {
 }
 
 export class Prospector extends BaseLinter {
-    constructor(outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
-        super(Product.prospector, outputChannel, serviceContainer);
+    constructor(serviceContainer: IServiceContainer) {
+        super(Product.prospector, serviceContainer);
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
@@ -39,8 +39,8 @@ export class Prospector extends BaseLinter {
         try {
             parsedData = JSON.parse(output);
         } catch (ex) {
-            this.outputChannel.appendLine(`${'#'.repeat(10)}Linting Output - ${this.info.id}${'#'.repeat(10)}`);
-            this.outputChannel.append(output);
+            traceLog(`${'#'.repeat(10)}Linting Output - ${this.info.id}${'#'.repeat(10)}`);
+            traceLog(output);
             traceError('Failed to parse Prospector output', ex);
             return [];
         }

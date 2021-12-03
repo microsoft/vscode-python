@@ -8,7 +8,7 @@ import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import { IConfigurationService, IOutputChannel } from '../../client/common/types';
+import { IConfigurationService } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { Pylint } from '../../client/linters/pylint';
 import { ILinterInfo, ILinterManager, ILintMessage, LintMessageSeverity } from '../../client/linters/types';
@@ -19,7 +19,6 @@ suite('Pylint - Function runLinter()', () => {
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let manager: TypeMoq.IMock<ILinterManager>;
-    let output: TypeMoq.IMock<IOutputChannel>;
     let _info: TypeMoq.IMock<ILinterInfo>;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let run: sinon.SinonStub<any>;
@@ -63,7 +62,6 @@ suite('Pylint - Function runLinter()', () => {
     setup(() => {
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         _info = TypeMoq.Mock.ofType<ILinterInfo>();
-        output = TypeMoq.Mock.ofType<IOutputChannel>();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -102,7 +100,7 @@ suite('Pylint - Function runLinter()', () => {
         run.callsFake(() => Promise.resolve([]));
         parseMessagesSeverity = sinon.stub(PylintTest.prototype, 'parseMessagesSeverity');
         parseMessagesSeverity.callsFake(() => 'Severity');
-        const pylint = new PylintTest(output.object, serviceContainer.object);
+        const pylint = new PylintTest(serviceContainer.object);
         await pylint.runLinter(doc as any, mock(vscode.CancellationTokenSource).token);
         assert.deepEqual(run.args[0][0], args);
         assert.ok(parseMessagesSeverity.notCalled);
@@ -132,7 +130,7 @@ suite('Pylint - Function runLinter()', () => {
         run.callsFake(() => Promise.resolve(message as any));
         parseMessagesSeverity = sinon.stub(PylintTest.prototype, 'parseMessagesSeverity');
         parseMessagesSeverity.callsFake(() => 'LintMessageSeverity');
-        const pylint = new PylintTest(output.object, serviceContainer.object);
+        const pylint = new PylintTest(serviceContainer.object);
         const result = await pylint.runLinter(doc as any, mock(vscode.CancellationTokenSource).token);
         assert.deepEqual(result, expectedResult as any);
         assert.ok(parseMessagesSeverity.calledOnce);

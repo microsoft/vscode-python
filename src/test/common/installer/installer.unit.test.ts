@@ -8,7 +8,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { Disposable, OutputChannel, Uri, WorkspaceFolder } from 'vscode';
+import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../client/common/application/types';
@@ -43,7 +43,6 @@ import {
     IDisposableRegistry,
     IExperimentService,
     InstallerResponse,
-    IOutputChannel,
     IPersistentState,
     IPersistentStateFactory,
     Product,
@@ -76,7 +75,7 @@ suite('Module Installer only', () => {
                 let promptDeferred: Deferred<string> | undefined;
                 let workspaceService: TypeMoq.IMock<IWorkspaceService>;
                 let persistentStore: TypeMoq.IMock<IPersistentStateFactory>;
-                let outputChannel: TypeMoq.IMock<OutputChannel>;
+
                 let productPathService: TypeMoq.IMock<IProductPathService>;
                 let interpreterService: TypeMoq.IMock<IInterpreterService>;
                 const productService = new ProductService();
@@ -87,7 +86,7 @@ suite('Module Installer only', () => {
                     }
                     promptDeferred = createDeferred<string>();
                     serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-                    outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
+
                     disposables = [];
                     serviceContainer
                         .setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
@@ -144,7 +143,7 @@ suite('Module Installer only', () => {
                     serviceContainer
                         .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny()))
                         .returns(() => interpreterService.object);
-                    installer = new ProductInstaller(serviceContainer.object, outputChannel.object);
+                    installer = new ProductInstaller(serviceContainer.object);
 
                     return undefined;
                 });
@@ -669,7 +668,6 @@ suite('Module Installer only', () => {
                 workspaceService = mock(WorkspaceService);
                 productService = mock(ProductService);
                 cmdManager = mock(CommandManager);
-                const outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
 
                 when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
                 when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
@@ -679,7 +677,7 @@ suite('Module Installer only', () => {
                 when(serviceContainer.get<IProductService>(IProductService)).thenReturn(instance(productService));
                 when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(cmdManager));
 
-                installer = new FormatterInstallerTest(instance(serviceContainer), outputChannel.object);
+                installer = new FormatterInstallerTest(instance(serviceContainer));
             });
 
             teardown(() => {
@@ -829,7 +827,6 @@ suite('Module Installer only', () => {
         let linterManager: ILinterManager;
         let serviceContainer: IServiceContainer;
         let productPathService: IProductPathService;
-        let outputChannel: TypeMoq.IMock<IOutputChannel>;
         setup(() => {
             serviceContainer = mock(ServiceContainer);
             appShell = mock(ApplicationShell);
@@ -840,7 +837,6 @@ suite('Module Installer only', () => {
             experimentsService = mock(ExperimentService);
             linterManager = mock(LinterManager);
             productPathService = mock(LinterProductPathService);
-            outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
 
             when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
             when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
@@ -859,7 +855,7 @@ suite('Module Installer only', () => {
                 instance(productPathService),
             );
 
-            installer = new LinterInstallerTest(instance(serviceContainer), outputChannel.object);
+            installer = new LinterInstallerTest(instance(serviceContainer));
         });
 
         teardown(() => {

@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
+import { CancellationToken, TextDocument, Uri } from 'vscode';
 import { IConfigurationService, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { traceError } from '../logging';
@@ -97,33 +97,28 @@ export class LinterManager implements ILinterManager {
         }
     }
 
-    public async createLinter(
-        product: Product,
-        outputChannel: OutputChannel,
-        serviceContainer: IServiceContainer,
-        resource?: Uri,
-    ): Promise<ILinter> {
+    public async createLinter(product: Product, serviceContainer: IServiceContainer, resource?: Uri): Promise<ILinter> {
         if (!(await this.isLintingEnabled(resource))) {
             return new DisabledLinter(this.configService);
         }
         const error = 'Linter manager: Unknown linter';
         switch (product) {
             case Product.bandit:
-                return new Bandit(outputChannel, serviceContainer);
+                return new Bandit(serviceContainer);
             case Product.flake8:
-                return new Flake8(outputChannel, serviceContainer);
+                return new Flake8(serviceContainer);
             case Product.pylint:
-                return new Pylint(outputChannel, serviceContainer);
+                return new Pylint(serviceContainer);
             case Product.mypy:
-                return new MyPy(outputChannel, serviceContainer);
+                return new MyPy(serviceContainer);
             case Product.prospector:
-                return new Prospector(outputChannel, serviceContainer);
+                return new Prospector(serviceContainer);
             case Product.pylama:
-                return new PyLama(outputChannel, serviceContainer);
+                return new PyLama(serviceContainer);
             case Product.pydocstyle:
-                return new PyDocStyle(outputChannel, serviceContainer);
+                return new PyDocStyle(serviceContainer);
             case Product.pycodestyle:
-                return new Pycodestyle(outputChannel, serviceContainer);
+                return new Pycodestyle(serviceContainer);
             default:
                 traceError(error);
                 break;

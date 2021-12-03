@@ -1,14 +1,14 @@
-import { OutputChannel, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { ExecutionInfo, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { traceError, traceWarn } from '../../logging';
+import { traceError, traceLog, traceWarn } from '../../logging';
 import { ILinterManager } from '../types';
 import { BaseErrorHandler } from './baseErrorHandler';
 
 export class NotInstalledErrorHandler extends BaseErrorHandler {
-    constructor(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
-        super(product, outputChannel, serviceContainer);
+    constructor(product: Product, serviceContainer: IServiceContainer) {
+        super(product, serviceContainer);
     }
     public async handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean> {
         const pythonExecutionService = await this.serviceContainer
@@ -26,7 +26,7 @@ export class NotInstalledErrorHandler extends BaseErrorHandler {
         const linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
         const info = linterManager.getLinterInfo(execInfo.product!);
         const customError = `Linter '${info.id}' is not installed. Please install it or select another linter".`;
-        this.outputChannel.appendLine(`\n${customError}\n${error}`);
+        traceLog(`\n${customError}\n${error}`);
         traceWarn(customError, error);
         return true;
     }

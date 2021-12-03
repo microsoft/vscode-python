@@ -8,9 +8,8 @@ import { Minimatch } from 'minimatch';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService, IOutputChannel } from '../common/types';
+import { IConfigurationService } from '../common/types';
 import { isNotebookCell } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
@@ -35,14 +34,12 @@ export class LintingEngine implements ILintingEngine {
     private linterManager: ILinterManager;
     private diagnosticCollection: vscode.DiagnosticCollection;
     private pendingLintings = new Map<string, vscode.CancellationTokenSource>();
-    private outputChannel: vscode.OutputChannel;
     private fileSystem: IFileSystem;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.documents = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.outputChannel = serviceContainer.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.linterManager = serviceContainer.get<ILinterManager>(ILinterManager);
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
         this.diagnosticCollection = vscode.languages.createDiagnosticCollection('python');
@@ -93,12 +90,7 @@ export class LintingEngine implements ILintingEngine {
         const activeLinters = await this.linterManager.getActiveLinters(document.uri);
         const promises: Promise<ILintMessage[]>[] = activeLinters.map(async (info: ILinterInfo) => {
             const stopWatch = new StopWatch();
-            const linter = await this.linterManager.createLinter(
-                info.product,
-                this.outputChannel,
-                this.serviceContainer,
-                document.uri,
-            );
+            const linter = await this.linterManager.createLinter(info.product, this.serviceContainer, document.uri);
             const promise = linter.lint(document, cancelToken.token);
             this.sendLinterRunTelemetry(info, document.uri, promise, stopWatch, trigger);
             return promise;

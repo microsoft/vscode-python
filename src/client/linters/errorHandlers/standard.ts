@@ -1,14 +1,15 @@
-import { OutputChannel, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
-import { ExecutionInfo, Product } from '../../common/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
+import { ExecutionInfo, IOutputChannel, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { traceError } from '../../logging';
+import { traceError, traceLog } from '../../logging';
 import { ILinterManager, LinterId } from '../types';
 import { BaseErrorHandler } from './baseErrorHandler';
 
 export class StandardErrorHandler extends BaseErrorHandler {
-    constructor(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
-        super(product, outputChannel, serviceContainer);
+    constructor(product: Product, serviceContainer: IServiceContainer) {
+        super(product, serviceContainer);
     }
     public async handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean> {
         if (
@@ -22,8 +23,8 @@ export class StandardErrorHandler extends BaseErrorHandler {
         const info = linterManager.getLinterInfo(execInfo.product!);
 
         traceError(`There was an error in running the linter ${info.id}`, error);
-        this.outputChannel.appendLine(`Linting with ${info.id} failed.`);
-        this.outputChannel.appendLine(error.toString());
+        traceLog(`Linting with ${info.id} failed.`);
+        traceLog(error.toString());
 
         this.displayLinterError(info.id).ignoreErrors();
         return true;
@@ -32,6 +33,7 @@ export class StandardErrorHandler extends BaseErrorHandler {
         const message = `There was an error in running the linter '${linterId}'`;
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         await appShell.showErrorMessage(message, 'View Errors');
-        this.outputChannel.show();
+        const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        outputChannel.show();
     }
 }

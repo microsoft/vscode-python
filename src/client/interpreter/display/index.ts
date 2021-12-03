@@ -1,11 +1,11 @@
 import { inject, injectable } from 'inversify';
-import { Disposable, OutputChannel, StatusBarAlignment, StatusBarItem, Uri } from 'vscode';
+import { Disposable, StatusBarAlignment, StatusBarItem, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import '../../common/extensions';
-import { IDisposableRegistry, IOutputChannel, IPathUtils, Resource } from '../../common/types';
+import { IDisposableRegistry, IPathUtils, Resource } from '../../common/types';
 import { Interpreters } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
+import { traceLog } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import {
     IInterpreterDisplay,
@@ -76,8 +76,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
             this.statusBar.color = '';
             this.statusBar.tooltip = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath);
             if (this.interpreterPath !== interpreter.path) {
-                const output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-                output.appendLine(
+                traceLog(
                     Interpreters.pythonInterpreterPath().format(
                         this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath),
                     ),

@@ -7,17 +7,11 @@ import { expect } from 'chai';
 import { Container } from 'inversify';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, OutputChannel, TextDocument, Uri, WorkspaceFolder } from 'vscode';
+import { CancellationTokenSource, TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import '../../client/common/extensions';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import {
-    IConfigurationService,
-    IInstaller,
-    ILintingSettings,
-    IOutputChannel,
-    IPythonSettings,
-} from '../../client/common/types';
+import { IConfigurationService, IInstaller, ILintingSettings, IPythonSettings } from '../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
     IInterpreterAutoSelectionProxyService,
@@ -58,7 +52,6 @@ suite('Linting - Arguments', () => {
                     let lm: ILinterManager;
                     let serviceContainer: ServiceContainer;
                     let document: TypeMoq.IMock<TextDocument>;
-                    let outputChannel: TypeMoq.IMock<OutputChannel>;
                     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
                     const cancellationToken = new CancellationTokenSource().token;
                     suiteSetup(initialize);
@@ -67,7 +60,6 @@ suite('Linting - Arguments', () => {
                         const serviceManager = new ServiceManager(cont);
 
                         serviceContainer = new ServiceContainer(cont);
-                        outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
 
                         const fs = TypeMoq.Mock.ofType<IFileSystem>();
                         fs.setup((x) => x.fileExists(TypeMoq.It.isAny())).returns(
@@ -77,8 +69,6 @@ suite('Linting - Arguments', () => {
                             () => true,
                         );
                         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fs.object);
-
-                        serviceManager.addSingletonInstance(IOutputChannel, outputChannel.object);
 
                         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
                         serviceManager.addSingletonInstance<IInterpreterService>(
@@ -151,17 +141,17 @@ suite('Linting - Arguments', () => {
                         expect(invoked).to.be.equal(true, 'method not invoked');
                     }
                     test('Flake8', async () => {
-                        const linter = new Flake8(outputChannel.object, serviceContainer);
+                        const linter = new Flake8(serviceContainer);
                         const expectedArgs = ['--format=%(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', fileUri.fsPath];
                         await testLinter(linter, expectedArgs);
                     });
                     test('Pycodestyle', async () => {
-                        const linter = new Pycodestyle(outputChannel.object, serviceContainer);
+                        const linter = new Pycodestyle(serviceContainer);
                         const expectedArgs = ['--format=%(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', fileUri.fsPath];
                         await testLinter(linter, expectedArgs);
                     });
                     test('Prospector', async () => {
-                        const linter = new Prospector(outputChannel.object, serviceContainer);
+                        const linter = new Prospector(serviceContainer);
                         const expectedPath = workspaceUri
                             ? fileUri.fsPath.substring(workspaceUri.length + 2)
                             : path.basename(fileUri.fsPath);
@@ -169,22 +159,22 @@ suite('Linting - Arguments', () => {
                         await testLinter(linter, expectedArgs);
                     });
                     test('Pylama', async () => {
-                        const linter = new PyLama(outputChannel.object, serviceContainer);
+                        const linter = new PyLama(serviceContainer);
                         const expectedArgs = ['--format=parsable', fileUri.fsPath];
                         await testLinter(linter, expectedArgs);
                     });
                     test('MyPy', async () => {
-                        const linter = new MyPy(outputChannel.object, serviceContainer);
+                        const linter = new MyPy(serviceContainer);
                         const expectedArgs = [fileUri.fsPath];
                         await testLinter(linter, expectedArgs);
                     });
                     test('Pydocstyle', async () => {
-                        const linter = new PyDocStyle(outputChannel.object, serviceContainer);
+                        const linter = new PyDocStyle(serviceContainer);
                         const expectedArgs = [fileUri.fsPath];
                         await testLinter(linter, expectedArgs);
                     });
                     test('Pylint', async () => {
-                        const linter = new Pylint(outputChannel.object, serviceContainer);
+                        const linter = new Pylint(serviceContainer);
                         document.setup((d) => d.uri).returns(() => fileUri);
 
                         let invoked = false;
@@ -198,7 +188,7 @@ suite('Linting - Arguments', () => {
                         expect(invoked).to.be.equal(true, 'method not invoked');
                     });
                     test('Bandit', async () => {
-                        const linter = new Bandit(outputChannel.object, serviceContainer);
+                        const linter = new Bandit(serviceContainer);
                         const expectedArgs = [
                             '-f',
                             'custom',

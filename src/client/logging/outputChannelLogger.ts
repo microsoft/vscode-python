@@ -14,7 +14,7 @@ export class OutputChannelLogger implements ILogging {
     constructor(private readonly channel: OutputChannel) {}
 
     public traceLog(...data: Arguments): void {
-        this.channel.appendLine(formatMessage(undefined, ...data));
+        this.channel.appendLine(util.format(...data));
     }
 
     public traceError(...data: Arguments): void {

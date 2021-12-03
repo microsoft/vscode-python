@@ -10,7 +10,7 @@ import '../common/extensions';
 import { IPythonToolExecutionService } from '../common/process/types';
 import { ExecutionInfo, IConfigurationService, IPythonSettings, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { traceError } from '../logging';
+import { traceError, traceLog } from '../logging';
 import { ErrorHandler } from './errorHandlers/errorHandler';
 import { ILinter, ILinterInfo, ILinterManager, ILintMessage, LinterId, LintMessageSeverity } from './types';
 
@@ -76,12 +76,11 @@ export abstract class BaseLinter implements ILinter {
 
     constructor(
         product: Product,
-        protected readonly outputChannel: vscode.OutputChannel,
         protected readonly serviceContainer: IServiceContainer,
         protected readonly columnOffset = 0,
     ) {
         this._info = serviceContainer.get<ILinterManager>(ILinterManager).getLinterInfo(product);
-        this.errorHandler = new ErrorHandler(this.info.product, outputChannel, serviceContainer);
+        this.errorHandler = new ErrorHandler(this.info.product, serviceContainer);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
@@ -155,7 +154,7 @@ export abstract class BaseLinter implements ILinter {
             this.displayLinterResultHeader(result.stdout);
             return await this.parseMessages(result.stdout, document, cancellation, regEx);
         } catch (error) {
-            await this.handleError(error, document.uri, executionInfo);
+            await this.handleError(error as Error, document.uri, executionInfo);
             return [];
         }
     }
@@ -204,7 +203,7 @@ export abstract class BaseLinter implements ILinter {
     }
 
     private displayLinterResultHeader(data: string) {
-        this.outputChannel.append(`${'#'.repeat(10)}Linting Output - ${this.info.id}${'#'.repeat(10)}\n`);
-        this.outputChannel.append(data);
+        traceLog(`${'#'.repeat(10)}Linting Output - ${this.info.id}${'#'.repeat(10)}\n`);
+        traceLog(data);
     }
 }

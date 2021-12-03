@@ -275,7 +275,7 @@ export class BaseTestFixture {
 
         await this.linterManager.setActiveLintersAsync([product]);
         await this.linterManager.enableLintingAsync(enabled);
-        return this.linterManager.createLinter(product, this.outputChannel.object, this.serviceContainer.object);
+        return this.linterManager.createLinter(product, this.serviceContainer.object);
     }
 
     public async getEnabledLinter(product: Product): Promise<ILinter> {

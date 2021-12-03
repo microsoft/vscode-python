@@ -5,40 +5,41 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
+import * as util from 'util';
 
 import untildify = require('untildify');
 import { WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { ProcessLogger } from '../../../client/common/process/logger';
-import { IOutputChannel } from '../../../client/common/types';
 import { Logging } from '../../../client/common/utils/localize';
 import { getOSType, OSType } from '../../../client/common/utils/platform';
+import * as logging from '../../../client/logging';
+import { Arguments } from '../../../client/logging/types';
 
 suite('ProcessLogger suite', () => {
-    let outputChannel: TypeMoq.IMock<IOutputChannel>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let outputResult: string;
     let logger: ProcessLogger;
 
     suiteSetup(() => {
-        outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         workspaceService
             .setup((w) => w.workspaceFolders)
             .returns(() => [({ uri: { fsPath: path.join('path', 'to', 'workspace') } } as unknown) as WorkspaceFolder]);
-        logger = new ProcessLogger(outputChannel.object, workspaceService.object);
+        logger = new ProcessLogger(workspaceService.object);
     });
 
     setup(() => {
         outputResult = '';
-        outputChannel
-            .setup((o) => o.appendLine(TypeMoq.It.isAnyString()))
-            .returns((s: string) => (outputResult += `${s}\n`));
+        sinon.stub(logging, 'traceLog').callsFake((...args: Arguments) => {
+            outputResult += `${util.format(...args)}`;
+        });
     });
 
     teardown(() => {
-        outputChannel.reset();
+        sinon.restore();
     });
 
     test('Logger displays the process command, arguments and current working directory in the output channel', async () => {
@@ -47,8 +48,6 @@ suite('ProcessLogger suite', () => {
 
         const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${options.cwd}\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect - String built incorrectly');
-
-        outputChannel.verify((o) => o.appendLine(TypeMoq.It.isAnyString()), TypeMoq.Times.exactly(2));
     });
 
     test('Logger adds quotes around arguments if they contain spaces', async () => {
