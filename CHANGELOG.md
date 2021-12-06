@@ -1,5 +1,127 @@
 # Changelog
 
+## 2021.12.0-rc (6 December 2021)
+
+### Enhancements
+
+1. Python extension should activate on onDebugInitialConfigurations.
+   (thanks [Nayana Vinod](https://github.com/nayana-vinod) and [Jessica Jolly](https://github.com/JessieJolly)).
+   ([#9557](https://github.com/Microsoft/vscode-python/issues/9557))
+1. Declare limited support when running in virtual workspaces by only supporting language servers.
+   ([#17519](https://github.com/Microsoft/vscode-python/issues/17519))
+1. Add a "Do not show again" option to the formatter installation prompt.
+   ([#17937](https://github.com/Microsoft/vscode-python/issues/17937))
+1. Add the ability to install `pip` if missing, when installing missing packages from the `Jupyter Extension`.
+   ([#17975](https://github.com/Microsoft/vscode-python/issues/17975))
+1. Declare limited support for untrusted workspaces by only supporting Pylance.
+   ([#18031](https://github.com/Microsoft/vscode-python/issues/18031))
+1. Update to latest jedi language server.
+   ([#18051](https://github.com/Microsoft/vscode-python/issues/18051))
+1. Add language status item indicating that extension works partially in virtual and untrusted workspaces.
+   ([#18059](https://github.com/Microsoft/vscode-python/issues/18059))
+
+### Fixes
+
+1. Partial fix for using the same directory as discovery when running tests.
+   (thanks [Brian Rutledge](https://github.com/bhrutledge))
+   ([#9553](https://github.com/Microsoft/vscode-python/issues/9553))
+1. Handle decorators properly when using the `Run Selection/Line in Python Terminal` command.
+   ([#15058](https://github.com/Microsoft/vscode-python/issues/15058))
+1. Don't interpret `--rootdir` as a test folder for `pytest`.
+   (thanks [Brian Rutledge](https://github.com/bhrutledge))
+   ([#16079](https://github.com/Microsoft/vscode-python/issues/16079))
+1. Ensure debug configuration env variables overwrite env variables defined in .env file.
+   ([#16984](https://github.com/Microsoft/vscode-python/issues/16984))
+1. Fix for `pytest` run all tests when using `pytest.ini` and `cwd`.
+   (thanks [Brian Rutledge](https://github.com/bhrutledge))
+   ([#17546](https://github.com/Microsoft/vscode-python/issues/17546))
+1. When parsing pytest node ids with parameters, use native pytest information to separate out the parameter decoration rather than try and parse the nodeid as text.
+   (thanks [Martijn Pieters](https://github.com/mjpieters))
+   ([#17676](https://github.com/Microsoft/vscode-python/issues/17676))
+1. Do not process system Python 2 installs on macOS Monterey.
+   ([#17870](https://github.com/Microsoft/vscode-python/issues/17870))
+1. Remove duplicate "Clear Workspace Interpreter Setting" command from the command palette.
+   ([#17890](https://github.com/Microsoft/vscode-python/issues/17890))
+1. Ensure that path towards extenal tools like linters are not synched between
+   machines. (thanks [Sorin Sbarnea](https://github.com/ssbarnea))
+   ([#18008](https://github.com/Microsoft/vscode-python/issues/18008))
+1. Increase timeout for activation of conda environments from 30s to 60s.
+   ([#18017](https://github.com/Microsoft/vscode-python/issues/18017))
+
+### Code Health
+
+1. Removing experiments for refresh and failed tests buttons.
+   ([#17868](https://github.com/Microsoft/vscode-python/issues/17868))
+1. Remove caching debug configuration experiment only.
+   ([#17895](https://github.com/Microsoft/vscode-python/issues/17895))
+1. Remove "join mailing list" notification experiment.
+   ([#17904](https://github.com/Microsoft/vscode-python/issues/17904))
+1. Remove dependency on `winston` logger.
+   ([#17921](https://github.com/Microsoft/vscode-python/issues/17921))
+1. Bump isort from 5.9.3 to 5.10.0.
+   ([#17923](https://github.com/Microsoft/vscode-python/issues/17923))
+1. Remove old discovery code and discovery experiments.
+   ([#17962](https://github.com/Microsoft/vscode-python/issues/17962))
+1. Remove dependency on `azure-storage`.
+   ([#17972](https://github.com/Microsoft/vscode-python/issues/17972))
+1. Ensure telemetry correctly identifies when users set linter paths.
+   ([#18019](https://github.com/Microsoft/vscode-python/issues/18019))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [poetry](https://pypi.org/project/poetry/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2021.11.0 (4 November 2021)
 
 ### Enhancements
