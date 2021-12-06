@@ -3,6 +3,7 @@
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
+import * as sinon from 'sinon';
 import { ConfigurationChangeEvent, Disposable, EventEmitter, Uri, WorkspaceConfiguration } from 'vscode';
 
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
@@ -22,7 +23,6 @@ import {
     IDisposable,
     IDisposableRegistry,
     IExtensions,
-    IOutputChannel,
     IPersistentState,
     IPersistentStateFactory,
     IPythonSettings,
@@ -32,6 +32,7 @@ import { LanguageService } from '../../client/common/utils/localize';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import * as logging from '../../client/logging';
 
 suite('Language Server Activation - ActivationService', () => {
     [LanguageServerType.Jedi].forEach((languageServerType) => {
@@ -51,7 +52,6 @@ suite('Language Server Activation - ActivationService', () => {
                 let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
                 let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
                 let interpreterService: TypeMoq.IMock<IInterpreterService>;
-                let output: TypeMoq.IMock<IOutputChannel>;
 
                 setup(() => {
                     serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -97,10 +97,6 @@ suite('Language Server Activation - ActivationService', () => {
                     workspaceService
                         .setup((ws) => ws.getConfiguration('python', TypeMoq.It.isAny()))
                         .returns(() => workspaceConfig.object);
-                    output = TypeMoq.Mock.ofType<IOutputChannel>();
-                    serviceContainer
-                        .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny()))
-                        .returns(() => output.object);
                     serviceContainer
                         .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
                         .returns(() => workspaceService.object);
@@ -517,8 +513,8 @@ suite('Language Server Activation - ActivationService', () => {
         let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
         let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
         let interpreterService: TypeMoq.IMock<IInterpreterService>;
-        let output: TypeMoq.IMock<IOutputChannel>;
         let configurationService: TypeMoq.IMock<IConfigurationService>;
+        let traceLogStub: sinon.SinonStub;
 
         setup(() => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -531,6 +527,8 @@ suite('Language Server Activation - ActivationService', () => {
             configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
             const extensionsMock = TypeMoq.Mock.ofType<IExtensions>();
 
+            traceLogStub = sinon.stub(logging, 'traceLog');
+
             workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
             workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
@@ -540,10 +538,6 @@ suite('Language Server Activation - ActivationService', () => {
             workspaceService
                 .setup((ws) => ws.getConfiguration('python', TypeMoq.It.isAny()))
                 .returns(() => workspaceConfig.object);
-            output = TypeMoq.Mock.ofType<IOutputChannel>();
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny()))
-                .returns(() => output.object);
             serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
                 .returns(() => workspaceService.object);
@@ -560,6 +554,10 @@ suite('Language Server Activation - ActivationService', () => {
                 .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService)))
                 .returns(() => interpreterService.object);
             serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IExtensions))).returns(() => extensionsMock.object);
+        });
+
+        teardown(() => {
+            sinon.restore();
         });
 
         const values: { ls: LanguageServerType; expected: LanguageServerType; outputString: string }[] = [
@@ -603,7 +601,7 @@ suite('Language Server Activation - ActivationService', () => {
 
                 await activationService.get(resource, interpreter);
 
-                output.verify((o) => o.appendLine(outputString), TypeMoq.Times.once());
+                traceLogStub.calledOnceWithExactly(outputString);
                 activator.verify((a) => a.start(resource, interpreter), TypeMoq.Times.once());
             });
         });
@@ -626,7 +624,7 @@ suite('Language Server Activation - ActivationService', () => {
 
             await activationService.get(resource, interpreter);
 
-            output.verify((o) => o.appendLine(LanguageService.startingPylance()), TypeMoq.Times.once());
+            traceLogStub.calledOnceWithExactly(LanguageService.startingPylance());
             activator.verify((a) => a.start(resource, interpreter), TypeMoq.Times.once());
         });
     });
@@ -682,10 +680,6 @@ suite('Language Server Activation - ActivationService', () => {
             workspaceService
                 .setup((ws) => ws.getConfiguration('python', TypeMoq.It.isAny()))
                 .returns(() => workspaceConfig.object);
-            const output = TypeMoq.Mock.ofType<IOutputChannel>();
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny()))
-                .returns(() => output.object);
             serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
                 .returns(() => workspaceService.object);
@@ -839,10 +833,6 @@ suite('Language Server Activation - ActivationService', () => {
             workspaceService
                 .setup((ws) => ws.getConfiguration('python', TypeMoq.It.isAny()))
                 .returns(() => workspaceConfig.object);
-            const output = TypeMoq.Mock.ofType<IOutputChannel>();
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny()))
-                .returns(() => output.object);
             serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
                 .returns(() => workspaceService.object);

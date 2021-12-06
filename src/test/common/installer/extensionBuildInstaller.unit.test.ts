@@ -70,6 +70,7 @@ suite('Extension build installer - Insiders build installer', async () => {
     let insidersBuildInstaller: InsidersBuildInstaller;
     let progressReporter: Progress<ProgressReporterData>;
     let progressReportStub: sinon.SinonStub;
+    let traceLogStub: sinon.SinonStub;
     setup(() => {
         fileDownloader = mock(FileDownloader);
         fs = mock(FileSystem);
@@ -83,6 +84,10 @@ suite('Extension build installer - Insiders build installer', async () => {
             instance(cmdManager),
             instance(appShell),
         );
+        traceLogStub = sinon.stub(logging, 'traceLog');
+    });
+    teardown(() => {
+        sinon.restore();
     });
     test('Installing Insiders build downloads and installs Insiders', async () => {
         const vsixFilePath = 'path/to/vsix';
@@ -91,10 +96,6 @@ suite('Extension build installer - Insiders build installer', async () => {
             outputChannel: output,
             progressMessagePrefix: ExtensionChannels.downloadingInsidersMessage(),
         };
-        when(output.append(ExtensionChannels.installingInsidersMessage())).thenReturn();
-        when(output.appendLine(ExtensionChannels.startingDownloadOutputMessage())).thenReturn();
-        when(output.appendLine(ExtensionChannels.downloadCompletedOutputMessage())).thenReturn();
-        when(output.appendLine(ExtensionChannels.installationCompleteMessage())).thenReturn();
         when(fileDownloader.downloadFile(developmentBuildUri, anything())).thenCall(
             (_, downloadOptions: DownloadOptions) => {
                 expect(downloadOptions.extension).to.equal(options.extension, 'Incorrect file extension');
@@ -113,10 +114,10 @@ suite('Extension build installer - Insiders build installer', async () => {
 
         await insidersBuildInstaller.install();
 
-        verify(output.append(ExtensionChannels.installingInsidersMessage())).once();
-        verify(output.appendLine(ExtensionChannels.startingDownloadOutputMessage())).once();
-        verify(output.appendLine(ExtensionChannels.downloadCompletedOutputMessage())).once();
-        verify(output.appendLine(ExtensionChannels.installationCompleteMessage())).once();
+        traceLogStub.calledWithExactly(ExtensionChannels.installingInsidersMessage());
+        traceLogStub.calledWithExactly(ExtensionChannels.startingDownloadOutputMessage());
+        traceLogStub.calledWithExactly(ExtensionChannels.downloadCompletedOutputMessage());
+        traceLogStub.calledWithExactly(ExtensionChannels.installationCompleteMessage());
         verify(appShell.withProgressCustomIcon(anything(), anything()));
         expect(progressReportStub.callCount).to.equal(1);
         verify(cmdManager.executeCommand('workbench.extensions.installExtension', anything(), anything())).once();

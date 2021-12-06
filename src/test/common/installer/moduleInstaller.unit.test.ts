@@ -4,9 +4,9 @@
 
 'use strict';
 
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 import * as path from 'path';
-
+import * as util from 'util';
 import rewiremock from 'rewiremock';
 import { SemVer } from 'semver';
 import * as sinon from 'sinon';
@@ -43,6 +43,8 @@ import { noop } from '../../../client/common/utils/misc';
 import { Architecture } from '../../../client/common/utils/platform';
 import { IComponentAdapter, ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
+import * as logging from '../../../client/logging';
+import { Arguments } from '../../../client/logging/types';
 import { EnvironmentType, ModuleInstallerType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 /* Complex test to ensure we cover all combinations:
@@ -89,6 +91,8 @@ suite('Module Installer', () => {
         }
     }
     let outputChannel: TypeMoq.IMock<IOutputChannel>;
+    let outputResult: string;
+
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     const pythonPath = path.join(__dirname, 'python');
@@ -99,6 +103,11 @@ suite('Module Installer', () => {
         const args = ['1', '2'];
         const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;
         setup(() => {
+            outputResult = '';
+            sinon.stub(logging, 'traceLog').callsFake((...a: Arguments) => {
+                outputResult += `${util.format(...a)}\n`;
+            });
+
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
             serviceContainer
@@ -110,6 +119,7 @@ suite('Module Installer', () => {
         });
         teardown(() => {
             rewiremock.disable();
+            sinon.restore();
         });
 
         test('Show error message if sudo exec fails with error', async () => {
@@ -125,14 +135,11 @@ suite('Module Installer', () => {
                 .setup((a) => a.showErrorMessage(error))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
-            outputChannel
-
-                .setup((o) => o.appendLine(`[Elevated] ${command}`))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
             installer.elevatedInstall(execPath, args);
             appShell.verifyAll();
-            outputChannel.verifyAll();
+
+            const expectedResult = `[Elevated] ${command}\n`;
+            expect(outputResult).to.equal(expectedResult);
         });
 
         test('Show stdout if sudo exec succeeds', async () => {
@@ -148,17 +155,11 @@ suite('Module Installer', () => {
                 .setup((o) => o.show())
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
-            outputChannel
-
-                .setup((o) => o.appendLine(`[Elevated] ${command}`))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
-            outputChannel
-                .setup((o) => o.append(stdout))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
             installer.elevatedInstall(execPath, args);
             outputChannel.verifyAll();
+
+            const expectedResult = `[Elevated] ${command}\n`;
+            expect(outputResult).to.equal(expectedResult);
         });
 
         test('Show stderr if sudo exec gives a warning with stderr', async () => {

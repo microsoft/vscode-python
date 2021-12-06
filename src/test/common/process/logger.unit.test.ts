@@ -34,7 +34,7 @@ suite('ProcessLogger suite', () => {
     setup(() => {
         outputResult = '';
         sinon.stub(logging, 'traceLog').callsFake((...args: Arguments) => {
-            outputResult += `${util.format(...args)}`;
+            outputResult += `${util.format(...args)}\n`;
         });
     });
 
