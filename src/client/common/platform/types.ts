@@ -6,6 +6,8 @@ import * as fsextra from 'fs-extra';
 import { SemVer } from 'semver';
 import * as vscode from 'vscode';
 import { Architecture, OSType } from '../utils/platform';
+import { FileType } from './types';
+import { FileStat } from './types';
 
 //= ==========================
 // registry
@@ -47,6 +49,11 @@ export type TemporaryFile = { filePath: string } & vscode.Disposable;
 export interface ITempFileSystem {
     createFile(suffix: string, mode?: number): Promise<TemporaryFile>;
 }
+
+export interface ITempFileSystemProvider {
+    createTempFile(suffix: string, mode?: number): Promise<TemporaryFile>;
+}
+export const ITempFileSystemService = Symbol('ITempFileSystemService');
 
 //= ==========================
 // FS paths

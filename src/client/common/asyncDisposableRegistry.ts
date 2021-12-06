@@ -18,3 +18,27 @@ export class AsyncDisposableRegistry implements IAsyncDisposableRegistry {
         return this.disposables.dispose();
     }
 }
+export class DisposableRegistry implements IDisposable {
+    private readonly disposables = new Disposables();
+
+    public push(...disposables: IDisposable[]): void {
+        this.disposables.push(...disposables);
+    }
+
+    public dispose(): void {
+        this.disposables.dispose();
+    }
+}
+export class Disposable implements IDisposable {
+    private _isDisposed = false;
+
+    public dispose(): void {
+        if (!this._isDisposed) {
+            this._isDisposed = true;
+        }
+    }
+
+    public get isDisposed(): boolean {
+        return this._isDisposed;
+    }
+}

@@ -38,6 +38,8 @@ export function getArchitectureDisplayName(arch?: Architecture) {
     }
 }
 
+export const Registry: IRegistry = new RegistryImplementation();
+
 async function getRegistryValue(options: Options, name: string = '') {
     const Registry = require('winreg') as typeof import('winreg');
     return new Promise<string | undefined | null>((resolve) => {
