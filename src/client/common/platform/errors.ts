@@ -36,6 +36,8 @@ namespace vscErrors {
     const IS_DIR = vscode.FileSystemError.FileIsADirectory().name;
     const NOT_DIR = vscode.FileSystemError.FileNotADirectory().name;
     const NO_PERM = vscode.FileSystemError.NoPermissions().name;
+    const NOT_EMPTY = vscode.FileSystemError.FileNotEmpty().name;
+    const ENOENT = vscode.FileSystemError.FileNotFound().name;
     const known = [
         // (order does not matter)
         FILE_NOT_FOUND,
@@ -43,6 +45,8 @@ namespace vscErrors {
         IS_DIR,
         NOT_DIR,
         NO_PERM,
+        NOT_EMPTY,
+        ENOENT,
     ];
     function errorMatches(err: Error, expectedName: string): boolean | undefined {
         if (!known.includes(err.name)) {
@@ -65,6 +69,12 @@ namespace vscErrors {
     }
     export function isNoPermissions(err: Error): boolean | undefined {
         return errorMatches(err, NO_PERM);
+    }
+    export function isNotEmpty(err: Error): boolean | undefined {
+        return errorMatches(err, NOT_EMPTY);
+    }
+    export function isFileNotFoundOrNoPermissions(err: Error): boolean | undefined {
+        return errorMatches(err, ENOENT) || errorMatches(err, NO_PERM);
     }
 }
 

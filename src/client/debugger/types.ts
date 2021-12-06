@@ -27,10 +27,16 @@ export enum DebugPurpose {
     DebugInTerminal = 'debug-in-terminal',
 }
 
+export enum DebuggerType {
+    Python = 'Python',
+    PythonCpp = 'PythonCpp'
+}
+
 export type PathMapping = {
     localRoot: string;
     remoteRoot: string;
 };
+
 type Connection = {
     host?: string;
     port?: number;

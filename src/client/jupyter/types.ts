@@ -41,6 +41,7 @@ enum ColumnType {
     String = 'string',
     Number = 'number',
     Bool = 'bool',
+    Float = "float"
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

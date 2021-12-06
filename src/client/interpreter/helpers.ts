@@ -81,4 +81,12 @@ export class InterpreterHelper implements IInterpreterHelper {
         const sorted = sortInterpreters(interpreters);
         return sorted[sorted.length - 1];
     }
+    
+    public async getInterpreters(resource?: Resource): Promise<PythonEnvironment[]> {
+        const workspaceUri = this.getActiveWorkspaceUri(resource);
+        if (workspaceUri) {
+            return this.pyenvs.getInterpreters(workspaceUri.folderUri);
+        }
+        return this.pyenvs.getInterpreters();
+    }
 }
