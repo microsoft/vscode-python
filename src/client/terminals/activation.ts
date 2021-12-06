@@ -63,4 +63,19 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
             resource,
         });
     }
+
+    public static getKey(): string {
+        return 'TerminalAutoActivation';
+    }
+
+    public static create(
+        terminalManager: ITerminalManager,
+        disposableRegistry: IDisposableRegistry,
+        activator: ITerminalActivator,
+        activeResourceService: IActiveResourceService,
+    ): ITerminalAutoActivation {
+        const instance = new TerminalAutoActivation(terminalManager, disposableRegistry, activator, activeResourceService);
+        instance.register();
+        return instance;
+    }
 }

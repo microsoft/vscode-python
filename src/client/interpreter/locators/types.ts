@@ -14,3 +14,7 @@ export interface IPipEnvServiceHelper {
     getPipEnvInfo(pythonPath: string): Promise<{ workspaceFolder: Uri; envName: string } | undefined>;
     trackWorkspaceFolder(pythonPath: string, workspaceFolder: Uri): Promise<void>;
 }
+export const IInterpreterLocatorProgressHandler = Symbol('IInterpreterLocatorProgressHandler');
+export interface IInterpreterLocatorProgressHandler {
+    handle(progress: { message: string; increment?: number }): void;
+}

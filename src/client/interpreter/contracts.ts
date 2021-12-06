@@ -62,6 +62,8 @@ export interface ICondaService {
 
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
+    getEnvironmentVariables(pythonPath: string);
+    getInterpreterInformation(pythonPath: string);
     readonly onRefreshStart: Event<void>;
     triggerRefresh(query?: PythonLocatorQuery): Promise<void>;
     readonly refreshPromise: Promise<void> | undefined;

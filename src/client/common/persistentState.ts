@@ -96,6 +96,10 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
         if (workspaceKeysStorageDeprecated.value.length > 0) {
             workspaceKeysStorageDeprecated.updateValue([]).ignoreErrors();
         }
+        if (!this.cleanedOnce) {
+            this.cleanedOnce = true;
+            await this.cleanAllPersistentStates();
+        }
     }
 
     public createGlobalPersistentState<T>(

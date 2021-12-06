@@ -33,3 +33,7 @@ export interface ITerminalAutoActivation extends IDisposable {
     register(): void;
     disableAutoActivation(terminal: Terminal): void;
 }
+export const ITerminalActivationCommandProvider = Symbol('ITerminalActivationCommandProvider');
+export interface ITerminalActivationCommandProvider {
+    getActivationCommands(): Promise<string[]>;
+}
