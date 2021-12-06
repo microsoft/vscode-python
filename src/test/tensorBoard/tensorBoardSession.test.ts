@@ -64,6 +64,9 @@ suite('TensorBoard session creation', async () => {
             // TensorBoard 2.4.1 not available for Python 2.7
             this.skip();
         }
+
+        // See: https://github.com/microsoft/vscode-python/issues/18130
+        this.skip();
     });
 
     setup(async () => {
