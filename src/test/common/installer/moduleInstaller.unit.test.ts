@@ -4,9 +4,8 @@
 
 'use strict';
 
-import { assert, expect } from 'chai';
+import { assert } from 'chai';
 import * as path from 'path';
-import * as util from 'util';
 import rewiremock from 'rewiremock';
 import { SemVer } from 'semver';
 import * as sinon from 'sinon';
@@ -44,7 +43,6 @@ import { Architecture } from '../../../client/common/utils/platform';
 import { IComponentAdapter, ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import * as logging from '../../../client/logging';
-import { Arguments } from '../../../client/logging/types';
 import { EnvironmentType, ModuleInstallerType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 /* Complex test to ensure we cover all combinations:
@@ -91,22 +89,19 @@ suite('Module Installer', () => {
         }
     }
     let outputChannel: TypeMoq.IMock<IOutputChannel>;
-    let outputResult: string;
 
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     const pythonPath = path.join(__dirname, 'python');
 
     suite('Method _elevatedInstall()', async () => {
+        let traceLogStub: sinon.SinonStub;
         let installer: TestModuleInstaller;
         const execPath = 'execPath';
         const args = ['1', '2'];
         const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;
         setup(() => {
-            outputResult = '';
-            sinon.stub(logging, 'traceLog').callsFake((...a: Arguments) => {
-                outputResult += `${util.format(...a)}\n`;
-            });
+            traceLogStub = sinon.stub(logging, 'traceLog');
 
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
@@ -137,9 +132,7 @@ suite('Module Installer', () => {
                 .verifiable(TypeMoq.Times.once());
             installer.elevatedInstall(execPath, args);
             appShell.verifyAll();
-
-            const expectedResult = `[Elevated] ${command}\n`;
-            expect(outputResult).to.equal(expectedResult);
+            traceLogStub.calledOnceWithExactly(`[Elevated] ${command}`);
         });
 
         test('Show stdout if sudo exec succeeds', async () => {
@@ -157,9 +150,7 @@ suite('Module Installer', () => {
                 .verifiable(TypeMoq.Times.once());
             installer.elevatedInstall(execPath, args);
             outputChannel.verifyAll();
-
-            const expectedResult = `[Elevated] ${command}\n`;
-            expect(outputResult).to.equal(expectedResult);
+            traceLogStub.calledOnceWithExactly(`[Elevated] ${command}`);
         });
 
         test('Show stderr if sudo exec gives a warning with stderr', async () => {
@@ -172,21 +163,12 @@ suite('Module Installer', () => {
             rewiremock.enable();
             rewiremock('sudo-prompt').with(sudoPromptMock);
             outputChannel
-
-                .setup((o) => o.appendLine(`[Elevated] ${command}`))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
-            outputChannel
                 .setup((o) => o.show())
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
-            outputChannel
-
-                .setup((o) => o.append(`Warning: ${stderr}`))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
             installer.elevatedInstall(execPath, args);
-            outputChannel.verifyAll();
+            traceLogStub.calledOnceWithExactly(`[Elevated] ${command}`);
+            traceLogStub.calledOnceWithExactly(`Warning: ${stderr}`);
         });
     });
 
