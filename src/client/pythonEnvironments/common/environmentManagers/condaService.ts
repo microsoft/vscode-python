@@ -1,14 +1,13 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { parse, SemVer } from 'semver';
+import { SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
-import { IProcessServiceFactory } from '../../../common/process/types';
 import { IDisposableRegistry } from '../../../common/types';
 import { cache } from '../../../common/utils/decorators';
 import { ICondaService } from '../../../interpreter/contracts';
-import { traceDecoratorVerbose, traceWarn } from '../../../logging';
+import { traceDecoratorVerbose } from '../../../logging';
 import { Conda, CondaInfo } from './conda';
 
 /**
@@ -21,7 +20,6 @@ export class CondaService implements ICondaService {
     private condaFile: Promise<string> | undefined;
 
     constructor(
-        @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
         @inject(IPlatformService) private platform: IPlatformService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
@@ -55,36 +53,10 @@ export class CondaService implements ICondaService {
 
     /**
      * Return the conda version.
-     * The version info is cached for some time.
-     * Remember, its possible the user can update the path to `conda` executable in settings.json,
-     * or environment variables.
-     * Doing that could change this value.
      */
-    @cache(120_000)
+    // eslint-disable-next-line class-methods-use-this
     public async getCondaVersion(): Promise<SemVer | undefined> {
-        const processService = await this.processServiceFactory.create();
-        const info = await this._getCondaInfo().catch<CondaInfo | undefined>(() => undefined);
-        let versionString: string | undefined;
-        if (info && info.conda_version) {
-            versionString = info.conda_version;
-        } else {
-            const stdOut = await this.getCondaFile()
-                .then((condaFile) => processService.exec(condaFile, ['--version'], {}))
-                .then((result) => result.stdout.trim())
-                .catch<string | undefined>(() => undefined);
-
-            versionString = stdOut && stdOut.startsWith('conda ') ? stdOut.substring('conda '.length).trim() : stdOut;
-        }
-        if (!versionString) {
-            return undefined;
-        }
-        const version = parse(versionString, true);
-        if (version) {
-            return version;
-        }
-        // Use a bogus version, at least to indicate the fact that a version was returned.
-        traceWarn(`Unable to parse Version of Conda, ${versionString}`);
-        return new SemVer('0.0.1');
+        return Conda.getConda().then((conda) => conda?.getCondaVersion());
     }
 
     /**

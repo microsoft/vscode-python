@@ -29,7 +29,7 @@ async function buildEnvironmentInfo(env: PythonEnvInfo): Promise<InterpreterInfo
         const conda = await Conda.getConda();
         const runArgs = await conda?.getRunArgs({ name: env.name, prefix: env.location });
         if (runArgs) {
-            python = [...runArgs, env.executable.filename];
+            python = [...runArgs, 'python'];
         }
     }
     const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(python)).catch((reason) => {
