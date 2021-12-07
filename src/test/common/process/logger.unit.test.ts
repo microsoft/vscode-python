@@ -13,6 +13,7 @@ import { IWorkspaceService } from '../../../client/common/application/types';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { IOutputChannel } from '../../../client/common/types';
 import { Logging } from '../../../client/common/utils/localize';
+import { getOSType, OSType } from '../../../client/common/utils/platform';
 
 suite('ProcessLogger suite', () => {
     let outputChannel: TypeMoq.IMock<IOutputChannel>;
@@ -136,7 +137,10 @@ suite('ProcessLogger suite', () => {
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect');
     });
 
-    test('Logger replaces both backwards and forward slash version of path to workspace with . if exactly one workspace folder is opened', async () => {
+    test('On Windows, logger replaces both backwards and forward slash version of path to workspace with . if exactly one workspace folder is opened', async function () {
+        if (getOSType() !== OSType.Windows) {
+            return this.skip();
+        }
         let options = { cwd: path.join('path/to/workspace', 'debug', 'path') };
 
         const expectedResult = `> ".${path.sep}test" "--foo" "--bar"\n${Logging.currentWorkingDirectory()} .${

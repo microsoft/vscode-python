@@ -9,7 +9,7 @@ import { IWorkspaceService } from '../application/types';
 import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IOutputChannel } from '../types';
 import { Logging } from '../utils/localize';
-import { getUserHomeDir } from '../utils/platform';
+import { getOSType, getUserHomeDir, OSType } from '../utils/platform';
 import { IProcessLogger, SpawnOptions } from './types';
 
 @injectable()
@@ -57,8 +57,8 @@ export class ProcessLogger implements IProcessLogger {
 function replaceMatchesWithCharacter(original: string, match: string, character: string): string {
     // Backslashes have special meaning in regexes, we need an extra backlash so
     // it's not considered special. Also match both forward and backward slash
-    // versions of 'match'.
-    const pattern = match.replaceAll('\\', '(\\\\|/)');
+    // versions of 'match' for Windows.
+    const pattern = match.replaceAll('\\', getOSType() === OSType.Windows ? '(\\\\|/)' : '\\\\');
     let regex = new RegExp(pattern, 'ig');
     return original.replace(regex, character);
 }
