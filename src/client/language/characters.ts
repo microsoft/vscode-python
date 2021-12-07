@@ -16,6 +16,7 @@ export function isIdentifierStartChar(ch: number) {
         case 0x212e:
         case 0x309b:
         case 0x309c:
+        case 0xab5b:
             return true;
         default:
             break;
@@ -96,4 +97,20 @@ export function isOctal(ch: number): boolean {
 
 export function isBinary(ch: number): boolean {
     return ch === Char._0 || ch === Char._1 || ch === Char.Underscore;
+}
+
+export function isUnicode(ch: number): boolean {
+    return isHex(ch) || ch === Char.Underscore;
+}
+
+export function isEscape(ch: number): boolean {
+    return ch === Char.Backslash || ch === Char.Underscore || ch === Char.Tilde;
+}
+
+export function isDot(ch: number): boolean {
+    return ch === Char.Dot || ch === Char.Ellipsis;
+}
+
+export function isDigit(ch: number): boolean {
+    return ch >= Char._0 && ch <= Char._9;
 }
