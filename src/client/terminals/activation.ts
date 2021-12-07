@@ -62,6 +62,15 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
         await this.activator.activateEnvironmentInTerminal(terminal, {
             resource,
         });
+
+        const terminalOptions = terminal.creationOptions;
+        if (
+            'cwd' in terminalOptions &&
+            typeof terminalOptions.cwd === 'string' &&
+            terminalOptions.cwd !== cwd
+        ) {
+            terminal.sendText(`cd ${terminalOptions.cwd}`);
+        }
     }
 
     public static getKey(): string {
