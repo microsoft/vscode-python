@@ -37,7 +37,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
     public async resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
         const kind = await identifyEnvironment(executablePath);
         const environment = await resolveBasicEnv({ kind, executablePath });
-        const info = await this.environmentInfoService.getEnvironmentInfo(environment.executable.filename);
+        const info = await this.environmentInfoService.getEnvironmentInfo(environment);
         if (!info) {
             return undefined;
         }
@@ -107,7 +107,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
         state.pending += 1;
         // It's essential we increment the pending call count before any asynchronus calls in this method.
         // We want this to be run even when `resolveInBackground` is called in background.
-        const info = await this.environmentInfoService.getEnvironmentInfo(seen[envIndex].executable.filename);
+        const info = await this.environmentInfoService.getEnvironmentInfo(seen[envIndex]);
         const old = seen[envIndex];
         if (info) {
             const resolvedEnv = getResolvedEnv(info, seen[envIndex]);
