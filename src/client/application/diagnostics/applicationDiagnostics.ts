@@ -15,10 +15,7 @@ function log(diagnostics: IDiagnostic[]): void {
     diagnostics.forEach((item) => {
         const message = `Diagnostic Code: ${item.code}, Message: ${item.message}`;
         switch (item.severity) {
-            case DiagnosticSeverity.Error: {
-                traceLog(message);
-                break;
-            }
+            case DiagnosticSeverity.Error:
             case DiagnosticSeverity.Warning: {
                 traceLog(message);
                 break;
