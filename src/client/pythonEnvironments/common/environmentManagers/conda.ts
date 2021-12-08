@@ -434,6 +434,7 @@ export class Conda {
             return version;
         }
         // Use a bogus version, at least to indicate the fact that a version was returned.
+        // This ensures we still use conda for activation, installation etc.
         traceWarn(`Unable to parse Version of Conda, ${versionString}`);
         return new SemVer('0.0.1');
     }
