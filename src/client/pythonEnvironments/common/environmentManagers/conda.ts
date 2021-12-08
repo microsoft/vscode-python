@@ -11,7 +11,7 @@ import { getRegistryInterpreters } from '../windowsUtils';
 import { EnvironmentType, PythonEnvironment } from '../../info';
 import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
-import { traceVerbose, traceWarn } from '../../../logging';
+import { traceError, traceVerbose } from '../../../logging';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 
@@ -435,7 +435,7 @@ export class Conda {
         }
         // Use a bogus version, at least to indicate the fact that a version was returned.
         // This ensures we still use conda for activation, installation etc.
-        traceWarn(`Unable to parse Version of Conda, ${versionString}`);
+        traceError(`Unable to parse version of Conda, ${versionString}`);
         return new SemVer('0.0.1');
     }
 }
