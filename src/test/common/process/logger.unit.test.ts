@@ -3,11 +3,9 @@
 
 'use strict';
 
-import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
-import * as util from 'util';
 
 import untildify = require('untildify');
 import { WorkspaceFolder } from 'vscode';
@@ -16,12 +14,11 @@ import { ProcessLogger } from '../../../client/common/process/logger';
 import { Logging } from '../../../client/common/utils/localize';
 import { getOSType, OSType } from '../../../client/common/utils/platform';
 import * as logging from '../../../client/logging';
-import { Arguments } from '../../../client/logging/types';
 
 suite('ProcessLogger suite', () => {
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
-    let outputResult: string;
     let logger: ProcessLogger;
+    let traceInfoStub: sinon.SinonStub;
 
     suiteSetup(() => {
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -32,10 +29,7 @@ suite('ProcessLogger suite', () => {
     });
 
     setup(() => {
-        outputResult = '';
-        sinon.stub(logging, 'traceLog').callsFake((...args: Arguments) => {
-            outputResult += `${util.format(...args)}\n`;
-        });
+        traceInfoStub = sinon.stub(logging, 'traceInfo');
     });
 
     teardown(() => {
@@ -46,94 +40,74 @@ suite('ProcessLogger suite', () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess('test', ['--foo', '--bar'], options);
 
-        const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${options.cwd}\n`;
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect - String built incorrectly');
+        traceInfoStub.calledOnceWithExactly(`> test --foo --bar`);
+        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${options.cwd}`);
     });
 
     test('Logger adds quotes around arguments if they contain spaces', async () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess('test', ['--foo', '--bar', 'import test'], options);
 
-        const expectedResult = `> test --foo --bar "import test"\n${Logging.currentWorkingDirectory()} ${path.join(
-            'debug',
-            'path',
-        )}\n`;
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
+        traceInfoStub.calledOnceWithExactly(`> test --foo --bar "import test"`);
+        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${path.join('debug', 'path')}`);
     });
 
     test('Logger preserves quotes around arguments if they contain spaces', async () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess('test', ['--foo', '--bar', '"import test"'], options);
 
-        const expectedResult = `> test --foo --bar \"import test\"\n${Logging.currentWorkingDirectory()} ${path.join(
-            'debug',
-            'path',
-        )}\n`;
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
+        traceInfoStub.calledOnceWithExactly(`> test --foo --bar "import test"`);
+        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${path.join('debug', 'path')}`);
     });
 
     test('Logger converts single quotes around arguments to double quotes if they contain spaces', async () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess('test', ['--foo', '--bar', "'import test'"], options);
 
-        const expectedResult = `> test --foo --bar \"import test\"\n${Logging.currentWorkingDirectory()} ${path.join(
-            'debug',
-            'path',
-        )}\n`;
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
+        traceInfoStub.calledOnceWithExactly(`> test --foo --bar "import test"`);
+        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${path.join('debug', 'path')}`);
     });
 
     test('Logger removes single quotes around arguments if they do not contain spaces', async () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess('test', ['--foo', '--bar', "'importtest'"], options);
 
-        const expectedResult = `> test --foo --bar importtest\n${Logging.currentWorkingDirectory()} ${path.join(
-            'debug',
-            'path',
-        )}\n`;
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
+        traceInfoStub.calledOnceWithExactly(`> test --foo --bar importtest`);
+        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${path.join('debug', 'path')}`);
     });
 
     test('Logger replaces the path/to/home with ~ in the current working directory', async () => {
         const options = { cwd: path.join(untildify('~'), 'debug', 'path') };
         logger.logProcess('test', ['--foo', '--bar'], options);
 
-        const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${path.join(
-            '~',
-            'debug',
-            'path',
-        )}\n`;
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
+        traceInfoStub.calledOnceWithExactly(`> test --foo --bar`);
+        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${path.join('~', 'debug', 'path')}`);
     });
 
     test('Logger replaces the path/to/home with ~ in the command path', async () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
 
-        const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n${Logging.currentWorkingDirectory()} ${
-            options.cwd
-        }\n`;
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
+        traceInfoStub.calledOnceWithExactly(`> ${path.join('~', 'test')} --foo --bar`);
+        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${options.cwd}`);
     });
 
     test('Logger replaces the path/to/home with ~ if shell command is provided', async () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess(`"${path.join(untildify('~'), 'test')}" "--foo" "--bar"`, undefined, options);
 
-        const expectedResult = `> "${path.join('~', 'test')}" "--foo" "--bar"\n${Logging.currentWorkingDirectory()} ${
-            options.cwd
-        }\n`;
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
+        traceInfoStub.calledOnceWithExactly(`> "${path.join('~', 'test')}" "--foo" "--bar"`);
+        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${options.cwd}`);
     });
 
     test('Logger replaces the path to workspace with . if exactly one workspace folder is opened', async () => {
         const options = { cwd: path.join('path', 'to', 'workspace', 'debug', 'path') };
         logger.logProcess(`"${path.join('path', 'to', 'workspace', 'test')}" "--foo" "--bar"`, undefined, options);
 
-        const expectedResult = `> ".${path.sep}test" "--foo" "--bar"\n${Logging.currentWorkingDirectory()} .${
-            path.sep + path.join('debug', 'path')
-        }\n`;
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect');
+        traceInfoStub.calledOnceWithExactly(`> ".${path.sep}test" "--foo" "--bar"`);
+        traceInfoStub.calledOnceWithExactly(
+            `${Logging.currentWorkingDirectory()} .${path.sep + path.join('debug', 'path')}`,
+        );
     });
 
     test('On Windows, logger replaces both backwards and forward slash version of path to workspace with . if exactly one workspace folder is opened', async function () {
@@ -142,39 +116,33 @@ suite('ProcessLogger suite', () => {
         }
         let options = { cwd: path.join('path/to/workspace', 'debug', 'path') };
 
-        const expectedResult = `> ".${path.sep}test" "--foo" "--bar"\n${Logging.currentWorkingDirectory()} .${
-            path.sep + path.join('debug', 'path')
-        }\n`;
-
         logger.logProcess(`"${path.join('path', 'to', 'workspace', 'test')}" "--foo" "--bar"`, undefined, options);
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect for case 1');
 
-        outputResult = '';
+        traceInfoStub.calledOnceWithExactly(`> ".${path.sep}test" "--foo" "--bar"`);
+        traceInfoStub.calledOnceWithExactly(
+            `${Logging.currentWorkingDirectory()} .${path.sep + path.join('debug', 'path')}`,
+        );
+        traceInfoStub.resetHistory();
 
         options = { cwd: path.join('path\\to\\workspace', 'debug', 'path') };
         logger.logProcess(`"${path.join('path', 'to', 'workspace', 'test')}" "--foo" "--bar"`, undefined, options);
 
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect for case 2');
+        traceInfoStub.calledOnceWithExactly(`> ".${path.sep}test" "--foo" "--bar"`);
+        traceInfoStub.calledOnceWithExactly(
+            `${Logging.currentWorkingDirectory()} .${path.sep + path.join('debug', 'path')}`,
+        );
     });
 
     test("Logger doesn't display the working directory line if there is no options parameter", async () => {
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar']);
 
-        const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n`;
-        expect(outputResult).to.equal(
-            expectedResult,
-            'Output string is incorrect: Working directory line should not be displayed',
-        );
+        traceInfoStub.calledOnceWithExactly(`> ${path.join('~', 'test')} --foo --bar`);
     });
 
     test("Logger doesn't display the working directory line if there is no cwd key in the options parameter", async () => {
         const options = {};
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
 
-        const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n`;
-        expect(outputResult).to.equal(
-            expectedResult,
-            'Output string is incorrect: Working directory line should not be displayed',
-        );
+        traceInfoStub.calledOnceWithExactly(`> ${path.join('~', 'test')} --foo --bar\n`);
     });
 });
