@@ -102,6 +102,15 @@ export interface IPythonExecutionService {
     execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
 
+export interface IPythonEnvironment {
+    getInterpreterInformation(): Promise<InterpreterInformation | undefined>;
+    getExecutionObservableInfo(pythonArgs?: string[]): PythonExecInfo;
+    getExecutablePath(): Promise<string>;
+    isModuleInstalled(moduleName: string): Promise<boolean>;
+    getModuleVersion(moduleName: string): Promise<string | undefined>;
+    getExecutionInfo(pythonArgs?: string[]): PythonExecInfo;
+}
+
 export class StdErrError extends Error {
     constructor(message: string) {
         super(message);

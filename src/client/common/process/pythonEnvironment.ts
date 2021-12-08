@@ -9,9 +9,9 @@ import { getExecutablePath } from '../../pythonEnvironments/info/executable';
 import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from './internal/python';
-import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types';
+import { ExecutionResult, IProcessService, IPythonEnvironment, ShellOptions, SpawnOptions } from './types';
 
-export class PythonEnvironment {
+class PythonEnvironment implements IPythonEnvironment {
     private cachedExecutablePath: Map<string, Promise<string>> = new Map<string, Promise<string>>();
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
 

@@ -10,7 +10,7 @@ import { EventName } from '../../telemetry/constants';
 import { IFileSystem } from '../platform/types';
 import { IConfigurationService, IDisposableRegistry, IInterpreterPathProxyService } from '../types';
 import { ProcessService } from './proc';
-import { createCondaEnv, createPythonEnv, createWindowsStoreEnv, PythonEnvironment } from './pythonEnvironment';
+import { createCondaEnv, createPythonEnv, createWindowsStoreEnv } from './pythonEnvironment';
 import { createPythonProcessService } from './pythonProcess';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
@@ -19,6 +19,7 @@ import {
     IProcessLogger,
     IProcessService,
     IProcessServiceFactory,
+    IPythonEnvironment,
     IPythonExecutionFactory,
     IPythonExecutionService,
 } from './types';
@@ -142,7 +143,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
 }
 
-function createPythonService(procService: IProcessService, env: PythonEnvironment): IPythonExecutionService {
+function createPythonService(procService: IProcessService, env: IPythonEnvironment): IPythonExecutionService {
     const procs = createPythonProcessService(procService, env);
     return {
         getInterpreterInformation: () => env.getInterpreterInformation(),
