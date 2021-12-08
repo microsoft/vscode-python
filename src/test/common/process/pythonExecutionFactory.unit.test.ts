@@ -16,7 +16,7 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
-import { CONDA_RUN_VERSION, PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
+import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import {
     IBufferDecoder,
     IProcessLogger,
@@ -34,6 +34,7 @@ import { ServiceContainer } from '../../../client/ioc/container';
 import { CondaService } from '../../../client/pythonEnvironments/common/environmentManagers/condaService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { IInterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection/types';
+import { CONDA_RUN_VERSION } from '../../../client/pythonEnvironments/common/environmentManagers/conda';
 
 const pythonInterpreter: PythonEnvironment = {
     path: '/foo/bar/python.exe',
