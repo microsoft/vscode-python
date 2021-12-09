@@ -9,7 +9,7 @@ on:
       - 'release-*'
 
 env:
-  NODE_VERSION: 12.15.0
+  NODE_VERSION: 14.18.2
   # Force a path with spaces and to test extension works in these scenarios
   # Unicode characters are causing 2.7 failures so skip that for now.
   special-working-directory: './path with spaces'
