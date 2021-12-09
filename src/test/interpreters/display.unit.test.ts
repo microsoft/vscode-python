@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
+import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import {
     ConfigurationTarget,
@@ -12,9 +13,8 @@ import {
     WorkspaceFolder,
 } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IDisposableRegistry, IOutputChannel, IPathUtils, ReadWrite } from '../../client/common/types';
+import { IDisposableRegistry, IPathUtils, ReadWrite } from '../../client/common/types';
 import { Interpreters } from '../../client/common/utils/localize';
 import { Architecture } from '../../client/common/utils/platform';
 import {
@@ -25,6 +25,7 @@ import {
 } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IServiceContainer } from '../../client/ioc/types';
+import * as logging from '../../client/logging';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 const info: PythonEnvironment = {
@@ -50,7 +51,8 @@ suite('Interpreters Display', () => {
     let interpreterDisplay: IInterpreterDisplay;
     let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
     let pathUtils: TypeMoq.IMock<IPathUtils>;
-    let output: TypeMoq.IMock<IOutputChannel>;
+    let traceLogStub: sinon.SinonStub;
+
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -61,11 +63,9 @@ suite('Interpreters Display', () => {
         disposableRegistry = [];
         statusBar = TypeMoq.Mock.ofType<StatusBarItem>();
         pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
-        output = TypeMoq.Mock.ofType<IOutputChannel>();
 
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), STANDARD_OUTPUT_CHANNEL))
-            .returns(() => output.object);
+        traceLogStub = sinon.stub(logging, 'traceLog');
+
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
@@ -87,6 +87,11 @@ suite('Interpreters Display', () => {
         pathUtils.setup((p) => p.getDisplayName(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p) => p);
         createInterpreterDisplay();
     });
+
+    teardown(() => {
+        sinon.restore();
+    });
+
     function createInterpreterDisplay(filters: IInterpreterStatusbarVisibilityFilter[] = []) {
         interpreterDisplay = new InterpreterDisplay(serviceContainer.object);
         filters.forEach((f) => interpreterDisplay.registerVisibilityFilter(f));
@@ -144,14 +149,9 @@ suite('Interpreters Display', () => {
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
             .returns(() => Promise.resolve(activeInterpreter));
-        output
-            .setup((o) => o.appendLine(Interpreters.pythonInterpreterPath().format(activeInterpreter.path)))
-            .returns(() => undefined)
-            .verifiable(TypeMoq.Times.once());
 
         await interpreterDisplay.refresh(resource);
-
-        output.verifyAll();
+        traceLogStub.calledOnceWithExactly(Interpreters.pythonInterpreterPath().format(activeInterpreter.path));
     });
     test('If interpreter is not identified then tooltip should point to python Path', async () => {
         const resource = Uri.file('x');

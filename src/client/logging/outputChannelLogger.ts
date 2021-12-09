@@ -6,12 +6,16 @@ import { OutputChannel } from 'vscode';
 import { Arguments, ILogging } from './types';
 import { getTimeForLogging } from './util';
 
-function formatMessage(level: string, ...data: Arguments): string {
-    return `[${level.toUpperCase()} ${getTimeForLogging()}]: ${util.format(...data)}`;
+function formatMessage(level?: string, ...data: Arguments): string {
+    return level ? `[${level.toUpperCase()} ${getTimeForLogging()}]: ${util.format(...data)}` : util.format(...data);
 }
 
 export class OutputChannelLogger implements ILogging {
     constructor(private readonly channel: OutputChannel) {}
+
+    public traceLog(...data: Arguments): void {
+        this.channel.appendLine(util.format(...data));
+    }
 
     public traceError(...data: Arguments): void {
         this.channel.appendLine(formatMessage('error', ...data));

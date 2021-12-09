@@ -16,6 +16,7 @@ export enum LogLevel {
 export type Arguments = unknown[];
 
 export interface ILogging {
+    traceLog(...data: Arguments): void;
     traceError(...data: Arguments): void;
     traceWarn(...data: Arguments): void;
     traceInfo(...data: Arguments): void;

@@ -3,9 +3,10 @@
 
 import { injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, OutputChannel, ProgressLocation, ProgressOptions } from 'vscode';
+import { CancellationToken, ProgressLocation, ProgressOptions } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { traceError, traceLog } from '../../logging';
 import { EnvironmentType, ModuleInstallerType } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -108,11 +109,10 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         const options = {
             name: 'VS Code Python',
         };
-        const outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;
 
-        outputChannel.appendLine('');
-        outputChannel.appendLine(`[Elevated] ${command}`);
+        traceLog(`[Elevated] ${command}`);
 
         const sudo = require('sudo-prompt');
 
@@ -123,12 +123,10 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             } else {
                 outputChannel.show();
                 if (stdout) {
-                    outputChannel.appendLine('');
-                    outputChannel.append(stdout);
+                    traceLog(stdout);
                 }
                 if (stderr) {
-                    outputChannel.appendLine('');
-                    outputChannel.append(`Warning: ${stderr}`);
+                    traceError(`Warning: ${stderr}`);
                 }
             }
         });

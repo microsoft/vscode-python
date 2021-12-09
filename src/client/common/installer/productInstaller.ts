@@ -1,8 +1,8 @@
 /* eslint-disable max-classes-per-file */
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as semver from 'semver';
-import { CancellationToken, OutputChannel, Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import '../extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -11,13 +11,12 @@ import { EnvironmentType, ModuleInstallerType, PythonEnvironment } from '../../p
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
-import { Commands, STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { Commands } from '../constants';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import {
     IConfigurationService,
     IInstaller,
     InstallerResponse,
-    IOutputChannel,
     IPersistentStateFactory,
     ProductInstallStatus,
     Product,
@@ -59,7 +58,7 @@ abstract class BaseInstaller {
 
     protected readonly persistentStateFactory: IPersistentStateFactory;
 
-    constructor(protected serviceContainer: IServiceContainer, protected outputChannel: OutputChannel) {
+    constructor(protected serviceContainer: IServiceContainer) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -284,8 +283,8 @@ export class FormatterInstaller extends BaseInstaller {
 }
 
 export class LinterInstaller extends BaseInstaller {
-    constructor(protected serviceContainer: IServiceContainer, protected outputChannel: OutputChannel) {
-        super(serviceContainer, outputChannel);
+    constructor(protected serviceContainer: IServiceContainer) {
+        super(serviceContainer);
     }
 
     protected async promptToInstallImplementation(
@@ -559,10 +558,7 @@ export class ProductInstaller implements IInstaller {
 
     private interpreterService: IInterpreterService;
 
-    constructor(
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private outputChannel: OutputChannel,
-    ) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.productService = serviceContainer.get<IProductService>(IProductService);
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
     }
@@ -616,13 +612,13 @@ export class ProductInstaller implements IInstaller {
         const productType = this.productService.getProductType(product);
         switch (productType) {
             case ProductType.Formatter:
-                return new FormatterInstaller(this.serviceContainer, this.outputChannel);
+                return new FormatterInstaller(this.serviceContainer);
             case ProductType.Linter:
-                return new LinterInstaller(this.serviceContainer, this.outputChannel);
+                return new LinterInstaller(this.serviceContainer);
             case ProductType.TestFramework:
-                return new TestFrameworkInstaller(this.serviceContainer, this.outputChannel);
+                return new TestFrameworkInstaller(this.serviceContainer);
             case ProductType.DataScience:
-                return new DataScienceInstaller(this.serviceContainer, this.outputChannel);
+                return new DataScienceInstaller(this.serviceContainer);
             default:
                 break;
         }

@@ -1,24 +1,18 @@
-<!-- Please search for existing issues at https://github.com/microsoft/vscode-python/issues?is%3Aissue+label%3Abug -->
-
+<!-- Please fill in all XXX markers -->
 # Behaviour
-
-XXX
-
-## Expected vs. Actual Behaviour
+## Expected vs. Actual
 
 XXX
 
 ## Steps to reproduce:
 
-[**NOTE**: Self-contained, minimal reproducing code samples are **extremely** helpful and will expedite addressing your issue]
-
-1.
+1. XXX
 
 <!--
-Note: If you think a GIF of what is happening would be helpful, consider tools like https://www.cockos.com/licecap/, https://github.com/phw/peek or https://www.screentogif.com/ .
-You can attach such things **after** you create your issue on GitHub.
+**After** creating the issue on GitHub, you can add screenshots and GIFs of what is happening. Consider tools like https://www.cockos.com/licecap/, https://github.com/phw/peek or https://www.screentogif.com/ for GIF creation.
 -->
 
+<!-- **NOTE**: Everything below is auto-generated; no editing required. -->
 # Diagnostic data
 
 -   Python version (& distribution if applicable, e.g. Anaconda): {0}

@@ -1,4 +1,4 @@
-import { OutputChannel, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { ExecutionInfo, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IErrorHandler } from '../types';
@@ -8,10 +8,10 @@ import { StandardErrorHandler } from './standard';
 
 export class ErrorHandler implements IErrorHandler {
     private handler: BaseErrorHandler;
-    constructor(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
+    constructor(product: Product, serviceContainer: IServiceContainer) {
         // Create chain of handlers.
-        const standardErrorHandler = new StandardErrorHandler(product, outputChannel, serviceContainer);
-        this.handler = new NotInstalledErrorHandler(product, outputChannel, serviceContainer);
+        const standardErrorHandler = new StandardErrorHandler(product, serviceContainer);
+        this.handler = new NotInstalledErrorHandler(product, serviceContainer);
         this.handler.setNextHandler(standardErrorHandler);
     }
 

@@ -1,9 +1,10 @@
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import * as fs from 'fs';
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as util from 'util';
+import { eq } from 'semver';
 import * as platform from '../../../../client/common/utils/platform';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
@@ -74,7 +75,7 @@ suite('Conda and its environments are located correctly', () => {
         expect(info).to.deep.equal(expectedInfo);
     }
 
-    function condaInfo(condaVersion: string): CondaInfo {
+    function condaInfo(condaVersion?: string): CondaInfo {
         return {
             conda_version: condaVersion,
             python_version: '3.9.0',
@@ -86,6 +87,7 @@ suite('Conda and its environments are located correctly', () => {
     }
 
     let getPythonSetting: sinon.SinonStub;
+    let condaVersionOutput: string;
 
     setup(() => {
         osType = platform.OSType.Unknown;
@@ -173,10 +175,14 @@ suite('Conda and its environments are located correctly', () => {
         sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
             for (const prefix of ['', ...execPath]) {
                 const contents = getFile(path.join(prefix, command));
-                if (args[0] !== 'info' || args[1] !== '--json') {
+                if (args[0] === 'info' && args[1] === '--json') {
+                    if (typeof contents === 'string' && contents !== '') {
+                        return { stdout: contents };
+                    }
+                } else if (args[0] === '--version') {
+                    return { stdout: condaVersionOutput };
+                } else {
                     throw new Error(`Invalid arguments: ${util.inspect(args)}`);
-                } else if (typeof contents === 'string' && contents !== '') {
-                    return { stdout: contents };
                 }
             }
             throw new Error(`${command} is missing or is not executable`);
@@ -184,6 +190,7 @@ suite('Conda and its environments are located correctly', () => {
     });
 
     teardown(() => {
+        condaVersionOutput = '';
         sinon.restore();
     });
 
@@ -432,6 +439,57 @@ suite('Conda and its environments are located correctly', () => {
 
             await expectConda('C:\\Anaconda3\\Scripts\\conda.exe');
         });
+    });
+
+    test('Conda version returns version info using `conda info` command if applicable', async () => {
+        files = {
+            conda: JSON.stringify(condaInfo('4.8.0')),
+        };
+        const conda = await Conda.getConda();
+        const version = await conda?.getCondaVersion();
+        expect(version).to.not.equal(undefined);
+        expect(eq(version!, '4.8.0')).to.equal(true);
+    });
+
+    test('Conda version returns version info using `conda --version` command otherwise', async () => {
+        files = {
+            conda: JSON.stringify(condaInfo()),
+        };
+        condaVersionOutput = 'conda 4.8.0';
+        const conda = await Conda.getConda();
+        const version = await conda?.getCondaVersion();
+        expect(version).to.not.equal(undefined);
+        expect(eq(version!, '4.8.0')).to.equal(true);
+    });
+
+    test('Conda run args returns `undefined` for conda version below 4.9.0', async () => {
+        files = {
+            conda: JSON.stringify(condaInfo('4.8.0')),
+        };
+        const conda = await Conda.getConda();
+        const args = await conda?.getRunArgs({ name: 'envName', prefix: 'envPrefix' });
+        expect(args).to.equal(undefined);
+    });
+
+    test('Conda run args returns appropriate args for conda version starting with 4.9.0', async () => {
+        files = {
+            conda: JSON.stringify(condaInfo('4.9.0')),
+        };
+        const conda = await Conda.getConda();
+        let args = await conda?.getRunArgs({ name: 'envName', prefix: 'envPrefix' });
+        expect(args).to.not.equal(undefined);
+        assert.deepStrictEqual(
+            args,
+            ['conda', 'run', '-n', 'envName', '--no-capture-output'],
+            'Incorrect args for case 1',
+        );
+
+        args = await conda?.getRunArgs({ name: '', prefix: 'envPrefix' });
+        assert.deepStrictEqual(
+            args,
+            ['conda', 'run', '-p', 'envPrefix', '--no-capture-output'],
+            'Incorrect args for case 2',
+        );
     });
 
     suite('Conda env list is parsed correctly', () => {

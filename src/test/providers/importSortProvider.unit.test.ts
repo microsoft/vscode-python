@@ -14,7 +14,7 @@ import { Writable } from 'stream';
 import * as TypeMoq from 'typemoq';
 import { Range, TextDocument, TextEditor, TextLine, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../client/common/application/types';
-import { Commands, EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
+import { Commands, EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { ProcessService } from '../../client/common/process/proc';
 import {
     IProcessServiceFactory,
@@ -26,7 +26,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IEditorUtils,
-    IOutputChannel,
     IPersistentState,
     IPersistentStateFactory,
     IPythonSettings,
@@ -50,7 +49,6 @@ suite('Import Sort Provider', () => {
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let persistentStateFactory: TypeMoq.IMock<IPersistentStateFactory>;
-    let output: TypeMoq.IMock<IOutputChannel>;
     let sortProvider: SortImportsEditingProvider;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -63,8 +61,6 @@ suite('Import Sort Provider', () => {
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         editorUtils = TypeMoq.Mock.ofType<IEditorUtils>();
         persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
-        output = TypeMoq.Mock.ofType<IOutputChannel>();
-        serviceContainer.setup((c) => c.get(IOutputChannel, STANDARD_OUTPUT_CHANNEL)).returns(() => output.object);
         serviceContainer.setup((c) => c.get(IPersistentStateFactory)).returns(() => persistentStateFactory.object);
         serviceContainer.setup((c) => c.get(ICommandManager)).returns(() => commandManager.object);
         serviceContainer.setup((c) => c.get(IDocumentManager)).returns(() => documentManager.object);
@@ -653,9 +649,8 @@ suite('Import Sort Provider', () => {
                 ),
             )
             .returns(() => Promise.resolve(Common.openOutputPanel()));
-        output.setup((o) => o.show(true)).verifiable(TypeMoq.Times.once());
+        commandManager.setup((c) => c.executeCommand(Commands.ViewOutput)).verifiable(TypeMoq.Times.once());
         await sortProvider._showWarningAndOptionallyShowOutput();
-        output.verifyAll();
     });
 
     test('If user clicks do not show again on the isort5 warning prompt, do not show the prompt again', async () => {

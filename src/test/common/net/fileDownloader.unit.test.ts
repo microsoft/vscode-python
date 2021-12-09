@@ -23,8 +23,9 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IHttpClient } from '../../../client/common/types';
 import { Http } from '../../../client/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
+import * as logging from '../../../client/logging';
 import { noop } from '../../core';
-import { MockOutputChannel } from '../../mockClasses';
+
 const requestProgress = require('request-progress');
 const request = require('request');
 
@@ -68,9 +69,9 @@ class DelayedReadMemoryStream extends Readable {
     }
     public _read() {
         // Delay reading data, mimicking slow file downloads.
-        setTimeout(() => this.sendMesage(), this.delayMs);
+        setTimeout(() => this.sendMessage(), this.delayMs);
     }
-    public sendMesage() {
+    public sendMessage() {
         const i = (this.readCounter += 1);
         if (i > this.totalKb / this.kbPerIteration) {
             this.push(null);
@@ -222,7 +223,9 @@ suite('File Downloader', () => {
     });
     suite('File Downloader (mocks)', () => {
         let downloadWithProgressStub: sinon.SinonStub<any>;
+        let traceLogStub: sinon.SinonStub;
         setup(() => {
+            traceLogStub = sinon.stub(logging, 'traceLog');
             httpClient = mock(HttpClient);
             fs = mock(FileSystem);
             appShell = mock(ApplicationShell);
@@ -243,7 +246,6 @@ suite('File Downloader', () => {
             assert.equal(file, 'my temp file');
         });
         test('Display progress message in output channel', async () => {
-            const outputChannel = mock(MockOutputChannel);
             const tmpFile = { filePath: 'my temp file', dispose: noop };
             when(fs.createTemporaryFile('.pdf')).thenResolve(tmpFile);
             fileDownloader = new FileDownloader(instance(httpClient), instance(fs), instance(appShell));
@@ -251,10 +253,9 @@ suite('File Downloader', () => {
             await fileDownloader.downloadFile('file to download', {
                 progressMessagePrefix: '',
                 extension: '.pdf',
-                outputChannel: outputChannel,
             });
 
-            verify(outputChannel.appendLine(Http.downloadingFile().format('file to download')));
+            traceLogStub.calledWithExactly(Http.downloadingFile().format('file to download'));
         });
         test('Display progress when downloading', async () => {
             const tmpFile = { filePath: 'my temp file', dispose: noop };

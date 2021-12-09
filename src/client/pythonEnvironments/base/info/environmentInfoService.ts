@@ -7,6 +7,8 @@ import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../../co
 import { getInterpreterInfo, InterpreterInformation } from './interpreter';
 import { buildPythonExecInfo } from '../../exec';
 import { traceVerbose } from '../../../logging';
+import { Conda } from '../../common/environmentManagers/conda';
+import { PythonEnvInfo, PythonEnvKind } from '.';
 
 export enum EnvironmentInfoServiceQueuePriority {
     Default,
@@ -15,14 +17,22 @@ export enum EnvironmentInfoServiceQueuePriority {
 
 export interface IEnvironmentInfoService {
     getEnvironmentInfo(
-        interpreterPath: string,
+        env: PythonEnvInfo,
         priority?: EnvironmentInfoServiceQueuePriority,
     ): Promise<InterpreterInformation | undefined>;
     isInfoProvided(interpreterPath: string): boolean;
 }
 
-async function buildEnvironmentInfo(interpreterPath: string): Promise<InterpreterInformation | undefined> {
-    const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(interpreterPath)).catch((reason) => {
+async function buildEnvironmentInfo(env: PythonEnvInfo): Promise<InterpreterInformation | undefined> {
+    let python = [env.executable.filename];
+    if (env.kind === PythonEnvKind.Conda) {
+        const conda = await Conda.getConda();
+        const runArgs = await conda?.getRunArgs({ name: env.name, prefix: env.location });
+        if (runArgs) {
+            python = [...runArgs, 'python'];
+        }
+    }
+    const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(python)).catch((reason) => {
         traceVerbose(reason);
         return undefined;
     });
@@ -43,7 +53,7 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
         Deferred<InterpreterInformation>
     >();
 
-    private workerPool?: IWorkerPool<string, InterpreterInformation | undefined>;
+    private workerPool?: IWorkerPool<PythonEnvInfo, InterpreterInformation | undefined>;
 
     public dispose(): void {
         if (this.workerPool !== undefined) {
@@ -53,9 +63,10 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
     }
 
     public async getEnvironmentInfo(
-        interpreterPath: string,
+        env: PythonEnvInfo,
         priority?: EnvironmentInfoServiceQueuePriority,
     ): Promise<InterpreterInformation | undefined> {
+        const interpreterPath = env.executable.filename;
         const result = this.cache.get(interpreterPath);
         if (result !== undefined) {
             // Another call for this environment has already been made, return its result
@@ -63,14 +74,16 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
         }
 
         if (this.workerPool === undefined) {
-            this.workerPool = createRunningWorkerPool<string, InterpreterInformation | undefined>(buildEnvironmentInfo);
+            this.workerPool = createRunningWorkerPool<PythonEnvInfo, InterpreterInformation | undefined>(
+                buildEnvironmentInfo,
+            );
         }
 
         const deferred = createDeferred<InterpreterInformation>();
         this.cache.set(interpreterPath, deferred);
         return (priority === EnvironmentInfoServiceQueuePriority.High
-            ? this.workerPool.addToQueue(interpreterPath, QueuePosition.Front)
-            : this.workerPool.addToQueue(interpreterPath, QueuePosition.Back)
+            ? this.workerPool.addToQueue(env, QueuePosition.Front)
+            : this.workerPool.addToQueue(env, QueuePosition.Back)
         ).then((r) => {
             deferred.resolve(r);
             if (r === undefined) {

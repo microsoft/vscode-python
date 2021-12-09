@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import * as requestTypes from 'request';
 import { Progress } from 'vscode';
+import { traceLog } from '../../logging';
 import { IApplicationShell } from '../application/types';
 import { Octicons } from '../constants';
 import { IFileSystem, WriteStream } from '../platform/types';
@@ -21,9 +22,7 @@ export class FileDownloader implements IFileDownloader {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
     ) {}
     public async downloadFile(uri: string, options: DownloadOptions): Promise<string> {
-        if (options.outputChannel) {
-            options.outputChannel.appendLine(Http.downloadingFile().format(uri));
-        }
+        traceLog(Http.downloadingFile().format(uri));
         const tempFile = await this.fs.createTemporaryFile(options.extension);
 
         await this.downloadFileWithStatusBarProgress(uri, options.progressMessagePrefix, tempFile.filePath).then(

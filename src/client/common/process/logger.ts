@@ -3,19 +3,17 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { traceInfo } from '../../logging';
-import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { IOutputChannel, IPathUtils } from '../types';
+import { IWorkspaceService } from '../application/types';
+import { isCI, isTestExecution } from '../constants';
 import { Logging } from '../utils/localize';
+import { getOSType, getUserHomeDir, OSType } from '../utils/platform';
 import { IProcessLogger, SpawnOptions } from './types';
 
 @injectable()
 export class ProcessLogger implements IProcessLogger {
-    constructor(
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-    ) {}
+    constructor(@inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {}
 
     public logProcess(fileOrCommand: string, args?: string[], options?: SpawnOptions) {
         if (!isTestExecution() && isCI && process.env.UITEST_DISABLE_PROCESS_LOGGING) {
@@ -23,27 +21,39 @@ export class ProcessLogger implements IProcessLogger {
             // Used only during UI Tests (hence this setting need not be exposed as a valid setting).
             return;
         }
-        // Note: Single quotes maybe converted to double quotes for printing purposes.
-        let commandList: string[];
-        if (!args) {
-            // It's a quoted command.
-            commandList = fileOrCommand.split('" "').map((s) => s.trimQuotes());
-        } else {
-            commandList = [fileOrCommand, ...args].map((s) => s.trimQuotes());
-        }
-        const command = commandList.reduce((accumulator, current, index) => {
-            const formattedArg = this.pathUtils.getDisplayName(current).toCommandArgument();
-            return index === 0 ? formattedArg : `${accumulator} ${formattedArg}`;
-        }, '');
-
-        const info = [`> ${command}`];
+        let command = args
+            ? [fileOrCommand, ...args].map((e) => e.trimQuotes().toCommandArgument()).join(' ')
+            : fileOrCommand;
+        const info = [`> ${this.getDisplayCommands(command)}`];
         if (options && options.cwd) {
-            info.push(`${Logging.currentWorkingDirectory()} ${this.pathUtils.getDisplayName(options.cwd)}`);
+            info.push(`${Logging.currentWorkingDirectory()} ${this.getDisplayCommands(options.cwd)}`);
         }
 
         info.forEach((line) => {
             traceInfo(line);
-            this.outputChannel.appendLine(line);
         });
     }
+
+    private getDisplayCommands(command: string): string {
+        if (this.workspaceService.workspaceFolders && this.workspaceService.workspaceFolders.length === 1) {
+            command = replaceMatchesWithCharacter(command, this.workspaceService.workspaceFolders[0].uri.fsPath, '.');
+        }
+        const home = getUserHomeDir();
+        if (home) {
+            command = replaceMatchesWithCharacter(command, home, '~');
+        }
+        return command;
+    }
+}
+
+/**
+ * Finds case insensitive matches in the original string and replaces it with character provided.
+ */
+function replaceMatchesWithCharacter(original: string, match: string, character: string): string {
+    // Backslashes have special meaning in regexes, we need an extra backlash so
+    // it's not considered special. Also match both forward and backward slash
+    // versions of 'match' for Windows.
+    const pattern = match.replaceAll('\\', getOSType() === OSType.Windows ? '(\\\\|/)' : '\\\\');
+    let regex = new RegExp(pattern, 'ig');
+    return original.replace(regex, character);
 }

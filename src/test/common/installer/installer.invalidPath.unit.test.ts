@@ -7,7 +7,7 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { OutputChannel, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import '../../../client/common/extensions';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
@@ -39,7 +39,6 @@ suite('Module Installer - Invalid Paths', () => {
                         return this.skip();
                     }
                     serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-                    const outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
 
                     serviceContainer
                         .setup((c) => c.get(TypeMoq.It.isValue(IProductService), TypeMoq.It.isAny()))
@@ -75,7 +74,7 @@ suite('Module Installer - Invalid Paths', () => {
                         .setup((c) => c.get(TypeMoq.It.isValue(IPersistentStateFactory), TypeMoq.It.isAny()))
                         .returns(() => persistentState.object);
 
-                    installer = new ProductInstaller(serviceContainer.object, outputChannel.object);
+                    installer = new ProductInstaller(serviceContainer.object);
                 });
 
                 switch (product.value) {

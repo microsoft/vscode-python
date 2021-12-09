@@ -16,6 +16,7 @@ import {
     EnvironmentInfoServiceQueuePriority,
     getEnvironmentInfoService,
 } from '../../../../client/pythonEnvironments/base/info/environmentInfoService';
+import { buildEnvInfo } from '../../../../client/pythonEnvironments/base/info/env';
 
 suite('Environment Info Service', () => {
     let stubShellExec: sinon.SinonStub;
@@ -61,9 +62,14 @@ suite('Environment Info Service', () => {
         for (let i = 0; i < 10; i = i + 1) {
             const path = `any-path${i}`;
             if (i < 5) {
-                promises.push(envService.getEnvironmentInfo(path));
+                promises.push(envService.getEnvironmentInfo(buildEnvInfo({ executable: path })));
             } else {
-                promises.push(envService.getEnvironmentInfo(path, EnvironmentInfoServiceQueuePriority.High));
+                promises.push(
+                    envService.getEnvironmentInfo(
+                        buildEnvInfo({ executable: path }),
+                        EnvironmentInfoServiceQueuePriority.High,
+                    ),
+                );
             }
             expected.push(createExpectedEnvInfo(path));
         }
@@ -86,10 +92,10 @@ suite('Environment Info Service', () => {
         // Clear call counts
         stubShellExec.resetHistory();
         // Evaluate once so the result is cached.
-        await envService.getEnvironmentInfo(path);
+        await envService.getEnvironmentInfo(buildEnvInfo({ executable: path }));
 
         for (let i = 0; i < 10; i = i + 1) {
-            promises.push(envService.getEnvironmentInfo(path));
+            promises.push(envService.getEnvironmentInfo(buildEnvInfo({ executable: path })));
             expected.push(createExpectedEnvInfo(path));
         }
 
@@ -106,8 +112,8 @@ suite('Environment Info Service', () => {
         const path1 = 'any-path1';
         const path2 = 'any-path2';
 
-        promises.push(envService.getEnvironmentInfo(path1));
-        promises.push(envService.getEnvironmentInfo(path2));
+        promises.push(envService.getEnvironmentInfo(buildEnvInfo({ executable: path1 })));
+        promises.push(envService.getEnvironmentInfo(buildEnvInfo({ executable: path2 })));
 
         await Promise.all(promises);
         result = envService.isInfoProvided(path1);
@@ -122,8 +128,8 @@ suite('Environment Info Service', () => {
         const path1 = 'any-path1';
         const path2 = 'any-path2';
 
-        promises.push(envService.getEnvironmentInfo(path1));
-        promises.push(envService.getEnvironmentInfo(path2));
+        promises.push(envService.getEnvironmentInfo(buildEnvInfo({ executable: path1 })));
+        promises.push(envService.getEnvironmentInfo(buildEnvInfo({ executable: path2 })));
 
         let result = envService.isInfoProvided(path1);
         assert.strictEqual(result, false);

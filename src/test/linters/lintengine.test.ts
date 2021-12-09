@@ -85,7 +85,7 @@ suite('Linting - LintingEngine', () => {
                 (l) =>
                     l.createLinter(
                         TypeMoq.It.isAny(),
-                        TypeMoq.It.isAny(),
+
                         TypeMoq.It.isAny(),
                         TypeMoq.It.isValue(doc.uri),
                     ),
@@ -98,7 +98,7 @@ suite('Linting - LintingEngine', () => {
         const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, true, ['a*.py']);
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
-            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             TypeMoq.Times.never(),
         );
     });
@@ -107,7 +107,7 @@ suite('Linting - LintingEngine', () => {
         const doc = mockTextDocument('a.ts', 'typescript', true);
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
-            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             TypeMoq.Times.never(),
         );
     });
@@ -116,7 +116,7 @@ suite('Linting - LintingEngine', () => {
         const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, false, [], 'git');
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
-            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             TypeMoq.Times.never(),
         );
     });
@@ -124,7 +124,7 @@ suite('Linting - LintingEngine', () => {
         const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, false, [], 'showModifications');
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
-            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             TypeMoq.Times.never(),
         );
     });
@@ -132,7 +132,7 @@ suite('Linting - LintingEngine', () => {
         const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, false, [], 'svn');
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
-            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             TypeMoq.Times.never(),
         );
     });
@@ -141,7 +141,7 @@ suite('Linting - LintingEngine', () => {
         const doc = mockTextDocument('file.py', PYTHON_LANGUAGE, false, []);
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
-            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             TypeMoq.Times.never(),
         );
     });

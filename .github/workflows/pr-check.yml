@@ -9,7 +9,7 @@ on:
 
 env:
   NODE_VERSION: 12.15.0
-  PYTHON_VERSION: 3.9
+  PYTHON_VERSION: '3.10' # YML treats 3.10 the number as 3.1, so quotes around 3.10
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
   VSIX_NAME: ms-python-insiders.vsix
@@ -61,7 +61,7 @@ jobs:
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the Unix case.
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
-        python: ['2.7', '3.9']
+        python: ['2.7', '3.x']
         test-suite: [ts-unit, python-unit, venv, single-workspace, debugger, functional]
         exclude:
           # For fast PR turn-around, skip 2.7 under Windows.

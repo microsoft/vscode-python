@@ -18,8 +18,6 @@ import {
 } from '../../../client/application/diagnostics/types';
 import { IApplicationDiagnostics } from '../../../client/application/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
-import { IOutputChannel } from '../../../client/common/types';
 import { createDeferred, createDeferredFromPromise } from '../../../client/common/utils/async';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -30,7 +28,6 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
     let envHealthCheck: typemoq.IMock<IDiagnosticsService>;
     let lsNotSupportedCheck: typemoq.IMock<IDiagnosticsService>;
     let pythonInterpreterCheck: typemoq.IMock<IDiagnosticsService>;
-    let outputChannel: typemoq.IMock<IOutputChannel>;
     let workspaceService: typemoq.IMock<IWorkspaceService>;
     let appDiagnostics: IApplicationDiagnostics;
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
@@ -47,7 +44,6 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         pythonInterpreterCheck = typemoq.Mock.ofType<IDiagnosticsService>();
         pythonInterpreterCheck.setup((service) => service.runInBackground).returns(() => false);
         pythonInterpreterCheck.setup((service) => service.runInUntrustedWorkspace).returns(() => false);
-        outputChannel = typemoq.Mock.ofType<IOutputChannel>();
         workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
         workspaceService.setup((w) => w.isTrusted).returns(() => true);
 
@@ -55,13 +51,10 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
             .setup((d) => d.getAll(typemoq.It.isValue(IDiagnosticsService)))
             .returns(() => [envHealthCheck.object, lsNotSupportedCheck.object, pythonInterpreterCheck.object]);
         serviceContainer
-            .setup((d) => d.get(typemoq.It.isValue(IOutputChannel), typemoq.It.isValue(STANDARD_OUTPUT_CHANNEL)))
-            .returns(() => outputChannel.object);
-        serviceContainer
             .setup((d) => d.get(typemoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
 
-        appDiagnostics = new ApplicationDiagnostics(serviceContainer.object, outputChannel.object);
+        appDiagnostics = new ApplicationDiagnostics(serviceContainer.object);
     });
 
     teardown(() => {
@@ -204,23 +197,6 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
             diagnostics.push(diagnostic);
         }
 
-        for (const diagnostic of diagnostics) {
-            const message = `Diagnostic Code: ${diagnostic.code}, Message: ${diagnostic.message}`;
-            switch (diagnostic.severity) {
-                case DiagnosticSeverity.Error: {
-                    outputChannel.setup((o) => o.appendLine(message)).verifiable(typemoq.Times.once());
-                    break;
-                }
-                case DiagnosticSeverity.Warning: {
-                    outputChannel.setup((o) => o.appendLine(message)).verifiable(typemoq.Times.once());
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-        }
-
         envHealthCheck
             .setup((e) => e.diagnose(typemoq.It.isAny()))
             .returns(() => Promise.resolve(diagnostics))
@@ -240,7 +216,6 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         envHealthCheck.verifyAll();
         lsNotSupportedCheck.verifyAll();
         pythonInterpreterCheck.verifyAll();
-        outputChannel.verifyAll();
     });
     test('Ensure diagnostics run in foreground and background', async () => {
         const foreGroundService = mock(InvalidPythonInterpreterService);
@@ -262,7 +237,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         when(foreGroundService.diagnose(anything())).thenReturn(foreGroundDeferred.promise);
         when(backGroundService.diagnose(anything())).thenReturn(backgroundGroundDeferred.promise);
 
-        const service = new ApplicationDiagnostics(instance(svcContainer), outputChannel.object);
+        const service = new ApplicationDiagnostics(instance(svcContainer));
 
         const promise = service.performPreStartupHealthCheck(undefined);
         const deferred = createDeferredFromPromise(promise);

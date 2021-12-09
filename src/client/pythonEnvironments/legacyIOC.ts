@@ -170,7 +170,7 @@ class ComponentAdapter implements IComponentAdapter {
         }
         if (env?.executable.sysPrefix) {
             const execInfoService = getEnvironmentInfoService();
-            const info = await execInfoService.getEnvironmentInfo(pythonPath, EnvironmentInfoServiceQueuePriority.High);
+            const info = await execInfoService.getEnvironmentInfo(env, EnvironmentInfoServiceQueuePriority.High);
             if (info) {
                 env.executable.sysPrefix = info.executable.sysPrefix;
                 env.version = info.version;
