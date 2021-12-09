@@ -51,21 +51,20 @@ function pylintMessageAsString(msg: ILintMessage, trailingComma: boolean = true)
         "column": ${msg.column},
         "symbol": "${msg.code}",
         "message": "${msg.message}",
-        "endLine": ${msg.endLine ? msg.endLine : null},
-        "endColumn": ${msg.endColumn ? msg.endColumn : null}
+        "endLine": ${msg.endLine ?? null},
+        "endColumn": ${msg.endColumn ?? null}
     }${trailingComma ? ',' : ''}`;
 }
 
 export function pylintLinterMessagesAsOutput(messages: ILintMessage[]): string {
-    const lines: string[] = [];
-    lines.push(`[`);
+    const lines: string[] = ['['];
     if (messages) {
-        for (const msg of messages.slice(0, -1)) {
-            lines.push(pylintMessageAsString(msg));
-        }
-        lines.push(pylintMessageAsString(messages[messages.length - 1], false));
+        const pylintMessages = messages.slice(0, -1).map((msg) => pylintMessageAsString(msg, true));
+        const lastMessage = pylintMessageAsString(messages[messages.length - 1], false);
+
+        lines.push(...pylintMessages, lastMessage);
     }
-    lines.push(`]`);
+    lines.push(']');
     return lines.join(os.EOL);
 }
 

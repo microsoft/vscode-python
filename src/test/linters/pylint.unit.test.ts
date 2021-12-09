@@ -248,7 +248,7 @@ suite('Pylint - Function runLinter()', () => {
                 type: 'error',
                 provider: LinterId.PyLint,
                 endLine: undefined,
-                endColumn: 0,
+                endColumn: undefined,
             },
         ];
         const settings = {

@@ -25,8 +25,6 @@ interface IRegexGroup {
     code: string;
     message: string;
     type: string;
-    endLine: number | undefined;
-    endColumn: number | undefined;
 }
 
 function matchNamedRegEx(data: string, regex: string): IRegexGroup | undefined {

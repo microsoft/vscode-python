@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as vscode from 'vscode';
 import { CancellationToken, OutputChannel, TextDocument } from 'vscode';
 import '../common/extensions';
 import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { traceError } from '../logging';
 import { BaseLinter } from './baseLinter';
-import { ILintMessage, LinterId } from './types';
+import { ILintMessage } from './types';
 
 interface IJsonMessage {
     column: number | null;
@@ -16,8 +15,8 @@ interface IJsonMessage {
     message: string;
     symbol: string;
     type: string;
-    endLine: number | null | undefined;
-    endColumn: number | null | undefined;
+    endLine?: number | null;
+    endColumn?: number | null;
 }
 
 export class Pylint extends BaseLinter {
@@ -37,15 +36,15 @@ export class Pylint extends BaseLinter {
         return messages;
     }
 
-    private parseOutputMessage(
-        outputMsg: IJsonMessage,
-        linterID: LinterId,
-        colOffset: number = 0,
-    ): ILintMessage | undefined {
-        if (outputMsg.endColumn === null) {
-            outputMsg.endColumn = 0;
-        } else if (outputMsg.endColumn !== undefined) {
+    private parseOutputMessage(outputMsg: IJsonMessage, colOffset: number = 0): ILintMessage | undefined {
+        // Both 'endLine' and 'endColumn' are only present on pylint 2.12.2+
+        // If present, both can still be 'null' if AST node didn't have endLine and / or endColumn information.
+        // If 'endColumn' is 'null' or not preset, set it to 'undefined' to
+        // prevent the lintingEngine from inferring an error range.
+        if (outputMsg.endColumn) {
             outputMsg.endColumn = outputMsg.endColumn <= 0 ? 0 : outputMsg.endColumn - colOffset;
+        } else {
+            outputMsg.endColumn = undefined;
         }
 
         return {
@@ -54,7 +53,7 @@ export class Pylint extends BaseLinter {
             column: outputMsg.column === null || outputMsg.column <= 0 ? 0 : outputMsg.column - colOffset,
             line: outputMsg.line,
             type: outputMsg.type,
-            provider: linterID,
+            provider: this.info.id,
             endLine: outputMsg.endLine === null ? undefined : outputMsg.endLine,
             endColumn: outputMsg.endColumn,
         };
@@ -62,15 +61,15 @@ export class Pylint extends BaseLinter {
 
     protected async parseMessages(
         output: string,
-        _document: vscode.TextDocument,
-        _token: vscode.CancellationToken,
+        _document: TextDocument,
+        _token: CancellationToken,
         _: string,
     ): Promise<ILintMessage[]> {
         const messages: ILintMessage[] = [];
         try {
             const parsedOutput: IJsonMessage[] = JSON.parse(output);
             for (const outputMsg of parsedOutput) {
-                const msg = this.parseOutputMessage(outputMsg, this.info.id, this.columnOffset);
+                const msg = this.parseOutputMessage(outputMsg, this.columnOffset);
                 if (msg) {
                     messages.push(msg);
                     if (messages.length >= this.pythonSettings.linting.maxNumberOfProblems) {
