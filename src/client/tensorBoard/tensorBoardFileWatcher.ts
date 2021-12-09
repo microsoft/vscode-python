@@ -7,7 +7,6 @@ import { IExtensionSingleActivationService } from '../activation/types';
 import { IWorkspaceService } from '../common/application/types';
 import { NativeTensorBoard } from '../common/experiments/groups';
 import { IDisposableRegistry, IExperimentService } from '../common/types';
-import { traceError } from '../logging';
 import { TensorBoardEntrypointTrigger } from './constants';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 
@@ -40,10 +39,6 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
             return;
         }
 
-        // Look for pre-existing tfevent files, as the file watchers will only pick up files
-        // created or changed after they have been registered and hooked up. Just one will do.
-        await this.promptIfWorkspaceHasPreexistingFiles();
-
         // If the user creates or changes tfevent files, listen for those too
         for (const folder of folders) {
             this.createFileSystemWatcher(folder);
@@ -53,22 +48,6 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
         this.disposables.push(
             this.workspaceService.onDidChangeWorkspaceFolders((e) => this.updateFileSystemWatchers(e)),
         );
-    }
-
-    private async promptIfWorkspaceHasPreexistingFiles() {
-        try {
-            for (const pattern of this.globPatterns) {
-                const matches = await this.workspaceService.findFiles(pattern, undefined, 1);
-                if (matches.length > 0) {
-                    await this.tensorBoardPrompt.showNativeTensorBoardPrompt(TensorBoardEntrypointTrigger.tfeventfiles);
-                    return;
-                }
-            }
-        } catch (e) {
-            traceError(
-                `Failed to prompt to launch TensorBoard session based on preexisting tfevent files in workspace: ${e}`,
-            );
-        }
     }
 
     private async updateFileSystemWatchers(event: WorkspaceFoldersChangeEvent) {

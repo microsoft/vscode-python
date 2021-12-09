@@ -179,6 +179,13 @@ suite('Terminal - Code Execution', () => {
                 await ensureWeSetCurrentDriveBeforeChangingDirectory(true);
             });
 
+            test('Ensure once set current drive before, we always send command to change the drive letter for subsequent executions', async () => {
+                await ensureWeSetCurrentDriveBeforeChangingDirectory(true);
+                const file = Uri.file(path.join('c:', 'path', 'to', 'file', 'one.py'));
+                await executor.executeFile(file);
+                terminalService.verify(async (t) => t.sendText(TypeMoq.It.isValue('c:')), TypeMoq.Times.once());
+            });
+
             async function ensureWeDoNotChangeDriveIfDriveLetterSameAsFileDriveLetter(
                 _isWindows: boolean,
             ): Promise<void> {

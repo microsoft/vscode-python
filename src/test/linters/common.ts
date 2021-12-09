@@ -44,6 +44,30 @@ export function linterMessageAsLine(msg: ILintMessage): string {
     }
 }
 
+function pylintMessageAsString(msg: ILintMessage, trailingComma: boolean = true): string {
+    return `    {
+        "type": "${msg.type}",
+        "line": ${msg.line},
+        "column": ${msg.column},
+        "symbol": "${msg.code}",
+        "message": "${msg.message}",
+        "endLine": ${msg.endLine ?? null},
+        "endColumn": ${msg.endColumn ?? null}
+    }${trailingComma ? ',' : ''}`;
+}
+
+export function pylintLinterMessagesAsOutput(messages: ILintMessage[]): string {
+    const lines: string[] = ['['];
+    if (messages) {
+        const pylintMessages = messages.slice(0, -1).map((msg) => pylintMessageAsString(msg, true));
+        const lastMessage = pylintMessageAsString(messages[messages.length - 1], false);
+
+        lines.push(...pylintMessages, lastMessage);
+    }
+    lines.push(']');
+    return lines.join(os.EOL);
+}
+
 export function getLinterID(product: Product): LinterId {
     const linterID = LINTERID_BY_PRODUCT.get(product);
     if (!linterID) {

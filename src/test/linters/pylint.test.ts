@@ -102,10 +102,32 @@ suite('Linting - Pylint', () => {
         workspace.setup((x) => x.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => wsf.object);
 
         const linterOutput = [
-            'No config file found, using default configuration',
-            '************* Module test',
-            '1,1,convention,C0111:Missing module docstring',
-            '3,-1,error,E1305:Too many arguments for format string',
+            '[',
+            '    {',
+            '        "type": "convention",',
+            '        "module": "test",',
+            '        "obj": "",',
+            '        "line": 1,',
+            '        "column": 1,',
+            `        "path": "${fileFolder}/test.py",`,
+            '        "symbol": "missing-module-docstring",',
+            '        "message": "Missing module docstring",',
+            '        "message-id": "C0114",',
+            '        "endLine": null,',
+            '        "endColumn": null',
+            '    },',
+            '    {',
+            '        "type": "error",',
+            '        "module": "test",',
+            '        "obj": "",',
+            '        "line": 3,',
+            '        "column": -1,',
+            `        "path": "${fileFolder}/test.py",`,
+            '        "symbol": "too-many-format-args",',
+            '        "message": "Too many arguments for format string",',
+            '        "message-id": "E1305"',
+            '     }',
+            ']',
         ].join(os.EOL);
         execService
             .setup((x) => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))

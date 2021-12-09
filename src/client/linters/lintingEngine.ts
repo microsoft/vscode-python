@@ -143,7 +143,11 @@ export class LintingEngine implements ILintingEngine {
 
     private createDiagnostics(message: ILintMessage, _document: vscode.TextDocument): vscode.Diagnostic {
         const position = new vscode.Position(message.line - 1, message.column);
-        const range = new vscode.Range(position, position);
+        let endPosition: vscode.Position = position;
+        if (message.endLine && message.endColumn) {
+            endPosition = new vscode.Position(message.endLine - 1, message.endColumn);
+        }
+        const range = new vscode.Range(position, endPosition);
 
         const severity = lintSeverityToVSSeverity.get(message.severity!)!;
         const diagnostic = new vscode.Diagnostic(range, message.message, severity);

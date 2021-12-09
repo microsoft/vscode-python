@@ -11,7 +11,7 @@ import { IFileSystem, IPlatformService } from '../../client/common/platform/type
 import { IConfigurationService } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { Pylint } from '../../client/linters/pylint';
-import { ILinterInfo, ILinterManager, ILintMessage, LintMessageSeverity } from '../../client/linters/types';
+import { ILinterInfo, ILinterManager, ILintMessage, LinterId, LintMessageSeverity } from '../../client/linters/types';
 
 suite('Pylint - Function runLinter()', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
@@ -26,12 +26,7 @@ suite('Pylint - Function runLinter()', () => {
     const doc = {
         uri: vscode.Uri.file('path/to/doc'),
     };
-    const args = [
-        "--msg-template='{line},{column},{category},{symbol}:{msg}'",
-        '--reports=n',
-        '--output-format=text',
-        doc.uri.fsPath,
-    ];
+    const args = ['--reports=n', '--output-format=json', doc.uri.fsPath];
     class PylintTest extends Pylint {
         public async run(
             _args: string[],
@@ -56,6 +51,13 @@ suite('Pylint - Function runLinter()', () => {
         }
         public getWorkingDirectoryPath(_document: vscode.TextDocument): string {
             return 'path/to/workspaceRoot';
+        }
+        public async parseMessages(
+            output: string,
+            _document: vscode.TextDocument,
+            _token: vscode.CancellationToken,
+        ): Promise<ILintMessage[]> {
+            return super.parseMessages(output, _document, _token, '');
         }
     }
 
@@ -82,6 +84,7 @@ suite('Pylint - Function runLinter()', () => {
             .setup((x) => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
             .returns((a, b) => a === b);
         manager.setup((m) => m.getLinterInfo(TypeMoq.It.isAny())).returns(() => undefined as any);
+        _info.setup((x) => x.id).returns(() => LinterId.PyLint);
     });
 
     teardown(() => {
@@ -135,5 +138,125 @@ suite('Pylint - Function runLinter()', () => {
         assert.deepEqual(result, expectedResult as any);
         assert.ok(parseMessagesSeverity.calledOnce);
         assert.ok(run.calledOnce);
+    });
+
+    test('Parse json output', async () => {
+        // If 'endLine' and 'endColumn' are missing in JSON output,
+        // both should be set to 'undefined'
+        const jsonOutput = `[
+    {
+        "type": "error",
+        "module": "file",
+        "obj": "Foo.meth3",
+        "line": 26,
+        "column": 15,
+        "path": "file.py",
+        "symbol": "no-member",
+        "message": "Instance of 'Foo' has no 'blop' member",
+        "message-id": "E1101"
+    }
+]`;
+        const expectedMessages: ILintMessage[] = [
+            {
+                code: 'no-member',
+                message: "Instance of 'Foo' has no 'blop' member",
+                column: 15,
+                line: 26,
+                type: 'error',
+                provider: LinterId.PyLint,
+                endLine: undefined,
+                endColumn: undefined,
+            },
+        ];
+        const settings = {
+            linting: {
+                pylintEnabled: true,
+            },
+        };
+        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
+        const pylint = new PylintTest(serviceContainer.object);
+        const result = await pylint.parseMessages(jsonOutput, doc as any, mock(vscode.CancellationTokenSource).token);
+        assert.deepEqual(result, expectedMessages);
+    });
+
+    test('Parse json output with endLine', async () => {
+        const jsonOutput = `[
+    {
+        "type": "error",
+        "module": "file",
+        "obj": "Foo.meth3",
+        "line": 26,
+        "column": 15,
+        "endLine": 26,
+        "endColumn": 24,
+        "path": "file.py",
+        "symbol": "no-member",
+        "message": "Instance of 'Foo' has no 'blop' member",
+        "message-id": "E1101"
+    }
+]`;
+        const expectedMessages: ILintMessage[] = [
+            {
+                code: 'no-member',
+                message: "Instance of 'Foo' has no 'blop' member",
+                column: 15,
+                line: 26,
+                type: 'error',
+                provider: LinterId.PyLint,
+                endLine: 26,
+                endColumn: 24,
+            },
+        ];
+        const settings = {
+            linting: {
+                pylintEnabled: true,
+            },
+        };
+        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
+        const pylint = new PylintTest(serviceContainer.object);
+        const result = await pylint.parseMessages(jsonOutput, doc as any, mock(vscode.CancellationTokenSource).token);
+        assert.deepEqual(result, expectedMessages);
+    });
+
+    test('Parse json output with unknown endLine', async () => {
+        // If 'endLine' and 'endColumn' are present in JSON output
+        // but 'null', 'endLine' should be set to 'undefined'.
+        // 'endColumn' defaults to 0.
+        const jsonOutput = `[
+    {
+        "type": "error",
+        "module": "file",
+        "obj": "Foo.meth3",
+        "line": 26,
+        "column": 15,
+        "endLine": null,
+        "endColumn": null,
+        "path": "file.py",
+        "symbol": "no-member",
+        "message": "Instance of 'Foo' has no 'blop' member",
+        "message-id": "E1101"
+    }
+]`;
+        const expectedMessages: ILintMessage[] = [
+            {
+                code: 'no-member',
+                message: "Instance of 'Foo' has no 'blop' member",
+                column: 15,
+                line: 26,
+                type: 'error',
+                provider: LinterId.PyLint,
+                endLine: undefined,
+                endColumn: undefined,
+            },
+        ];
+        const settings = {
+            linting: {
+                pylintEnabled: true,
+            },
+        };
+        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
+        const pylint = new PylintTest(serviceContainer.object);
+        const result = await pylint.parseMessages(jsonOutput, doc as any, mock(vscode.CancellationTokenSource).token);
+        assert.deepEqual(result, expectedMessages);
     });
 });

@@ -32,7 +32,9 @@ async function buildEnvironmentInfo(env: PythonEnvInfo): Promise<InterpreterInfo
             python = [...runArgs, 'python'];
         }
     }
-    const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(python)).catch((reason) => {
+    const interpreterInfo = await getInterpreterInfo(
+        buildPythonExecInfo(python, undefined, env.executable.filename),
+    ).catch((reason) => {
         traceVerbose(reason);
         return undefined;
     });
