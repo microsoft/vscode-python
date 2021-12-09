@@ -153,7 +153,7 @@ export function testLocatorWatcher(
 
     suiteSetup(async function () {
         if (getOSType() === OSType.Linux) {
-            return this.skip();
+            this.skip();
         }
         await venvs.cleanUp();
     });
