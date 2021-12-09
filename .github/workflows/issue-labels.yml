@@ -17,9 +17,20 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            github.rest.issues.addLabels({
-              issue_number: context.issue.number,
+            const result = github.rest.issues.listLabelsOnIssue({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              labels: ['classify']
+              issue_number: context.issue.number,
             })
+            const labels = labels.map((label) => label.name)
+            
+            const skipClassify = ['needs community feedback', 'needs decision', 'needs PR', 'needs proposal', 'needs spike']
+
+            if (!labels.includes(...skipClassify)) {
+              github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: ['classify']
+              })
+            }
