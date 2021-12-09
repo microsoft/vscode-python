@@ -37,8 +37,6 @@ export function buildPythonExecInfo(
             args,
             command: python[0],
             python: [...python],
-            // It isn't necessarily the last item but our supported
-            // cases it currently is.
             pythonExecutable: pythonExecutable ?? python[python.length - 1],
         };
     }
@@ -67,9 +65,7 @@ export function copyPythonExecInfo(orig: PythonExecInfo, extraPythonArgs?: strin
         info.args.push(...extraPythonArgs);
     }
     if (info.pythonExecutable === undefined) {
-        // It isn't necessarily the last item but our supported
-        // cases it currently is.
-        info.pythonExecutable = info.python[info.python.length - 1];
+        info.pythonExecutable = info.python[info.python.length - 1]; // Default case
     }
     return info;
 }
