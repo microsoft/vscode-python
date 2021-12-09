@@ -6,6 +6,7 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { ImportMock } from 'ts-mock-imports';
+import { SemVer } from 'semver';
 import { ExecutionResult } from '../../../../client/common/process/types';
 import { IDisposableRegistry } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
@@ -17,6 +18,8 @@ import {
     getEnvironmentInfoService,
 } from '../../../../client/pythonEnvironments/base/info/environmentInfoService';
 import { buildEnvInfo } from '../../../../client/pythonEnvironments/base/info/env';
+import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
+import { Conda, CONDA_RUN_VERSION } from '../../../../client/pythonEnvironments/common/environmentManagers/conda';
 
 suite('Environment Info Service', () => {
     let stubShellExec: sinon.SinonStub;
@@ -50,9 +53,11 @@ suite('Environment Info Service', () => {
                 });
             }),
         );
+        sinon.stub(Conda, 'getConda').resolves(new Conda('conda'));
+        sinon.stub(Conda.prototype, 'getCondaVersion').resolves(new SemVer(CONDA_RUN_VERSION));
     });
     teardown(() => {
-        stubShellExec.restore();
+        sinon.restore();
         disposables.forEach((d) => d.dispose());
     });
     test('Add items to queue and get results', async () => {
@@ -137,5 +142,12 @@ suite('Environment Info Service', () => {
         assert.strictEqual(result, false);
         result = envService.isInfoProvided('some-random-path');
         assert.strictEqual(result, false);
+    });
+
+    test('Returns expected item if interpreter type is conda', async () => {
+        const envService = getEnvironmentInfoService(disposables);
+        const path = `any-path`;
+        const info = await envService.getEnvironmentInfo(buildEnvInfo({ executable: path, kind: PythonEnvKind.Conda }));
+        assert.deepEqual(info, createExpectedEnvInfo(path));
     });
 });

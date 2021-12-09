@@ -23,7 +23,11 @@ export type PythonExecInfo = {
  * @param python - the path (or command + arguments) to use to invoke Python
  * @param pythonArgs - any extra arguments to use when running Python
  */
-export function buildPythonExecInfo(python: string | string[], pythonArgs?: string[]): PythonExecInfo {
+export function buildPythonExecInfo(
+    python: string | string[],
+    pythonArgs?: string[],
+    pythonExecutable?: string,
+): PythonExecInfo {
     if (Array.isArray(python)) {
         const args = python.slice(1);
         if (pythonArgs) {
@@ -35,7 +39,7 @@ export function buildPythonExecInfo(python: string | string[], pythonArgs?: stri
             python: [...python],
             // It isn't necessarily the last item but our supported
             // cases it currently is.
-            pythonExecutable: python[python.length - 1],
+            pythonExecutable: pythonExecutable ?? python[python.length - 1],
         };
     }
     return {
