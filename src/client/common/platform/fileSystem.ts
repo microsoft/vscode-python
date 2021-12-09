@@ -122,7 +122,7 @@ export class RawFileSystem implements IRawFileSystem {
             // The "fs-extra" module is effectively equivalent to node's "fs"
             // module (but is a bit more async-friendly).  So we use that
             // instead of "fs".
-            fsExtra || fs,
+            fsExtra || (fs as IRawFSExtra),
         );
     }
 
