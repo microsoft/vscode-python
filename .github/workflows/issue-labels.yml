@@ -22,7 +22,7 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number,
             })
-            const labels = labels.map((label) => label.name)
+            const labels = result.map((label) => label.name)
 
             const skipClassify = ['needs community feedback', 'needs decision', 'needs PR', 'needs proposal', 'needs spike']
 
