@@ -82,7 +82,7 @@ suite('Interpreters Display', () => {
             .returns(() => interpreterHelper.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
         applicationShell
-            .setup((a) => a.createStatusBarItem(TypeMoq.It.isValue(StatusBarAlignment.Left), TypeMoq.It.isValue(100)))
+            .setup((a) => a.createStatusBarItem(TypeMoq.It.isValue(StatusBarAlignment.Right), TypeMoq.It.isValue(100)))
             .returns(() => statusBar.object);
         pathUtils.setup((p) => p.getDisplayName(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p) => p);
         createInterpreterDisplay();

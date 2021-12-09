@@ -36,7 +36,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         const application = serviceContainer.get<IApplicationShell>(IApplicationShell);
         const disposableRegistry = serviceContainer.get<Disposable[]>(IDisposableRegistry);
 
-        this.statusBar = application.createStatusBarItem(StatusBarAlignment.Left, 100);
+        this.statusBar = application.createStatusBarItem(StatusBarAlignment.Right, 100);
         this.statusBar.command = 'python.setInterpreter';
         disposableRegistry.push(this.statusBar);
 
