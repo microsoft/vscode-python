@@ -174,7 +174,7 @@ suite('Pylint - Function runLinter()', () => {
             },
         };
         configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
-        const pylint = new PylintTest(output.object, serviceContainer.object);
+        const pylint = new PylintTest(serviceContainer.object);
         const result = await pylint.parseMessages(jsonOutput, doc as any, mock(vscode.CancellationTokenSource).token);
         assert.deepEqual(result, expectedMessages);
     });
@@ -213,7 +213,7 @@ suite('Pylint - Function runLinter()', () => {
             },
         };
         configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
-        const pylint = new PylintTest(output.object, serviceContainer.object);
+        const pylint = new PylintTest(serviceContainer.object);
         const result = await pylint.parseMessages(jsonOutput, doc as any, mock(vscode.CancellationTokenSource).token);
         assert.deepEqual(result, expectedMessages);
     });
@@ -255,7 +255,7 @@ suite('Pylint - Function runLinter()', () => {
             },
         };
         configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
-        const pylint = new PylintTest(output.object, serviceContainer.object);
+        const pylint = new PylintTest(serviceContainer.object);
         const result = await pylint.parseMessages(jsonOutput, doc as any, mock(vscode.CancellationTokenSource).token);
         assert.deepEqual(result, expectedMessages);
     });
