@@ -28,7 +28,7 @@ suite('Configuration Settings', () => {
 
             const pythonSettingValue = (pythonSettings as any)[key] as string;
             if (key.endsWith('Path') && IS_WINDOWS) {
-                assert.equal(
+                assert.strictEqual(
                     settingValue.toUpperCase(),
                     pythonSettingValue.toUpperCase(),
                     `Setting ${key} not the same`,

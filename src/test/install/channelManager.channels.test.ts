@@ -39,8 +39,8 @@ suite('Installation - installation channels', () => {
         const installer = mockInstaller(true, '');
         const cm = new InstallationChannelManager(serviceContainer);
         const channels = await cm.getInstallationChannels();
-        assert.equal(channels.length, 1, 'Incorrect number of channels');
-        assert.equal(channels[0], installer.object, 'Incorrect installer');
+        assert.strictEqual(channels.length, 1, 'Incorrect number of channels');
+        assert.strictEqual(channels[0], installer.object, 'Incorrect installer');
     });
 
     test('Multiple channels', async () => {
@@ -50,9 +50,9 @@ suite('Installation - installation channels', () => {
 
         const cm = new InstallationChannelManager(serviceContainer);
         const channels = await cm.getInstallationChannels();
-        assert.equal(channels.length, 2, 'Incorrect number of channels');
-        assert.equal(channels[0], installer1.object, 'Incorrect installer 1');
-        assert.equal(channels[1], installer3.object, 'Incorrect installer 2');
+        assert.strictEqual(channels.length, 2, 'Incorrect number of channels');
+        assert.strictEqual(channels[0], installer1.object, 'Incorrect installer 1');
+        assert.strictEqual(channels[1], installer3.object, 'Incorrect installer 2');
     });
 
     test('pipenv channel', async () => {
@@ -63,8 +63,8 @@ suite('Installation - installation channels', () => {
 
         const cm = new InstallationChannelManager(serviceContainer);
         const channels = await cm.getInstallationChannels();
-        assert.equal(channels.length, 1, 'Incorrect number of channels');
-        assert.equal(channels[0], pipenvInstaller.object, 'Installer must be pipenv');
+        assert.strictEqual(channels.length, 1, 'Incorrect number of channels');
+        assert.strictEqual(channels[0], pipenvInstaller.object, 'Installer must be pipenv');
     });
 
     test('Select installer', async () => {
@@ -91,10 +91,10 @@ suite('Installation - installation channels', () => {
         const cm = new InstallationChannelManager(serviceContainer);
         await cm.getInstallationChannel(Product.pylint);
 
-        assert.notEqual(items, undefined, 'showQuickPick not called');
-        assert.equal(items!.length, 2, 'Incorrect number of installer shown');
-        assert.notEqual(items![0]!.label!.indexOf('Name 1'), -1, 'Incorrect first installer name');
-        assert.notEqual(items![1]!.label!.indexOf('Name 2'), -1, 'Incorrect second installer name');
+        assert.notStrictEqual(items, undefined, 'showQuickPick not called');
+        assert.strictEqual(items!.length, 2, 'Incorrect number of installer shown');
+        assert.notStrictEqual(items![0]!.label!.indexOf('Name 1'), -1, 'Incorrect first installer name');
+        assert.notStrictEqual(items![1]!.label!.indexOf('Name 2'), -1, 'Incorrect second installer name');
     });
 
     function mockInstaller(supported: boolean, name: string, priority?: number): TypeMoq.IMock<IModuleInstaller> {

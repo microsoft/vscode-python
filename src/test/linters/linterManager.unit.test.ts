@@ -83,9 +83,17 @@ suite('Linting - Linter Manager', () => {
     });
     test('Pylint configuration file watch', async () => {
         const pylint = linterManager.getLinterInfo(Product.pylint);
-        assert.equal(pylint.configFileNames.length, 2, 'Pylint configuration file count is incorrect.');
-        assert.notEqual(pylint.configFileNames.indexOf('pylintrc'), -1, 'Pylint configuration files miss pylintrc.');
-        assert.notEqual(pylint.configFileNames.indexOf('.pylintrc'), -1, 'Pylint configuration files miss .pylintrc.');
+        assert.strictEqual(pylint.configFileNames.length, 2, 'Pylint configuration file count is incorrect.');
+        assert.notStrictEqual(
+            pylint.configFileNames.indexOf('pylintrc'),
+            -1,
+            'Pylint configuration files miss pylintrc.',
+        );
+        assert.notStrictEqual(
+            pylint.configFileNames.indexOf('.pylintrc'),
+            -1,
+            'Pylint configuration files miss .pylintrc.',
+        );
     });
 
     [undefined, Uri.parse('something')].forEach((resource) => {

@@ -27,7 +27,7 @@ const KIND_NAMES: [PythonEnvKind, string][] = [
 
 suite('pyenvs info - PyEnvKind', () => {
     test('all Python env kinds are covered', () => {
-        assert.equal(
+        assert.strictEqual(
             KIND_NAMES.length,
             // We ignore PythonEnvKind.Unknown.
             getNamesAndValues(PythonEnvKind).length - 1,
@@ -43,7 +43,7 @@ suite('pyenvs info - PyEnvKind', () => {
                 test(`check ${kind}`, () => {
                     const name = getKindDisplayName(kind);
 
-                    assert.notEqual(name, '');
+                    assert.notStrictEqual(name, '');
                 });
             });
         });
@@ -58,7 +58,7 @@ suite('pyenvs info - PyEnvKind', () => {
                 test(`check ${kind}`, () => {
                     const name = getKindDisplayName(kind);
 
-                    assert.equal(name, '');
+                    assert.strictEqual(name, '');
                 });
             });
         });
@@ -69,7 +69,7 @@ suite('pyenvs info - PyEnvKind', () => {
             const numPrioritized = getPrioritizedEnvKinds().length;
             const numNames = getNamesAndValues(PythonEnvKind).length;
 
-            assert.equal(numPrioritized, numNames);
+            assert.strictEqual(numPrioritized, numNames);
         });
     });
 });

@@ -85,14 +85,14 @@ suite('Module Installer - Poetry', () => {
 
     test('Is not supported when there is no resource', async () => {
         const supported = await poetryInstaller.isSupported();
-        assert.equal(supported, false);
+        assert.strictEqual(supported, false);
     });
     test('Is not supported when there is no workspace', async () => {
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn();
 
         const supported = await poetryInstaller.isSupported(Uri.file(__filename));
 
-        assert.equal(supported, false);
+        assert.strictEqual(supported, false);
     });
     test('Get Executable info', async () => {
         const uri = Uri.file(__dirname);
@@ -134,7 +134,7 @@ suite('Module Installer - Poetry', () => {
 
         const supported = await poetryInstaller.isSupported(Uri.file(__filename));
 
-        assert.equal(supported, true);
+        assert.strictEqual(supported, true);
     });
 
     test('Is supported returns true if no interpreter is selected', async () => {
@@ -148,7 +148,7 @@ suite('Module Installer - Poetry', () => {
 
         const supported = await poetryInstaller.isSupported(Uri.file(__filename));
 
-        assert.equal(supported, false);
+        assert.strictEqual(supported, false);
     });
 
     test('Is supported returns false if selected interpreter is not related to the workspace', async () => {
@@ -166,7 +166,7 @@ suite('Module Installer - Poetry', () => {
 
         const supported = await poetryInstaller.isSupported(Uri.file(__filename));
 
-        assert.equal(supported, false);
+        assert.strictEqual(supported, false);
     });
 
     test('Is supported returns false if selected interpreter is not of Poetry type', async () => {
@@ -184,6 +184,6 @@ suite('Module Installer - Poetry', () => {
 
         const supported = await poetryInstaller.isSupported(Uri.file(__filename));
 
-        assert.equal(supported, false);
+        assert.strictEqual(supported, false);
     });
 });

@@ -59,7 +59,7 @@ suite('Environment Identifier', () => {
 
             const envType: PythonEnvKind = await identifyEnvironment(interpreterPath);
 
-            assert.equal(envType, PythonEnvKind.Pipenv);
+            assert.strictEqual(envType, PythonEnvKind.Pipenv);
         });
 
         test('Path to a local pipenv environment with a custom Pipfile name', async () => {
@@ -75,7 +75,7 @@ suite('Environment Identifier', () => {
 
             const envType: PythonEnvKind = await identifyEnvironment(interpreterPath);
 
-            assert.equal(envType, PythonEnvKind.Pipenv);
+            assert.strictEqual(envType, PythonEnvKind.Pipenv);
         });
     });
 

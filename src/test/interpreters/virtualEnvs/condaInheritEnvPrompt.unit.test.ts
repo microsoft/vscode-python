@@ -269,7 +269,7 @@ suite('Conda Inherit Env Prompt', async () => {
             await sleep(1);
 
             // Ensure activate() function has completed while initializeInBackground() is still not resolved
-            assert.equal(deferred.completed, true);
+            assert.strictEqual(deferred.completed, true);
 
             initializeInBackgroundDeferred.resolve();
             await sleep(1);

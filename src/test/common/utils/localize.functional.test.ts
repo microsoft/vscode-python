@@ -51,7 +51,7 @@ suite('Localization', () => {
 
     test('keys', (done) => {
         const val = localize.ExtensionSurveyBanner.bannerMessage();
-        assert.equal(
+        assert.strictEqual(
             val,
             'Can you please take 2 minutes to tell us how the Python extension is working for you?',
             'LanguageService string doesnt match',
@@ -64,7 +64,7 @@ suite('Localization', () => {
         setLocale('it');
 
         const val = localize.ExtensionSurveyBanner.bannerLabelYes();
-        assert.equal(val, 'Sì, prenderò il sondaggio ora', 'bannerLabelYes is not being translated');
+        assert.strictEqual(val, 'Sì, prenderò il sondaggio ora', 'bannerLabelYes is not being translated');
         done();
     });
 
@@ -78,8 +78,8 @@ suite('Localization', () => {
         const title = localize.DebugConfigStrings.selectConfiguration.title();
         const gotIt = localize.Common.gotIt();
 
-        assert.equal(title, '???', 'not used');
-        assert.equal(gotIt, '!!!', 'not used');
+        assert.strictEqual(title, '???', 'not used');
+        assert.strictEqual(gotIt, '!!!', 'not used');
         done();
     });
 
@@ -91,7 +91,7 @@ suite('Localization', () => {
 
         const gotIt = localize.Common.gotIt();
 
-        assert.equal(gotIt, 'Got it!', `default not used (got ${gotIt})`);
+        assert.strictEqual(gotIt, 'Got it!', `default not used (got ${gotIt})`);
         done();
     });
 

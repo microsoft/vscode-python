@@ -42,7 +42,7 @@ suite('Experimentation telemetry', () => {
         experimentTelemetry.postEvent(event, eventProperties);
 
         sinon.assert.calledOnce(sendTelemetryEventStub);
-        assert.equal(telemetryEvents.length, 1);
+        assert.strictEqual(telemetryEvents.length, 1);
         assert.deepEqual(telemetryEvents[0], {
             eventName: event,
             properties: {

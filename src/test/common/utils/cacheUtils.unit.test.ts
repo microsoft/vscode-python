@@ -18,38 +18,38 @@ suite('Common Utils - CacheUtils', () => {
             const cache = new InMemoryCache(5_000);
             cache.data = 'Hello World';
 
-            assert.equal(cache.data, 'Hello World');
+            assert.strictEqual(cache.data, 'Hello World');
             assert.isOk(cache.hasData);
         });
         test('Cached item can be updated and should exist', () => {
             const cache = new InMemoryCache(5_000);
             cache.data = 'Hello World';
 
-            assert.equal(cache.data, 'Hello World');
+            assert.strictEqual(cache.data, 'Hello World');
             assert.isOk(cache.hasData);
 
             cache.data = 'Bye';
 
-            assert.equal(cache.data, 'Bye');
+            assert.strictEqual(cache.data, 'Bye');
             assert.isOk(cache.hasData);
         });
         test('Cached item should not exist after time expires', () => {
             const cache = new InMemoryCache(5_000);
             cache.data = 'Hello World';
 
-            assert.equal(cache.data, 'Hello World');
+            assert.strictEqual(cache.data, 'Hello World');
             assert.isTrue(cache.hasData);
 
             // Should not expire after 4.999s.
             clock.tick(4_999);
 
-            assert.equal(cache.data, 'Hello World');
+            assert.strictEqual(cache.data, 'Hello World');
             assert.isTrue(cache.hasData);
 
             // Should expire after 5s (previous 4999ms + 1ms).
             clock.tick(1);
 
-            assert.equal(cache.data, undefined);
+            assert.strictEqual(cache.data, undefined);
             assert.isFalse(cache.hasData);
         });
     });

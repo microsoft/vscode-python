@@ -42,6 +42,6 @@ suite('Pipenv utils', () => {
 
         const isRelated = await isPipenvEnvironmentRelatedToFolder(interpreterPath, folder);
 
-        assert.equal(isRelated, true);
+        assert.strictEqual(isRelated, true);
     });
 });

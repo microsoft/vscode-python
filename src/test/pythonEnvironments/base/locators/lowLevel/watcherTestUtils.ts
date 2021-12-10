@@ -187,11 +187,11 @@ export function testLocatorWatcher(
             assert.ok(isFound);
         }
 
-        assert.equal(actualEvent!.type, FileChangeType.Created, 'Wrong event emitted');
+        assert.strictEqual(actualEvent!.type, FileChangeType.Created, 'Wrong event emitted');
         if (options?.kind) {
-            assert.equal(actualEvent!.kind, options.kind, 'Wrong event emitted');
+            assert.strictEqual(actualEvent!.kind, options.kind, 'Wrong event emitted');
         }
-        assert.notEqual(actualEvent!.searchLocation, undefined, 'Wrong event emitted');
+        assert.notStrictEqual(actualEvent!.searchLocation, undefined, 'Wrong event emitted');
         assert.ok(
             externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
             'Wrong event emitted',
@@ -221,11 +221,11 @@ export function testLocatorWatcher(
             assert.notOk(isFound);
         }
 
-        assert.notEqual(actualEvent!, undefined, 'Wrong event emitted');
+        assert.notStrictEqual(actualEvent!, undefined, 'Wrong event emitted');
         if (options?.kind) {
-            assert.equal(actualEvent!.kind, options.kind, 'Wrong event emitted');
+            assert.strictEqual(actualEvent!.kind, options.kind, 'Wrong event emitted');
         }
-        assert.notEqual(actualEvent!.searchLocation, undefined, 'Wrong event emitted');
+        assert.notStrictEqual(actualEvent!.searchLocation, undefined, 'Wrong event emitted');
         assert.ok(
             externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
             'Wrong event emitted',
@@ -248,11 +248,11 @@ export function testLocatorWatcher(
 
         await venvs.update(executable);
         await waitForChangeToBeDetected(deferred);
-        assert.notEqual(actualEvent!, undefined, 'Event was not emitted');
+        assert.notStrictEqual(actualEvent!, undefined, 'Event was not emitted');
         if (options?.kind) {
-            assert.equal(actualEvent!.kind, options.kind, 'Kind is not as expected');
+            assert.strictEqual(actualEvent!.kind, options.kind, 'Kind is not as expected');
         }
-        assert.notEqual(actualEvent!.searchLocation, undefined, 'Search location is not set');
+        assert.notStrictEqual(actualEvent!.searchLocation, undefined, 'Search location is not set');
         assert.ok(
             externalDeps.arePathsSame(actualEvent!.searchLocation!.fsPath, path.dirname(envDir)),
             `Paths don't match ${actualEvent!.searchLocation!.fsPath} != ${path.dirname(envDir)}`,

@@ -199,7 +199,7 @@ suite('Insiders Extension Service - Activation', () => {
         await sleep(1);
 
         // Ensure activate() function has completed while handleChannel is still running
-        assert.equal(deferred.completed, true);
+        assert.strictEqual(deferred.completed, true);
 
         handleChannelsDeferred.resolve();
         await sleep(1);
