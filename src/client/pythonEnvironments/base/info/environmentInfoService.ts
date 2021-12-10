@@ -6,7 +6,7 @@ import { createDeferred, Deferred } from '../../../common/utils/async';
 import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../../common/utils/workerPool';
 import { getInterpreterInfo, InterpreterInformation } from './interpreter';
 import { buildPythonExecInfo } from '../../exec';
-import { traceVerbose } from '../../../logging';
+import { traceError } from '../../../logging';
 import { Conda } from '../../common/environmentManagers/conda';
 import { PythonEnvInfo, PythonEnvKind } from '.';
 
@@ -35,7 +35,7 @@ async function buildEnvironmentInfo(env: PythonEnvInfo): Promise<InterpreterInfo
     const interpreterInfo = await getInterpreterInfo(
         buildPythonExecInfo(python, undefined, env.executable.filename),
     ).catch((reason) => {
-        traceVerbose(reason);
+        traceError(reason);
         return undefined;
     });
 
