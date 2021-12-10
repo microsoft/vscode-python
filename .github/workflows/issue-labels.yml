@@ -24,9 +24,10 @@ jobs:
             })
             const labels = result.data.map((label) => label.name)
 
-            const skipClassify = ['needs community feedback', 'needs decision', 'needs PR', 'needs proposal', 'needs spike']
+            const skipLabels = ['classify', 'needs community feedback', 'needs decision', 'needs PR', 'needs proposal', 'needs spike']
+            const shouldSkipClassify = labels.some((label) => skipLabels.includes(label))
 
-            if (!labels.includes('classify', ...skipClassify)) {
+            if (!shouldSkipClassify) {
               console.log('This issue is not labeled with "classify" or a "needs __" label, add the "classify" label.')
 
               github.rest.issues.addLabels({
