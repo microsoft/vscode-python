@@ -56,8 +56,10 @@ src/test/testing/common/debugLauncher.unit.test.ts
 src/test/testing/common/services/configSettingService.unit.test.ts
 
 src/test/common/exitCIAfterTestReporter.ts
+
 src/test/common/net/fileDownloader.unit.test.ts
 src/test/common/net/httpClient.unit.test.ts
+
 src/test/common/terminals/activator/index.unit.test.ts
 src/test/common/terminals/activator/base.unit.test.ts
 src/test/common/terminals/shellDetector.unit.test.ts
@@ -66,9 +68,13 @@ src/test/common/terminals/helper.unit.test.ts
 src/test/common/terminals/activation.unit.test.ts
 src/test/common/terminals/shellDetectors/shellDetectors.unit.test.ts
 src/test/common/terminals/environmentActivationProviders/terminalActivation.testvirtualenvs.ts
+
 src/test/common/socketStream.test.ts
+
 src/test/common/configSettings.test.ts
+
 src/test/common/experiments/telemetry.unit.test.ts
+
 src/test/common/platform/filesystem.unit.test.ts
 src/test/common/platform/errors.unit.test.ts
 src/test/common/platform/utils.ts
@@ -76,23 +82,28 @@ src/test/common/platform/fs-temp.unit.test.ts
 src/test/common/platform/fs-temp.functional.test.ts
 src/test/common/platform/filesystem.functional.test.ts
 src/test/common/platform/filesystem.test.ts
+
 src/test/common/utils/cacheUtils.unit.test.ts
 src/test/common/utils/decorators.unit.test.ts
 src/test/common/utils/localize.functional.test.ts
 src/test/common/utils/version.unit.test.ts
+
 src/test/common/configSettings/configSettings.unit.test.ts
 src/test/common/serviceRegistry.unit.test.ts
 src/test/common/extensions.unit.test.ts
 src/test/common/variables/envVarsService.unit.test.ts
 src/test/common/helpers.test.ts
 src/test/common/application/commands/reloadCommand.unit.test.ts
+
 src/test/common/installer/channelManager.unit.test.ts
 src/test/common/installer/pipInstaller.unit.test.ts
 src/test/common/installer/installer.invalidPath.unit.test.ts
 src/test/common/installer/pipEnvInstaller.unit.test.ts
 src/test/common/installer/productPath.unit.test.ts
 src/test/common/installer/extensionBuildInstaller.unit.test.ts
+
 src/test/common/socketCallbackHandler.test.ts
+
 src/test/common/process/decoder.test.ts
 src/test/common/process/processFactory.unit.test.ts
 src/test/common/process/pythonToolService.unit.test.ts
@@ -102,13 +113,14 @@ src/test/common/process/logger.unit.test.ts
 src/test/common/process/proc.exec.test.ts
 src/test/common/process/pythonProcess.unit.test.ts
 src/test/common/process/proc.unit.test.ts
+
 src/test/common/interpreterPathService.unit.test.ts
+
 src/test/common/insidersBuild/insidersExtensionPrompt.unit.test.ts
 src/test/common/insidersBuild/downloadChannelService.unit.test.ts
 src/test/common/insidersBuild/insidersExtensionService.unit.test.ts
 
 src/test/pythonFiles/formatting/dummy.ts
-
 
 src/test/debugger/extension/configuration/debugConfigurationService.unit.test.ts
 src/test/debugger/extension/configuration/providers/fileLaunch.unit.test.ts
