@@ -40,9 +40,9 @@ suite('Linting Settings', () => {
     });
     suiteTeardown(closeActiveWindows);
     teardown(async () => {
-        await ioc.dispose();
         await closeActiveWindows();
         await resetSettings();
+        await ioc.dispose();
     });
 
     async function initializeDI() {
