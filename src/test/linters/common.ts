@@ -1,5 +1,7 @@
+/* eslint-disable max-classes-per-file */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import * as os from 'os';
@@ -44,7 +46,7 @@ export function linterMessageAsLine(msg: ILintMessage): string {
     }
 }
 
-function pylintMessageAsString(msg: ILintMessage, trailingComma: boolean = true): string {
+function pylintMessageAsString(msg: ILintMessage, trailingComma = true): string {
     return `    {
         "type": "${msg.type}",
         "line": ${msg.line},
@@ -83,48 +85,79 @@ export function getProductName(product: Product, capitalize = true): string {
     }
     if (capitalize) {
         return prodName.charAt(0).toUpperCase() + prodName.slice(1);
-    } else {
-        return prodName;
     }
+    return prodName;
 }
 
-export function throwUnknownProduct(product: Product) {
+export function throwUnknownProduct(product: Product): void {
     throw Error(`unsupported product ${Product[product]} (${product})`);
 }
 
 export class LintingSettings {
     public enabled: boolean;
+
     public cwd?: string;
+
     public ignorePatterns: string[];
+
     public prospectorEnabled: boolean;
+
     public prospectorArgs: string[];
+
     public pylintEnabled: boolean;
+
     public pylintArgs: string[];
+
     public pycodestyleEnabled: boolean;
+
     public pycodestyleArgs: string[];
+
     public pylamaEnabled: boolean;
+
     public pylamaArgs: string[];
+
     public flake8Enabled: boolean;
+
     public flake8Args: string[];
+
     public pydocstyleEnabled: boolean;
+
     public pydocstyleArgs: string[];
+
     public lintOnSave: boolean;
+
     public maxNumberOfProblems: number;
+
     public pylintCategorySeverity: IPylintCategorySeverity;
+
     public pycodestyleCategorySeverity: IPycodestyleCategorySeverity;
+
     public flake8CategorySeverity: Flake8CategorySeverity;
+
     public mypyCategorySeverity: IMypyCategorySeverity;
+
     public prospectorPath: string;
+
     public pylintPath: string;
+
     public pycodestylePath: string;
+
     public pylamaPath: string;
+
     public flake8Path: string;
+
     public pydocstylePath: string;
+
     public mypyEnabled: boolean;
+
     public mypyArgs: string[];
+
     public mypyPath: string;
+
     public banditEnabled: boolean;
+
     public banditArgs: string[];
+
     public banditPath: string;
 
     constructor() {
@@ -192,16 +225,21 @@ export class LintingSettings {
 
 export class BaseTestFixture {
     public serviceContainer: TypeMoq.IMock<IServiceContainer>;
+
     public linterManager: LinterManager;
 
     // services
     public workspaceService: TypeMoq.IMock<IWorkspaceService>;
+
     public installer: TypeMoq.IMock<IInstaller>;
+
     public appShell: TypeMoq.IMock<IApplicationShell>;
 
     // config
     public configService: TypeMoq.IMock<IConfigurationService>;
+
     public pythonSettings: TypeMoq.IMock<IPythonSettings>;
+
     public lintingSettings: LintingSettings;
 
     // data
@@ -209,6 +247,7 @@ export class BaseTestFixture {
 
     // artifacts
     public output: string;
+
     public logged: string[];
 
     constructor(
@@ -222,9 +261,8 @@ export class BaseTestFixture {
         public readonly workspaceDir = '.',
         protected readonly printLogs = false,
     ) {
-        this.serviceContainer = serviceContainer
-            ? serviceContainer
-            : TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
+        this.serviceContainer =
+            serviceContainer || TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
 
         // services
 
@@ -257,9 +295,8 @@ export class BaseTestFixture {
 
         // config
 
-        this.configService = configService
-            ? configService
-            : TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
+        this.configService =
+            configService || TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
         this.pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>(undefined, TypeMoq.MockBehavior.Strict);
         this.lintingSettings = new LintingSettings();
 
@@ -295,7 +332,8 @@ export class BaseTestFixture {
     public async getLinter(product: Product, enabled = true): Promise<ILinter> {
         const info = this.linterManager.getLinterInfo(product);
 
-        (this.lintingSettings as any)[info.enabledSettingName] = enabled;
+        // @ts-ignore We only do this during testing.
+        this.lintingSettings[info.enabledSettingName] = enabled;
 
         await this.linterManager.setActiveLintersAsync([product]);
         await this.linterManager.enableLintingAsync(enabled);
@@ -310,6 +348,7 @@ export class BaseTestFixture {
         return this.getLinter(product, false);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected newMockDocument(filename: string): TypeMoq.IMock<TextDocument> {
         return newMockDocument(filename);
     }
@@ -337,7 +376,8 @@ export class BaseTestFixture {
                 }
                 const prefix = 'linting.';
                 if (setting.startsWith(prefix)) {
-                    (this.lintingSettings as any)[setting.substring(prefix.length)] = value;
+                    // @ts-ignore We only do this during testing.
+                    this.lintingSettings[setting.substr(prefix.length)] = value;
                 }
             })
             .returns(() => Promise.resolve(undefined));

@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import * as assert from 'assert';
@@ -536,9 +537,13 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
 
 class TestFixture extends BaseTestFixture {
     public platformService: TypeMoq.IMock<IPlatformService>;
+
     public filesystem: TypeMoq.IMock<IFileSystem>;
+
     public pythonToolExecService: TypeMoq.IMock<IPythonToolExecutionService>;
+
     public pythonExecService: TypeMoq.IMock<IPythonExecutionService>;
+
     public pythonExecFactory: TypeMoq.IMock<IPythonExecutionFactory>;
 
     constructor(workspaceDir = '.', printLogs = false) {
@@ -568,7 +573,7 @@ class TestFixture extends BaseTestFixture {
         this.pythonExecFactory = pythonExecFactory;
 
         this.filesystem.setup((f) => f.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
-
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.pythonExecService.setup((s: any) => s.then).returns(() => undefined);
         this.pythonExecService
             .setup((s) => s.isModuleInstalled(TypeMoq.It.isAny()))
@@ -623,7 +628,7 @@ class TestFixture extends BaseTestFixture {
             return;
         }
 
-        if (product && getLinterID(product) == 'pylint') {
+        if (product && getLinterID(product) === 'pylint') {
             this.setStdout(pylintLinterMessagesAsOutput(messages));
             return;
         }
@@ -641,7 +646,7 @@ class TestFixture extends BaseTestFixture {
     public setStdout(stdout: string) {
         this.pythonToolExecService
             .setup((s) => s.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve({ stdout: stdout }));
+            .returns(() => Promise.resolve({ stdout }));
     }
 }
 
@@ -750,12 +755,10 @@ suite('Linting Scenarios', () => {
 
         if (messagesToBeReceived.length === 0) {
             assert.equal(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
-        } else {
-            if (fixture.output.indexOf('ENOENT') === -1) {
-                // Pylint for Python Version 2.7 could return 80 linter messages, where as in 3.5 it might only return 1.
-                // Looks like pylint stops linting as soon as it comes across any ERRORS.
-                assert.notEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
-            }
+        } else if (fixture.output.indexOf('ENOENT') === -1) {
+            // Pylint for Python Version 2.7 could return 80 linter messages, where as in 3.5 it might only return 1.
+            // Looks like pylint stops linting as soon as it comes across any ERRORS.
+            assert.notEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
         }
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
@@ -794,25 +797,21 @@ suite('Linting Scenarios', () => {
     });
 });
 
-const PRODUCTS = Object.keys(Product)
-
-    .filter((key) => !isNaN(Number(Product[key as any])))
-
-    .map((key) => Product[key as any]);
-
 suite('Linting Products', () => {
     const prodService = new ProductService();
 
     test('All linting products are represented by linters', async () => {
-        for (const product of PRODUCTS) {
-            if (prodService.getProductType(product as any) !== ProductType.Linter) {
-                continue;
+        const products = Object.keys(Product)
+            .filter((item) => Number.isNaN(Number(item)))
+            .map((key) => Product[Number(key)]);
+
+        products.forEach((p) => {
+            const product = (p as unknown) as Product;
+            if (prodService.getProductType(product) === ProductType.Linter) {
+                const found = LINTERID_BY_PRODUCT.get(product);
+                assert.notStrictEqual(found, undefined, `did find linter ${Product[product]}`);
             }
-
-            const found = LINTERID_BY_PRODUCT.get(product as any);
-
-            assert.notEqual(found, undefined, `did find linter ${Product[product as any]}`);
-        }
+        });
     });
 
     test('All linters match linting products', async () => {

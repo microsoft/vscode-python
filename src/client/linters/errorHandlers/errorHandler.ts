@@ -8,6 +8,7 @@ import { StandardErrorHandler } from './standard';
 
 export class ErrorHandler implements IErrorHandler {
     private handler: BaseErrorHandler;
+
     constructor(product: Product, serviceContainer: IServiceContainer) {
         // Create chain of handlers.
         const standardErrorHandler = new StandardErrorHandler(product, serviceContainer);

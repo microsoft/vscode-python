@@ -14,11 +14,14 @@ export abstract class BaseErrorHandler implements IErrorHandler {
     constructor(protected product: Product, protected serviceContainer: IServiceContainer) {
         this.installer = this.serviceContainer.get<IInstaller>(IInstaller);
     }
+
     protected get nextHandler(): IErrorHandler | undefined {
         return this.handler;
     }
+
     public setNextHandler(handler: IErrorHandler): void {
         this.handler = handler;
     }
+
     public abstract handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean>;
 }

@@ -29,11 +29,17 @@ lintSeverityToVSSeverity.set(LintMessageSeverity.Warning, vscode.DiagnosticSever
 @injectable()
 export class LintingEngine implements ILintingEngine {
     private workspace: IWorkspaceService;
+
     private documents: IDocumentManager;
+
     private configurationService: IConfigurationService;
+
     private linterManager: ILinterManager;
+
     private diagnosticCollection: vscode.DiagnosticCollection;
+
     private pendingLintings = new Map<string, vscode.CancellationTokenSource>();
+
     private fileSystem: IFileSystem;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
@@ -120,6 +126,7 @@ export class LintingEngine implements ILintingEngine {
         this.diagnosticCollection.set(document.uri, diagnostics);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private sendLinterRunTelemetry(
         info: ILinterInfo,
         resource: vscode.Uri,
@@ -141,6 +148,7 @@ export class LintingEngine implements ILintingEngine {
         return this.documents.textDocuments.some((document) => document.uri.fsPath === uri.fsPath);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private createDiagnostics(message: ILintMessage, _document: vscode.TextDocument): vscode.Diagnostic {
         const position = new vscode.Position(message.line - 1, message.column);
         let endPosition: vscode.Position = position;

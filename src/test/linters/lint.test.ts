@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import * as assert from 'assert';
@@ -12,7 +13,7 @@ import {
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
-import { IConfigurationService, ProductType } from '../../client/common/types';
+import { IConfigurationService, ILintingSettings, ProductType } from '../../client/common/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinterManager } from '../../client/linters/types';
@@ -25,11 +26,11 @@ suite('Linting Settings', () => {
     let linterManager: ILinterManager;
     let configService: IConfigurationService;
 
-    suiteSetup(async function () {
+    suiteSetup(async () => {
         // These tests are still consistently failing during teardown.
         // See https://github.com/Microsoft/vscode-python/issues/4326.
 
-        this.skip();
+        // this.skip();
 
         await initialize();
     });
@@ -89,27 +90,35 @@ suite('Linting Settings', () => {
         await resetSettings(false);
 
         await linterManager.enableLintingAsync(false);
-        assert.equal(settings.linting.enabled, false, 'mismatch');
+        assert.strictEqual(settings.linting.enabled, false, 'mismatch');
 
         await linterManager.enableLintingAsync(true);
-        assert.equal(settings.linting.enabled, true, 'mismatch');
+        assert.strictEqual(settings.linting.enabled, true, 'mismatch');
     });
 
-    for (const product of LINTERID_BY_PRODUCT.keys()) {
-        test(`enable through manager (${Product[product]})`, async () => {
+    LINTERID_BY_PRODUCT.forEach((_, key) => {
+        const product = Product[key];
+
+        test(`enable through manager (${product})`, async () => {
             const settings = configService.getSettings();
             await resetSettings();
 
-            assert.equal((settings.linting as any)[`${Product[product]}Enabled`], false, 'mismatch');
+            const name = `${product}Enabled` as keyof ILintingSettings;
 
-            await linterManager.setActiveLintersAsync([product]);
+            assert.strictEqual(settings.linting[name], false, 'mismatch');
 
-            assert.equal((settings.linting as any)[`${Product[product]}Enabled`], true, 'mismatch');
+            await linterManager.setActiveLintersAsync([key]);
+
+            assert.strictEqual(settings.linting[name], true, 'mismatch');
             linterManager.getAllLinterInfos().forEach(async (x) => {
-                if (x.product !== product) {
-                    assert.equal((settings.linting as any)[x.enabledSettingName], false, 'mismatch');
+                if (x.product !== key) {
+                    assert.strictEqual(
+                        settings.linting[x.enabledSettingName as keyof ILintingSettings],
+                        false,
+                        'mismatch',
+                    );
                 }
             });
         });
-    }
+    });
 });

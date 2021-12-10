@@ -1,16 +1,12 @@
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
-import { ExecutionInfo, IOutputChannel, Product } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
+import { ExecutionInfo, IOutputChannel } from '../../common/types';
 import { traceError, traceLog } from '../../logging';
 import { ILinterManager, LinterId } from '../types';
 import { BaseErrorHandler } from './baseErrorHandler';
 
 export class StandardErrorHandler extends BaseErrorHandler {
-    constructor(product: Product, serviceContainer: IServiceContainer) {
-        super(product, serviceContainer);
-    }
     public async handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean> {
         if (
             typeof error === 'string' &&
@@ -29,6 +25,7 @@ export class StandardErrorHandler extends BaseErrorHandler {
         this.displayLinterError(info.id).ignoreErrors();
         return true;
     }
+
     private async displayLinterError(linterId: LinterId) {
         const message = `There was an error in running the linter '${linterId}'`;
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);

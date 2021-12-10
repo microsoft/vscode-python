@@ -25,7 +25,7 @@ export class Pylint extends BaseLinter {
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
-        const uri = document.uri;
+        const { uri } = document;
         const settings = this.configService.getSettings(uri);
         const args = ['--reports=n', '--output-format=json', uri.fsPath];
         const messages = await this.run(args, document, cancellation);
@@ -36,7 +36,7 @@ export class Pylint extends BaseLinter {
         return messages;
     }
 
-    private parseOutputMessage(outputMsg: IJsonMessage, colOffset: number = 0): ILintMessage | undefined {
+    private parseOutputMessage(outputMsg: IJsonMessage, colOffset = 0): ILintMessage | undefined {
         // Both 'endLine' and 'endColumn' are only present on pylint 2.12.2+
         // If present, both can still be 'null' if AST node didn't have endLine and / or endColumn information.
         // If 'endColumn' is 'null' or not preset, set it to 'undefined' to

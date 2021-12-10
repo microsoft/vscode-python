@@ -8,7 +8,7 @@ import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import { IConfigurationService } from '../../client/common/types';
+import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { Pylint } from '../../client/linters/pylint';
 import { ILinterInfo, ILinterManager, ILintMessage, LinterId, LintMessageSeverity } from '../../client/linters/types';
@@ -21,13 +21,14 @@ suite('Pylint - Function runLinter()', () => {
     let manager: TypeMoq.IMock<ILinterManager>;
     let _info: TypeMoq.IMock<ILinterInfo>;
     let platformService: TypeMoq.IMock<IPlatformService>;
-    let run: sinon.SinonStub<any>;
-    let parseMessagesSeverity: sinon.SinonStub<any>;
+    let run: sinon.SinonStub;
+    let parseMessagesSeverity: sinon.SinonStub;
     const doc = {
         uri: vscode.Uri.file('path/to/doc'),
     };
     const args = ['--reports=n', '--output-format=json', doc.uri.fsPath];
     class PylintTest extends Pylint {
+        // eslint-disable-next-line class-methods-use-this
         public async run(
             _args: string[],
             _document: vscode.TextDocument,
@@ -36,9 +37,13 @@ suite('Pylint - Function runLinter()', () => {
         ): Promise<ILintMessage[]> {
             return [];
         }
-        public parseMessagesSeverity(_error: string, _categorySeverity: any): LintMessageSeverity {
-            return 'Severity' as any;
+
+        // eslint-disable-next-line class-methods-use-this
+        public parseMessagesSeverity(_error: string, _categorySeverity: unknown): LintMessageSeverity {
+            return ('Severity' as unknown) as LintMessageSeverity;
         }
+
+        // eslint-disable-next-line class-methods-use-this
         public get info(): ILinterInfo {
             return _info.object;
         }
@@ -49,9 +54,12 @@ suite('Pylint - Function runLinter()', () => {
         ): Promise<ILintMessage[]> {
             return super.runLinter(document, cancellation);
         }
+
+        // eslint-disable-next-line class-methods-use-this
         public getWorkingDirectoryPath(_document: vscode.TextDocument): string {
             return 'path/to/workspaceRoot';
         }
+
         public async parseMessages(
             output: string,
             _document: vscode.TextDocument,
@@ -83,7 +91,7 @@ suite('Pylint - Function runLinter()', () => {
         fileSystem
             .setup((x) => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
             .returns((a, b) => a === b);
-        manager.setup((m) => m.getLinterInfo(TypeMoq.It.isAny())).returns(() => undefined as any);
+        manager.setup((m) => m.getLinterInfo(TypeMoq.It.isAny())).returns(() => (undefined as unknown) as ILinterInfo);
         _info.setup((x) => x.id).returns(() => LinterId.PyLint);
     });
 
@@ -97,14 +105,14 @@ suite('Pylint - Function runLinter()', () => {
                 pylintEnabled: true,
             },
         };
-        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
+        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as IPythonSettings);
         _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
         run = sinon.stub(PylintTest.prototype, 'run');
         run.callsFake(() => Promise.resolve([]));
         parseMessagesSeverity = sinon.stub(PylintTest.prototype, 'parseMessagesSeverity');
         parseMessagesSeverity.callsFake(() => 'Severity');
         const pylint = new PylintTest(serviceContainer.object);
-        await pylint.runLinter(doc as any, mock(vscode.CancellationTokenSource).token);
+        await pylint.runLinter(doc as vscode.TextDocument, mock(vscode.CancellationTokenSource).token);
         assert.deepEqual(run.args[0][0], args);
         assert.ok(parseMessagesSeverity.notCalled);
         assert.ok(run.calledOnce);
@@ -127,15 +135,15 @@ suite('Pylint - Function runLinter()', () => {
                 pylintEnabled: true,
             },
         };
-        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
+        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as IPythonSettings);
         _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
         run = sinon.stub(PylintTest.prototype, 'run');
-        run.callsFake(() => Promise.resolve(message as any));
+        run.callsFake(() => Promise.resolve(message));
         parseMessagesSeverity = sinon.stub(PylintTest.prototype, 'parseMessagesSeverity');
         parseMessagesSeverity.callsFake(() => 'LintMessageSeverity');
         const pylint = new PylintTest(serviceContainer.object);
-        const result = await pylint.runLinter(doc as any, mock(vscode.CancellationTokenSource).token);
-        assert.deepEqual(result, expectedResult as any);
+        const result = await pylint.runLinter(doc as vscode.TextDocument, mock(vscode.CancellationTokenSource).token);
+        assert.deepEqual(result, (expectedResult as unknown) as ILintMessage[]);
         assert.ok(parseMessagesSeverity.calledOnce);
         assert.ok(run.calledOnce);
     });
@@ -173,9 +181,13 @@ suite('Pylint - Function runLinter()', () => {
                 pylintEnabled: true,
             },
         };
-        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
+        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as IPythonSettings);
         const pylint = new PylintTest(serviceContainer.object);
-        const result = await pylint.parseMessages(jsonOutput, doc as any, mock(vscode.CancellationTokenSource).token);
+        const result = await pylint.parseMessages(
+            jsonOutput,
+            doc as vscode.TextDocument,
+            mock(vscode.CancellationTokenSource).token,
+        );
         assert.deepEqual(result, expectedMessages);
     });
 
@@ -212,9 +224,13 @@ suite('Pylint - Function runLinter()', () => {
                 pylintEnabled: true,
             },
         };
-        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
+        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as IPythonSettings);
         const pylint = new PylintTest(serviceContainer.object);
-        const result = await pylint.parseMessages(jsonOutput, doc as any, mock(vscode.CancellationTokenSource).token);
+        const result = await pylint.parseMessages(
+            jsonOutput,
+            doc as vscode.TextDocument,
+            mock(vscode.CancellationTokenSource).token,
+        );
         assert.deepEqual(result, expectedMessages);
     });
 
@@ -254,9 +270,13 @@ suite('Pylint - Function runLinter()', () => {
                 pylintEnabled: true,
             },
         };
-        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
+        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as IPythonSettings);
         const pylint = new PylintTest(serviceContainer.object);
-        const result = await pylint.parseMessages(jsonOutput, doc as any, mock(vscode.CancellationTokenSource).token);
+        const result = await pylint.parseMessages(
+            jsonOutput,
+            doc as vscode.TextDocument,
+            mock(vscode.CancellationTokenSource).token,
+        );
         assert.deepEqual(result, expectedMessages);
     });
 });

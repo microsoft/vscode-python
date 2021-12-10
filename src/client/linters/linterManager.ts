@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -21,9 +22,12 @@ import { ILinter, ILinterInfo, ILinterManager, ILintMessage, LinterId } from './
 
 class DisabledLinter implements ILinter {
     constructor(private configService: IConfigurationService) {}
+
     public get info() {
         return new LinterInfo(Product.pylint, LinterId.PyLint, this.configService);
     }
+
+    // eslint-disable-next-line class-methods-use-this
     public async lint(_document: TextDocument, _cancellation: CancellationToken): Promise<ILintMessage[]> {
         return [];
     }

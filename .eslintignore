@@ -143,15 +143,6 @@ src/test/debugger/envVars.test.ts
 src/test/telemetry/index.unit.test.ts
 src/test/telemetry/envFileTelemetry.unit.test.ts
 
-src/test/linters/pylint.unit.test.ts
-src/test/linters/lint.unit.test.ts
-src/test/linters/common.ts
-src/test/linters/lintengine.test.ts
-src/test/linters/lint.multilinter.test.ts
-src/test/linters/lint.test.ts
-src/test/linters/linterCommands.unit.test.ts
-src/test/linters/linterManager.unit.test.ts
-
 src/test/application/diagnostics/checks/macPythonInterpreter.unit.test.ts
 src/test/application/diagnostics/checks/upgradeCodeRunner.unit.test.ts
 src/test/application/diagnostics/checks/pythonPathDeprecated.unit.test.ts
@@ -365,21 +356,6 @@ src/client/debugger/extension/attachQuickPick/factory.ts
 src/client/debugger/extension/attachQuickPick/psProcessParser.ts
 src/client/debugger/extension/attachQuickPick/picker.ts
 src/client/debugger/extension/helpers/protocolParser.ts
-
-src/client/linters/pydocstyle.ts
-src/client/linters/serviceRegistry.ts
-src/client/linters/lintingEngine.ts
-src/client/linters/prospector.ts
-src/client/linters/linterInfo.ts
-src/client/linters/linterCommands.ts
-src/client/linters/errorHandlers/baseErrorHandler.ts
-src/client/linters/errorHandlers/errorHandler.ts
-src/client/linters/errorHandlers/notInstalled.ts
-src/client/linters/errorHandlers/standard.ts
-src/client/linters/types.ts
-src/client/linters/baseLinter.ts
-src/client/linters/linterManager.ts
-src/client/linters/pylint.ts
 
 src/client/application/serviceRegistry.ts
 src/client/application/diagnostics/surceMapSupportService.ts

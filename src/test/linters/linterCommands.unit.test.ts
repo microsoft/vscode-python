@@ -5,6 +5,7 @@
 
 import { expect } from 'chai';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { DiagnosticCollection } from 'vscode';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { CommandManager } from '../../client/common/application/commandManager';
 import { DocumentManager } from '../../client/common/application/documentManager';
@@ -46,7 +47,7 @@ suite('Linting - Linter Commands', () => {
     });
 
     test('Run Linting method will lint all open files', async () => {
-        when(lintingEngine.lintOpenPythonFiles()).thenResolve('Hello' as any);
+        when(lintingEngine.lintOpenPythonFiles()).thenResolve(('Hello' as unknown) as DiagnosticCollection);
 
         const result = await linterCommands.runLinting();
 
@@ -63,7 +64,7 @@ suite('Linting - Linter Commands', () => {
             matchOnDescription: true,
             placeHolder: `current: ${currentState ? 'Enable' : 'Disable'}`,
         };
-        when(shell.showQuickPick(anything(), anything())).thenResolve(selectedState as any);
+        when(shell.showQuickPick(anything(), anything())).thenReturn(Promise.resolve(selectedState));
 
         await linterCommands.enableLintingAsync();
 
@@ -118,7 +119,7 @@ suite('Linting - Linter Commands', () => {
 
     test('Set Linter should display a quickpick and currently active linter when only one is enabled', async () => {
         const linterId = 'Hello World';
-        const activeLinters: ILinterInfo[] = [{ id: linterId } as any];
+        const activeLinters: ILinterInfo[] = [({ id: linterId } as unknown) as ILinterInfo];
         when(manager.getAllLinterInfos()).thenReturn([]);
         when(manager.getActiveLinters(anything())).thenResolve(activeLinters);
         when(shell.showQuickPick(anything(), anything())).thenResolve();
@@ -136,7 +137,7 @@ suite('Linting - Linter Commands', () => {
     });
 
     test('Set Linter should display a quickpick and with message about multiple linters being enabled', async () => {
-        const activeLinters: ILinterInfo[] = [{ id: 'linterId' } as any, { id: 'linterId2' } as any];
+        const activeLinters: ILinterInfo[] = ([{ id: 'linterId' }, { id: 'linterId2' }] as unknown) as ILinterInfo[];
         when(manager.getAllLinterInfos()).thenReturn([]);
         when(manager.getActiveLinters(anything())).thenResolve(activeLinters);
         when(shell.showQuickPick(anything(), anything())).thenResolve();
@@ -154,12 +155,16 @@ suite('Linting - Linter Commands', () => {
     });
 
     test('Selecting a linter should display warning message about multiple linters', async () => {
-        const linters: ILinterInfo[] = [{ id: '1' }, { id: '2' }, { id: '3', product: 'Three' }] as any;
-        const activeLinters: ILinterInfo[] = [{ id: '1' }, { id: '3' }] as any;
+        const linters: ILinterInfo[] = ([
+            { id: '1' },
+            { id: '2' },
+            { id: '3', product: 'Three' },
+        ] as unknown) as ILinterInfo[];
+        const activeLinters: ILinterInfo[] = ([{ id: '1' }, { id: '3' }] as unknown) as ILinterInfo[];
         when(manager.getAllLinterInfos()).thenReturn(linters);
         when(manager.getActiveLinters(anything())).thenResolve(activeLinters);
-        when(shell.showQuickPick(anything(), anything())).thenResolve('3' as any);
-        when(shell.showWarningMessage(anything(), 'Yes', 'No')).thenResolve('Yes' as any);
+        when(shell.showQuickPick(anything(), anything())).thenReturn(Promise.resolve('3'));
+        when(shell.showWarningMessage(anything(), 'Yes', 'No')).thenReturn(Promise.resolve('Yes'));
         const expectedQuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
@@ -172,6 +177,6 @@ suite('Linting - Linter Commands', () => {
         verify(shell.showWarningMessage(anything(), 'Yes', 'No')).once();
         const quickPickOptions = capture(shell.showQuickPick).last()[1];
         expect(quickPickOptions).to.deep.equal(expectedQuickPickOptions);
-        verify(manager.setActiveLintersAsync(deepEqual([('Three' as any) as Product]), anything())).once();
+        verify(manager.setActiveLintersAsync(deepEqual([('Three' as unknown) as Product]), anything())).once();
     });
 });
