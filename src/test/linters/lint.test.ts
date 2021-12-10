@@ -27,10 +27,6 @@ suite('Linting Settings', () => {
     let configService: IConfigurationService;
 
     suiteSetup(async () => {
-        // These tests are still consistently failing during teardown.
-        // See https://github.com/Microsoft/vscode-python/issues/4326.
-
-        // this.skip();
         await initialize();
     });
     setup(async () => {
