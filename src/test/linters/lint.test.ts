@@ -5,6 +5,7 @@
 
 import * as assert from 'assert';
 import { ConfigurationTarget } from 'vscode';
+import { ExperimentService } from '../../client/common/experiments/service';
 import { Product } from '../../client/common/installer/productInstaller';
 import {
     FormatterProductPathService,
@@ -13,7 +14,7 @@ import {
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
-import { IConfigurationService, ILintingSettings, ProductType } from '../../client/common/types';
+import { IConfigurationService, IExperimentService, ILintingSettings, ProductType } from '../../client/common/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinterManager } from '../../client/linters/types';
@@ -31,7 +32,6 @@ suite('Linting Settings', () => {
         // See https://github.com/Microsoft/vscode-python/issues/4326.
 
         // this.skip();
-
         await initialize();
     });
     setup(async () => {
@@ -54,6 +54,7 @@ suite('Linting Settings', () => {
         ioc.registerPlatformTypes();
         configService = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
         linterManager = new LinterManager(configService);
+        ioc.serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
