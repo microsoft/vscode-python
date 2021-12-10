@@ -52,7 +52,6 @@ suite('Linting Settings', () => {
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
         ioc.registerPlatformTypes();
-        ioc.serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
         configService = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
         linterManager = new LinterManager(configService);
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
