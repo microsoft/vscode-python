@@ -32,7 +32,9 @@ suite('Terminal Provider', () => {
     teardown(() => {
         try {
             terminalProvider.dispose();
-        } catch {}
+        } catch {
+            // No catch clause.
+        }
     });
 
     test('Ensure command is registered', () => {
@@ -119,11 +121,7 @@ suite('Terminal Provider', () => {
                 .returns(() => activeResourceService.object);
 
             terminal = TypeMoq.Mock.ofType<Terminal>();
-            terminal
-                .setup((c) => c.creationOptions)
-                .returns(() => {
-                    return { hideFromUser: false };
-                });
+            terminal.setup((c) => c.creationOptions).returns(() => ({ hideFromUser: false }));
         });
 
         test('If terminal.activateCurrentTerminal setting is set, provided terminal should be activated', async () => {
@@ -181,11 +179,7 @@ suite('Terminal Provider', () => {
                 .returns(() => resource)
                 .verifiable(TypeMoq.Times.once());
 
-            terminal
-                .setup((c) => c.creationOptions)
-                .returns(() => {
-                    return { hideFromUser: true };
-                });
+            terminal.setup((c) => c.creationOptions).returns(() => ({ hideFromUser: true }));
 
             terminalProvider = new TerminalProvider(serviceContainer.object);
             await terminalProvider.initialize(terminal.object);

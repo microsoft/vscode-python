@@ -22,6 +22,7 @@ export class LaunchJsonCodeActionProvider implements CodeActionProvider {
             .map((diagnostic) => this.createFix(document, diagnostic));
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private createFix(document: TextDocument, diagnostic: Diagnostic): CodeAction {
         const finalText = `"${document.getText(diagnostic.range)}"`;
         const fix = new CodeAction(`Convert to ${finalText}`, CodeActionKind.QuickFix);

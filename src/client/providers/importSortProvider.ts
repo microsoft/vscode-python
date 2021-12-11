@@ -24,12 +24,19 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         string,
         { deferred: Deferred<WorkspaceEdit | undefined>; tokenSource: CancellationTokenSource }
     >();
+
     private readonly processServiceFactory: IProcessServiceFactory;
+
     private readonly pythonExecutionFactory: IPythonExecutionFactory;
+
     private readonly shell: IApplicationShell;
+
     private readonly persistentStateFactory: IPersistentStateFactory;
+
     private readonly documentManager: IDocumentManager;
+
     private readonly configurationService: IConfigurationService;
+
     private readonly editorUtils: IEditorUtils;
 
     public constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
@@ -65,15 +72,15 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     ): Promise<WorkspaceEdit | undefined> {
         const document = await this.documentManager.openTextDocument(uri);
         if (!document) {
-            return;
+            return undefined;
         }
         if (document.lineCount <= 1) {
-            return;
+            return undefined;
         }
 
         const execIsort = await this.getExecIsort(document, uri, token);
         if (token && token.isCancellationRequested) {
-            return;
+            return undefined;
         }
         const diffPatch = await execIsort(document.getText());
 
@@ -82,7 +89,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             : undefined;
     }
 
-    public registerCommands() {
+    public registerCommands(): void {
         const cmdManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         const disposable = cmdManager.registerCommand(Commands.Sort_Imports, this.sortImports, this);
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(disposable);
@@ -119,14 +126,18 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             }
             await this.documentManager.applyEdit(changes);
         } catch (error) {
-            const message =
-                typeof error === 'string' ? error : (error as Error).message ? (error as Error).message : error;
+            let message = error;
+            if (typeof error === 'string') {
+                message = error;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
             traceError(`Failed to format imports for '${uri.fsPath}'.`, error);
             this.shell.showErrorMessage(message as string).then(noop, noop);
         }
     }
 
-    public async _showWarningAndOptionallyShowOutput() {
+    public async _showWarningAndOptionallyShowOutput(): Promise<void> {
         const neverShowAgain = this.persistentStateFactory.createGlobalPersistentState(
             doNotDisplayPromptStateKey,
             false,
@@ -177,14 +188,13 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
                 const result = procService.execObservable(isort, args, spawnOptions);
                 return this.communicateWithIsortProcess(result, documentText);
             };
-        } else {
-            const procService = await this.pythonExecutionFactory.create({ resource: document.uri });
-            return async (documentText: string) => {
-                const [args, parse] = internalScripts.sortImports(filename, isortArgs);
-                const result = procService.execObservable(args, spawnOptions);
-                return parse(await this.communicateWithIsortProcess(result, documentText));
-            };
         }
+        const procService = await this.pythonExecutionFactory.create({ resource: document.uri });
+        return async (documentText: string) => {
+            const [args, parse] = internalScripts.sortImports(filename, isortArgs);
+            const result = procService.execObservable(args, spawnOptions);
+            return parse(await this.communicateWithIsortProcess(result, documentText));
+        };
     }
 
     private async communicateWithIsortProcess(

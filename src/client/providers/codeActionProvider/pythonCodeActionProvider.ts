@@ -7,6 +7,7 @@ import * as vscode from 'vscode';
 import { isNotebookCell } from '../../common/utils/misc';
 
 export class PythonCodeActionProvider implements vscode.CodeActionProvider {
+    // eslint-disable-next-line class-methods-use-this
     public provideCodeActions(
         document: vscode.TextDocument,
         _range: vscode.Range,

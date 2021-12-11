@@ -35,12 +35,6 @@ src/test/terminals/codeExecution/terminalCodeExec.unit.test.ts
 src/test/terminals/codeExecution/codeExecutionManager.unit.test.ts
 src/test/terminals/codeExecution/djangoShellCodeExect.unit.test.ts
 
-src/test/providers/importSortProvider.unit.test.ts
-src/test/providers/terminal.unit.test.ts
-src/test/providers/repl.unit.test.ts
-src/test/providers/codeActionProvider/main.unit.test.ts
-src/test/providers/shebangCodeLenseProvider.unit.test.ts
-
 src/test/activation/activationService.unit.test.ts
 src/test/activation/activeResource.unit.test.ts
 src/test/activation/node/languageServerChangeHandler.unit.test.ts
@@ -186,16 +180,6 @@ src/client/startupTelemetry.ts
 src/client/terminals/codeExecution/terminalCodeExecution.ts
 src/client/terminals/codeExecution/codeExecutionManager.ts
 src/client/terminals/codeExecution/djangoContext.ts
-
-src/client/providers/serviceRegistry.ts
-src/client/providers/formatProvider.ts
-src/client/providers/importSortProvider.ts
-src/client/providers/replProvider.ts
-src/client/providers/codeActionProvider/main.ts
-src/client/providers/codeActionProvider/launchJsonCodeActionProvider.ts
-src/client/providers/codeActionProvider/pythonCodeActionProvider.ts
-src/client/providers/linterProvider.ts
-src/client/providers/terminalProvider.ts
 
 src/client/activation/commands.ts
 src/client/activation/progress.ts

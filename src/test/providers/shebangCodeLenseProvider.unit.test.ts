@@ -33,6 +33,7 @@ suite('Shebang detection', () => {
         processService = typemoq.Mock.ofType<IProcessService>();
         platformService = typemoq.Mock.ofType<IPlatformService>();
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((p) => (p as any).then).returns(() => undefined);
         when(configurationService.getSettings(anything())).thenReturn(pythonSettings.object);
         when(factory.create(anything())).thenResolve(processService.object);

@@ -8,19 +8,24 @@ import { ICodeExecutionService } from '../terminals/types';
 
 export class ReplProvider implements Disposable {
     private readonly disposables: Disposable[] = [];
+
     private activeResourceService: IActiveResourceService;
+
     constructor(private serviceContainer: IServiceContainer) {
         this.activeResourceService = this.serviceContainer.get<IActiveResourceService>(IActiveResourceService);
         this.registerCommand();
     }
-    public dispose() {
+
+    public dispose(): void {
         this.disposables.forEach((disposable) => disposable.dispose());
     }
+
     private registerCommand() {
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         const disposable = commandManager.registerCommand(Commands.Start_REPL, this.commandHandler, this);
         this.disposables.push(disposable);
     }
+
     @captureTelemetry(EventName.REPL)
     private async commandHandler() {
         const resource = this.activeResourceService.getActiveResource();

@@ -41,7 +41,9 @@ suite('REPL Provider', () => {
     teardown(() => {
         try {
             replProvider.dispose();
-        } catch {}
+        } catch {
+            // No catch clause.
+        }
     });
 
     test('Ensure command is registered', () => {

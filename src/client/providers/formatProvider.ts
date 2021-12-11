@@ -7,24 +7,31 @@ import { PYTHON_LANGUAGE } from '../common/constants';
 import { IConfigurationService } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
-import { AutoPep8Formatter } from './../formatters/autoPep8Formatter';
-import { BaseFormatter } from './../formatters/baseFormatter';
-import { BlackFormatter } from './../formatters/blackFormatter';
-import { DummyFormatter } from './../formatters/dummyFormatter';
-import { YapfFormatter } from './../formatters/yapfFormatter';
+import { AutoPep8Formatter } from '../formatters/autoPep8Formatter';
+import { BaseFormatter } from '../formatters/baseFormatter';
+import { BlackFormatter } from '../formatters/blackFormatter';
+import { DummyFormatter } from '../formatters/dummyFormatter';
+import { YapfFormatter } from '../formatters/yapfFormatter';
 
 export class PythonFormattingEditProvider
     implements vscode.DocumentFormattingEditProvider, vscode.DocumentRangeFormattingEditProvider, vscode.Disposable {
     private readonly config: IConfigurationService;
+
     private readonly workspace: IWorkspaceService;
+
     private readonly documentManager: IDocumentManager;
+
     private readonly commands: ICommandManager;
+
     private formatters = new Map<string, BaseFormatter>();
+
     private disposables: vscode.Disposable[] = [];
 
     // Workaround for https://github.com/Microsoft/vscode/issues/41194
     private documentVersionBeforeFormatting = -1;
+
     private formatterMadeChanges = false;
+
     private saving = false;
 
     public constructor(_context: vscode.ExtensionContext, serviceContainer: IServiceContainer) {
@@ -50,11 +57,13 @@ export class PythonFormattingEditProvider
                 if (this.documentManager.activeTextEditor) {
                     return this.onSaveDocument(this.documentManager.activeTextEditor.document);
                 }
+
+                return undefined;
             }),
         );
     }
 
-    public dispose() {
+    public dispose(): void {
         this.disposables.forEach((d) => d.dispose());
     }
 
