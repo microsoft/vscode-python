@@ -26,7 +26,11 @@ suite('Formatting - Helper', () => {
     test('Ensure product is set in Execution Info', async () => {
         [Product.autopep8, Product.black, Product.yapf].forEach((formatter) => {
             const info = formatHelper.getExecutionInfo(formatter, []);
-            assert.equal(info.product, formatter, `Incorrect products for ${formatHelper.translateToId(formatter)}`);
+            assert.strictEqual(
+                info.product,
+                formatter,
+                `Incorrect products for ${formatHelper.translateToId(formatter)}`,
+            );
         });
     });
 
@@ -38,7 +42,7 @@ suite('Formatting - Helper', () => {
             const names = formatHelper.getSettingsPropertyNames(formatter);
             const execPath = settings.formatting[names.pathName] as string;
 
-            assert.equal(
+            assert.strictEqual(
                 info.execPath,
                 execPath,
                 `Incorrect executable paths for product ${formatHelper.translateToId(formatter)}`,
@@ -57,7 +61,7 @@ suite('Formatting - Helper', () => {
                 : [];
             const expectedArgs = args.concat(customArgs).join(',');
 
-            assert.equal(
+            assert.strictEqual(
                 expectedArgs.endsWith(customArgs.join(',')),
                 true,
                 `Incorrect custom arguments for product ${formatHelper.translateToId(formatter)}`,
@@ -89,7 +93,7 @@ suite('Formatting - Helper', () => {
 
         [Product.autopep8, Product.black, Product.yapf].forEach((formatter) => {
             const translatedId = formatHelper.translateToId(formatter);
-            assert.equal(
+            assert.strictEqual(
                 translatedId,
                 formatterMapping.get(formatter)!,
                 `Incorrect translation for product ${formatHelper.translateToId(formatter)}`,

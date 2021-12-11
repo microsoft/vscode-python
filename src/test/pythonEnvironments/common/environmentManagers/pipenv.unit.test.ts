@@ -41,7 +41,7 @@ suite('Pipenv helper', () => {
 
             const isRelated = await isPipenvEnvironmentRelatedToFolder(interpreterPath, folder);
 
-            assert.equal(isRelated, false);
+            assert.strictEqual(isRelated, false);
         });
 
         test('If a Pipfile is associated with the environment but no pipfile is associated with the folder, return false', async () => {
@@ -62,7 +62,7 @@ suite('Pipenv helper', () => {
 
             const isRelated = await isPipenvEnvironmentRelatedToFolder(interpreterPath, folder);
 
-            assert.equal(isRelated, false);
+            assert.strictEqual(isRelated, false);
         });
 
         test('If a Pipfile is associated with the environment and another is associated with the folder, but the path to both Pipfiles are different, return false', async () => {
@@ -85,7 +85,7 @@ suite('Pipenv helper', () => {
 
             const isRelated = await isPipenvEnvironmentRelatedToFolder(interpreterPath, folder);
 
-            assert.equal(isRelated, false);
+            assert.strictEqual(isRelated, false);
         });
 
         test('If a Pipfile is associated with the environment and another is associated with the folder, and the path to both Pipfiles are same, return true', async () => {
@@ -108,7 +108,7 @@ suite('Pipenv helper', () => {
 
             const isRelated = await isPipenvEnvironmentRelatedToFolder(interpreterPath, folder);
 
-            assert.equal(isRelated, true);
+            assert.strictEqual(isRelated, true);
         });
     });
 
@@ -139,7 +139,7 @@ suite('Pipenv helper', () => {
 
             const result = await isPipenvEnvironment(interpreterPath);
 
-            assert.equal(result, true);
+            assert.strictEqual(result, true);
         });
 
         test('If not local & dotProject file is missing, return false', async () => {
@@ -155,7 +155,7 @@ suite('Pipenv helper', () => {
 
             const result = await isPipenvEnvironment(interpreterPath);
 
-            assert.equal(result, false);
+            assert.strictEqual(result, false);
         });
 
         test('If not local & dotProject contains invalid path to project, return false', async () => {
@@ -171,7 +171,7 @@ suite('Pipenv helper', () => {
 
             const result = await isPipenvEnvironment(interpreterPath);
 
-            assert.equal(result, false);
+            assert.strictEqual(result, false);
         });
 
         test("If not local & the name of the project isn't used as a prefix in the environment folder, return false", async () => {
@@ -188,7 +188,7 @@ suite('Pipenv helper', () => {
 
             const result = await isPipenvEnvironment(interpreterPath);
 
-            assert.equal(result, false);
+            assert.strictEqual(result, false);
         });
 
         test('If the project layout matches that of a global pipenv environment, return true', async () => {
@@ -204,7 +204,7 @@ suite('Pipenv helper', () => {
 
             const result = await isPipenvEnvironment(interpreterPath);
 
-            assert.equal(result, true);
+            assert.strictEqual(result, true);
         });
     });
 
@@ -230,7 +230,7 @@ suite('Pipenv helper', () => {
 
             const result = await _getAssociatedPipfile(folder, { lookIntoParentDirectories: false });
 
-            assert.equal(result, pipFile);
+            assert.strictEqual(result, pipFile);
         });
 
         test('Correct Pipfile is returned for folder if a custom Pipfile name is being used', async () => {
@@ -243,7 +243,7 @@ suite('Pipenv helper', () => {
 
             const result = await _getAssociatedPipfile(folder, { lookIntoParentDirectories: false });
 
-            assert.equal(result, pipFile);
+            assert.strictEqual(result, pipFile);
         });
 
         test('Correct Pipfile is returned for folder whose Pipfile lies 3 levels above the folder', async () => {
@@ -257,7 +257,7 @@ suite('Pipenv helper', () => {
 
             const result = await _getAssociatedPipfile(folder, { lookIntoParentDirectories: true });
 
-            assert.equal(result, pipFile);
+            assert.strictEqual(result, pipFile);
         });
 
         test('No Pipfile is returned for folder if no Pipfile exists in the associated directories', async () => {
@@ -272,7 +272,7 @@ suite('Pipenv helper', () => {
 
             const result = await _getAssociatedPipfile(folder, { lookIntoParentDirectories: true });
 
-            assert.equal(result, undefined);
+            assert.strictEqual(result, undefined);
         });
     });
 });

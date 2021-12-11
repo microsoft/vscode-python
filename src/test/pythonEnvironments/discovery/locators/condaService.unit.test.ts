@@ -81,7 +81,7 @@ suite('Interpreters Conda Service', () => {
                 .returns(() => Promise.resolve(true));
 
             const condaFile = await condaService.getCondaFileFromInterpreter(t.pythonPath, t.environmentName);
-            assert.equal(condaFile, t.expectedCondaPath);
+            assert.strictEqual(condaFile, t.expectedCondaPath);
         });
         test(`Finds conda.exe for different ${t.environmentName}`, async () => {
             platformService.setup((p) => p.isLinux).returns(() => t.isLinux);
@@ -104,9 +104,9 @@ suite('Interpreters Conda Service', () => {
 
             // This should only work if the expectedConda path has the original environment name in it
             if (t.expectedCondaPath.includes(t.environmentName)) {
-                assert.equal(condaFile, t.expectedCondaPath);
+                assert.strictEqual(condaFile, t.expectedCondaPath);
             } else {
-                assert.equal(condaFile, undefined);
+                assert.strictEqual(condaFile, undefined);
             }
         });
     });

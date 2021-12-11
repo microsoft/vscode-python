@@ -81,7 +81,7 @@ suite('Terminal Activator', () => {
             hideFromUser: hidden,
         });
 
-        assert.equal(activated, activationSuccessful);
+        assert.strictEqual(activated, activationSuccessful);
         baseActivator.verifyAll();
         handler1.verifyAll();
         handler2.verifyAll();

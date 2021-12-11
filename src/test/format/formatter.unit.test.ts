@@ -116,8 +116,8 @@ suite('Formatting - Test Arguments', () => {
 
         const execInfo = await setupFormatter(formatter, formattingSettingsWithPath);
 
-        assert.equal(execInfo.execPath, formattingSettingsWithPath.blackPath);
-        assert.equal(execInfo.moduleName, undefined);
+        assert.strictEqual(execInfo.execPath, formattingSettingsWithPath.blackPath);
+        assert.strictEqual(execInfo.moduleName, undefined);
         assert.deepEqual(
             execInfo.args,
             formattingSettingsWithPath.blackArgs.concat(['--diff', '--quiet', docUri.fsPath]),
@@ -128,8 +128,8 @@ suite('Formatting - Test Arguments', () => {
 
         const execInfo = await setupFormatter(formatter, formattingSettingsWithModuleName);
 
-        assert.equal(execInfo.execPath, formattingSettingsWithModuleName.blackPath);
-        assert.equal(execInfo.moduleName, formattingSettingsWithModuleName.blackPath);
+        assert.strictEqual(execInfo.execPath, formattingSettingsWithModuleName.blackPath);
+        assert.strictEqual(execInfo.moduleName, formattingSettingsWithModuleName.blackPath);
         assert.deepEqual(
             execInfo.args,
             formattingSettingsWithPath.blackArgs.concat(['--diff', '--quiet', docUri.fsPath]),
@@ -140,8 +140,8 @@ suite('Formatting - Test Arguments', () => {
 
         const execInfo = await setupFormatter(formatter, formattingSettingsWithPath);
 
-        assert.equal(execInfo.execPath, formattingSettingsWithPath.autopep8Path);
-        assert.equal(execInfo.moduleName, undefined);
+        assert.strictEqual(execInfo.execPath, formattingSettingsWithPath.autopep8Path);
+        assert.strictEqual(execInfo.moduleName, undefined);
         assert.deepEqual(execInfo.args, formattingSettingsWithPath.autopep8Args.concat(['--diff', docUri.fsPath]));
     });
     test('Ensure autpep8 modulename and args used to launch the formatter', async () => {
@@ -149,8 +149,8 @@ suite('Formatting - Test Arguments', () => {
 
         const execInfo = await setupFormatter(formatter, formattingSettingsWithModuleName);
 
-        assert.equal(execInfo.execPath, formattingSettingsWithModuleName.autopep8Path);
-        assert.equal(execInfo.moduleName, formattingSettingsWithModuleName.autopep8Path);
+        assert.strictEqual(execInfo.execPath, formattingSettingsWithModuleName.autopep8Path);
+        assert.strictEqual(execInfo.moduleName, formattingSettingsWithModuleName.autopep8Path);
         assert.deepEqual(execInfo.args, formattingSettingsWithPath.autopep8Args.concat(['--diff', docUri.fsPath]));
     });
     test('Ensure yapfpath and args used to launch the formatter', async () => {
@@ -158,8 +158,8 @@ suite('Formatting - Test Arguments', () => {
 
         const execInfo = await setupFormatter(formatter, formattingSettingsWithPath);
 
-        assert.equal(execInfo.execPath, formattingSettingsWithPath.yapfPath);
-        assert.equal(execInfo.moduleName, undefined);
+        assert.strictEqual(execInfo.execPath, formattingSettingsWithPath.yapfPath);
+        assert.strictEqual(execInfo.moduleName, undefined);
         assert.deepEqual(execInfo.args, formattingSettingsWithPath.yapfArgs.concat(['--diff', docUri.fsPath]));
     });
     test('Ensure yapf modulename and args used to launch the formatter', async () => {
@@ -167,8 +167,8 @@ suite('Formatting - Test Arguments', () => {
 
         const execInfo = await setupFormatter(formatter, formattingSettingsWithModuleName);
 
-        assert.equal(execInfo.execPath, formattingSettingsWithModuleName.yapfPath);
-        assert.equal(execInfo.moduleName, formattingSettingsWithModuleName.yapfPath);
+        assert.strictEqual(execInfo.execPath, formattingSettingsWithModuleName.yapfPath);
+        assert.strictEqual(execInfo.moduleName, formattingSettingsWithModuleName.yapfPath);
         assert.deepEqual(execInfo.args, formattingSettingsWithPath.yapfArgs.concat(['--diff', docUri.fsPath]));
     });
 });

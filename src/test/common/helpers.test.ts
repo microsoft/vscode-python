@@ -8,13 +8,13 @@ import { isNotInstalledError } from '../../client/common/helpers';
 suite('helpers', () => {
     test('isNotInstalledError', (done) => {
         const error = new Error('something is not installed');
-        assert.equal(isNotInstalledError(error), false, 'Standard error');
+        assert.strictEqual(isNotInstalledError(error), false, 'Standard error');
 
         (error as any).code = 'ENOENT';
-        assert.equal(isNotInstalledError(error), true, 'ENOENT error code not detected');
+        assert.strictEqual(isNotInstalledError(error), true, 'ENOENT error code not detected');
 
         (error as any).code = 127;
-        assert.equal(isNotInstalledError(error), true, '127 error code not detected');
+        assert.strictEqual(isNotInstalledError(error), true, '127 error code not detected');
 
         done();
     });

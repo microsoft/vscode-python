@@ -34,7 +34,7 @@ suite('Python envs watcher - PythonEnvsWatcher', () => {
 
             watcher.fire(expected);
 
-            assert.equal(event, expected);
+            assert.strictEqual(event, expected);
         });
 
         KINDS_TO_TEST.forEach((kind) => {
@@ -51,7 +51,7 @@ suite('Python envs watcher - PythonEnvsWatcher', () => {
 
                 watcher.fire(expected);
 
-                assert.equal(event, expected);
+                assert.strictEqual(event, expected);
             });
         });
 
@@ -65,7 +65,7 @@ suite('Python envs watcher - PythonEnvsWatcher', () => {
 
             watcher.fire(expected);
 
-            assert.equal(event, expected);
+            assert.strictEqual(event, expected);
         });
 
         test('searchLocation-only', () => {
@@ -78,7 +78,7 @@ suite('Python envs watcher - PythonEnvsWatcher', () => {
 
             watcher.fire(expected);
 
-            assert.equal(event, expected);
+            assert.strictEqual(event, expected);
         });
     });
 
@@ -93,7 +93,7 @@ suite('Python envs watcher - PythonEnvsWatcher', () => {
 
             watcher.fire(expected);
 
-            assert.equal(event, expected);
+            assert.strictEqual(event, expected);
         });
 
         KINDS_TO_TEST.forEach((kind) => {
@@ -109,7 +109,7 @@ suite('Python envs watcher - PythonEnvsWatcher', () => {
 
                 watcher.fire(expected);
 
-                assert.equal(event, expected);
+                assert.strictEqual(event, expected);
             });
         });
     });

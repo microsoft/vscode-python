@@ -92,7 +92,7 @@ suite('File System Watching Locator Tests', () => {
 
                     // Watcher should be called for all workspace locators. For global locators it should never be called.
                     if (watcherKind === FSWatcherKind.Workspace) {
-                        assert.equal(watchLocationStub.callCount, expected.length);
+                        assert.strictEqual(watchLocationStub.callCount, expected.length);
                         expected.forEach((glob) => {
                             assert.ok(watchLocationStub.calledWithMatch(baseDir, sinon.match.any, glob));
                         });

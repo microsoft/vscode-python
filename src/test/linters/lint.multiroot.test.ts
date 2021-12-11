@@ -84,7 +84,7 @@ suite('Multiroot Linting', () => {
         const messages = await linter.lint(document, cancelToken.token);
 
         const errorMessage = mustHaveErrors ? 'No errors returned by linter' : 'Errors returned by linter';
-        assert.equal(messages.length > 0, mustHaveErrors, errorMessage);
+        assert.strictEqual(messages.length > 0, mustHaveErrors, errorMessage);
     }
 
     test('Enabling Pylint in root and also in Workspace, should return errors', async () => {

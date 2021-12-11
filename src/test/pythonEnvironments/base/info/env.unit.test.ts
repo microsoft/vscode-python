@@ -60,7 +60,7 @@ suite('pyenvs info - getEnvDisplayString()', () => {
         test(`"${expected}"`, () => {
             const result = getEnvDisplayString(env);
 
-            assert.equal(result, expected);
+            assert.strictEqual(result, expected);
         });
     });
 });

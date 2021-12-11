@@ -116,11 +116,11 @@ suite('Linting - Multiple Linters Enabled Test', () => {
         const commands = api.serviceContainer.get<ICommandManager>(ICommandManager);
 
         const collection = (await commands.executeCommand('python.runLinting')) as DiagnosticCollection;
-        assert.notEqual(collection, undefined, 'python.runLinting did not return valid diagnostics collection.');
+        assert.notStrictEqual(collection, undefined, 'python.runLinting did not return valid diagnostics collection.');
 
         const messages = collection!.get(document.uri);
-        assert.notEqual(messages!.length, 0, 'No diagnostic messages.');
-        assert.notEqual(messages!.filter((x) => x.source === 'pylint').length, 0, 'No pylint messages.');
-        assert.notEqual(messages!.filter((x) => x.source === 'flake8').length, 0, 'No flake8 messages.');
+        assert.notStrictEqual(messages!.length, 0, 'No diagnostic messages.');
+        assert.notStrictEqual(messages!.filter((x) => x.source === 'pylint').length, 0, 'No pylint messages.');
+        assert.notStrictEqual(messages!.filter((x) => x.source === 'flake8').length, 0, 'No flake8 messages.');
     });
 });

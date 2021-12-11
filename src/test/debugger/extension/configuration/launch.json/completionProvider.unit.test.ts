@@ -41,11 +41,11 @@ suite('Debugging - launch.json Completion Provider', () => {
         const document = typemoq.Mock.ofType<TextDocument>();
         const position = new Position(0, 0);
         document.setup((doc) => doc.uri).returns(() => Uri.file(__filename));
-        assert.equal(completionProvider.canProvideCompletions(document.object, position), false);
+        assert.strictEqual(completionProvider.canProvideCompletions(document.object, position), false);
 
         document.reset();
         document.setup((doc) => doc.uri).returns(() => Uri.file('settings.json'));
-        assert.equal(completionProvider.canProvideCompletions(document.object, position), false);
+        assert.strictEqual(completionProvider.canProvideCompletions(document.object, position), false);
     });
     function testCanProvideCompletions(position: Position, offset: number, json: string, expectedValue: boolean) {
         const document = typemoq.Mock.ofType<TextDocument>();
@@ -53,7 +53,7 @@ suite('Debugging - launch.json Completion Provider', () => {
         document.setup((doc) => doc.uri).returns(() => Uri.file('launch.json'));
         document.setup((doc) => doc.offsetAt(typemoq.It.isAny())).returns(() => offset);
         const canProvideCompletions = completionProvider.canProvideCompletions(document.object, position);
-        assert.equal(canProvideCompletions, expectedValue);
+        assert.strictEqual(canProvideCompletions, expectedValue);
     }
     test('Cannot provide completions when there is no configurations section in json', () => {
         const position = new Position(0, 0);
@@ -88,7 +88,7 @@ suite('Debugging - launch.json Completion Provider', () => {
 
         const completions = await completionProvider.provideCompletionItems(document.object, position, token);
 
-        assert.equal(completions.length, 0);
+        assert.strictEqual(completions.length, 0);
     });
     test('No Completions for files ending with launch.json', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
@@ -98,7 +98,7 @@ suite('Debugging - launch.json Completion Provider', () => {
 
         const completions = await completionProvider.provideCompletionItems(document.object, position, token);
 
-        assert.equal(completions.length, 0);
+        assert.strictEqual(completions.length, 0);
     });
     test('Get Completions', async () => {
         const json = `{
@@ -117,7 +117,7 @@ suite('Debugging - launch.json Completion Provider', () => {
 
         const completions = await completionProvider.provideCompletionItems(document.object, position, token);
 
-        assert.equal(completions.length, 1);
+        assert.strictEqual(completions.length, 1);
 
         const expectedCompletionItem: CompletionItem = {
             command: {

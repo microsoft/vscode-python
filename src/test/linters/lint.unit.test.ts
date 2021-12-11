@@ -666,7 +666,7 @@ suite('Linting Scenarios', () => {
             new CancellationTokenSource().token,
         );
 
-        assert.equal(
+        assert.strictEqual(
             messages.length,
             0,
             `Unexpected linter errors when linting is disabled, Output - ${fixture.output}`,
@@ -686,7 +686,7 @@ suite('Linting Scenarios', () => {
             new CancellationTokenSource().token,
         );
 
-        assert.equal(
+        assert.strictEqual(
             messages.length,
             0,
             `Unexpected linter errors when linting is disabled, Output - ${fixture.output}`,
@@ -707,13 +707,13 @@ suite('Linting Scenarios', () => {
         );
 
         if (enabled) {
-            assert.notEqual(
+            assert.notStrictEqual(
                 messages.length,
                 0,
                 `Expected linter errors when linter is enabled, Output - ${fixture.output}`,
             );
         } else {
-            assert.equal(
+            assert.strictEqual(
                 messages.length,
                 0,
                 `Unexpected linter errors when linter is disabled, Output - ${fixture.output}`,
@@ -754,11 +754,11 @@ suite('Linting Scenarios', () => {
         );
 
         if (messagesToBeReceived.length === 0) {
-            assert.equal(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
+            assert.strictEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
         } else if (fixture.output.indexOf('ENOENT') === -1) {
             // Pylint for Python Version 2.7 could return 80 linter messages, where as in 3.5 it might only return 1.
             // Looks like pylint stops linting as soon as it comes across any ERRORS.
-            assert.notEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
+            assert.notStrictEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
         }
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
@@ -782,7 +782,7 @@ suite('Linting Scenarios', () => {
             new CancellationTokenSource().token,
         );
 
-        assert.equal(
+        assert.strictEqual(
             messages.length,
             messageCountToBeReceived,
             `Expected number of lint errors does not match lint error count, Output - ${fixture.output}`,
@@ -817,15 +817,15 @@ suite('Linting Products', () => {
     test('All linters match linting products', async () => {
         for (const product of LINTERID_BY_PRODUCT.keys()) {
             const prodType = prodService.getProductType(product);
-            assert.notEqual(prodType, undefined, `${Product[product]} is not not properly registered`);
-            assert.equal(prodType, ProductType.Linter, `${Product[product]} is not a linter product`);
+            assert.notStrictEqual(prodType, undefined, `${Product[product]} is not not properly registered`);
+            assert.strictEqual(prodType, ProductType.Linter, `${Product[product]} is not a linter product`);
         }
     });
 
     test('All linting product names match linter IDs', async () => {
         for (const [product, linterID] of LINTERID_BY_PRODUCT) {
             const prodName = ProductNames.get(product);
-            assert.equal(prodName, linterID, 'product name does not match linter ID');
+            assert.strictEqual(prodName, linterID, 'product name does not match linter ID');
         }
     });
 });

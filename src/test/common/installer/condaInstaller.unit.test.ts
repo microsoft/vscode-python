@@ -39,9 +39,9 @@ suite('Common - Conda Installer', () => {
         installer = new CondaInstallerTest(instance(serviceContainer));
     });
     test('Name and priority', async () => {
-        assert.equal(installer.displayName, 'Conda');
-        assert.equal(installer.name, 'Conda');
-        assert.equal(installer.priority, 0);
+        assert.strictEqual(installer.displayName, 'Conda');
+        assert.strictEqual(installer.name, 'Conda');
+        assert.strictEqual(installer.priority, 0);
     });
     test('Installer is not supported when conda is available variable is set to false', async () => {
         const uri = Uri.file(__filename);
@@ -49,7 +49,7 @@ suite('Common - Conda Installer', () => {
 
         const supported = await installer.isSupported(uri);
 
-        assert.equal(supported, false);
+        assert.strictEqual(supported, false);
     });
     test('Installer is not supported when conda is not available', async () => {
         const uri = Uri.file(__filename);
@@ -57,7 +57,7 @@ suite('Common - Conda Installer', () => {
 
         const supported = await installer.isSupported(uri);
 
-        assert.equal(supported, false);
+        assert.strictEqual(supported, false);
     });
     test('Installer is not supported when current env is not a conda env', async () => {
         const uri = Uri.file(__filename);
@@ -71,7 +71,7 @@ suite('Common - Conda Installer', () => {
 
         const supported = await installer.isSupported(uri);
 
-        assert.equal(supported, false);
+        assert.strictEqual(supported, false);
     });
     test('Installer is supported when current env is a conda env', async () => {
         const uri = Uri.file(__filename);
@@ -85,7 +85,7 @@ suite('Common - Conda Installer', () => {
 
         const supported = await installer.isSupported(uri);
 
-        assert.equal(supported, true);
+        assert.strictEqual(supported, true);
     });
     test('Include name of environment', async () => {
         const uri = Uri.file(__filename);

@@ -75,17 +75,17 @@ suite('Sorting', () => {
         expect(edit.entries()).to.be.lengthOf(1);
         const edits = edit.entries()[0][1];
         expect(edits.length).to.equal(4);
-        assert.equal(
+        assert.strictEqual(
             edits.filter((value) => value.newText === EOL && value.range.isEqual(new Range(2, 0, 2, 0))).length,
             1,
             'EOL not found',
         );
-        assert.equal(
+        assert.strictEqual(
             edits.filter((value) => value.newText === '' && value.range.isEqual(new Range(3, 0, 4, 0))).length,
             1,
             '"" not found',
         );
-        assert.equal(
+        assert.strictEqual(
             edits.filter(
                 (value) =>
                     value.newText === `from rope.refactor.extract import ExtractMethod, ExtractVariable${EOL}` &&
@@ -94,7 +94,7 @@ suite('Sorting', () => {
             1,
             'Text not found',
         );
-        assert.equal(
+        assert.strictEqual(
             edits.filter((value) => value.newText === '' && value.range.isEqual(new Range(16, 0, 18, 0))).length,
             1,
             '"" not found',
@@ -106,7 +106,7 @@ suite('Sorting', () => {
         const originalContent = textDocument.getText();
         await window.showTextDocument(textDocument);
         await commands.executeCommand(Commands.Sort_Imports);
-        assert.notEqual(originalContent, textDocument.getText(), 'Contents have not changed');
+        assert.notStrictEqual(originalContent, textDocument.getText(), 'Contents have not changed');
     });
 
     test('With Config', async () => {
@@ -117,7 +117,7 @@ suite('Sorting', () => {
         expect(edit.entries()).to.be.lengthOf(1);
         const edits = edit.entries()[0][1];
         const newValue = `from third_party import lib2${EOL}from third_party import lib3${EOL}from third_party import lib4${EOL}from third_party import lib5${EOL}from third_party import lib6${EOL}from third_party import lib7${EOL}from third_party import lib8${EOL}from third_party import lib9${EOL}`;
-        assert.equal(
+        assert.strictEqual(
             edits.filter((value) => value.newText === newValue && value.range.isEqual(new Range(0, 0, 3, 0))).length,
             1,
             'New Text not found',
@@ -129,7 +129,7 @@ suite('Sorting', () => {
         const originalContent = textDocument.getText();
         await window.showTextDocument(textDocument);
         await commands.executeCommand(Commands.Sort_Imports);
-        assert.notEqual(originalContent, textDocument.getText(), 'Contents have not changed');
+        assert.notStrictEqual(originalContent, textDocument.getText(), 'Contents have not changed');
     });
 
     test('With Changes and Config in Args', async () => {
@@ -147,7 +147,7 @@ suite('Sorting', () => {
         const edit = (await sorter.provideDocumentSortImportsEdits(textDocument.uri))!;
         expect(edit.entries()).to.be.lengthOf(1);
         const edits = edit.entries()[0][1];
-        assert.notEqual(edits.length, 0, 'No edits');
+        assert.notStrictEqual(edits.length, 0, 'No edits');
     });
     test('With Changes and Config in Args (via Command)', async () => {
         await updateSetting(
@@ -163,20 +163,20 @@ suite('Sorting', () => {
         });
         const originalContent = textDocument.getText();
         await commands.executeCommand(Commands.Sort_Imports);
-        assert.notEqual(originalContent, textDocument.getText(), 'Contents have not changed');
+        assert.notStrictEqual(originalContent, textDocument.getText(), 'Contents have not changed');
     }).timeout(TEST_TIMEOUT * 2);
 
     test('With Changes and Config implicit from cwd', async () => {
         const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
-        assert.equal(textDocument.isDirty, false, 'Document should initially be unmodified');
+        assert.strictEqual(textDocument.isDirty, false, 'Document should initially be unmodified');
         const editor = await window.showTextDocument(textDocument);
         await editor.edit((builder) => {
             builder.insert(new Position(0, 0), `from third_party import lib0${EOL}`);
         });
-        assert.equal(textDocument.isDirty, true, 'Document should have been modified (pre sort)');
+        assert.strictEqual(textDocument.isDirty, true, 'Document should have been modified (pre sort)');
         await sorter.sortImports(textDocument.uri);
-        assert.equal(textDocument.isDirty, true, 'Document should have been modified by sorting');
+        assert.strictEqual(textDocument.isDirty, true, 'Document should have been modified by sorting');
         const newValue = `from third_party import lib0${EOL}from third_party import lib1${EOL}from third_party import lib2${EOL}from third_party import lib3${EOL}from third_party import lib4${EOL}from third_party import lib5${EOL}from third_party import lib6${EOL}from third_party import lib7${EOL}from third_party import lib8${EOL}from third_party import lib9${EOL}`;
-        assert.equal(textDocument.getText(), newValue);
+        assert.strictEqual(textDocument.getText(), newValue);
     });
 });

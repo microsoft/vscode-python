@@ -119,7 +119,7 @@ suite('File Downloader', () => {
 
             // Confirm the package.json file gets downloaded
             const expectedFileContents = fsExtra.readFileSync(packageJsonFile).toString();
-            assert.equal(fsExtra.readFileSync(tmpFilePath.filePath).toString(), expectedFileContents);
+            assert.strictEqual(fsExtra.readFileSync(tmpFilePath.filePath).toString(), expectedFileContents);
         });
         test('Error is throw for http Status !== 200', async () => {
             // When downloading a uri, throw status 500 error.
@@ -243,7 +243,7 @@ suite('File Downloader', () => {
             const file = await fileDownloader.downloadFile('file', { progressMessagePrefix: '', extension: '.pdf' });
 
             verify(fs.createTemporaryFile('.pdf')).once();
-            assert.equal(file, 'my temp file');
+            assert.strictEqual(file, 'my temp file');
         });
         test('Display progress message in output channel', async () => {
             const tmpFile = { filePath: 'my temp file', dispose: noop };

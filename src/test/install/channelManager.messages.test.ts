@@ -134,17 +134,17 @@ suite('Installation - channel messages', () => {
 
     function verifyMessage(message: string, present: string[], missing: string[]) {
         for (const p of present) {
-            assert.equal(message.indexOf(p) >= 0, true, `Message does not contain ${p}.`);
+            assert.strictEqual(message.indexOf(p) >= 0, true, `Message does not contain ${p}.`);
         }
         for (const m of missing) {
-            assert.equal(message.indexOf(m) < 0, true, `Message incorrectly contains ${m}.`);
+            assert.strictEqual(message.indexOf(m) < 0, true, `Message incorrectly contains ${m}.`);
         }
     }
 
     function verifyUrl(url: string, terms: string[]) {
-        assert.equal(url.indexOf('https://') >= 0, true, 'Search Url must be https.');
+        assert.strictEqual(url.indexOf('https://') >= 0, true, 'Search Url must be https.');
         for (const term of terms) {
-            assert.equal(url.indexOf(term) >= 0, true, `Search Url does not contain ${term}.`);
+            assert.strictEqual(url.indexOf(term) >= 0, true, `Search Url does not contain ${term}.`);
         }
     }
 

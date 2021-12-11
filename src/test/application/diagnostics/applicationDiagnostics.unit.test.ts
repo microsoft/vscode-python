@@ -246,11 +246,11 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         verify(foreGroundService.runInBackground).atLeast(1);
         verify(backGroundService.runInBackground).atLeast(1);
 
-        assert.equal(deferred.completed, false);
+        assert.strictEqual(deferred.completed, false);
         foreGroundDeferred.resolve([]);
         await sleep(1);
 
-        assert.equal(deferred.completed, true);
+        assert.strictEqual(deferred.completed, true);
 
         backgroundGroundDeferred.resolve([]);
         await sleep(1);

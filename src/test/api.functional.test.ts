@@ -114,6 +114,6 @@ suite('Extension API', () => {
             instance(serviceContainer),
         ).debug.getDebuggerPackagePath();
 
-        assert.equal(pkgPath, debuggerPath);
+        assert.strictEqual(pkgPath, debuggerPath);
     });
 });

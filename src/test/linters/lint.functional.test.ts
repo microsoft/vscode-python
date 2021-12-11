@@ -595,7 +595,7 @@ function getMessages(product: Product): ILintMessage[] {
 async function getInfoForConfig(product: Product) {
     const prodID = getLinterID(product);
     const dirname = linterConfigDirs.get(prodID);
-    assert.notEqual(dirname, undefined, `tests not set up for ${Product[product]}`);
+    assert.notStrictEqual(dirname, undefined, `tests not set up for ${Product[product]}`);
 
     const filename = path.join(dirname!, product === Product.pylint ? 'file2.py' : 'file.py');
     let messagesToBeReceived: ILintMessage[] = [];
@@ -771,11 +771,11 @@ suite('Linting Functional Tests', () => {
         const messages = await linter.lint(doc, new CancellationTokenSource().token);
 
         if (messagesToBeReceived.length === 0) {
-            assert.equal(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
+            assert.strictEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
         } else if (fixture.output.indexOf('ENOENT') === -1) {
             // Pylint for Python Version 2.7 could return 80 linter messages, where as in 3.5 it might only return 1.
             // Looks like pylint stops linting as soon as it comes across any ERRORS.
-            assert.notEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
+            assert.notStrictEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
         }
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
@@ -832,7 +832,7 @@ suite('Linting Functional Tests', () => {
 
         const messages = await linter.lint(doc, new CancellationTokenSource().token);
 
-        assert.equal(
+        assert.strictEqual(
             messages.length,
             messageCountToBeReceived,
             'Expected number of lint errors does not match lint error count',
