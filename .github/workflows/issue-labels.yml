@@ -23,12 +23,10 @@ jobs:
               issue_number: context.issue.number,
             })
             const labels = result.data.map((label) => label.name)
+            const hasNeeds = labels.some((label) => label.startsWith('needs'))
 
-            const skipLabels = ['classify', 'needs community feedback', 'needs decision', 'needs PR', 'needs proposal', 'needs spike']
-            const shouldSkipClassify = labels.some((label) => skipLabels.includes(label))
-
-            if (!shouldSkipClassify) {
-              console.log('This issue is not labeled with "classify" or a "needs __" label, add the "classify" label.')
+            if (!hasNeeds) {
+              console.log('This issue is not labeled with a "needs __" label, add the "classify" label.')
 
               github.rest.issues.addLabels({
                 owner: context.repo.owner,
@@ -37,5 +35,5 @@ jobs:
                 labels: ['classify']
               })
             } else {
-              console.log('This issue already has a "classify" or a "needs __" label, do not add the "classify" label.')
+              console.log('This issue already has a "needs __" label, do not add the "classify" label.')
             }
