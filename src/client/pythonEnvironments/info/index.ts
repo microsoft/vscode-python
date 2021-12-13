@@ -68,6 +68,7 @@ export type InterpreterInformation = {
 export type PythonEnvironment = InterpreterInformation & {
     companyDisplayName?: string;
     displayName?: string;
+    detailedDisplayName?: string;
     envType: EnvironmentType;
     envName?: string;
     envPath?: string;

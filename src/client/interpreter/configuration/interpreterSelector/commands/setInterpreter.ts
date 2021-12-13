@@ -158,7 +158,11 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
 
     private getSuggestions(resource: Resource): QuickPickType[] {
         const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
-        const items = this.interpreterSelector.getSuggestions(resource);
+        const items = this.interpreterSelector.getSuggestions(resource, !!this.interpreterService.refreshPromise);
+        if (this.interpreterService.refreshPromise) {
+            // We cannot put items in groups while the list is loading as group of an item can change.
+            return items;
+        }
         return getGroupedQuickPickItems(items, workspaceFolder?.uri.fsPath);
     }
 
@@ -242,6 +246,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             const newSuggestion: QuickPickType = this.interpreterSelector.suggestionToQuickPickItem(
                 event.new,
                 resource,
+                true,
             );
             if (envIndex === -1) {
                 updatedItems.push(newSuggestion);
@@ -381,6 +386,7 @@ export enum EnvGroups {
     Venv = 'Venv',
     Poetry = 'Poetry',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
+    NewlyDiscovered = 'NewlyDiscovered',
 }
 
 function getGroupedQuickPickItems(items: IInterpreterQuickPickItem[], workspacePath?: string): QuickPickType[] {

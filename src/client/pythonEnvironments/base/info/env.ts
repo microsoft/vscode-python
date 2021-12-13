@@ -126,18 +126,20 @@ function updateEnv(
  * The format is `Python <Version> <bitness> (<env name>: <env type>)`
  * E.g. `Python 3.5.1 32-bit (myenv2: virtualenv)`
  */
-export function getEnvDisplayString(env: PythonEnvInfo): string {
-    return buildEnvDisplayString(env);
+export function setEnvDisplayString(env: PythonEnvInfo): void {
+    env.display = buildEnvDisplayString(env);
+    env.detailedDisplayName = buildEnvDisplayString(env, true);
 }
 
-function buildEnvDisplayString(env: PythonEnvInfo): string {
+function buildEnvDisplayString(env: PythonEnvInfo, getAllDetails = false): string {
     // main parts
-    const shouldDisplayKind = env.searchLocation || globallyInstalledEnvKinds.includes(env.kind);
+    const shouldDisplayKind = getAllDetails || env.searchLocation || globallyInstalledEnvKinds.includes(env.kind);
+    const shouldDisplayArch = getAllDetails || !virtualEnvKinds.includes(env.kind);
     const displayNameParts: string[] = ['Python'];
     if (env.version && !isVersionEmpty(env.version)) {
         displayNameParts.push(getVersionDisplayString(env.version));
     }
-    if (!virtualEnvKinds.includes(env.kind)) {
+    if (shouldDisplayArch) {
         const archName = getArchitectureDisplayName(env.arch);
         if (archName !== '') {
             displayNameParts.push(archName);

@@ -26,8 +26,12 @@ export interface IPythonPathUpdaterServiceManager {
 export const IInterpreterSelector = Symbol('IInterpreterSelector');
 export interface IInterpreterSelector extends Disposable {
     getAllSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]>;
-    getSuggestions(resource: Resource): IInterpreterQuickPickItem[];
-    suggestionToQuickPickItem(suggestion: PythonEnvironment, workspaceUri?: Uri | undefined): IInterpreterQuickPickItem;
+    getSuggestions(resource: Resource, useFullDisplayName?: boolean): IInterpreterQuickPickItem[];
+    suggestionToQuickPickItem(
+        suggestion: PythonEnvironment,
+        workspaceUri?: Uri | undefined,
+        useDetailedName?: boolean,
+    ): IInterpreterQuickPickItem;
 }
 
 export interface IInterpreterQuickPickItem extends QuickPickItem {

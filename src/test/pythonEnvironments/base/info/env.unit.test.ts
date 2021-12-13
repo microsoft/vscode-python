@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { parseVersionInfo } from '../../../../client/common/utils/version';
 import { PythonEnvInfo, PythonDistroInfo, PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { getEnvDisplayString } from '../../../../client/pythonEnvironments/base/info/env';
+import { setEnvDisplayString } from '../../../../client/pythonEnvironments/base/info/env';
 import { createLocatedEnv } from '../common';
 
 suite('pyenvs info - getEnvDisplayString()', () => {
@@ -58,9 +58,9 @@ suite('pyenvs info - getEnvDisplayString()', () => {
     ];
     tests.forEach(([env, expected]) => {
         test(`"${expected}"`, () => {
-            const result = getEnvDisplayString(env);
+            setEnvDisplayString(env);
 
-            assert.strictEqual(result, expected);
+            assert.equal(env.display, expected);
         });
     });
 });
