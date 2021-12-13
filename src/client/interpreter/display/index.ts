@@ -14,6 +14,11 @@ import {
     IInterpreterStatusbarVisibilityFilter,
 } from '../contracts';
 
+/**
+ * Based on https://github.com/microsoft/vscode-python/issues/18040#issuecomment-992567670.
+ * This is to ensure the item appears right after the Python language status item.
+ */
+const STATUS_BAR_ITEM_PRIORITY = 100.09999;
 @injectable()
 export class InterpreterDisplay implements IInterpreterDisplay {
     private readonly statusBar: StatusBarItem;
@@ -36,7 +41,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         const application = serviceContainer.get<IApplicationShell>(IApplicationShell);
         const disposableRegistry = serviceContainer.get<Disposable[]>(IDisposableRegistry);
 
-        this.statusBar = application.createStatusBarItem(StatusBarAlignment.Right, 100);
+        this.statusBar = application.createStatusBarItem(StatusBarAlignment.Right, STATUS_BAR_ITEM_PRIORITY);
         this.statusBar.command = 'python.setInterpreter';
         disposableRegistry.push(this.statusBar);
 
@@ -83,7 +88,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
                 );
                 this.interpreterPath = interpreter.path;
             }
-            this.statusBar.text = interpreter.displayName!;
+            this.statusBar.text = interpreter.displayName!.substring('Python '.length);
             this.currentlySelectedInterpreterPath = interpreter.path;
         } else {
             this.statusBar.tooltip = '';
