@@ -6,10 +6,10 @@
 import { inject, injectable } from 'inversify';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
-import { QuickPick, QuickPickItem } from 'vscode';
+import { QuickPick, QuickPickItem, QuickPickItemKind } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands, Octicons } from '../../../../common/constants';
-import { arePathsSame } from '../../../../common/platform/fs-paths';
+import { arePathsSame, isParentPath } from '../../../../common/platform/fs-paths';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
 import { getIcon } from '../../../../common/utils/icons';
@@ -22,6 +22,7 @@ import {
 } from '../../../../common/utils/multiStepInput';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
 import { REFRESH_BUTTON_ICON } from '../../../../debugger/extension/attachQuickPick/types';
+import { EnvironmentType } from '../../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { IInterpreterService, PythonEnvironmentsChangedEvent } from '../../../contracts';
@@ -36,7 +37,7 @@ import { BaseInterpreterSelectorCommand } from './base';
 const untildify = require('untildify');
 
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
-type QuickPickType = IInterpreterQuickPickItem | ISpecialQuickPickItem;
+type QuickPickType = IInterpreterQuickPickItem | ISpecialQuickPickItem | QuickPickItem;
 
 function isInterpreterQuickPickItem(item: QuickPickType): item is IInterpreterQuickPickItem {
     return 'interpreter' in item;
@@ -149,15 +150,23 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         if (defaultInterpreterPathSuggestion) {
             suggestions.push(defaultInterpreterPathSuggestion);
         }
-        const interpreterSuggestions = this.interpreterSelector.getSuggestions(resource);
+        const interpreterSuggestions = this.getSuggestions(resource);
         this.setRecommendedItem(interpreterSuggestions, resource);
         suggestions.push(...interpreterSuggestions);
         return suggestions;
     }
 
+    private getSuggestions(resource: Resource): QuickPickType[] {
+        const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
+        const items = this.interpreterSelector.getSuggestions(resource);
+        return getGroupedQuickPickItems(items, workspaceFolder?.uri.fsPath);
+    }
+
     private getActiveItem(resource: Resource, suggestions: QuickPickType[]) {
         const currentPythonPath = this.configurationService.getSettings(resource).pythonPath;
-        const activeInterpreter = suggestions.filter((i) => i.path === currentPythonPath);
+        const activeInterpreter = suggestions.filter(
+            (i) => isInterpreterQuickPickItem(i) && i.path === currentPythonPath,
+        );
         if (activeInterpreter.length > 0) {
             return activeInterpreter[0];
         }
@@ -253,7 +262,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             // List is in the final state, so first suggestion is the recommended one.
             const recommended = cloneDeep(interpreterSuggestions[0]);
             recommended.label = `${Octicons.Star} ${recommended.label}`;
-            recommended.description = Common.recommended();
+            recommended.description = `${recommended.description ?? ''} - ${Common.recommended()}`;
             const index = items.findIndex(
                 (item) =>
                     isInterpreterQuickPickItem(item) &&
@@ -359,5 +368,47 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTERED_EXISTS, undefined, { discovered });
 
         return undefined;
+    }
+}
+
+export enum EnvGroups {
+    Workspace = 'Workspace',
+    Conda = 'Conda',
+    Global = 'Global',
+    VirtualEnv = 'VirtualEnv',
+    PipEnv = 'PipEnv',
+    Pyenv = 'Pyenv',
+    Venv = 'Venv',
+    Poetry = 'Poetry',
+    VirtualEnvWrapper = 'VirtualEnvWrapper',
+}
+
+function getGroupedQuickPickItems(items: IInterpreterQuickPickItem[], workspacePath?: string): QuickPickType[] {
+    const updatedItems: QuickPickType[] = [];
+    let previousGroup: EnvGroups | undefined;
+    for (const item of items) {
+        const currentGroup = getGroup(item, workspacePath);
+        if (!previousGroup || currentGroup !== previousGroup) {
+            const separatorItem: QuickPickItem = { label: currentGroup, kind: QuickPickItemKind.Separator };
+            updatedItems.push(separatorItem);
+            previousGroup = currentGroup;
+        }
+        updatedItems.push(item);
+    }
+    return updatedItems;
+}
+
+function getGroup(item: IInterpreterQuickPickItem, workspacePath?: string) {
+    if (workspacePath && isParentPath(item.path, workspacePath)) {
+        return EnvGroups.Workspace;
+    }
+    switch (item.interpreter.envType) {
+        case EnvironmentType.Global:
+        case EnvironmentType.System:
+        case EnvironmentType.Unknown:
+        case EnvironmentType.WindowsStore:
+            return EnvGroups.Global;
+        default:
+            return EnvGroups[item.interpreter.envType];
     }
 }

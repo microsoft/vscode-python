@@ -43,7 +43,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         const cachedPrefix = suggestion.cachedEntry ? '(cached) ' : '';
         return {
             label: suggestion.displayName || 'Python',
-            detail: `${cachedPrefix}${detail}`,
+            description: `${cachedPrefix}${detail}`,
             path: suggestion.path,
             interpreter: suggestion,
         };

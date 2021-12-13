@@ -11,7 +11,15 @@ import { arePathsSame } from '../../common/externalDependencies';
 import { getKindDisplayName } from './envKind';
 import { areIdenticalVersion, areSimilarVersions, getVersionDisplayString, isVersionEmpty } from './pythonVersion';
 
-import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, PythonReleaseLevel, PythonVersion } from '.';
+import {
+    globallyInstalledEnvKinds,
+    PythonEnvInfo,
+    PythonEnvKind,
+    PythonEnvSource,
+    PythonReleaseLevel,
+    PythonVersion,
+    virtualEnvKinds,
+} from '.';
 
 /**
  * Create a new info object with all values empty.
@@ -124,13 +132,16 @@ export function getEnvDisplayString(env: PythonEnvInfo): string {
 
 function buildEnvDisplayString(env: PythonEnvInfo): string {
     // main parts
+    const shouldDisplayKind = env.searchLocation || globallyInstalledEnvKinds.includes(env.kind);
     const displayNameParts: string[] = ['Python'];
     if (env.version && !isVersionEmpty(env.version)) {
         displayNameParts.push(getVersionDisplayString(env.version));
     }
-    const archName = getArchitectureDisplayName(env.arch);
-    if (archName !== '') {
-        displayNameParts.push(archName);
+    if (!virtualEnvKinds.includes(env.kind)) {
+        const archName = getArchitectureDisplayName(env.arch);
+        if (archName !== '') {
+            displayNameParts.push(archName);
+        }
     }
 
     // Note that currently we do not use env.distro in the display name.
@@ -140,9 +151,11 @@ function buildEnvDisplayString(env: PythonEnvInfo): string {
     if (env.name && env.name !== '') {
         envSuffixParts.push(`'${env.name}'`);
     }
-    const kindName = getKindDisplayName(env.kind);
-    if (kindName !== '') {
-        envSuffixParts.push(kindName);
+    if (shouldDisplayKind) {
+        const kindName = getKindDisplayName(env.kind);
+        if (kindName !== '') {
+            envSuffixParts.push(kindName);
+        }
     }
     const envSuffix = envSuffixParts.length === 0 ? '' : `(${envSuffixParts.join(': ')})`;
 

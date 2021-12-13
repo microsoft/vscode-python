@@ -36,6 +36,15 @@ export const virtualEnvKinds = [
     PythonEnvKind.Conda,
     PythonEnvKind.VirtualEnv,
 ];
+
+export const globallyInstalledEnvKinds = [
+    PythonEnvKind.OtherGlobal,
+    PythonEnvKind.Unknown,
+    PythonEnvKind.WindowsStore,
+    PythonEnvKind.System,
+    PythonEnvKind.Custom,
+];
+
 /**
  * Information about a file.
  */

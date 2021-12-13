@@ -9,16 +9,15 @@ import { PythonVersion } from '../../pythonEnvironments/info/pythonVersion';
 import { IInterpreterHelper } from '../contracts';
 import { IInterpreterComparer } from './types';
 
-/*
- * Enum description:
- * - Local environments (.venv);
- * - Global environments (pipenv, conda);
- * - Globally-installed interpreters (/usr/bin/python3, Windows Store).
- */
-export enum EnvTypeHeuristic {
+export enum EnvLocationHeuristic {
+    /**
+     * Environments inside the workspace.
+     */
     Local = 1,
+    /**
+     * Environments outside the workspace.
+     */
     Global = 2,
-    GlobalInterpreters = 3,
 }
 
 @injectable()
@@ -41,8 +40,14 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
      * Always sort with newest version of Python first within each subgroup.
      */
     public compare(a: PythonEnvironment, b: PythonEnvironment): number {
+        // Check environment location.
+        const envLocationComparison = compareEnvironmentLocation(a, b, this.workspaceFolderPath);
+        if (envLocationComparison !== 0) {
+            return envLocationComparison;
+        }
+
         // Check environment type.
-        const envTypeComparison = compareEnvironmentType(a, b, this.workspaceFolderPath);
+        const envTypeComparison = compareEnvironmentType(a, b);
         if (envTypeComparison !== 0) {
             return envTypeComparison;
         }
@@ -151,11 +156,11 @@ function comparePythonVersionDescending(a: PythonVersion | undefined, b: PythonV
 }
 
 /**
- * Compare 2 environment types: return 0 if they are the same, -1 if a comes before b, 1 otherwise.
+ * Compare 2 environment locations: return 0 if they are the same, -1 if a comes before b, 1 otherwise.
  */
-function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment, workspacePath: string): number {
-    const aHeuristic = getEnvTypeHeuristic(a, workspacePath);
-    const bHeuristic = getEnvTypeHeuristic(b, workspacePath);
+function compareEnvironmentLocation(a: PythonEnvironment, b: PythonEnvironment, workspacePath: string): number {
+    const aHeuristic = getEnvLocationHeuristic(a, workspacePath);
+    const bHeuristic = getEnvLocationHeuristic(b, workspacePath);
 
     return Math.sign(aHeuristic - bHeuristic);
 }
@@ -163,28 +168,37 @@ function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment, work
 /**
  * Return a heuristic value depending on the environment type.
  */
-export function getEnvTypeHeuristic(environment: PythonEnvironment, workspacePath: string): EnvTypeHeuristic {
-    const { envType } = environment;
-
+export function getEnvLocationHeuristic(environment: PythonEnvironment, workspacePath: string): EnvLocationHeuristic {
     if (
         workspacePath.length > 0 &&
         ((environment.envPath && isParentPath(environment.envPath, workspacePath)) ||
             (environment.path && isParentPath(environment.path, workspacePath)))
     ) {
-        return EnvTypeHeuristic.Local;
+        return EnvLocationHeuristic.Local;
     }
+    return EnvLocationHeuristic.Global;
+}
 
-    switch (envType) {
-        case EnvironmentType.Venv:
-        case EnvironmentType.Conda:
-        case EnvironmentType.VirtualEnv:
-        case EnvironmentType.VirtualEnvWrapper:
-        case EnvironmentType.Pipenv:
-        case EnvironmentType.Poetry:
-            return EnvTypeHeuristic.Global;
-        // The default case covers global environments.
-        // For now this includes: pyenv, Windows Store, Global, System and Unknown environment types.
-        default:
-            return EnvTypeHeuristic.GlobalInterpreters;
-    }
+/**
+ * Compare 2 environment types: return 0 if they are the same, -1 if a comes before b, 1 otherwise.
+ */
+function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment): number {
+    const envTypeByPriority = getPrioritizedEnvironmentType();
+    return envTypeByPriority.indexOf(a.envType) - envTypeByPriority.indexOf(b.envType);
+}
+
+function getPrioritizedEnvironmentType(): EnvironmentType[] {
+    return [
+        EnvironmentType.Conda,
+        EnvironmentType.Poetry,
+        EnvironmentType.Pipenv,
+        EnvironmentType.VirtualEnvWrapper,
+        EnvironmentType.Venv,
+        EnvironmentType.VirtualEnv,
+        EnvironmentType.Pyenv,
+        EnvironmentType.WindowsStore,
+        EnvironmentType.Global,
+        EnvironmentType.System,
+        EnvironmentType.Unknown,
+    ];
 }
