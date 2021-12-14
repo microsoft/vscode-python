@@ -15,6 +15,7 @@ def normalize(path):
 
 
 module = sys.argv[1]
+# Printing out markers to make it more resilient to pull the output. Especially useful for `conda run`.
 print(">>>EXTENSIONOUTPUT")
 if module == "-c":
     ns = {}
