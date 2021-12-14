@@ -119,7 +119,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
                     );
                     this.interpreterPath = interpreter.path;
                 }
-                let text = interpreter.displayName!;
+                let text = interpreter.detailedDisplayName!;
                 if (this.experiments.inExperimentSync(InterpreterStatusBarPosition.Pinned)) {
                     text = text.startsWith('Python') ? text.substring('Python'.length).trim() : text;
                 }
@@ -142,7 +142,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
                     );
                     this.interpreterPath = interpreter.path;
                 }
-                let text = interpreter.displayName!;
+                let text = interpreter.detailedDisplayName!;
                 text = text.startsWith('Python') ? text.substring('Python'.length).trim() : text;
                 this.languageStatus.text = text;
                 this.currentlySelectedInterpreterPath = interpreter.path;

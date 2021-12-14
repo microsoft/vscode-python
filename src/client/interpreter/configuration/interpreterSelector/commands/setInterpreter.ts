@@ -9,7 +9,6 @@ import * as path from 'path';
 import { QuickPick, QuickPickItem, QuickPickItemKind } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands, Octicons } from '../../../../common/constants';
-import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { arePathsSame, isParentPath } from '../../../../common/platform/fs-paths';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
@@ -46,6 +45,10 @@ function isInterpreterQuickPickItem(item: QuickPickType): item is IInterpreterQu
 
 function isSpecialQuickPickItem(item: QuickPickType): item is ISpecialQuickPickItem {
     return 'alwaysShow' in item;
+}
+
+function isSeparatorItem(item: QuickPickType): item is QuickPickItem {
+    return 'kind' in item && item.kind === QuickPickItemKind.Separator;
 }
 
 @injectable()
@@ -236,6 +239,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         resource: Resource,
     ): QuickPickType[] {
         const updatedItems = [...items.values()];
+        const areItemsGrouped = items.find((item) => isSeparatorItem(item));
         const env = event.old ?? event.new;
         let envIndex = -1;
         if (env) {
@@ -244,9 +248,13 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             );
         }
         if (event.new) {
-            const newSuggestion = this.interpreterSelector.suggestionToQuickPickItem(event.new, resource, true);
+            const newSuggestion = this.interpreterSelector.suggestionToQuickPickItem(
+                event.new,
+                resource,
+                !areItemsGrouped,
+            );
             if (envIndex === -1) {
-                if (event.type === FileChangeType.Created) {
+                if (areItemsGrouped) {
                     addSeparatorIfApplicable(
                         updatedItems,
                         newSuggestion,

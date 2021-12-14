@@ -134,7 +134,7 @@ export function setEnvDisplayString(env: PythonEnvInfo): void {
 function buildEnvDisplayString(env: PythonEnvInfo, getAllDetails = false): string {
     // main parts
     const shouldDisplayKind = getAllDetails || env.searchLocation || globallyInstalledEnvKinds.includes(env.kind);
-    const shouldDisplayArch = getAllDetails || !virtualEnvKinds.includes(env.kind);
+    const shouldDisplayArch = !virtualEnvKinds.includes(env.kind);
     const displayNameParts: string[] = ['Python'];
     if (env.version && !isVersionEmpty(env.version)) {
         displayNameParts.push(getVersionDisplayString(env.version));
