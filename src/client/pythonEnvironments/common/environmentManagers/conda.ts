@@ -12,6 +12,7 @@ import { EnvironmentType, PythonEnvironment } from '../../info';
 import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
 import { traceError, traceVerbose } from '../../../logging';
+import { _SCRIPTS_DIR } from '../../../common/process/internal/scripts/constants';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 
@@ -202,6 +203,8 @@ export async function getPythonVersionFromConda(interpreterPath: string): Promis
 // Minimum version number of conda required to be able to use 'conda run' with '--no-capture-output' flag.
 export const CONDA_RUN_VERSION = '4.9.0';
 export const CONDA_RUN_TIMEOUT = 45000;
+
+export const CONDA_RUN_SCRIPT = path.join(_SCRIPTS_DIR, 'conda_run_script.py');
 
 /** Wraps the "conda" utility, and exposes its functionality.
  */

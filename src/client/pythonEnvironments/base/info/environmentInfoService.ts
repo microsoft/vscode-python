@@ -7,7 +7,7 @@ import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../../co
 import { getInterpreterInfo, InterpreterInformation } from './interpreter';
 import { buildPythonExecInfo } from '../../exec';
 import { traceError } from '../../../logging';
-import { Conda, CONDA_RUN_TIMEOUT } from '../../common/environmentManagers/conda';
+import { Conda, CONDA_RUN_TIMEOUT, CONDA_RUN_SCRIPT } from '../../common/environmentManagers/conda';
 import { PythonEnvInfo, PythonEnvKind } from '.';
 
 export enum EnvironmentInfoServiceQueuePriority {
@@ -30,7 +30,7 @@ async function buildEnvironmentInfo(env: PythonEnvInfo): Promise<InterpreterInfo
         const conda = await Conda.getConda();
         const runArgs = await conda?.getRunArgs({ name: env.name, prefix: env.location });
         if (runArgs) {
-            python = [...runArgs, 'python'];
+            python = [...runArgs, 'python', CONDA_RUN_SCRIPT];
         }
     }
     const interpreterInfo = await getInterpreterInfo(
