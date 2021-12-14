@@ -46,11 +46,14 @@ export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJs
     const args = [script];
 
     function parse(out: string): InterpreterInfoJson {
+        const regex = />>>JSON([\s\S]*)<<<JSON/;
+        const match = out.match(regex);
+        const filteredOut = match !== null && match.length >= 2 ? match[1].trim() : '';
         let json: InterpreterInfoJson;
         try {
-            json = JSON.parse(out);
+            json = JSON.parse(filteredOut);
         } catch (ex) {
-            throw Error(`python ${args} returned bad JSON (${out}) (${ex})`);
+            throw Error(`python ${args} returned bad JSON (${out}) (${filteredOut}) (${ex})`);
         }
         return json;
     }

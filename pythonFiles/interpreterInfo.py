@@ -10,4 +10,6 @@ obj["sysPrefix"] = sys.prefix
 obj["sysVersion"] = sys.version
 obj["is64Bit"] = sys.maxsize > 2 ** 32
 
+print('>>>JSON')
 print(json.dumps(obj))
+print('<<<JSON')
