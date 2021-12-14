@@ -1,4 +1,37 @@
 /* __GDPR__
+   "language_server.enabled" : {
+      "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
+      "errorname" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+      "errorstack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+   }
+*/
+/* __GDPR__
+   "language_server.ready" : {
+      "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
+      "errorname" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+      "errorstack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+   }
+*/
+/* __GDPR__
+   "language_server.request" : {
+      "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
+      "errorname" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+      "errorstack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "method" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+   }
+*/
+/* __GDPR__
+   "language_server.startup" : {
+      "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
+      "errorname" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+      "errorstack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+   }
+*/
+/* __GDPR__
    "language_server/analysis_complete" : {
       "common.remotename" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "common.uikind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
