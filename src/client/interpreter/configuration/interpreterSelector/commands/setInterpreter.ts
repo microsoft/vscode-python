@@ -9,6 +9,7 @@ import * as path from 'path';
 import { QuickPick, QuickPickItem, QuickPickItemKind } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands, Octicons } from '../../../../common/constants';
+import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { arePathsSame, isParentPath } from '../../../../common/platform/fs-paths';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
@@ -243,12 +244,15 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             );
         }
         if (event.new) {
-            const newSuggestion: QuickPickType = this.interpreterSelector.suggestionToQuickPickItem(
-                event.new,
-                resource,
-                true,
-            );
+            const newSuggestion = this.interpreterSelector.suggestionToQuickPickItem(event.new, resource, true);
             if (envIndex === -1) {
+                if (event.type === FileChangeType.Created) {
+                    addSeparatorIfApplicable(
+                        updatedItems,
+                        newSuggestion,
+                        this.workspaceService.getWorkspaceFolder(resource)?.uri.fsPath,
+                    );
+                }
                 updatedItems.push(newSuggestion);
             } else {
                 updatedItems[envIndex] = newSuggestion;
@@ -393,15 +397,31 @@ function getGroupedQuickPickItems(items: IInterpreterQuickPickItem[], workspaceP
     const updatedItems: QuickPickType[] = [];
     let previousGroup: EnvGroups | undefined;
     for (const item of items) {
-        const currentGroup = getGroup(item, workspacePath);
-        if (!previousGroup || currentGroup !== previousGroup) {
-            const separatorItem: QuickPickItem = { label: currentGroup, kind: QuickPickItemKind.Separator };
-            updatedItems.push(separatorItem);
-            previousGroup = currentGroup;
-        }
+        addSeparatorIfApplicable(updatedItems, item, workspacePath, previousGroup);
         updatedItems.push(item);
     }
     return updatedItems;
+}
+
+function addSeparatorIfApplicable(
+    items: QuickPickType[],
+    newItem: IInterpreterQuickPickItem,
+    workspacePath?: string,
+    previousGroup?: EnvGroups | undefined,
+) {
+    if (!previousGroup) {
+        const lastItem = items.length ? items[items.length - 1] : undefined;
+        previousGroup =
+            items.length && lastItem && isInterpreterQuickPickItem(lastItem)
+                ? getGroup(lastItem, workspacePath)
+                : undefined;
+    }
+    const currentGroup = getGroup(newItem, workspacePath);
+    if (!previousGroup || currentGroup !== previousGroup) {
+        const separatorItem: QuickPickItem = { label: currentGroup, kind: QuickPickItemKind.Separator };
+        items.push(separatorItem);
+        previousGroup = currentGroup;
+    }
 }
 
 function getGroup(item: IInterpreterQuickPickItem, workspacePath?: string) {
