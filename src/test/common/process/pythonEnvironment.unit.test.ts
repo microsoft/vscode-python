@@ -36,7 +36,13 @@ suite('PythonEnvironment', () => {
 
         processService
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
+            .returns(() =>
+                Promise.resolve({
+                    stdout: `>>>JSON
+${JSON.stringify(json)}
+<<<JSON`,
+                }),
+            );
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
 
         const result = await env.getInterpreterInformation();
@@ -61,7 +67,13 @@ suite('PythonEnvironment', () => {
 
         processService
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
+            .returns(() =>
+                Promise.resolve({
+                    stdout: `>>>JSON
+${JSON.stringify(json)}
+<<<JSON`,
+                }),
+            );
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
 
         const result = await env.getInterpreterInformation();
@@ -89,7 +101,13 @@ suite('PythonEnvironment', () => {
 
         processService
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
+            .returns(() =>
+                Promise.resolve({
+                    stdout: `>>>JSON
+${JSON.stringify(json)}
+<<<JSON`,
+                }),
+            );
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
 
         const result = await env.getInterpreterInformation();
@@ -117,7 +135,13 @@ suite('PythonEnvironment', () => {
 
         processService
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
+            .returns(() =>
+                Promise.resolve({
+                    stdout: `>>>JSON
+${JSON.stringify(json)}
+<<<JSON`,
+                }),
+            );
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
 
         const result = await env.getInterpreterInformation();

@@ -44,7 +44,13 @@ suite('getInterpreterInfo()', () => {
         deps
             // Checking the args is the key point of this test.
             .setup((d) => d.shellExec(cmd, 15000))
-            .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
+            .returns(() =>
+                Promise.resolve({
+                    stdout: `>>>JSON
+${JSON.stringify(json)}
+<<<JSON`,
+                }),
+            );
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
         await getInterpreterInfo(python, shellExec);
@@ -64,7 +70,13 @@ suite('getInterpreterInfo()', () => {
         deps
             // Checking the args is the key point of this test.
             .setup((d) => d.shellExec(cmd, 15000))
-            .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
+            .returns(() =>
+                Promise.resolve({
+                    stdout: `>>>JSON
+${JSON.stringify(json)}
+<<<JSON`,
+                }),
+            );
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
         await getInterpreterInfo(_python, shellExec);
@@ -84,7 +96,13 @@ suite('getInterpreterInfo()', () => {
         deps
             // Checking the args is the key point of this test.
             .setup((d) => d.shellExec(cmd, 15000))
-            .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
+            .returns(() =>
+                Promise.resolve({
+                    stdout: `>>>JSON
+${JSON.stringify(json)}
+<<<JSON`,
+                }),
+            );
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
         await getInterpreterInfo(_python, shellExec);
@@ -109,7 +127,13 @@ suite('getInterpreterInfo()', () => {
         deps
             // We check the args in other tests.
             .setup((d) => d.shellExec(TypeMoqIt.isAny(), TypeMoqIt.isAny()))
-            .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
+            .returns(() =>
+                Promise.resolve({
+                    stdout: `>>>JSON
+${JSON.stringify(json)}
+<<<JSON`,
+                }),
+            );
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
         const result = await getInterpreterInfo(python, shellExec);
@@ -135,7 +159,13 @@ suite('getInterpreterInfo()', () => {
         deps
             // We check the args in other tests.
             .setup((d) => d.shellExec(TypeMoqIt.isAny(), TypeMoqIt.isAny()))
-            .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
+            .returns(() =>
+                Promise.resolve({
+                    stdout: `>>>JSON
+${JSON.stringify(json)}
+<<<JSON`,
+                }),
+            );
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
         const result = await getInterpreterInfo(python, shellExec);
@@ -161,7 +191,13 @@ suite('getInterpreterInfo()', () => {
         deps
             // We check the args in other tests.
             .setup((d) => d.shellExec(TypeMoqIt.isAny(), TypeMoqIt.isAny()))
-            .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
+            .returns(() =>
+                Promise.resolve({
+                    stdout: `>>>JSON
+${JSON.stringify(json)}
+<<<JSON`,
+                }),
+            );
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
         const result = await getInterpreterInfo(python, shellExec);
