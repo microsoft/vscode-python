@@ -41,15 +41,15 @@ export type InterpreterInfoJson = {
     is64Bit: boolean;
 };
 
-export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJson] {
+export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJson | undefined] {
     const script = path.join(SCRIPTS_DIR, 'interpreterInfo.py');
     const args = [script];
 
-    function parse(out: string): InterpreterInfoJson {
+    function parse(out: string): InterpreterInfoJson | undefined {
         const regex = />>>JSON([\s\S]*)<<<JSON/;
         const match = out.match(regex);
         const filteredOut = match !== null && match.length >= 2 ? match[1].trim() : '';
-        let json: InterpreterInfoJson;
+        let json: InterpreterInfoJson | undefined;
         try {
             json = JSON.parse(filteredOut);
         } catch (ex) {

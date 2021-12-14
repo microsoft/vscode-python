@@ -83,10 +83,14 @@ export async function getInterpreterInfo(python: PythonExecInfo): Promise<Interp
     // https://github.com/microsoft/vscode-python/issues/7760
     const result = await shellExecute(quoted, { timeout: 15000 });
     if (result.stderr) {
-        traceError(`Failed to parse interpreter information for ${argv} stderr: ${result.stderr}`);
-        return undefined;
+        traceError(
+            `Stderr when executing script with ${argv} stderr: ${result.stderr}, still attempting to parse output`,
+        );
     }
     const json = parse(result.stdout);
+    if (!json) {
+        return undefined;
+    }
     traceInfo(`Found interpreter for ${argv}`);
     return extractInterpreterInfo(python.pythonExecutable, json);
 }
