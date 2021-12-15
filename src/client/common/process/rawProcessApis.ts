@@ -66,12 +66,9 @@ export function shellExec(
             } else if (shellOptions.throwOnStdErr && stderr && stderr.length) {
                 reject(new Error(stderr));
             } else {
+                stdout = filterOutputUsingMarkers(stdout);
                 // Make sure stderr is undefined if we actually had none. This is checked
                 // elsewhere because that's how exec behaves.
-                const regex = />>>EXTENSIONOUTPUT([\s\S]*)<<<EXTENSIONOUTPUT/;
-                const match = stdout.match(regex);
-                const filteredOut = match !== null && match.length >= 2 ? match[1].trim() : '';
-                stdout = filteredOut.length ? filteredOut : stdout;
                 resolve({ stderr: stderr && stderr.length > 0 ? stderr : undefined, stdout });
             }
         };
@@ -149,10 +146,7 @@ export function plainExec(
             deferred.reject(new StdErrError(stderr));
         } else {
             let stdout = decoder ? decoder.decode(stdoutBuffers, encoding) : '';
-            const regex = />>>EXTENSIONOUTPUT([\s\S]*)<<<EXTENSIONOUTPUT/;
-            const match = stdout.match(regex);
-            const filteredOut = match !== null && match.length >= 2 ? match[1].trim() : '';
-            stdout = filteredOut.length ? filteredOut : stdout;
+            stdout = filterOutputUsingMarkers(stdout);
             deferred.resolve({ stdout, stderr });
         }
         internalDisposables.forEach((d) => d.dispose());
@@ -163,6 +157,13 @@ export function plainExec(
     });
 
     return deferred.promise;
+}
+
+function filterOutputUsingMarkers(stdout: string) {
+    const regex = />>>EXTENSIONOUTPUT([\s\S]*)<<<EXTENSIONOUTPUT/;
+    const match = stdout.match(regex);
+    const filteredOut = match !== null && match.length >= 2 ? match[1].trim() : '';
+    return filteredOut.length ? filteredOut : stdout;
 }
 
 export function execObservable(
