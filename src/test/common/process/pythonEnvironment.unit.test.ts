@@ -38,9 +38,7 @@ suite('PythonEnvironment', () => {
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() =>
                 Promise.resolve({
-                    stdout: `>>>JSON
-${JSON.stringify(json)}
-<<<JSON`,
+                    stdout: JSON.stringify(json),
                 }),
             );
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
@@ -69,9 +67,7 @@ ${JSON.stringify(json)}
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() =>
                 Promise.resolve({
-                    stdout: `>>>JSON
-${JSON.stringify(json)}
-<<<JSON`,
+                    stdout: JSON.stringify(json),
                 }),
             );
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
@@ -103,9 +99,7 @@ ${JSON.stringify(json)}
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() =>
                 Promise.resolve({
-                    stdout: `>>>JSON
-${JSON.stringify(json)}
-<<<JSON`,
+                    stdout: JSON.stringify(json),
                 }),
             );
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
@@ -137,9 +131,7 @@ ${JSON.stringify(json)}
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() =>
                 Promise.resolve({
-                    stdout: `>>>JSON
-${JSON.stringify(json)}
-<<<JSON`,
+                    stdout: JSON.stringify(json),
                 }),
             );
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
