@@ -32,3 +32,5 @@ jobs:
         with:
           node_version: ${{ env.NODE_VERSION}}
           vsix_name: ${{ env.VSIX_NAME }}
+          artifact_name: ${{ env.ARTIFACT_NAME_VSIX }}
+
