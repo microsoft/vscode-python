@@ -900,7 +900,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "format.sort_imports" : {
-           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
+           "originaleventname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
      */
     [EventName.FORMAT_SORT_IMPORTS]: never | undefined;
@@ -1017,7 +1018,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "linting" : {
-           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
           "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "hascustomargs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -1773,7 +1774,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent with details of linter selected in quickpick of linter list.
      */
     /* __GDPR__
-       "select_linter" : {
+       "linting.select" : {
           "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "enabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }
