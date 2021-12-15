@@ -66,7 +66,7 @@ export function shellExec(
             } else if (shellOptions.throwOnStdErr && stderr && stderr.length) {
                 reject(new Error(stderr));
             } else {
-                stdout = filterOutputUsingMarkers(stdout);
+                stdout = filterOutputUsingCondaRunMarkers(stdout);
                 // Make sure stderr is undefined if we actually had none. This is checked
                 // elsewhere because that's how exec behaves.
                 resolve({ stderr: stderr && stderr.length > 0 ? stderr : undefined, stdout });
@@ -146,7 +146,7 @@ export function plainExec(
             deferred.reject(new StdErrError(stderr));
         } else {
             let stdout = decoder ? decoder.decode(stdoutBuffers, encoding) : '';
-            stdout = filterOutputUsingMarkers(stdout);
+            stdout = filterOutputUsingCondaRunMarkers(stdout);
             deferred.resolve({ stdout, stderr });
         }
         internalDisposables.forEach((d) => d.dispose());
@@ -159,12 +159,17 @@ export function plainExec(
     return deferred.promise;
 }
 
-function filterOutputUsingMarkers(stdout: string) {
+function filterOutputUsingCondaRunMarkers(stdout: string) {
     // These markers are added if conda run is used, see `conda_run_script.py`.
-    const regex = />>>EXTENSIONOUTPUT([\s\S]*)<<<EXTENSIONOUTPUT/;
+    const regex = />>>CONDARUNOUTPUT([\s\S]*)<<<CONDARUNOUTPUT/;
     const match = stdout.match(regex);
     const filteredOut = match !== null && match.length >= 2 ? match[1].trim() : '';
     return filteredOut.length ? filteredOut : stdout;
+}
+
+function removeCondaRunMarkers(out: string) {
+    out = out.replace('>>>CONDARUNOUTPUT', '');
+    return out.replace('<<<CONDARUNOUTPUT', '');
 }
 
 export function execObservable(
@@ -214,10 +219,14 @@ export function execObservable(
         }
 
         const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
-            const out = decoder ? decoder.decode([data], encoding) : '';
+            let out = decoder ? decoder.decode([data], encoding) : '';
             if (source === 'stderr' && options.throwOnStdErr) {
                 subscriber.error(new StdErrError(out));
             } else {
+                // Because all of output is not retrieved at once, filtering out the
+                // actual output using markers is not possible. Hence simply remove
+                // the markers and return original output.
+                out = removeCondaRunMarkers(out);
                 subscriber.next({ source, out });
             }
         };
