@@ -163,7 +163,7 @@ function filterOutputUsingCondaRunMarkers(stdout: string) {
     // These markers are added if conda run is used, see `conda_run_script.py`.
     const regex = />>>CONDARUNOUTPUT([\s\S]*)<<<CONDARUNOUTPUT/;
     const match = stdout.match(regex);
-    const filteredOut = match !== null && match.length >= 2 ? match[1].trim() : '';
+    const filteredOut = match !== null && match.length >= 2 ? match[1] : '';
     return filteredOut.length ? filteredOut : stdout;
 }
 
