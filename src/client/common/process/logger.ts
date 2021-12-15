@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { traceInfo } from '../../logging';
+import { traceLog } from '../../logging';
 import { IWorkspaceService } from '../application/types';
 import { isCI, isTestExecution } from '../constants';
 import { Logging } from '../utils/localize';
@@ -30,7 +30,7 @@ export class ProcessLogger implements IProcessLogger {
         }
 
         info.forEach((line) => {
-            traceInfo(line);
+            traceLog(line);
         });
     }
 
