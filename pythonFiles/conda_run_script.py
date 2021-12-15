@@ -7,7 +7,9 @@ if __name__ != "__main__":
 import runpy
 import sys
 
-# Printing out markers to make it more resilient to pull the output.
+# Activating conda can print out stuff before the actual output is
+# printed. Hence, printing out markers to make it more resilient to
+# pull the output.
 print(">>>EXTENSIONOUTPUT")
 
 module = sys.argv[1]
