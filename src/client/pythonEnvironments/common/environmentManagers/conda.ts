@@ -201,6 +201,7 @@ export async function getPythonVersionFromConda(interpreterPath: string): Promis
 
 // Minimum version number of conda required to be able to use 'conda run' with '--no-capture-output' flag.
 export const CONDA_RUN_VERSION = '4.9.0';
+export const CONDA_RUN_TIMEOUT = 45000;
 
 /** Wraps the "conda" utility, and exposes its functionality.
  */

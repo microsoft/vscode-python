@@ -7,7 +7,7 @@ import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../../co
 import { getInterpreterInfo, InterpreterInformation } from './interpreter';
 import { buildPythonExecInfo } from '../../exec';
 import { traceError } from '../../../logging';
-import { Conda } from '../../common/environmentManagers/conda';
+import { Conda, CONDA_RUN_TIMEOUT } from '../../common/environmentManagers/conda';
 import { PythonEnvInfo, PythonEnvKind } from '.';
 
 export enum EnvironmentInfoServiceQueuePriority {
@@ -25,7 +25,8 @@ export interface IEnvironmentInfoService {
 
 async function buildEnvironmentInfo(env: PythonEnvInfo): Promise<InterpreterInformation | undefined> {
     let python = [env.executable.filename];
-    if (env.kind === PythonEnvKind.Conda) {
+    const isCondaEnv = env.kind === PythonEnvKind.Conda;
+    if (isCondaEnv) {
         const conda = await Conda.getConda();
         const runArgs = await conda?.getRunArgs({ name: env.name, prefix: env.location });
         if (runArgs) {
@@ -34,6 +35,7 @@ async function buildEnvironmentInfo(env: PythonEnvInfo): Promise<InterpreterInfo
     }
     const interpreterInfo = await getInterpreterInfo(
         buildPythonExecInfo(python, undefined, env.executable.filename),
+        isCondaEnv ? CONDA_RUN_TIMEOUT : undefined,
     ).catch((reason) => {
         traceError(reason);
         return undefined;
@@ -88,9 +90,6 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
             : this.workerPool.addToQueue(env, QueuePosition.Back)
         ).then((r) => {
             deferred.resolve(r);
-            if (r === undefined) {
-                this.cache.delete(interpreterPath);
-            }
             return r;
         });
     }
