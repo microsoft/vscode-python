@@ -101,37 +101,37 @@ def build_test_tree(
     """
     Build a test tree from a unittest test suite.
 
-    Payload format for a successful discovery:
+    Test tree structure:
     {
-        "status": "success",
-        "cwd": <test discovery directory>,
-        "tests": [
+        "path": <test_directory path>,
+        "type": "folder",
+        "name": <folder name>,
+        "children": [
+            { files and folders }
+            ...
             {
-                "path": <file or folder path>,
-                "type": "file" or "folder",
-                "name": <file or folder name>,
+                "path": <file path>,
+                "name": filename.py,
+                "type": "file",
                 "children": [
-                    { files and folders }
                     {
-                        "path": <file or folder path>,
-                        "name": <test name>,
-                        "type": "test",
-                        "lineno": <line number>
-                        "id": <test case id>,
+                        "path": <class path>,
+                        "name": <class name>,
+                        "type": "class",
+                        "children": [
+                            {
+                                "path": <test path>,
+                                "name": <test name>,
+                                "type": "test",
+                                "lineno": <line number>
+                                "id": <test case id>,
+                            }
+                        ]
                     }
                 ]
             }
         ]
     }
-
-    Payload format when there are errors:
-    {
-        "cwd": <test discovery directory>
-        "errors": [list of errors]
-        "status": "error",
-    }
-
-
     """
 
     errors = []

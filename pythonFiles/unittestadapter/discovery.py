@@ -79,5 +79,20 @@ if __name__ == "__main__":
         payload["errors"] = errors
 
     # Connect to the TypeScript side and send payload.
+
+    # Payload format for a successful discovery:
+    # {
+    #     "status": "success",
+    #     "cwd": <test discovery directory>,
+    #     "tests": <test tree>
+    # }
+
+    # Payload format when there are errors:
+    # {
+    #     "cwd": <test discovery directory>
+    #     "errors": [list of errors]
+    #     "status": "error",
+    # }
+
     port = parse_port(script_args)
     requests.post(f"http://localhost:{port}", json=payload)
