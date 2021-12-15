@@ -33,13 +33,24 @@ async function buildEnvironmentInfo(env: PythonEnvInfo): Promise<InterpreterInfo
             python = [...runArgs, 'python', CONDA_RUN_SCRIPT];
         }
     }
-    const interpreterInfo = await getInterpreterInfo(
+    let interpreterInfo = await getInterpreterInfo(
         buildPythonExecInfo(python, undefined, env.executable.filename),
         isCondaEnv ? CONDA_RUN_TIMEOUT : undefined,
     ).catch((reason) => {
         traceError(reason);
         return undefined;
     });
+
+    if (interpreterInfo === undefined && isCondaEnv) {
+        python = [env.executable.filename];
+        interpreterInfo = await getInterpreterInfo(
+            buildPythonExecInfo(python, undefined, env.executable.filename),
+            isCondaEnv ? CONDA_RUN_TIMEOUT : undefined,
+        ).catch((reason) => {
+            traceError(reason);
+            return undefined;
+        });
+    }
 
     if (interpreterInfo === undefined || interpreterInfo.version === undefined) {
         return undefined;
