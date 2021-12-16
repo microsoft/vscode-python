@@ -2,7 +2,7 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { lt, parse, SemVer } from 'semver';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
-import { arePathsSame, exec, getPythonSetting, pathExists, readFile } from '../externalDependencies';
+import { arePathsSame, exec, getPythonSetting, isParentPath, pathExists, readFile } from '../externalDependencies';
 
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../base/info';
 import { parseVersion } from '../../base/info/pythonVersion';
@@ -398,6 +398,11 @@ export class Conda {
             prefix,
             name: getName(prefix),
         }));
+    }
+
+    public async getCondaEnvironment(executable: string): Promise<CondaEnvInfo | undefined> {
+        const envList = await this.getEnvList();
+        return envList.find((e) => isParentPath(executable, e.prefix));
     }
 
     public async getRunArgs(env: CondaEnvInfo): Promise<string[] | undefined> {
