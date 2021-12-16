@@ -9,6 +9,7 @@ import { buildPythonExecInfo } from '../../exec';
 import { traceError } from '../../../logging';
 import { Conda, CONDA_RUN_TIMEOUT, isCondaEnvironment, CONDA_RUN_SCRIPT } from '../../common/environmentManagers/conda';
 import { PythonEnvInfo, PythonEnvKind } from '.';
+import { normCasePath } from '../../common/externalDependencies';
 
 export enum EnvironmentInfoServiceQueuePriority {
     Default,
@@ -84,14 +85,14 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
         priority?: EnvironmentInfoServiceQueuePriority,
     ): Promise<InterpreterInformation | undefined> {
         const interpreterPath = env.executable.filename;
-        const result = this.cache.get(interpreterPath);
+        const result = this.cache.get(normCasePath(interpreterPath));
         if (result !== undefined) {
             // Another call for this environment has already been made, return its result.
             return result.promise;
         }
 
         const deferred = createDeferred<InterpreterInformation>();
-        this.cache.set(interpreterPath, deferred);
+        this.cache.set(normCasePath(interpreterPath), deferred);
         this._getEnvironmentInfo(env, priority)
             .then((r) => {
                 deferred.resolve(r);
