@@ -6,7 +6,7 @@ import sys
 import traceback
 import unittest
 
-from utils import TestNode, build_test_tree
+from utils import build_test_tree
 
 sys.path.insert(0, os.getcwd())
 
@@ -62,7 +62,8 @@ if __name__ == "__main__":
     start_dir, pattern, top_level_dir = parse_unittest_args(unittest_args)
     cwd = os.path.abspath(start_dir)
     payload = {"cwd": cwd}
-    tests: TestNode = {}
+    tests = None
+    errors = []
 
     try:
         loader = unittest.TestLoader()
@@ -71,9 +72,10 @@ if __name__ == "__main__":
         tests, errors = build_test_tree(suite, cwd)
     except:
         payload["status"] = "error"
-        payload["errors"] = [traceback.format_exc()]
+        errors.append(traceback.format_exc())
 
-    payload["tests"] = tests
+    if tests is not None:
+        payload["tests"] = tests
 
     if len(errors):
         payload["errors"] = errors

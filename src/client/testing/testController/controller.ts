@@ -18,6 +18,7 @@ import {
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IWorkspaceService } from '../../common/application/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
 import { traceVerbose } from '../../logging';
@@ -26,10 +27,13 @@ import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
 import { ITestController, ITestFrameworkController, TestRefreshOptions } from './common/types';
+import { WorkspaceTestAdapter } from './workspaceTestAdapter';
 
 @injectable()
 export class PythonTestController implements ITestController, IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
+
+    private readonly testAdapters: WorkspaceTestAdapter[] = [];
 
     private readonly testController: TestController;
 
@@ -57,6 +61,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         @inject(ITestFrameworkController) @named(PYTEST_PROVIDER) private readonly pytest: ITestFrameworkController,
         @inject(ITestFrameworkController) @named(UNITTEST_PROVIDER) private readonly unittest: ITestFrameworkController,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
     ) {
         this.refreshCancellation = new CancellationTokenSource();
 
@@ -143,7 +148,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             if (settings.testing.pytestEnabled) {
                 await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
-                await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+                await this.testAdapters[0].discoverTests(this.testController, uri, this.refreshCancellation.token);
+                // await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else {
                 sendTelemetryEvent(EventName.UNITTEST_DISABLED);
                 // If we are here we may have to remove an existing node from the tree

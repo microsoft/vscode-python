@@ -50,10 +50,9 @@ export function removeItemByIdFromChildren(
     });
 }
 
-export function createErrorTestItem(
-    testController: TestController,
-    options: { id: string; label: string; error: string },
-): TestItem {
+export type ErrorTestItemOptions = { id: string; label: string; error: string };
+
+export function createErrorTestItem(testController: TestController, options: ErrorTestItemOptions): TestItem {
     const testItem = testController.createTestItem(options.id, options.label);
     testItem.canResolveChildren = false;
     testItem.error = options.error;

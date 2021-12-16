@@ -11,6 +11,8 @@ import {
     Uri,
     WorkspaceFolder,
 } from 'vscode';
+import { IPythonExecutionFactory } from '../../../common/process/types';
+import { IConfigurationService } from '../../../common/types';
 import { TestDiscoveryOptions } from '../../common/types';
 
 export type TestRunInstanceOptions = TestRunOptions & {
@@ -84,6 +86,40 @@ export type TestRunOptions = {
     cwd: string;
     args: string[];
     token: CancellationToken;
+};
+
+export interface ITestDiscoveryAdapter {
+    executionFactory: IPythonExecutionFactory;
+    configSettings: IConfigurationService;
+    port: number;
+    discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
+}
+
+// New test discovery adapter types
+
+export type DiscoveredTestCommon = {
+    path: string;
+    name: string;
+    // Same types as in pythonFiles/unittestadapter/utils.py
+    // Trailing underscore to avoid collision with the 'types' Python keyword.
+    type_: 'folder' | 'file' | 'class' | 'test';
+};
+
+export type DiscoveredTestItem = DiscoveredTestCommon & {
+    lineno: number;
+    // Trailing underscore to avoid collision with the 'id' Python keyword.
+    id_: string;
+};
+
+export type DiscoveredTestNode = DiscoveredTestCommon & {
+    children: (DiscoveredTestNode | DiscoveredTestItem)[];
+};
+
+export type DiscoveredTestPayload = {
+    cwd: string;
+    tests?: DiscoveredTestNode;
+    status: 'success' | 'error';
+    errors?: string[];
 };
 
 // We expose these here as a convenience and to cut down on churn

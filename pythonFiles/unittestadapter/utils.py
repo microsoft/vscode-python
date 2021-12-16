@@ -78,9 +78,12 @@ def build_test_node(path: str, name: str, type: TestNodeTypeEnum) -> TestNode:
     }
 
 
-def find_child_node(name: str, type: TestNodeTypeEnum, root: TestNode) -> TestNode:
+def get_child_node(
+    name: str, path: str, type: TestNodeTypeEnum, root: TestNode
+) -> TestNode:
     """
     Find a child node in a test tree given its name and type.
+    If the node doesn't exist, create it.
     """
     try:
         result = next(
@@ -89,7 +92,7 @@ def find_child_node(name: str, type: TestNodeTypeEnum, root: TestNode) -> TestNo
             if node["name"] == name and node["type"] == type
         )
     except StopIteration:
-        result = build_test_node(f'{root["path"]}/{name}', name, type)
+        result = build_test_node(path, name, type)
         root["children"].append(result)
 
     return result
@@ -154,18 +157,23 @@ def build_test_tree(
 
             # Find/build folder nodes
             for folder in folders:
-                current_node = find_child_node(
-                    folder, TestNodeTypeEnum.folder, current_node
+                current_node = get_child_node(
+                    folder,
+                    f'{current_node["path"]}/{folder}',
+                    TestNodeTypeEnum.folder,
+                    current_node,
                 )
 
             # Find/build file node
-            current_node = find_child_node(
-                py_filename, TestNodeTypeEnum.file, current_node
+            path_components = [test_directory] + folders + [py_filename]
+            file_path = "/".join(path_components)
+            current_node = get_child_node(
+                py_filename, file_path, TestNodeTypeEnum.file, current_node
             )
 
             # Find/build class node
-            current_node = find_child_node(
-                class_name, TestNodeTypeEnum.class_, current_node
+            current_node = get_child_node(
+                class_name, file_path, TestNodeTypeEnum.class_, current_node
             )
 
             # Get test line number
@@ -176,7 +184,7 @@ def build_test_tree(
             test_node: TestItem = {
                 "id_": test_id,
                 "name": function_name,
-                "path": f'{current_node["path"]}/{function_name}',
+                "path": file_path,
                 "lineno": lineno,
                 "type_": TestNodeTypeEnum.test,
             }

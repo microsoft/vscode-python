@@ -8,6 +8,10 @@ export type UnitTestProduct = Product.pytest | Product.unittest;
 // ****************
 // test args/options
 
+export type TestCommandOptions = TestDiscoveryOptions & {
+    port: number;
+};
+
 export type TestDiscoveryOptions = {
     workspaceFolder: Uri;
     cwd: string;
