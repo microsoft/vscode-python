@@ -139,11 +139,10 @@ export async function createCondaEnv(
     fs: IFileSystem,
 ): Promise<PythonEnvironment | undefined> {
     const conda = await Conda.getConda();
-    const runArgs = await conda?.getRunArgs({ name: condaInfo.name, prefix: condaInfo.path });
-    if (!runArgs) {
+    const pythonArgv = await conda?.getRunPythonArgs({ name: condaInfo.name, prefix: condaInfo.path });
+    if (!pythonArgv) {
         return undefined;
     }
-    const pythonArgv = [...runArgs, 'python'];
     const deps = createDeps(
         async (filename) => fs.pathExists(filename),
         pythonArgv,
