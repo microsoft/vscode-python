@@ -29,6 +29,12 @@ const debounceFrequentCall = 1000 * 60 * 5;
 // For calls that are less likely to happen during a session (go-to-def, workspace symbols).
 const debounceRareCall = 1000 * 60;
 
+type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
+type MiddleWareMethods = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [P in keyof Middleware]-?: NonNullable<Middleware[P]> extends (...args: any) => any ? Middleware[P] : never;
+};
+
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable prefer-rest-params */
 /* eslint-disable consistent-return */
@@ -159,7 +165,10 @@ export class LanguageClientMiddlewareBase implements Middleware {
                 debounceFrequentCall,
                 'provideCompletionItem',
                 arguments,
-                (result) => {
+                (_, result) => {
+                    if (!result) {
+                        return { resultLength: 0 };
+                    }
                     const resultLength = Array.isArray(result) ? result.length : result.items.length;
                     return { resultLength };
                 },
@@ -441,17 +450,16 @@ export class LanguageClientMiddlewareBase implements Middleware {
         return args[args.length - 1](...args);
     }
 
-    private callNextAndSendTelemetry(
+    private callNextAndSendTelemetry<T extends keyof MiddleWareMethods>(
         lspMethod: string,
         debounceMilliseconds: number,
-        funcName: keyof Middleware,
+        funcName: T,
         args: IArguments,
-        lazyMeasures?: (this_: any, result: any) => Record<string, number>,
-    ) {
+        lazyMeasures?: (this_: any, result: Awaited<ReturnType<MiddleWareMethods[T]>>) => Record<string, number>,
+    ): ReturnType<MiddleWareMethods[T]> {
         const now = Date.now();
         const stopWatch = new StopWatch();
         let calledNext = false;
-
         // Change the 'last' argument (which is our next) in order to track if
         // telemetry should be sent or not.
         const changedArgs = [...args];
@@ -473,7 +481,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
         }
         const lastCapture = this.lastCaptured.get(lspMethod);
 
-        const sendTelemetry = (result: any) => {
+        const sendTelemetry = (result: Awaited<ReturnType<MiddleWareMethods[T]>>) => {
             // Skip doing anything if not allowed
             // We should have:
             // - called the next function in the middleware (this means a request was actually sent)
@@ -511,12 +519,12 @@ export class LanguageClientMiddlewareBase implements Middleware {
         };
 
         // Try to call the 'next' function in the middleware chain
-        const result = this.callNext(funcName, changedArgs as any);
+        const result: ReturnType<MiddleWareMethods[T]> = this.callNext(funcName, changedArgs as any);
 
         // Then wait for the result before sending telemetry
-        if (isThenable<any>(result)) {
+        if (isThenable(result)) {
             return result.then(sendTelemetry);
         }
-        return sendTelemetry(result);
+        return sendTelemetry(result as any) as ReturnType<MiddleWareMethods[T]>;
     }
 }
