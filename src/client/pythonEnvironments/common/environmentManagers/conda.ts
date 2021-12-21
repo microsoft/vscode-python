@@ -202,7 +202,8 @@ export async function getPythonVersionFromConda(interpreterPath: string): Promis
 
 // Minimum version number of conda required to be able to use 'conda run' with '--no-capture-output' flag.
 export const CONDA_RUN_VERSION = '4.9.0';
-export const CONDA_RUN_TIMEOUT = 45000;
+export const CONDA_ACTIVATION_TIMEOUT = 45000;
+const CONDA_GENERAL_TIMEOUT = 50000;
 
 export const CONDA_RUN_SCRIPT = path.join(_SCRIPTS_DIR, 'conda_run_script.py');
 
@@ -360,7 +361,7 @@ export class Conda {
     @cache(30_000, true, 10_000)
     // eslint-disable-next-line class-methods-use-this
     private async getInfoCached(command: string): Promise<CondaInfo> {
-        const result = await exec(command, ['info', '--json'], { timeout: 50000 });
+        const result = await exec(command, ['info', '--json'], { timeout: CONDA_GENERAL_TIMEOUT });
         traceVerbose(`conda info --json: ${result.stdout}`);
         return JSON.parse(result.stdout);
     }
@@ -429,7 +430,7 @@ export class Conda {
         if (info && info.conda_version) {
             versionString = info.conda_version;
         } else {
-            const stdOut = await exec(this.command, ['--version'], { timeout: 50000 })
+            const stdOut = await exec(this.command, ['--version'], { timeout: CONDA_GENERAL_TIMEOUT })
                 .then((result) => result.stdout.trim())
                 .catch<string | undefined>(() => undefined);
 

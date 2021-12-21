@@ -84,6 +84,8 @@ export async function isPoetryEnvironment(interpreterPath: string): Promise<bool
     return false;
 }
 
+const POETRY_TIMEOUT = 50000;
+
 /** Wraps the "poetry" utility, and exposes its functionality.
  */
 export class Poetry {
@@ -261,11 +263,12 @@ export class Poetry {
 
     private async safeShellExecute(command: string, logVerbose = false) {
         // It has been observed that commands related to conda or poetry binary take upto 10-15 seconds unlike
-        // python binaries. So for now no timeouts on them.
+        // python binaries. So have a large timeout.
         const stopWatch = new StopWatch();
         const result = await shellExecute(command, {
             cwd: this.cwd,
             throwOnStdErr: true,
+            timeout: POETRY_TIMEOUT,
         }).catch((ex) => {
             if (logVerbose) {
                 traceVerbose(ex);

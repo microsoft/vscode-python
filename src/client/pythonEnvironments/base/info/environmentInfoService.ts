@@ -7,7 +7,7 @@ import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../../co
 import { getInterpreterInfo, InterpreterInformation } from './interpreter';
 import { buildPythonExecInfo } from '../../exec';
 import { traceError, traceInfo } from '../../../logging';
-import { Conda, CONDA_RUN_TIMEOUT, isCondaEnvironment } from '../../common/environmentManagers/conda';
+import { Conda, CONDA_ACTIVATION_TIMEOUT, isCondaEnvironment } from '../../common/environmentManagers/conda';
 import { PythonEnvInfo, PythonEnvKind } from '.';
 import { normCasePath } from '../../common/externalDependencies';
 
@@ -41,7 +41,7 @@ async function buildEnvironmentInfoUsingCondaRun(env: PythonEnvInfo): Promise<In
     }
     const interpreterInfo = await getInterpreterInfo(
         buildPythonExecInfo(python, undefined, env.executable.filename),
-        CONDA_RUN_TIMEOUT,
+        CONDA_ACTIVATION_TIMEOUT,
     );
     return interpreterInfo;
 }
