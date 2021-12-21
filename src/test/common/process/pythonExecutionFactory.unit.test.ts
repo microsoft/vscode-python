@@ -24,7 +24,7 @@ import {
     IProcessServiceFactory,
     IPythonExecutionService,
 } from '../../../client/common/process/types';
-import { IConfigurationService, IDisposableRegistry, IInterpreterPathProxyService } from '../../../client/common/types';
+import { IConfigurationService, IDisposableRegistry, IInterpreterPathService } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
@@ -85,7 +85,7 @@ suite('Process - PythonExecutionFactory', () => {
             let pyenvs: IComponentAdapter;
             let executionService: typemoq.IMock<IPythonExecutionService>;
             let autoSelection: IInterpreterAutoSelectionService;
-            let interpreterPathExpHelper: IInterpreterPathProxyService;
+            let interpreterPathExpHelper: IInterpreterPathService;
             setup(() => {
                 bufferDecoder = mock(BufferDecoder);
                 activationHelper = mock(EnvironmentActivationService);
@@ -94,7 +94,7 @@ suite('Process - PythonExecutionFactory', () => {
                 condaService = mock(CondaService);
                 processLogger = mock(ProcessLogger);
                 autoSelection = mock<IInterpreterAutoSelectionService>();
-                interpreterPathExpHelper = mock<IInterpreterPathProxyService>();
+                interpreterPathExpHelper = mock<IInterpreterPathService>();
                 when(interpreterPathExpHelper.get(anything())).thenReturn('selected interpreter path');
 
                 pyenvs = mock<IComponentAdapter>();

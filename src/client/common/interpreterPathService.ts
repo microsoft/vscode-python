@@ -22,6 +22,7 @@ import {
     IPythonSettings,
     Resource,
 } from './types';
+import { SystemVariables } from './variables/systemVariables';
 
 export const workspaceKeysForWhichTheCopyIsDone_Key = 'workspaceKeysForWhichTheCopyIsDone_Key';
 export const workspaceFolderKeysForWhichTheCopyIsDone_Key = 'workspaceFolderKeysForWhichTheCopyIsDone_Key';
@@ -83,12 +84,17 @@ export class InterpreterPathService implements IInterpreterPathService {
 
     public get(resource: Resource): string {
         const settings = this.inspect(resource);
-        return (
+        const value =
             settings.workspaceFolderValue ||
             settings.workspaceValue ||
             settings.globalValue ||
-            (isTestExecution() ? CI_PYTHON_PATH : 'python')
+            (isTestExecution() ? CI_PYTHON_PATH : 'python');
+        const systemVariables = new SystemVariables(
+            undefined,
+            this.workspaceService.getWorkspaceFolder(resource)?.uri.fsPath,
+            this.workspaceService,
         );
+        return systemVariables.resolveAny(value)!;
     }
 
     public async update(

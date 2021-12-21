@@ -73,15 +73,8 @@ function isUsingGlobalInterpreterInWorkspace(currentPythonPath: string, serviceC
 }
 
 export function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IServiceContainer) {
-    const abExperiments = serviceContainer.get<IExperimentService>(IExperimentService);
-    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-    let settings: InspectInterpreterSettingType;
-    if (abExperiments.inExperimentSync(DeprecatePythonPath.experiment)) {
-        settings = interpreterPathService.inspect(resource);
-    } else {
-        settings = workspaceService.getConfiguration('python', resource)!.inspect<string>('pythonPath')!;
-    }
+    let settings = interpreterPathService.inspect(resource);
     return (settings.workspaceFolderValue && settings.workspaceFolderValue !== 'python') ||
         (settings.workspaceValue && settings.workspaceValue !== 'python') ||
         (settings.globalValue && settings.globalValue !== 'python')

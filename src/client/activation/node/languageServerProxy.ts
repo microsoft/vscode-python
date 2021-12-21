@@ -11,7 +11,6 @@ import {
     State,
 } from 'vscode-languageclient/node';
 
-import { DeprecatePythonPath } from '../../common/experiments/groups';
 import { IConfigurationService, IExperimentService, IInterpreterPathService, Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -177,20 +176,17 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         const progressReporting = new ProgressReporting(this.languageClient!);
         this.disposables.push(progressReporting);
 
-        if (this.experimentService.inExperimentSync(DeprecatePythonPath.experiment)) {
-            this.disposables.push(
-                this.interpreterPathService.onDidChange(() => {
-                    // Manually send didChangeConfiguration in order to get the server to requery
-                    // the workspace configurations (to then pick up pythonPath set in the middleware).
-                    // This is needed as interpreter changes via the interpreter path service happen
-                    // outside of VS Code's settings (which would mean VS Code sends the config updates itself).
-                    this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, {
-                        settings: null,
-                    });
-                }),
-            );
-        }
-
+        this.disposables.push(
+            this.interpreterPathService.onDidChange(() => {
+                // Manually send didChangeConfiguration in order to get the server to requery
+                // the workspace configurations (to then pick up pythonPath set in the middleware).
+                // This is needed as interpreter changes via the interpreter path service happen
+                // outside of VS Code's settings (which would mean VS Code sends the config updates itself).
+                this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, {
+                    settings: null,
+                });
+            }),
+        );
         this.disposables.push(
             this.environmentService.onDidEnvironmentVariablesChange(() => {
                 this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, {

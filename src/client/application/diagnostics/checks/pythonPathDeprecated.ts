@@ -5,8 +5,7 @@
 import { inject, named } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
-import { DeprecatePythonPath } from '../../../common/experiments/groups';
-import { IDisposableRegistry, IExperimentService, Resource } from '../../../common/types';
+import { IDisposableRegistry, Resource } from '../../../common/types';
 import { Common, Diagnostics } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
@@ -44,10 +43,6 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
     }
 
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
-        const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
-        if (!experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
-            return [];
-        }
         const setting = this.workspaceService.getConfiguration('python', resource).inspect<string>('pythonPath');
         if (!setting) {
             return [];

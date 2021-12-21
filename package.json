@@ -982,12 +982,6 @@
                     "scope": "machine-overridable",
                     "type": "string"
                 },
-                "python.pythonPath": {
-                    "default": "python",
-                    "description": "(DEPRECATED: Note this setting is not used when in pythonDeprecatePythonPath experiment) Path to Python, you can use a custom version of Python by modifying this setting to include the full path.",
-                    "scope": "machine-overridable",
-                    "type": "string"
-                },
                 "python.sortImports.args": {
                     "default": [],
                     "description": "Arguments passed in. Each argument is a separate item in the array.",

@@ -26,7 +26,7 @@ import {
     IPythonExecutionFactory,
     IPythonToolExecutionService,
 } from '../../client/common/process/types';
-import { IConfigurationService, IDisposableRegistry, IInterpreterPathProxyService } from '../../client/common/types';
+import { IConfigurationService, IDisposableRegistry, IInterpreterPathService } from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IComponentAdapter, ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
@@ -715,7 +715,7 @@ class TestFixture extends BaseTestFixture {
         const pyenvs: IComponentAdapter = mock<IComponentAdapter>();
 
         const autoSelection = mock<IInterpreterAutoSelectionService>();
-        const interpreterPathExpHelper = mock<IInterpreterPathProxyService>();
+        const interpreterPathExpHelper = mock<IInterpreterPathService>();
         when(interpreterPathExpHelper.get(anything())).thenReturn('selected interpreter path');
 
         return new PythonExecutionFactory(
