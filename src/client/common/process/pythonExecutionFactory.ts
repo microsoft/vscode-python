@@ -3,7 +3,7 @@
 import { inject, injectable } from 'inversify';
 
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { IComponentAdapter, IInterpreterService } from '../../interpreter/contracts';
+import { IComponentAdapter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
