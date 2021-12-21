@@ -155,7 +155,7 @@ def parse_item(
     """
     # _debug_item(item, showsummary=True)
     kind, _ = _get_item_kind(item)
-    # Skip plugin generated tests
+    # Skip unknown tests
     if kind is None:
         return None, None
 
@@ -408,6 +408,9 @@ def _parse_node_id(
             parameterized = testid[len(funcid) :]
         elif kind == "function":
             funcname = name
+        elif kind == "other":
+            # if kind is "other", we don't have a function necessarily
+            funcname = None
         else:
             raise should_never_reach_here(
                 testid,
@@ -538,6 +541,8 @@ def _get_item_kind(item):
     elif isinstance(item, pytest.Function):
         # We *could* be more specific, e.g. "method", "subtest".
         return "function", False
+    elif isinstance(item, pytest.Item):
+        return "other", False
     else:
         return None, False
 
