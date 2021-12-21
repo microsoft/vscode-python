@@ -120,7 +120,6 @@ export class Poetry {
             // This check is not expensive and may change during a session, so we need not cache it.
             return undefined;
         }
-        traceVerbose(`Getting poetry for cwd ${cwd}`);
         if (Poetry.poetryPromise.get(cwd) === undefined || isTestExecution()) {
             Poetry.poetryPromise.set(cwd, Poetry.locate(cwd));
         }
@@ -131,6 +130,7 @@ export class Poetry {
         // First thing this method awaits on should be poetry command execution, hence perform all operations
         // before that synchronously.
 
+        traceVerbose(`Getting poetry for cwd ${cwd}`);
         // Produce a list of candidate binaries to be probed by exec'ing them.
         function* getCandidates() {
             const customPoetryPath = getPythonSetting<string>('poetryPath');
@@ -158,6 +158,7 @@ export class Poetry {
                 traceVerbose(`Found poetry via filesystem probing for ${cwd}: ${poetryPath}`);
                 return poetry;
             }
+            traceVerbose(`Failed to find poetry for ${cwd}: ${poetryPath}`);
         }
 
         // Didn't find anything.
