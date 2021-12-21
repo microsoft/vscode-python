@@ -343,7 +343,7 @@ export class Conda {
         }
 
         // Didn't find anything.
-        traceVerbose('No conda binary found');
+        traceVerbose("Couldn't locate the conda binary.");
         return undefined;
     }
 
