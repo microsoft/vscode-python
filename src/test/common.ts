@@ -627,8 +627,8 @@ export class FakeClock {
  * const handler = new TestEventHandler(xyz.onDidSave);
  * // Do something that would trigger the event.
  * assert.ok(handler.fired)
- * assert.equal(handler.first, 'Args Passed to first onDidSave')
- * assert.equal(handler.count, 1)// Only one should have been fired.
+ * assert.strictEqual(handler.first, 'Args Passed to first onDidSave')
+ * assert.strictEqual(handler.count, 1)// Only one should have been fired.
  */
 export class TestEventHandler<T extends void | any = any> implements IDisposable {
     public get fired() {

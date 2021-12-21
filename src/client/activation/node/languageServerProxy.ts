@@ -23,6 +23,7 @@ import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerFolderService, ILanguageServerProxy } from '../types';
 import { traceDecoratorError, traceDecoratorVerbose, traceError } from '../../logging';
+import { IWorkspaceService } from '../../common/application/types';
 
 namespace InExperiment {
     export const Method = 'python/inExperiment';
@@ -64,6 +65,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
         @inject(IEnvironmentVariablesProvider) private readonly environmentService: IEnvironmentVariablesProvider,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
     ) {
         this.startupCompleted = createDeferred<void>();
     }
@@ -126,6 +128,14 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
                     this.registerHandlers(resource);
                 }
             });
+
+            this.disposables.push(
+                this.workspace.onDidGrantWorkspaceTrust(() => {
+                    this.languageClient!.onReady().then(() => {
+                        this.languageClient!.sendNotification('python/workspaceTrusted', { isTrusted: true });
+                    });
+                }),
+            );
 
             this.disposables.push(this.languageClient.start());
             await this.serverReady();
@@ -223,6 +233,14 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
                 const value = await this.experimentService.getExperimentValue<T>(params.experimentName);
                 return { value };
             },
+        );
+
+        this.disposables.push(
+            this.languageClient!.onRequest('python/isTrustedWorkspace', async () => {
+                return {
+                    isTrusted: this.workspace.isTrusted,
+                };
+            }),
         );
     }
 }

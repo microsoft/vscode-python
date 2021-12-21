@@ -72,7 +72,7 @@ suite('Debugging - launch.json Updater Service', () => {
         document.setup((doc) => doc.getText(typemoq.It.isAny())).returns(() => JSON.stringify(config));
 
         const isEmpty = helper.isConfigurationArrayEmpty(document.object);
-        assert.equal(isEmpty, true);
+        assert.strictEqual(isEmpty, true);
     });
     test('Configuration Array is not empty', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
@@ -89,7 +89,7 @@ suite('Debugging - launch.json Updater Service', () => {
         document.setup((doc) => doc.getText(typemoq.It.isAny())).returns(() => JSON.stringify(config));
 
         const isEmpty = helper.isConfigurationArrayEmpty(document.object);
-        assert.equal(isEmpty, false);
+        assert.strictEqual(isEmpty, false);
     });
     test('Cursor is not positioned in the configurations array', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
@@ -107,7 +107,7 @@ suite('Debugging - launch.json Updater Service', () => {
         document.setup((doc) => doc.offsetAt(typemoq.It.isAny())).returns(() => 10);
 
         const cursorPosition = helper.getCursorPositionInConfigurationsArray(document.object, new Position(0, 0));
-        assert.equal(cursorPosition, undefined);
+        assert.strictEqual(cursorPosition, undefined);
     });
     test('Cursor is positioned in the empty configurations array', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
@@ -121,7 +121,7 @@ suite('Debugging - launch.json Updater Service', () => {
         document.setup((doc) => doc.offsetAt(typemoq.It.isAny())).returns(() => json.indexOf('#'));
 
         const cursorPosition = helper.getCursorPositionInConfigurationsArray(document.object, new Position(0, 0));
-        assert.equal(cursorPosition, 'InsideEmptyArray');
+        assert.strictEqual(cursorPosition, 'InsideEmptyArray');
     });
     test('Cursor is positioned before an item in the configurations array', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
@@ -137,7 +137,7 @@ suite('Debugging - launch.json Updater Service', () => {
         document.setup((doc) => doc.offsetAt(typemoq.It.isAny())).returns(() => json.lastIndexOf('{') - 1);
 
         const cursorPosition = helper.getCursorPositionInConfigurationsArray(document.object, new Position(0, 0));
-        assert.equal(cursorPosition, 'BeforeItem');
+        assert.strictEqual(cursorPosition, 'BeforeItem');
     });
     test('Cursor is positioned before an item in the middle of the configurations array', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
@@ -155,7 +155,7 @@ suite('Debugging - launch.json Updater Service', () => {
         document.setup((doc) => doc.offsetAt(typemoq.It.isAny())).returns(() => json.indexOf(',{') + 1);
 
         const cursorPosition = helper.getCursorPositionInConfigurationsArray(document.object, new Position(0, 0));
-        assert.equal(cursorPosition, 'BeforeItem');
+        assert.strictEqual(cursorPosition, 'BeforeItem');
     });
     test('Cursor is positioned after an item in the configurations array', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
@@ -170,7 +170,7 @@ suite('Debugging - launch.json Updater Service', () => {
         document.setup((doc) => doc.offsetAt(typemoq.It.isAny())).returns(() => json.lastIndexOf('}]') + 1);
 
         const cursorPosition = helper.getCursorPositionInConfigurationsArray(document.object, new Position(0, 0));
-        assert.equal(cursorPosition, 'AfterItem');
+        assert.strictEqual(cursorPosition, 'AfterItem');
     });
     test('Cursor is positioned after an item in the middle of the configurations array', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
@@ -188,7 +188,7 @@ suite('Debugging - launch.json Updater Service', () => {
         document.setup((doc) => doc.offsetAt(typemoq.It.isAny())).returns(() => json.indexOf('},') + 1);
 
         const cursorPosition = helper.getCursorPositionInConfigurationsArray(document.object, new Position(0, 0));
-        assert.equal(cursorPosition, 'AfterItem');
+        assert.strictEqual(cursorPosition, 'AfterItem');
     });
     test('Text to be inserted must be prefixed with a comma', async () => {
         const config = {} as any;
@@ -196,7 +196,7 @@ suite('Debugging - launch.json Updater Service', () => {
 
         const textToInsert = helper.getTextForInsertion(config, 'AfterItem');
 
-        assert.equal(textToInsert, expectedText);
+        assert.strictEqual(textToInsert, expectedText);
     });
     test('Text to be inserted must not be prefixed with a comma (as a comma already exists)', async () => {
         const config = {} as any;
@@ -204,7 +204,7 @@ suite('Debugging - launch.json Updater Service', () => {
 
         const textToInsert = helper.getTextForInsertion(config, 'AfterItem', 'BeforeCursor');
 
-        assert.equal(textToInsert, expectedText);
+        assert.strictEqual(textToInsert, expectedText);
     });
     test('Text to be inserted must be suffixed with a comma', async () => {
         const config = {} as any;
@@ -212,7 +212,7 @@ suite('Debugging - launch.json Updater Service', () => {
 
         const textToInsert = helper.getTextForInsertion(config, 'BeforeItem');
 
-        assert.equal(textToInsert, expectedText);
+        assert.strictEqual(textToInsert, expectedText);
     });
     test('Text to be inserted must not be prefixed nor suffixed with commas', async () => {
         const config = {} as any;
@@ -220,7 +220,7 @@ suite('Debugging - launch.json Updater Service', () => {
 
         const textToInsert = helper.getTextForInsertion(config, 'InsideEmptyArray');
 
-        assert.equal(textToInsert, expectedText);
+        assert.strictEqual(textToInsert, expectedText);
     });
     test('When inserting the debug config into the json file format the document', async () => {
         const json = `{
@@ -259,7 +259,7 @@ suite('Debugging - launch.json Updater Service', () => {
 
         verify(documentManager.activeTextEditor).atLeast(1);
         verify(workspace.getWorkspaceFolder(anything())).never();
-        assert.equal(debugConfigInserted, false);
+        assert.strictEqual(debugConfigInserted, false);
     });
     test('No changes to configuration if the active document is not same as the document passed in', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
@@ -282,7 +282,7 @@ suite('Debugging - launch.json Updater Service', () => {
         verify(documentManager.activeTextEditor).atLeast(1);
         verify(workspace.getWorkspaceFolder(anything())).never();
         textEditor.verifyAll();
-        assert.equal(debugConfigInserted, false);
+        assert.strictEqual(debugConfigInserted, false);
     });
     test('No changes to configuration if cancellation token has been cancelled', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
@@ -317,7 +317,7 @@ suite('Debugging - launch.json Updater Service', () => {
         verify(workspace.getWorkspaceFolder(docUri)).atLeast(1);
         textEditor.verifyAll();
         document.verifyAll();
-        assert.equal(debugConfigInserted, false);
+        assert.strictEqual(debugConfigInserted, false);
     });
     test('No changes to configuration if no configuration items are returned', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
@@ -351,7 +351,7 @@ suite('Debugging - launch.json Updater Service', () => {
         verify(workspace.getWorkspaceFolder(docUri)).atLeast(1);
         textEditor.verifyAll();
         document.verifyAll();
-        assert.equal(debugConfigInserted, false);
+        assert.strictEqual(debugConfigInserted, false);
     });
     test('Changes are made to the configuration', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
@@ -385,7 +385,7 @@ suite('Debugging - launch.json Updater Service', () => {
         verify(workspace.getWorkspaceFolder(docUri)).atLeast(1);
         textEditor.verifyAll();
         document.verifyAll();
-        assert.equal(debugConfigInserted, true);
+        assert.strictEqual(debugConfigInserted, true);
     });
     test('If cursor is at the begining of line 1 then there is no comma before cursor', async () => {
         sandbox.restore();

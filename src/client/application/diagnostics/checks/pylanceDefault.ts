@@ -40,7 +40,7 @@ export class PylanceDefaultDiagnosticService extends BaseDiagnosticsService {
         protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
-        super([DiagnosticCodes.PylanceDefaultDiagnostic], serviceContainer, disposableRegistry, true);
+        super([DiagnosticCodes.PylanceDefaultDiagnostic], serviceContainer, disposableRegistry, true, true);
 
         this.initialMementoValue = this.context.globalState.get(EXTENSION_VERSION_MEMENTO);
     }

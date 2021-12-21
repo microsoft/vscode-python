@@ -38,7 +38,7 @@ export class SwitchToDefaultLanguageServerDiagnosticService extends BaseDiagnost
         protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
-        super([DiagnosticCodes.JediPython27NotSupportedDiagnostic], serviceContainer, disposableRegistry, true);
+        super([DiagnosticCodes.JediPython27NotSupportedDiagnostic], serviceContainer, disposableRegistry, true, true);
     }
 
     public diagnose(resource: Resource): Promise<IDiagnostic[]> {

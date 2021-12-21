@@ -194,10 +194,11 @@ suite('ProcessService', () => {
         );
     });
 
-    test('execObservable should stream stdout and stderr separately', function (done) {
+    test('execObservable should stream stdout and stderr separately and removes markers related to conda run', function (done) {
         this.timeout(20000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
+            'print(">>>CONDA-RUN-OUTPUT")',
             'import sys',
             'import time',
             'print("1")',
@@ -218,6 +219,7 @@ suite('ProcessService', () => {
             'sys.stderr.write("c")',
             'sys.stderr.flush()',
             'time.sleep(2)',
+            'print("<<<CONDA-RUN-OUTPUT")',
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = [
@@ -246,7 +248,6 @@ suite('ProcessService', () => {
             done,
         );
     });
-
     test('execObservable should send stdout and stderr streams separately', async function () {
         // This test is failing on Windows. Tracked by GH #4755.
         if (isOs(OSType.Windows)) {

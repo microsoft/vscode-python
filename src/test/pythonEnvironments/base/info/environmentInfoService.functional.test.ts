@@ -6,6 +6,7 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { ImportMock } from 'ts-mock-imports';
+import { SemVer } from 'semver';
 import { ExecutionResult } from '../../../../client/common/process/types';
 import { IDisposableRegistry } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
@@ -16,6 +17,8 @@ import {
     EnvironmentInfoServiceQueuePriority,
     getEnvironmentInfoService,
 } from '../../../../client/pythonEnvironments/base/info/environmentInfoService';
+import { buildEnvInfo } from '../../../../client/pythonEnvironments/base/info/env';
+import { Conda, CONDA_RUN_VERSION } from '../../../../client/pythonEnvironments/common/environmentManagers/conda';
 
 suite('Environment Info Service', () => {
     let stubShellExec: sinon.SinonStub;
@@ -46,12 +49,15 @@ suite('Environment Info Service', () => {
                 resolve({
                     stdout:
                         '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "sysVersion": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
+                    stderr: 'Some std error', // This should be ignored.
                 });
             }),
         );
+        sinon.stub(Conda, 'getConda').resolves(new Conda('conda'));
+        sinon.stub(Conda.prototype, 'getCondaVersion').resolves(new SemVer(CONDA_RUN_VERSION));
     });
     teardown(() => {
-        stubShellExec.restore();
+        sinon.restore();
         disposables.forEach((d) => d.dispose());
     });
     test('Add items to queue and get results', async () => {
@@ -61,9 +67,14 @@ suite('Environment Info Service', () => {
         for (let i = 0; i < 10; i = i + 1) {
             const path = `any-path${i}`;
             if (i < 5) {
-                promises.push(envService.getEnvironmentInfo(path));
+                promises.push(envService.getEnvironmentInfo(buildEnvInfo({ executable: path })));
             } else {
-                promises.push(envService.getEnvironmentInfo(path, EnvironmentInfoServiceQueuePriority.High));
+                promises.push(
+                    envService.getEnvironmentInfo(
+                        buildEnvInfo({ executable: path }),
+                        EnvironmentInfoServiceQueuePriority.High,
+                    ),
+                );
             }
             expected.push(createExpectedEnvInfo(path));
         }
@@ -86,10 +97,10 @@ suite('Environment Info Service', () => {
         // Clear call counts
         stubShellExec.resetHistory();
         // Evaluate once so the result is cached.
-        await envService.getEnvironmentInfo(path);
+        await envService.getEnvironmentInfo(buildEnvInfo({ executable: path }));
 
         for (let i = 0; i < 10; i = i + 1) {
-            promises.push(envService.getEnvironmentInfo(path));
+            promises.push(envService.getEnvironmentInfo(buildEnvInfo({ executable: path })));
             expected.push(createExpectedEnvInfo(path));
         }
 
@@ -97,39 +108,5 @@ suite('Environment Info Service', () => {
             assert.deepEqual(r, expected);
         });
         assert.ok(stubShellExec.calledOnce);
-    });
-
-    test('isInfoProvided() returns true for items already processed', async () => {
-        const envService = getEnvironmentInfoService(disposables);
-        let result: boolean;
-        const promises: Promise<InterpreterInformation | undefined>[] = [];
-        const path1 = 'any-path1';
-        const path2 = 'any-path2';
-
-        promises.push(envService.getEnvironmentInfo(path1));
-        promises.push(envService.getEnvironmentInfo(path2));
-
-        await Promise.all(promises);
-        result = envService.isInfoProvided(path1);
-        assert.strictEqual(result, true);
-        result = envService.isInfoProvided(path2);
-        assert.strictEqual(result, true);
-    });
-
-    test('isInfoProvided() returns false otherwise', async () => {
-        const envService = getEnvironmentInfoService(disposables);
-        const promises: Promise<InterpreterInformation | undefined>[] = [];
-        const path1 = 'any-path1';
-        const path2 = 'any-path2';
-
-        promises.push(envService.getEnvironmentInfo(path1));
-        promises.push(envService.getEnvironmentInfo(path2));
-
-        let result = envService.isInfoProvided(path1);
-        assert.strictEqual(result, false);
-        result = envService.isInfoProvided(path2);
-        assert.strictEqual(result, false);
-        result = envService.isInfoProvided('some-random-path');
-        assert.strictEqual(result, false);
     });
 });

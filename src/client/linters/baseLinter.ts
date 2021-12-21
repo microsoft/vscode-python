@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import * as path from 'path';
@@ -8,9 +9,18 @@ import { IWorkspaceService } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { IPythonToolExecutionService } from '../common/process/types';
-import { ExecutionInfo, IConfigurationService, IPythonSettings, Product } from '../common/types';
+import {
+    ExecutionInfo,
+    Flake8CategorySeverity,
+    IConfigurationService,
+    IMypyCategorySeverity,
+    IPycodestyleCategorySeverity,
+    IPylintCategorySeverity,
+    IPythonSettings,
+    Product,
+} from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { traceError } from '../logging';
+import { traceError, traceLog } from '../logging';
 import { ErrorHandler } from './errorHandlers/errorHandler';
 import { ILinter, ILinterInfo, ILinterManager, ILintMessage, LinterId, LintMessageSeverity } from './types';
 
@@ -37,25 +47,20 @@ function matchNamedRegEx(data: string, regex: string): IRegexGroup | undefined {
     return undefined;
 }
 
-export function parseLine(
-    line: string,
-    regex: string,
-    linterID: LinterId,
-    colOffset: number = 0,
-): ILintMessage | undefined {
+export function parseLine(line: string, regex: string, linterID: LinterId, colOffset = 0): ILintMessage | undefined {
     const match = matchNamedRegEx(line, regex)!;
     if (!match) {
-        return;
+        return undefined;
     }
 
-    match.line = Number(<any>match.line);
+    match.line = Number(match.line);
 
-    match.column = Number(<any>match.column);
+    match.column = Number(match.column);
 
     return {
         code: match.code,
         message: match.message,
-        column: isNaN(match.column) || match.column <= 0 ? 0 : match.column - colOffset,
+        column: Number.isNaN(match.column) || match.column <= 0 ? 0 : match.column - colOffset,
         line: match.line,
         type: match.type,
         provider: linterID,
@@ -66,8 +71,11 @@ export abstract class BaseLinter implements ILinter {
     protected readonly configService: IConfigurationService;
 
     private errorHandler: ErrorHandler;
+
     private _pythonSettings!: IPythonSettings;
+
     private _info: ILinterInfo;
+
     private workspace: IWorkspaceService;
 
     protected get pythonSettings(): IPythonSettings {
@@ -76,12 +84,11 @@ export abstract class BaseLinter implements ILinter {
 
     constructor(
         product: Product,
-        protected readonly outputChannel: vscode.OutputChannel,
         protected readonly serviceContainer: IServiceContainer,
         protected readonly columnOffset = 0,
     ) {
         this._info = serviceContainer.get<ILinterManager>(ILinterManager).getLinterInfo(product);
-        this.errorHandler = new ErrorHandler(this.info.product, outputChannel, serviceContainer);
+        this.errorHandler = new ErrorHandler(this.info.product, serviceContainer);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
@@ -105,14 +112,25 @@ export abstract class BaseLinter implements ILinter {
     protected getWorkingDirectoryPath(document: vscode.TextDocument): string {
         return this._pythonSettings.linting.cwd || this.getWorkspaceRootPath(document);
     }
+
     protected abstract runLinter(
         document: vscode.TextDocument,
         cancellation: vscode.CancellationToken,
     ): Promise<ILintMessage[]>;
 
-    protected parseMessagesSeverity(error: string, categorySeverity: any): LintMessageSeverity {
-        if (categorySeverity[error]) {
-            const severityName = categorySeverity[error];
+    // eslint-disable-next-line class-methods-use-this
+    protected parseMessagesSeverity(
+        error: string,
+        categorySeverity:
+            | Flake8CategorySeverity
+            | IMypyCategorySeverity
+            | IPycodestyleCategorySeverity
+            | IPylintCategorySeverity,
+    ): LintMessageSeverity {
+        const severity = error as keyof typeof categorySeverity;
+
+        if (categorySeverity[severity]) {
+            const severityName = categorySeverity[severity];
             switch (severityName) {
                 case 'Error':
                     return LintMessageSeverity.Error;
@@ -124,7 +142,7 @@ export abstract class BaseLinter implements ILinter {
                     return LintMessageSeverity.Warning;
                 default: {
                     if (LintMessageSeverity[severityName]) {
-                        return <LintMessageSeverity>(<any>LintMessageSeverity[severityName]);
+                        return (LintMessageSeverity[severityName] as unknown) as LintMessageSeverity;
                     }
                 }
             }
@@ -155,7 +173,7 @@ export abstract class BaseLinter implements ILinter {
             this.displayLinterResultHeader(result.stdout);
             return await this.parseMessages(result.stdout, document, cancellation, regEx);
         } catch (error) {
-            await this.handleError(error, document.uri, executionInfo);
+            await this.handleError(error as Error, document.uri, executionInfo);
             return [];
         }
     }
@@ -165,12 +183,12 @@ export abstract class BaseLinter implements ILinter {
         _document: vscode.TextDocument,
         _token: vscode.CancellationToken,
         regEx: string,
-    ) {
+    ): Promise<ILintMessage[]> {
         const outputLines = output.splitLines({ removeEmptyEntries: false, trim: false });
         return this.parseLines(outputLines, regEx);
     }
 
-    protected async handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo) {
+    protected async handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo): Promise<void> {
         if (isTestExecution()) {
             this.errorHandler.handleError(error, resource, execInfo).ignoreErrors();
         } else {
@@ -204,7 +222,7 @@ export abstract class BaseLinter implements ILinter {
     }
 
     private displayLinterResultHeader(data: string) {
-        this.outputChannel.append(`${'#'.repeat(10)}Linting Output - ${this.info.id}${'#'.repeat(10)}\n`);
-        this.outputChannel.append(data);
+        traceLog(`${'#'.repeat(10)}Linting Output - ${this.info.id}${'#'.repeat(10)}\n`);
+        traceLog(data);
     }
 }

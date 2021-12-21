@@ -22,10 +22,10 @@ All dates should align with VS Code's [iteration](https://github.com/microsoft/v
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/main/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
     -   [ ] Merge pull request into `main`
 -   [ ] Create the [`release` branch](https://github.com/microsoft/vscode-python/branches)
-    -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time
-    -   [ ] Create a new `release/YYYY.MM` branch from `main`
+    -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[minor - 2]) you can delete them at this time
+    -   [ ] Create a new `release/YYYY.minor` branch from `main`
 -   [ ] Update `main` post-release (🤖)
-    -   [ ] Bump the version number to the next monthly ("YYYY.MM.0-dev") release in the `main` branch
+    -   [ ] Bump the minor version number to the next ("YYYY.[minor+1].0-dev") release in the `main` branch. For example, if the release brach is `2022.0.0-rc` then main branch should be `2022.1.0-dev`.
         -   [ ] `package.json`
         -   [ ] `package-lock.json`
     -   [ ] Create a pull request against `main`
@@ -44,8 +44,8 @@ All dates should align with VS Code's [iteration](https://github.com/microsoft/v
 ## Preparation
 
 -   [ ] Make sure the [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls) for the [documentation](https://code.visualstudio.com/docs/python/python-tutorial) -- including the [WOW](https://code.visualstudio.com/docs/languages/python) page -- are ready
--   [ ] Final updates to the `release-YYYY.MM` branch
-    -   [ ] Create a branch against `release-YYYY.MM` for a pull request
+-   [ ] Final updates to the `release-YYYY.minor` branch
+    -   [ ] Create a branch against `release-YYYY.minor` for a pull request
     -   [ ] Update the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) to remove the `-rc` (🤖)
     -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) is up-to-date (the only update should be the version number if `package-lock.json` has been kept up-to-date) (🤖)
         -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/main/CHANGELOG.md) (🤖)
@@ -53,8 +53,8 @@ All dates should align with VS Code's [iteration](https://github.com/microsoft/v
             -   [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/main/news) and copy-and-paste new entries (typically `python news --final | code-insiders -`; quite possibly nothing new to add)
     -   [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/main/ThirdPartyNotices-Distribution.txt) by using https://tools.opensource.microsoft.com/notice (🤖; see team notes)
         -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/main/ThirdPartyNotices-Repository.txt) manually if necessary
-        -   [ ] Create pull request against `release-YYYY.MM` (🤖)
-        -   [ ] Merge pull request into `release-YYYY.MM`
+        -   [ ] Create pull request against `release-YYYY.minor` (🤖)
+        -   [ ] Merge pull request into `release-YYYY.minor`
 -   [ ] Make sure component governance is happy
 
 ## Release
@@ -71,7 +71,7 @@ All dates should align with VS Code's [iteration](https://github.com/microsoft/v
 -   [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
 -   [ ] Publish the [blog](http://aka.ms/pythonblog) post
 -   [ ] Determine if a hotfix is needed
--   [ ] Merge `release-YYYY.MM` back into `main`. Don't overwrite the `-dev` version in package.json. (🤖)
+-   [ ] Merge `release-YYYY.minor` back into `main`. Don't overwrite the main branch version or remove `-dev` in package.json. (🤖)
 
 ## Clean up after _this_ release
 

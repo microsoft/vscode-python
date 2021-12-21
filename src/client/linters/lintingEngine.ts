@@ -8,9 +8,8 @@ import { Minimatch } from 'minimatch';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService, IOutputChannel } from '../common/types';
+import { IConfigurationService } from '../common/types';
 import { isNotebookCell } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
@@ -30,19 +29,23 @@ lintSeverityToVSSeverity.set(LintMessageSeverity.Warning, vscode.DiagnosticSever
 @injectable()
 export class LintingEngine implements ILintingEngine {
     private workspace: IWorkspaceService;
+
     private documents: IDocumentManager;
+
     private configurationService: IConfigurationService;
+
     private linterManager: ILinterManager;
+
     private diagnosticCollection: vscode.DiagnosticCollection;
+
     private pendingLintings = new Map<string, vscode.CancellationTokenSource>();
-    private outputChannel: vscode.OutputChannel;
+
     private fileSystem: IFileSystem;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.documents = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.outputChannel = serviceContainer.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.linterManager = serviceContainer.get<ILinterManager>(ILinterManager);
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
         this.diagnosticCollection = vscode.languages.createDiagnosticCollection('python');
@@ -93,12 +96,7 @@ export class LintingEngine implements ILintingEngine {
         const activeLinters = await this.linterManager.getActiveLinters(document.uri);
         const promises: Promise<ILintMessage[]>[] = activeLinters.map(async (info: ILinterInfo) => {
             const stopWatch = new StopWatch();
-            const linter = await this.linterManager.createLinter(
-                info.product,
-                this.outputChannel,
-                this.serviceContainer,
-                document.uri,
-            );
+            const linter = await this.linterManager.createLinter(info.product, this.serviceContainer, document.uri);
             const promise = linter.lint(document, cancelToken.token);
             this.sendLinterRunTelemetry(info, document.uri, promise, stopWatch, trigger);
             return promise;
@@ -128,6 +126,7 @@ export class LintingEngine implements ILintingEngine {
         this.diagnosticCollection.set(document.uri, diagnostics);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private sendLinterRunTelemetry(
         info: ILinterInfo,
         resource: vscode.Uri,
@@ -149,9 +148,14 @@ export class LintingEngine implements ILintingEngine {
         return this.documents.textDocuments.some((document) => document.uri.fsPath === uri.fsPath);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private createDiagnostics(message: ILintMessage, _document: vscode.TextDocument): vscode.Diagnostic {
         const position = new vscode.Position(message.line - 1, message.column);
-        const range = new vscode.Range(position, position);
+        let endPosition: vscode.Position = position;
+        if (message.endLine && message.endColumn) {
+            endPosition = new vscode.Position(message.endLine - 1, message.endColumn);
+        }
+        const range = new vscode.Range(position, endPosition);
 
         const severity = lintSeverityToVSSeverity.get(message.severity!)!;
         const diagnostic = new vscode.Diagnostic(range, message.message, severity);

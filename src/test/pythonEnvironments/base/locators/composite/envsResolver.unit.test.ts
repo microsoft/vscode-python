@@ -160,7 +160,6 @@ suite('Python envs locator - Environments Resolver', () => {
             stubShellExec.returns(
                 new Promise<ExecutionResult<string>>((resolve) => {
                     resolve({
-                        stderr: 'Kaboom',
                         stdout: '',
                     });
                 }),
@@ -295,7 +294,7 @@ suite('Python envs locator - Environments Resolver', () => {
             assert.deepEqual(expected, undefined);
         });
 
-        test('If fetching interpreter info fails with stderr, return undefined', async () => {
+        test('If parsing interpreter info fails, return undefined', async () => {
             stubShellExec.returns(
                 new Promise<ExecutionResult<string>>((resolve) => {
                     resolve({

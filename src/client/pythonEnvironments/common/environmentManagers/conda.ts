@@ -1,7 +1,8 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
+import { lt, parse, SemVer } from 'semver';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
-import { arePathsSame, exec, getPythonSetting, pathExists, readFile } from '../externalDependencies';
+import { arePathsSame, exec, getPythonSetting, isParentPath, pathExists, readFile } from '../externalDependencies';
 
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../base/info';
 import { parseVersion } from '../../base/info/pythonVersion';
@@ -10,7 +11,8 @@ import { getRegistryInterpreters } from '../windowsUtils';
 import { EnvironmentType, PythonEnvironment } from '../../info';
 import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
-import { traceVerbose } from '../../../logging';
+import { traceError, traceVerbose } from '../../../logging';
+import { _SCRIPTS_DIR } from '../../../common/process/internal/scripts/constants';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 
@@ -198,6 +200,13 @@ export async function getPythonVersionFromConda(interpreterPath: string): Promis
     return UNKNOWN_PYTHON_VERSION;
 }
 
+// Minimum version number of conda required to be able to use 'conda run' with '--no-capture-output' flag.
+export const CONDA_RUN_VERSION = '4.9.0';
+export const CONDA_ACTIVATION_TIMEOUT = 45000;
+const CONDA_GENERAL_TIMEOUT = 50000;
+
+export const CONDA_RUN_SCRIPT = path.join(_SCRIPTS_DIR, 'conda_run_script.py');
+
 /** Wraps the "conda" utility, and exposes its functionality.
  */
 export class Conda {
@@ -218,7 +227,6 @@ export class Conda {
     constructor(readonly command: string) {}
 
     public static async getConda(): Promise<Conda | undefined> {
-        traceVerbose(`Searching for conda.`);
         if (this.condaPromise === undefined || isTestExecution()) {
             this.condaPromise = Conda.locate();
         }
@@ -232,6 +240,7 @@ export class Conda {
      * @return A Conda instance corresponding to the binary, if successful; otherwise, undefined.
      */
     private static async locate(): Promise<Conda | undefined> {
+        traceVerbose(`Searching for conda.`);
         const home = getUserHomeDir();
         const suffix = getOSType() === OSType.Windows ? 'Scripts\\conda.exe' : 'bin/conda';
 
@@ -330,11 +339,12 @@ export class Conda {
                 // Failed to spawn because the binary doesn't exist or isn't on PATH, or the current
                 // user doesn't have execute permissions for it, or this conda couldn't handle command
                 // line arguments that we passed (indicating an old version that we do not support).
-                traceVerbose(ex);
+                traceVerbose('Failed to spawn conda binary', condaPath, ex);
             }
         }
 
         // Didn't find anything.
+        traceVerbose("Couldn't locate the conda binary.");
         return undefined;
     }
 
@@ -352,7 +362,7 @@ export class Conda {
     @cache(30_000, true, 10_000)
     // eslint-disable-next-line class-methods-use-this
     private async getInfoCached(command: string): Promise<CondaInfo> {
-        const result = await exec(command, ['info', '--json'], { timeout: 50000 });
+        const result = await exec(command, ['info', '--json'], { timeout: CONDA_GENERAL_TIMEOUT });
         traceVerbose(`conda info --json: ${result.stdout}`);
         return JSON.parse(result.stdout);
     }
@@ -390,5 +400,53 @@ export class Conda {
             prefix,
             name: getName(prefix),
         }));
+    }
+
+    public async getCondaEnvironment(executable: string): Promise<CondaEnvInfo | undefined> {
+        const envList = await this.getEnvList();
+        return envList.find((e) => isParentPath(executable, e.prefix));
+    }
+
+    public async getRunPythonArgs(env: CondaEnvInfo): Promise<string[] | undefined> {
+        const condaVersion = await this.getCondaVersion();
+        if (condaVersion && lt(condaVersion, CONDA_RUN_VERSION)) {
+            return undefined;
+        }
+        const args = [];
+        if (env.name) {
+            args.push('-n', env.name);
+        } else {
+            args.push('-p', env.prefix);
+        }
+        return [this.command, 'run', ...args, '--no-capture-output', 'python', CONDA_RUN_SCRIPT];
+    }
+
+    /**
+     * Return the conda version. The version info is cached.
+     */
+    @cache(-1, true)
+    public async getCondaVersion(): Promise<SemVer | undefined> {
+        const info = await this.getInfo().catch<CondaInfo | undefined>(() => undefined);
+        let versionString: string | undefined;
+        if (info && info.conda_version) {
+            versionString = info.conda_version;
+        } else {
+            const stdOut = await exec(this.command, ['--version'], { timeout: CONDA_GENERAL_TIMEOUT })
+                .then((result) => result.stdout.trim())
+                .catch<string | undefined>(() => undefined);
+
+            versionString = stdOut && stdOut.startsWith('conda ') ? stdOut.substring('conda '.length).trim() : stdOut;
+        }
+        if (!versionString) {
+            return undefined;
+        }
+        const version = parse(versionString, true);
+        if (version) {
+            return version;
+        }
+        // Use a bogus version, at least to indicate the fact that a version was returned.
+        // This ensures we still use conda for activation, installation etc.
+        traceError(`Unable to parse version of Conda, ${versionString}`);
+        return new SemVer('0.0.1');
     }
 }

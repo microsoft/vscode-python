@@ -40,6 +40,14 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
     ) {
+        if (!this.workspaceService.isTrusted) {
+            this.activationServices = this.activationServices.filter(
+                (service) => service.supportedWorkspaceTypes.untrustedWorkspace,
+            );
+            this.singleActivationServices = this.singleActivationServices.filter(
+                (service) => service.supportedWorkspaceTypes.untrustedWorkspace,
+            );
+        }
         if (this.workspaceService.isVirtualWorkspace) {
             this.activationServices = this.activationServices.filter(
                 (service) => service.supportedWorkspaceTypes.virtualWorkspace,
@@ -80,13 +88,14 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         }
         this.activatedWorkspaces.add(key);
 
-        if (this.experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
-            await this.interpreterPathService.copyOldInterpreterStorageValuesToNew(resource);
+        if (this.workspaceService.isTrusted) {
+            // Do not interact with interpreters in a untrusted workspace.
+            if (this.experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
+                await this.interpreterPathService.copyOldInterpreterStorageValuesToNew(resource);
+            }
+            await this.autoSelection.autoSelectInterpreter(resource);
         }
-
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
-
-        await this.autoSelection.autoSelectInterpreter(resource);
         await Promise.all(this.activationServices.map((item) => item.activate(resource)));
         await this.appDiagnostics.performPreStartupHealthCheck(resource);
     }

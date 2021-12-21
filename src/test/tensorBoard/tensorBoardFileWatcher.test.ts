@@ -52,39 +52,6 @@ suite('TensorBoard file system watcher', async () => {
         }
     });
 
-    test('Preexisting tfeventfile in workspace root results in prompt being shown', async () => {
-        await createFiles(currentDirectory);
-        await configureStubsAndActivate();
-        assert.ok(showNativeTensorBoardPrompt.called);
-    });
-
-    test('Preexisting tfeventfile one directory down results in prompt being shown', async () => {
-        const dir1 = path.join(currentDirectory, '1');
-        await createFiles(dir1);
-        await configureStubsAndActivate();
-        assert.ok(showNativeTensorBoardPrompt.called);
-    });
-
-    test('Preexisting tfeventfile two directories down results in prompt being called', async () => {
-        const dir2 = path.join(currentDirectory, '1', '2');
-        await createFiles(dir2);
-        await configureStubsAndActivate();
-        assert.ok(showNativeTensorBoardPrompt.called);
-    });
-
-    test('Preexisting tfeventfile three directories down does not result in prompt being called', async () => {
-        const dir3 = path.join(currentDirectory, '1', '2', '3');
-        await createFiles(dir3);
-        await configureStubsAndActivate();
-        assert.ok(showNativeTensorBoardPrompt.notCalled);
-    });
-
-    test('Creating tfeventfile in workspace root results in prompt being shown', async () => {
-        await configureStubsAndActivate();
-        await createFiles(currentDirectory);
-        await waitForCondition(async () => showNativeTensorBoardPrompt.called, 5000, 'Prompt not shown');
-    });
-
     test('Creating tfeventfile one directory down results in prompt being shown', async () => {
         const dir1 = path.join(currentDirectory, '1');
         await configureStubsAndActivate();

@@ -676,6 +676,16 @@ export interface IWorkspaceService {
     readonly rootPath: string | undefined;
 
     /**
+     * When true, the user has explicitly trusted the contents of the workspace.
+     */
+    readonly isTrusted: boolean;
+
+    /**
+     * Event that fires when the current workspace has been trusted.
+     */
+    readonly onDidGrantWorkspaceTrust: Event<void>;
+
+    /**
      * List of workspace folders or `undefined` when no folder is open.
      * *Note* that the first entry corresponds to the value of `rootPath`.
      *

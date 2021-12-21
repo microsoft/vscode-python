@@ -336,12 +336,6 @@ export type DownloadOptions = {
      */
     progressMessagePrefix: 'Downloading ... ' | string;
     /**
-     * Output panel into which progress information is written.
-     *
-     * @type {IOutputChannel}
-     */
-    outputChannel?: IOutputChannel;
-    /**
      * Extension of file that'll be created when downloading the file.
      *
      * @type {('tmp' | string)}

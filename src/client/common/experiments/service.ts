@@ -6,11 +6,12 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
+import { traceLog } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
-import { PVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { GLOBAL_MEMENTO, IExperimentService, IMemento, IOutputChannel } from '../types';
+import { PVSC_EXTENSION_ID } from '../constants';
+import { GLOBAL_MEMENTO, IExperimentService, IMemento } from '../types';
 import { Experiments } from '../utils/localize';
 import { ExperimentationTelemetry } from './telemetry';
 
@@ -37,7 +38,6 @@ export class ExperimentService implements IExperimentService {
         @inject(IWorkspaceService) readonly workspaceService: IWorkspaceService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
     ) {
         const settings = this.workspaceService.getConfiguration('python');
         // Users can only opt in or out of experiment groups, not control groups.
@@ -145,22 +145,22 @@ export class ExperimentService implements IExperimentService {
         const telemetrySettings = this.workspaceService.getConfiguration('telemetry');
         let experimentsDisabled = false;
         if (telemetrySettings && telemetrySettings.get<boolean>('enableTelemetry') === false) {
-            this.output.appendLine('Telemetry is disabled');
+            traceLog('Telemetry is disabled');
             experimentsDisabled = true;
         }
 
         if (telemetrySettings && telemetrySettings.get<string>('telemetryLevel') === 'off') {
-            this.output.appendLine('Telemetry level is off');
+            traceLog('Telemetry level is off');
             experimentsDisabled = true;
         }
 
         if (experimentsDisabled) {
-            this.output.appendLine('Experiments are disabled, only manually opted experiments are active.');
+            traceLog('Experiments are disabled, only manually opted experiments are active.');
         }
 
         if (this._optOutFrom.includes('All')) {
             // We prioritize opt out first
-            this.output.appendLine(Experiments.optedOutOf().format('All'));
+            traceLog(Experiments.optedOutOf().format('All'));
 
             // Since we are in the Opt Out all case, this means when checking for experiment we
             // short circuit and return. So, printing out additional experiment info might cause
@@ -169,7 +169,7 @@ export class ExperimentService implements IExperimentService {
         }
         if (this._optInto.includes('All')) {
             // Only if 'All' is not in optOut then check if it is in Opt In.
-            this.output.appendLine(Experiments.inGroup().format('All'));
+            traceLog(Experiments.inGroup().format('All'));
 
             // Similar to the opt out case. If user is opting into to all experiments we short
             // circuit the experiment checks. So, skip printing any additional details to the logs.
@@ -180,14 +180,14 @@ export class ExperimentService implements IExperimentService {
         this._optOutFrom
             .filter((exp) => exp !== 'All' && exp.toLowerCase().startsWith('python'))
             .forEach((exp) => {
-                this.output.appendLine(Experiments.optedOutOf().format(exp));
+                traceLog(Experiments.optedOutOf().format(exp));
             });
 
         // Log experiments that users manually opt into, these are experiments which are added using the exp framework.
         this._optInto
             .filter((exp) => exp !== 'All' && exp.toLowerCase().startsWith('python'))
             .forEach((exp) => {
-                this.output.appendLine(Experiments.inGroup().format(exp));
+                traceLog(Experiments.inGroup().format(exp));
             });
 
         if (!experimentsDisabled) {
@@ -201,7 +201,7 @@ export class ExperimentService implements IExperimentService {
                     !this._optOutFrom.includes(exp) &&
                     !this._optInto.includes(exp)
                 ) {
-                    this.output.appendLine(Experiments.inGroup().format(exp));
+                    traceLog(Experiments.inGroup().format(exp));
                 }
             });
         }

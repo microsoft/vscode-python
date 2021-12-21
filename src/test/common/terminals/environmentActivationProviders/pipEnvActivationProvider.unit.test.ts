@@ -45,7 +45,7 @@ suite('Terminals Activation - Pipenv', () => {
                 for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {
                     const cmd = await activationProvider.getActivationCommands(resource, shell.value);
 
-                    assert.equal(cmd, undefined);
+                    assert.strictEqual(cmd, undefined);
                 }
             });
             test('No commands for an interpreter that is not Pipenv', async () => {
@@ -61,7 +61,7 @@ suite('Terminals Activation - Pipenv', () => {
                     for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {
                         const cmd = await activationProvider.getActivationCommands(resource, shell.value);
 
-                        assert.equal(cmd, undefined);
+                        assert.strictEqual(cmd, undefined);
                     }
                 }
             });

@@ -32,7 +32,7 @@ import { ProgressLocation, ProgressOptions, window } from 'vscode';
 
 import { buildApi, IExtensionApi } from './api';
 import { IApplicationShell, IWorkspaceService } from './common/application/types';
-import { IAsyncDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
+import { IAsyncDisposableRegistry, IDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
 import { activateComponents } from './extensionActivation';
@@ -42,6 +42,7 @@ import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 import { IStartupDurations } from './types';
 import { runAfterActivation } from './common/utils/runAfterActivation';
 import { IInterpreterService } from './interpreter/contracts';
+import { WorkspaceService } from './common/application/workspace';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -59,6 +60,13 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
     let ready: Promise<void>;
     let serviceContainer: IServiceContainer;
     try {
+        const workspaceService = new WorkspaceService();
+        context.subscriptions.push(
+            workspaceService.onDidGrantWorkspaceTrust(async () => {
+                await deactivate();
+                await activate(context);
+            }),
+        );
         [api, ready, serviceContainer] = await activateUnsafe(context, stopWatch, durations);
     } catch (ex) {
         // We want to completely handle the error
@@ -79,9 +87,13 @@ export function deactivate(): Thenable<void> {
     // Make sure to shutdown anybody who needs it.
     if (activatedServiceContainer) {
         const registry = activatedServiceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
-        if (registry) {
-            return registry.dispose();
-        }
+        const disposables = activatedServiceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        const promises = Promise.all(disposables.map((d) => d.dispose()));
+        return promises.then(() => {
+            if (registry) {
+                return registry.dispose();
+            }
+        });
     }
 
     return Promise.resolve();
@@ -133,11 +145,13 @@ async function activateUnsafe(
     setTimeout(async () => {
         if (activatedServiceContainer) {
             const workspaceService = activatedServiceContainer.get<IWorkspaceService>(IWorkspaceService);
-            const interpreterManager = activatedServiceContainer.get<IInterpreterService>(IInterpreterService);
-            const workspaces = workspaceService.workspaceFolders ?? [];
-            await interpreterManager
-                .refresh(workspaces.length > 0 ? workspaces[0].uri : undefined)
-                .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
+            if (workspaceService.isTrusted) {
+                const interpreterManager = activatedServiceContainer.get<IInterpreterService>(IInterpreterService);
+                const workspaces = workspaceService.workspaceFolders ?? [];
+                await interpreterManager
+                    .refresh(workspaces.length > 0 ? workspaces[0].uri : undefined)
+                    .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
+            }
         }
 
         runAfterActivation();

@@ -25,7 +25,7 @@ suite('Download channel rules - ExtensionInsidersOffChannelRule', () => {
 
     test('Never look for insiders build', async () => {
         const result = await stableChannelRule.shouldLookForInsidersBuild();
-        assert.equal(result, false, 'Not looking for the correct build');
+        assert.strictEqual(result, false, 'Not looking for the correct build');
     });
 });
 
@@ -49,7 +49,7 @@ suite('Download channel rules - ExtensionInsidersDailyChannelRule', () => {
             .verifiable(TypeMoq.Times.once());
         const result = await insidersDailyChannelRule.shouldLookForInsidersBuild(true);
         lastLookUpTime.verifyAll();
-        assert.equal(result, true, 'Not looking for the correct build');
+        assert.strictEqual(result, true, 'Not looking for the correct build');
     });
     suite('If insiders channel rule is not new', async () => {
         test('Update look up time and return installer for insiders build if looking for insiders the first time', async () => {
@@ -63,7 +63,7 @@ suite('Download channel rules - ExtensionInsidersDailyChannelRule', () => {
                 .verifiable(TypeMoq.Times.atLeastOnce());
             const result = await insidersDailyChannelRule.shouldLookForInsidersBuild(false);
             lastLookUpTime.verifyAll();
-            assert.equal(result, true, 'Not looking for the correct build');
+            assert.strictEqual(result, true, 'Not looking for the correct build');
         });
         test('Update look up time and return installer for insiders build if looking for insiders after 24 hrs of last lookup time', async () => {
             lastLookUpTime
@@ -76,7 +76,7 @@ suite('Download channel rules - ExtensionInsidersDailyChannelRule', () => {
                 .verifiable(TypeMoq.Times.atLeastOnce());
             const result = await insidersDailyChannelRule.shouldLookForInsidersBuild(false);
             lastLookUpTime.verifyAll();
-            assert.equal(result, true, 'Not looking for the correct build');
+            assert.strictEqual(result, true, 'Not looking for the correct build');
         });
         test('Do not update look up time or return any installer if looking for insiders within 24 hrs of last lookup time', async () => {
             lastLookUpTime
@@ -89,7 +89,7 @@ suite('Download channel rules - ExtensionInsidersDailyChannelRule', () => {
                 .verifiable(TypeMoq.Times.atLeastOnce());
             const result = await insidersDailyChannelRule.shouldLookForInsidersBuild(false);
             lastLookUpTime.verifyAll();
-            assert.equal(result, false, 'Not looking for the correct build');
+            assert.strictEqual(result, false, 'Not looking for the correct build');
         });
     });
 });
@@ -114,7 +114,7 @@ suite('Download channel rules - ExtensionInsidersWeeklyChannelRule', () => {
             .verifiable(TypeMoq.Times.once());
         const result = await insidersWeeklyChannelRule.shouldLookForInsidersBuild(true);
         lastLookUpTime.verifyAll();
-        assert.equal(result, true, 'Not looking for the correct build');
+        assert.strictEqual(result, true, 'Not looking for the correct build');
     });
     suite('If insiders channel rule is not new', async () => {
         test('Update look up time and return installer for insiders build if looking for insiders the first time', async () => {
@@ -128,7 +128,7 @@ suite('Download channel rules - ExtensionInsidersWeeklyChannelRule', () => {
                 .verifiable(TypeMoq.Times.atLeastOnce());
             const result = await insidersWeeklyChannelRule.shouldLookForInsidersBuild(false);
             lastLookUpTime.verifyAll();
-            assert.equal(result, true, 'Not looking for the correct build');
+            assert.strictEqual(result, true, 'Not looking for the correct build');
         });
         test('Update look up time and return installer for insiders build if looking for insiders after a week of last lookup time', async () => {
             lastLookUpTime
@@ -141,7 +141,7 @@ suite('Download channel rules - ExtensionInsidersWeeklyChannelRule', () => {
                 .verifiable(TypeMoq.Times.atLeastOnce());
             const result = await insidersWeeklyChannelRule.shouldLookForInsidersBuild(false);
             lastLookUpTime.verifyAll();
-            assert.equal(result, true, 'Not looking for the correct build');
+            assert.strictEqual(result, true, 'Not looking for the correct build');
         });
         test('Do not update look up time or return any installer if looking for insiders within one week of last lookup time', async () => {
             lastLookUpTime
@@ -154,7 +154,7 @@ suite('Download channel rules - ExtensionInsidersWeeklyChannelRule', () => {
                 .verifiable(TypeMoq.Times.atLeastOnce());
             const result = await insidersWeeklyChannelRule.shouldLookForInsidersBuild(false);
             lastLookUpTime.verifyAll();
-            assert.equal(result, false, 'Not looking for the correct build');
+            assert.strictEqual(result, false, 'Not looking for the correct build');
         });
     });
 });

@@ -35,6 +35,7 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
         @unmanaged() protected serviceContainer: IServiceContainer,
         @unmanaged() disposableRegistry: IDisposableRegistry,
         @unmanaged() public readonly runInBackground: boolean = false,
+        @unmanaged() public readonly runInUntrustedWorkspace: boolean = false,
     ) {
         this.filterService = serviceContainer.get<IDiagnosticFilterService>(IDiagnosticFilterService);
         disposableRegistry.push(this);

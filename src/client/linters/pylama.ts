@@ -1,4 +1,4 @@
-import { CancellationToken, OutputChannel, TextDocument } from 'vscode';
+import { CancellationToken, TextDocument } from 'vscode';
 import '../common/extensions';
 import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -10,8 +10,8 @@ const REGEX =
 const COLUMN_OFF_SET = 1;
 
 export class PyLama extends BaseLinter {
-    constructor(outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
-        super(Product.pylama, outputChannel, serviceContainer, COLUMN_OFF_SET);
+    constructor(serviceContainer: IServiceContainer) {
+        super(Product.pylama, serviceContainer, COLUMN_OFF_SET);
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {

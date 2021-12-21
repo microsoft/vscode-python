@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import * as vscode from 'vscode';
@@ -49,17 +50,14 @@ export interface ILinterManager {
     isLintingEnabled(resource?: vscode.Uri): Promise<boolean>;
     enableLintingAsync(enable: boolean, resource?: vscode.Uri): Promise<void>;
     setActiveLintersAsync(products: Product[], resource?: vscode.Uri): Promise<void>;
-    createLinter(
-        product: Product,
-        outputChannel: vscode.OutputChannel,
-        serviceContainer: IServiceContainer,
-        resource?: vscode.Uri,
-    ): Promise<ILinter>;
+    createLinter(product: Product, serviceContainer: IServiceContainer, resource?: vscode.Uri): Promise<ILinter>;
 }
 
 export interface ILintMessage {
     line: number;
     column: number;
+    endLine?: number;
+    endColumn?: number;
     code: string | undefined;
     message: string;
     type: string;

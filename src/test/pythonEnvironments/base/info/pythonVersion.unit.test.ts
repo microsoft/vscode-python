@@ -46,7 +46,7 @@ suite('pyenvs info - getShortVersionString', () => {
         test(`conversion works for '${expected}'`, () => {
             const result = getShortVersionString(info);
 
-            assert.equal(result, expected);
+            assert.strictEqual(result, expected);
         });
     }
 
@@ -56,7 +56,7 @@ suite('pyenvs info - getShortVersionString', () => {
 
         const result = getShortVersionString(info);
 
-        assert.equal(result, expected);
+        assert.strictEqual(result, expected);
     });
 });
 

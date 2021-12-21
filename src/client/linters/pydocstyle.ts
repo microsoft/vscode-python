@@ -1,16 +1,16 @@
 import * as path from 'path';
-import { CancellationToken, OutputChannel, TextDocument } from 'vscode';
+import { CancellationToken, TextDocument } from 'vscode';
 import '../common/extensions';
 import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { traceError } from '../logging';
-import { IS_WINDOWS } from './../common/platform/constants';
+import { IS_WINDOWS } from '../common/platform/constants';
 import { BaseLinter } from './baseLinter';
 import { ILintMessage, LintMessageSeverity } from './types';
 
 export class PyDocStyle extends BaseLinter {
-    constructor(outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
-        super(Product.pydocstyle, outputChannel, serviceContainer);
+    constructor(serviceContainer: IServiceContainer) {
+        super(Product.pydocstyle, serviceContainer);
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
@@ -23,7 +23,12 @@ export class PyDocStyle extends BaseLinter {
         return messages;
     }
 
-    protected async parseMessages(output: string, document: TextDocument, _token: CancellationToken, _regEx: string) {
+    protected async parseMessages(
+        output: string,
+        document: TextDocument,
+        _token: CancellationToken,
+        _regEx: string,
+    ): Promise<ILintMessage[]> {
         let outputLines = output.split(/\r?\n/g);
         const baseFileName = path.basename(document.uri.fsPath);
 
@@ -52,7 +57,7 @@ export class PyDocStyle extends BaseLinter {
                 .map((line) => {
                     try {
                         if (line.trim().length === 0) {
-                            return;
+                            return undefined;
                         }
                         const lineNumber = parseInt(line.substring(0, line.indexOf(' ')), 10);
                         const part = line.substring(line.indexOf(':') + 1).trim();
@@ -60,12 +65,12 @@ export class PyDocStyle extends BaseLinter {
                         const message = part.substring(part.indexOf(':') + 1).trim();
 
                         const sourceLine = document.lineAt(lineNumber - 1).text;
-                        const trmmedSourceLine = sourceLine.trim();
-                        const sourceStart = sourceLine.indexOf(trmmedSourceLine);
+                        const trimmedSourceLine = sourceLine.trim();
+                        const sourceStart = sourceLine.indexOf(trimmedSourceLine);
 
                         return {
-                            code: code,
-                            message: message,
+                            code,
+                            message,
                             column: sourceStart,
                             line: lineNumber,
                             type: '',
@@ -73,8 +78,9 @@ export class PyDocStyle extends BaseLinter {
                         } as ILintMessage;
                     } catch (ex) {
                         traceError(`Failed to parse pydocstyle line '${line}'`, ex);
-                        return;
                     }
+
+                    return undefined;
                 })
                 .filter((item) => item !== undefined)
                 .map((item) => item!)

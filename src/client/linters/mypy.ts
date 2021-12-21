@@ -1,4 +1,4 @@
-import { CancellationToken, OutputChannel, TextDocument } from 'vscode';
+import { CancellationToken, TextDocument } from 'vscode';
 import '../common/extensions';
 import { escapeRegExp } from 'lodash';
 import { Product } from '../common/types';
@@ -12,8 +12,8 @@ export function getRegex(filepath: string): string {
 const COLUMN_OFF_SET = 1;
 
 export class MyPy extends BaseLinter {
-    constructor(outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
-        super(Product.mypy, outputChannel, serviceContainer, COLUMN_OFF_SET);
+    constructor(serviceContainer: IServiceContainer) {
+        super(Product.mypy, serviceContainer, COLUMN_OFF_SET);
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {

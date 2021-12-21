@@ -36,7 +36,11 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         return parseEnvFile(contents, baseVars);
     }
 
-    public mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables) {
+    public mergeVariables(
+        source: EnvironmentVariables,
+        target: EnvironmentVariables,
+        options?: { overwrite?: boolean },
+    ) {
         if (!target) {
             return;
         }
@@ -45,7 +49,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
             if (settingsNotToMerge.indexOf(setting) >= 0) {
                 return;
             }
-            if (target[setting] === undefined) {
+            if (target[setting] === undefined || options?.overwrite) {
                 target[setting] = source[setting];
             }
         });

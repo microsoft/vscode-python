@@ -1,25 +1,22 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
 import { isNotInstalledError } from '../common/helpers';
 import { IFileSystem } from '../common/platform/types';
 import { IPythonToolExecutionService } from '../common/process/types';
-import { IDisposableRegistry, IInstaller, IOutputChannel, Product } from '../common/types';
+import { IDisposableRegistry, IInstaller, Product } from '../common/types';
 import { isNotebookCell } from '../common/utils/misc';
 import { IServiceContainer } from '../ioc/types';
-import { traceError } from '../logging';
+import { traceError, traceLog } from '../logging';
 import { getTempFileWithDocumentContents, getTextEditsFromPatch } from './../common/editor';
 import { IFormatterHelper } from './types';
 
 export abstract class BaseFormatter {
-    protected readonly outputChannel: vscode.OutputChannel;
     protected readonly workspace: IWorkspaceService;
     private readonly helper: IFormatterHelper;
 
     constructor(public Id: string, private product: Product, protected serviceContainer: IServiceContainer) {
-        this.outputChannel = serviceContainer.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.helper = serviceContainer.get<IFormatterHelper>(IFormatterHelper);
         this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
@@ -116,7 +113,7 @@ export abstract class BaseFormatter {
             }
         }
 
-        this.outputChannel.appendLine(`\n${customError}\n${error}`);
+        traceLog(`\n${customError}\n${error}`);
     }
 
     /**

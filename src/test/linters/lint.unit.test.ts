@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import * as assert from 'assert';
@@ -18,7 +19,14 @@ import {
 import { ProductType } from '../../client/common/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { ILintMessage, LintMessageSeverity } from '../../client/linters/types';
-import { BaseTestFixture, getLinterID, getProductName, linterMessageAsLine, throwUnknownProduct } from './common';
+import {
+    BaseTestFixture,
+    getLinterID,
+    getProductName,
+    linterMessageAsLine,
+    pylintLinterMessagesAsOutput,
+    throwUnknownProduct,
+} from './common';
 
 const pylintMessagesToBeReturned: ILintMessage[] = [
     {
@@ -155,6 +163,8 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
         type: 'warning',
+        endLine: undefined,
+        endColumn: undefined,
     },
     {
         line: 61,
@@ -164,6 +174,8 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
         type: 'warning',
+        endLine: 61,
+        endColumn: undefined,
     },
     {
         line: 72,
@@ -173,6 +185,8 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
         type: 'warning',
+        endLine: 72,
+        endColumn: 28,
     },
     {
         line: 75,
@@ -182,6 +196,8 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
         type: 'warning',
+        endLine: 75,
+        endColumn: 28,
     },
     {
         line: 77,
@@ -191,6 +207,8 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
         type: 'warning',
+        endLine: 77,
+        endColumn: 24,
     },
     {
         line: 83,
@@ -200,6 +218,8 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
         type: 'warning',
+        endLine: 83,
+        endColumn: 24,
     },
 ];
 const flake8MessagesToBeReturned: ILintMessage[] = [
@@ -517,9 +537,13 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
 
 class TestFixture extends BaseTestFixture {
     public platformService: TypeMoq.IMock<IPlatformService>;
+
     public filesystem: TypeMoq.IMock<IFileSystem>;
+
     public pythonToolExecService: TypeMoq.IMock<IPythonToolExecutionService>;
+
     public pythonExecService: TypeMoq.IMock<IPythonExecutionService>;
+
     public pythonExecFactory: TypeMoq.IMock<IPythonExecutionFactory>;
 
     constructor(workspaceDir = '.', printLogs = false) {
@@ -549,7 +573,7 @@ class TestFixture extends BaseTestFixture {
         this.pythonExecFactory = pythonExecFactory;
 
         this.filesystem.setup((f) => f.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
-
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.pythonExecService.setup((s: any) => s.then).returns(() => undefined);
         this.pythonExecService
             .setup((s) => s.isModuleInstalled(TypeMoq.It.isAny()))
@@ -604,6 +628,10 @@ class TestFixture extends BaseTestFixture {
             return;
         }
 
+        if (product && getLinterID(product) === 'pylint') {
+            this.setStdout(pylintLinterMessagesAsOutput(messages));
+            return;
+        }
         const lines: string[] = [];
         for (const msg of messages) {
             if (msg.provider === '' && product) {
@@ -618,7 +646,7 @@ class TestFixture extends BaseTestFixture {
     public setStdout(stdout: string) {
         this.pythonToolExecService
             .setup((s) => s.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve({ stdout: stdout }));
+            .returns(() => Promise.resolve({ stdout }));
     }
 }
 
@@ -638,7 +666,7 @@ suite('Linting Scenarios', () => {
             new CancellationTokenSource().token,
         );
 
-        assert.equal(
+        assert.strictEqual(
             messages.length,
             0,
             `Unexpected linter errors when linting is disabled, Output - ${fixture.output}`,
@@ -658,7 +686,7 @@ suite('Linting Scenarios', () => {
             new CancellationTokenSource().token,
         );
 
-        assert.equal(
+        assert.strictEqual(
             messages.length,
             0,
             `Unexpected linter errors when linting is disabled, Output - ${fixture.output}`,
@@ -679,13 +707,13 @@ suite('Linting Scenarios', () => {
         );
 
         if (enabled) {
-            assert.notEqual(
+            assert.notStrictEqual(
                 messages.length,
                 0,
                 `Expected linter errors when linter is enabled, Output - ${fixture.output}`,
             );
         } else {
-            assert.equal(
+            assert.strictEqual(
                 messages.length,
                 0,
                 `Unexpected linter errors when linter is disabled, Output - ${fixture.output}`,
@@ -726,13 +754,11 @@ suite('Linting Scenarios', () => {
         );
 
         if (messagesToBeReceived.length === 0) {
-            assert.equal(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
-        } else {
-            if (fixture.output.indexOf('ENOENT') === -1) {
-                // Pylint for Python Version 2.7 could return 80 linter messages, where as in 3.5 it might only return 1.
-                // Looks like pylint stops linting as soon as it comes across any ERRORS.
-                assert.notEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
-            }
+            assert.strictEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
+        } else if (fixture.output.indexOf('ENOENT') === -1) {
+            // Pylint for Python Version 2.7 could return 80 linter messages, where as in 3.5 it might only return 1.
+            // Looks like pylint stops linting as soon as it comes across any ERRORS.
+            assert.notStrictEqual(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
         }
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
@@ -756,7 +782,7 @@ suite('Linting Scenarios', () => {
             new CancellationTokenSource().token,
         );
 
-        assert.equal(
+        assert.strictEqual(
             messages.length,
             messageCountToBeReceived,
             `Expected number of lint errors does not match lint error count, Output - ${fixture.output}`,
@@ -771,39 +797,35 @@ suite('Linting Scenarios', () => {
     });
 });
 
-const PRODUCTS = Object.keys(Product)
-
-    .filter((key) => !isNaN(Number(Product[key as any])))
-
-    .map((key) => Product[key as any]);
-
 suite('Linting Products', () => {
     const prodService = new ProductService();
 
     test('All linting products are represented by linters', async () => {
-        for (const product of PRODUCTS) {
-            if (prodService.getProductType(product as any) !== ProductType.Linter) {
-                continue;
+        const products = Object.keys(Product)
+            .filter((item) => Number.isNaN(Number(item)))
+            .map((key) => Product[Number(key)]);
+
+        products.forEach((p) => {
+            const product = (p as unknown) as Product;
+            if (prodService.getProductType(product) === ProductType.Linter) {
+                const found = LINTERID_BY_PRODUCT.get(product);
+                assert.notStrictEqual(found, undefined, `did find linter ${Product[product]}`);
             }
-
-            const found = LINTERID_BY_PRODUCT.get(product as any);
-
-            assert.notEqual(found, undefined, `did find linter ${Product[product as any]}`);
-        }
+        });
     });
 
     test('All linters match linting products', async () => {
         for (const product of LINTERID_BY_PRODUCT.keys()) {
             const prodType = prodService.getProductType(product);
-            assert.notEqual(prodType, undefined, `${Product[product]} is not not properly registered`);
-            assert.equal(prodType, ProductType.Linter, `${Product[product]} is not a linter product`);
+            assert.notStrictEqual(prodType, undefined, `${Product[product]} is not not properly registered`);
+            assert.strictEqual(prodType, ProductType.Linter, `${Product[product]} is not a linter product`);
         }
     });
 
     test('All linting product names match linter IDs', async () => {
         for (const [product, linterID] of LINTERID_BY_PRODUCT) {
             const prodName = ProductNames.get(product);
-            assert.equal(prodName, linterID, 'product name does not match linter ID');
+            assert.strictEqual(prodName, linterID, 'product name does not match linter ID');
         }
     });
 });

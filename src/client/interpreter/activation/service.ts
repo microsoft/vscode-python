@@ -37,7 +37,7 @@ const ENVIRONMENT_TIMEOUT = 30000;
 const CONDA_ENVIRONMENT_TIMEOUT = 60_000;
 
 // The shell under which we'll execute activation scripts.
-const defaultShells = {
+export const defaultShells = {
     [OSType.Windows]: { shell: 'cmd', shellType: TerminalShellType.commandPrompt },
     [OSType.OSX]: { shell: 'bash', shellType: TerminalShellType.bash },
     [OSType.Linux]: { shell: 'bash', shellType: TerminalShellType.bash },
@@ -150,7 +150,16 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             return vars;
         });
     }
-
+    public async getEnvironmentActivationShellCommands(
+        resource: Resource,
+        interpreter?: PythonEnvironment,
+    ): Promise<string[] | undefined> {
+        const shellInfo = defaultShells[this.platform.osType];
+        if (!shellInfo) {
+            return [];
+        }
+        return this.helper.getEnvironmentActivationShellCommands(resource, shellInfo.shellType, interpreter);
+    }
     public async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
         interpreter?: PythonEnvironment,

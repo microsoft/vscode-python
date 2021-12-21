@@ -7,7 +7,7 @@ import { fail } from 'assert';
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
-import { OutputChannel, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import '../../../client/common/extensions';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
 import {
@@ -57,10 +57,7 @@ suite('Product Path', () => {
                 formattingSettings = TypeMoq.Mock.ofType<IFormattingSettings>();
                 unitTestSettings = TypeMoq.Mock.ofType<ITestingSettings>();
 
-                productInstaller = new ProductInstaller(
-                    serviceContainer.object,
-                    TypeMoq.Mock.ofType<OutputChannel>().object,
-                );
+                productInstaller = new ProductInstaller(serviceContainer.object);
                 const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
                 pythonSettings.setup((p) => p.formatting).returns(() => formattingSettings.object);
                 pythonSettings.setup((p) => p.testing).returns(() => unitTestSettings.object);

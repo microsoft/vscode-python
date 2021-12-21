@@ -16,6 +16,7 @@ import { ICodeExecutionService } from '../../terminals/types';
 
 @injectable()
 export class TerminalCodeExecutionProvider implements ICodeExecutionService {
+    private hasRanOutsideCurrentDrive = false;
     protected terminalTitle!: string;
     private _terminalService!: ITerminalService;
     private replActive?: Promise<boolean>;
@@ -98,7 +99,8 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                         ? this.workspace.rootPath.replace(/\:.*/g, '')
                         : undefined;
                 const fileDrive = fileDirPath.replace(/\:.*/g, '');
-                if (fileDrive !== currentDrive) {
+                if (fileDrive !== currentDrive || this.hasRanOutsideCurrentDrive) {
+                    this.hasRanOutsideCurrentDrive = true;
                     await this.getTerminalService(file).sendText(`${fileDrive}:`);
                 }
             }

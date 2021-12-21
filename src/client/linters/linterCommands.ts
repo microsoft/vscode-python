@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import { DiagnosticCollection, Disposable, QuickPickOptions, Uri } from 'vscode';
@@ -14,8 +15,11 @@ import { ILinterManager, ILintingEngine, LinterId } from './types';
 
 export class LinterCommands implements IDisposable {
     private disposables: Disposable[] = [];
+
     private linterManager: ILinterManager;
+
     private readonly appShell: IApplicationShell;
+
     private readonly documentManager: IDocumentManager;
 
     constructor(private serviceContainer: IServiceContainer) {
@@ -28,7 +32,8 @@ export class LinterCommands implements IDisposable {
         commandManager.registerCommand(Commands.Enable_Linter, this.enableLintingAsync.bind(this));
         commandManager.registerCommand(Commands.Run_Linter, this.runLinting.bind(this));
     }
-    public dispose() {
+
+    public dispose(): void {
         this.disposables.forEach((disposable) => disposable.dispose());
     }
 

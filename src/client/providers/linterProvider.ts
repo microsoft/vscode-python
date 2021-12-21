@@ -19,15 +19,24 @@ import { ILinterManager, ILintingEngine } from '../linters/types';
 @injectable()
 export class LinterProvider implements IExtensionActivationService, Disposable {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
+
     private interpreterService: IInterpreterService;
+
     private documents: IDocumentManager;
+
     private configuration: IConfigurationService;
+
     private linterManager: ILinterManager;
+
     private engine: ILintingEngine;
+
     private fs: IFileSystem;
+
     private readonly disposables: IDisposable[] = [];
+
     private workspaceService: IWorkspaceService;
-    private activatedOnce: boolean = false;
+
+    private activatedOnce = false;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.serviceContainer = serviceContainer;
@@ -62,7 +71,7 @@ export class LinterProvider implements IExtensionActivationService, Disposable {
         }
     }
 
-    public dispose() {
+    public dispose(): void {
         this.disposables.forEach((d) => d.dispose());
     }
 

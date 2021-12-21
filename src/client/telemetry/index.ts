@@ -608,16 +608,16 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when attaching to child process
      */
     /* __GDPR__
-       "debugger.attach_to_child_process" : { }
+       "debugger.attach_to_child_process" : {
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+       }
      */
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     /**
      * Telemetry event sent when attaching to a local process.
      */
     /* __GDPR__
-       "debugger.attach_to_local_process" : {
-          "" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
-       }
+       "debugger.attach_to_local_process" : { }
      */
     [EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS]: never | undefined;
     /**
@@ -735,7 +735,10 @@ export interface IEventNamePropertyMapping {
        "editor.load" : {
           "codeloadingtime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "condaversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "errorname" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+          "errorstack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
           "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "installsource" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "terminal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
           "workspacefoldercount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -751,15 +754,15 @@ export interface IEventNamePropertyMapping {
         /**
          * The conda version if selected
          */
-        condaVersion: string | undefined;
+        condaVersion?: string | undefined;
         /**
          * The python interpreter version if selected
          */
-        pythonVersion: string | undefined;
+        pythonVersion?: string | undefined;
         /**
          * The type of interpreter (conda, virtualenv, pipenv etc.)
          */
-        interpreterType: EnvironmentType | undefined;
+        interpreterType?: EnvironmentType | undefined;
         /**
          * The type of terminal shell created: powershell, cmd, zsh, bash etc.
          *
@@ -773,15 +776,15 @@ export interface IEventNamePropertyMapping {
         /**
          * If interpreters found for the main workspace contains a python3 interpreter
          */
-        hasPython3: boolean;
+        hasPython3?: boolean;
         /**
          * If user has defined an interpreter in settings.json
          */
-        usingUserDefinedInterpreter: boolean;
+        usingUserDefinedInterpreter?: boolean;
         /**
          * If global interpreter is being used
          */
-        usingGlobalInterpreter: boolean;
+        usingGlobalInterpreter?: boolean;
     };
     /**
      * Telemetry event sent when substituting Environment variables to calculate value of variables
@@ -854,6 +857,9 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "format.format" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
+          "errorname" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+          "errorstack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
           "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "hascustomargs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "formatselection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
@@ -893,7 +899,10 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when sorting imports using formatter
      */
     /* __GDPR__
-       "format.sort_imports" : { }
+       "format.sort_imports" : {
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
+           "originaleventname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+       }
      */
     [EventName.FORMAT_SORT_IMPORTS]: never | undefined;
     /**
@@ -1009,6 +1018,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "linting" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
           "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "hascustomargs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -1068,7 +1078,9 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when 'Select Interpreter' command is invoked.
      */
     /* __GDPR__
-       "select_interpreter" : { }
+       "select_interpreter" : {
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+       }
      */
     [EventName.SELECT_INTERPRETER]: never | undefined;
     /**
@@ -1292,6 +1304,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter_discovery" : {
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
           "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
        }
      */
@@ -1752,14 +1765,16 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when starting REPL
      */
     /* __GDPR__
-       "repl" : { }
+       "repl" : {
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+       }
      */
     [EventName.REPL]: never | undefined;
     /**
      * Telemetry event sent with details of linter selected in quickpick of linter list.
      */
     /* __GDPR__
-       "select_linter" : {
+       "linting.select" : {
           "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
           "enabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
        }

@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as path from 'path';
-import { CancellationTokenSource, ConfigurationTarget, OutputChannel, Uri, workspace } from 'vscode';
+import { CancellationTokenSource, ConfigurationTarget, Uri, workspace } from 'vscode';
 import { LanguageServerType } from '../../client/activation/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import {
@@ -10,9 +10,8 @@ import {
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
-import { IConfigurationService, IOutputChannel, Product, ProductType } from '../../client/common/types';
+import { IConfigurationService, Product, ProductType } from '../../client/common/types';
 import { ILinter, ILinterManager } from '../../client/linters/types';
-import { TEST_OUTPUT_CHANNEL } from '../../client/testing/constants';
 import { TEST_TIMEOUT } from '../constants';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
@@ -69,9 +68,8 @@ suite('Multiroot Linting', () => {
     }
 
     async function createLinter(product: Product): Promise<ILinter> {
-        const mockOutputChannel = ioc.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
         const lm = ioc.serviceContainer.get<ILinterManager>(ILinterManager);
-        return lm.createLinter(product, mockOutputChannel, ioc.serviceContainer);
+        return lm.createLinter(product, ioc.serviceContainer);
     }
     async function testLinterInWorkspaceFolder(
         product: Product,
@@ -86,7 +84,7 @@ suite('Multiroot Linting', () => {
         const messages = await linter.lint(document, cancelToken.token);
 
         const errorMessage = mustHaveErrors ? 'No errors returned by linter' : 'Errors returned by linter';
-        assert.equal(messages.length > 0, mustHaveErrors, errorMessage);
+        assert.strictEqual(messages.length > 0, mustHaveErrors, errorMessage);
     }
 
     test('Enabling Pylint in root and also in Workspace, should return errors', async () => {

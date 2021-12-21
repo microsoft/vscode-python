@@ -9,7 +9,7 @@ import { CodeActionProviderService } from './codeActionProvider/main';
 import { SortImportsEditingProvider } from './importSortProvider';
 import { ISortImportsEditingProvider } from './types';
 
-export function registerTypes(serviceManager: IServiceManager) {
+export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<ISortImportsEditingProvider>(ISortImportsEditingProvider, SortImportsEditingProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,

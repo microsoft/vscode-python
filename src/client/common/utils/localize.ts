@@ -205,11 +205,26 @@ export namespace TensorBoard {
 }
 
 export namespace LanguageService {
+    export const virtualWorkspaceStatusItem = {
+        detail: localize(
+            'LanguageService.virtualWorkspaceStatusItem.detail',
+            'Limited IntelliSense supported by Jedi and Pylance',
+        ),
+    };
+    export const statusItem = {
+        name: localize('LanguageService.statusItem.name', 'Python IntelliSense Status'),
+        text: localize('LanguageService.statusItem.text', 'Partial Mode'),
+        detail: localize('LanguageService.statusItem.detail', 'Limited IntelliSense provided by Pylance'),
+    };
     export const startingPylance = localize('LanguageService.startingPylance', 'Starting Pylance language server.');
     export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi language server.');
     export const startingNone = localize(
         'LanguageService.startingNone',
         'Editor support is inactive since language server is set to None.',
+    );
+    export const untrustedWorkspaceMessage = localize(
+        'LanguageService.untrustedWorkspaceMessage',
+        'Only Pylance is supported in untrusted workspaces, setting language server to None.',
     );
 
     export const reloadAfterLanguageServerChange = localize(

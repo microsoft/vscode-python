@@ -86,11 +86,13 @@ export async function getInterpreterInfo(
         if (logger) {
             logger.error(`Failed to parse interpreter information for ${argv} stderr: ${result.stderr}`);
         }
-        return undefined;
     }
     const json = parse(result.stdout);
     if (logger) {
         logger.info(`Found interpreter for ${argv}`);
+    }
+    if (!json) {
+        return undefined;
     }
     return extractInterpreterInfo(python.pythonExecutable, json);
 }

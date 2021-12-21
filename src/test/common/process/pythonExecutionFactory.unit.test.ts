@@ -210,7 +210,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const service = await verifyCreateActivated(factory, activationHelper, resource, interpreter);
                 assert.deepEqual(service, mockExecService);
-                assert.equal(createInvoked, true);
+                assert.strictEqual(createInvoked, true);
             });
             test('Ensure we use an existing `create` method if there are no environment variables (0 length) for the activated env', async () => {
                 const pythonPath = 'path/to/python';
@@ -230,7 +230,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const service = await verifyCreateActivated(factory, activationHelper, resource, interpreter);
                 assert.deepEqual(service, mockExecService);
-                assert.equal(createInvoked, true);
+                assert.strictEqual(createInvoked, true);
             });
             test('PythonExecutionService is created', async () => {
                 let createInvoked = false;
@@ -254,7 +254,7 @@ suite('Process - PythonExecutionFactory', () => {
                 if (!interpreter) {
                     verify(pythonSettings.pythonPath).once();
                 }
-                assert.equal(createInvoked, false);
+                assert.strictEqual(createInvoked, false);
             });
 
             test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
@@ -366,7 +366,7 @@ suite('Process - PythonExecutionFactory', () => {
                     verify(pythonSettings.pythonPath).once();
                 }
 
-                assert.equal(createInvoked, false);
+                assert.strictEqual(createInvoked, false);
             });
 
             test('Ensure `createCondaExecutionService` creates a CondaExecutionService instance if there is a conda environment', async () => {

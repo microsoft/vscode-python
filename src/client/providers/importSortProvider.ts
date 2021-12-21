@@ -3,16 +3,10 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { CancellationToken, CancellationTokenSource, TextDocument, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
-import { Commands, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { Commands, PYTHON_LANGUAGE } from '../common/constants';
 import * as internalScripts from '../common/process/internal/scripts';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../common/process/types';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IEditorUtils,
-    IOutputChannel,
-    IPersistentStateFactory,
-} from '../common/types';
+import { IConfigurationService, IDisposableRegistry, IEditorUtils, IPersistentStateFactory } from '../common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../common/utils/async';
 import { Common, Diagnostics } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -30,14 +24,20 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         string,
         { deferred: Deferred<WorkspaceEdit | undefined>; tokenSource: CancellationTokenSource }
     >();
+
     private readonly processServiceFactory: IProcessServiceFactory;
+
     private readonly pythonExecutionFactory: IPythonExecutionFactory;
+
     private readonly shell: IApplicationShell;
+
     private readonly persistentStateFactory: IPersistentStateFactory;
+
     private readonly documentManager: IDocumentManager;
+
     private readonly configurationService: IConfigurationService;
+
     private readonly editorUtils: IEditorUtils;
-    private readonly output: IOutputChannel;
 
     public constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.shell = serviceContainer.get<IApplicationShell>(IApplicationShell);
@@ -46,7 +46,6 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         this.pythonExecutionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.editorUtils = serviceContainer.get<IEditorUtils>(IEditorUtils);
-        this.output = serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.persistentStateFactory = serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }
 
@@ -73,15 +72,15 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     ): Promise<WorkspaceEdit | undefined> {
         const document = await this.documentManager.openTextDocument(uri);
         if (!document) {
-            return;
+            return undefined;
         }
         if (document.lineCount <= 1) {
-            return;
+            return undefined;
         }
 
         const execIsort = await this.getExecIsort(document, uri, token);
         if (token && token.isCancellationRequested) {
-            return;
+            return undefined;
         }
         const diffPatch = await execIsort(document.getText());
 
@@ -90,7 +89,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             : undefined;
     }
 
-    public registerCommands() {
+    public registerCommands(): void {
         const cmdManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         const disposable = cmdManager.registerCommand(Commands.Sort_Imports, this.sortImports, this);
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(disposable);
@@ -127,15 +126,18 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             }
             await this.documentManager.applyEdit(changes);
         } catch (error) {
-            const message = typeof error === 'string' ? error : error.message ? error.message : error;
-            const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-            outputChannel.appendLine(error);
+            let message = error;
+            if (typeof error === 'string') {
+                message = error;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
             traceError(`Failed to format imports for '${uri.fsPath}'.`, error);
-            this.shell.showErrorMessage(message).then(noop, noop);
+            this.shell.showErrorMessage(message as string).then(noop, noop);
         }
     }
 
-    public async _showWarningAndOptionallyShowOutput() {
+    public async _showWarningAndOptionallyShowOutput(): Promise<void> {
         const neverShowAgain = this.persistentStateFactory.createGlobalPersistentState(
             doNotDisplayPromptStateKey,
             false,
@@ -149,7 +151,8 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             Common.doNotShowAgain(),
         );
         if (selection === Common.openOutputPanel()) {
-            this.output.show(true);
+            const cmdManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+            await cmdManager.executeCommand(Commands.ViewOutput);
         } else if (selection === Common.doNotShowAgain()) {
             await neverShowAgain.updateValue(true);
         }
@@ -185,14 +188,13 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
                 const result = procService.execObservable(isort, args, spawnOptions);
                 return this.communicateWithIsortProcess(result, documentText);
             };
-        } else {
-            const procService = await this.pythonExecutionFactory.create({ resource: document.uri });
-            return async (documentText: string) => {
-                const [args, parse] = internalScripts.sortImports(filename, isortArgs);
-                const result = procService.execObservable(args, spawnOptions);
-                return parse(await this.communicateWithIsortProcess(result, documentText));
-            };
         }
+        const procService = await this.pythonExecutionFactory.create({ resource: document.uri });
+        return async (documentText: string) => {
+            const [args, parse] = internalScripts.sortImports(filename, isortArgs);
+            const result = procService.execObservable(args, spawnOptions);
+            return parse(await this.communicateWithIsortProcess(result, documentText));
+        };
     }
 
     private async communicateWithIsortProcess(

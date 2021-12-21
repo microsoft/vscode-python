@@ -14,7 +14,7 @@ import { Writable } from 'stream';
 import * as TypeMoq from 'typemoq';
 import { Range, TextDocument, TextEditor, TextLine, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../client/common/application/types';
-import { Commands, EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
+import { Commands, EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { ProcessService } from '../../client/common/process/proc';
 import {
     IProcessServiceFactory,
@@ -26,7 +26,6 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IEditorUtils,
-    IOutputChannel,
     IPersistentState,
     IPersistentStateFactory,
     IPythonSettings,
@@ -50,7 +49,6 @@ suite('Import Sort Provider', () => {
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let persistentStateFactory: TypeMoq.IMock<IPersistentStateFactory>;
-    let output: TypeMoq.IMock<IOutputChannel>;
     let sortProvider: SortImportsEditingProvider;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -63,8 +61,6 @@ suite('Import Sort Provider', () => {
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         editorUtils = TypeMoq.Mock.ofType<IEditorUtils>();
         persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
-        output = TypeMoq.Mock.ofType<IOutputChannel>();
-        serviceContainer.setup((c) => c.get(IOutputChannel, STANDARD_OUTPUT_CHANNEL)).returns(() => output.object);
         serviceContainer.setup((c) => c.get(IPersistentStateFactory)).returns(() => persistentStateFactory.object);
         serviceContainer.setup((c) => c.get(ICommandManager)).returns(() => commandManager.object);
         serviceContainer.setup((c) => c.get(IDocumentManager)).returns(() => documentManager.object);
@@ -157,6 +153,7 @@ suite('Import Sort Provider', () => {
         const uri = Uri.file('TestDoc');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
             .setup((d) => d.lineCount)
@@ -180,6 +177,7 @@ suite('Import Sort Provider', () => {
         const uri = Uri.file('TestDoc');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
             .setup((d) => d.lineCount)
@@ -202,6 +200,7 @@ suite('Import Sort Provider', () => {
     test('Ensure empty line is added when line does not end with an empty line', async () => {
         const uri = Uri.file('TestDoc');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
             .setup((d) => d.lineCount)
@@ -224,7 +223,9 @@ suite('Import Sort Provider', () => {
             .verifiable(TypeMoq.Times.atLeastOnce());
         documentManager
             .setup((d) => d.applyEdit(TypeMoq.It.isAny()))
-            .callback((e) => (editApplied = e))
+            .callback((e) => {
+                editApplied = e;
+            })
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.atLeastOnce());
         documentManager
@@ -249,6 +250,7 @@ suite('Import Sort Provider', () => {
     test('Ensure no edits are provided when there is only one line (when using provider method)', async () => {
         const uri = Uri.file('TestDoc');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
             .setup((d) => d.lineCount)
@@ -272,6 +274,7 @@ suite('Import Sort Provider', () => {
     test('Ensure no edits are provided when there are no lines (when using provider method)', async () => {
         const uri = Uri.file('TestDoc');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
             .setup((d) => d.lineCount)
@@ -296,7 +299,9 @@ suite('Import Sort Provider', () => {
         const uri = Uri.file('something.py');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
         const processService = TypeMoq.Mock.ofType<ProcessService>();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((d: any) => d.then).returns(() => undefined);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
             .setup((d) => d.lineCount)
@@ -320,9 +325,7 @@ suite('Import Sort Provider', () => {
             .verifiable(TypeMoq.Times.atLeastOnce());
         pythonSettings
             .setup((s) => s.sortImports)
-            .returns(() => {
-                return ({ path: 'CUSTOM_ISORT', args: ['1', '2'] } as any) as ISortImportSettings;
-            })
+            .returns(() => ({ path: 'CUSTOM_ISORT', args: ['1', '2'] } as ISortImportSettings))
             .verifiable(TypeMoq.Times.once());
         processServiceFactory
             .setup((p) => p.create(TypeMoq.It.isAny()))
@@ -343,7 +346,9 @@ suite('Import Sort Provider', () => {
         childProcess.setup((p) => p.stdin).returns(() => stdinStream.object);
         const executionResult = {
             proc: childProcess.object,
-            out: new Observable<Output<string>>((subscriber) => (actualSubscriber = subscriber)),
+            out: new Observable<Output<string>>((subscriber) => {
+                actualSubscriber = subscriber;
+            }),
             dispose: noop,
         };
         const expectedArgs = ['-', '--diff', '1', '2'];
@@ -380,7 +385,9 @@ suite('Import Sort Provider', () => {
         const uri = Uri.file('something.py');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
         const processService = TypeMoq.Mock.ofType<ProcessService>();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((d: any) => d.then).returns(() => undefined);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
             .setup((d) => d.lineCount)
@@ -404,12 +411,11 @@ suite('Import Sort Provider', () => {
             .verifiable(TypeMoq.Times.atLeastOnce());
         pythonSettings
             .setup((s) => s.sortImports)
-            .returns(() => {
-                return ({ args: ['1', '2'] } as any) as ISortImportSettings;
-            })
+            .returns(() => ({ args: ['1', '2'] } as ISortImportSettings))
             .verifiable(TypeMoq.Times.once());
 
         const processExeService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processExeService.setup((p: any) => p.then).returns(() => undefined);
         pythonExecFactory
             .setup((p) => p.create(TypeMoq.It.isAny()))
@@ -430,7 +436,9 @@ suite('Import Sort Provider', () => {
         childProcess.setup((p) => p.stdin).returns(() => stdinStream.object);
         const executionResult = {
             proc: childProcess.object,
-            out: new Observable<Output<string>>((subscriber) => (actualSubscriber = subscriber)),
+            out: new Observable<Output<string>>((subscriber) => {
+                actualSubscriber = subscriber;
+            }),
             dispose: noop,
         };
         const importScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'sortImports.py');
@@ -469,7 +477,9 @@ suite('Import Sort Provider', () => {
         const uri = Uri.file('something.py');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
         const processService = TypeMoq.Mock.ofType<ProcessService>();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((d: any) => d.then).returns(() => undefined);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc.setup((d) => d.lineCount).returns(() => 10);
         mockDoc.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => 'Hello');
@@ -480,9 +490,7 @@ suite('Import Sort Provider', () => {
             .returns(() => Promise.resolve(mockDoc.object));
         pythonSettings
             .setup((s) => s.sortImports)
-            .returns(() => {
-                return ({ path: 'CUSTOM_ISORT', args: [] } as any) as ISortImportSettings;
-            });
+            .returns(() => ({ path: 'CUSTOM_ISORT', args: [] } as ISortImportSettings));
         processServiceFactory
             .setup((p) => p.create(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(processService.object));
@@ -515,7 +523,9 @@ suite('Import Sort Provider', () => {
         firstChildProcess.setup((p) => p.stdin).returns(() => stdinStream1.object);
         const firstExecutionResult = {
             proc: firstChildProcess.object,
-            out: new Observable<Output<string>>((subscriber) => (firstSubscriber = subscriber)),
+            out: new Observable<Output<string>>((subscriber) => {
+                firstSubscriber = subscriber;
+            }),
             dispose: noop,
         };
         processService
@@ -543,10 +553,13 @@ suite('Import Sort Provider', () => {
         secondChildProcess.setup((p) => p.stdin).returns(() => stdinStream2.object);
         const secondExecutionResult = {
             proc: secondChildProcess.object,
-            out: new Observable<Output<string>>((subscriber) => (secondSubscriber = subscriber)),
+            out: new Observable<Output<string>>((subscriber) => {
+                secondSubscriber = subscriber;
+            }),
             dispose: noop,
         };
         processService.reset();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((d: any) => d.then).returns(() => undefined);
         processService
             .setup((p) => p.execObservable(TypeMoq.It.isValue('CUSTOM_ISORT'), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -577,7 +590,9 @@ suite('Import Sort Provider', () => {
         const uri = Uri.file('something.py');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
         const processService = TypeMoq.Mock.ofType<ProcessService>();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((d: any) => d.then).returns(() => undefined);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc.setup((d) => d.lineCount).returns(() => 10);
         mockDoc.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => 'Hello');
@@ -588,9 +603,7 @@ suite('Import Sort Provider', () => {
             .returns(() => Promise.resolve(mockDoc.object));
         pythonSettings
             .setup((s) => s.sortImports)
-            .returns(() => {
-                return ({ path: 'CUSTOM_ISORT', args: [] } as any) as ISortImportSettings;
-            });
+            .returns(() => ({ path: 'CUSTOM_ISORT', args: [] } as ISortImportSettings));
         processServiceFactory
             .setup((p) => p.create(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(processService.object));
@@ -621,10 +634,13 @@ suite('Import Sort Provider', () => {
         childProcess.setup((p) => p.stdin).returns(() => stdinStream.object);
         const executionResult = {
             proc: childProcess.object,
-            out: new Observable<Output<string>>((s) => (subscriber = s)),
+            out: new Observable<Output<string>>((s) => {
+                subscriber = s;
+            }),
             dispose: noop,
         };
         processService.reset();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((d: any) => d.then).returns(() => undefined);
         processService
             .setup((p) => p.execObservable(TypeMoq.It.isValue('CUSTOM_ISORT'), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -653,9 +669,8 @@ suite('Import Sort Provider', () => {
                 ),
             )
             .returns(() => Promise.resolve(Common.openOutputPanel()));
-        output.setup((o) => o.show(true)).verifiable(TypeMoq.Times.once());
+        commandManager.setup((c) => c.executeCommand(Commands.ViewOutput)).verifiable(TypeMoq.Times.once());
         await sortProvider._showWarningAndOptionallyShowOutput();
-        output.verifyAll();
     });
 
     test('If user clicks do not show again on the isort5 warning prompt, do not show the prompt again', async () => {

@@ -89,6 +89,14 @@ export class WorkspaceService implements IWorkspaceService {
         return !!isVirtualWorkspace;
     }
 
+    public get isTrusted(): boolean {
+        return workspace.isTrusted;
+    }
+
+    public get onDidGrantWorkspaceTrust(): Event<void> {
+        return workspace.onDidGrantWorkspaceTrust;
+    }
+
     private get searchExcludes() {
         const searchExcludes = this.getConfiguration('search.exclude');
         const enabledSearchExcludes = Object.keys(searchExcludes).filter((key) => searchExcludes.get(key) === true);

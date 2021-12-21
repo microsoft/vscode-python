@@ -2,13 +2,14 @@
     "name": "python",
     "displayName": "Python",
     "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2021.12.0-dev",
+    "version": "2022.0.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
     "capabilities": {
         "untrustedWorkspaces": {
-            "supported": false
+            "supported": "limited",
+            "description": "Only Partial IntelliSense with Pylance is supported. Cannot execute Python with untrusted files."
         },
         "virtualWorkspaces": {
             "supported": "limited",
@@ -550,7 +551,10 @@
                         "yapf"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "tags": [
+                        "experimental"
+                    ]
                 },
                 "python.formatting.yapfArgs": {
                     "default": [],
@@ -1950,7 +1954,7 @@
         "@types/md5": "^2.1.32",
         "@types/mocha": "^5.2.7",
         "@types/nock": "^10.0.3",
-        "@types/node": "^12.19.12",
+        "@types/node": "^14.18.0",
         "@types/request": "^2.47.0",
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",

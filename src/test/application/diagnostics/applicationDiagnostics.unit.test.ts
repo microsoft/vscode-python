@@ -17,8 +17,7 @@ import {
     ISourceMapSupportService,
 } from '../../../client/application/diagnostics/types';
 import { IApplicationDiagnostics } from '../../../client/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
-import { IOutputChannel } from '../../../client/common/types';
+import { IWorkspaceService } from '../../../client/common/application/types';
 import { createDeferred, createDeferredFromPromise } from '../../../client/common/utils/async';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -29,7 +28,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
     let envHealthCheck: typemoq.IMock<IDiagnosticsService>;
     let lsNotSupportedCheck: typemoq.IMock<IDiagnosticsService>;
     let pythonInterpreterCheck: typemoq.IMock<IDiagnosticsService>;
-    let outputChannel: typemoq.IMock<IOutputChannel>;
+    let workspaceService: typemoq.IMock<IWorkspaceService>;
     let appDiagnostics: IApplicationDiagnostics;
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
     const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
@@ -44,16 +43,18 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         lsNotSupportedCheck.setup((service) => service.runInBackground).returns(() => false);
         pythonInterpreterCheck = typemoq.Mock.ofType<IDiagnosticsService>();
         pythonInterpreterCheck.setup((service) => service.runInBackground).returns(() => false);
-        outputChannel = typemoq.Mock.ofType<IOutputChannel>();
+        pythonInterpreterCheck.setup((service) => service.runInUntrustedWorkspace).returns(() => false);
+        workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
+        workspaceService.setup((w) => w.isTrusted).returns(() => true);
 
         serviceContainer
             .setup((d) => d.getAll(typemoq.It.isValue(IDiagnosticsService)))
             .returns(() => [envHealthCheck.object, lsNotSupportedCheck.object, pythonInterpreterCheck.object]);
         serviceContainer
-            .setup((d) => d.get(typemoq.It.isValue(IOutputChannel), typemoq.It.isValue(STANDARD_OUTPUT_CHANNEL)))
-            .returns(() => outputChannel.object);
+            .setup((d) => d.get(typemoq.It.isValue(IWorkspaceService)))
+            .returns(() => workspaceService.object);
 
-        appDiagnostics = new ApplicationDiagnostics(serviceContainer.object, outputChannel.object);
+        appDiagnostics = new ApplicationDiagnostics(serviceContainer.object);
     });
 
     teardown(() => {
@@ -87,6 +88,29 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
             .setup((p) => p.diagnose(typemoq.It.isAny()))
             .returns(() => Promise.resolve([]))
             .verifiable(typemoq.Times.once());
+
+        await appDiagnostics.performPreStartupHealthCheck(undefined);
+
+        envHealthCheck.verifyAll();
+        lsNotSupportedCheck.verifyAll();
+        pythonInterpreterCheck.verifyAll();
+    });
+
+    test('When running in a untrusted workspace skip diagnosing validation checks which do not support it', async () => {
+        workspaceService.reset();
+        workspaceService.setup((w) => w.isTrusted).returns(() => false);
+        envHealthCheck
+            .setup((e) => e.diagnose(typemoq.It.isAny()))
+            .returns(() => Promise.resolve([]))
+            .verifiable(typemoq.Times.once());
+        lsNotSupportedCheck
+            .setup((p) => p.diagnose(typemoq.It.isAny()))
+            .returns(() => Promise.resolve([]))
+            .verifiable(typemoq.Times.once());
+        pythonInterpreterCheck
+            .setup((p) => p.diagnose(typemoq.It.isAny()))
+            .returns(() => Promise.resolve([]))
+            .verifiable(typemoq.Times.never());
 
         await appDiagnostics.performPreStartupHealthCheck(undefined);
 
@@ -173,23 +197,6 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
             diagnostics.push(diagnostic);
         }
 
-        for (const diagnostic of diagnostics) {
-            const message = `Diagnostic Code: ${diagnostic.code}, Message: ${diagnostic.message}`;
-            switch (diagnostic.severity) {
-                case DiagnosticSeverity.Error: {
-                    outputChannel.setup((o) => o.appendLine(message)).verifiable(typemoq.Times.once());
-                    break;
-                }
-                case DiagnosticSeverity.Warning: {
-                    outputChannel.setup((o) => o.appendLine(message)).verifiable(typemoq.Times.once());
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-        }
-
         envHealthCheck
             .setup((e) => e.diagnose(typemoq.It.isAny()))
             .returns(() => Promise.resolve(diagnostics))
@@ -209,15 +216,17 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         envHealthCheck.verifyAll();
         lsNotSupportedCheck.verifyAll();
         pythonInterpreterCheck.verifyAll();
-        outputChannel.verifyAll();
     });
     test('Ensure diagnostics run in foreground and background', async () => {
         const foreGroundService = mock(InvalidPythonInterpreterService);
         const backGroundService = mock(EnvironmentPathVariableDiagnosticsService);
         const svcContainer = mock(ServiceContainer);
+        const workspaceService = mock<IWorkspaceService>();
         const foreGroundDeferred = createDeferred<IDiagnostic[]>();
         const backgroundGroundDeferred = createDeferred<IDiagnostic[]>();
 
+        when(svcContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(workspaceService);
+        when(workspaceService.isTrusted).thenReturn(true);
         when(svcContainer.getAll<IDiagnosticsService>(IDiagnosticsService)).thenReturn([
             instance(foreGroundService),
             instance(backGroundService),
@@ -228,7 +237,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         when(foreGroundService.diagnose(anything())).thenReturn(foreGroundDeferred.promise);
         when(backGroundService.diagnose(anything())).thenReturn(backgroundGroundDeferred.promise);
 
-        const service = new ApplicationDiagnostics(instance(svcContainer), outputChannel.object);
+        const service = new ApplicationDiagnostics(instance(svcContainer));
 
         const promise = service.performPreStartupHealthCheck(undefined);
         const deferred = createDeferredFromPromise(promise);
@@ -237,11 +246,11 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         verify(foreGroundService.runInBackground).atLeast(1);
         verify(backGroundService.runInBackground).atLeast(1);
 
-        assert.equal(deferred.completed, false);
+        assert.strictEqual(deferred.completed, false);
         foreGroundDeferred.resolve([]);
         await sleep(1);
 
-        assert.equal(deferred.completed, true);
+        assert.strictEqual(deferred.completed, true);
 
         backgroundGroundDeferred.resolve([]);
         await sleep(1);

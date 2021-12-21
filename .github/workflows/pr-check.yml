@@ -8,8 +8,8 @@ on:
       - release*
 
 env:
-  NODE_VERSION: 12.15.0
-  PYTHON_VERSION: 3.9
+  NODE_VERSION: 14.18.2
+  PYTHON_VERSION: '3.10' # YML treats 3.10 the number as 3.1, so quotes around 3.10
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
   VSIX_NAME: ms-python-insiders.vsix
@@ -61,7 +61,7 @@ jobs:
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the Unix case.
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
-        python: ['2.7', '3.9']
+        python: ['2.7', '3.x']
         test-suite: [ts-unit, python-unit, venv, single-workspace, debugger, functional]
         exclude:
           # For fast PR turn-around, skip 2.7 under Windows.
@@ -375,13 +375,19 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+            jedils_requirements.txt
+            build/test-requirements.txt
+            build/functional-test-requirements.txt
 
       - name: Install Python requirements
         run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt --no-user
+          python -m pip --disable-pip-version-check install --require-hashes -t ./pythonFiles/lib/python --implementation py --no-deps --upgrade -r requirements.txt --no-user
           # We need to have debugpy so that tests relying on it keep passing, but we don't need install_debugpy's logic in the test phase.
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py --no-deps --upgrade -r ./jedils_requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --implementation py --no-deps --upgrade --pre debugpy
+          python -m pip --disable-pip-version-check install --require-hashes -t ./pythonFiles/lib/jedilsp --implementation py --no-deps --upgrade -r ./jedils_requirements.txt
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt

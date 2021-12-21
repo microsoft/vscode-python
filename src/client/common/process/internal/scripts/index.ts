@@ -41,12 +41,12 @@ export type InterpreterInfoJson = {
     is64Bit: boolean;
 };
 
-export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJson] {
+export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJson | undefined] {
     const script = path.join(SCRIPTS_DIR, 'interpreterInfo.py');
     const args = [script];
 
-    function parse(out: string): InterpreterInfoJson {
-        let json: InterpreterInfoJson;
+    function parse(out: string): InterpreterInfoJson | undefined {
+        let json: InterpreterInfoJson | undefined;
         try {
             json = JSON.parse(out);
         } catch (ex) {

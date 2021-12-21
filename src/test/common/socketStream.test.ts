@@ -44,7 +44,7 @@ suite('SocketStream', () => {
 
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
 
-        assert.equal(stream.ReadByte(), byteValue);
+        assert.strictEqual(stream.ReadByte(), byteValue);
         done();
     });
     test('Read Int32', (done) => {
@@ -54,7 +54,7 @@ suite('SocketStream', () => {
 
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
 
-        assert.equal(stream.ReadInt32(), num);
+        assert.strictEqual(stream.ReadInt32(), num);
         done();
     });
     test('Read Int64', (done) => {
@@ -64,7 +64,7 @@ suite('SocketStream', () => {
 
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
 
-        assert.equal(stream.ReadInt64(), num);
+        assert.strictEqual(stream.ReadInt64(), num);
         done();
     });
     test('Read Ascii String', (done) => {
@@ -74,7 +74,7 @@ suite('SocketStream', () => {
 
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
 
-        assert.equal(stream.ReadString(), message);
+        assert.strictEqual(stream.ReadString(), message);
         done();
     });
     test('Read Unicode String', (done) => {
@@ -88,7 +88,7 @@ suite('SocketStream', () => {
 
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
 
-        assert.equal(stream.ReadString(), message);
+        assert.strictEqual(stream.ReadString(), message);
         done();
     });
     test('Read RollBackTransaction', (done) => {
@@ -103,11 +103,15 @@ suite('SocketStream', () => {
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
 
         stream.BeginTransaction();
-        assert.equal(stream.ReadString(), message, 'First message not read properly');
+        assert.strictEqual(stream.ReadString(), message, 'First message not read properly');
         stream.ReadString();
-        assert.equal(stream.HasInsufficientDataForReading, true, 'Should not have sufficient data for reading');
+        assert.strictEqual(stream.HasInsufficientDataForReading, true, 'Should not have sufficient data for reading');
         stream.RollBackTransaction();
-        assert.equal(stream.ReadString(), message, 'First message not read properly after rolling back transaction');
+        assert.strictEqual(
+            stream.ReadString(),
+            message,
+            'First message not read properly after rolling back transaction',
+        );
         done();
     });
     test('Read EndTransaction', (done) => {
@@ -122,12 +126,12 @@ suite('SocketStream', () => {
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
 
         stream.BeginTransaction();
-        assert.equal(stream.ReadString(), message, 'First message not read properly');
+        assert.strictEqual(stream.ReadString(), message, 'First message not read properly');
         stream.ReadString();
-        assert.equal(stream.HasInsufficientDataForReading, true, 'Should not have sufficient data for reading');
+        assert.strictEqual(stream.HasInsufficientDataForReading, true, 'Should not have sufficient data for reading');
         stream.EndTransaction();
         stream.RollBackTransaction();
-        assert.notEqual(stream.ReadString(), message, 'First message cannot be read after commit transaction');
+        assert.notStrictEqual(stream.ReadString(), message, 'First message cannot be read after commit transaction');
         done();
     });
     test('Write Buffer', (done) => {
@@ -138,7 +142,7 @@ suite('SocketStream', () => {
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
         stream.Write(Buffer.from(message));
 
-        assert.equal(socket.dataWritten, message);
+        assert.strictEqual(socket.dataWritten, message);
         done();
     });
     test('Write Int32', (done) => {
@@ -149,7 +153,7 @@ suite('SocketStream', () => {
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
         stream.WriteInt32(num);
 
-        assert.equal(uint64be.decode(socket.rawDataWritten), num);
+        assert.strictEqual(uint64be.decode(socket.rawDataWritten), num);
         done();
     });
     test('Write Int64', (done) => {
@@ -160,7 +164,7 @@ suite('SocketStream', () => {
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
         stream.WriteInt64(num);
 
-        assert.equal(uint64be.decode(socket.rawDataWritten), num);
+        assert.strictEqual(uint64be.decode(socket.rawDataWritten), num);
         done();
     });
     test('Write Ascii String', (done) => {
@@ -171,7 +175,7 @@ suite('SocketStream', () => {
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
         stream.WriteString(message);
 
-        assert.equal(socket.dataWritten, message);
+        assert.strictEqual(socket.dataWritten, message);
         done();
     });
     test('Write Unicode String', (done) => {
@@ -182,7 +186,7 @@ suite('SocketStream', () => {
         const stream = new SocketStream((socket as any) as net.Socket, buffer);
         stream.WriteString(message);
 
-        assert.equal(socket.dataWritten, message);
+        assert.strictEqual(socket.dataWritten, message);
         done();
     });
 });

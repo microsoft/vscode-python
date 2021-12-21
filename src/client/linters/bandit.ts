@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, OutputChannel, TextDocument } from 'vscode';
+import { CancellationToken, TextDocument } from 'vscode';
 import '../common/extensions';
 import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -20,8 +20,8 @@ export const BANDIT_REGEX =
     '(?<line>\\d+),(?<column>(col)?(\\d+)?),(?<type>\\w+),(?<code>\\w+\\d+):(?<message>.*)\\r?(\\n|$)';
 
 export class Bandit extends BaseLinter {
-    constructor(outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
-        super(Product.bandit, outputChannel, serviceContainer);
+    constructor(serviceContainer: IServiceContainer) {
+        super(Product.bandit, serviceContainer);
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {

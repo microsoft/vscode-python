@@ -6,20 +6,12 @@
 
 import { assert } from 'chai';
 import * as path from 'path';
-
 import rewiremock from 'rewiremock';
 import { SemVer } from 'semver';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import {
-    CancellationTokenSource,
-    Disposable,
-    OutputChannel,
-    ProgressLocation,
-    Uri,
-    WorkspaceConfiguration,
-} from 'vscode';
+import { CancellationTokenSource, Disposable, ProgressLocation, Uri, WorkspaceConfiguration } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
@@ -50,6 +42,7 @@ import { noop } from '../../../client/common/utils/misc';
 import { Architecture } from '../../../client/common/utils/platform';
 import { IComponentAdapter, ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
+import * as logging from '../../../client/logging';
 import { EnvironmentType, ModuleInstallerType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 /* Complex test to ensure we cover all combinations:
@@ -96,16 +89,20 @@ suite('Module Installer', () => {
         }
     }
     let outputChannel: TypeMoq.IMock<IOutputChannel>;
+
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     const pythonPath = path.join(__dirname, 'python');
 
     suite('Method _elevatedInstall()', async () => {
+        let traceLogStub: sinon.SinonStub;
         let installer: TestModuleInstaller;
         const execPath = 'execPath';
         const args = ['1', '2'];
         const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;
         setup(() => {
+            traceLogStub = sinon.stub(logging, 'traceLog');
+
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
             serviceContainer
@@ -117,6 +114,7 @@ suite('Module Installer', () => {
         });
         teardown(() => {
             rewiremock.disable();
+            sinon.restore();
         });
 
         test('Show error message if sudo exec fails with error', async () => {
@@ -132,14 +130,9 @@ suite('Module Installer', () => {
                 .setup((a) => a.showErrorMessage(error))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
-            outputChannel
-
-                .setup((o) => o.appendLine(`[Elevated] ${command}`))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
             installer.elevatedInstall(execPath, args);
             appShell.verifyAll();
-            outputChannel.verifyAll();
+            traceLogStub.calledOnceWithExactly(`[Elevated] ${command}`);
         });
 
         test('Show stdout if sudo exec succeeds', async () => {
@@ -155,17 +148,9 @@ suite('Module Installer', () => {
                 .setup((o) => o.show())
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
-            outputChannel
-
-                .setup((o) => o.appendLine(`[Elevated] ${command}`))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
-            outputChannel
-                .setup((o) => o.append(stdout))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
             installer.elevatedInstall(execPath, args);
             outputChannel.verifyAll();
+            traceLogStub.calledOnceWithExactly(`[Elevated] ${command}`);
         });
 
         test('Show stderr if sudo exec gives a warning with stderr', async () => {
@@ -178,21 +163,12 @@ suite('Module Installer', () => {
             rewiremock.enable();
             rewiremock('sudo-prompt').with(sudoPromptMock);
             outputChannel
-
-                .setup((o) => o.appendLine(`[Elevated] ${command}`))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
-            outputChannel
                 .setup((o) => o.show())
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
-            outputChannel
-
-                .setup((o) => o.append(`Warning: ${stderr}`))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
             installer.elevatedInstall(execPath, args);
-            outputChannel.verifyAll();
+            traceLogStub.calledOnceWithExactly(`[Elevated] ${command}`);
+            traceLogStub.calledOnceWithExactly(`Warning: ${stderr}`);
         });
     });
 
@@ -722,9 +698,8 @@ function getModuleNamesForTesting(): { name: string; value: Product; moduleName:
         .map((product) => {
             let moduleName = '';
             const mockSvc = TypeMoq.Mock.ofType<IServiceContainer>().object;
-            const mockOutChnl = TypeMoq.Mock.ofType<OutputChannel>().object;
             try {
-                const prodInstaller = new ProductInstaller(mockSvc, mockOutChnl);
+                const prodInstaller = new ProductInstaller(mockSvc);
                 moduleName = prodInstaller.translateProductToModuleName(product.value);
                 return { name: product.name, value: product.value, moduleName };
             } catch {

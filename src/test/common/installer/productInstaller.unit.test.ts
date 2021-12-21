@@ -17,13 +17,7 @@ import {
     IProductPathService,
     IProductService,
 } from '../../../client/common/installer/types';
-import {
-    InstallerResponse,
-    IOutputChannel,
-    IPersistentStateFactory,
-    Product,
-    ProductType,
-} from '../../../client/common/types';
+import { InstallerResponse, IPersistentStateFactory, Product, ProductType } from '../../../client/common/types';
 import { Common, Products } from '../../../client/common/utils/localize';
 import { Architecture } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -40,7 +34,6 @@ suite('DataScienceInstaller install', async () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let installationChannelManager: TypeMoq.IMock<IInstallationChannelManager>;
     let dataScienceInstaller: DataScienceInstaller;
-    let outputChannel: TypeMoq.IMock<IOutputChannel>;
     let appShell: TypeMoq.IMock<IApplicationShell>;
 
     const interpreterPath = 'path/to/interpreter';
@@ -48,7 +41,6 @@ suite('DataScienceInstaller install', async () => {
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         installationChannelManager = TypeMoq.Mock.ofType<IInstallationChannelManager>();
-        outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(undefined));
         serviceContainer
@@ -57,7 +49,7 @@ suite('DataScienceInstaller install', async () => {
 
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
 
-        dataScienceInstaller = new AlwaysInstalledDataScienceInstaller(serviceContainer.object, outputChannel.object);
+        dataScienceInstaller = new AlwaysInstalledDataScienceInstaller(serviceContainer.object);
     });
 
     teardown(() => {
@@ -319,7 +311,7 @@ suite('Formatter installer', async () => {
                 updateValue: () => Promise.resolve(),
             }));
 
-        const formatterInstaller = new FormatterInstaller(serviceContainer.object, {} as IOutputChannel);
+        const formatterInstaller = new FormatterInstaller(serviceContainer.object);
         const result = await formatterInstaller.promptToInstall(Product.black);
 
         appShell.verifyAll();
@@ -350,7 +342,7 @@ suite('Formatter installer', async () => {
                 updateValue: () => Promise.resolve(),
             }));
 
-        const formatterInstaller = new FormatterInstaller(serviceContainer.object, {} as IOutputChannel);
+        const formatterInstaller = new FormatterInstaller(serviceContainer.object);
         const result = await formatterInstaller.promptToInstall(Product.autopep8);
 
         appShell.verifyAll();
@@ -381,7 +373,7 @@ suite('Formatter installer', async () => {
                 updateValue: () => Promise.resolve(),
             }));
 
-        const formatterInstaller = new FormatterInstaller(serviceContainer.object, {} as IOutputChannel);
+        const formatterInstaller = new FormatterInstaller(serviceContainer.object);
         const result = await formatterInstaller.promptToInstall(Product.yapf);
 
         appShell.verifyAll();
@@ -414,7 +406,7 @@ suite('Formatter installer', async () => {
                 updateValue: () => Promise.resolve(),
             }));
 
-        const formatterInstaller = new FormatterInstaller(serviceContainer.object, {} as IOutputChannel);
+        const formatterInstaller = new FormatterInstaller(serviceContainer.object);
         await formatterInstaller.promptToInstall(Product.black);
 
         appShell.verifyAll();
@@ -440,7 +432,7 @@ suite('Formatter installer', async () => {
                 updateValue: () => Promise.resolve(),
             }));
 
-        const formatterInstaller = new FormatterInstaller(serviceContainer.object, {} as IOutputChannel);
+        const formatterInstaller = new FormatterInstaller(serviceContainer.object);
         const result = await formatterInstaller.promptToInstall(Product.black);
 
         appShell.verifyAll();
@@ -475,7 +467,7 @@ suite('Formatter installer', async () => {
                 },
             }));
 
-        const formatterInstaller = new FormatterInstaller(serviceContainer.object, {} as IOutputChannel);
+        const formatterInstaller = new FormatterInstaller(serviceContainer.object);
         const result = await formatterInstaller.promptToInstall(Product.black);
         const resultTwo = await formatterInstaller.promptToInstall(Product.black);
 

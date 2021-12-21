@@ -64,16 +64,18 @@ function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): Inter
  * Collect full interpreter information from the given Python executable.
  *
  * @param python - the information to use when running Python
- * @param shellExec - the function to use to exec Python
- * @param logger - if provided, used to log failures or other info
+ * @param timeout - any specific timeouts to use for getting info.
  */
-export async function getInterpreterInfo(python: PythonExecInfo): Promise<InterpreterInformation | undefined> {
+export async function getInterpreterInfo(
+    python: PythonExecInfo,
+    timeout?: number,
+): Promise<InterpreterInformation | undefined> {
     const [args, parse] = getInterpreterInfoCommand();
     const info = copyPythonExecInfo(python, args);
     const argv = [info.command, ...info.args];
 
     // Concat these together to make a set of quoted strings
-    const quoted = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c}"`), '');
+    const quoted = argv.reduce((p, c) => (p ? `${p} ${c.toCommandArgument()}` : `${c.toCommandArgument()}`), '');
 
     // Try shell execing the command, followed by the arguments. This will make node kill the process if it
     // takes too long.
@@ -81,12 +83,16 @@ export async function getInterpreterInfo(python: PythonExecInfo): Promise<Interp
     // See these two bugs:
     // https://github.com/microsoft/vscode-python/issues/7569
     // https://github.com/microsoft/vscode-python/issues/7760
-    const result = await shellExecute(quoted, { timeout: 15000 });
+    const result = await shellExecute(quoted, { timeout: timeout ?? 15000 });
     if (result.stderr) {
-        traceError(`Failed to parse interpreter information for ${argv} stderr: ${result.stderr}`);
-        return undefined;
+        traceError(
+            `Stderr when executing script with ${argv} stderr: ${result.stderr}, still attempting to parse output`,
+        );
     }
     const json = parse(result.stdout);
+    if (!json) {
+        return undefined;
+    }
     traceInfo(`Found interpreter for ${argv}`);
     return extractInterpreterInfo(python.pythonExecutable, json);
 }

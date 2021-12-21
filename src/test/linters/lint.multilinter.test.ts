@@ -25,8 +25,19 @@ class MockPythonToolExecService extends PythonToolExecutionService {
     public flake8Msg =
         '1,1,W,W391:blank line at end of file\ns:142:13), <anonymous>:1\n1,7,E,E999:SyntaxError: invalid syntax\n';
 
-    public pylintMsg =
-        "************* Module print\ns:142:13), <anonymous>:1\n1,0,error,syntax-error:Missing parentheses in call to 'print'. Did you mean print(x)? (<unknown>, line 1)\n";
+    public pylintMsg = `[
+    {
+        "type": "error",
+        "module": "print",
+        "obj": "",
+        "line": 1,
+        "column": 0,
+        "path": "print.py",
+        "symbol": "syntax-error",
+        "message": "Missing parentheses in call to 'print'. Did you mean print(x)? (<unknown>, line 1)",
+        "message-id": "E0001"
+    }
+]`;
 
     // Depending on moduleName being exec'd, return the appropriate sample.
     public async exec(
@@ -105,11 +116,11 @@ suite('Linting - Multiple Linters Enabled Test', () => {
         const commands = api.serviceContainer.get<ICommandManager>(ICommandManager);
 
         const collection = (await commands.executeCommand('python.runLinting')) as DiagnosticCollection;
-        assert.notEqual(collection, undefined, 'python.runLinting did not return valid diagnostics collection.');
+        assert.notStrictEqual(collection, undefined, 'python.runLinting did not return valid diagnostics collection.');
 
         const messages = collection!.get(document.uri);
-        assert.notEqual(messages!.length, 0, 'No diagnostic messages.');
-        assert.notEqual(messages!.filter((x) => x.source === 'pylint').length, 0, 'No pylint messages.');
-        assert.notEqual(messages!.filter((x) => x.source === 'flake8').length, 0, 'No flake8 messages.');
+        assert.notStrictEqual(messages!.length, 0, 'No diagnostic messages.');
+        assert.notStrictEqual(messages!.filter((x) => x.source === 'pylint').length, 0, 'No pylint messages.');
+        assert.notStrictEqual(messages!.filter((x) => x.source === 'flake8').length, 0, 'No flake8 messages.');
     });
 });

@@ -6,7 +6,10 @@ import { createDeferred, Deferred } from '../../../common/utils/async';
 import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../../common/utils/workerPool';
 import { getInterpreterInfo, InterpreterInformation } from './interpreter';
 import { buildPythonExecInfo } from '../../exec';
-import { traceVerbose } from '../../../logging';
+import { traceError, traceInfo } from '../../../logging';
+import { Conda, CONDA_ACTIVATION_TIMEOUT, isCondaEnvironment } from '../../common/environmentManagers/conda';
+import { PythonEnvInfo, PythonEnvKind } from '.';
+import { normCasePath } from '../../common/externalDependencies';
 
 export enum EnvironmentInfoServiceQueuePriority {
     Default,
@@ -15,21 +18,31 @@ export enum EnvironmentInfoServiceQueuePriority {
 
 export interface IEnvironmentInfoService {
     getEnvironmentInfo(
-        interpreterPath: string,
+        env: PythonEnvInfo,
         priority?: EnvironmentInfoServiceQueuePriority,
     ): Promise<InterpreterInformation | undefined>;
-    isInfoProvided(interpreterPath: string): boolean;
 }
 
-async function buildEnvironmentInfo(interpreterPath: string): Promise<InterpreterInformation | undefined> {
-    const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(interpreterPath)).catch((reason) => {
-        traceVerbose(reason);
-        return undefined;
-    });
+async function buildEnvironmentInfo(env: PythonEnvInfo): Promise<InterpreterInformation | undefined> {
+    const python = [env.executable.filename];
+    const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(python, undefined, env.executable.filename));
+    return interpreterInfo;
+}
 
-    if (interpreterInfo === undefined || interpreterInfo.version === undefined) {
+async function buildEnvironmentInfoUsingCondaRun(env: PythonEnvInfo): Promise<InterpreterInformation | undefined> {
+    const conda = await Conda.getConda();
+    const condaEnv = await conda?.getCondaEnvironment(env.executable.filename);
+    if (!condaEnv) {
         return undefined;
     }
+    const python = await conda?.getRunPythonArgs(condaEnv);
+    if (!python) {
+        return undefined;
+    }
+    const interpreterInfo = await getInterpreterInfo(
+        buildPythonExecInfo(python, undefined, env.executable.filename),
+        CONDA_ACTIVATION_TIMEOUT,
+    );
     return interpreterInfo;
 }
 
@@ -43,47 +56,96 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
         Deferred<InterpreterInformation>
     >();
 
-    private workerPool?: IWorkerPool<string, InterpreterInformation | undefined>;
+    private workerPool?: IWorkerPool<PythonEnvInfo, InterpreterInformation | undefined>;
+
+    private condaRunWorkerPool?: IWorkerPool<PythonEnvInfo, InterpreterInformation | undefined>;
 
     public dispose(): void {
         if (this.workerPool !== undefined) {
             this.workerPool.stop();
             this.workerPool = undefined;
         }
+        if (this.condaRunWorkerPool !== undefined) {
+            this.condaRunWorkerPool.stop();
+            this.condaRunWorkerPool = undefined;
+        }
     }
 
     public async getEnvironmentInfo(
-        interpreterPath: string,
+        env: PythonEnvInfo,
         priority?: EnvironmentInfoServiceQueuePriority,
     ): Promise<InterpreterInformation | undefined> {
-        const result = this.cache.get(interpreterPath);
+        const interpreterPath = env.executable.filename;
+        const result = this.cache.get(normCasePath(interpreterPath));
         if (result !== undefined) {
-            // Another call for this environment has already been made, return its result
+            // Another call for this environment has already been made, return its result.
             return result.promise;
         }
 
+        const deferred = createDeferred<InterpreterInformation>();
+        this.cache.set(normCasePath(interpreterPath), deferred);
+        this._getEnvironmentInfo(env, priority)
+            .then((r) => {
+                deferred.resolve(r);
+            })
+            .catch((ex) => {
+                deferred.reject(ex);
+            });
+        return deferred.promise;
+    }
+
+    public async _getEnvironmentInfo(
+        env: PythonEnvInfo,
+        priority?: EnvironmentInfoServiceQueuePriority,
+    ): Promise<InterpreterInformation | undefined> {
         if (this.workerPool === undefined) {
-            this.workerPool = createRunningWorkerPool<string, InterpreterInformation | undefined>(buildEnvironmentInfo);
+            this.workerPool = createRunningWorkerPool<PythonEnvInfo, InterpreterInformation | undefined>(
+                buildEnvironmentInfo,
+            );
         }
 
-        const deferred = createDeferred<InterpreterInformation>();
-        this.cache.set(interpreterPath, deferred);
-        return (priority === EnvironmentInfoServiceQueuePriority.High
-            ? this.workerPool.addToQueue(interpreterPath, QueuePosition.Front)
-            : this.workerPool.addToQueue(interpreterPath, QueuePosition.Back)
-        ).then((r) => {
-            deferred.resolve(r);
-            if (r === undefined) {
-                this.cache.delete(interpreterPath);
-            }
-            return r;
+        let reason: unknown;
+        let r = await addToQueue(this.workerPool, env, priority).catch((err) => {
+            reason = err;
+            return undefined;
         });
-    }
 
-    public isInfoProvided(interpreterPath: string): boolean {
-        const result = this.cache.get(interpreterPath);
-        return !!(result && result.completed);
+        if (r === undefined) {
+            // Even though env kind is not conda, it can still be a conda environment
+            // as complete env info may not be available at this time.
+            const isCondaEnv = env.kind === PythonEnvKind.Conda || (await isCondaEnvironment(env.executable.filename));
+            if (isCondaEnv) {
+                traceInfo(
+                    `Validating ${env.executable.filename} normally failed with error, falling back to using conda run: (${reason})`,
+                );
+                if (this.condaRunWorkerPool === undefined) {
+                    // Create a separate queue for validation using conda, so getting environment info for
+                    // other types of environment aren't blocked on conda.
+                    this.condaRunWorkerPool = createRunningWorkerPool<
+                        PythonEnvInfo,
+                        InterpreterInformation | undefined
+                    >(buildEnvironmentInfoUsingCondaRun);
+                }
+                r = await addToQueue(this.condaRunWorkerPool, env, priority).catch((err) => {
+                    traceError(err);
+                    return undefined;
+                });
+            } else if (reason) {
+                traceError(reason);
+            }
+        }
+        return r;
     }
+}
+
+function addToQueue(
+    workerPool: IWorkerPool<PythonEnvInfo, InterpreterInformation | undefined>,
+    env: PythonEnvInfo,
+    priority: EnvironmentInfoServiceQueuePriority | undefined,
+) {
+    return priority === EnvironmentInfoServiceQueuePriority.High
+        ? workerPool.addToQueue(env, QueuePosition.Front)
+        : workerPool.addToQueue(env, QueuePosition.Back);
 }
 
 let envInfoService: IEnvironmentInfoService | undefined;

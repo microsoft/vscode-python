@@ -9,7 +9,6 @@ import * as TypeMoq from 'typemoq';
 import {
     CancellationTokenSource,
     DiagnosticSeverity,
-    OutputChannel,
     TextDocument,
     Uri,
     WorkspaceConfiguration,
@@ -92,8 +91,7 @@ suite('Linting - Pylint', () => {
 
     test('Negative column numbers should be treated 0', async () => {
         const fileFolder = '/user/a/b/c';
-        const outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
-        const pylinter = new Pylint(outputChannel.object, serviceContainer);
+        const pylinter = new Pylint(serviceContainer);
 
         const document = TypeMoq.Mock.ofType<TextDocument>();
         document.setup((x) => x.uri).returns(() => Uri.file(path.join(fileFolder, 'test.py')));
@@ -104,10 +102,32 @@ suite('Linting - Pylint', () => {
         workspace.setup((x) => x.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => wsf.object);
 
         const linterOutput = [
-            'No config file found, using default configuration',
-            '************* Module test',
-            '1,1,convention,C0111:Missing module docstring',
-            '3,-1,error,E1305:Too many arguments for format string',
+            '[',
+            '    {',
+            '        "type": "convention",',
+            '        "module": "test",',
+            '        "obj": "",',
+            '        "line": 1,',
+            '        "column": 1,',
+            `        "path": "${fileFolder}/test.py",`,
+            '        "symbol": "missing-module-docstring",',
+            '        "message": "Missing module docstring",',
+            '        "message-id": "C0114",',
+            '        "endLine": null,',
+            '        "endColumn": null',
+            '    },',
+            '    {',
+            '        "type": "error",',
+            '        "module": "test",',
+            '        "obj": "",',
+            '        "line": 3,',
+            '        "column": -1,',
+            `        "path": "${fileFolder}/test.py",`,
+            '        "symbol": "too-many-format-args",',
+            '        "message": "Too many arguments for format string",',
+            '        "message-id": "E1305"',
+            '     }',
+            ']',
         ].join(os.EOL);
         execService
             .setup((x) => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
