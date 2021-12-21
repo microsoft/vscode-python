@@ -226,7 +226,6 @@ export class Conda {
     constructor(readonly command: string) {}
 
     public static async getConda(): Promise<Conda | undefined> {
-        traceVerbose(`Searching for conda.`);
         if (this.condaPromise === undefined || isTestExecution()) {
             this.condaPromise = Conda.locate();
         }
@@ -240,6 +239,7 @@ export class Conda {
      * @return A Conda instance corresponding to the binary, if successful; otherwise, undefined.
      */
     private static async locate(): Promise<Conda | undefined> {
+        traceVerbose(`Searching for conda.`);
         const home = getUserHomeDir();
         const suffix = getOSType() === OSType.Windows ? 'Scripts\\conda.exe' : 'bin/conda';
 
@@ -338,11 +338,12 @@ export class Conda {
                 // Failed to spawn because the binary doesn't exist or isn't on PATH, or the current
                 // user doesn't have execute permissions for it, or this conda couldn't handle command
                 // line arguments that we passed (indicating an old version that we do not support).
-                traceVerbose(ex);
+                traceVerbose('Failed to spawn conda binary', condaPath, ex);
             }
         }
 
         // Didn't find anything.
+        traceVerbose('No conda binary found');
         return undefined;
     }
 
