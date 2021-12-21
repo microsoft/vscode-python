@@ -6,7 +6,7 @@ import { createDeferred, Deferred } from '../../../common/utils/async';
 import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../../common/utils/workerPool';
 import { getInterpreterInfo, InterpreterInformation } from './interpreter';
 import { buildPythonExecInfo } from '../../exec';
-import { traceError } from '../../../logging';
+import { traceError, traceInfo } from '../../../logging';
 import { Conda, CONDA_RUN_TIMEOUT, isCondaEnvironment } from '../../common/environmentManagers/conda';
 import { PythonEnvInfo, PythonEnvKind } from '.';
 import { normCasePath } from '../../common/externalDependencies';
@@ -25,12 +25,7 @@ export interface IEnvironmentInfoService {
 
 async function buildEnvironmentInfo(env: PythonEnvInfo): Promise<InterpreterInformation | undefined> {
     const python = [env.executable.filename];
-    const interpreterInfo = await getInterpreterInfo(
-        buildPythonExecInfo(python, undefined, env.executable.filename),
-    ).catch((reason) => {
-        traceError(reason);
-        return undefined;
-    });
+    const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(python, undefined, env.executable.filename));
     return interpreterInfo;
 }
 
@@ -47,10 +42,7 @@ async function buildEnvironmentInfoUsingCondaRun(env: PythonEnvInfo): Promise<In
     const interpreterInfo = await getInterpreterInfo(
         buildPythonExecInfo(python, undefined, env.executable.filename),
         CONDA_RUN_TIMEOUT,
-    ).catch((reason) => {
-        traceError(reason);
-        return undefined;
-    });
+    );
     return interpreterInfo;
 }
 
@@ -112,15 +104,20 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
             );
         }
 
-        let r = await (priority === EnvironmentInfoServiceQueuePriority.High
-            ? this.workerPool.addToQueue(env, QueuePosition.Front)
-            : this.workerPool.addToQueue(env, QueuePosition.Back));
+        let reason: unknown;
+        let r = await addToQueue(this.workerPool, env, priority).catch((err) => {
+            reason = err;
+            return undefined;
+        });
 
         if (r === undefined) {
             // Even though env kind is not conda, it can still be a conda environment
             // as complete env info may not be available at this time.
             const isCondaEnv = env.kind === PythonEnvKind.Conda || (await isCondaEnvironment(env.executable.filename));
             if (isCondaEnv) {
+                traceInfo(
+                    `Validating ${env.executable.filename} normally failed with error, falling back to using conda run: (${reason})`,
+                );
                 if (this.condaRunWorkerPool === undefined) {
                     // Create a separate queue for validation using conda, so getting environment info for
                     // other types of environment aren't blocked on conda.
@@ -129,13 +126,26 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
                         InterpreterInformation | undefined
                     >(buildEnvironmentInfoUsingCondaRun);
                 }
-                r = await (priority === EnvironmentInfoServiceQueuePriority.High
-                    ? this.condaRunWorkerPool.addToQueue(env, QueuePosition.Front)
-                    : this.condaRunWorkerPool.addToQueue(env, QueuePosition.Back));
+                r = await addToQueue(this.condaRunWorkerPool, env, priority).catch((err) => {
+                    traceError(err);
+                    return undefined;
+                });
+            } else if (reason) {
+                traceError(reason);
             }
         }
         return r;
     }
+}
+
+function addToQueue(
+    workerPool: IWorkerPool<PythonEnvInfo, InterpreterInformation | undefined>,
+    env: PythonEnvInfo,
+    priority: EnvironmentInfoServiceQueuePriority | undefined,
+) {
+    return priority === EnvironmentInfoServiceQueuePriority.High
+        ? workerPool.addToQueue(env, QueuePosition.Front)
+        : workerPool.addToQueue(env, QueuePosition.Back);
 }
 
 let envInfoService: IEnvironmentInfoService | undefined;
