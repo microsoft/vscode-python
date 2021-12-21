@@ -405,7 +405,7 @@ export class Conda {
         return envList.find((e) => isParentPath(executable, e.prefix));
     }
 
-    public async getRunArgs(env: CondaEnvInfo): Promise<string[] | undefined> {
+    public async getRunPythonArgs(env: CondaEnvInfo): Promise<string[] | undefined> {
         const condaVersion = await this.getCondaVersion();
         if (condaVersion && lt(condaVersion, CONDA_RUN_VERSION)) {
             return undefined;
@@ -416,7 +416,7 @@ export class Conda {
         } else {
             args.push('-p', env.prefix);
         }
-        return [this.command, 'run', ...args, '--no-capture-output'];
+        return [this.command, 'run', ...args, '--no-capture-output', 'python', CONDA_RUN_SCRIPT];
     }
 
     /**

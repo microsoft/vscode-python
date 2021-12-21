@@ -10,7 +10,11 @@ import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import * as windowsUtils from '../../../../client/pythonEnvironments/common/windowsUtils';
-import { Conda, CondaInfo } from '../../../../client/pythonEnvironments/common/environmentManagers/conda';
+import {
+    Conda,
+    CondaInfo,
+    CONDA_RUN_SCRIPT,
+} from '../../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { CondaEnvironmentLocator } from '../../../../client/pythonEnvironments/base/locators/lowLevel/condaLocator';
 import { createBasicEnv } from '../../base/common';
 import { assertBasicEnvsEqual } from '../../base/locators/envTestUtils';
@@ -467,7 +471,7 @@ suite('Conda and its environments are located correctly', () => {
             conda: JSON.stringify(condaInfo('4.8.0')),
         };
         const conda = await Conda.getConda();
-        const args = await conda?.getRunArgs({ name: 'envName', prefix: 'envPrefix' });
+        const args = await conda?.getRunPythonArgs({ name: 'envName', prefix: 'envPrefix' });
         expect(args).to.equal(undefined);
     });
 
@@ -476,18 +480,18 @@ suite('Conda and its environments are located correctly', () => {
             conda: JSON.stringify(condaInfo('4.9.0')),
         };
         const conda = await Conda.getConda();
-        let args = await conda?.getRunArgs({ name: 'envName', prefix: 'envPrefix' });
+        let args = await conda?.getRunPythonArgs({ name: 'envName', prefix: 'envPrefix' });
         expect(args).to.not.equal(undefined);
         assert.deepStrictEqual(
             args,
-            ['conda', 'run', '-n', 'envName', '--no-capture-output'],
+            ['conda', 'run', '-n', 'envName', '--no-capture-output', 'python', CONDA_RUN_SCRIPT],
             'Incorrect args for case 1',
         );
 
-        args = await conda?.getRunArgs({ name: '', prefix: 'envPrefix' });
+        args = await conda?.getRunPythonArgs({ name: '', prefix: 'envPrefix' });
         assert.deepStrictEqual(
             args,
-            ['conda', 'run', '-p', 'envPrefix', '--no-capture-output'],
+            ['conda', 'run', '-p', 'envPrefix', '--no-capture-output', 'python', CONDA_RUN_SCRIPT],
             'Incorrect args for case 2',
         );
     });
