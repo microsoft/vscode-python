@@ -130,10 +130,11 @@ suite('ProcessService Observable', () => {
         expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 
-    test('exec should stream stdout and stderr separately', async function () {
+    test('exec should stream stdout and stderr separately and filter output using conda related markers', async function () {
         this.timeout(7000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
+            'print(">>>CONDA-RUN-OUTPUT")',
             'import sys',
             'import time',
             'print("1")',
@@ -153,6 +154,7 @@ suite('ProcessService Observable', () => {
             'time.sleep(1)',
             'sys.stderr.write("c")',
             'sys.stderr.flush()',
+            'print("<<<CONDA-RUN-OUTPUT")',
         ];
         const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')]);
         const expectedStdout = ['1', '2', '3'];
@@ -228,10 +230,12 @@ suite('ProcessService Observable', () => {
         expect(result.stdout).equals('', 'stdout is invalid');
         expect(result.stderr).equals(undefined, 'stderr is invalid');
     });
-    test('shellExec should be able to run python too', async () => {
+    test('shellExec should be able to run python and filter output using conda related markers', async () => {
         const procService = new ProcessService(new BufferDecoder());
         const printOutput = '1234';
-        const result = await procService.shellExec(`"${pythonPath}" -c "print('${printOutput}')"`);
+        const result = await procService.shellExec(
+            `"${pythonPath}" -c "print('>>>CONDA-RUN-OUTPUT');print('${printOutput}');print('<<<CONDA-RUN-OUTPUT')"`,
+        );
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         expect(result.stderr).to.equal(undefined, 'stderr not empty');

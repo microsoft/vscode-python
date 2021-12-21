@@ -5,7 +5,7 @@ autopep8
 bandit ; python_version >= '3.5'
 black ; python_version > '2.7'
 yapf
-pylint
+pylint ; python_version > '2.7'
 pycodestyle
 pydocstyle
 prospector ; python_version > '2.7'

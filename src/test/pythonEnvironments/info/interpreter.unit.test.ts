@@ -46,9 +46,7 @@ suite('getInterpreterInfo()', () => {
             .setup((d) => d.shellExec(cmd, 15000))
             .returns(() =>
                 Promise.resolve({
-                    stdout: `>>>JSON
-${JSON.stringify(json)}
-<<<JSON`,
+                    stdout: JSON.stringify(json),
                 }),
             );
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
@@ -72,9 +70,7 @@ ${JSON.stringify(json)}
             .setup((d) => d.shellExec(cmd, 15000))
             .returns(() =>
                 Promise.resolve({
-                    stdout: `>>>JSON
-${JSON.stringify(json)}
-<<<JSON`,
+                    stdout: JSON.stringify(json),
                 }),
             );
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
@@ -98,9 +94,7 @@ ${JSON.stringify(json)}
             .setup((d) => d.shellExec(cmd, 15000))
             .returns(() =>
                 Promise.resolve({
-                    stdout: `>>>JSON
-${JSON.stringify(json)}
-<<<JSON`,
+                    stdout: JSON.stringify(json),
                 }),
             );
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
@@ -129,9 +123,7 @@ ${JSON.stringify(json)}
             .setup((d) => d.shellExec(TypeMoqIt.isAny(), TypeMoqIt.isAny()))
             .returns(() =>
                 Promise.resolve({
-                    stdout: `>>>JSON
-${JSON.stringify(json)}
-<<<JSON`,
+                    stdout: JSON.stringify(json),
                 }),
             );
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
@@ -161,9 +153,7 @@ ${JSON.stringify(json)}
             .setup((d) => d.shellExec(TypeMoqIt.isAny(), TypeMoqIt.isAny()))
             .returns(() =>
                 Promise.resolve({
-                    stdout: `>>>JSON
-${JSON.stringify(json)}
-<<<JSON`,
+                    stdout: JSON.stringify(json),
                 }),
             );
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
@@ -193,9 +183,7 @@ ${JSON.stringify(json)}
             .setup((d) => d.shellExec(TypeMoqIt.isAny(), TypeMoqIt.isAny()))
             .returns(() =>
                 Promise.resolve({
-                    stdout: `>>>JSON
-${JSON.stringify(json)}
-<<<JSON`,
+                    stdout: JSON.stringify(json),
                 }),
             );
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);

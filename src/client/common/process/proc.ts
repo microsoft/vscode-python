@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { EventEmitter } from 'events';
+import { traceError } from '../../logging';
 
 import { IDisposable } from '../types';
 import { EnvironmentVariables } from '../variables/types';
@@ -59,6 +60,16 @@ export class ProcessService extends EventEmitter implements IProcessService {
 
     public shellExec(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
         this.emit('exec', command, undefined, options);
-        return shellExec(command, options, this.env, this.processesToKill);
+        const disposables = new Set<IDisposable>();
+        return shellExec(command, options, this.env, disposables).finally(() => {
+            // Ensure the process we started is cleaned up.
+            disposables.forEach((p) => {
+                try {
+                    p.dispose();
+                } catch {
+                    traceError(`Unable to kill process for ${command}`);
+                }
+            });
+        });
     }
 }

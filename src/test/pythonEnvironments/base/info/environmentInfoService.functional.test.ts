@@ -18,7 +18,6 @@ import {
     getEnvironmentInfoService,
 } from '../../../../client/pythonEnvironments/base/info/environmentInfoService';
 import { buildEnvInfo } from '../../../../client/pythonEnvironments/base/info/env';
-import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { Conda, CONDA_RUN_VERSION } from '../../../../client/pythonEnvironments/common/environmentManagers/conda';
 
 suite('Environment Info Service', () => {
@@ -49,7 +48,7 @@ suite('Environment Info Service', () => {
             new Promise<ExecutionResult<string>>((resolve) => {
                 resolve({
                     stdout:
-                        'SomeGarbage>>>JSON\n{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "sysVersion": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}\n<<<JSON_SomeGarbage',
+                        '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "sysVersion": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
                     stderr: 'Some std error', // This should be ignored.
                 });
             }),
@@ -109,46 +108,5 @@ suite('Environment Info Service', () => {
             assert.deepEqual(r, expected);
         });
         assert.ok(stubShellExec.calledOnce);
-    });
-
-    test('isInfoProvided() returns true for items already processed', async () => {
-        const envService = getEnvironmentInfoService(disposables);
-        let result: boolean;
-        const promises: Promise<InterpreterInformation | undefined>[] = [];
-        const path1 = 'any-path1';
-        const path2 = 'any-path2';
-
-        promises.push(envService.getEnvironmentInfo(buildEnvInfo({ executable: path1 })));
-        promises.push(envService.getEnvironmentInfo(buildEnvInfo({ executable: path2 })));
-
-        await Promise.all(promises);
-        result = envService.isInfoProvided(path1);
-        assert.strictEqual(result, true);
-        result = envService.isInfoProvided(path2);
-        assert.strictEqual(result, true);
-    });
-
-    test('isInfoProvided() returns false otherwise', async () => {
-        const envService = getEnvironmentInfoService(disposables);
-        const promises: Promise<InterpreterInformation | undefined>[] = [];
-        const path1 = 'any-path1';
-        const path2 = 'any-path2';
-
-        promises.push(envService.getEnvironmentInfo(buildEnvInfo({ executable: path1 })));
-        promises.push(envService.getEnvironmentInfo(buildEnvInfo({ executable: path2 })));
-
-        let result = envService.isInfoProvided(path1);
-        assert.strictEqual(result, false);
-        result = envService.isInfoProvided(path2);
-        assert.strictEqual(result, false);
-        result = envService.isInfoProvided('some-random-path');
-        assert.strictEqual(result, false);
-    });
-
-    test('Returns expected item if interpreter type is conda', async () => {
-        const envService = getEnvironmentInfoService(disposables);
-        const path = `any-path`;
-        const info = await envService.getEnvironmentInfo(buildEnvInfo({ executable: path, kind: PythonEnvKind.Conda }));
-        assert.deepEqual(info, createExpectedEnvInfo(path));
     });
 });
