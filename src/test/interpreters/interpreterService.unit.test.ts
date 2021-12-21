@@ -10,13 +10,11 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Disposable, TextDocument, TextEditor, Uri, WorkspaceConfiguration } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
-import { DeprecatePythonPath } from '../../client/common/experiments/groups';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IInterpreterPathService,
     InterpreterConfigurationScope,
     IPersistentStateFactory,
@@ -54,7 +52,6 @@ suite('Interpreters service', () => {
     let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let interpreterPathService: TypeMoq.IMock<IInterpreterPathService>;
-    let experimentService: TypeMoq.IMock<IExperimentService>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
 
     function setupSuite() {
@@ -62,7 +59,6 @@ suite('Interpreters service', () => {
         serviceManager = new ServiceManager(cont);
         serviceContainer = new ServiceContainer(cont);
 
-        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
         interpreterPathService = TypeMoq.Mock.ofType<IInterpreterPathService>();
         updater = TypeMoq.Mock.ofType<IPythonPathUpdaterServiceManager>();
         pyenvs = TypeMoq.Mock.ofType<IComponentAdapter>();
@@ -103,7 +99,6 @@ suite('Interpreters service', () => {
         );
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fileSystem.object);
-        serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, experimentService.object);
         serviceManager.addSingletonInstance<IInterpreterPathService>(
             IInterpreterPathService,
             interpreterPathService.object,
@@ -153,7 +148,6 @@ suite('Interpreters service', () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
-        experimentService.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
         workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
         workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
         let activeTextEditorChangeHandler: (e: TextEditor | undefined) => any | undefined;
@@ -180,7 +174,6 @@ suite('Interpreters service', () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
-        experimentService.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
         workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
         workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
         let activeTextEditorChangeHandler: (e?: TextEditor | undefined) => any | undefined;
@@ -202,7 +195,6 @@ suite('Interpreters service', () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
-        experimentService.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
         workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
         workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
         let interpreterPathServiceHandler: (e: InterpreterConfigurationScope) => any | undefined = () => 0;

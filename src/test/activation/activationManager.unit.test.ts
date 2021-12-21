@@ -16,7 +16,6 @@ import { ActiveResourceService } from '../../client/common/application/activeRes
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
-import { DeprecatePythonPath } from '../../client/common/experiments/groups';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -342,7 +341,6 @@ suite('Activation Manager', () => {
             when(activationService1.activate(resource)).thenResolve();
             when(activationService2.activate(resource)).thenResolve();
 
-            when(experiments.inExperimentSync(DeprecatePythonPath.experiment)).thenReturn(true);
             interpreterPathService
                 .setup((i) => i.copyOldInterpreterStorageValuesToNew(resource))
                 .returns(() => Promise.resolve())

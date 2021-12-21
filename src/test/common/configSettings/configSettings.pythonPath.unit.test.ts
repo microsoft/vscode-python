@@ -11,7 +11,6 @@ import * as typemoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
-import { DeprecatePythonPath } from '../../../client/common/experiments/groups';
 import { IExperimentService, IInterpreterPathService } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
@@ -175,13 +174,9 @@ suite('Python Settings - pythonPath', () => {
             resource,
             instance(selectionService),
             workspaceService.object,
-            experimentsManager.object,
             interpreterPathService.object,
+            undefined,
         );
-        experimentsManager
-            .setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment))
-            .returns(() => true)
-            .verifiable(typemoq.Times.once());
         interpreterPathService.setup((i) => i.get(resource)).returns(() => 'python');
         configSettings.update(pythonSettings.object);
 
@@ -196,15 +191,11 @@ suite('Python Settings - pythonPath', () => {
             resource,
             new MockAutoSelectionService(),
             workspaceService.object,
-            experimentsManager.object,
             interpreterPathService.object,
+            undefined,
         );
         const pythonPath = 'This is the new API python Path';
         pythonSettings.setup((p) => p.get(typemoq.It.isValue('pythonPath'))).verifiable(typemoq.Times.never());
-        experimentsManager
-            .setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment))
-            .returns(() => true)
-            .verifiable(typemoq.Times.once());
         interpreterPathService
             .setup((i) => i.get(resource))
             .returns(() => pythonPath)
@@ -222,18 +213,14 @@ suite('Python Settings - pythonPath', () => {
             resource,
             new MockAutoSelectionService(),
             workspaceService.object,
-            experimentsManager.object,
             interpreterPathService.object,
+            undefined,
         );
         const pythonPath = 'This is the settings python Path';
         pythonSettings
             .setup((p) => p.get(typemoq.It.isValue('pythonPath')))
             .returns(() => pythonPath)
             .verifiable(typemoq.Times.atLeastOnce());
-        experimentsManager
-            .setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment))
-            .returns(() => false)
-            .verifiable(typemoq.Times.once());
         interpreterPathService.setup((i) => i.get(resource)).verifiable(typemoq.Times.never());
         configSettings.update(pythonSettings.object);
 
