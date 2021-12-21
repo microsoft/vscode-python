@@ -190,4 +190,7 @@ def build_test_tree(
             }
             current_node["children"].append(test_node)
 
+    if len(root["children"]) == 0:
+        root = None
+
     return root, errors
