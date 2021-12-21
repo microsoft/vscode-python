@@ -94,7 +94,7 @@ class FakeMarker(object):
         self.name = name
 
 
-class StubPytestItem(util.StubProxy):
+class StubPytestItem(util.StubProxy, pytest.Item):
 
     _debugging = False
     _hasfunc = True
@@ -521,6 +521,7 @@ class CollectorTests(unittest.TestCase):
         testroot = adapter_util.fix_path("/a/b/c")
         relfile1 = adapter_util.fix_path("./test_spam.py")
         relfile2 = adapter_util.fix_path("x/y/z/test_eggs.py")
+        non_python_path = adapter_util.fix_path("e/f/abc.test")
 
         collector.pytest_collection_modifyitems(
             session,
@@ -596,6 +597,13 @@ class CollectorTests(unittest.TestCase):
                             "timeout",
                         ]
                     ],
+                ),
+                StubSubtypedItem.from_args(
+                    stub,
+                    nodeid="test_spam.py::SpamTests::abc.test::test_one",
+                    name="test_one",
+                    location=(non_python_path, 12, "test_one"),
+                    fspath=adapter_util.PATH_JOIN(testroot, "test_spam.py"),
                 ),
             ],
         )
@@ -770,6 +778,36 @@ class CollectorTests(unittest.TestCase):
                             ),
                             markers=["expected-failure", "skip", "skip-if"],
                             parentid="./x/y/z/test_eggs.py::All::BasicTests::test_each",
+                        ),
+                    ),
+                ),
+                (
+                    "discovered.add_test",
+                    None,
+                    dict(
+                        parents=[
+                            (
+                                "./test_spam.py::SpamTests::abc.test",
+                                "abc.test",
+                                "suite",
+                            ),
+                            ("./test_spam.py::SpamTests", "SpamTests", "suite"),
+                            ("./test_spam.py", "test_spam.py", "file"),
+                            (".", testroot, "folder"),
+                        ],
+                        test=info.SingleTestInfo(
+                            id="./test_spam.py::SpamTests::abc.test::test_one",
+                            name="test_one",
+                            path=info.SingleTestPath(
+                                root=testroot,
+                                relfile=adapter_util.fix_relpath(relfile1),
+                                func=None,
+                            ),
+                            source="{}:{}".format(
+                                adapter_util.fix_relpath(non_python_path), 13
+                            ),
+                            markers=[],
+                            parentid="./test_spam.py::SpamTests::abc.test",
                         ),
                     ),
                 ),
