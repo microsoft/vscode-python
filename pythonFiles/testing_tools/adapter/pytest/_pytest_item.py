@@ -219,6 +219,7 @@ def parse_item(
             markers.add("expected-failure")
         # We can add support for other markers as we need them?
 
+    # TODO: preserve the correct test kind here instead of always using "function"
     test = SingleTestInfo(
         id=nodeid,
         name=item.name,
