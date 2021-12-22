@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationTarget, OpenDialogOptions, QuickPickItem, Uri } from 'vscode';
+import { ConfigurationTarget, OpenDialogOptions, QuickPick, QuickPickItem, Uri } from 'vscode';
 import { cloneDeep } from 'lodash';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
@@ -36,6 +36,7 @@ import { MockWorkspaceConfiguration } from '../../../mocks/mockWorkspaceConfig';
 import { Octicons } from '../../../../client/common/constants';
 import { IInterpreterService, PythonEnvironmentsChangedEvent } from '../../../../client/interpreter/contracts';
 import { createDeferred, sleep } from '../../../../client/common/utils/async';
+import { SystemVariables } from '../../../../client/common/variables/systemVariables';
 
 const untildify = require('untildify');
 
@@ -219,6 +220,90 @@ suite('Set Interpreter Command', () => {
             assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
         });
 
+        test('If system variables are used in the default interpreter path, make sure they are resolved when the path is displayed', async () => {
+            // Create a SetInterpreterCommand instance from scratch, and use a different defaultInterpreterPath from the rest of the tests.
+            const workspaceDefaultInterpreterPath = '${workspaceFolder}/defaultInterpreterPath';
+
+            const systemVariables = new SystemVariables(undefined, undefined, workspace.object);
+            const pathUtils = new PathUtils(false);
+
+            const expandedPath = systemVariables.resolveAny(workspaceDefaultInterpreterPath);
+            const expandedDetail = pathUtils.getDisplayName(expandedPath);
+
+            pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+            workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
+
+            pythonSettings.setup((p) => p.pythonPath).returns(() => currentPythonPath);
+            pythonSettings.setup((p) => p.defaultInterpreterPath).returns(() => workspaceDefaultInterpreterPath);
+            configurationService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+            workspace.setup((w) => w.rootPath).returns(() => 'rootPath');
+            workspace
+                .setup((w) => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isAny()))
+                .returns(
+                    () =>
+                        new MockWorkspaceConfiguration({
+                            defaultInterpreterPath: workspaceDefaultInterpreterPath,
+                        }),
+                );
+
+            setInterpreterCommand = new SetInterpreterCommand(
+                appShell.object,
+                pathUtils,
+                pythonPathUpdater.object,
+                configurationService.object,
+                commandManager.object,
+                multiStepInputFactory.object,
+                platformService.object,
+                interpreterSelector.object,
+                workspace.object,
+                instance(interpreterService),
+            );
+
+            // Test info
+            const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
+            const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+            const recommended = cloneDeep(item);
+            recommended.label = `${Octicons.Star} ${item.label}`;
+            recommended.description = Common.recommended();
+
+            const defaultPathSuggestion = {
+                label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
+                detail: expandedDetail,
+                path: expandedPath,
+                alwaysShow: true,
+            };
+
+            const suggestions = [expectedEnterInterpreterPathSuggestion, defaultPathSuggestion, recommended];
+            const expectedParameters: IQuickPickParameters<QuickPickItem> = {
+                placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
+                items: suggestions,
+                activeItem: recommended,
+                matchOnDetail: true,
+                matchOnDescription: true,
+                title: InterpreterQuickPickList.browsePath.openButtonLabel(),
+                sortByLabel: true,
+                keepScrollPosition: true,
+            };
+            let actualParameters: IQuickPickParameters<QuickPickItem> | undefined;
+            multiStepInput
+                .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
+                .callback((options) => {
+                    actualParameters = options;
+                })
+                .returns(() => Promise.resolve((undefined as unknown) as QuickPickItem));
+
+            await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
+
+            expect(actualParameters).to.not.equal(undefined, 'Parameters not set');
+            const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
+            expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
+
+            delete actualParameters!.customButtonSetup;
+            delete actualParameters!.onChangeItem;
+
+            assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
+        });
+
         test('Ensure a refresh is triggered if refresh button is clicked', async () => {
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
@@ -237,8 +322,7 @@ suite('Set Interpreter Command', () => {
             expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
 
             when(interpreterService.triggerRefresh()).thenResolve();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await refreshButtonCallback!({} as any); // Invoke callback, meaning that the refresh button is clicked.
+            await refreshButtonCallback!({} as QuickPick<QuickPickItem>); // Invoke callback, meaning that the refresh button is clicked.
             verify(interpreterService.triggerRefresh()).once();
         });
 
@@ -276,8 +360,7 @@ suite('Set Interpreter Command', () => {
                 old: item.interpreter,
                 new: refreshedItem.interpreter,
             };
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await onChangedCallback!(changeEvent, quickPick as any); // Invoke callback, meaning that the items are supposed to change.
+            await onChangedCallback!(changeEvent, (quickPick as unknown) as QuickPick<QuickPickItem>); // Invoke callback, meaning that the items are supposed to change.
 
             assert.deepStrictEqual(
                 quickPick,
