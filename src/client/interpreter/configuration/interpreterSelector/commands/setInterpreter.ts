@@ -20,6 +20,7 @@ import {
     InputStep,
     IQuickPickParameters,
 } from '../../../../common/utils/multiStepInput';
+import { SystemVariables } from '../../../../common/variables/systemVariables';
 import { REFRESH_BUTTON_ICON } from '../../../../debugger/extension/attachQuickPick/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
@@ -162,7 +163,8 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
 
     private getDefaultInterpreterPathSuggestion(resource: Resource): ISpecialQuickPickItem | undefined {
         const config = this.workspaceService.getConfiguration('python', resource);
-        const defaultInterpreterPathValue = config.get<string>('defaultInterpreterPath');
+        const systemVariables = new SystemVariables(resource, undefined, this.workspaceService);
+        const defaultInterpreterPathValue = systemVariables.resolveAny(config.get<string>('defaultInterpreterPath'));
         if (defaultInterpreterPathValue && defaultInterpreterPathValue !== 'python') {
             return {
                 label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
