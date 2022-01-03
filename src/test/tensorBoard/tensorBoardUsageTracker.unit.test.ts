@@ -1,32 +1,21 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { mock, when, instance } from 'ts-mockito';
 import { TensorBoardUsageTracker } from '../../client/tensorBoard/tensorBoardUsageTracker';
 import { TensorBoardPrompt } from '../../client/tensorBoard/tensorBoardPrompt';
 import { MockDocumentManager } from '../mocks/mockDocumentManager';
 import { createTensorBoardPromptWithMocks } from './helpers';
-import { NativeTensorBoard } from '../../client/common/experiments/groups';
-import { ExperimentService } from '../../client/common/experiments/service';
 
 suite('TensorBoard usage tracker', () => {
     let documentManager: MockDocumentManager;
     let tensorBoardImportTracker: TensorBoardUsageTracker;
     let prompt: TensorBoardPrompt;
-    let experimentService: ExperimentService;
     let showNativeTensorBoardPrompt: sinon.SinonSpy;
 
     setup(() => {
         documentManager = new MockDocumentManager();
         prompt = createTensorBoardPromptWithMocks();
         showNativeTensorBoardPrompt = sinon.spy(prompt, 'showNativeTensorBoardPrompt');
-        experimentService = mock(ExperimentService);
-        when(experimentService.inExperiment(NativeTensorBoard.experiment)).thenResolve(true);
-        tensorBoardImportTracker = new TensorBoardUsageTracker(
-            documentManager,
-            [],
-            prompt,
-            instance(experimentService),
-        );
+        tensorBoardImportTracker = new TensorBoardUsageTracker(documentManager, [], prompt);
     });
 
     test('Simple tensorboard import in Python file', async () => {

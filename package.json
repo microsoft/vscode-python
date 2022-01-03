@@ -490,8 +490,7 @@
                         "enum": [
                             "All",
                             "pythonDeprecatePythonPath",
-                            "pythonSurveyNotification",
-                            "pythonTensorboardExperiment"
+                            "pythonSurveyNotification"
                         ]
                     },
                     "scope": "machine",
@@ -504,8 +503,7 @@
                         "enum": [
                             "All",
                             "pythonDeprecatePythonPath",
-                            "pythonSurveyNotification",
-                            "pythonTensorboardExperiment"
+                            "pythonSurveyNotification"
                         ]
                     },
                     "scope": "machine",
