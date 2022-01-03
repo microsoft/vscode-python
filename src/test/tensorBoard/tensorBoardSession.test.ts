@@ -20,7 +20,6 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { Architecture } from '../../client/common/utils/platform';
 import { PythonEnvironment, EnvironmentType } from '../../client/pythonEnvironments/info';
 import { PYTHON_PATH } from '../common';
-import { TorchProfiler } from '../../client/common/experiments/groups';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IMultiStepInput, IMultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { ModuleInstallFlags } from '../../client/common/installer/types';
@@ -92,16 +91,11 @@ suite('TensorBoard session creation', async () => {
     });
 
     function configureStubs(
-        isInTorchProfilerExperiment: boolean,
         hasTorchImports: boolean,
         tensorBoardInstallStatus: ProductInstallStatus,
         torchProfilerPackageInstallStatus: ProductInstallStatus,
         installPromptSelection: 'Yes' | 'No',
     ) {
-        sandbox
-            .stub(experimentService, 'inExperiment')
-            .withArgs(TorchProfiler.experiment)
-            .resolves(isInTorchProfilerExperiment);
         sandbox.stub(ImportTracker, 'hasModuleImport').withArgs('torch').returns(hasTorchImports);
         const isProductVersionCompatible = sandbox.stub(installer, 'isProductVersionCompatible');
         isProductVersionCompatible
@@ -202,18 +196,18 @@ suite('TensorBoard session creation', async () => {
                     ),
                 );
             }
-            test('In experiment: true, has torch imports: true, is profiler package installed: false, TensorBoard needs upgrade', async () => {
-                configureStubs(true, true, ProductInstallStatus.NeedsUpgrade, ProductInstallStatus.NotInstalled, 'Yes');
+            test('Has torch imports: true, is profiler package installed: false, TensorBoard needs upgrade', async () => {
+                configureStubs(true, ProductInstallStatus.NeedsUpgrade, ProductInstallStatus.NotInstalled, 'Yes');
                 await runTest(true);
             });
-            test('In experiment: true, has torch imports: true, is profiler package installed: false, TensorBoard not installed', async () => {
-                configureStubs(true, true, ProductInstallStatus.NotInstalled, ProductInstallStatus.NotInstalled, 'Yes');
+            test('Has torch imports: true, is profiler package installed: false, TensorBoard not installed', async () => {
+                configureStubs(true, ProductInstallStatus.NotInstalled, ProductInstallStatus.NotInstalled, 'Yes');
                 await runTest(false);
             });
         });
         suite('Install profiler only', async () => {
-            test('In experiment: true, has torch imports: true, is profiler package installed: false, TensorBoard installed', async () => {
-                configureStubs(true, true, ProductInstallStatus.Installed, ProductInstallStatus.NotInstalled, 'Yes');
+            test('Has torch imports: true, is profiler package installed: false, TensorBoard installed', async () => {
+                configureStubs(true, ProductInstallStatus.Installed, ProductInstallStatus.NotInstalled, 'Yes');
                 sandbox
                     .stub(applicationShell, 'showQuickPick')
                     .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
@@ -241,28 +235,25 @@ suite('TensorBoard session creation', async () => {
             });
         });
         suite('Install tensorboard only', async () => {
-            [false, true].forEach(async (inExperiment) => {
-                [false, true].forEach(async (hasTorchImports) => {
-                    [
-                        ProductInstallStatus.Installed,
-                        ProductInstallStatus.NotInstalled,
-                        ProductInstallStatus.NeedsUpgrade,
-                    ].forEach(async (torchProfilerInstallStatus) => {
-                        const isTorchProfilerPackageInstalled =
-                            torchProfilerInstallStatus === ProductInstallStatus.Installed;
-                        if (!(inExperiment && hasTorchImports && !isTorchProfilerPackageInstalled)) {
-                            test(`In experiment: ${inExperiment}, has torch imports: ${hasTorchImports}, is profiler package installed: ${isTorchProfilerPackageInstalled}, TensorBoard not installed`, async () => {
-                                configureStubs(
-                                    inExperiment,
-                                    hasTorchImports,
-                                    ProductInstallStatus.NotInstalled,
-                                    torchProfilerInstallStatus,
-                                    'No',
-                                );
-                                await createSessionAndVerifyMessage(TensorBoard.installPrompt());
-                            });
-                        }
-                    });
+            [false, true].forEach(async (hasTorchImports) => {
+                [
+                    ProductInstallStatus.Installed,
+                    ProductInstallStatus.NotInstalled,
+                    ProductInstallStatus.NeedsUpgrade,
+                ].forEach(async (torchProfilerInstallStatus) => {
+                    const isTorchProfilerPackageInstalled =
+                        torchProfilerInstallStatus === ProductInstallStatus.Installed;
+                    if (!(hasTorchImports && !isTorchProfilerPackageInstalled)) {
+                        test(`Has torch imports: ${hasTorchImports}, is profiler package installed: ${isTorchProfilerPackageInstalled}, TensorBoard not installed`, async () => {
+                            configureStubs(
+                                hasTorchImports,
+                                ProductInstallStatus.NotInstalled,
+                                torchProfilerInstallStatus,
+                                'No',
+                            );
+                            await createSessionAndVerifyMessage(TensorBoard.installPrompt());
+                        });
+                    }
                 });
             });
         });
@@ -279,28 +270,26 @@ suite('TensorBoard session creation', async () => {
                     'Unexpected attempt to install profiler package',
                 );
             }
-            [false, true].forEach(async (inExperiment) => {
-                [false, true].forEach(async (hasTorchImports) => {
-                    [
-                        ProductInstallStatus.Installed,
-                        ProductInstallStatus.NotInstalled,
-                        ProductInstallStatus.NeedsUpgrade,
-                    ].forEach(async (torchProfilerInstallStatus) => {
-                        const isTorchProfilerPackageInstalled =
-                            torchProfilerInstallStatus === ProductInstallStatus.Installed;
-                        if (!(inExperiment && hasTorchImports && !isTorchProfilerPackageInstalled)) {
-                            test(`In experiment: ${inExperiment}, has torch imports: ${hasTorchImports}, is profiler package installed: ${isTorchProfilerPackageInstalled}, TensorBoard needs upgrade`, async () => {
-                                configureStubs(
-                                    inExperiment,
-                                    hasTorchImports,
-                                    ProductInstallStatus.NeedsUpgrade,
-                                    torchProfilerInstallStatus,
-                                    'Yes',
-                                );
-                                await runTest();
-                            });
-                        }
-                    });
+
+            [false, true].forEach(async (hasTorchImports) => {
+                [
+                    ProductInstallStatus.Installed,
+                    ProductInstallStatus.NotInstalled,
+                    ProductInstallStatus.NeedsUpgrade,
+                ].forEach(async (torchProfilerInstallStatus) => {
+                    const isTorchProfilerPackageInstalled =
+                        torchProfilerInstallStatus === ProductInstallStatus.Installed;
+                    if (!(hasTorchImports && !isTorchProfilerPackageInstalled)) {
+                        test(`Has torch imports: ${hasTorchImports}, is profiler package installed: ${isTorchProfilerPackageInstalled}, TensorBoard needs upgrade`, async () => {
+                            configureStubs(
+                                hasTorchImports,
+                                ProductInstallStatus.NeedsUpgrade,
+                                torchProfilerInstallStatus,
+                                'Yes',
+                            );
+                            await runTest();
+                        });
+                    }
                 });
             });
         });
@@ -316,28 +305,26 @@ suite('TensorBoard session creation', async () => {
                 );
                 assert.ok(errorMessageStub.notCalled, 'Prompt was unexpectedly shown');
             }
-            [false, true].forEach(async (inExperiment) => {
-                [false, true].forEach(async (hasTorchImports) => {
-                    [
-                        ProductInstallStatus.Installed,
-                        ProductInstallStatus.NotInstalled,
-                        ProductInstallStatus.NeedsUpgrade,
-                    ].forEach(async (torchProfilerInstallStatus) => {
-                        const isTorchProfilerPackageInstalled =
-                            torchProfilerInstallStatus === ProductInstallStatus.Installed;
-                        if (!(inExperiment && hasTorchImports && !isTorchProfilerPackageInstalled)) {
-                            test(`In experiment: ${inExperiment}, has torch imports: ${hasTorchImports}, is profiler package installed: ${isTorchProfilerPackageInstalled}, TensorBoard installed`, async () => {
-                                configureStubs(
-                                    inExperiment,
-                                    hasTorchImports,
-                                    ProductInstallStatus.Installed,
-                                    torchProfilerInstallStatus,
-                                    'Yes',
-                                );
-                                await runTest();
-                            });
-                        }
-                    });
+
+            [false, true].forEach(async (hasTorchImports) => {
+                [
+                    ProductInstallStatus.Installed,
+                    ProductInstallStatus.NotInstalled,
+                    ProductInstallStatus.NeedsUpgrade,
+                ].forEach(async (torchProfilerInstallStatus) => {
+                    const isTorchProfilerPackageInstalled =
+                        torchProfilerInstallStatus === ProductInstallStatus.Installed;
+                    if (!(hasTorchImports && !isTorchProfilerPackageInstalled)) {
+                        test(`Has torch imports: ${hasTorchImports}, is profiler package installed: ${isTorchProfilerPackageInstalled}, TensorBoard installed`, async () => {
+                            configureStubs(
+                                hasTorchImports,
+                                ProductInstallStatus.Installed,
+                                torchProfilerInstallStatus,
+                                'Yes',
+                            );
+                            await runTest();
+                        });
+                    }
                 });
             });
         });
@@ -374,7 +361,7 @@ suite('TensorBoard session creation', async () => {
             assert.ok(quickPickStub.notCalled, 'User opted not to upgrade and we proceeded to create session');
         });
         test('If TensorBoard is not installed and user chooses not to install, do not show error', async () => {
-            configureStubs(true, true, ProductInstallStatus.NotInstalled, ProductInstallStatus.NotInstalled, 'Yes');
+            configureStubs(true, ProductInstallStatus.NotInstalled, ProductInstallStatus.NotInstalled, 'Yes');
             sandbox.stub(installer, 'install').resolves(InstallerResponse.Ignore);
 
             await commandManager.executeCommand(
@@ -424,7 +411,7 @@ suite('TensorBoard session creation', async () => {
             assert.ok(errorMessageStub.called, 'TensorBoard timed out but no error was shown');
         });
         test('If installing the profiler package fails, do not show error, continue to create session', async () => {
-            configureStubs(true, true, ProductInstallStatus.Installed, ProductInstallStatus.NotInstalled, 'Yes');
+            configureStubs(true, ProductInstallStatus.Installed, ProductInstallStatus.NotInstalled, 'Yes');
             sandbox
                 .stub(applicationShell, 'showQuickPick')
                 .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });
@@ -443,7 +430,7 @@ suite('TensorBoard session creation', async () => {
             assert.ok(session.panel?.visible, 'Webview panel not shown, expected successful session creation');
         });
         test('If user opts not to install profiler package and tensorboard is already installed, continue to create session', async () => {
-            configureStubs(true, true, ProductInstallStatus.Installed, ProductInstallStatus.NotInstalled, 'No');
+            configureStubs(true, ProductInstallStatus.Installed, ProductInstallStatus.NotInstalled, 'No');
             sandbox
                 .stub(applicationShell, 'showQuickPick')
                 .resolves({ label: TensorBoard.useCurrentWorkingDirectory() });

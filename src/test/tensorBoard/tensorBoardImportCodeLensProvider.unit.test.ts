@@ -2,21 +2,16 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { mock } from 'ts-mockito';
 import { CancellationTokenSource } from 'vscode';
-import { ExperimentService } from '../../client/common/experiments/service';
-import { IExperimentService } from '../../client/common/types';
 import { TensorBoardImportCodeLensProvider } from '../../client/tensorBoard/tensorBoardImportCodeLensProvider';
 import { MockDocument } from '../mocks/mockDocument';
 
 suite('TensorBoard import code lens provider', () => {
-    let experimentService: IExperimentService;
     let codeLensProvider: TensorBoardImportCodeLensProvider;
     let cancelTokenSource: CancellationTokenSource;
 
     setup(() => {
-        experimentService = mock(ExperimentService);
-        codeLensProvider = new TensorBoardImportCodeLensProvider(experimentService, []);
+        codeLensProvider = new TensorBoardImportCodeLensProvider([]);
         cancelTokenSource = new CancellationTokenSource();
     });
     teardown(() => {

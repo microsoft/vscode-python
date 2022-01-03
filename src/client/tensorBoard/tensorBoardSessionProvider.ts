@@ -7,15 +7,8 @@ import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
-import { TorchProfiler } from '../common/experiments/groups';
 import { IProcessServiceFactory } from '../common/process/types';
-import {
-    IDisposableRegistry,
-    IExperimentService,
-    IInstaller,
-    IPersistentState,
-    IPersistentStateFactory,
-} from '../common/types';
+import { IDisposableRegistry, IInstaller, IPersistentState, IPersistentStateFactory } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
 import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -45,7 +38,6 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
     ) {
@@ -106,7 +98,6 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                 this.commandManager,
                 this.disposables,
                 this.applicationShell,
-                await this.experimentService.inExperiment(TorchProfiler.experiment),
                 this.preferredViewGroupMemento,
                 this.multiStepFactory,
             );
