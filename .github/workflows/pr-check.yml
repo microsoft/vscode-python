@@ -99,7 +99,7 @@ jobs:
       - name: Install Python 3 requirements
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt --no-user
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py --no-deps --upgrade -r ./jedils_requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py --no-deps --upgrade -r ./pythonFiles/jedilsp_requirements/requirements.txt
         if: startsWith(matrix.python, 3.)
 
       - name: Install test requirements
@@ -378,7 +378,7 @@ jobs:
           cache: 'pip'
           cache-dependency-path: |
             requirements.txt
-            jedils_requirements.txt
+            pythonFiles/jedilsp_requirements/requirements.txt
             build/test-requirements.txt
             build/functional-test-requirements.txt
 
@@ -387,7 +387,7 @@ jobs:
           python -m pip --disable-pip-version-check install --require-hashes -t ./pythonFiles/lib/python --implementation py --no-deps --upgrade -r requirements.txt --no-user
           # We need to have debugpy so that tests relying on it keep passing, but we don't need install_debugpy's logic in the test phase.
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --implementation py --no-deps --upgrade --pre debugpy
-          python -m pip --disable-pip-version-check install --require-hashes -t ./pythonFiles/lib/jedilsp --implementation py --no-deps --upgrade -r ./jedils_requirements.txt
+          python -m pip --disable-pip-version-check install --require-hashes -t ./pythonFiles/lib/jedilsp --implementation py --no-deps --upgrade -r ./pythonFiles/jedilsp_requirements/requirements.txt
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt

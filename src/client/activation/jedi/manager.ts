@@ -87,7 +87,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         try {
             // Version is actually hardcoded in our requirements.txt.
             const requirementsTxt = await fs.readFile(
-                path.join(EXTENSION_ROOT_DIR, 'jedils_requirements.txt'),
+                path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'jedilsp_requirements', 'requirements.txt'),
                 'utf-8',
             );
 

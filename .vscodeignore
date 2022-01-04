@@ -60,6 +60,7 @@ pythonFiles/**/*.pyc
 pythonFiles/lib/**/*.dist-info/**
 pythonFiles/lib/**/*.egg-info/**
 pythonFiles/lib/python/bin/**
+pythonFiles/jedilsp_requirements/**
 pythonFiles/tests/**
 scripts/**
 src/**

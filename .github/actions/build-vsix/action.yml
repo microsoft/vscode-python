@@ -30,7 +30,7 @@ runs:
         cache-dependency-path: |
           requirements.txt
           build/debugger-install-requirements.txt
-          jedils_requirements.txt
+          pythonFiles/jedilsp_requirements/requirements.txt
 
     - name: Upgrade Pip
       run: python -m pip install -U pip
@@ -53,7 +53,7 @@ runs:
 
     - name: Install Jedi LSP
       run: |
-        python -m pip --disable-pip-version-check install --require-hashes -t ./pythonFiles/lib/jedilsp --implementation py --platform any --abi none --no-deps --only-binary :all: --upgrade -r jedils_requirements.txt
+        python -m pip --disable-pip-version-check install --require-hashes -t ./pythonFiles/lib/jedilsp --implementation py --platform any --abi none --no-deps --only-binary :all: --upgrade -r ./pythonFiles/jedilsp_requirements/requirements.txt
       shell: bash
 
     - name: Run npm ci
