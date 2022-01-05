@@ -21,6 +21,7 @@ import { IWorkspaceService } from '../../common/application/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
+import { Common } from '../../common/utils/localize';
 import { traceVerbose } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -33,7 +34,7 @@ import { WorkspaceTestAdapter } from './workspaceTestAdapter';
 export class PythonTestController implements ITestController, IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
 
-    private readonly testAdapters: WorkspaceTestAdapter[] = [];
+    private readonly testAdapters: Map<Uri, WorkspaceTestAdapter> = new Map();
 
     private readonly testController: TestController;
 
@@ -148,7 +149,17 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             if (settings.testing.pytestEnabled) {
                 await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
-                await this.testAdapters[0].discoverTests(this.testController, uri, this.refreshCancellation.token);
+                const workspace = this.workspaceService.getWorkspaceFolder(uri);
+                console.warn(`workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
+                const testAdapter =
+                    this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                testAdapter.discoverTests(
+                    this.testController,
+                    uri,
+                    this.refreshCancellation.token,
+                    this.testAdapters.size > 1,
+                    this.workspaceService.workspaceFile?.fsPath || Common.workspace(),
+                );
                 // await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else {
                 sendTelemetryEvent(EventName.UNITTEST_DISABLED);
@@ -297,8 +308,20 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
     private watchForTestChanges(): void {
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
-        for (const workspace of workspaces) {
+        for (let i = 0; i < workspaces.length; i += 1) {
+            const workspace = workspaces[i];
+            console.warn(`instantiating test adapters - workspace name: ${workspace.name}`);
             const settings = this.configSettings.getSettings(workspace.uri);
+            const workspaceTestAdapter = new WorkspaceTestAdapter(
+                'unittest',
+                this.pythonExecFactory,
+                this.workspaceService,
+                this.configSettings,
+                i,
+            );
+
+            this.testAdapters.set(workspace.uri, workspaceTestAdapter);
+
             if (settings.testing.autoTestDiscoverOnSaveEnabled) {
                 traceVerbose(`Testing: Setting up watcher for ${workspace.uri.fsPath}`);
                 this.watchForSettingsChanges(workspace);

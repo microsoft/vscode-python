@@ -97,12 +97,14 @@ export interface ITestDiscoveryAdapter {
 
 // New test discovery adapter types
 
+// Same types as in pythonFiles/unittestadapter/utils.py
+// Trailing underscore to avoid collision with the 'types' Python keyword.
+export type DiscoveredTestType = 'folder' | 'file' | 'class' | 'test';
+
 export type DiscoveredTestCommon = {
     path: string;
     name: string;
-    // Same types as in pythonFiles/unittestadapter/utils.py
-    // Trailing underscore to avoid collision with the 'types' Python keyword.
-    type_: 'folder' | 'file' | 'class' | 'test';
+    type_: DiscoveredTestType;
 };
 
 export type DiscoveredTestItem = DiscoveredTestCommon & {

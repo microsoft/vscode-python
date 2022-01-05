@@ -14,7 +14,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestProvider } from '../types';
 import { createErrorTestItem, DebugTestTag, ErrorTestItemOptions, RunTestTag } from './common/testItemUtilities';
-import { DiscoveredTestItem, DiscoveredTestNode, ITestDiscoveryAdapter } from './common/types';
+import { DiscoveredTestItem, DiscoveredTestNode, DiscoveredTestType, ITestDiscoveryAdapter } from './common/types';
 import { DEFAULT_TEST_PORT } from './common/utils';
 import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
 
@@ -32,7 +32,6 @@ export class WorkspaceTestAdapter {
         executionFactory: IPythonExecutionFactory,
         private workspaceService: IWorkspaceService,
         configSettings: IConfigurationService,
-        private workspaceUri: Uri,
         index: number,
     ) {
         if (this.testProvider === 'unittest') {
@@ -46,13 +45,19 @@ export class WorkspaceTestAdapter {
         }
     }
 
-    public async discoverTests(testController: TestController, uri: Uri, token?: CancellationToken): Promise<void> {
+    public async discoverTests(
+        testController: TestController,
+        uri: Uri,
+        token?: CancellationToken,
+        isMultiroot?: boolean,
+        workspaceFilePath?: string,
+    ): Promise<void> {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: 'unittest' });
 
-        // TODO: When can the uri differ from this.workspaceUri?
-        // If never, don't pass uri as an arg and use this.workspaceUri everywhere.
-        console.warn(`workspace uri: ${this.workspaceUri.fsPath} - discovery uri: ${uri.fsPath}`);
+        console.warn(`discovery uri: ${uri.fsPath}`);
 
+        // The uri parameter can differ from the workspace uri when we're in a multiroot workspace scenario.
+        // As such, we don't rely on this.workspaceUri
         const workspace = this.workspaceService.getWorkspaceFolder(uri);
 
         if (workspace) {
@@ -120,21 +125,52 @@ export class WorkspaceTestAdapter {
                 // then parse and insert test data.
                 testController.items.delete(`DiscoveryError:${discoveryUri.fsPath}`);
 
-                // Find test root in the test controller.
-                const rootPath = rawTestData.cwd;
-                const workspaceNode = testController.items.get(rootPath);
+                // If we are in a multiroot workspace scenario, find the overall root (should be the workspace file name),
+                // And wrap the current folder's test result in a tree under the overall root + the current folder name.
+                let workspaceNode: TestItem | undefined;
+                if (isMultiroot && workspaceFilePath) {
+                    const rootFilename = path.basename(workspaceFilePath);
+                    workspaceNode = testController.items.get(workspaceFilePath);
+
+                    const workspacePath = workspace.uri.fsPath;
+                    const wrappedTests = rawTestData.tests;
+
+                    const children = [
+                        {
+                            path: workspacePath,
+                            name: path.basename(workspacePath),
+                            type_: 'folder' as DiscoveredTestType,
+                            children: wrappedTests ? [wrappedTests] : [],
+                        },
+                    ];
+
+                    rawTestData.tests = {
+                        path: workspaceFilePath,
+                        name: rootFilename,
+                        type_: 'folder',
+                        children,
+                    };
+                } else {
+                    // Find the root for this test data in the test controller.
+                    const rootPath = rawTestData.cwd;
+                    workspaceNode = testController.items.get(rootPath);
+                }
 
                 if (rawTestData.tests) {
-                    // If the test root exists: Workspace refresh, update its children.
+                    // If the test root for this folder exists: Workspace refresh, update its children.
                     // Otherwise, it is a freshly discovered workspace, and we need to create a new test root and populate the test tree.
                     if (workspaceNode) {
-                        console.warn(`Update test tree with:\n${rawTestData}`);
-                        updateTestTree(testController, rawTestData.tests, this.testData, undefined, token);
+                        console.warn(`Update test tree with:`);
+                        console.warn(rawTestData);
+                        updateTestTree(testController, rawTestData.tests, this.testData, workspaceNode, token);
                     } else {
+                        console.warn(`Populate test tree with:`);
+                        console.warn(rawTestData);
                         populateTestTree(testController, rawTestData.tests, undefined, token);
                     }
                 } else {
                     // Delete everything from the test controller.
+                    console.warn(`Delete everything from the test controller.`);
                     testController.items.replace([]);
                 }
 
@@ -252,6 +288,8 @@ function populateTestTree(
     testRoot: TestItem | undefined,
     token?: CancellationToken,
 ): void {
+    console.warn(`populate test tree:`);
+    console.warn(testTreeData);
     // If testRoot is undefined, use the info of the root item of testTreeData to create a test item, and append it to the test controller.
     if (!testRoot) {
         testRoot = testController.createTestItem(testTreeData.path, testTreeData.name, Uri.file(testTreeData.path));
