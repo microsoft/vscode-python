@@ -3,9 +3,8 @@
 
 'use strict';
 
-import { assert, expect } from 'chai';
+import { expect } from 'chai';
 import * as typemoq from 'typemoq';
-import { ConfigurationChangeEvent, Uri } from 'vscode';
 import { BaseDiagnosticsService } from '../../../../client/application/diagnostics/base';
 import {
     InvalidMacPythonInterpreterDiagnostic,
@@ -27,16 +26,13 @@ import {
 } from '../../../../client/application/diagnostics/types';
 import { CommandsWithoutArgs } from '../../../../client/common/application/commands';
 import { IWorkspaceService } from '../../../../client/common/application/types';
-import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
 import { IPlatformService } from '../../../../client/common/platform/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IInterpreterPathService,
     InterpreterConfigurationScope,
     IPythonSettings,
-    Resource,
 } from '../../../../client/common/types';
 import { sleep } from '../../../../client/common/utils/async';
 import { noop } from '../../../../client/common/utils/misc';
@@ -53,6 +49,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
     let platformService: typemoq.IMock<IPlatformService>;
     let helper: typemoq.IMock<IInterpreterHelper>;
     let filterService: typemoq.IMock<IDiagnosticFilterService>;
+    let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
     const pythonPath = 'My Python Path in Settings';
     let serviceContainer: typemoq.IMock<IServiceContainer>;
     function createContainer() {
@@ -93,6 +90,10 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             .setup((s) => s.get(typemoq.It.isValue(IDiagnosticFilterService)))
             .returns(() => filterService.object);
 
+        interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
+        serviceContainer
+            .setup((s) => s.get(typemoq.It.isValue(IInterpreterPathService)))
+            .returns(() => interpreterPathService.object);
         platformService
             .setup((p) => p.isMac)
             .returns(() => true)
@@ -460,50 +461,8 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
 
             expect(invoked).to.be.equal(true, 'Not invoked');
         });
-        test('Event Handler is registered and invoked', async () => {
-            let invoked = false;
-            let callbackHandler!: (e: ConfigurationChangeEvent) => Promise<void>;
-            const workspaceService = {
-                onDidChangeConfiguration: (cb: (e: ConfigurationChangeEvent) => Promise<void>) =>
-                    (callbackHandler = cb),
-            } as any;
-            const serviceContainerObject = createContainer();
-
-            serviceContainer.setup((s) => s.get(typemoq.It.isValue(IWorkspaceService))).returns(() => workspaceService);
-            const experiments = typemoq.Mock.ofType<IExperimentService>();
-            serviceContainer
-                .setup((s) => s.get(typemoq.It.isValue(IExperimentService)))
-                .returns(() => experiments.object);
-            experiments.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
-            diagnosticService = new (class extends InvalidMacPythonInterpreterService {
-                protected async onDidChangeConfiguration(_event: ConfigurationChangeEvent) {
-                    invoked = true;
-                }
-            })(serviceContainerObject, undefined as any, [], undefined as any, undefined as any);
-
-            await callbackHandler({} as any);
-            expect(invoked).to.be.equal(true, 'Not invoked');
-        });
-        test('Event Handler is registered and not invoked', async () => {
-            let invoked = false;
-            const workspaceService = { onDidChangeConfiguration: noop } as any;
-            const serviceContainerObject = createContainer();
-            serviceContainer.setup((s) => s.get(typemoq.It.isValue(IWorkspaceService))).returns(() => workspaceService);
-            const experiments = typemoq.Mock.ofType<IExperimentService>();
-            serviceContainer
-                .setup((s) => s.get(typemoq.It.isValue(IExperimentService)))
-                .returns(() => experiments.object);
-            experiments.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
-            diagnosticService = new (class extends InvalidMacPythonInterpreterService {
-                protected async onDidChangeConfiguration(_event: ConfigurationChangeEvent) {
-                    invoked = true;
-                }
-            })(serviceContainerObject, undefined as any, [], undefined as any, undefined as any);
-
-            expect(invoked).to.be.equal(false, 'Not invoked');
-        });
-        test('Diagnostics are checked with Config change event uri when path changes and event is passed', async () => {
-            const event = typemoq.Mock.ofType<ConfigurationChangeEvent>();
+        test('Diagnostics are checked with correct interpreter config uri when path changes', async () => {
+            const event = typemoq.Mock.ofType<InterpreterConfigurationScope>();
             const workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
             const serviceContainerObject = createContainer();
             let diagnoseInvocationCount = 0;
@@ -518,11 +477,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             serviceContainer
                 .setup((s) => s.get(typemoq.It.isValue(IWorkspaceService)))
                 .returns(() => workspaceService.object);
-            const experiments = typemoq.Mock.ofType<IExperimentService>();
-            serviceContainer
-                .setup((s) => s.get(typemoq.It.isValue(IExperimentService)))
-                .returns(() => experiments.object);
-            experiments.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
+
             const diagnosticSvc = new (class extends InvalidMacPythonInterpreterService {
                 constructor(
                     arg1: IServiceContainer,
@@ -533,7 +488,8 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                     super(arg1, arg2, [], arg3, arg4);
                     this.changeThrottleTimeout = 1;
                 }
-                public onDidChangeConfigurationEx = (e: ConfigurationChangeEvent) => super.onDidChangeConfiguration(e);
+                public onDidChangeConfigurationEx = (e: InterpreterConfigurationScope) =>
+                    super.onDidChangeConfiguration(e);
                 public diagnose(): Promise<any> {
                     diagnoseInvocationCount += 1;
                     return Promise.resolve();
@@ -545,11 +501,6 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 typemoq.Mock.ofType<IInterpreterHelper>().object,
             );
 
-            event
-                .setup((e) => e.affectsConfiguration(typemoq.It.isValue('python.pythonPath'), typemoq.It.isAny()))
-                .returns(() => true)
-                .verifiable(typemoq.Times.atLeastOnce());
-
             await diagnosticSvc.onDidChangeConfigurationEx(event.object);
             event.verifyAll();
             await sleep(100);
@@ -560,91 +511,8 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             expect(diagnoseInvocationCount).to.be.equal(2, 'Not invoked');
         });
 
-        test('Diagnostics are checked with correct interpreter config uri when path changes and only config uri is passed', async () => {
-            const configUri = Uri.parse('i');
-            const interpreterConfigurationScope = typemoq.Mock.ofType<InterpreterConfigurationScope>();
-            interpreterConfigurationScope.setup((i) => i.uri).returns(() => Uri.parse('i'));
-            const workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
-            const serviceContainerObject = createContainer();
-            let diagnoseInvocationCount = 0;
-            serviceContainer
-                .setup((s) => s.get(typemoq.It.isValue(IWorkspaceService)))
-                .returns(() => workspaceService.object);
-            const experiments = typemoq.Mock.ofType<IExperimentService>();
-            serviceContainer
-                .setup((s) => s.get(typemoq.It.isValue(IExperimentService)))
-                .returns(() => experiments.object);
-            experiments.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
-            const diagnosticSvc = new (class extends InvalidMacPythonInterpreterService {
-                constructor(
-                    arg1: IServiceContainer,
-                    arg2: IInterpreterService,
-                    arg3: IPlatformService,
-                    arg4: IInterpreterHelper,
-                ) {
-                    super(arg1, arg2, [], arg3, arg4);
-                    this.changeThrottleTimeout = 1;
-                }
-                public onDidChangeConfigurationEx = (e?: ConfigurationChangeEvent, i?: InterpreterConfigurationScope) =>
-                    super.onDidChangeConfiguration(e, i);
-                public diagnose(resource: Resource): Promise<any> {
-                    diagnoseInvocationCount += 1;
-                    assert.deepEqual(resource, configUri);
-                    return Promise.resolve();
-                }
-            })(
-                serviceContainerObject,
-                typemoq.Mock.ofType<IInterpreterService>().object,
-                typemoq.Mock.ofType<IPlatformService>().object,
-                typemoq.Mock.ofType<IInterpreterHelper>().object,
-            );
-
-            await diagnosticSvc.onDidChangeConfigurationEx(undefined, interpreterConfigurationScope.object);
-            await sleep(100);
-            expect(diagnoseInvocationCount).to.be.equal(1, 'Not invoked');
-
-            await diagnosticSvc.onDidChangeConfigurationEx(undefined, interpreterConfigurationScope.object);
-            await sleep(100);
-            expect(diagnoseInvocationCount).to.be.equal(2, 'Not invoked');
-        });
-
-        test('Diagnostics throws error when none of config uri or config change event uri is passed', async () => {
-            const workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
-            const serviceContainerObject = createContainer();
-            serviceContainer
-                .setup((s) => s.get(typemoq.It.isValue(IWorkspaceService)))
-                .returns(() => workspaceService.object);
-            const experiments = typemoq.Mock.ofType<IExperimentService>();
-            serviceContainer
-                .setup((s) => s.get(typemoq.It.isValue(IExperimentService)))
-                .returns(() => experiments.object);
-            experiments.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
-            const diagnosticSvc = new (class extends InvalidMacPythonInterpreterService {
-                constructor(
-                    arg1: IServiceContainer,
-                    arg2: IInterpreterService,
-                    arg3: IPlatformService,
-                    arg4: IInterpreterHelper,
-                ) {
-                    super(arg1, arg2, [], arg3, arg4);
-                    this.changeThrottleTimeout = 1;
-                }
-                public onDidChangeConfigurationEx = (e?: ConfigurationChangeEvent, i?: InterpreterConfigurationScope) =>
-                    super.onDidChangeConfiguration(e, i);
-            })(
-                serviceContainerObject,
-                typemoq.Mock.ofType<IInterpreterService>().object,
-                typemoq.Mock.ofType<IPlatformService>().object,
-                typemoq.Mock.ofType<IInterpreterHelper>().object,
-            );
-
-            await expect(diagnosticSvc.onDidChangeConfigurationEx(undefined, undefined)).to.eventually.be.rejectedWith(
-                Error,
-            );
-        });
-
         test('Diagnostics are checked and throttled when path changes', async () => {
-            const event = typemoq.Mock.ofType<ConfigurationChangeEvent>();
+            const event = typemoq.Mock.ofType<InterpreterConfigurationScope>();
             const workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
             const serviceContainerObject = createContainer();
             let diagnoseInvocationCount = 0;
@@ -659,11 +527,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             serviceContainer
                 .setup((s) => s.get(typemoq.It.isValue(IWorkspaceService)))
                 .returns(() => workspaceService.object);
-            const experiments = typemoq.Mock.ofType<IExperimentService>();
-            serviceContainer
-                .setup((s) => s.get(typemoq.It.isValue(IExperimentService)))
-                .returns(() => experiments.object);
-            experiments.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
+
             const diagnosticSvc = new (class extends InvalidMacPythonInterpreterService {
                 constructor(
                     arg1: IServiceContainer,
@@ -674,7 +538,8 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                     super(arg1, arg2, [], arg3, arg4);
                     this.changeThrottleTimeout = 100;
                 }
-                public onDidChangeConfigurationEx = (e: ConfigurationChangeEvent) => super.onDidChangeConfiguration(e);
+                public onDidChangeConfigurationEx = (e: InterpreterConfigurationScope) =>
+                    super.onDidChangeConfiguration(e);
                 public diagnose(): Promise<any> {
                     diagnoseInvocationCount += 1;
                     return Promise.resolve();
@@ -686,52 +551,39 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 typemoq.Mock.ofType<IInterpreterHelper>().object,
             );
 
-            event
-                .setup((e) => e.affectsConfiguration(typemoq.It.isValue('python.pythonPath'), typemoq.It.isAny()))
-                .returns(() => true)
-                .verifiable(typemoq.Times.atLeastOnce());
-
             await diagnosticSvc.onDidChangeConfigurationEx(event.object);
             await diagnosticSvc.onDidChangeConfigurationEx(event.object);
             await diagnosticSvc.onDidChangeConfigurationEx(event.object);
             await diagnosticSvc.onDidChangeConfigurationEx(event.object);
             await diagnosticSvc.onDidChangeConfigurationEx(event.object);
             await sleep(500);
-            event.verifyAll();
             expect(diagnoseInvocationCount).to.be.equal(1, 'Not invoked');
         });
 
-        test('Ensure event Handler is registered correctly if in Deprecate Python path experiment', async () => {
+        test('Ensure event Handler is registered correctly', async () => {
             let interpreterPathServiceHandler: Function;
+            let invoked = false;
             const workspaceService = { onDidChangeConfiguration: noop } as any;
             const serviceContainerObject = createContainer();
 
-            const interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
             interpreterPathService
                 .setup((d) => d.onDidChange(typemoq.It.isAny(), typemoq.It.isAny()))
                 .callback((cb) => (interpreterPathServiceHandler = cb))
                 .returns(() => {
                     return { dispose: noop };
                 });
-            serviceContainer
-                .setup((s) => s.get(typemoq.It.isValue(IInterpreterPathService)))
-                .returns(() => interpreterPathService.object);
 
             serviceContainer.setup((s) => s.get(typemoq.It.isValue(IWorkspaceService))).returns(() => workspaceService);
-            const experiments = typemoq.Mock.ofType<IExperimentService>();
-            serviceContainer
-                .setup((s) => s.get(typemoq.It.isValue(IExperimentService)))
-                .returns(() => experiments.object);
-            experiments.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
-            diagnosticService = new (class extends InvalidMacPythonInterpreterService {})(
-                serviceContainerObject,
-                undefined as any,
-                [],
-                undefined as any,
-                undefined as any,
-            );
+
+            diagnosticService = new (class extends InvalidMacPythonInterpreterService {
+                protected async onDidChangeConfiguration(_i: InterpreterConfigurationScope) {
+                    invoked = true;
+                }
+            })(serviceContainerObject, undefined as any, [], undefined as any, undefined as any);
 
             expect(interpreterPathServiceHandler!).to.not.equal(undefined, 'Handler not set');
+            await interpreterPathServiceHandler!({} as any);
+            expect(invoked).to.be.equal(true, 'Not invoked');
         });
     });
 });
