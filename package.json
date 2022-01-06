@@ -175,7 +175,18 @@
                         "media": {
                             "altText": "Image representing our documentation page and mailing list resources.",
                             "svg": "resources/walkthrough/learnmore.svg"
-                        }
+                        },
+                        "when": ""
+                    },
+                    {
+                        "id": "python.learnMoreWithDS",
+                        "title": "Explore more resources",
+                        "description": "🎨 Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands). \n 📈 Learn more about getting started with [data science](command:workbench.action.openWalkthrough?%7B%22category%22%3A%22ms-python.python%23pythonDataScienceWelcome%22%2C%22step%22%3A%22ms-python.python%23python.createNewNotebook%22%7D) in Python. \n 💌 [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list. \n ✨ Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features. \n \n[Learn More](https://aka.ms/AA8dqti)",
+                        "media": {
+                            "altText": "Image representing our documentation page and mailing list resources.",
+                            "svg": "resources/walkthrough/learnmore.svg"
+                        },
+                        "when": "false"
                     }
                 ]
             },
@@ -192,7 +203,7 @@
                         "media": {
                             "markdown": "resources/walkthrough/install-python-windows.md"
                         },
-                        "when": "workspacePlatform == windows"
+                        "when": "false"
                     },
                     {
                         "id": "python.installPythonMacDS",
@@ -201,7 +212,7 @@
                         "media": {
                             "markdown": "resources/walkthrough/install-python-macos.md"
                         },
-                        "when": "workspacePlatform == mac",
+                        "when": "false",
                         "command": "workbench.action.terminal.new"
                     },
                     {
@@ -211,7 +222,7 @@
                         "media": {
                             "markdown": "resources/walkthrough/install-python-linux.md"
                         },
-                        "when": "workspacePlatform == linux",
+                        "when": "false",
                         "command": "workbench.action.terminal.new"
                     },
                     {
@@ -225,7 +236,7 @@
                         "completionEvents": [
                             "onCommand:workbench.action.files.openFileFolder"
                         ],
-                        "when": "workspacePlatform == mac && workspaceFolderCount == 0"
+                        "when": "false"
                     },
                     {
                         "id": "python.openFolder",
@@ -238,18 +249,29 @@
                         "completionEvents": [
                             "onCommand:workbench.action.files.openFolder"
                         ],
-                        "when": "workspacePlatform != mac && workspaceFolderCount == 0"
+                        "when": "false"
+                    },
+                    {
+                        "id": "python.installJupyterExt",
+                        "title": "Install Jupyter extension",
+                        "description": "If you haven't already, install the [Jupyter extension](command:workbench.extensions.search?\"ms-toolsai.jupyter\") to take full advantage of notebooks experiences in VS Code!\n \n[Search Jupyter extension](command:workbench.extensions.search?\"ms-toolsai.jupyter\")",
+                        "media": {
+                            "svg": "resources/walkthrough/data-science.svg",
+                            "altText": "Creating a new Jupyter notebook"
+                        }
                     },
                     {
                         "id": "python.createNewNotebook",
-                        "title": "Create a new Jupyter Notebook",
-                        "description": "To create a new Jupyter Notebook, you can right click in the file explorer and create a new file with an .ipynb extension anytime.\n \nAlternatively, you can open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create New Blank Notebook``.\n[Create new Jupyter Notebook](command:toSide:jupyter.createnewnotebook)",
+                        "title": "Create or open a Jupyter Notebook",
+                        "description": "Right click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create New Blank Notebook``.\n[Create new Jupyter Notebook](command:toSide:jupyter.createnewnotebook)\n If you have an existing project, you can also [open a folder](command:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:git.clone).",
                         "media": {
                             "svg": "resources/walkthrough/create-notebook.svg",
                             "altText": "Creating a new Jupyter notebook"
                         },
                         "completionEvents": [
-                            "onCommand:jupyter.createnewnotebook"
+                            "onCommand:jupyter.createnewnotebook",
+                            "onCommand:workbench.action.files.openFolder",
+                            "onCommand:workbench.action.files.openFileFolder"
                         ]
                     },
                     {
@@ -267,7 +289,7 @@
                     {
                         "id": "python.dataScienceLearnMore",
                         "title": "Find out more!",
-                        "description": "🎨 Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands). \n 📒 Take a look into the [Jupyter extension](command:workbench.extensions.search?\"ms-toolsai.jupyter\") features, by looking for \"Jupyter\" in the [Command Palette](command:workbench.action.showCommands). \n 📃 Find out more features in our [Tutorials](https://aka.ms/AAdjzpd).  \n[Learn more](https://aka.ms/AAdar6q)",
+                        "description": "📒 Take a look into the [Jupyter extension](command:workbench.extensions.search?\"ms-toolsai.jupyter\") features, by looking for \"Jupyter\" in the [Command Palette](command:workbench.action.showCommands). \n 🏃🏻 Find out more features in our [Tutorials](https://aka.ms/AAdjzpd).  \n[Learn more](https://aka.ms/AAdar6q)",
                         "media": {
                             "svg": "resources/walkthrough/learnmore.svg",
                             "altText": "Image representing our documentation page and mailing list resources."
@@ -2019,7 +2041,7 @@
         "ts-node": "^8.3.0",
         "tsconfig-paths-webpack-plugin": "^3.2.0",
         "typemoq": "^2.1.0",
-        "typescript": "4.1.5",
+        "typescript": "^4.1.5",
         "typescript-formatter": "^7.1.0",
         "uuid": "^3.3.2",
         "vsce": "^1.96.1",
