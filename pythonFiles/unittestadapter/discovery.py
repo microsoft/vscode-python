@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import getopt
 import os
 from typing import Any, Dict, List, Tuple
@@ -81,6 +84,12 @@ def discover_tests(start_dir, pattern, top_level_dir) -> Dict[str, Any]:
     #     "status": "success",
     #     "cwd": <test discovery directory>,
     #     "tests": <test tree>
+    # }
+
+    # Payload format for a successful discovery with no tests:
+    # {
+    #     "status": "success",
+    #     "cwd": <test discovery directory>,
     # }
 
     # Payload format when there are errors:
