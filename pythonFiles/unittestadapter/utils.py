@@ -103,6 +103,8 @@ def build_test_tree(
 ) -> Tuple[TestNode, List[str]]:
     """
     Build a test tree from a unittest test suite.
+    This function returns the test tree, and any errors found by unittest.
+    If no tests were discovered, return None and a list of errors (if any).
 
     Test tree structure:
     {
@@ -115,17 +117,17 @@ def build_test_tree(
             {
                 "path": <file path>,
                 "name": filename.py,
-                "type": "file",
+                "type_": "file",
                 "children": [
                     {
                         "path": <class path>,
                         "name": <class name>,
-                        "type": "class",
+                        "type_": "class",
                         "children": [
                             {
                                 "path": <test path>,
                                 "name": <test name>,
-                                "type": "test",
+                                "type_": "test",
                                 "lineno": <line number>
                                 "id": <test case id>,
                             }
