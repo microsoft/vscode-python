@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationTarget, Uri } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IExperimentService, IInterpreterPathService } from '../../client/common/types';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
@@ -27,13 +27,6 @@ suite('Python Path Settings Updater', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterPathService)))
             .returns(() => interpreterPathService.object);
         updaterServiceFactory = new PythonPathUpdaterServiceFactory(serviceContainer.object);
-    }
-    function setupConfigProvider(resource?: Uri): TypeMoq.IMock<WorkspaceConfiguration> {
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        workspaceService
-            .setup((w) => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isValue(resource)))
-            .returns(() => workspaceConfig.object);
-        return workspaceConfig;
     }
 
     suite('Global', () => {
@@ -106,8 +99,6 @@ suite('Python Path Settings Updater', () => {
             const workspaceFolder = Uri.file(workspaceFolderPath);
             const pythonPath = Uri.file(path.join(workspaceFolderPath, 'env', 'bin', 'python')).fsPath;
             const expectedPythonPath = path.join('env', 'bin', 'python');
-            const workspaceConfig = setupConfigProvider(workspaceFolder);
-            workspaceConfig.setup((w) => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
             interpreterPathService.setup((i) => i.inspect(workspaceFolder)).returns(() => ({}));
             interpreterPathService
                 .setup((i) => i.update(workspaceFolder, ConfigurationTarget.WorkspaceFolder, expectedPythonPath))
