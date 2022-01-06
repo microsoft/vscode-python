@@ -66,20 +66,20 @@ def get_source_line(obj) -> str:
 # Helper functions for test tree building.
 
 
-def build_test_node(path: str, name: str, type: TestNodeTypeEnum) -> TestNode:
+def build_test_node(path: str, name: str, type_: TestNodeTypeEnum) -> TestNode:
     """
     Build a test node with no children. A test node can be a folder, a file or a class.
     """
     return {
         "path": path,
         "name": name,
-        "type": type,
+        "type_": type_,
         "children": [],
     }
 
 
 def get_child_node(
-    name: str, path: str, type: TestNodeTypeEnum, root: TestNode
+    name: str, path: str, type_: TestNodeTypeEnum, root: TestNode
 ) -> TestNode:
     """
     Find a child node in a test tree given its name and type.
@@ -89,10 +89,10 @@ def get_child_node(
         result = next(
             node
             for node in root["children"]
-            if node["name"] == name and node["type"] == type
+            if node["name"] == name and node["type_"] == type_
         )
     except StopIteration:
-        result = build_test_node(path, name, type)
+        result = build_test_node(path, name, type_)
         root["children"].append(result)
 
     return result
