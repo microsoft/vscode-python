@@ -1,6 +1,6 @@
 import getopt
 import os
-from typing import Any, List, Tuple
+from typing import Any, Dict, List, Tuple
 import sys
 import traceback
 import unittest
@@ -16,16 +16,6 @@ sys.path.insert(0, os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python"))
 
 import requests
 
-# Get arguments
-argv = sys.argv[1:]
-index = argv.index("--")
-
-script_args, _ = getopt.getopt(argv[:index], "", ["port="])
-unittest_args, _ = getopt.getopt(
-    argv[index + 1 :],
-    "vs:p:t:",
-    ["start-directory=", "pattern=", "top-level-directory="],
-)
 
 Arguments = Tuple[str, Any]
 
@@ -63,9 +53,7 @@ def parse_unittest_args(args: List[Arguments]) -> Tuple[str, str, str]:
     return start_dir, pattern, top_level_dir
 
 
-if __name__ == "__main__":
-    # Test discovery
-    start_dir, pattern, top_level_dir = parse_unittest_args(unittest_args)
+def discover_tests(start_dir, pattern, top_level_dir) -> Dict[str, Any]:
     cwd = os.path.abspath(start_dir)
     payload = {"cwd": cwd}
     tests = None
@@ -101,6 +89,26 @@ if __name__ == "__main__":
     #     "errors": [list of errors]
     #     "status": "error",
     # }
+
+    return payload
+
+
+if __name__ == "__main__":
+    # Get unittest discovery arguments
+    argv = sys.argv[1:]
+    index = argv.index("--udiscovery")
+
+    script_args, _ = getopt.getopt(argv[:index], "", ["port="])
+    unittest_args, _ = getopt.getopt(
+        argv[index + 1 :],
+        "vs:p:t:",
+        ["start-directory=", "pattern=", "top-level-directory="],
+    )
+
+    start_dir, pattern, top_level_dir = parse_unittest_args(unittest_args)
+
+    # Perform test discovery & send it over
+    payload = discover_tests(start_dir, pattern, top_level_dir)
 
     port = parse_port(script_args)
     requests.post(f"http://localhost:{port}", json=payload)

@@ -39,6 +39,6 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
     private buildDiscoveryCommand(args: string[]): string[] {
         const discoveryScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'discovery.py');
-        return [discoveryScript, '--port', `${this.port}`, '--', ...args];
+        return [discoveryScript, '--port', `${this.port}`, '--udiscovery', ...args];
     }
 }
