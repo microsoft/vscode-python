@@ -11,7 +11,10 @@ import * as TypeMoq from 'typemoq';
 import untildify = require('untildify');
 import { WorkspaceConfiguration } from 'vscode';
 import { LanguageServerType } from '../../../client/activation/types';
+import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
+import { InterpreterPathService } from '../../../client/common/interpreterPathService';
+import { PersistentStateFactory } from '../../../client/common/persistentState';
 import {
     IAutoCompleteSettings,
     IExperiments,
@@ -24,6 +27,7 @@ import { noop } from '../../../client/common/utils/misc';
 import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 import { ITestingSettings } from '../../../client/testing/configuration/types';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
+import { MockMemento } from '../../mocks/mementos';
 
 suite('Python Settings', async () => {
     class CustomPythonSettings extends PythonSettings {
@@ -40,8 +44,25 @@ suite('Python Settings', async () => {
     setup(() => {
         sinon.stub(EnvFileTelemetry, 'sendSettingTelemetry').returns();
         config = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Loose);
-        expected = new CustomPythonSettings(undefined, new MockAutoSelectionService());
-        settings = new CustomPythonSettings(undefined, new MockAutoSelectionService());
+
+        const workspaceService = new WorkspaceService();
+        const workspaceMemento = new MockMemento();
+        const globalMemento = new MockMemento();
+        const persistentStateFactory = new PersistentStateFactory(globalMemento, workspaceMemento);
+        expected = new CustomPythonSettings(
+            undefined,
+            new MockAutoSelectionService(),
+            workspaceService,
+            new InterpreterPathService(persistentStateFactory, workspaceService, []),
+            undefined,
+        );
+        settings = new CustomPythonSettings(
+            undefined,
+            new MockAutoSelectionService(),
+            workspaceService,
+            new InterpreterPathService(persistentStateFactory, workspaceService, []),
+            undefined,
+        );
         expected.defaultInterpreterPath = 'python';
     });
 
@@ -119,7 +140,6 @@ suite('Python Settings', async () => {
 
     suite('String settings', async () => {
         [
-            'pythonPath',
             'venvPath',
             'condaPath',
             'pipenvPath',
