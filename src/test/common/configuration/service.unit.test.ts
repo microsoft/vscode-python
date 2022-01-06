@@ -158,24 +158,4 @@ suite('Configuration Service', () => {
 
         workspaceConfig.verifyAll();
     });
-
-    test('If in Deprecate PythonPath experiment & setting to update is `python.pythonPath`, update settings using new API if stored value is not equal to the new value', async () => {
-        interpreterPathService
-            .setup((w) => w.inspect(resource))
-
-            .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue', key: 'setting' }));
-        interpreterPathService
-            .setup((w) => w.update(resource, ConfigurationTarget.WorkspaceFolder, 'newWorkspaceFolderValue'))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
-
-        await configService.updateSetting(
-            'pythonPath',
-            'newWorkspaceFolderValue',
-            resource,
-            ConfigurationTarget.WorkspaceFolder,
-        );
-
-        interpreterPathService.verifyAll();
-    });
 });
