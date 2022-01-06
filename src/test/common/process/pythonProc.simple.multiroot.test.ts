@@ -15,7 +15,8 @@ import { IConfigurationService } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { OSType } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { clearPythonPathInWorkspaceFolder, getExtensionSettings, isOs, isPythonVersion } from '../../common';
+import { clearPythonPathInWorkspaceFolder, isOs, isPythonVersion } from '../../common';
+import { getExtensionSettings } from '../../extensionSettings';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 
 use(chaiAsPromised);

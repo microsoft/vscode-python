@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 
+// IMPORTANT: Do not import anything from the 'client' folder in this file as that folder is not available during smoke tests.
+
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
@@ -9,16 +11,11 @@ import * as path from 'path';
 import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
-import { WorkspaceService } from '../client/common/application/workspace';
-import { InterpreterPathService } from '../client/common/interpreterPathService';
-import { PersistentStateFactory } from '../client/common/persistentState';
 import { IProcessService } from '../client/common/process/types';
-import { IDisposable, IPythonSettings, Resource } from '../client/common/types';
+import { IDisposable } from '../client/common/types';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
-import { PythonEnvironment } from '../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop, sleep } from './core';
-import { MockMemento } from './mocks/mementos';
 
 const StreamZip = require('node-stream-zip');
 
@@ -155,38 +152,6 @@ function getWorkspaceRoot() {
     return workspaceFolder ? workspaceFolder.uri : vscode.workspace.workspaceFolders[0].uri;
 }
 
-export function getExtensionSettings(resource: Uri | undefined): IPythonSettings {
-    const vscode = require('vscode') as typeof import('vscode');
-    class AutoSelectionService {
-        get onDidChangeAutoSelectedInterpreter(): Event<void> {
-            return new vscode.EventEmitter<void>().event;
-        }
-        public autoSelectInterpreter(_resource: Resource): Promise<void> {
-            return Promise.resolve();
-        }
-        public getAutoSelectedInterpreter(_resource: Resource): PythonEnvironment | undefined {
-            return;
-        }
-        public async setWorkspaceInterpreter(
-            _resource: Uri,
-            _interpreter: PythonEnvironment | undefined,
-        ): Promise<void> {
-            return;
-        }
-    }
-    const pythonSettings = require('../client/common/configSettings') as typeof import('../client/common/configSettings');
-    const workspaceService = new WorkspaceService();
-    const workspaceMemento = new MockMemento();
-    const globalMemento = new MockMemento();
-    const persistentStateFactory = new PersistentStateFactory(globalMemento, workspaceMemento);
-    return pythonSettings.PythonSettings.getInstance(
-        resource,
-        new AutoSelectionService(),
-        workspaceService,
-        new InterpreterPathService(persistentStateFactory, workspaceService, []),
-        undefined,
-    );
-}
 export function retryAsync(this: any, wrapped: Function, retryCount: number = 2) {
     return async (...args: any[]) => {
         return new Promise((resolve, reject) => {
