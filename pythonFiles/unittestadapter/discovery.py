@@ -1,14 +1,20 @@
 import getopt
 import os
 from typing import Any, List, Tuple
-import requests
 import sys
 import traceback
 import unittest
 
 from utils import build_test_tree
 
-sys.path.insert(0, os.getcwd())
+
+# Add the lib path to our sys path to find the requests module.
+EXTENSION_ROOT = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
+sys.path.insert(0, os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python"))
+
+import requests
 
 # Get arguments
 argv = sys.argv[1:]
