@@ -9,7 +9,7 @@ import { ConfigurationTarget, Disposable, QuickPickItem, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { IConfigurationService, IDisposable, IPathUtils, Resource } from '../../../../common/types';
-import { Interpreters } from '../../../../common/utils/localize';
+import { Common, Interpreters } from '../../../../common/utils/localize';
 import { IPythonPathUpdaterServiceManager } from '../../types';
 export interface WorkspaceSelectionQuickPickItem extends QuickPickItem {
     uri?: Uri;
@@ -67,7 +67,7 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
         let quickPickItems: WorkspaceSelectionQuickPickItem[] = options?.resetTarget
             ? [
                   {
-                      label: 'Clear all',
+                      label: Common.clearAll(),
                   },
               ]
             : [];
@@ -85,7 +85,7 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
                 };
             }),
             {
-                label: options?.resetTarget ? 'Clear at workspace level' : Interpreters.entireWorkspace(),
+                label: options?.resetTarget ? Interpreters.clearAtWorkspace() : Interpreters.entireWorkspace(),
                 uri: workspaceFolders[0].uri,
             },
         );
@@ -96,7 +96,7 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
                 : 'Select the workspace folder to set the interpreter',
         });
 
-        if (selection?.label === 'Clear all') {
+        if (selection?.label === Common.clearAll()) {
             const folderTargets: {
                 folderUri: Resource;
                 configTarget: ConfigurationTarget;
@@ -108,7 +108,7 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
         }
 
         return selection
-            ? selection.label === Interpreters.entireWorkspace()
+            ? selection.label === Interpreters.entireWorkspace() || selection.label === Interpreters.clearAtWorkspace()
                 ? [{ folderUri: selection.uri, configTarget: ConfigurationTarget.Workspace }]
                 : [{ folderUri: selection.uri, configTarget: ConfigurationTarget.WorkspaceFolder }]
             : undefined;
