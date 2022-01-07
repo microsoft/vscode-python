@@ -26,7 +26,7 @@ def test_simple_test_cases() -> None:
     ]
     actual = []
 
-    # Discover tests in .data/utils_case_one.py
+    # Discover tests in .data/utils_simple_cases.py
     start_dir = TEST_DATA_PATH.__str__()
     pattern = "utils_simple_cases*"
 
@@ -54,8 +54,8 @@ def test_nested_test_cases() -> None:
     ]
     actual = []
 
-    # Discover tests in .data/utils_case_two/
-    start_dir = Path(TEST_DATA_PATH, "utils_nested_cases").__str__()
+    # Discover tests in .data/utils_nested_cases/
+    start_dir = PurePath(TEST_DATA_PATH, "utils_nested_cases").__str__()
     pattern = "file*"
 
     loader = unittest.TestLoader()
@@ -164,13 +164,13 @@ def test_no_existing_child_node() -> None:
 
 def test_build_simple_tree() -> None:
     """
-    The build_test_tree fuction should build and return a test tree from discovered test suites, and a list of errors if there are any, or an empty list otherwise .
+    The build_test_tree function should build and return a test tree from discovered test suites, and an empty list of errors if there are none in the discovered data.
     """
 
-    # Discovery tests in utils_tree_one.py
+    # Discovery tests in utils_simple_tree.py
     start_dir = TEST_DATA_PATH.__str__()
     pattern = "utils_simple_tree*"
-    file_dir = PurePath(TEST_DATA_PATH, "utils_simple_tree.py").__str__()
+    file_path = PurePath(TEST_DATA_PATH, "utils_simple_tree.py").__str__()
 
     expected: TestNode = {
         "path": start_dir,
@@ -180,24 +180,24 @@ def test_build_simple_tree() -> None:
             {
                 "name": "utils_simple_tree.py",
                 "type_": TestNodeTypeEnum.file,
-                "path": file_dir,
+                "path": file_path,
                 "children": [
                     {
                         "name": "TreeOne",
-                        "path": file_dir,
+                        "path": file_path,
                         "type_": TestNodeTypeEnum.class_,
                         "children": [
                             {
                                 "id_": "utils_simple_tree.TreeOne.test_one",
                                 "name": "test_one",
-                                "path": file_dir,
+                                "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "13",
                             },
                             {
                                 "id_": "utils_simple_tree.TreeOne.test_two",
                                 "name": "test_two",
-                                "path": file_dir,
+                                "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "16",
                             },
@@ -218,7 +218,7 @@ def test_build_simple_tree() -> None:
 
 def test_build_empty_tree() -> None:
     """
-    The build_test_tree fuction should return None if there are no discovered test suites, and a list of errors if there are any, or an empty list otherwise .
+    The build_test_tree function should return None if there are no discovered test suites, and an empty list of errors if there are none in the discovered data
     """
 
     start_dir = TEST_DATA_PATH.__str__()
