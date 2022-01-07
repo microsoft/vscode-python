@@ -73,8 +73,10 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
             : [];
         quickPickItems.push(
             ...workspaceFolders.map((w) => {
-                const p = this.configurationService.getSettings(w.uri).pythonPath;
-                const selectedInterpreter = this.pathUtils.getDisplayName(p, w.uri.fsPath);
+                const selectedInterpreter = this.pathUtils.getDisplayName(
+                    this.configurationService.getSettings(w.uri).pythonPath,
+                    w.uri.fsPath,
+                );
                 return {
                     label: w.name,
                     description: this.pathUtils.getDisplayName(path.dirname(w.uri.fsPath)),
@@ -102,7 +104,10 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
                 folderUri: w.uri,
                 configTarget: ConfigurationTarget.WorkspaceFolder,
             }));
-            return [...folderTargets, { folderUri: undefined, configTarget: ConfigurationTarget.Workspace }];
+            return [
+                ...folderTargets,
+                { folderUri: workspaceFolders[0].uri, configTarget: ConfigurationTarget.Workspace },
+            ];
         }
 
         return selection

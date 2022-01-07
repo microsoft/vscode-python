@@ -186,6 +186,76 @@ suite('Reset Interpreter Command', () => {
             workspace.verifyAll();
             pythonPathUpdater.verifyAll();
         });
+        test('Update all folders and workspace scope if `Clear all` is selected', async () => {
+            workspace.setup((w) => w.workspaceFolders).returns(() => [folder1, folder2]);
+            const expectedItems = [
+                { label: Common.clearAll() },
+                {
+                    label: 'one',
+                    description: path.dirname(folder1.uri.fsPath),
+                    uri: folder1.uri,
+                    detail: 'pythonPath',
+                },
+                {
+                    label: 'two',
+                    description: path.dirname(folder2.uri.fsPath),
+                    uri: folder2.uri,
+                    detail: 'pythonPath',
+                },
+                {
+                    label: Interpreters.clearAtWorkspace(),
+                    uri: folder1.uri,
+                },
+            ];
+            appShell
+                .setup((s) => s.showQuickPick(TypeMoq.It.isValue(expectedItems), TypeMoq.It.isAny()))
+                .returns(() =>
+                    Promise.resolve({
+                        label: Common.clearAll(),
+                        uri: folder1.uri,
+                    }),
+                )
+                .verifiable(TypeMoq.Times.once());
+            pythonPathUpdater
+                .setup((p) =>
+                    p.updatePythonPath(
+                        TypeMoq.It.isValue(undefined),
+                        TypeMoq.It.isValue(ConfigurationTarget.Workspace),
+                        TypeMoq.It.isValue('ui'),
+                        TypeMoq.It.isValue(folder1.uri),
+                    ),
+                )
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.once());
+            pythonPathUpdater
+                .setup((p) =>
+                    p.updatePythonPath(
+                        TypeMoq.It.isValue(undefined),
+                        TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder),
+                        TypeMoq.It.isValue('ui'),
+                        TypeMoq.It.isValue(folder2.uri),
+                    ),
+                )
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.once());
+
+            pythonPathUpdater
+                .setup((p) =>
+                    p.updatePythonPath(
+                        TypeMoq.It.isValue(undefined),
+                        TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder),
+                        TypeMoq.It.isValue('ui'),
+                        TypeMoq.It.isValue(folder1.uri),
+                    ),
+                )
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.once());
+            await resetInterpreterCommand.resetInterpreter();
+
+            appShell.verifyAll();
+            workspace.verifyAll();
+            pythonPathUpdater.verifyAll();
+        });
         test('Do not update anything when user does not select a workspace folder and there is more than one workspace folder', async () => {
             workspace.setup((w) => w.workspaceFolders).returns(() => [folder1, folder2]);
 
