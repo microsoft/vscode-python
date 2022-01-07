@@ -16,6 +16,10 @@ TEST_DATA_PATH = Path(Path(__file__).parent, ".data")
 
 
 def test_simple_test_cases() -> None:
+    """
+    The get_test_case fuction should return tests from the test suite.
+    """
+
     expected = ["utils_case_one.CaseOne.test_one", "utils_case_one.CaseOne.test_two"]
     actual = []
 
@@ -34,11 +38,16 @@ def test_simple_test_cases() -> None:
 
 
 def test_nested_test_cases() -> None:
+    """
+    The get_test_case fuction should return tests from all test suites,
+    even those in subfolders.
+    """
+
     expected = [
         "file_one.CaseTwoFileOne.test_one",
         "file_one.CaseTwoFileOne.test_two",
-        "file_two.CaseTwoFileTwo.test_one",
-        "file_two.CaseTwoFileTwo.test_two",
+        "folder.file_two.CaseTwoFileTwo.test_one",
+        "folder.file_two.CaseTwoFileTwo.test_two",
     ]
     actual = []
 
@@ -57,6 +66,10 @@ def test_nested_test_cases() -> None:
 
 
 def test_get_existing_child_node() -> None:
+    """
+    The get_child_node fuction should return the child node of a test tree if it exists.
+    """
+
     tree = {
         "name": "root",
         "path": "foo",
@@ -99,6 +112,10 @@ def test_get_existing_child_node() -> None:
 
 
 def test_no_existing_child_node() -> None:
+    """
+    The get_child_node fuction should add a child node to a test tree and return it if it does not exist.
+    """
+
     tree: TestNode = {
         "name": "root",
         "path": "foo",
@@ -175,6 +192,10 @@ def is_same_tree(tree1, tree2) -> bool:
 
 
 def test_build_simple_tree() -> None:
+    """
+    The build_test_tree fuction should build and return a test tree from discovered test suites, and a list of errors if there are any, or an empty list otherwise .
+    """
+
     # Discovery tests in utils_tree_one.py
     start_dir = TEST_DATA_PATH.__str__()
     pattern = "utils_tree_one*"
@@ -220,18 +241,15 @@ def test_build_simple_tree() -> None:
     suite = loader.discover(start_dir, pattern)
     tests, errors = build_test_tree(suite, start_dir)
 
-    # Build tree
-    print("***** EXPECTED")
-    print(expected)
-    print("***** ACTUAL")
-    print(tests)
-    print("***** END")
-
     assert is_same_tree(expected, tests)
     assert len(errors) == 0
 
 
 def test_build_empty_tree() -> None:
+    """
+    The build_test_tree fuction should return None if there are no discovered test suites, and a list of errors if there are any, or an empty list otherwise .
+    """
+
     start_dir = TEST_DATA_PATH.__str__()
     pattern = "does_not_exist*"
 
