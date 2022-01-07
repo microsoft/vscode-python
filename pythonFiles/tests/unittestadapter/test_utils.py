@@ -20,12 +20,15 @@ def test_simple_test_cases() -> None:
     The get_test_case fuction should return tests from the test suite.
     """
 
-    expected = ["utils_case_one.CaseOne.test_one", "utils_case_one.CaseOne.test_two"]
+    expected = [
+        "utils_simple_cases.CaseOne.test_one",
+        "utils_simple_cases.CaseOne.test_two",
+    ]
     actual = []
 
     # Discover tests in .data/utils_case_one.py
     start_dir = TEST_DATA_PATH.__str__()
-    pattern = "utils_case_one*"
+    pattern = "utils_simple_cases*"
 
     loader = unittest.TestLoader()
     suite = loader.discover(start_dir, pattern)
@@ -52,7 +55,7 @@ def test_nested_test_cases() -> None:
     actual = []
 
     # Discover tests in .data/utils_case_two/
-    start_dir = Path(TEST_DATA_PATH, "utils_case_two").__str__()
+    start_dir = Path(TEST_DATA_PATH, "utils_nested_cases").__str__()
     pattern = "file*"
 
     loader = unittest.TestLoader()
@@ -198,8 +201,8 @@ def test_build_simple_tree() -> None:
 
     # Discovery tests in utils_tree_one.py
     start_dir = TEST_DATA_PATH.__str__()
-    pattern = "utils_tree_one*"
-    file_dir = PurePath(TEST_DATA_PATH, "utils_tree_one.py").__str__()
+    pattern = "utils_simple_tree*"
+    file_dir = PurePath(TEST_DATA_PATH, "utils_simple_tree.py").__str__()
 
     expected: TestNode = {
         "path": start_dir,
@@ -207,7 +210,7 @@ def test_build_simple_tree() -> None:
         "name": ".data",
         "children": [
             {
-                "name": "utils_tree_one.py",
+                "name": "utils_simple_tree.py",
                 "type_": TestNodeTypeEnum.file,
                 "path": file_dir,
                 "children": [
@@ -217,14 +220,14 @@ def test_build_simple_tree() -> None:
                         "type_": TestNodeTypeEnum.class_,
                         "children": [
                             {
-                                "id_": "utils_tree_one.TreeOne.test_one",
+                                "id_": "utils_simple_tree.TreeOne.test_one",
                                 "name": "test_one",
                                 "path": file_dir,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "13",
                             },
                             {
-                                "id_": "utils_tree_one.TreeOne.test_two",
+                                "id_": "utils_simple_tree.TreeOne.test_two",
                                 "name": "test_two",
                                 "path": file_dir,
                                 "type_": TestNodeTypeEnum.test,
