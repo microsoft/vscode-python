@@ -55,10 +55,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
 
     constructor(
         @inject(IApplicationShell) applicationShell: IApplicationShell,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
+        @inject(IPathUtils) pathUtils: IPathUtils,
         @inject(IPythonPathUpdaterServiceManager)
         pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
@@ -66,7 +66,14 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
     ) {
-        super(pythonPathUpdaterService, commandManager, applicationShell, workspaceService);
+        super(
+            pythonPathUpdaterService,
+            commandManager,
+            applicationShell,
+            workspaceService,
+            pathUtils,
+            configurationService,
+        );
     }
 
     public async activate(): Promise<void> {

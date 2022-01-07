@@ -5,29 +5,25 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    IWorkspaceService,
-} from '../../../../common/application/types';
+import { IExtensionSingleActivationService } from '../../../../activation/types';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands } from '../../../../common/constants';
+import { IDisposableRegistry } from '../../../../common/types';
 import { IShebangCodeLensProvider } from '../../../contracts';
 import { IPythonPathUpdaterServiceManager } from '../../types';
-import { BaseInterpreterSelectorCommand } from './base';
 
 @injectable()
-export class SetShebangInterpreterCommand extends BaseInterpreterSelectorCommand {
+export class SetShebangInterpreterCommand implements IExtensionSingleActivationService {
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
     constructor(
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
-        @inject(IPythonPathUpdaterServiceManager) pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
+        @inject(IPythonPathUpdaterServiceManager)
+        private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
         @inject(IShebangCodeLensProvider) private readonly shebangCodeLensProvider: IShebangCodeLensProvider,
-        @inject(ICommandManager) commandManager: ICommandManager,
-        @inject(ICommandManager) applicationShell: IApplicationShell,
-    ) {
-        super(pythonPathUpdaterService, commandManager, applicationShell, workspaceService);
-    }
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+    ) {}
 
     public async activate() {
         this.disposables.push(
