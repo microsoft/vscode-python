@@ -405,7 +405,7 @@ function getGroupedQuickPickItems(items: IInterpreterQuickPickItem[], workspaceP
     const updatedItems: QuickPickType[] = [];
     let previousGroup: EnvGroups | undefined;
     for (const item of items) {
-        addSeparatorIfApplicable(updatedItems, item, workspacePath, previousGroup);
+        previousGroup = addSeparatorIfApplicable(updatedItems, item, workspacePath, previousGroup);
         updatedItems.push(item);
     }
     return updatedItems;
@@ -430,6 +430,7 @@ function addSeparatorIfApplicable(
         items.push(separatorItem);
         previousGroup = currentGroup;
     }
+    return previousGroup;
 }
 
 function getGroup(item: IInterpreterQuickPickItem, workspacePath?: string) {
