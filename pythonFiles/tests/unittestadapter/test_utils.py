@@ -2,8 +2,8 @@
 # Licensed under the MIT License.
 
 import unittest
+from pathlib import Path, PurePath
 
-from os import path
 from unittestadapter.utils import (
     build_test_tree,
     get_child_node,
@@ -12,13 +12,15 @@ from unittestadapter.utils import (
     TestNodeTypeEnum,
 )
 
+TEST_DATA_PATH = Path(Path(__file__).parent, ".data")
+
 
 def test_simple_test_cases() -> None:
     expected = ["utils_case_one.CaseOne.test_one", "utils_case_one.CaseOne.test_two"]
     actual = []
 
     # Discover tests in .data/utils_case_one.py
-    start_dir = path.join(path.dirname(__file__), ".data")
+    start_dir = TEST_DATA_PATH.__str__()
     pattern = "utils_case_one*"
 
     loader = unittest.TestLoader()
@@ -41,7 +43,7 @@ def test_nested_test_cases() -> None:
     actual = []
 
     # Discover tests in .data/utils_case_two/
-    start_dir = path.join(path.dirname(__file__), ".data", "utils_case_two")
+    start_dir = Path(TEST_DATA_PATH, "utils_case_two").__str__()
     pattern = "file*"
 
     loader = unittest.TestLoader()
@@ -174,8 +176,9 @@ def is_same_tree(tree1, tree2) -> bool:
 
 def test_build_simple_tree() -> None:
     # Discovery tests in utils_tree_one.py
-    start_dir = path.join(path.dirname(__file__), ".data")
+    start_dir = TEST_DATA_PATH.__str__()
     pattern = "utils_tree_one*"
+    file_dir = PurePath(TEST_DATA_PATH, "utils_tree_one.py").__str__()
 
     expected: TestNode = {
         "path": start_dir,
@@ -185,24 +188,24 @@ def test_build_simple_tree() -> None:
             {
                 "name": "utils_tree_one.py",
                 "type_": TestNodeTypeEnum.file,
-                "path": path.join(start_dir, "utils_tree_one.py"),
+                "path": file_dir,
                 "children": [
                     {
                         "name": "TreeOne",
-                        "path": path.join(start_dir, "utils_tree_one.py"),
+                        "path": file_dir,
                         "type_": TestNodeTypeEnum.class_,
                         "children": [
                             {
                                 "id_": "utils_tree_one.TreeOne.test_one",
                                 "name": "test_one",
-                                "path": path.join(start_dir, "utils_tree_one.py"),
+                                "path": file_dir,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "13",
                             },
                             {
                                 "id_": "utils_tree_one.TreeOne.test_two",
                                 "name": "test_two",
-                                "path": path.join(start_dir, "utils_tree_one.py"),
+                                "path": file_dir,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "16",
                             },
@@ -229,7 +232,7 @@ def test_build_simple_tree() -> None:
 
 
 def test_build_empty_tree() -> None:
-    start_dir = path.join(path.dirname(__file__), ".data")
+    start_dir = TEST_DATA_PATH.__str__()
     pattern = "does_not_exist*"
 
     expected = None

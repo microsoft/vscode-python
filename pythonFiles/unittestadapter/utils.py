@@ -164,14 +164,14 @@ def build_test_tree(
             for folder in folders:
                 current_node = get_child_node(
                     folder,
-                    f'{current_node["path"]}/{folder}',
+                    pathlib.PurePath(current_node["path"], folder).__str__(),
                     TestNodeTypeEnum.folder,
                     current_node,
                 )
 
             # Find/build file node
             path_components = [test_directory] + folders + [py_filename]
-            file_path = "/".join(path_components)
+            file_path = pathlib.PurePath("/".join(path_components)).__str__()
             current_node = get_child_node(
                 py_filename, file_path, TestNodeTypeEnum.file, current_node
             )
