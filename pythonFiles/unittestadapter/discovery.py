@@ -60,6 +60,13 @@ def parse_unittest_args(args: List[Arguments]) -> Tuple[str, str, str]:
 
 
 def discover_tests(start_dir, pattern, top_level_dir) -> Dict[str, Any]:
+    """
+    Unittest test discovery function, that returns a payload dictionary with the following keys:
+    - cwd: Absolute path to the test start directory;
+    - status: Test discovery status, can be "success" or "error";
+    - tests: Discoverered tests if any, not present otherwise. Note that the status can be "error" but the payload can still contain tests;
+    - errors: Discovery errors if any, not present otherwise.
+    """
     cwd = os.path.abspath(start_dir)
     payload = {"cwd": cwd, "status": "success"}
     tests = None

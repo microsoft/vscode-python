@@ -7,6 +7,10 @@ TEST_DATA_PATH = Path(Path(__file__).parent, ".data")
 
 # Helper function to test if two test trees are the same.
 def is_same_tree(tree1, tree2) -> bool:
+    """
+    Helper function to test if two test trees are the same by comparing the root attributes,
+    and checking if all children are the same.
+    """
     # Compare the root
     if (
         tree1["path"] != tree2["path"]

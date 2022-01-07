@@ -141,7 +141,6 @@ def build_test_tree(
         ]
     }
     """
-
     errors = []
     directory_path = pathlib.PurePath(test_directory)
     root = build_test_node(test_directory, directory_path.name, TestNodeTypeEnum.folder)

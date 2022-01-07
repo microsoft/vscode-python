@@ -18,7 +18,6 @@ def test_parse_port_option() -> None:
     """
     The parse_port function should parse and return the port passed as a command-line option.
     """
-
     expected = 9999
     args = [("--port", expected)]
 
@@ -31,7 +30,6 @@ def test_parse_no_port_option() -> None:
     """
     The parse_port function should return a default port value if there was no --port command-line option.
     """
-
     args = [("--foo", "something"), ("--bar", "another")]
 
     actual = parse_port(args)
@@ -44,7 +42,6 @@ def test_parse_short_unittest_args() -> None:
     The parse_unittest_args function should return the values for the start_dir, pattern, and top_level_dir arguments
     when passed as command-line options with their shorthand form.
     """
-
     expected_start_dir = "foo"
     expected_pattern = "bar*"
     expected_top_level_dir = "baz"
@@ -66,7 +63,6 @@ def test_parse_long_unittest_args() -> None:
     The parse_unittest_args function should return the values for the start_dir, pattern, and top_level_dir arguments
     when passed as command-line options with their long form.
     """
-
     expected_start_dir = "foo"
     expected_pattern = "bar*"
     expected_top_level_dir = "baz"
@@ -88,7 +84,6 @@ def test_parse_no_unittest_args() -> None:
     The parse_unittest_args function should return default values for the start_dir, pattern, and top_level_dir arguments
     if they were not passed as command-line options, and ignore unrecognized arguments.
     """
-
     expected_start_dir = "."
     expected_pattern = "test*.py"
     expected_top_level_dir = None
@@ -108,7 +103,6 @@ def test_simple_discovery() -> None:
     The discover_tests function should return a dictionary with a "success" status, no errors, and a test tree
     if unittest discovery was performed successfully.
     """
-
     start_dir = TEST_DATA_PATH.__str__()
     pattern = "discovery_simple*"
     file_path = PurePath(TEST_DATA_PATH, "discovery_simple.py").__str__()
@@ -161,7 +155,6 @@ def test_empty_discovery() -> None:
     The discover_tests function should return a dictionary with a "success" status, no errors, and no test tree
     if unittest discovery was performed successfully but no tests were found.
     """
-
     start_dir = TEST_DATA_PATH.__str__()
     pattern = "discovery_empty*"
 
@@ -177,7 +170,6 @@ def test_error_discovery() -> None:
     The discover_tests function should return a dictionary with an "error" status, the discovered tests, and a list of errors
     if unittest discovery failed at some point.
     """
-
     # Discover tests in .data/discovery_error/
     start_dir = PurePath(TEST_DATA_PATH, "discovery_error").__str__()
     pattern = "file*"
