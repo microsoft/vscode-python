@@ -276,8 +276,14 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     private setRecommendedItem(items: QuickPickType[], resource: Resource) {
         const interpreterSuggestions = this.interpreterSelector.getSuggestions(resource);
         if (!this.interpreterService.refreshPromise && interpreterSuggestions.length > 0) {
-            // List is in the final state, so first suggestion is the recommended one.
-            const recommended = cloneDeep(interpreterSuggestions[0]);
+            const suggestion = this.interpreterSelector.getRecommendedSuggestion(
+                interpreterSuggestions,
+                this.workspaceService.getWorkspaceFolder(resource)?.uri,
+            );
+            if (!suggestion) {
+                return;
+            }
+            const recommended = cloneDeep(suggestion);
             recommended.label = `${Octicons.Star} ${recommended.label}`;
             recommended.description = `${recommended.description ?? ''} - ${Common.recommended()}`;
             const index = items.findIndex(

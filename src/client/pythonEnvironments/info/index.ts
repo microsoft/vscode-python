@@ -23,6 +23,15 @@ export enum EnvironmentType {
     System = 'System',
 }
 
+export const virtualEnvTypes = [
+    EnvironmentType.Poetry,
+    EnvironmentType.Pipenv,
+    EnvironmentType.Venv,
+    EnvironmentType.VirtualEnvWrapper,
+    EnvironmentType.Conda,
+    EnvironmentType.VirtualEnv,
+];
+
 /**
  * The IModuleInstaller implementations.
  */

@@ -298,7 +298,7 @@ suite('getEnvTypeHeuristic tests', () => {
 
             const envTypeHeuristic = getEnvLocationHeuristic(environment, workspacePath);
 
-            assert.strictEqual(envTypeHeuristic, EnvLocationHeuristic.GlobalInterpreters);
+            assert.strictEqual(envTypeHeuristic, EnvLocationHeuristic.Global);
         });
     });
 });

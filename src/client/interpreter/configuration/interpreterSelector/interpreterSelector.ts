@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, Uri } from 'vscode';
+import { arePathsSame } from '../../../common/platform/fs-paths';
 import { IPathUtils, Resource } from '../../../common/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { IInterpreterService } from '../../contracts';
@@ -51,5 +52,17 @@ export class InterpreterSelector implements IInterpreterSelector {
             path: suggestion.path,
             interpreter: suggestion,
         };
+    }
+
+    public getRecommendedSuggestion(
+        suggestions: IInterpreterQuickPickItem[],
+        resource: Resource,
+    ): IInterpreterQuickPickItem | undefined {
+        const envs = this.interpreterManager.getInterpreters(resource);
+        const recommendedEnv = this.envTypeComparer.getRecommended(envs);
+        if (!recommendedEnv) {
+            return undefined;
+        }
+        return suggestions.find((item) => arePathsSame(item.interpreter.path, recommendedEnv.path));
     }
 }

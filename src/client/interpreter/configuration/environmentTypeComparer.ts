@@ -3,8 +3,9 @@
 
 import { injectable, inject } from 'inversify';
 import { getArchitectureDisplayName } from '../../common/platform/registry';
+import { Resource } from '../../common/types';
 import { isParentPath } from '../../pythonEnvironments/common/externalDependencies';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment, virtualEnvTypes } from '../../pythonEnvironments/info';
 import { PythonVersion } from '../../pythonEnvironments/info/pythonVersion';
 import { IInterpreterHelper } from '../contracts';
 import { IInterpreterComparer } from './types';
@@ -80,6 +81,23 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
         }
 
         return nameA > nameB ? 1 : -1;
+    }
+
+    public getRecommended(interpreters: PythonEnvironment[], workspaceUri?: Resource): PythonEnvironment | undefined {
+        // When recommending an intepreter for a workspace, we either want to return a local one
+        // or fallback on a globally-installed interpreter, and we don't want want to suggest a global environment
+        // because we would have to add a way to match environments to a workspace.
+        const filteredInterpreters = interpreters.filter((i) => {
+            if (getEnvLocationHeuristic(i, workspaceUri?.fsPath || '') === EnvLocationHeuristic.Local) {
+                return true;
+            }
+            if (virtualEnvTypes.includes(i.envType)) {
+                return false;
+            }
+            return true;
+        });
+        filteredInterpreters.sort(this.compare.bind(this));
+        return filteredInterpreters.length ? filteredInterpreters[0] : undefined;
     }
 }
 
