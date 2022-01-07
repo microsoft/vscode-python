@@ -8,7 +8,7 @@ import sys
 import traceback
 import unittest
 
-from utils import build_test_tree
+from .utils import build_test_tree
 
 
 # Add the lib path to our sys path to find the requests module.
@@ -22,6 +22,8 @@ import requests
 
 Arguments = Tuple[str, Any]
 
+DEFAULT_PORT = 45454
+
 
 def parse_port(args: List[Arguments]) -> int:
     """
@@ -29,8 +31,8 @@ def parse_port(args: List[Arguments]) -> int:
     for example the port number that it needs to connect to.
     """
     # The port is passed to the discovery.py script when it is executed,
-    # defaults to 45454 if it can't be parsed.
-    port = 45454
+    # defaults to DEFAULT_PORT if it can't be parsed.
+    port = DEFAULT_PORT
     for opt in args:
         if opt[0] == "--port":
             port = opt[1]
@@ -40,17 +42,18 @@ def parse_port(args: List[Arguments]) -> int:
 def parse_unittest_args(args: List[Arguments]) -> Tuple[str, str, str]:
     """
     Parse command-line arguments that should be forwarded to unittest.
-    Unittest arguments are: -v, -s, -p, -t, in that order.
+    Unittest arguments are: -v, -s, -p, -t.
     """
     pattern = "test*.py"
+    start_dir = "."
     top_level_dir = None
 
     for opt in args:
-        if opt[0] == "-s":
+        if opt[0] in ("-s", "--start-directory"):
             start_dir = opt[1]
-        elif opt[0] == "-p":
+        elif opt[0] in ("-p", "--pattern"):
             pattern = opt[1]
-        elif opt[0] == "-t":
+        elif opt[0] in ("-t", "--top-level-directory"):
             top_level_dir = opt[1]
 
     return start_dir, pattern, top_level_dir
@@ -58,7 +61,7 @@ def parse_unittest_args(args: List[Arguments]) -> Tuple[str, str, str]:
 
 def discover_tests(start_dir, pattern, top_level_dir) -> Dict[str, Any]:
     cwd = os.path.abspath(start_dir)
-    payload = {"cwd": cwd}
+    payload = {"cwd": cwd, "status": "success"}
     tests = None
     errors = []
 
@@ -68,13 +71,13 @@ def discover_tests(start_dir, pattern, top_level_dir) -> Dict[str, Any]:
 
         tests, errors = build_test_tree(suite, cwd)
     except:
-        payload["status"] = "error"
         errors.append(traceback.format_exc())
 
     if tests is not None:
         payload["tests"] = tests
 
     if len(errors):
+        payload["status"] = "error"
         payload["errors"] = errors
 
     # Connect to the TypeScript side and send payload.
