@@ -218,6 +218,12 @@ def test_build_simple_tree() -> None:
     tests, errors = build_test_tree(suite, start_dir)
 
     # Build tree
+    print("***** EXPECTED")
+    print(expected)
+    print("***** ACTUAL")
+    print(tests)
+    print("***** END")
+
     assert is_same_tree(expected, tests)
     assert len(errors) == 0
 
