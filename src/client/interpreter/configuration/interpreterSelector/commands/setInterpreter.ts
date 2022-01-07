@@ -309,13 +309,13 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
 
     @captureTelemetry(EventName.SELECT_INTERPRETER)
     public async setInterpreter(): Promise<void> {
-        const targetConfig = await this.getConfigTarget();
+        const targetConfig = await this.getConfigTargets();
         if (!targetConfig) {
             return;
         }
 
-        const { configTarget } = targetConfig;
-        const wkspace = targetConfig.folderUri;
+        const { configTarget } = targetConfig[0];
+        const wkspace = targetConfig[0].folderUri;
         const interpreterState: InterpreterStateArgs = { path: undefined, workspace: wkspace };
         const multiStep = this.multiStepFactory.create<InterpreterStateArgs>();
         await multiStep.run((input, s) => this._pickInterpreter(input, s), interpreterState);

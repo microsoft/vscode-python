@@ -37,13 +37,16 @@ export class ResetInterpreterCommand extends BaseInterpreterSelectorCommand {
     }
 
     public async resetInterpreter() {
-        const targetConfig = await this.getConfigTarget();
-        if (!targetConfig) {
+        const targetConfigs = await this.getConfigTargets({ resetTarget: true });
+        if (!targetConfigs) {
             return;
         }
-        const configTarget = targetConfig.configTarget;
-        const wkspace = targetConfig.folderUri;
-
-        await this.pythonPathUpdaterService.updatePythonPath(undefined, configTarget, 'ui', wkspace);
+        await Promise.all(
+            targetConfigs.map(async (targetConfig) => {
+                const configTarget = targetConfig.configTarget;
+                const wkspace = targetConfig.folderUri;
+                await this.pythonPathUpdaterService.updatePythonPath(undefined, configTarget, 'ui', wkspace);
+            }),
+        );
     }
 }

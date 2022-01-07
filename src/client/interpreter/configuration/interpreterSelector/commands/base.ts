@@ -12,7 +12,7 @@ import { IConfigurationService, IDisposable, IPathUtils, Resource } from '../../
 import { Interpreters } from '../../../../common/utils/localize';
 import { IPythonPathUpdaterServiceManager } from '../../types';
 export interface WorkspaceSelectionQuickPickItem extends QuickPickItem {
-    uri: Uri;
+    uri?: Uri;
 }
 @injectable()
 export abstract class BaseInterpreterSelectorCommand implements IExtensionSingleActivationService, IDisposable {
@@ -35,30 +35,43 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
 
     public abstract activate(): Promise<void>;
 
-    protected async getConfigTarget(): Promise<
+    protected async getConfigTargets(options?: {
+        resetTarget?: boolean;
+    }): Promise<
         | {
               folderUri: Resource;
               configTarget: ConfigurationTarget;
-          }
+          }[]
         | undefined
     > {
         const workspaceFolders = this.workspaceService.workspaceFolders;
         if (workspaceFolders === undefined || workspaceFolders.length === 0) {
-            return {
-                folderUri: undefined,
-                configTarget: ConfigurationTarget.Global,
-            };
+            return [
+                {
+                    folderUri: undefined,
+                    configTarget: ConfigurationTarget.Global,
+                },
+            ];
         }
         if (!this.workspaceService.workspaceFile && workspaceFolders.length === 1) {
-            return {
-                folderUri: workspaceFolders[0].uri,
-                configTarget: ConfigurationTarget.WorkspaceFolder,
-            };
+            return [
+                {
+                    folderUri: workspaceFolders[0].uri,
+                    configTarget: ConfigurationTarget.WorkspaceFolder,
+                },
+            ];
         }
 
         // Ok we have multiple workspaces, get the user to pick a folder.
 
-        const quickPickItems: WorkspaceSelectionQuickPickItem[] = [
+        let quickPickItems: WorkspaceSelectionQuickPickItem[] = options?.resetTarget
+            ? [
+                  {
+                      label: 'Clear all',
+                  },
+              ]
+            : [];
+        quickPickItems.push(
             ...workspaceFolders.map((w) => {
                 const selectedInterpreter = this.pathUtils.getDisplayName(
                     this.configurationService.getSettings(w.uri).pythonPath,
@@ -72,19 +85,32 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
                 };
             }),
             {
-                label: Interpreters.entireWorkspace(),
+                label: options?.resetTarget ? 'Clear at workspace level' : Interpreters.entireWorkspace(),
                 uri: workspaceFolders[0].uri,
             },
-        ];
+        );
 
         const selection = await this.applicationShell.showQuickPick(quickPickItems, {
-            placeHolder: 'Select the workspace to set the interpreter',
+            placeHolder: options?.resetTarget
+                ? 'Select the workspace folder to clear the interpreter for'
+                : 'Select the workspace folder to set the interpreter',
         });
+
+        if (selection?.label === 'Clear all') {
+            const folderTargets: {
+                folderUri: Resource;
+                configTarget: ConfigurationTarget;
+            }[] = workspaceFolders.map((w) => ({
+                folderUri: w.uri,
+                configTarget: ConfigurationTarget.WorkspaceFolder,
+            }));
+            return [...folderTargets, { folderUri: undefined, configTarget: ConfigurationTarget.Workspace }];
+        }
 
         return selection
             ? selection.label === Interpreters.entireWorkspace()
-                ? { folderUri: selection.uri, configTarget: ConfigurationTarget.Workspace }
-                : { folderUri: selection.uri, configTarget: ConfigurationTarget.WorkspaceFolder }
+                ? [{ folderUri: selection.uri, configTarget: ConfigurationTarget.Workspace }]
+                : [{ folderUri: selection.uri, configTarget: ConfigurationTarget.WorkspaceFolder }]
             : undefined;
     }
 }
