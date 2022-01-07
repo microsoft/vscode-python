@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { SystemVariables } from '../../client/common/variables/systemVariables';
-import { getExtensionSettings } from '../common';
+import { getExtensionSettings } from '../extensionSettings';
 import { initialize } from './../initialize';
 
 const workspaceRoot = path.join(__dirname, '..', '..', '..', 'src', 'test');

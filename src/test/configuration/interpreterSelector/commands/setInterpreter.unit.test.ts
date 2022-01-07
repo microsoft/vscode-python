@@ -773,11 +773,13 @@ suite('Set Interpreter Command', () => {
                     label: 'one',
                     description: path.dirname(folder1.uri.fsPath),
                     uri: folder1.uri,
+                    detail: 'python',
                 },
                 {
                     label: 'two',
                     description: path.dirname(folder2.uri.fsPath),
                     uri: folder2.uri,
+                    detail: 'python',
                 },
                 {
                     label: Interpreters.entireWorkspace(),
@@ -801,6 +803,7 @@ suite('Set Interpreter Command', () => {
                         label: 'two',
                         description: path.dirname(folder2.uri.fsPath),
                         uri: folder2.uri,
+                        detail: 'python',
                     }),
                 )
                 .verifiable(TypeMoq.Times.once());
@@ -839,11 +842,13 @@ suite('Set Interpreter Command', () => {
                     label: 'one',
                     description: path.dirname(folder1.uri.fsPath),
                     uri: folder1.uri,
+                    detail: 'python',
                 },
                 {
                     label: 'two',
                     description: path.dirname(folder2.uri.fsPath),
                     uri: folder2.uri,
+                    detail: 'python',
                 },
                 {
                     label: Interpreters.entireWorkspace(),
@@ -887,6 +892,7 @@ suite('Set Interpreter Command', () => {
             pythonPathUpdater.verifyAll();
         });
         test('Do not update anything when user does not select a workspace folder and there is more than one workspace folder', async () => {
+            pythonSettings.setup((p) => p.pythonPath).returns(() => 'python');
             workspace.setup((w) => w.workspaceFolders).returns(() => [folder1, folder2]);
 
             interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => []);
@@ -897,11 +903,13 @@ suite('Set Interpreter Command', () => {
                     label: 'one',
                     description: path.dirname(folder1.uri.fsPath),
                     uri: folder1.uri,
+                    detail: 'python',
                 },
                 {
                     label: 'two',
                     description: path.dirname(folder2.uri.fsPath),
                     uri: folder2.uri,
+                    detail: 'python',
                 },
                 {
                     label: Interpreters.entireWorkspace(),

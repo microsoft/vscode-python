@@ -78,11 +78,11 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceState: Memento,
-        @inject(ICommandManager) private cmdManager: ICommandManager,
+        @inject(ICommandManager) private cmdManager?: ICommandManager,
     ) {}
 
     public async activate(): Promise<void> {
-        this.cmdManager.registerCommand(Commands.ClearStorage, this.cleanAllPersistentStates.bind(this));
+        this.cmdManager?.registerCommand(Commands.ClearStorage, this.cleanAllPersistentStates.bind(this));
         const globalKeysStorageDeprecated = this.createGlobalPersistentState(GLOBAL_PERSISTENT_KEYS_DEPRECATED, []);
         const workspaceKeysStorageDeprecated = this.createWorkspacePersistentState(
             WORKSPACE_PERSISTENT_KEYS_DEPRECATED,

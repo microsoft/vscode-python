@@ -23,14 +23,12 @@ import { ITestingSettings } from '../testing/configuration/types';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { DEFAULT_INTERPRETER_SETTING, isTestExecution } from './constants';
-import { DeprecatePythonPath } from './experiments/groups';
 import { ExtensionChannels } from './insidersBuild/types';
 import { IS_WINDOWS } from './platform/constants';
 import {
     IAutoCompleteSettings,
     IDefaultLanguageServer,
     IExperiments,
-    IExperimentService,
     IFormattingSettings,
     IInterpreterPathService,
     ILintingSettings,
@@ -146,10 +144,9 @@ export class PythonSettings implements IPythonSettings {
     constructor(
         workspaceFolder: Resource,
         private readonly interpreterAutoSelectionService: IInterpreterAutoSelectionProxyService,
-        workspace?: IWorkspaceService,
-        private readonly experimentsManager?: IExperimentService,
-        private readonly interpreterPathService?: IInterpreterPathService,
-        private readonly defaultLS?: IDefaultLanguageServer,
+        workspace: IWorkspaceService,
+        private readonly interpreterPathService: IInterpreterPathService,
+        private readonly defaultLS: IDefaultLanguageServer | undefined,
     ) {
         this.workspace = workspace || new WorkspaceService();
         this.workspaceRoot = workspaceFolder;
@@ -159,10 +156,9 @@ export class PythonSettings implements IPythonSettings {
     public static getInstance(
         resource: Uri | undefined,
         interpreterAutoSelectionService: IInterpreterAutoSelectionProxyService,
-        workspace?: IWorkspaceService,
-        experimentsManager?: IExperimentService,
-        interpreterPathService?: IInterpreterPathService,
-        defaultLS?: IDefaultLanguageServer,
+        workspace: IWorkspaceService,
+        interpreterPathService: IInterpreterPathService,
+        defaultLS: IDefaultLanguageServer | undefined,
     ): PythonSettings {
         workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
@@ -173,7 +169,6 @@ export class PythonSettings implements IPythonSettings {
                 workspaceFolderUri,
                 interpreterAutoSelectionService,
                 workspace,
-                experimentsManager,
                 interpreterPathService,
                 defaultLS,
             );
@@ -237,7 +232,7 @@ export class PythonSettings implements IPythonSettings {
         const workspaceRoot = this.workspaceRoot?.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot, this.workspace);
 
-        this.pythonPath = this.getPythonPath(pythonSettings, systemVariables, workspaceRoot);
+        this.pythonPath = this.getPythonPath(systemVariables, workspaceRoot);
 
         const defaultInterpreterPath = systemVariables.resolveAny(pythonSettings.get<string>('defaultInterpreterPath'));
         this.defaultInterpreterPath = defaultInterpreterPath || DEFAULT_INTERPRETER_SETTING;
@@ -561,24 +556,8 @@ export class PythonSettings implements IPythonSettings {
         this.changed.fire();
     }
 
-    private getPythonPath(
-        pythonSettings: WorkspaceConfiguration,
-        systemVariables: SystemVariables,
-        workspaceRoot: string | undefined,
-    ) {
-        /**
-         * Note that while calling `IExperimentsManager.inExperiment()`, we assume `IExperimentsManager.activate()` is already called.
-         * That's not true here, as this method is often called in the constructor,which runs before `.activate()` methods.
-         * But we can still use it here for this particular experiment. Reason being that this experiment only changes
-         * `pythonPath` setting, and I've checked that `pythonPath` setting is not accessed anywhere in the constructor.
-         */
-        const inExperiment = this.experimentsManager?.inExperimentSync(DeprecatePythonPath.experiment);
-        // Use the interpreter path service if in the experiment otherwise use the normal settings
-        this.pythonPath = systemVariables.resolveAny(
-            inExperiment && this.interpreterPathService
-                ? this.interpreterPathService.get(this.workspaceRoot)
-                : pythonSettings.get<string>('pythonPath'),
-        )!;
+    private getPythonPath(systemVariables: SystemVariables, workspaceRoot: string | undefined) {
+        this.pythonPath = systemVariables.resolveAny(this.interpreterPathService.get(this.workspaceRoot))!;
         if (
             !process.env.CI_DISABLE_AUTO_SELECTION &&
             (this.pythonPath.length === 0 || this.pythonPath === 'python') &&

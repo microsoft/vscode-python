@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 
+// IMPORTANT: Do not import anything from the 'client' folder in this file as that folder is not available during smoke tests.
+
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
@@ -10,9 +12,8 @@ import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
 import { IProcessService } from '../client/common/process/types';
-import { IDisposable, IPythonSettings, Resource } from '../client/common/types';
+import { IDisposable } from '../client/common/types';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
-import { PythonEnvironment } from '../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop, sleep } from './core';
 
@@ -36,7 +37,7 @@ export enum OSType {
 }
 
 export type PythonSettingKeys =
-    | 'pythonPath'
+    | 'defaultInterpreterPath'
     | 'languageServer'
     | 'linting.lintOnSave'
     | 'linting.enabled'
@@ -151,28 +152,6 @@ function getWorkspaceRoot() {
     return workspaceFolder ? workspaceFolder.uri : vscode.workspace.workspaceFolders[0].uri;
 }
 
-export function getExtensionSettings(resource: Uri | undefined): IPythonSettings {
-    const vscode = require('vscode') as typeof import('vscode');
-    class AutoSelectionService {
-        get onDidChangeAutoSelectedInterpreter(): Event<void> {
-            return new vscode.EventEmitter<void>().event;
-        }
-        public autoSelectInterpreter(_resource: Resource): Promise<void> {
-            return Promise.resolve();
-        }
-        public getAutoSelectedInterpreter(_resource: Resource): PythonEnvironment | undefined {
-            return;
-        }
-        public async setWorkspaceInterpreter(
-            _resource: Uri,
-            _interpreter: PythonEnvironment | undefined,
-        ): Promise<void> {
-            return;
-        }
-    }
-    const pythonSettings = require('../client/common/configSettings') as typeof import('../client/common/configSettings');
-    return pythonSettings.PythonSettings.getInstance(resource, new AutoSelectionService());
-}
 export function retryAsync(this: any, wrapped: Function, retryCount: number = 2) {
     return async (...args: any[]) => {
         return new Promise((resolve, reject) => {
@@ -222,11 +201,11 @@ async function setPythonPathInWorkspace(
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
     const settings = vscode.workspace.getConfiguration('python', resourceUri || null);
-    const value = settings.inspect<string>('pythonPath');
+    const value = settings.inspect<string>('defaultInterpreterPath');
     const prop: 'workspaceFolderValue' | 'workspaceValue' =
         config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
     if (value && value[prop] !== pythonPath) {
-        await settings.update('pythonPath', pythonPath, config);
+        await settings.update('defaultInterpreterPath', pythonPath, config);
         await disposePythonSettings();
     }
 }
@@ -234,7 +213,7 @@ async function restoreGlobalPythonPathSetting(): Promise<void> {
     const vscode = require('vscode') as typeof import('vscode');
     const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
     await Promise.all([
-        pythonConfig.update('pythonPath', undefined, true),
+        pythonConfig.update('defaultInterpreterPath', undefined, true),
         pythonConfig.update('defaultInterpreterPath', undefined, true),
     ]);
     await disposePythonSettings();

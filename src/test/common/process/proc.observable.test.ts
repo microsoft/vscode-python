@@ -7,7 +7,8 @@ import { CancellationTokenSource } from 'vscode';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { createDeferred } from '../../../client/common/utils/async';
-import { getExtensionSettings, isOs, OSType } from '../../common';
+import { isOs, OSType } from '../../common';
+import { getExtensionSettings } from '../../extensionSettings';
 import { initialize } from './../../initialize';
 
 use(chaiAsPromised);

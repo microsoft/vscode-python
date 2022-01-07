@@ -16,11 +16,9 @@ import { ActiveResourceService } from '../../client/common/application/activeRes
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
-import { DeprecatePythonPath } from '../../client/common/experiments/groups';
-import { ExperimentService } from '../../client/common/experiments/service';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IDisposable, IExperimentService, IInterpreterPathService } from '../../client/common/types';
+import { IDisposable, IInterpreterPathService } from '../../client/common/types';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
 import * as EnvFileTelemetry from '../../client/telemetry/envFileTelemetry';
 import { sleep } from '../core';
@@ -47,12 +45,10 @@ suite('Activation Manager', () => {
         let activeResourceService: IActiveResourceService;
         let documentManager: typemoq.IMock<IDocumentManager>;
         let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
-        let experiments: IExperimentService;
         let activationService1: IExtensionActivationService;
         let activationService2: IExtensionActivationService;
         let fileSystem: IFileSystem;
         setup(() => {
-            experiments = mock(ExperimentService);
             interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
             workspaceService = mock(WorkspaceService);
             activeResourceService = mock(ActiveResourceService);
@@ -84,8 +80,6 @@ suite('Activation Manager', () => {
                 instance(workspaceService),
                 instance(fileSystem),
                 instance(activeResourceService),
-                instance(experiments),
-                interpreterPathService.object,
             );
 
             sinon.stub(EnvFileTelemetry, 'sendActivationTelemetry').resolves();
@@ -127,8 +121,6 @@ suite('Activation Manager', () => {
                 instance(workspaceService),
                 instance(fileSystem),
                 instance(activeResourceService),
-                instance(experiments),
-                interpreterPathService.object,
             );
             await managerTest.activateWorkspace(resource);
 
@@ -170,8 +162,6 @@ suite('Activation Manager', () => {
                 instance(workspaceService),
                 instance(fileSystem),
                 instance(activeResourceService),
-                instance(experiments),
-                interpreterPathService.object,
             );
             await managerTest.activateWorkspace(resource);
 
@@ -337,32 +327,6 @@ suite('Activation Manager', () => {
             verify(activationService2.activate(resource)).once();
         });
 
-        test('If in Deprecate PythonPath experiment, method activateWorkspace() will copy old interpreter storage values to new', async () => {
-            const resource = Uri.parse('two');
-            when(activationService1.activate(resource)).thenResolve();
-            when(activationService2.activate(resource)).thenResolve();
-
-            when(experiments.inExperimentSync(DeprecatePythonPath.experiment)).thenReturn(true);
-            interpreterPathService
-                .setup((i) => i.copyOldInterpreterStorageValuesToNew(resource))
-                .returns(() => Promise.resolve())
-                .verifiable(typemoq.Times.once());
-            autoSelection
-                .setup((a) => a.autoSelectInterpreter(resource))
-                .returns(() => Promise.resolve())
-                .verifiable(typemoq.Times.once());
-            appDiagnostics
-                .setup((a) => a.performPreStartupHealthCheck(resource))
-                .returns(() => Promise.resolve())
-                .verifiable(typemoq.Times.once());
-
-            await managerTest.activateWorkspace(resource);
-
-            interpreterPathService.verifyAll();
-            verify(activationService1.activate(resource)).once();
-            verify(activationService2.activate(resource)).once();
-        });
-
         test("The same workspace isn't activated more than once", async () => {
             const resource = Uri.parse('two');
             when(activationService1.activate(resource)).thenResolve();
@@ -501,10 +465,8 @@ suite('Activation Manager', () => {
         let managerTest: ExtensionActivationManager;
         const resource = Uri.parse('a');
         let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
-        let experiments: IExperimentService;
 
         setup(() => {
-            experiments = mock(ExperimentService);
             workspaceService = mock(WorkspaceService);
             activeResourceService = mock(ActiveResourceService);
             appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
@@ -541,8 +503,6 @@ suite('Activation Manager', () => {
                 instance(workspaceService),
                 instance(fileSystem),
                 instance(activeResourceService),
-                instance(experiments),
-                interpreterPathService.object,
             );
         });
 

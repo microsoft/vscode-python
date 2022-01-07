@@ -4,7 +4,7 @@ import { IConfigurationService, IFormattingSettings, Product } from '../../clien
 import * as EnumEx from '../../client/common/utils/enum';
 import { FormatterHelper } from '../../client/formatters/helper';
 import { FormatterId } from '../../client/formatters/types';
-import { getExtensionSettings } from '../common';
+import { getExtensionSettings } from '../extensionSettings';
 import { initialize } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 

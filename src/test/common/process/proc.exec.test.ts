@@ -10,7 +10,8 @@ import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { StdErrError } from '../../../client/common/process/types';
 import { OSType } from '../../../client/common/utils/platform';
-import { getExtensionSettings, isOs, isPythonVersion } from '../../common';
+import { isOs, isPythonVersion } from '../../common';
+import { getExtensionSettings } from '../../extensionSettings';
 import { initialize } from './../../initialize';
 
 use(chaiAsPromised);

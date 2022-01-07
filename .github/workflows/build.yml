@@ -119,7 +119,7 @@ jobs:
       - name: Install Python 3 requirements
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py --no-deps --upgrade -r ./jedils_requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py --no-deps --upgrade -r ./pythonFiles/jedilsp_requirements/requirements.txt
         if: startsWith(matrix.python, 3.)
 
       - name: Install test requirements

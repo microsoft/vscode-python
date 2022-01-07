@@ -55,10 +55,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
 
     constructor(
         @inject(IApplicationShell) applicationShell: IApplicationShell,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
+        @inject(IPathUtils) pathUtils: IPathUtils,
         @inject(IPythonPathUpdaterServiceManager)
         pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
@@ -66,7 +66,14 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
     ) {
-        super(pythonPathUpdaterService, commandManager, applicationShell, workspaceService);
+        super(
+            pythonPathUpdaterService,
+            commandManager,
+            applicationShell,
+            workspaceService,
+            pathUtils,
+            configurationService,
+        );
     }
 
     public async activate(): Promise<void> {
@@ -302,13 +309,13 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
 
     @captureTelemetry(EventName.SELECT_INTERPRETER)
     public async setInterpreter(): Promise<void> {
-        const targetConfig = await this.getConfigTarget();
+        const targetConfig = await this.getConfigTargets();
         if (!targetConfig) {
             return;
         }
 
-        const { configTarget } = targetConfig;
-        const wkspace = targetConfig.folderUri;
+        const { configTarget } = targetConfig[0];
+        const wkspace = targetConfig[0].folderUri;
         const interpreterState: InterpreterStateArgs = { path: undefined, workspace: wkspace };
         const multiStep = this.multiStepFactory.create<InterpreterStateArgs>();
         await multiStep.run((input, s) => this._pickInterpreter(input, s), interpreterState);

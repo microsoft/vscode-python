@@ -33,7 +33,7 @@ export namespace Diagnostics {
     );
     export const removedPythonPathFromSettings = localize(
         'diagnostics.removedPythonPathFromSettings',
-        'The "python.pythonPath" setting in your settings.json is no longer used by the Python extension. If you want, you can use a new setting called "python.defaultInterpreterPath" instead. Keep in mind that you need to change the value of this setting manually as the Python extension doesn’t modify it when you change interpreters. [Learn more](https://aka.ms/AA7jfor).',
+        'The "python.pythonPath" setting in your settings.json is no longer used by the Python extension. If you want, you can use a new setting called "python.defaultInterpreterPath" instead. Keep in mind that you need to change the value of this setting manually as the Python extension doesn\'t modify it when you change interpreters. [Learn more](https://aka.ms/AA7jfor).',
     );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',
@@ -67,7 +67,7 @@ export namespace Diagnostics {
     );
     export const pylanceDefaultMessage = localize(
         'diagnostics.pylanceDefaultMessage',
-        'The Python extension now includes Pylance to improve completions, code navigation, overall performance and much more! You can learn more about the update and learn how to change your language server [here](https://aka.ms/new-python-bundle).\n\nRead Pylance’s license [here](https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license).',
+        "The Python extension now includes Pylance to improve completions, code navigation, overall performance and much more! You can learn more about the update and learn how to change your language server [here](https://aka.ms/new-python-bundle).\n\nRead Pylance's license [here](https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license).",
     );
 }
 
@@ -93,6 +93,7 @@ export namespace Common {
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
     export const recommended = localize('Common.recommended', 'Recommended');
     export const workspace = localize('Common.workspace', 'Workspace');
+    export const clearAll = localize('Common.clearAll', 'Clear all');
 }
 
 export namespace CommonSurvey {
@@ -284,6 +285,7 @@ export namespace Interpreters {
         'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?',
     );
     export const entireWorkspace = localize('Interpreters.entireWorkspace', 'Select at workspace level');
+    export const clearAtWorkspace = localize('Interpreters.clearAtWorkspace', 'Clear at workspace level');
     export const selectInterpreterTip = localize(
         'Interpreters.selectInterpreterTip',
         'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar',
@@ -570,7 +572,7 @@ export namespace Python27Support {
 export namespace SwitchToDefaultLS {
     export const bannerMessage = localize(
         'SwitchToDefaultLS.bannerMessage',
-        'The Microsoft Python Language Server has reached end of life. Your language server has been set to the default for Python in VS Code, Pylance.\n\nIf you’d like to change your language server, you can learn about how to do so [here](https://devblogs.microsoft.com/python/python-in-visual-studio-code-may-2021-release/#configuring-your-language-server).\n\nRead Pylance’s license [here](https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license).',
+        "The Microsoft Python Language Server has reached end of life. Your language server has been set to the default for Python in VS Code, Pylance.\n\nIf you'd like to change your language server, you can learn about how to do so [here](https://devblogs.microsoft.com/python/python-in-visual-studio-code-may-2021-release/#configuring-your-language-server).\n\nRead Pylance's license [here](https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license).",
     );
 }
 

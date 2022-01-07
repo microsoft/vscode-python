@@ -19,7 +19,6 @@ import {
     IToolExecutionPath,
     IsWindows,
     ToolExecutionPath,
-    IInterpreterPathProxyService,
 } from './types';
 import { IServiceManager } from '../ioc/types';
 import { JupyterExtensionDependencyManager } from '../jupyter/jupyterExtensionDependencyManager';
@@ -110,17 +109,12 @@ import {
 
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { Random } from './utils/random';
-import { InterpreterPathProxyService } from './interpreterPathProxyService';
 import { ContextKeyManager } from './application/contextKeyManager';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
 
     serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
-    serviceManager.addSingleton<IInterpreterPathProxyService>(
-        IInterpreterPathProxyService,
-        InterpreterPathProxyService,
-    );
     serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<IRandom>(IRandom, Random);

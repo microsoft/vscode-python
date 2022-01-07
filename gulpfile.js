@@ -265,7 +265,7 @@ gulp.task('installPythonRequirements', async () => {
         '--no-deps',
         '--upgrade',
         '-r',
-        './jedils_requirements.txt',
+        './pythonFiles/jedilsp_requirements/requirements.txt',
     ];
     success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args, undefined, true)
         .then(() => true)

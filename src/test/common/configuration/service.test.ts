@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { workspace } from 'vscode';
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { getExtensionSettings } from '../../common';
+import { getExtensionSettings } from '../../extensionSettings';
 import { initialize } from '../../initialize';
 
 suite('Configuration Service', () => {

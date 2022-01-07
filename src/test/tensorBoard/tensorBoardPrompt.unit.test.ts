@@ -2,8 +2,6 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { CommandManager } from '../../client/common/application/commandManager';
 import { Commands } from '../../client/common/constants';
-import { NativeTensorBoard } from '../../client/common/experiments/groups';
-import { ExperimentService } from '../../client/common/experiments/service';
 import { PersistentState, PersistentStateFactory } from '../../client/common/persistentState';
 import { Common } from '../../client/common/utils/localize';
 import { TensorBoardEntrypointTrigger } from '../../client/tensorBoard/constants';
@@ -14,10 +12,9 @@ suite('TensorBoard prompt', () => {
     let commandManager: CommandManager;
     let persistentState: PersistentState<boolean>;
     let persistentStateFactory: PersistentStateFactory;
-    let experimentService: ExperimentService;
     let prompt: TensorBoardPrompt;
 
-    async function setupPromptWithOptions(inExperiment = true, persistentStateValue = true, selection = 'Yes') {
+    async function setupPromptWithOptions(persistentStateValue = true, selection = 'Yes') {
         applicationShell = mock(ApplicationShell);
         when(applicationShell.showInformationMessage(anything(), anything(), anything(), anything())).thenReturn(
             Promise.resolve(selection),
@@ -34,14 +31,10 @@ suite('TensorBoard prompt', () => {
             instance(persistentState),
         );
 
-        experimentService = mock(ExperimentService);
-        when(experimentService.inExperiment(NativeTensorBoard.experiment)).thenResolve(inExperiment);
-
         prompt = new TensorBoardPrompt(
             instance(applicationShell),
             instance(commandManager),
             instance(persistentStateFactory),
-            instance(experimentService),
         );
         await prompt.showNativeTensorBoardPrompt(TensorBoardEntrypointTrigger.palette);
     }
@@ -52,19 +45,13 @@ suite('TensorBoard prompt', () => {
         verify(commandManager.executeCommand(Commands.LaunchTensorBoard, anything(), anything())).once();
     });
 
-    test('Do not show prompt if user is not in experiment', async () => {
-        await setupPromptWithOptions(false);
-        verify(applicationShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
-        verify(commandManager.executeCommand(Commands.LaunchTensorBoard, anything(), anything())).never();
-    });
-
     test('Disable prompt if user selects "Do not show again"', async () => {
-        await setupPromptWithOptions(true, true, Common.doNotShowAgain());
+        await setupPromptWithOptions(true, Common.doNotShowAgain());
         verify(persistentState.updateValue(false)).once();
     });
 
     test('Do not show prompt if user has previously disabled prompt', async () => {
-        await setupPromptWithOptions(true, false);
+        await setupPromptWithOptions(false);
         verify(applicationShell.showInformationMessage(anything(), anything(), anything(), anything())).never();
         verify(commandManager.executeCommand(Commands.LaunchTensorBoard, anything(), anything())).never();
     });

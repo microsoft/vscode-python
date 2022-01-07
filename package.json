@@ -455,7 +455,7 @@
                 },
                 "python.defaultInterpreterPath": {
                     "default": "python",
-                    "description": "Path to Python, you can use a custom version of Python by modifying this setting to include the full path. This default setting is used as a fallback if no interpreter is selected for the workspace. The extension will also not set nor change the value of this setting, it will only read from it.",
+                    "description": "Path to default Python to use when extension loads up for the first time, no longer used once an interpreter is selected for the workspace. See https://aka.ms/AAfekmf to understand when this is used.",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
@@ -490,8 +490,7 @@
                         "enum": [
                             "All",
                             "pythonDeprecatePythonPath",
-                            "pythonSurveyNotification",
-                            "pythonTensorboardExperiment"
+                            "pythonSurveyNotification"
                         ]
                     },
                     "scope": "machine",
@@ -504,8 +503,7 @@
                         "enum": [
                             "All",
                             "pythonDeprecatePythonPath",
-                            "pythonSurveyNotification",
-                            "pythonTensorboardExperiment"
+                            "pythonSurveyNotification"
                         ]
                     },
                     "scope": "machine",
@@ -981,12 +979,6 @@
                 "python.poetryPath": {
                     "default": "poetry",
                     "description": "Path to the poetry executable.",
-                    "scope": "machine-overridable",
-                    "type": "string"
-                },
-                "python.pythonPath": {
-                    "default": "python",
-                    "description": "(DEPRECATED: Note this setting is not used when in pythonDeprecatePythonPath experiment) Path to Python, you can use a custom version of Python by modifying this setting to include the full path.",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
