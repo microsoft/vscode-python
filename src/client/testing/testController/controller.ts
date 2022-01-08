@@ -155,7 +155,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
                 testAdapter.discoverTests(
                     this.testController,
-                    uri,
                     this.refreshCancellation.token,
                     this.testAdapters.size > 1,
                     this.workspaceService.workspaceFile?.fsPath || Common.workspace(),
@@ -314,10 +313,10 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             const settings = this.configSettings.getSettings(workspace.uri);
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
-                this.pythonExecFactory,
-                this.workspaceService,
-                this.configSettings,
+                workspace.uri,
                 i,
+                this.pythonExecFactory,
+                this.configSettings,
             );
 
             this.testAdapters.set(workspace.uri, workspaceTestAdapter);
