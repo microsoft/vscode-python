@@ -36,7 +36,7 @@ import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironme
 const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
     companyDisplayName: '',
-    displayName: '',
+    detailedDisplayName: '',
     envName: '',
     path: '',
     envType: EnvironmentType.Unknown,
@@ -171,7 +171,7 @@ suite('Interpreters Display', () => {
                 const workspaceFolder = Uri.file('workspace');
                 const activeInterpreter: PythonEnvironment = {
                     ...info,
-                    displayName: 'Dummy_Display_Name',
+                    detailedDisplayName: 'Dummy_Display_Name',
                     envType: EnvironmentType.Unknown,
                     path: path.join('user', 'development', 'env', 'bin', 'python'),
                 };
@@ -187,7 +187,7 @@ suite('Interpreters Display', () => {
 
                 if (inExperiment === InterpreterStatusBarPosition.Unpinned) {
                     languageStatusItem.verify(
-                        (s) => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!),
+                        (s) => (s.text = TypeMoq.It.isValue(activeInterpreter.detailedDisplayName)!),
                         TypeMoq.Times.once(),
                     );
                     languageStatusItem.verify(
@@ -196,7 +196,7 @@ suite('Interpreters Display', () => {
                     );
                 } else {
                     statusBar.verify(
-                        (s) => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!),
+                        (s) => (s.text = TypeMoq.It.isValue(activeInterpreter.detailedDisplayName)!),
                         TypeMoq.Times.once(),
                     );
                     statusBar.verify(
@@ -210,7 +210,7 @@ suite('Interpreters Display', () => {
                 const workspaceFolder = Uri.file('workspace');
                 const activeInterpreter: PythonEnvironment = {
                     ...info,
-                    displayName: 'Dummy_Display_Name',
+                    detailedDisplayName: 'Dummy_Display_Name',
                     envType: EnvironmentType.Unknown,
                     path: path.join('user', 'development', 'env', 'bin', 'python'),
                 };
@@ -237,7 +237,7 @@ suite('Interpreters Display', () => {
 
                 setupWorkspaceFolder(resource, workspaceFolder);
                 const pythonInterpreter: PythonEnvironment = ({
-                    displayName,
+                    detailedDisplayName: displayName,
                     path: pythonPath,
                 } as any) as PythonEnvironment;
                 interpreterService
@@ -299,7 +299,7 @@ suite('Interpreters Display', () => {
                 const pythonPath = path.join('user', 'development', 'env', 'bin', 'python');
                 const activeInterpreter: PythonEnvironment = {
                     ...info,
-                    displayName: 'Dummy_Display_Name',
+                    detailedDisplayName: 'Dummy_Display_Name',
                     envType: EnvironmentType.Unknown,
                     companyDisplayName: 'Company Name',
                     path: pythonPath,
@@ -322,7 +322,7 @@ suite('Interpreters Display', () => {
                 interpreterService.verifyAll();
                 if (inExperiment === InterpreterStatusBarPosition.Unpinned) {
                     languageStatusItem.verify(
-                        (s) => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!),
+                        (s) => (s.text = TypeMoq.It.isValue(activeInterpreter.detailedDisplayName)!),
                         TypeMoq.Times.once(),
                     );
                     languageStatusItem.verify(
@@ -331,7 +331,7 @@ suite('Interpreters Display', () => {
                     );
                 } else {
                     statusBar.verify(
-                        (s) => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!),
+                        (s) => (s.text = TypeMoq.It.isValue(activeInterpreter.detailedDisplayName)!),
                         TypeMoq.Times.once(),
                     );
                     statusBar.verify((s) => (s.tooltip = TypeMoq.It.isValue(pythonPath)!), TypeMoq.Times.atLeastOnce());
@@ -348,7 +348,7 @@ suite('Interpreters Display', () => {
                     const workspaceFolder = Uri.file('workspace');
                     const activeInterpreter: PythonEnvironment = {
                         ...info,
-                        displayName: 'Dummy_Display_Name',
+                        detailedDisplayName: 'Dummy_Display_Name',
                         envType: EnvironmentType.Unknown,
                         path: path.join('user', 'development', 'env', 'bin', 'python'),
                     };
