@@ -83,12 +83,13 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
         return nameA > nameB ? 1 : -1;
     }
 
-    public getRecommended(interpreters: PythonEnvironment[], workspaceUri?: Resource): PythonEnvironment | undefined {
+    public getRecommended(interpreters: PythonEnvironment[], resource: Resource): PythonEnvironment | undefined {
         // When recommending an intepreter for a workspace, we either want to return a local one
         // or fallback on a globally-installed interpreter, and we don't want want to suggest a global environment
         // because we would have to add a way to match environments to a workspace.
+        const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
         const filteredInterpreters = interpreters.filter((i) => {
-            if (getEnvLocationHeuristic(i, workspaceUri?.fsPath || '') === EnvLocationHeuristic.Local) {
+            if (getEnvLocationHeuristic(i, workspaceUri?.folderUri.fsPath || '') === EnvLocationHeuristic.Local) {
                 return true;
             }
             if (virtualEnvTypes.includes(i.envType)) {

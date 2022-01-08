@@ -203,7 +203,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         const interpreters = await this.interpreterService.getAllInterpreters(resource);
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
 
-        const recommendedInterpreter = this.envTypeComparer.getRecommended(interpreters);
+        const recommendedInterpreter = this.envTypeComparer.getRecommended(interpreters, workspaceUri?.folderUri);
         if (!recommendedInterpreter) {
             return;
         }

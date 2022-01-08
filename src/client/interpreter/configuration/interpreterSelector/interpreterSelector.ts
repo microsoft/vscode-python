@@ -59,7 +59,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         resource: Resource,
     ): IInterpreterQuickPickItem | undefined {
         const envs = this.interpreterManager.getInterpreters(resource);
-        const recommendedEnv = this.envTypeComparer.getRecommended(envs);
+        const recommendedEnv = this.envTypeComparer.getRecommended(envs, resource);
         if (!recommendedEnv) {
             return undefined;
         }

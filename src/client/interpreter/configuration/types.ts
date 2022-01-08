@@ -60,5 +60,5 @@ export interface ISpecialQuickPickItem {
 export const IInterpreterComparer = Symbol('IInterpreterComparer');
 export interface IInterpreterComparer {
     compare(a: PythonEnvironment, b: PythonEnvironment): number;
-    getRecommended(interpreters: PythonEnvironment[], workspaceUri?: Resource): PythonEnvironment | undefined;
+    getRecommended(interpreters: PythonEnvironment[], resource: Resource): PythonEnvironment | undefined;
 }
