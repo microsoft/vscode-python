@@ -57,6 +57,7 @@ suite('Python envs locator - Environments Resolver', () => {
         updatedEnv.executable.sysPrefix = 'path';
         updatedEnv.arch = Architecture.x64;
         updatedEnv.display = expectedDisplay;
+        updatedEnv.detailedDisplayName = expectedDisplay;
         return updatedEnv;
     }
 
@@ -79,6 +80,7 @@ suite('Python envs locator - Environments Resolver', () => {
                 mtime: -1,
             },
             display,
+            detailedDisplayName: display,
             version,
             arch: Architecture.Unknown,
             distro: { org: '' },
@@ -151,7 +153,7 @@ suite('Python envs locator - Environments Resolver', () => {
             const envs = await getEnvsWithUpdates(iterator);
 
             assertEnvsEqual(envs, [
-                createExpectedEnvInfo(resolvedEnvReturnedByBasicResolver, "Python 3.8.3 64-bit ('win1': venv)"),
+                createExpectedEnvInfo(resolvedEnvReturnedByBasicResolver, "Python 3.8.3 ('win1': venv)"),
             ]);
         });
 
@@ -215,10 +217,7 @@ suite('Python envs locator - Environments Resolver', () => {
 
             // Assert
             assertEnvsEqual(envs, [
-                createExpectedEnvInfo(
-                    resolvedUpdatedEnvReturnedByBasicResolver,
-                    "Python 3.8.3 64-bit ('win1': poetry)",
-                ),
+                createExpectedEnvInfo(resolvedUpdatedEnvReturnedByBasicResolver, "Python 3.8.3 ('win1': poetry)"),
             ]);
             didUpdate.dispose();
         });
@@ -276,7 +275,7 @@ suite('Python envs locator - Environments Resolver', () => {
 
             assertEnvEqual(
                 expected,
-                createExpectedEnvInfo(resolvedEnvReturnedByBasicResolver, "Python 3.8.3 64-bit ('win1': venv)"),
+                createExpectedEnvInfo(resolvedEnvReturnedByBasicResolver, "Python 3.8.3 ('win1': venv)"),
             );
         });
 
