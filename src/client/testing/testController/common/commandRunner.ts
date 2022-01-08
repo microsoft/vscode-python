@@ -10,8 +10,10 @@ import { createDeferred } from '../../../common/utils/async';
 import { TestCommandOptions } from '../../common/types';
 
 /**
- * Helper function that will send the unittest discovery command, wait for a reply from the Python script, and return the data.
- * It is up to the caller to parse this data into a JSON object.
+ * Helper function that will communicate with a Python script via a "client/server" architecture.
+ * The TS side will send a command to a Python script, and spawn a server that will listen for a reply from the Python side.
+ * Once the reply is received, it will close down the server and resolve the resulting promise with the data as a string.
+ * It is up to the caller to parse this data into a JSON object if necessary.
  */
 export async function runTestCommand(
     executionFactory: IPythonExecutionFactory,
@@ -64,6 +66,8 @@ export async function runTestCommand(
         try {
             await execService.exec(options.args, spawnOptions);
         } catch (ex) {
+            // Close the connection.
+            server.close();
             deferred.reject(ex);
         }
     });
