@@ -59,18 +59,13 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
             return versionComparison;
         }
 
-        // Prioritize non-Conda environments.
-        if (isCondaEnvironment(a) && !isCondaEnvironment(b)) {
-            return 1;
-        }
-
-        if (!isCondaEnvironment(a) && isCondaEnvironment(b)) {
-            return -1;
-        }
-
         // If we have the "base" Conda env, put it last in its Python version subgroup.
         if (isBaseCondaEnvironment(a)) {
             return 1;
+        }
+
+        if (isBaseCondaEnvironment(b)) {
+            return -1;
         }
 
         // Check alphabetical order.
@@ -137,12 +132,11 @@ function getSortName(info: PythonEnvironment, interpreterHelper: IInterpreterHel
     return `${sortNameParts.join(' ')} ${envSuffix}`.trim();
 }
 
-function isCondaEnvironment(environment: PythonEnvironment): boolean {
-    return environment.envType === EnvironmentType.Conda;
-}
-
 function isBaseCondaEnvironment(environment: PythonEnvironment): boolean {
-    return isCondaEnvironment(environment) && (environment.envName === 'base' || environment.envName === 'miniconda');
+    return (
+        environment.envType === EnvironmentType.Conda &&
+        (environment.envName === 'base' || environment.envName === 'miniconda')
+    );
 }
 
 /**
@@ -203,17 +197,18 @@ export function getEnvLocationHeuristic(environment: PythonEnvironment, workspac
  */
 function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment): number {
     const envTypeByPriority = getPrioritizedEnvironmentType();
-    return envTypeByPriority.indexOf(a.envType) - envTypeByPriority.indexOf(b.envType);
+    return Math.sign(envTypeByPriority.indexOf(a.envType) - envTypeByPriority.indexOf(b.envType));
 }
 
 function getPrioritizedEnvironmentType(): EnvironmentType[] {
     return [
-        EnvironmentType.Conda,
+        // Prioritize non-Conda environments.
         EnvironmentType.Poetry,
         EnvironmentType.Pipenv,
         EnvironmentType.VirtualEnvWrapper,
         EnvironmentType.Venv,
         EnvironmentType.VirtualEnv,
+        EnvironmentType.Conda,
         EnvironmentType.Pyenv,
         EnvironmentType.WindowsStore,
         EnvironmentType.Global,
