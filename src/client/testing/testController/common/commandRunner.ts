@@ -9,6 +9,10 @@ import {
 import { createDeferred } from '../../../common/utils/async';
 import { TestCommandOptions } from '../../common/types';
 
+/**
+ * Helper function that will send the unittest discovery command, wait for a reply from the Python script, and return the data.
+ * It is up to the caller to parse this data into a JSON object.
+ */
 export async function runTestCommand(
     executionFactory: IPythonExecutionFactory,
     options: TestCommandOptions,

@@ -10,6 +10,9 @@ import { TestCommandOptions } from '../../common/types';
 import { runTestCommand } from '../common/commandRunner';
 import { DiscoveredTestPayload, ITestDiscoveryAdapter } from '../common/types';
 
+/**
+ * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.
+ */
 export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     constructor(
         public executionFactory: IPythonExecutionFactory,

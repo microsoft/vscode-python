@@ -18,6 +18,15 @@ import { DiscoveredTestItem, DiscoveredTestNode, DiscoveredTestType, ITestDiscov
 import { DEFAULT_TEST_PORT } from './common/utils';
 import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
 
+/**
+ * This class exposes a test-provider-agnostic way of discovering tests.
+ *
+ * It gets instantiated by the `PythonTestController` class in charge of reflecting test data in the UI,
+ * and then instantiates provider-specific adapters under the hood depending on settings.
+ *
+ * This class formats the JSON test data returned by the `UnittestTestDiscoveryAdapter` into test UI elements,
+ * and uses them to insert/update/remove items in the `TestController` instance behind the testing UI whenever the `PythonTestController` requests a refresh.
+ */
 export class WorkspaceTestAdapter {
     private discoveryAdapter: ITestDiscoveryAdapter;
 
@@ -25,6 +34,7 @@ export class WorkspaceTestAdapter {
 
     private testData: DiscoveredTestNode | undefined;
 
+    // TODO: Implement test running
     // private running: ITestRunningAdapter;
 
     constructor(
@@ -53,8 +63,6 @@ export class WorkspaceTestAdapter {
         workspaceFilePath?: string,
     ): Promise<void> {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: 'unittest' });
-
-        console.warn(`discovery uri: ${uri.fsPath}`);
 
         // The uri parameter can differ from the workspace uri when we're in a multiroot workspace scenario.
         // As such, we don't rely on this.workspaceUri
@@ -160,25 +168,18 @@ export class WorkspaceTestAdapter {
                     // If the test root for this folder exists: Workspace refresh, update its children.
                     // Otherwise, it is a freshly discovered workspace, and we need to create a new test root and populate the test tree.
                     if (workspaceNode) {
-                        console.warn(`Update test tree with:`);
-                        console.warn(rawTestData);
                         updateTestTree(testController, rawTestData.tests, this.testData, workspaceNode, token);
                     } else {
-                        console.warn(`Populate test tree with:`);
-                        console.warn(rawTestData);
                         populateTestTree(testController, rawTestData.tests, undefined, token);
                     }
                 } else {
                     // Delete everything from the test controller.
-                    console.warn(`Delete everything from the test controller.`);
                     testController.items.replace([]);
                 }
 
                 // Save new test data state.
                 this.testData = rawTestData.tests;
             }
-
-            console.warn(this.testData);
         }
 
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: 'unittest', failed: false });
@@ -288,8 +289,6 @@ function populateTestTree(
     testRoot: TestItem | undefined,
     token?: CancellationToken,
 ): void {
-    console.warn(`populate test tree:`);
-    console.warn(testTreeData);
     // If testRoot is undefined, use the info of the root item of testTreeData to create a test item, and append it to the test controller.
     if (!testRoot) {
         testRoot = testController.createTestItem(testTreeData.path, testTreeData.name, Uri.file(testTreeData.path));
