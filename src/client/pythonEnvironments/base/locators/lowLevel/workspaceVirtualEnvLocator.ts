@@ -2,8 +2,13 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { chain, iterable } from '../../../../common/utils/async';
-import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
+import {
+    findInterpretersInDir,
+    getEnvironmentDirFromPath,
+    looksLikeBasicVirtualPython,
+} from '../../../common/commonUtils';
 import { pathExists } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from '../../../common/environmentManagers/pipenv';
 import { isVenvEnvironment, isVirtualenvEnvironment } from '../../../common/environmentManagers/simplevirtualenvs';
@@ -80,11 +85,19 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator<BasicE
                         // python.exe or python in the same directory in the case of virtual
                         // environments.
                         if (await looksLikeBasicVirtualPython(entry)) {
-                            // We should extract the kind here to avoid doing is*Environment()
-                            // check multiple times. Those checks are file system heavy and
-                            // we can use the kind to determine this anyway.
+                            const location = getEnvironmentDirFromPath(filename);
+                            // For environments inside roots, we need to set search location so they can be queried accordingly.
+                            // Search location particularly for virtual environments is intended as the directory in which the
+                            // environment was found in.
+                            // For eg.the default search location for an env containing 'bin' or 'Scripts' directory is:
+                            //
+                            // searchLocation <--- Default search location directory
+                            // |__ env
+                            //    |__ bin or Scripts
+                            //        |__ python  <--- executable
+                            const searchLocation = Uri.file(path.dirname(location));
                             const kind = await getVirtualEnvKind(filename);
-                            yield { kind, executablePath: filename };
+                            yield { kind, executablePath: filename, searchLocation };
                             traceVerbose(`Workspace Virtual Environment: [added] ${filename}`);
                         } else {
                             traceVerbose(`Workspace Virtual Environment: [skipped] ${filename}`);

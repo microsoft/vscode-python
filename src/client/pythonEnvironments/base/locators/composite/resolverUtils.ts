@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { Uri } from 'vscode';
 import { uniq } from 'lodash';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, UNKNOWN_PYTHON_VERSION, virtualEnvKinds } from '../../info';
 import { buildEnvInfo, comparePythonVersionSpecificity, getEnvDisplayString, getEnvMatcher } from '../../info/env';
@@ -11,7 +10,7 @@ import {
     getInterpreterPathFromDir,
     getPythonVersionFromPath,
 } from '../../../common/commonUtils';
-import { arePathsSame, getWorkspaceFolders, isParentPath } from '../../../common/externalDependencies';
+import { arePathsSame } from '../../../common/externalDependencies';
 import { AnacondaCompanyName, Conda } from '../../../common/environmentManagers/conda';
 import { parsePyenvVersion } from '../../../common/environmentManagers/pyenv';
 import { Architecture, getOSType, OSType } from '../../../../common/utils/platform';
@@ -42,11 +41,16 @@ function getResolvers(): Map<PythonEnvKind, (executablePath: string) => Promise<
  * executable and returns it. Notice `undefined` is never returned, so environment
  * returned could still be invalid.
  */
-export async function resolveBasicEnv({ kind, executablePath, source }: BasicEnvInfo): Promise<PythonEnvInfo> {
+export async function resolveBasicEnv({
+    kind,
+    executablePath,
+    source,
+    searchLocation,
+}: BasicEnvInfo): Promise<PythonEnvInfo> {
     const resolvers = getResolvers();
     const resolverForKind = resolvers.get(kind)!;
     const resolvedEnv = await resolverForKind(executablePath);
-    resolvedEnv.searchLocation = getSearchLocation(resolvedEnv);
+    resolvedEnv.searchLocation = searchLocation;
     resolvedEnv.source = uniq(resolvedEnv.source.concat(source ?? []));
     if (getOSType() === OSType.Windows && resolvedEnv.source?.includes(PythonEnvSource.WindowsRegistry)) {
         // We can update env further using information we can get from the Windows registry.
@@ -54,24 +58,6 @@ export async function resolveBasicEnv({ kind, executablePath, source }: BasicEnv
     }
     resolvedEnv.display = getEnvDisplayString(resolvedEnv);
     return resolvedEnv;
-}
-
-function getSearchLocation(env: PythonEnvInfo): Uri | undefined {
-    const folders = getWorkspaceFolders();
-    const isRootedEnv = folders.some((f) => isParentPath(env.executable.filename, f));
-    if (isRootedEnv) {
-        // For environments inside roots, we need to set search location so they can be queried accordingly.
-        // Search location particularly for virtual environments is intended as the directory in which the
-        // environment was found in.
-        // For eg.the default search location for an env containing 'bin' or 'Scripts' directory is:
-        //
-        // searchLocation <--- Default search location directory
-        // |__ env
-        //    |__ bin or Scripts
-        //        |__ python  <--- executable
-        return Uri.file(path.dirname(env.location));
-    }
-    return undefined;
 }
 
 async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {

@@ -4,6 +4,7 @@
 'use strict';
 
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { chain, iterable } from '../../../../common/utils/async';
 import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
@@ -83,7 +84,7 @@ export class PoetryLocator extends FSWatchingLocator<BasicEnvInfo> {
                             // We should extract the kind here to avoid doing is*Environment()
                             // check multiple times. Those checks are file system heavy and
                             // we can use the kind to determine this anyway.
-                            yield { executablePath: filename, kind };
+                            yield { executablePath: filename, kind, searchLocation: Uri.file(root) };
                             traceVerbose(`Poetry Virtual Environment: [added] ${filename}`);
                         } catch (ex) {
                             traceError(`Failed to process environment: ${filename}`, ex);

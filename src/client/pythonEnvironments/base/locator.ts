@@ -116,7 +116,12 @@ export type PythonLocatorQuery = BasicPythonLocatorQuery & {
 
 type QueryForEvent<E> = E extends PythonEnvsChangedEvent ? PythonLocatorQuery : BasicPythonLocatorQuery;
 
-export type BasicEnvInfo = { kind: PythonEnvKind; executablePath: string; source?: PythonEnvSource[] };
+export type BasicEnvInfo = {
+    kind: PythonEnvKind;
+    executablePath: string;
+    source?: PythonEnvSource[];
+    searchLocation?: Uri;
+};
 
 /**
  * A single Python environment locator.

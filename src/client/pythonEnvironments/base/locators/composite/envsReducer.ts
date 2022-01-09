@@ -119,6 +119,7 @@ function resolveEnvCollision(oldEnv: BasicEnvInfo, newEnv: BasicEnvInfo): BasicE
     const [env] = sortEnvInfoByPriority(oldEnv, newEnv);
     const merged = cloneDeep(env);
     merged.source = uniq((oldEnv.source ?? []).concat(newEnv.source ?? []));
+    merged.searchLocation = oldEnv.searchLocation ?? newEnv.searchLocation;
     return merged;
 }
 
