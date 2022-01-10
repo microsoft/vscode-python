@@ -11,13 +11,13 @@ import unittest
 from .utils import build_test_tree
 
 
-# Add the lib path to our sys path to find the requests module.
+# Add the lib path to our sys path to find the httpx module.
 EXTENSION_ROOT = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
 sys.path.insert(0, os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python"))
 
-import requests
+import httpx
 
 
 Arguments = Tuple[str, Any]
@@ -130,4 +130,4 @@ if __name__ == "__main__":
     payload = discover_tests(start_dir, pattern, top_level_dir)
 
     port = parse_port(script_args)
-    requests.post(f"http://localhost:{port}", json=payload)
+    httpx.post(f"http://localhost:{port}", data=payload)

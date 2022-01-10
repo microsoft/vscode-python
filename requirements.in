@@ -4,7 +4,7 @@
 # 2) pip-compile --generate-hashes requirements.in
 
 # Unittest test adapter
-requests==2.27.1
+httpx==0.21.3
 
 # Sort Imports
 isort==5.10.0
