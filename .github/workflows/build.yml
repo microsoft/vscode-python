@@ -70,6 +70,19 @@ jobs:
         with:
           node_version: ${{ env.NODE_VERSION }}
 
+  typecheck:
+    name: Check Python types
+    if: github.repository == 'microsoft/vscode-python'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Run Pyright
+        uses: jakebailey/pyright-action@v1
+        with:
+          working-directory: ${{ env.special-working-directory }}
+
   ### Non-smoke tests
   tests:
     name: Tests
