@@ -9,3 +9,7 @@ exclude = '''
   )/
 )
 '''
+
+[tool.pyright]
+exclude = ['lib']
+extraPaths = ['lib']
