@@ -55,6 +55,8 @@ jobs:
 
       - name: Run Pyright
         uses: jakebailey/pyright-action@v1
+        with:
+          working-directory: 'pythonFiles'
 
   ### Non-smoke tests
   tests:
