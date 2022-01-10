@@ -148,6 +148,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             if (settings.testing.pytestEnabled) {
                 await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
+                // TODO: Use new test discovery mechanism
                 await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else {
                 sendTelemetryEvent(EventName.UNITTEST_DISABLED);
