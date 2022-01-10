@@ -27,10 +27,12 @@ contextvars==2.4 \
     # via
     #   anyio
     #   sniffio
-dataclasses==0.8 \
+dataclasses==0.8 ; python_version < "3.7" \
     --hash=sha256:0201d89fa866f68c8ebd9d08ee6ff50c0b255f8ec63a71c16fda7af82bb887bf \
     --hash=sha256:8479067f342acf957dc82ec415d355ab5edb7e7646b90dc6e2fd1d96ad084c97
-    # via anyio
+    # via
+    #   -r requirements.in
+    #   anyio
 h11==0.12.0 \
     --hash=sha256:36a3cb8c0a032f56e2da7084577878a035d3b61d104230d4bd49c0c6b555a9c6 \
     --hash=sha256:47222cb6067e4a307d535814917cd98fd0a57b6788ce715755fa2b6c28b56042
