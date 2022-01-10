@@ -51,9 +51,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
      - name: Use Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+       uses: actions/setup-python@v2
+       with:
+         python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Checkout
         uses: actions/checkout@v2.3.4
