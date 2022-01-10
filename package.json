@@ -1894,7 +1894,7 @@
         "webpack": "webpack"
     },
     "dependencies": {
-        "@vscode/jupyter-lsp-middleware": "^0.2.15",
+        "@vscode/jupyter-lsp-middleware": "^0.2.35",
         "arch": "^2.1.0",
         "chokidar": "^3.4.3",
         "diff-match-patch": "^1.0.0",

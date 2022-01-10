@@ -70,6 +70,31 @@ jobs:
         with:
           node_version: ${{ env.NODE_VERSION }}
 
+  check-types:
+    name: Check Python types
+    if: github.repository == 'microsoft/vscode-python'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Use Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Install Python requirements
+        run: |
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt --no-user
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py --no-deps --upgrade -r ./pythonFiles/jedilsp_requirements/requirements.txt
+          python -m pip install --upgrade -r build/test-requirements.txt
+
+      - name: Run Pyright
+        uses: jakebailey/pyright-action@v1
+        with:
+          working-directory: 'pythonFiles'
+
   ### Non-smoke tests
   tests:
     name: Tests

@@ -81,6 +81,14 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const disposables = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         disposables.push(
+            this.onDidChangeInterpreters((e) => {
+                const interpreter = e.old ?? e.new;
+                if (interpreter) {
+                    this.didChangeInterpreterInformation.fire(interpreter);
+                }
+            }),
+        );
+        disposables.push(
             documentManager.onDidChangeActiveTextEditor((e) =>
                 e && e.document ? this.refresh(e.document.uri) : undefined,
             ),
