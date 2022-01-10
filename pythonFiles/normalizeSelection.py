@@ -55,7 +55,8 @@ def _get_statements(selection):
         # In Python 2.7, lineno takes into account decorators, so this offset check is unnecessary.
         # Also, not all AST objects can have decorators.
         if hasattr(node, "decorator_list") and sys.version_info.major >= 3:
-            line_end -= len(node.decorator_list)
+            # Using getattr instead of node.decorator_list or pyright will complain about an unknown member.
+            line_end -= len(getattr(node, "decorator_list"))
         ends.append(line_end)
     ends.append(len(lines))
 
@@ -71,7 +72,8 @@ def _get_statements(selection):
 
         # Special handling of decorators similar to what's above.
         if hasattr(node, "decorator_list") and sys.version_info.major >= 3:
-            start -= len(node.decorator_list)
+            # Using getattr instead of node.decorator_list or pyright will complain about an unknown member.
+            start -= len(getattr(node, "decorator_list"))
         block = "\n".join(lines[start:end])
 
         # If the block is multiline, add an extra newline character at its end.
