@@ -17,10 +17,8 @@ from unittestadapter.utils import (
 
 from . import is_same_tree, TEST_DATA_PATH
 
-if sys.version_info < (3, 0):
-    pytest.skip("Skip unittest test utils tests on Python 2.7", allow_module_level=True)
 
-
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_simple_test_cases() -> None:
     """
     The get_test_case fuction should return tests from the test suite.
@@ -46,6 +44,7 @@ def test_simple_test_cases() -> None:
     assert expected == actual
 
 
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_nested_test_cases() -> None:
     """
     The get_test_case fuction should return tests from all test suites,
@@ -74,6 +73,7 @@ def test_nested_test_cases() -> None:
     assert expected == actual
 
 
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_get_existing_child_node() -> None:
     """
     The get_child_node fuction should return the child node of a test tree if it exists.
@@ -120,6 +120,7 @@ def test_get_existing_child_node() -> None:
     assert initial_len == post_len
 
 
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_no_existing_child_node() -> None:
     """
     The get_child_node fuction should add a child node to a test tree and return it if it does not exist.
@@ -168,6 +169,7 @@ def test_no_existing_child_node() -> None:
     assert initial_len < post_len
 
 
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_build_simple_tree() -> None:
     """
     The build_test_tree function should build and return a test tree from discovered test suites, and an empty list of errors if there are none in the discovered data.
@@ -222,6 +224,7 @@ def test_build_simple_tree() -> None:
     assert len(errors) == 0
 
 
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_build_empty_tree() -> None:
     """
     The build_test_tree function should return None if there are no discovered test suites, and an empty list of errors if there are none in the discovered data

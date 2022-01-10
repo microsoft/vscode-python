@@ -17,12 +17,7 @@ from unittestadapter.utils import TestNodeTypeEnum
 from . import TEST_DATA_PATH, is_same_tree
 
 
-if sys.version_info < (3, 0):
-    pytest.skip(
-        "Skip unittest test discovery tests on Python 2.7", allow_module_level=True
-    )
-
-
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_parse_port_option() -> None:
     """
     The parse_port function should parse and return the port passed as a command-line option.
@@ -35,6 +30,7 @@ def test_parse_port_option() -> None:
     assert expected == actual
 
 
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_parse_no_port_option() -> None:
     """
     The parse_port function should return a default port value if there was no --port command-line option.
@@ -46,6 +42,7 @@ def test_parse_no_port_option() -> None:
     assert DEFAULT_PORT == actual
 
 
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_parse_short_unittest_args() -> None:
     """
     The parse_unittest_args function should return the values for the start_dir, pattern, and top_level_dir arguments
@@ -67,6 +64,7 @@ def test_parse_short_unittest_args() -> None:
     assert expected_top_level_dir == actual_top_level_dir
 
 
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_parse_long_unittest_args() -> None:
     """
     The parse_unittest_args function should return the values for the start_dir, pattern, and top_level_dir arguments
@@ -88,6 +86,7 @@ def test_parse_long_unittest_args() -> None:
     assert expected_top_level_dir == actual_top_level_dir
 
 
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_parse_no_unittest_args() -> None:
     """
     The parse_unittest_args function should return default values for the start_dir, pattern, and top_level_dir arguments
@@ -107,6 +106,7 @@ def test_parse_no_unittest_args() -> None:
     assert expected_top_level_dir == actual_top_level_dir
 
 
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_simple_discovery() -> None:
     """
     The discover_tests function should return a dictionary with a "success" status, no errors, and a test tree
@@ -159,6 +159,7 @@ def test_simple_discovery() -> None:
     assert "errors" not in actual
 
 
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_empty_discovery() -> None:
     """
     The discover_tests function should return a dictionary with a "success" status, no errors, and no test tree
@@ -174,6 +175,7 @@ def test_empty_discovery() -> None:
     assert "errors" not in actual
 
 
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_error_discovery() -> None:
     """
     The discover_tests function should return a dictionary with an "error" status, the discovered tests, and a list of errors
