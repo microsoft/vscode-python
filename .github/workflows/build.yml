@@ -80,8 +80,6 @@ jobs:
 
       - name: Run Pyright
         uses: jakebailey/pyright-action@v1
-        with:
-          working-directory: ${{ env.special-working-directory }}
 
   ### Non-smoke tests
   tests:
