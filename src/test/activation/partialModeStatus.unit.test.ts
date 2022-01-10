@@ -44,9 +44,12 @@ suite('Partial Mode Status', async () => {
                 parse: (s: string) => s,
             },
         } as unknown) as typeof vscodeTypes;
-        rewiremock.disable();
         rewiremock.enable();
         rewiremock('vscode').with(vscodeMock);
+    });
+
+    teardown(() => {
+        rewiremock.disable();
     });
 
     test("No item is created if workspace is trusted and isn't virtual", async () => {

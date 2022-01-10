@@ -35,6 +35,11 @@ export enum LanguageStatusSeverity {
     Error = 2,
 }
 
+export enum QuickPickItemKind {
+    Separator = -1,
+    Default = 1,
+}
+
 export class Disposable {
     constructor(private callOnDispose: () => void) {}
 

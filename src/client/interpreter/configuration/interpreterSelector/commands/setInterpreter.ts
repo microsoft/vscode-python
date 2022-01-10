@@ -274,7 +274,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     }
 
     private setRecommendedItem(items: QuickPickType[], resource: Resource) {
-        const interpreterSuggestions = this.interpreterSelector.getSuggestions(resource);
+        const interpreterSuggestions = this.interpreterSelector.getSuggestions(resource, false);
         if (!this.interpreterService.refreshPromise && interpreterSuggestions.length > 0) {
             const suggestion = this.interpreterSelector.getRecommendedSuggestion(
                 interpreterSuggestions,
