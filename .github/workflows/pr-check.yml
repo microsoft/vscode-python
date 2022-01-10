@@ -46,7 +46,7 @@ jobs:
         with:
           node_version: ${{ env.NODE_VERSION }}
 
-  typecheck:
+  check-types:
     name: Check Python types
     runs-on: ubuntu-latest
     steps:
