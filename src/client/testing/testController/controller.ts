@@ -149,17 +149,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             if (settings.testing.pytestEnabled) {
                 await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
-                const workspace = this.workspaceService.getWorkspaceFolder(uri);
-                console.warn(`workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
-                const testAdapter =
-                    this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                testAdapter.discoverTests(
-                    this.testController,
-                    this.refreshCancellation.token,
-                    this.testAdapters.size > 1,
-                    this.workspaceService.workspaceFile?.fsPath || Common.workspace(),
-                );
-                // await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+                await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else {
                 sendTelemetryEvent(EventName.UNITTEST_DISABLED);
                 // If we are here we may have to remove an existing node from the tree
