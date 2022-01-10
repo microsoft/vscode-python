@@ -169,11 +169,11 @@ suite('Interpreters - selector', () => {
 
         const expected: InterpreterQuickPickItem[] = [
             new InterpreterQuickPickItem('two', path.join(workspacePath, '.venv', 'bin', 'python')),
-            new InterpreterQuickPickItem('four', path.join('a', 'conda', 'environment')),
             new InterpreterQuickPickItem(
                 'one',
                 path.join('path', 'to', 'another', 'workspace', '.venv', 'bin', 'python'),
             ),
+            new InterpreterQuickPickItem('four', path.join('a', 'conda', 'environment')),
             new InterpreterQuickPickItem('three', path.join('a', 'global', 'env', 'python')),
         ];
 
