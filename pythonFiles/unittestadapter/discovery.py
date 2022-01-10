@@ -3,7 +3,7 @@
 
 import getopt
 import os
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 import sys
 import traceback
 import unittest
@@ -39,14 +39,14 @@ def parse_port(args: List[Arguments]) -> int:
     return port
 
 
-def parse_unittest_args(args: List[Arguments]) -> Tuple[str, str, str]:
+def parse_unittest_args(args: List[Arguments]) -> Tuple[str, str, Union[str, None]]:
     """
     Parse command-line arguments that should be forwarded to unittest.
     Unittest arguments are: -v, -s, -p, -t.
     """
-    pattern = "test*.py"
-    start_dir = "."
-    top_level_dir = None
+    pattern: str = "test*.py"
+    start_dir: str = "."
+    top_level_dir: Union[str, None] = None
 
     for opt in args:
         if opt[0] in ("-s", "--start-directory"):

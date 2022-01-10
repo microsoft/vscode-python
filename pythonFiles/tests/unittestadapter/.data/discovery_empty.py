@@ -11,5 +11,5 @@ class DiscoveryEmpty(unittest.TestCase):
     if unittest discovery was performed successfully but no tests were found.
     """
 
-    def something() -> None:
+    def something(self) -> bool:
         return True

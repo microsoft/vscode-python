@@ -17,7 +17,7 @@ from unittestadapter.utils import TestNodeTypeEnum
 from . import TEST_DATA_PATH, is_same_tree
 
 
-if sys.version_info < (3):
+if sys.version_info < (3, 0):
     pytest.skip(
         "Skip unittest test discovery tests on Python 2.7", allow_module_level=True
     )

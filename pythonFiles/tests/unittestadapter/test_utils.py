@@ -17,7 +17,7 @@ from unittestadapter.utils import (
 
 from . import is_same_tree, TEST_DATA_PATH
 
-if sys.version_info < (3):
+if sys.version_info < (3, 0):
     pytest.skip("Skip unittest test utils tests on Python 2.7", allow_module_level=True)
 
 
@@ -79,26 +79,26 @@ def test_get_existing_child_node() -> None:
     The get_child_node fuction should return the child node of a test tree if it exists.
     """
 
-    tree = {
+    tree: TestNode = {
         "name": "root",
         "path": "foo",
-        "type_": "folder",
+        "type_": TestNodeTypeEnum.folder,
         "children": [
             {
                 "name": "childOne",
                 "path": "child/one",
-                "type_": "folder",
+                "type_": TestNodeTypeEnum.folder,
                 "children": [
                     {
                         "name": "nestedOne",
                         "path": "nested/one",
-                        "type_": "folder",
+                        "type_": TestNodeTypeEnum.folder,
                         "children": [],
                     },
                     {
                         "name": "nestedTwo",
                         "path": "nested/two",
-                        "type_": "folder",
+                        "type_": TestNodeTypeEnum.folder,
                         "children": [],
                     },
                 ],
@@ -106,14 +106,14 @@ def test_get_existing_child_node() -> None:
             {
                 "name": "childTwo",
                 "path": "child/two",
-                "type_": "folder",
+                "type_": TestNodeTypeEnum.folder,
                 "children": [],
             },
         ],
     }
 
     initial_len = len(tree["children"])
-    result = get_child_node("childTwo", "child/two", "folder", tree)
+    result = get_child_node("childTwo", "child/two", TestNodeTypeEnum.folder, tree)
     post_len = len(tree["children"])
 
     assert result is not None
@@ -128,23 +128,23 @@ def test_no_existing_child_node() -> None:
     tree: TestNode = {
         "name": "root",
         "path": "foo",
-        "type_": "folder",
+        "type_": TestNodeTypeEnum.folder,
         "children": [
             {
                 "name": "childOne",
                 "path": "child/one",
-                "type_": "folder",
+                "type_": TestNodeTypeEnum.folder,
                 "children": [
                     {
                         "name": "nestedOne",
                         "path": "nested/one",
-                        "type_": "folder",
+                        "type_": TestNodeTypeEnum.folder,
                         "children": [],
                     },
                     {
                         "name": "nestedTwo",
                         "path": "nested/two",
-                        "type_": "folder",
+                        "type_": TestNodeTypeEnum.folder,
                         "children": [],
                     },
                 ],
@@ -152,14 +152,14 @@ def test_no_existing_child_node() -> None:
             {
                 "name": "childTwo",
                 "path": "child/two",
-                "type_": "folder",
+                "type_": TestNodeTypeEnum.folder,
                 "children": [],
             },
         ],
     }
 
     initial_len = len(tree["children"])
-    result = get_child_node("childThree", "child/three", "folder", tree)
+    result = get_child_node("childThree", "child/three", TestNodeTypeEnum.folder, tree)
     post_len = len(tree["children"])
     last_child = tree["children"][-1]
 

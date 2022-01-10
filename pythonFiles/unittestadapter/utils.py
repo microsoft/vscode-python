@@ -4,7 +4,7 @@
 from enum import Enum
 import inspect
 import pathlib
-from typing import List, Tuple, TypedDict
+from typing import List, Tuple, TypedDict, Union
 import unittest
 
 # Types
@@ -92,7 +92,9 @@ def get_child_node(
         result = next(
             node
             for node in root["children"]
-            if node["name"] == name and node["type_"] == type_
+            if isinstance(node, TestNode)
+            and node["name"] == name
+            and node["type_"] == type_
         )
     except StopIteration:
         result = build_test_node(path, name, type_)
@@ -103,7 +105,7 @@ def get_child_node(
 
 def build_test_tree(
     suite: unittest.TestSuite, test_directory: str
-) -> Tuple[TestNode, List[str]]:
+) -> Tuple[Union[TestNode, None], List[str]]:
     """
     Build a test tree from a unittest test suite.
     This function returns the test tree, and any errors found by unittest.
@@ -148,7 +150,7 @@ def build_test_tree(
     for test_case in get_test_case(suite):
         test_id = test_case.id()
         if test_id.startswith("unittest.loader._FailedTest"):
-            errors.append(test_case._exception.__str__())
+            errors.append(test_case._exception.__str__())  # type: ignore
         else:
             # Get test path components
             folders = test_id.split(".")
