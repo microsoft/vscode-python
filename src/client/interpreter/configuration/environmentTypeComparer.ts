@@ -87,8 +87,7 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
             if (getEnvLocationHeuristic(i, workspaceUri?.folderUri.fsPath || '') === EnvLocationHeuristic.Local) {
                 return true;
             }
-            const virtualEnvTypesRelatedToWorkspace = [EnvironmentType.Pipenv, EnvironmentType.Poetry];
-            if (virtualEnvTypes.includes(i.envType) && !virtualEnvTypesRelatedToWorkspace.includes(i.envType)) {
+            if (virtualEnvTypes.includes(i.envType)) {
                 // We're not sure if these envs were created for the workspace, so do not recommend them.
                 return false;
             }
