@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import sys
+import pytest
+
 import unittest
 from pathlib import PurePath
 
@@ -13,6 +16,9 @@ from unittestadapter.utils import (
 )
 
 from . import is_same_tree, TEST_DATA_PATH
+
+if sys.version_info < (3):
+    pytest.skip("Skip unittest test utils tests on Python 2.7", allow_module_level=True)
 
 
 def test_simple_test_cases() -> None:
