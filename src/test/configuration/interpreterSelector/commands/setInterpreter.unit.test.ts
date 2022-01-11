@@ -6,7 +6,15 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationTarget, OpenDialogOptions, QuickPick, QuickPickItem, QuickPickItemKind, Uri } from 'vscode';
+import {
+    ConfigurationTarget,
+    OpenDialogOptions,
+    QuickPick,
+    QuickPickItem,
+    QuickPickItemKind,
+    Uri,
+    WorkspaceFolder,
+} from 'vscode';
 import { cloneDeep } from 'lodash';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
@@ -127,6 +135,7 @@ suite('Set Interpreter Command', () => {
             alwaysShow: true,
         };
         const currentPythonPath = 'python';
+        const workspacePath = 'path/to/workspace';
 
         setup(() => {
             _enterOrBrowseInterpreterPath = sinon.stub(
@@ -160,6 +169,10 @@ suite('Set Interpreter Command', () => {
                             defaultInterpreterPath,
                         }),
                 );
+
+            workspace
+                .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny()))
+                .returns(() => (({ uri: { fsPath: workspacePath } } as unknown) as WorkspaceFolder));
 
             setInterpreterCommand = new SetInterpreterCommand(
                 appShell.object,
@@ -231,6 +244,108 @@ suite('Set Interpreter Command', () => {
             delete actualParameters!.customButtonSetup;
             delete actualParameters!.onChangeItem;
             assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
+        });
+
+        test('Items displayed should be grouped if no refresh is going on', async () => {
+            const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
+            const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+            const interpreterItems: IInterpreterQuickPickItem[] = [
+                {
+                    description: `${workspacePath}/interpreterPath1`,
+                    detail: '',
+                    label: 'This is the selected Python path',
+                    path: `${workspacePath}/interpreterPath1`,
+                    interpreter: {
+                        path: `${workspacePath}/interpreterPath1`,
+                        envType: EnvironmentType.Venv,
+                    } as PythonEnvironment,
+                },
+                {
+                    description: 'interpreterPath2',
+                    detail: '',
+                    label: 'This is the selected Python path',
+                    path: 'interpreterPath2',
+                    interpreter: {
+                        path: 'interpreterPath2',
+                        envType: EnvironmentType.VirtualEnvWrapper,
+                    } as PythonEnvironment,
+                },
+                {
+                    description: 'interpreterPath3',
+                    detail: '',
+                    label: 'This is the selected Python path',
+                    path: 'interpreterPath3',
+                    interpreter: {
+                        path: 'interpreterPath3',
+                        envType: EnvironmentType.VirtualEnvWrapper,
+                    } as PythonEnvironment,
+                },
+                {
+                    description: 'interpreterPath4',
+                    detail: '',
+                    label: 'This is the selected Python path',
+                    path: 'interpreterPath4',
+                    interpreter: { path: 'interpreterPath4', envType: EnvironmentType.Conda } as PythonEnvironment,
+                },
+                item,
+                {
+                    description: 'interpreterPath5',
+                    detail: '',
+                    label: 'This is the selected Python path',
+                    path: 'interpreterPath5',
+                    interpreter: { path: 'interpreterPath5', envType: EnvironmentType.Global } as PythonEnvironment,
+                },
+            ];
+            interpreterSelector.reset();
+            interpreterSelector
+                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => interpreterItems);
+            interpreterSelector
+                .setup((i) => i.getRecommendedSuggestion(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => item);
+            const recommended = cloneDeep(item);
+            recommended.label = `${Octicons.Star} ${item.label}`;
+            recommended.description = `${interpreterPath} - ${Common.recommended()}`;
+            const suggestions = [
+                expectedEnterInterpreterPathSuggestion,
+                defaultInterpreterPathSuggestion,
+                { label: EnvGroups.Workspace, kind: QuickPickItemKind.Separator },
+                interpreterItems[0],
+                { label: EnvGroups.VirtualEnvWrapper, kind: QuickPickItemKind.Separator },
+                interpreterItems[1],
+                interpreterItems[2],
+                { label: EnvGroups.Conda, kind: QuickPickItemKind.Separator },
+                interpreterItems[3],
+                recommended,
+                { label: EnvGroups.Global, kind: QuickPickItemKind.Separator },
+                interpreterItems[5],
+            ];
+            const expectedParameters: IQuickPickParameters<QuickPickItem> = {
+                placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
+                items: suggestions,
+                activeItem: recommended,
+                matchOnDetail: true,
+                matchOnDescription: true,
+                title: InterpreterQuickPickList.browsePath.openButtonLabel(),
+                sortByLabel: true,
+                keepScrollPosition: true,
+            };
+            let actualParameters: IQuickPickParameters<QuickPickItem> | undefined;
+            multiStepInput
+                .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
+                .callback((options) => {
+                    actualParameters = options;
+                })
+                .returns(() => Promise.resolve((undefined as unknown) as QuickPickItem));
+
+            await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
+
+            expect(actualParameters).to.not.equal(undefined, 'Parameters not set');
+            const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
+            expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
+            delete actualParameters!.customButtonSetup;
+            delete actualParameters!.onChangeItem;
+            assert.deepStrictEqual(actualParameters?.items, expectedParameters.items, 'Params not equal');
         });
 
         test('If system variables are used in the default interpreter path, make sure they are resolved when the path is displayed', async () => {

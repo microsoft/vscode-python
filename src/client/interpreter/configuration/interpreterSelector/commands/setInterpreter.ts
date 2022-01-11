@@ -404,7 +404,6 @@ export enum EnvGroups {
     Venv = 'Venv',
     Poetry = 'Poetry',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
-    NewlyDiscovered = 'NewlyDiscovered',
 }
 
 function getGroupedQuickPickItems(items: IInterpreterQuickPickItem[], workspacePath?: string): QuickPickType[] {
