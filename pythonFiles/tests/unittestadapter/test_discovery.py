@@ -14,7 +14,8 @@ from unittestadapter.discovery import (
 )
 from unittestadapter.utils import TestNodeTypeEnum
 
-from . import TEST_DATA_PATH, is_same_tree
+from . import TEST_DATA_PATH
+from .helpers import is_same_tree
 
 
 @pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
