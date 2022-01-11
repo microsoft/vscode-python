@@ -148,6 +148,7 @@ export class MockDocumentManager implements IMockDocumentManager {
             const ev: TextDocumentChangeEvent = {
                 document: doc,
                 contentChanges,
+                reason: undefined,
             };
             // Changes are applied to the doc before it's sent.
             ev.contentChanges.forEach(doc.edit.bind(doc));

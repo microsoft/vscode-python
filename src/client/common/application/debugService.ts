@@ -28,7 +28,7 @@ export class DebugService implements IDebugService {
     public get activeDebugSession(): DebugSession | undefined {
         return debug.activeDebugSession;
     }
-    public get breakpoints(): Breakpoint[] {
+    public get breakpoints(): readonly Breakpoint[] {
         return debug.breakpoints;
     }
     public get onDidChangeActiveDebugSession(): Event<DebugSession | undefined> {
