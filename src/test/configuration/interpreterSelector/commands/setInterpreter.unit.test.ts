@@ -455,7 +455,7 @@ suite('Set Interpreter Command', () => {
             verify(interpreterService.triggerRefresh()).once();
         });
 
-        test('If an event to update quickpick is received, the quickpick is updated accordingly', async () => {
+        test('Events to update quickpick updates the quickpick accordingly', async () => {
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             let actualParameters: IQuickPickParameters<QuickPickItem> | undefined;
@@ -516,7 +516,9 @@ suite('Set Interpreter Command', () => {
                 .setup((i) => i.getRecommendedSuggestion(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => refreshedItem);
             interpreterSelector
-                .setup((i) => i.suggestionToQuickPickItem(TypeMoq.It.isAny(), undefined, false))
+                .setup((i) =>
+                    i.suggestionToQuickPickItem(TypeMoq.It.isValue(refreshedItem.interpreter), undefined, false),
+                )
                 .returns(() => refreshedItem);
             when(interpreterService.refreshPromise).thenReturn(undefined);
 
@@ -541,6 +543,54 @@ suite('Set Interpreter Command', () => {
                     busy: false,
                 },
                 'Quickpick not updated correctly after refresh has finished',
+            );
+
+            const newItem = {
+                description: `${workspacePath}/interpreterPath1`,
+                detail: '',
+                label: 'This is the selected Python path',
+                path: `${workspacePath}/interpreterPath1`,
+                interpreter: {
+                    path: `${workspacePath}/interpreterPath1`,
+                    envType: EnvironmentType.Venv,
+                } as PythonEnvironment,
+            };
+            const changeEvent2: PythonEnvironmentsChangedEvent = {
+                old: undefined,
+                new: newItem.interpreter,
+            };
+            interpreterSelector.reset();
+            interpreterSelector
+                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => [refreshedItem, newItem]);
+            interpreterSelector
+                .setup((i) => i.getRecommendedSuggestion(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => refreshedItem);
+            interpreterSelector
+                .setup((i) =>
+                    i.suggestionToQuickPickItem(TypeMoq.It.isValue(refreshedItem.interpreter), undefined, false),
+                )
+                .returns(() => refreshedItem);
+            interpreterSelector
+                .setup((i) => i.suggestionToQuickPickItem(TypeMoq.It.isValue(newItem.interpreter), undefined, false))
+                .returns(() => newItem);
+            await onChangedCallback!(changeEvent2, (quickPick as unknown) as QuickPick<QuickPickItem>); // Invoke callback, meaning that the items are supposed to change.
+
+            assert.deepStrictEqual(
+                quickPick,
+                {
+                    items: [
+                        expectedEnterInterpreterPathSuggestion,
+                        defaultInterpreterPathSuggestion,
+                        separator,
+                        recommended,
+                        { label: EnvGroups.Workspace, kind: QuickPickItemKind.Separator },
+                        newItem,
+                    ],
+                    activeItems: [recommended],
+                    busy: false,
+                },
+                'Quickpick not updated correctly',
             );
         });
 
