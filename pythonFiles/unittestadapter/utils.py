@@ -92,15 +92,13 @@ def get_child_node(
         result = next(
             node
             for node in root["children"]
-            if isinstance(node, TestNode)
-            and node["name"] == name
-            and node["type_"] == type_
+            if node["name"] == name and node["type_"] == type_
         )
     except StopIteration:
         result = build_test_node(path, name, type_)
         root["children"].append(result)
 
-    return result
+    return result  # type:ignore
 
 
 def build_test_tree(
