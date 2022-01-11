@@ -59,7 +59,6 @@ import {
     WorkspaceFolderPickOptions,
     WorkspaceFoldersChangeEvent,
 } from 'vscode';
-import type { NotebookConcatTextDocument, NotebookDocument } from 'vscode-proposed';
 
 import { Channel } from '../constants';
 import { Resource } from '../types';
@@ -1098,11 +1097,4 @@ export interface IClipboard {
      * Writes text into the clipboard.
      */
     writeText(value: string): Promise<void>;
-}
-export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
-export interface IVSCodeNotebook {
-    readonly notebookDocuments: ReadonlyArray<NotebookDocument>;
-    readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
-    readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
-    createConcatTextDocument(notebook: NotebookDocument, selector?: DocumentSelector): NotebookConcatTextDocument;
 }
