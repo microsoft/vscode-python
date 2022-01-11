@@ -5,7 +5,6 @@
 
 # Unittest test adapter
 httpx==0.21.3
-dataclasses==0.8;python_version<'3.7'
 
 # Sort Imports
 isort==5.10.0
