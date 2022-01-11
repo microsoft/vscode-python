@@ -1,3 +1,10 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+from pathlib import Path
+
+TEST_DATA_PATH = Path(Path(__file__).parent, ".data")
+
 # Helper function to test if two test trees are the same.
 def is_same_tree(tree1, tree2) -> bool:
     """
