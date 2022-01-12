@@ -106,6 +106,7 @@ mockedVSCode.QuickInputButtons = vscodeMocks.vscMockExtHostedTypes.QuickInputBut
 mockedVSCode.FileType = vscodeMocks.FileType;
 mockedVSCode.UIKind = vscodeMocks.UIKind;
 mockedVSCode.FileSystemError = vscodeMocks.vscMockExtHostedTypes.FileSystemError;
+mockedVSCode.LanguageStatusSeverity = vscodeMocks.LanguageStatusSeverity;
 (mockedVSCode as any).NotebookCellKind = vscodeMocks.vscMockExtHostedTypes.NotebookCellKind;
 (mockedVSCode as any).CellOutputKind = vscodeMocks.vscMockExtHostedTypes.CellOutputKind;
 (mockedVSCode as any).NotebookCellRunState = vscodeMocks.vscMockExtHostedTypes.NotebookCellRunState;

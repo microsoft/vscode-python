@@ -29,6 +29,12 @@ export enum ExtensionKind {
     Workspace = 2,
 }
 
+export enum LanguageStatusSeverity {
+    Information = 0,
+    Warning = 1,
+    Error = 2,
+}
+
 export class Disposable {
     constructor(private callOnDispose: () => void) {}
 

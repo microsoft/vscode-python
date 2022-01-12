@@ -7,6 +7,8 @@ import {
     ConfigurationTarget,
     Disposable,
     EventEmitter,
+    LanguageStatusItem,
+    LanguageStatusSeverity,
     StatusBarAlignment,
     StatusBarItem,
     Uri,
@@ -14,10 +16,11 @@ import {
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
+import { Commands, PYTHON_LANGUAGE } from '../../client/common/constants';
 import { InterpreterStatusBarPosition } from '../../client/common/experiments/groups';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IDisposableRegistry, IExperimentService, IPathUtils, ReadWrite } from '../../client/common/types';
-import { Interpreters } from '../../client/common/utils/localize';
+import { InterpreterQuickPickList, Interpreters } from '../../client/common/utils/localize';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterDisplay,
@@ -42,7 +45,7 @@ const info: PythonEnvironment = {
     sysVersion: '',
 };
 
-suite('xInterpreters Display', () => {
+suite('Interpreters Display', () => {
     let applicationShell: TypeMoq.IMock<IApplicationShell>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -54,6 +57,7 @@ suite('xInterpreters Display', () => {
     let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
     let experiments: TypeMoq.IMock<IExperimentService>;
     let pathUtils: TypeMoq.IMock<IPathUtils>;
+    let languageStatusItem: TypeMoq.IMock<LanguageStatusItem>;
     let traceLogStub: sinon.SinonStub;
     async function createInterpreterDisplay(filters: IInterpreterStatusbarVisibilityFilter[] = []) {
         interpreterDisplay = new InterpreterDisplay(serviceContainer.object);
@@ -61,17 +65,22 @@ suite('xInterpreters Display', () => {
         filters.forEach((f) => interpreterDisplay.registerVisibilityFilter(f));
     }
 
-    async function setupMocks(inExperiment = false) {
+    async function setupMocks(inExperiment: InterpreterStatusBarPosition | undefined) {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         experiments = TypeMoq.Mock.ofType<IExperimentService>();
-        experiments.setup((e) => e.inExperimentSync(InterpreterStatusBarPosition.Pinned)).returns(() => inExperiment);
+        if (inExperiment) {
+            experiments.setup((e) => e.inExperimentSync(inExperiment)).returns(() => true);
+        } else {
+            experiments.setup((e) => e.inExperimentSync(TypeMoq.It.isAny())).returns(() => false);
+        }
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
         disposableRegistry = [];
         statusBar = TypeMoq.Mock.ofType<StatusBarItem>();
+        languageStatusItem = TypeMoq.Mock.ofType<LanguageStatusItem>();
         pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
 
         traceLogStub = sinon.stub(logging, 'traceLog');
@@ -92,10 +101,16 @@ suite('xInterpreters Display', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterHelper)))
             .returns(() => interpreterHelper.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
-        if (inExperiment) {
+        if (inExperiment === InterpreterStatusBarPosition.Pinned) {
             applicationShell
                 .setup((a) => a.createStatusBarItem(TypeMoq.It.isValue(StatusBarAlignment.Right), TypeMoq.It.isAny()))
                 .returns(() => statusBar.object);
+        } else if (inExperiment === InterpreterStatusBarPosition.Unpinned) {
+            applicationShell
+                .setup((a) =>
+                    a.createLanguageStatusItem(TypeMoq.It.isAny(), TypeMoq.It.isValue({ language: PYTHON_LANGUAGE })),
+                )
+                .returns(() => languageStatusItem.object);
         } else {
             applicationShell
                 .setup((a) =>
@@ -118,8 +133,8 @@ suite('xInterpreters Display', () => {
             workspaceService.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isValue(resource))).returns(() => undefined);
         }
     }
-    [true, false].forEach((inExperiment) => {
-        suite(`When ${inExperiment ? 'in experiment' : 'not in experiment'}`, () => {
+    [InterpreterStatusBarPosition.Unpinned, InterpreterStatusBarPosition.Pinned, undefined].forEach((inExperiment) => {
+        suite(`When ${inExperiment ? `in experiment ${inExperiment}` : 'not in experiment'}`, () => {
             setup(async () => {
                 setupMocks(inExperiment);
             });
@@ -128,12 +143,28 @@ suite('xInterpreters Display', () => {
                 sinon.restore();
             });
             test('Statusbar must be created and have command name initialized', () => {
-                statusBar.verify(
-                    (s) => (s.command = TypeMoq.It.isValue('python.setInterpreter')),
-                    TypeMoq.Times.once(),
-                );
+                if (inExperiment === InterpreterStatusBarPosition.Unpinned) {
+                    languageStatusItem.verify(
+                        (s) => (s.severity = TypeMoq.It.isValue(LanguageStatusSeverity.Information)),
+                        TypeMoq.Times.once(),
+                    );
+                    languageStatusItem.verify(
+                        (s) =>
+                            (s.command = TypeMoq.It.isValue({
+                                title: InterpreterQuickPickList.browsePath.openButtonLabel(),
+                                command: Commands.Set_Interpreter,
+                            })),
+                        TypeMoq.Times.once(),
+                    );
+                    expect(disposableRegistry).contain(languageStatusItem.object);
+                } else {
+                    statusBar.verify(
+                        (s) => (s.command = TypeMoq.It.isValue('python.setInterpreter')),
+                        TypeMoq.Times.once(),
+                    );
+                    expect(disposableRegistry).contain(statusBar.object);
+                }
                 expect(disposableRegistry).to.be.lengthOf.above(0);
-                expect(disposableRegistry).contain(statusBar.object);
             });
             test('Display name and tooltip must come from interpreter info', async () => {
                 const resource = Uri.file('x');
@@ -154,14 +185,25 @@ suite('xInterpreters Display', () => {
 
                 await interpreterDisplay.refresh(resource);
 
-                statusBar.verify(
-                    (s) => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!),
-                    TypeMoq.Times.once(),
-                );
-                statusBar.verify(
-                    (s) => (s.tooltip = TypeMoq.It.isValue(activeInterpreter.path)!),
-                    TypeMoq.Times.atLeastOnce(),
-                );
+                if (inExperiment === InterpreterStatusBarPosition.Unpinned) {
+                    languageStatusItem.verify(
+                        (s) => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!),
+                        TypeMoq.Times.once(),
+                    );
+                    languageStatusItem.verify(
+                        (s) => (s.detail = TypeMoq.It.isValue(activeInterpreter.path)!),
+                        TypeMoq.Times.atLeastOnce(),
+                    );
+                } else {
+                    statusBar.verify(
+                        (s) => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!),
+                        TypeMoq.Times.once(),
+                    );
+                    statusBar.verify(
+                        (s) => (s.tooltip = TypeMoq.It.isValue(activeInterpreter.path)!),
+                        TypeMoq.Times.atLeastOnce(),
+                    );
+                }
             });
             test('Log the output channel if displayed needs to be updated with a new interpreter', async () => {
                 const resource = Uri.file('x');
@@ -203,9 +245,19 @@ suite('xInterpreters Display', () => {
                     .returns(() => Promise.resolve(pythonInterpreter));
 
                 await interpreterDisplay.refresh(resource);
-
-                statusBar.verify((s) => (s.tooltip = TypeMoq.It.isValue(pythonPath)), TypeMoq.Times.atLeastOnce());
-                statusBar.verify((s) => (s.text = TypeMoq.It.isValue(expectedDisplayName)), TypeMoq.Times.once());
+                if (inExperiment === InterpreterStatusBarPosition.Unpinned) {
+                    languageStatusItem.verify(
+                        (s) => (s.detail = TypeMoq.It.isValue(pythonPath)),
+                        TypeMoq.Times.atLeastOnce(),
+                    );
+                    languageStatusItem.verify(
+                        (s) => (s.text = TypeMoq.It.isValue(expectedDisplayName)),
+                        TypeMoq.Times.once(),
+                    );
+                } else {
+                    statusBar.verify((s) => (s.tooltip = TypeMoq.It.isValue(pythonPath)), TypeMoq.Times.atLeastOnce());
+                    statusBar.verify((s) => (s.text = TypeMoq.It.isValue(expectedDisplayName)), TypeMoq.Times.once());
+                }
             });
             test('If interpreter file does not exist then update status bar accordingly', async () => {
                 const resource = Uri.file('x');
@@ -228,11 +280,18 @@ suite('xInterpreters Display', () => {
 
                 await interpreterDisplay.refresh(resource);
 
-                statusBar.verify((s) => (s.color = TypeMoq.It.isValue('')), TypeMoq.Times.once());
-                statusBar.verify(
-                    (s) => (s.text = TypeMoq.It.isValue('$(alert) Select Python Interpreter')),
-                    TypeMoq.Times.once(),
-                );
+                if (inExperiment === InterpreterStatusBarPosition.Unpinned) {
+                    languageStatusItem.verify(
+                        (s) => (s.text = TypeMoq.It.isValue('$(alert) No Interpreter Selected')),
+                        TypeMoq.Times.once(),
+                    );
+                } else {
+                    statusBar.verify((s) => (s.color = TypeMoq.It.isValue('')), TypeMoq.Times.once());
+                    statusBar.verify(
+                        (s) => (s.text = TypeMoq.It.isValue('$(alert) Select Python Interpreter')),
+                        TypeMoq.Times.once(),
+                    );
+                }
             });
             test('Ensure we try to identify the active workspace when a resource is not provided ', async () => {
                 const workspaceFolder = Uri.file('x');
@@ -261,14 +320,30 @@ suite('xInterpreters Display', () => {
 
                 interpreterHelper.verifyAll();
                 interpreterService.verifyAll();
-                statusBar.verify(
-                    (s) => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!),
-                    TypeMoq.Times.once(),
-                );
-                statusBar.verify((s) => (s.tooltip = TypeMoq.It.isValue(pythonPath)!), TypeMoq.Times.atLeastOnce());
+                if (inExperiment === InterpreterStatusBarPosition.Unpinned) {
+                    languageStatusItem.verify(
+                        (s) => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!),
+                        TypeMoq.Times.once(),
+                    );
+                    languageStatusItem.verify(
+                        (s) => (s.detail = TypeMoq.It.isValue(pythonPath)!),
+                        TypeMoq.Times.atLeastOnce(),
+                    );
+                } else {
+                    statusBar.verify(
+                        (s) => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!),
+                        TypeMoq.Times.once(),
+                    );
+                    statusBar.verify((s) => (s.tooltip = TypeMoq.It.isValue(pythonPath)!), TypeMoq.Times.atLeastOnce());
+                }
             });
             suite('Visibility', () => {
                 const resource = Uri.file('x');
+                suiteSetup(function () {
+                    if (inExperiment === InterpreterStatusBarPosition.Unpinned) {
+                        return this.skip();
+                    }
+                });
                 setup(() => {
                     const workspaceFolder = Uri.file('workspace');
                     const activeInterpreter: PythonEnvironment = {

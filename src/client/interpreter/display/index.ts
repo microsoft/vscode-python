@@ -69,6 +69,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
                 title: InterpreterQuickPickList.browsePath.openButtonLabel(),
                 command: Commands.Set_Interpreter,
             };
+            this.disposableRegistry.push(this.languageStatus);
         } else {
             let [alignment, priority] = [StatusBarAlignment.Left, 100];
             if (this.experiments.inExperimentSync(InterpreterStatusBarPosition.Pinned)) {
