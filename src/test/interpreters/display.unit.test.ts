@@ -12,9 +12,11 @@ import {
     Uri,
     WorkspaceFolder,
 } from 'vscode';
+import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
+import { InterpreterStatusBarPosition } from '../../client/common/experiments/groups';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IDisposableRegistry, IPathUtils, ReadWrite } from '../../client/common/types';
+import { IDisposableRegistry, IExperimentService, IPathUtils, ReadWrite } from '../../client/common/types';
 import { Interpreters } from '../../client/common/utils/localize';
 import { Architecture } from '../../client/common/utils/platform';
 import {
@@ -48,16 +50,19 @@ suite('Interpreters Display', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let disposableRegistry: Disposable[];
     let statusBar: TypeMoq.IMock<StatusBarItem>;
-    let interpreterDisplay: IInterpreterDisplay;
+    let interpreterDisplay: IInterpreterDisplay & IExtensionSingleActivationService;
     let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
+    let experiments: TypeMoq.IMock<IExperimentService>;
     let pathUtils: TypeMoq.IMock<IPathUtils>;
     let traceLogStub: sinon.SinonStub;
 
-    setup(() => {
+    setup(async () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        experiments = TypeMoq.Mock.ofType<IExperimentService>();
+        experiments.setup((e) => e.inExperimentSync(InterpreterStatusBarPosition.Pinned)).returns(() => false);
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
         disposableRegistry = [];
@@ -75,6 +80,7 @@ suite('Interpreters Display', () => {
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService)))
             .returns(() => interpreterService.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IExperimentService))).returns(() => experiments.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => disposableRegistry);
         serviceContainer
@@ -82,18 +88,19 @@ suite('Interpreters Display', () => {
             .returns(() => interpreterHelper.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
         applicationShell
-            .setup((a) => a.createStatusBarItem(TypeMoq.It.isValue(StatusBarAlignment.Right), TypeMoq.It.isValue(100)))
+            .setup((a) => a.createStatusBarItem(TypeMoq.It.isValue(StatusBarAlignment.Left), TypeMoq.It.isValue(100)))
             .returns(() => statusBar.object);
         pathUtils.setup((p) => p.getDisplayName(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p) => p);
-        createInterpreterDisplay();
+        await createInterpreterDisplay();
     });
 
     teardown(() => {
         sinon.restore();
     });
 
-    function createInterpreterDisplay(filters: IInterpreterStatusbarVisibilityFilter[] = []) {
+    async function createInterpreterDisplay(filters: IInterpreterStatusbarVisibilityFilter[] = []) {
         interpreterDisplay = new InterpreterDisplay(serviceContainer.object);
+        await interpreterDisplay.activate();
         filters.forEach((f) => interpreterDisplay.registerVisibilityFilter(f));
     }
     function setupWorkspaceFolder(resource: Uri, workspaceFolder?: Uri) {

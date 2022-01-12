@@ -58,7 +58,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
     }
 
     public async activate(): Promise<void> {
-        let [alignment, priority] = [StatusBarAlignment.Left, <number | undefined>undefined];
+        let [alignment, priority] = [StatusBarAlignment.Left, 100];
         if (this.experiments.inExperimentSync(InterpreterStatusBarPosition.Pinned)) {
             [alignment, priority] = [StatusBarAlignment.Right, STATUS_BAR_ITEM_PRIORITY];
         }
@@ -107,7 +107,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
             }
             let text = interpreter.displayName!;
             if (this.experiments.inExperimentSync(InterpreterStatusBarPosition.Pinned)) {
-                text = text.substring('Python '.length);
+                text = text.substring('Python'.length).trim();
             }
             this.statusBar.text = text;
             this.currentlySelectedInterpreterPath = interpreter.path;

@@ -10,11 +10,13 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Disposable, TextDocument, TextEditor, Uri, WorkspaceConfiguration } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import { InterpreterStatusBarPosition } from '../../client/common/experiments/groups';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IInterpreterPathService,
     InterpreterConfigurationScope,
     IPersistentStateFactory,
@@ -53,6 +55,7 @@ suite('Interpreters service', () => {
     let configService: TypeMoq.IMock<IConfigurationService>;
     let interpreterPathService: TypeMoq.IMock<IInterpreterPathService>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
+    let experiments: TypeMoq.IMock<IExperimentService>;
 
     function setupSuite() {
         const cont = new Container();
@@ -71,6 +74,8 @@ suite('Interpreters service', () => {
         pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
         pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        experiments = TypeMoq.Mock.ofType<IExperimentService>();
+        experiments.setup((e) => e.inExperimentSync(InterpreterStatusBarPosition.Pinned)).returns(() => false);
 
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         pythonSettings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
@@ -91,6 +96,7 @@ suite('Interpreters service', () => {
                 return state as any;
             });
 
+        serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, experiments.object);
         serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, []);
         serviceManager.addSingletonInstance<IInterpreterHelper>(IInterpreterHelper, helper.object);
         serviceManager.addSingletonInstance<IPythonPathUpdaterServiceManager>(
