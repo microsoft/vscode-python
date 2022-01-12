@@ -425,9 +425,7 @@ function addSeparatorIfApplicable(
     if (!previousGroup) {
         const lastItem = items.length ? items[items.length - 1] : undefined;
         previousGroup =
-            items.length && lastItem && isInterpreterQuickPickItem(lastItem)
-                ? getGroup(lastItem, workspacePath)
-                : undefined;
+            lastItem && isInterpreterQuickPickItem(lastItem) ? getGroup(lastItem, workspacePath) : undefined;
     }
     const currentGroup = getGroup(newItem, workspacePath);
     if (!previousGroup || currentGroup !== previousGroup) {
