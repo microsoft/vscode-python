@@ -1,8 +1,11 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, StatusBarAlignment, StatusBarItem, Uri } from 'vscode';
+import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { Commands } from '../../common/constants';
+import { InterpreterStatusBarPosition } from '../../common/experiments/groups';
 import '../../common/extensions';
-import { IDisposableRegistry, IPathUtils, Resource } from '../../common/types';
+import { IDisposableRegistry, IExperimentService, IPathUtils, Resource } from '../../common/types';
 import { Interpreters } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { traceLog } from '../../logging';
@@ -20,8 +23,12 @@ import {
  */
 const STATUS_BAR_ITEM_PRIORITY = 100.09999;
 @injectable()
-export class InterpreterDisplay implements IInterpreterDisplay {
-    private readonly statusBar: StatusBarItem;
+export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingleActivationService {
+    public supportedWorkspaceTypes: { untrustedWorkspace: boolean; virtualWorkspace: boolean } = {
+        untrustedWorkspace: false,
+        virtualWorkspace: true,
+    };
+    private statusBar!: StatusBarItem;
     private readonly helper: IInterpreterHelper;
     private readonly workspaceService: IWorkspaceService;
     private readonly pathUtils: IPathUtils;
@@ -31,6 +38,8 @@ export class InterpreterDisplay implements IInterpreterDisplay {
     private interpreterPath: string | undefined;
     private statusBarCanBeDisplayed?: boolean;
     private visibilityFilters: IInterpreterStatusbarVisibilityFilter[] = [];
+    private disposableRegistry: Disposable[];
+    private experiments: IExperimentService;
 
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
@@ -38,19 +47,27 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         this.pathUtils = serviceContainer.get<IPathUtils>(IPathUtils);
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
 
-        const application = serviceContainer.get<IApplicationShell>(IApplicationShell);
-        const disposableRegistry = serviceContainer.get<Disposable[]>(IDisposableRegistry);
-
-        this.statusBar = application.createStatusBarItem(StatusBarAlignment.Right, STATUS_BAR_ITEM_PRIORITY);
-        this.statusBar.command = 'python.setInterpreter';
-        disposableRegistry.push(this.statusBar);
+        this.disposableRegistry = serviceContainer.get<Disposable[]>(IDisposableRegistry);
 
         this.interpreterService.onDidChangeInterpreterInformation(
             this.onDidChangeInterpreterInformation,
             this,
-            disposableRegistry,
+            this.disposableRegistry,
         );
+        this.experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
     }
+
+    public async activate(): Promise<void> {
+        let [alignment, priority] = [StatusBarAlignment.Left, <number | undefined>undefined];
+        if (this.experiments.inExperimentSync(InterpreterStatusBarPosition.Pinned)) {
+            [alignment, priority] = [StatusBarAlignment.Right, STATUS_BAR_ITEM_PRIORITY];
+        }
+        const application = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        this.statusBar = application.createStatusBarItem(alignment, priority);
+        this.statusBar.command = Commands.Set_Interpreter;
+        this.disposableRegistry.push(this.statusBar);
+    }
+
     public async refresh(resource?: Uri) {
         // Use the workspace Uri if available
         if (resource && this.workspaceService.getWorkspaceFolder(resource)) {
@@ -88,7 +105,11 @@ export class InterpreterDisplay implements IInterpreterDisplay {
                 );
                 this.interpreterPath = interpreter.path;
             }
-            this.statusBar.text = interpreter.displayName!.substring('Python '.length);
+            let text = interpreter.displayName!;
+            if (this.experiments.inExperimentSync(InterpreterStatusBarPosition.Pinned)) {
+                text = text.substring('Python '.length);
+            }
+            this.statusBar.text = text;
             this.currentlySelectedInterpreterPath = interpreter.path;
         } else {
             this.statusBar.tooltip = '';
