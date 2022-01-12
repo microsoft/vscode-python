@@ -1,12 +1,12 @@
 import { inject, injectable } from 'inversify';
-import { Disposable, StatusBarAlignment, StatusBarItem, Uri } from 'vscode';
+import { Disposable, LanguageStatusItem, LanguageStatusSeverity, StatusBarAlignment, StatusBarItem, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { Commands } from '../../common/constants';
+import { Commands, PYTHON_LANGUAGE } from '../../common/constants';
 import { InterpreterStatusBarPosition } from '../../common/experiments/groups';
 import '../../common/extensions';
 import { IDisposableRegistry, IExperimentService, IPathUtils, Resource } from '../../common/types';
-import { Interpreters } from '../../common/utils/localize';
+import { InterpreterQuickPickList, Interpreters } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { traceLog } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -28,7 +28,8 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
         untrustedWorkspace: false,
         virtualWorkspace: true,
     };
-    private statusBar!: StatusBarItem;
+    private statusBar: StatusBarItem | undefined;
+    private languageStatus: LanguageStatusItem | undefined;
     private readonly helper: IInterpreterHelper;
     private readonly workspaceService: IWorkspaceService;
     private readonly pathUtils: IPathUtils;
@@ -58,14 +59,25 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
     }
 
     public async activate(): Promise<void> {
-        let [alignment, priority] = [StatusBarAlignment.Left, 100];
-        if (this.experiments.inExperimentSync(InterpreterStatusBarPosition.Pinned)) {
-            [alignment, priority] = [StatusBarAlignment.Right, STATUS_BAR_ITEM_PRIORITY];
-        }
         const application = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.statusBar = application.createStatusBarItem(alignment, priority);
-        this.statusBar.command = Commands.Set_Interpreter;
-        this.disposableRegistry.push(this.statusBar);
+        if (this.experiments.inExperimentSync(InterpreterStatusBarPosition.Unpinned)) {
+            this.languageStatus = application.createLanguageStatusItem('python.selectedInterpreter', {
+                language: PYTHON_LANGUAGE,
+            });
+            this.languageStatus.severity = LanguageStatusSeverity.Information;
+            this.languageStatus.command = {
+                title: InterpreterQuickPickList.browsePath.openButtonLabel(),
+                command: Commands.Set_Interpreter,
+            };
+        } else {
+            let [alignment, priority] = [StatusBarAlignment.Left, 100];
+            if (this.experiments.inExperimentSync(InterpreterStatusBarPosition.Pinned)) {
+                [alignment, priority] = [StatusBarAlignment.Right, STATUS_BAR_ITEM_PRIORITY];
+            }
+            this.statusBar = application.createStatusBarItem(alignment, priority);
+            this.statusBar.command = Commands.Set_Interpreter;
+            this.disposableRegistry.push(this.statusBar);
+        }
     }
 
     public async refresh(resource?: Uri) {
@@ -94,34 +106,56 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
     private async updateDisplay(workspaceFolder?: Uri) {
         const interpreter = await this.interpreterService.getActiveInterpreter(workspaceFolder);
         this.currentlySelectedWorkspaceFolder = workspaceFolder;
-        if (interpreter) {
-            this.statusBar.color = '';
-            this.statusBar.tooltip = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath);
-            if (this.interpreterPath !== interpreter.path) {
-                traceLog(
-                    Interpreters.pythonInterpreterPath().format(
-                        this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath),
-                    ),
-                );
-                this.interpreterPath = interpreter.path;
+        if (this.statusBar) {
+            if (interpreter) {
+                this.statusBar.color = '';
+                this.statusBar.tooltip = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath);
+                if (this.interpreterPath !== interpreter.path) {
+                    traceLog(
+                        Interpreters.pythonInterpreterPath().format(
+                            this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath),
+                        ),
+                    );
+                    this.interpreterPath = interpreter.path;
+                }
+                let text = interpreter.displayName!;
+                if (this.experiments.inExperimentSync(InterpreterStatusBarPosition.Pinned)) {
+                    text = text.startsWith('Python') ? text.substring('Python'.length).trim() : text;
+                }
+                this.statusBar.text = text;
+                this.currentlySelectedInterpreterPath = interpreter.path;
+            } else {
+                this.statusBar.tooltip = '';
+                this.statusBar.color = '';
+                this.statusBar.text = '$(alert) Select Python Interpreter';
+                this.currentlySelectedInterpreterPath = undefined;
             }
-            let text = interpreter.displayName!;
-            if (this.experiments.inExperimentSync(InterpreterStatusBarPosition.Pinned)) {
+        } else if (this.languageStatus) {
+            if (interpreter) {
+                this.languageStatus.detail = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath);
+                if (this.interpreterPath !== interpreter.path) {
+                    traceLog(
+                        Interpreters.pythonInterpreterPath().format(
+                            this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath),
+                        ),
+                    );
+                    this.interpreterPath = interpreter.path;
+                }
+                let text = interpreter.displayName!;
                 text = text.startsWith('Python') ? text.substring('Python'.length).trim() : text;
+                this.languageStatus.text = text;
+                this.currentlySelectedInterpreterPath = interpreter.path;
+            } else {
+                this.languageStatus.text = '$(alert) No Interpreter Selected';
+                this.languageStatus.detail = undefined;
+                this.currentlySelectedInterpreterPath = undefined;
             }
-            this.statusBar.text = text;
-            this.currentlySelectedInterpreterPath = interpreter.path;
-        } else {
-            this.statusBar.tooltip = '';
-            this.statusBar.color = '';
-            this.statusBar.text = '$(alert) Select Python Interpreter';
-            this.currentlySelectedInterpreterPath = undefined;
         }
         this.statusBarCanBeDisplayed = true;
         this.updateVisibility();
     }
     private updateVisibility() {
-        if (!this.statusBarCanBeDisplayed) {
+        if (!this.statusBar || !this.statusBarCanBeDisplayed) {
             return;
         }
         if (this.visibilityFilters.length === 0 || this.visibilityFilters.every((filter) => !filter.hidden)) {

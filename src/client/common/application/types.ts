@@ -24,6 +24,7 @@ import {
     GlobPattern,
     InputBox,
     InputBoxOptions,
+    LanguageStatusItem,
     MessageItem,
     MessageOptions,
     OpenDialogOptions,
@@ -416,6 +417,7 @@ export interface IApplicationShell {
      * @param name Human-readable string which will be used to represent the channel in the UI.
      */
     createOutputChannel(name: string): OutputChannel;
+    createLanguageStatusItem(id: string, selector: DocumentSelector): LanguageStatusItem;
 }
 
 export const ICommandManager = Symbol('ICommandManager');
