@@ -107,7 +107,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
             }
             let text = interpreter.displayName!;
             if (this.experiments.inExperimentSync(InterpreterStatusBarPosition.Pinned)) {
-                text = text.substring('Python'.length).trim();
+                text = text.startsWith('Python') ? text.substring('Python'.length).trim() : text;
             }
             this.statusBar.text = text;
             this.currentlySelectedInterpreterPath = interpreter.path;
