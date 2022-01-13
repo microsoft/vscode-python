@@ -67,18 +67,6 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
             throw Error(
                 'This configuration can only be used by the test debugging commands. `"request": "test"` is deprecated use "purpose" instead.',
             );
-        } else if (
-            debugConfiguration.request === 'launch' &&
-            ((debugConfiguration as LaunchRequestArguments).purpose ?? []).length > 0
-        ) {
-            // We reach here only if people try to use debug-test or debug-in-terminal purpose for
-            // launching a file via F5 or "start with debugging".
-            // debug-test : is not allowed to be launched via (F5 or "start with debugging") since it
-            //              requires test framework specific configuration that is done in the test
-            //              debug launcher.
-            // debug-in-terminal : is not allowed because we may update the configuration based on
-            //                     editor context where it was triggered.
-            throw Error('This configuration can only be used as defined by `purpose`.');
         } else {
             if (Object.keys(debugConfiguration).length === 0) {
                 if (this.cacheDebugConfig) {
