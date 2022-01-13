@@ -160,16 +160,17 @@ export function plainExec(
 }
 
 function filterOutputUsingCondaRunMarkers(stdout: string) {
-    // These markers are added if conda run is used, see `conda_run_script.py`.
-    const regex = />>>CONDA-RUN-OUTPUT([\s\S]*)<<<CONDA-RUN-OUTPUT/;
+    // These markers are added if conda run is used or `interpreterInfo.py` is
+    // run, see `get_output_via_markers.py`.
+    const regex = />>>PYTHON-EXEC-OUTPUT([\s\S]*)<<<PYTHON-EXEC-OUTPUT/;
     const match = stdout.match(regex);
     const filteredOut = match !== null && match.length >= 2 ? match[1] : '';
     return filteredOut.length ? filteredOut : stdout;
 }
 
 function removeCondaRunMarkers(out: string) {
-    out = out.replace('>>>CONDA-RUN-OUTPUT', '');
-    return out.replace('<<<CONDA-RUN-OUTPUT', '');
+    out = out.replace('>>>PYTHON-EXEC-OUTPUT', '');
+    return out.replace('<<<PYTHON-EXEC-OUTPUT', '');
 }
 
 export function execObservable(

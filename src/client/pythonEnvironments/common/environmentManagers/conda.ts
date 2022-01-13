@@ -12,7 +12,7 @@ import { EnvironmentType, PythonEnvironment } from '../../info';
 import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
 import { traceError, traceVerbose } from '../../../logging';
-import { _SCRIPTS_DIR } from '../../../common/process/internal/scripts/constants';
+import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 
@@ -204,8 +204,6 @@ export async function getPythonVersionFromConda(interpreterPath: string): Promis
 export const CONDA_RUN_VERSION = '4.9.0';
 export const CONDA_ACTIVATION_TIMEOUT = 45000;
 const CONDA_GENERAL_TIMEOUT = 50000;
-
-export const CONDA_RUN_SCRIPT = path.join(_SCRIPTS_DIR, 'conda_run_script.py');
 
 /** Wraps the "conda" utility, and exposes its functionality.
  */
@@ -418,7 +416,7 @@ export class Conda {
         } else {
             args.push('-p', env.prefix);
         }
-        return [this.command, 'run', ...args, '--no-capture-output', 'python', CONDA_RUN_SCRIPT];
+        return [this.command, 'run', ...args, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT];
     }
 
     /**

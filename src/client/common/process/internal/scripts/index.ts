@@ -41,6 +41,8 @@ export type InterpreterInfoJson = {
     is64Bit: boolean;
 };
 
+export const OUTPUT_MARKER_SCRIPT = path.join(_SCRIPTS_DIR, 'get_output_via_markers.py');
+
 export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJson | undefined] {
     const script = path.join(SCRIPTS_DIR, 'interpreterInfo.py');
     const args = [script];

@@ -4,10 +4,10 @@
 import runpy
 import sys
 
-# Activating conda can print out stuff before the actual output is
-# printed. Hence, printing out markers to make it more resilient to
-# pull the output.
-print(">>>CONDA-RUN-OUTPUT", end="")
+# Sometimes executing scripts can print out stuff before the actual output is
+# printed. For eg. when activating conda. Hence, printing out markers to make
+# it more resilient to pull the output.
+print(">>>PYTHON-EXEC-OUTPUT", end="")
 
 module = sys.argv[1]
 if module == "-c":
@@ -21,4 +21,4 @@ elif module.endswith(".py"):
 else:
     runpy.run_module(module, run_name="__main__", alter_sys=True)
 
-print("<<<CONDA-RUN-OUTPUT", end="")
+print("<<<PYTHON-EXEC-OUTPUT", end="")
