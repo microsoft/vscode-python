@@ -221,7 +221,7 @@ def test_build_simple_tree() -> None:
     tests, errors = build_test_tree(suite, start_dir)
 
     assert is_same_tree(expected, tests)
-    assert len(errors) == 0
+    assert not errors
 
 
 @pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
@@ -241,4 +241,4 @@ def test_build_empty_tree() -> None:
 
     # Build tree
     assert expected == tests
-    assert len(errors) == 0
+    assert not errors

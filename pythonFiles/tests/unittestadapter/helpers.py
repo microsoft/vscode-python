@@ -12,11 +12,7 @@ def is_same_tree(tree1, tree2) -> bool:
     and checking if all children are the same.
     """
     # Compare the root
-    if (
-        tree1["path"] != tree2["path"]
-        or tree1["name"] != tree2["name"]
-        or tree1["type_"] != tree2["type_"]
-    ):
+    if any(tree1[key] != tree2[key] for key in ["path", "name", "type_"]):
         return False
 
     # Compare child test nodes if they exist, otherwise compare test items.
@@ -28,14 +24,9 @@ def is_same_tree(tree1, tree2) -> bool:
         if len(children1) != len(children2):
             return False
         else:
-            result = True
-            index = 0
-            while index < len(children1) and result == True:
-                result = result and is_same_tree(children1[index], children2[index])
-                index = index + 1
-            return result
+            return all(is_same_tree(*pair) for pair in zip(children1, children2))
     elif "id_" in tree1 and "id_" in tree2:
         # Compare test items
-        return tree1["id_"] == tree2["id_"] and tree1["lineno"] == tree2["lineno"]
+        return any(tree1[key] != tree2[key] for key in ["id_", "lineno"])
 
     return False
