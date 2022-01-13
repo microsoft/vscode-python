@@ -54,7 +54,7 @@ def _get_statements(selection):
         # and we have to use the length of the decorator_list array to compute the actual start line.
         # Before that, lineno takes into account decorators, so this offset check is unnecessary.
         # Also, not all AST objects can have decorators.
-        if hasattr(node, "decorator_list") and sys.version_info > (3, 7):
+        if hasattr(node, "decorator_list") and sys.version_info >= (3, 8):
             # Using getattr instead of node.decorator_list or pyright will complain about an unknown member.
             line_end -= len(getattr(node, "decorator_list"))
         ends.append(line_end)
@@ -71,7 +71,7 @@ def _get_statements(selection):
         start = node.lineno - 1
 
         # Special handling of decorators similar to what's above.
-        if hasattr(node, "decorator_list") and sys.version_info > (3, 7):
+        if hasattr(node, "decorator_list") and sys.version_info >= (3, 8):
             # Using getattr instead of node.decorator_list or pyright will complain about an unknown member.
             start -= len(getattr(node, "decorator_list"))
         block = "\n".join(lines[start:end])
