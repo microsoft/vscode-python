@@ -292,6 +292,8 @@ export namespace Interpreters {
 }
 
 export namespace InterpreterQuickPickList {
+    export const globalGroupName = localize('InterpreterQuickPickList.globalGroupName', 'Global');
+    export const workspaceGroupName = localize('InterpreterQuickPickList.workspaceGroupName', 'Workspace');
     export const quickPickListPlaceholder = localize(
         'InterpreterQuickPickList.quickPickListPlaceholder',
         'Current: {0}',

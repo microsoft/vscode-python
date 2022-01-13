@@ -51,17 +51,18 @@ function isSeparatorItem(item: QuickPickType): item is QuickPickItem {
     return 'kind' in item && item.kind === QuickPickItemKind.Separator;
 }
 
-export enum EnvGroups {
-    Workspace = 'Workspace',
-    Conda = 'Conda',
-    Global = 'Global',
-    VirtualEnv = 'VirtualEnv',
-    PipEnv = 'PipEnv',
-    Pyenv = 'Pyenv',
-    Venv = 'Venv',
-    Poetry = 'Poetry',
-    VirtualEnvWrapper = 'VirtualEnvWrapper',
-    Recommended = 'Recommended',
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace EnvGroups {
+    export const Workspace = InterpreterQuickPickList.workspaceGroupName();
+    export const Conda = 'Conda';
+    export const Global = InterpreterQuickPickList.globalGroupName();
+    export const VirtualEnv = 'VirtualEnv';
+    export const PipEnv = 'PipEnv';
+    export const Pyenv = 'Pyenv';
+    export const Venv = 'Venv';
+    export const Poetry = 'Poetry';
+    export const VirtualEnvWrapper = 'VirtualEnvWrapper';
+    export const Recommended = Common.recommended();
 }
 @injectable()
 export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
@@ -427,7 +428,7 @@ function getGroupedQuickPickItems(
     if (recommended) {
         updatedItems.push({ label: EnvGroups.Recommended, kind: QuickPickItemKind.Separator }, recommended);
     }
-    let previousGroup: EnvGroups | undefined = EnvGroups.Recommended;
+    let previousGroup = EnvGroups.Recommended;
     for (const item of items) {
         previousGroup = addSeparatorIfApplicable(updatedItems, item, workspacePath, previousGroup);
         updatedItems.push(item);
@@ -439,7 +440,7 @@ function addSeparatorIfApplicable(
     items: QuickPickType[],
     newItem: IInterpreterQuickPickItem,
     workspacePath?: string,
-    previousGroup?: EnvGroups | undefined,
+    previousGroup?: string | undefined,
 ) {
     if (!previousGroup) {
         const lastItem = items.length ? items[items.length - 1] : undefined;
