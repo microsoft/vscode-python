@@ -118,7 +118,7 @@ suite('Set Interpreter Command', () => {
         const defaultInterpreterPath = 'defaultInterpreterPath';
         const defaultInterpreterPathSuggestion = {
             label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
-            detail: defaultInterpreterPath,
+            description: defaultInterpreterPath,
             path: defaultInterpreterPath,
             alwaysShow: true,
         };
@@ -210,12 +210,11 @@ suite('Set Interpreter Command', () => {
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             const recommended = cloneDeep(item);
             recommended.label = `${Octicons.Star} ${item.label}`;
-            recommended.description = `${interpreterPath} - ${Common.recommended()}`;
-            const separator = { label: EnvGroups.Conda, kind: QuickPickItemKind.Separator };
+            recommended.description = interpreterPath;
             const suggestions = [
                 expectedEnterInterpreterPathSuggestion,
                 defaultInterpreterPathSuggestion,
-                separator,
+                { kind: QuickPickItemKind.Separator, label: EnvGroups.Recommended },
                 recommended,
             ];
             const expectedParameters: IQuickPickParameters<QuickPickItem> = {
@@ -305,10 +304,12 @@ suite('Set Interpreter Command', () => {
                 .returns(() => item);
             const recommended = cloneDeep(item);
             recommended.label = `${Octicons.Star} ${item.label}`;
-            recommended.description = `${interpreterPath} - ${Common.recommended()}`;
+            recommended.description = interpreterPath;
             const suggestions = [
                 expectedEnterInterpreterPathSuggestion,
                 defaultInterpreterPathSuggestion,
+                { kind: QuickPickItemKind.Separator, label: EnvGroups.Recommended },
+                recommended,
                 { label: EnvGroups.Workspace, kind: QuickPickItemKind.Separator },
                 interpreterItems[0],
                 { label: EnvGroups.VirtualEnvWrapper, kind: QuickPickItemKind.Separator },
@@ -316,7 +317,7 @@ suite('Set Interpreter Command', () => {
                 interpreterItems[2],
                 { label: EnvGroups.Conda, kind: QuickPickItemKind.Separator },
                 interpreterItems[3],
-                recommended,
+                item,
                 { label: EnvGroups.Global, kind: QuickPickItemKind.Separator },
                 interpreterItems[5],
             ];
@@ -392,12 +393,12 @@ suite('Set Interpreter Command', () => {
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             const recommended = cloneDeep(item);
             recommended.label = `${Octicons.Star} ${item.label}`;
-            recommended.description = `${interpreterPath} - ${Common.recommended()}`;
-            const separator = { label: EnvGroups.Conda, kind: QuickPickItemKind.Separator };
+            recommended.description = interpreterPath;
+            const separator = { label: EnvGroups.Recommended, kind: QuickPickItemKind.Separator };
 
             const defaultPathSuggestion = {
                 label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
-                detail: expandedDetail,
+                description: expandedDetail,
                 path: expandedPath,
                 alwaysShow: true,
             };
