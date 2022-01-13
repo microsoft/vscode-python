@@ -55,7 +55,7 @@
     "Logging.CurrentWorkingDirectory": "cwd:",
     "InterpreterQuickPickList.workspaceGroupName": "Workspace",
     "InterpreterQuickPickList.globalGroupName": "Global",
-    "InterpreterQuickPickList.quickPickListPlaceholder": "Current: {0}",
+    "InterpreterQuickPickList.quickPickListPlaceholder": "Selected Interpreter: {0}",
     "InterpreterQuickPickList.enterPath.label": "Enter interpreter path...",
     "InterpreterQuickPickList.enterPath.placeholder": "Enter path to a Python interpreter.",
     "InterpreterQuickPickList.refreshInterpreterList": "Refresh Interpreter list",

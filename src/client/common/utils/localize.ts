@@ -296,7 +296,7 @@ export namespace InterpreterQuickPickList {
     export const workspaceGroupName = localize('InterpreterQuickPickList.workspaceGroupName', 'Workspace');
     export const quickPickListPlaceholder = localize(
         'InterpreterQuickPickList.quickPickListPlaceholder',
-        'Current: {0}',
+        'Selected Interpreter: {0}',
     );
     export const enterPath = {
         label: localize('InterpreterQuickPickList.enterPath.label', 'Enter interpreter path...'),
