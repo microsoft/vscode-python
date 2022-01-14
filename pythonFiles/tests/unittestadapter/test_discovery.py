@@ -3,7 +3,7 @@
 
 import pytest
 
-from pathlib import PurePath
+import pathlib
 
 from unittestadapter.discovery import (
     DEFAULT_PORT,
@@ -75,7 +75,7 @@ def test_simple_discovery() -> None:
     """
     start_dir = TEST_DATA_PATH.__str__()
     pattern = "discovery_simple*"
-    file_path = PurePath(TEST_DATA_PATH, "discovery_simple.py").__str__()
+    file_path = pathlib.PurePath(TEST_DATA_PATH, "discovery_simple.py").__str__()
 
     expected = {
         "path": start_dir,
@@ -139,10 +139,10 @@ def test_error_discovery() -> None:
     if unittest discovery failed at some point.
     """
     # Discover tests in .data/discovery_error/.
-    start_dir = PurePath(TEST_DATA_PATH, "discovery_error").__str__()
+    start_dir = pathlib.PurePath(TEST_DATA_PATH, "discovery_error").__str__()
     pattern = "file*"
 
-    file_path = PurePath(start_dir, "file_two.py").__str__()
+    file_path = pathlib.PurePath(start_dir, "file_two.py").__str__()
 
     expected = {
         "path": start_dir,

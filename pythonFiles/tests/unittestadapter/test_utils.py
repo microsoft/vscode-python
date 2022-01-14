@@ -3,8 +3,9 @@
 
 import pytest
 
+import pathlib
+
 import unittest
-from pathlib import PurePath
 
 from unittestadapter.utils import (
     build_test_tree,
@@ -46,7 +47,7 @@ def test_simple_test_cases(directory, pattern, expected) -> None:
     actual = []
 
     # Discover tests in .data/<directory>.
-    start_dir = PurePath(TEST_DATA_PATH, directory).__str__()
+    start_dir = pathlib.PurePath(TEST_DATA_PATH, directory).__str__()
 
     loader = unittest.TestLoader()
     suite = loader.discover(start_dir, pattern)
@@ -154,7 +155,7 @@ def test_build_simple_tree() -> None:
     # Discovery tests in utils_simple_tree.py.
     start_dir = TEST_DATA_PATH.__str__()
     pattern = "utils_simple_tree*"
-    file_path = PurePath(TEST_DATA_PATH, "utils_simple_tree.py").__str__()
+    file_path = pathlib.PurePath(TEST_DATA_PATH, "utils_simple_tree.py").__str__()
 
     expected: TestNode = {
         "path": start_dir,
