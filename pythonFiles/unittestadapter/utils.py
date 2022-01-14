@@ -1,11 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from enum import Enum
 import inspect
 import pathlib
-from typing import List, Tuple, TypedDict, Union
 import unittest
+
+from enum import Enum
+from typing import List, Tuple, TypedDict, Union
 
 # Types
 

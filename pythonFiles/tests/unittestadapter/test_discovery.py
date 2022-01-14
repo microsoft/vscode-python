@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import pytest
-
 import pathlib
+
+import pytest
 
 from unittestadapter.discovery import (
     DEFAULT_PORT,

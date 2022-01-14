@@ -1,18 +1,17 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import pytest
-
 import pathlib
-
 import unittest
 
+import pytest
+
 from unittestadapter.utils import (
+    TestNode,
+    TestNodeTypeEnum,
     build_test_tree,
     get_child_node,
     get_test_case,
-    TestNode,
-    TestNodeTypeEnum,
 )
 
 from .helpers import TEST_DATA_PATH, is_same_tree

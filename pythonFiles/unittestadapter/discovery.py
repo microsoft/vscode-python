@@ -3,13 +3,13 @@
 
 import getopt
 import os
-from typing import Any, Dict, List, Tuple, Union
 import sys
 import traceback
 import unittest
 
-from .utils import build_test_tree
+from typing import Any, Dict, List, Tuple, Union
 
+from .utils import build_test_tree
 
 # Add the lib path to our sys path to find the httpx module.
 EXTENSION_ROOT = os.path.dirname(
@@ -18,7 +18,6 @@ EXTENSION_ROOT = os.path.dirname(
 sys.path.insert(0, os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python"))
 
 import httpx
-
 
 Arguments = Tuple[str, Any]
 
