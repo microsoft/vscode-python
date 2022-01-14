@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { parseVersionInfo } from '../../../../client/common/utils/version';
 import { PythonEnvInfo, PythonDistroInfo, PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { getEnvDisplayString } from '../../../../client/pythonEnvironments/base/info/env';
+import { setEnvDisplayString } from '../../../../client/pythonEnvironments/base/info/env';
 import { createLocatedEnv } from '../common';
 
 suite('pyenvs info - getEnvDisplayString()', () => {
@@ -41,26 +41,27 @@ suite('pyenvs info - getEnvDisplayString()', () => {
         env.display = info.display;
         return env;
     }
-    const tests: [PythonEnvInfo, string][] = [
-        [getEnv({}), 'Python'],
-        [getEnv({ version, arch, name, kind, distro }), "Python 3.8.1 64-bit ('my-env': venv)"],
+    const tests: [PythonEnvInfo, string, string][] = [
+        [getEnv({}), 'Python', 'Python'],
+        [getEnv({ version, arch, name, kind, distro }), "Python 3.8.1 ('my-env')", "Python 3.8.1 ('my-env': venv)"],
         // without "suffix" info
-        [getEnv({ version }), 'Python 3.8.1'],
-        [getEnv({ arch }), 'Python 64-bit'],
-        [getEnv({ version, arch }), 'Python 3.8.1 64-bit'],
+        [getEnv({ version }), 'Python 3.8.1', 'Python 3.8.1'],
+        [getEnv({ arch }), 'Python 64-bit', 'Python 64-bit'],
+        [getEnv({ version, arch }), 'Python 3.8.1 64-bit', 'Python 3.8.1 64-bit'],
         // with "suffix" info
-        [getEnv({ name }), "Python ('my-env')"],
-        [getEnv({ kind }), 'Python (venv)'],
-        [getEnv({ name, kind }), "Python ('my-env': venv)"],
+        [getEnv({ name }), "Python ('my-env')", "Python ('my-env')"],
+        [getEnv({ kind }), 'Python', 'Python (venv)'],
+        [getEnv({ name, kind }), "Python ('my-env')", "Python ('my-env': venv)"],
         // env.location is ignored.
-        [getEnv({ location }), 'Python'],
-        [getEnv({ name, location }), "Python ('my-env')"],
+        [getEnv({ location }), 'Python', 'Python'],
+        [getEnv({ name, location }), "Python ('my-env')", "Python ('my-env')"],
     ];
-    tests.forEach(([env, expected]) => {
-        test(`"${expected}"`, () => {
-            const result = getEnvDisplayString(env);
+    tests.forEach(([env, expectedDisplay, expectedDetailedDisplay]) => {
+        test(`"${expectedDisplay}"`, () => {
+            setEnvDisplayString(env);
 
-            assert.strictEqual(result, expected);
+            assert.equal(env.display, expectedDisplay);
+            assert.equal(env.detailedDisplayName, expectedDetailedDisplay);
         });
     });
 });

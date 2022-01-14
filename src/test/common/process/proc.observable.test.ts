@@ -199,7 +199,7 @@ suite('ProcessService', () => {
         this.timeout(20000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
-            'print(">>>CONDA-RUN-OUTPUT")',
+            'print(">>>PYTHON-EXEC-OUTPUT")',
             'import sys',
             'import time',
             'print("1")',
@@ -220,7 +220,7 @@ suite('ProcessService', () => {
             'sys.stderr.write("c")',
             'sys.stderr.flush()',
             'time.sleep(2)',
-            'print("<<<CONDA-RUN-OUTPUT")',
+            'print("<<<PYTHON-EXEC-OUTPUT")',
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = [

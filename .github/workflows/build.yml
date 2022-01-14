@@ -399,7 +399,7 @@ jobs:
         with:
           name: ${{ needs.setup.outputs.vsix_artifact_name }}
       - name: Azure Login
-        uses: azure/login@v1.3.0
+        uses: azure/login@v1.4.2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Upload to Blob Storage

@@ -52,7 +52,7 @@ export class UnittestRunner implements ITestsRunner {
     }
 
     private async runTest(
-        testNodes: TestItem[],
+        testNodes: readonly TestItem[],
         runInstance: TestRun,
         options: TestRunInstanceOptions,
         idToRawData: Map<string, TestData>,

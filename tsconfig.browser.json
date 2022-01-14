@@ -2,6 +2,6 @@
         "extends": "./tsconfig.json",
         "include": [
             "./src/client/browser",
-            "./types/vscode.proposed.d.ts"
+            "./types"
         ]
 }

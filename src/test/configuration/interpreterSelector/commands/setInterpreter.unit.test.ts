@@ -6,7 +6,15 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationTarget, OpenDialogOptions, QuickPick, QuickPickItem, Uri } from 'vscode';
+import {
+    ConfigurationTarget,
+    OpenDialogOptions,
+    QuickPick,
+    QuickPickItem,
+    QuickPickItemKind,
+    Uri,
+    WorkspaceFolder,
+} from 'vscode';
 import { cloneDeep } from 'lodash';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
@@ -21,6 +29,7 @@ import {
     IQuickPickParameters,
 } from '../../../../client/common/utils/multiStepInput';
 import {
+    EnvGroups,
     InterpreterStateArgs,
     SetInterpreterCommand,
 } from '../../../../client/interpreter/configuration/interpreterSelector/commands/setInterpreter';
@@ -29,7 +38,7 @@ import {
     IInterpreterSelector,
     IPythonPathUpdaterServiceManager,
 } from '../../../../client/interpreter/configuration/types';
-import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { EventName } from '../../../../client/telemetry/constants';
 import * as Telemetry from '../../../../client/telemetry';
 import { MockWorkspaceConfiguration } from '../../../mocks/mockWorkspaceConfig';
@@ -100,32 +109,33 @@ suite('Set Interpreter Command', () => {
 
         const interpreterPath = 'path/to/interpreter';
         const item: IInterpreterQuickPickItem = {
-            description: '',
+            description: interpreterPath,
             detail: '',
             label: 'This is the selected Python path',
             path: interpreterPath,
-            interpreter: { path: interpreterPath } as PythonEnvironment,
+            interpreter: { path: interpreterPath, envType: EnvironmentType.Conda } as PythonEnvironment,
         };
         const defaultInterpreterPath = 'defaultInterpreterPath';
         const defaultInterpreterPathSuggestion = {
             label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
-            detail: defaultInterpreterPath,
+            description: defaultInterpreterPath,
             path: defaultInterpreterPath,
             alwaysShow: true,
         };
 
         const refreshedItem: IInterpreterQuickPickItem = {
-            description: '',
+            description: interpreterPath,
             detail: '',
             label: 'Refreshed path',
             path: interpreterPath,
-            interpreter: { path: interpreterPath } as PythonEnvironment,
+            interpreter: { path: interpreterPath, envType: EnvironmentType.Conda } as PythonEnvironment,
         };
         const expectedEnterInterpreterPathSuggestion = {
             label: `${Octicons.Add} ${InterpreterQuickPickList.enterPath.label()}`,
             alwaysShow: true,
         };
         const currentPythonPath = 'python';
+        const workspacePath = 'path/to/workspace';
 
         setup(() => {
             _enterOrBrowseInterpreterPath = sinon.stub(
@@ -141,7 +151,13 @@ suite('Set Interpreter Command', () => {
                         properties,
                     };
                 });
-            interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => [item]);
+            interpreterSelector
+                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => [item]);
+            interpreterSelector
+                .setup((i) => i.getRecommendedSuggestion(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => item);
+
             pythonSettings.setup((p) => p.pythonPath).returns(() => currentPythonPath);
             pythonSettings.setup((p) => p.defaultInterpreterPath).returns(() => defaultInterpreterPath);
 
@@ -153,6 +169,10 @@ suite('Set Interpreter Command', () => {
                             defaultInterpreterPath,
                         }),
                 );
+
+            workspace
+                .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny()))
+                .returns(() => (({ uri: { fsPath: workspacePath } } as unknown) as WorkspaceFolder));
 
             setInterpreterCommand = new SetInterpreterCommand(
                 appShell.object,
@@ -190,8 +210,13 @@ suite('Set Interpreter Command', () => {
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             const recommended = cloneDeep(item);
             recommended.label = `${Octicons.Star} ${item.label}`;
-            recommended.description = Common.recommended();
-            const suggestions = [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, recommended];
+            recommended.description = interpreterPath;
+            const suggestions = [
+                expectedEnterInterpreterPathSuggestion,
+                defaultInterpreterPathSuggestion,
+                { kind: QuickPickItemKind.Separator, label: EnvGroups.Recommended },
+                recommended,
+            ];
             const expectedParameters: IQuickPickParameters<QuickPickItem> = {
                 placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
                 items: suggestions,
@@ -218,6 +243,110 @@ suite('Set Interpreter Command', () => {
             delete actualParameters!.customButtonSetup;
             delete actualParameters!.onChangeItem;
             assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
+        });
+
+        test('Items displayed should be grouped if no refresh is going on', async () => {
+            const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
+            const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+            const interpreterItems: IInterpreterQuickPickItem[] = [
+                {
+                    description: `${workspacePath}/interpreterPath1`,
+                    detail: '',
+                    label: 'This is the selected Python path',
+                    path: `${workspacePath}/interpreterPath1`,
+                    interpreter: {
+                        path: `${workspacePath}/interpreterPath1`,
+                        envType: EnvironmentType.Venv,
+                    } as PythonEnvironment,
+                },
+                {
+                    description: 'interpreterPath2',
+                    detail: '',
+                    label: 'This is the selected Python path',
+                    path: 'interpreterPath2',
+                    interpreter: {
+                        path: 'interpreterPath2',
+                        envType: EnvironmentType.VirtualEnvWrapper,
+                    } as PythonEnvironment,
+                },
+                {
+                    description: 'interpreterPath3',
+                    detail: '',
+                    label: 'This is the selected Python path',
+                    path: 'interpreterPath3',
+                    interpreter: {
+                        path: 'interpreterPath3',
+                        envType: EnvironmentType.VirtualEnvWrapper,
+                    } as PythonEnvironment,
+                },
+                {
+                    description: 'interpreterPath4',
+                    detail: '',
+                    label: 'This is the selected Python path',
+                    path: 'interpreterPath4',
+                    interpreter: { path: 'interpreterPath4', envType: EnvironmentType.Conda } as PythonEnvironment,
+                },
+                item,
+                {
+                    description: 'interpreterPath5',
+                    detail: '',
+                    label: 'This is the selected Python path',
+                    path: 'interpreterPath5',
+                    interpreter: { path: 'interpreterPath5', envType: EnvironmentType.Global } as PythonEnvironment,
+                },
+            ];
+            interpreterSelector.reset();
+            interpreterSelector
+                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => interpreterItems);
+            interpreterSelector
+                .setup((i) => i.getRecommendedSuggestion(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => item);
+            const recommended = cloneDeep(item);
+            recommended.label = `${Octicons.Star} ${item.label}`;
+            recommended.description = interpreterPath;
+            const suggestions = [
+                expectedEnterInterpreterPathSuggestion,
+                defaultInterpreterPathSuggestion,
+                { kind: QuickPickItemKind.Separator, label: EnvGroups.Recommended },
+                recommended,
+                { label: EnvGroups.Workspace, kind: QuickPickItemKind.Separator },
+                interpreterItems[0],
+                { label: EnvGroups.VirtualEnvWrapper, kind: QuickPickItemKind.Separator },
+                interpreterItems[1],
+                interpreterItems[2],
+                { label: EnvGroups.Conda, kind: QuickPickItemKind.Separator },
+                interpreterItems[3],
+                item,
+                { label: EnvGroups.Global, kind: QuickPickItemKind.Separator },
+                interpreterItems[5],
+            ];
+            const expectedParameters: IQuickPickParameters<QuickPickItem> = {
+                placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
+                items: suggestions,
+                activeItem: recommended,
+                matchOnDetail: true,
+                matchOnDescription: true,
+                title: InterpreterQuickPickList.browsePath.openButtonLabel(),
+                sortByLabel: true,
+                keepScrollPosition: true,
+            };
+            let actualParameters: IQuickPickParameters<QuickPickItem> | undefined;
+            multiStepInput
+                .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
+                .callback((options) => {
+                    actualParameters = options;
+                })
+                .returns(() => Promise.resolve((undefined as unknown) as QuickPickItem));
+
+            await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
+
+            expect(actualParameters).to.not.equal(undefined, 'Parameters not set');
+            const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
+            expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
+            delete actualParameters!.customButtonSetup;
+            delete actualParameters!.onChangeItem;
+            assert.deepStrictEqual(actualParameters?.items, expectedParameters.items, 'Params not equal');
         });
 
         test('If system variables are used in the default interpreter path, make sure they are resolved when the path is displayed', async () => {
@@ -264,16 +393,17 @@ suite('Set Interpreter Command', () => {
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             const recommended = cloneDeep(item);
             recommended.label = `${Octicons.Star} ${item.label}`;
-            recommended.description = Common.recommended();
+            recommended.description = interpreterPath;
+            const separator = { label: EnvGroups.Recommended, kind: QuickPickItemKind.Separator };
 
             const defaultPathSuggestion = {
                 label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
-                detail: expandedDetail,
+                description: expandedDetail,
                 path: expandedPath,
                 alwaysShow: true,
             };
 
-            const suggestions = [expectedEnterInterpreterPathSuggestion, defaultPathSuggestion, recommended];
+            const suggestions = [expectedEnterInterpreterPathSuggestion, defaultPathSuggestion, separator, recommended];
             const expectedParameters: IQuickPickParameters<QuickPickItem> = {
                 placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
                 items: suggestions,
@@ -326,7 +456,7 @@ suite('Set Interpreter Command', () => {
             verify(interpreterService.triggerRefresh()).once();
         });
 
-        test('If an event to update quickpick is received, the quickpick is updated accordingly', async () => {
+        test('Events to update quickpick updates the quickpick accordingly', async () => {
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             let actualParameters: IQuickPickParameters<QuickPickItem> | undefined;
@@ -347,13 +477,14 @@ suite('Set Interpreter Command', () => {
             expect(onChangedCallback).to.not.equal(undefined, 'Callback not set');
             multiStepInput.verifyAll();
 
+            const separator = { label: EnvGroups.Conda, kind: QuickPickItemKind.Separator };
             const quickPick = {
-                items: [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, item],
+                items: [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, separator, item],
                 activeItems: [item],
                 busy: false,
             };
             interpreterSelector
-                .setup((i) => i.suggestionToQuickPickItem(TypeMoq.It.isAny(), undefined))
+                .setup((i) => i.suggestionToQuickPickItem(TypeMoq.It.isAny(), undefined, false))
                 .returns(() => refreshedItem);
 
             const changeEvent: PythonEnvironmentsChangedEvent = {
@@ -365,7 +496,12 @@ suite('Set Interpreter Command', () => {
             assert.deepStrictEqual(
                 quickPick,
                 {
-                    items: [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, refreshedItem],
+                    items: [
+                        expectedEnterInterpreterPathSuggestion,
+                        defaultInterpreterPathSuggestion,
+                        separator,
+                        refreshedItem,
+                    ],
                     activeItems: [refreshedItem],
                     busy: true,
                 },
@@ -373,7 +509,18 @@ suite('Set Interpreter Command', () => {
             );
 
             // Refresh is over; set the final states accordingly
-            interpreterSelector.setup((i) => i.getSuggestions(TypeMoq.It.isAny())).returns(() => [refreshedItem]);
+            interpreterSelector.reset();
+            interpreterSelector
+                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => [refreshedItem]);
+            interpreterSelector
+                .setup((i) => i.getRecommendedSuggestion(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => refreshedItem);
+            interpreterSelector
+                .setup((i) =>
+                    i.suggestionToQuickPickItem(TypeMoq.It.isValue(refreshedItem.interpreter), undefined, false),
+                )
+                .returns(() => refreshedItem);
             when(interpreterService.refreshPromise).thenReturn(undefined);
 
             refreshPromiseDeferred.resolve();
@@ -381,17 +528,70 @@ suite('Set Interpreter Command', () => {
 
             const recommended = cloneDeep(refreshedItem);
             recommended.label = `${Octicons.Star} ${refreshedItem.label}`;
-            recommended.description = Common.recommended();
+            recommended.description = `${interpreterPath} - ${Common.recommended()}`;
             assert.deepStrictEqual(
                 quickPick,
                 {
                     // Refresh has finished, so recommend an interpreter
-                    items: [expectedEnterInterpreterPathSuggestion, defaultInterpreterPathSuggestion, recommended],
+                    items: [
+                        expectedEnterInterpreterPathSuggestion,
+                        defaultInterpreterPathSuggestion,
+                        separator,
+                        recommended,
+                    ],
                     activeItems: [recommended],
                     // Refresh has finished, so quickpick busy indicator should go away
                     busy: false,
                 },
                 'Quickpick not updated correctly after refresh has finished',
+            );
+
+            const newItem = {
+                description: `${workspacePath}/interpreterPath1`,
+                detail: '',
+                label: 'This is the selected Python path',
+                path: `${workspacePath}/interpreterPath1`,
+                interpreter: {
+                    path: `${workspacePath}/interpreterPath1`,
+                    envType: EnvironmentType.Venv,
+                } as PythonEnvironment,
+            };
+            const changeEvent2: PythonEnvironmentsChangedEvent = {
+                old: undefined,
+                new: newItem.interpreter,
+            };
+            interpreterSelector.reset();
+            interpreterSelector
+                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => [refreshedItem, newItem]);
+            interpreterSelector
+                .setup((i) => i.getRecommendedSuggestion(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => refreshedItem);
+            interpreterSelector
+                .setup((i) =>
+                    i.suggestionToQuickPickItem(TypeMoq.It.isValue(refreshedItem.interpreter), undefined, false),
+                )
+                .returns(() => refreshedItem);
+            interpreterSelector
+                .setup((i) => i.suggestionToQuickPickItem(TypeMoq.It.isValue(newItem.interpreter), undefined, false))
+                .returns(() => newItem);
+            await onChangedCallback!(changeEvent2, (quickPick as unknown) as QuickPick<QuickPickItem>); // Invoke callback, meaning that the items are supposed to change.
+
+            assert.deepStrictEqual(
+                quickPick,
+                {
+                    items: [
+                        expectedEnterInterpreterPathSuggestion,
+                        defaultInterpreterPathSuggestion,
+                        separator,
+                        recommended,
+                        { label: EnvGroups.Workspace, kind: QuickPickItemKind.Separator },
+                        newItem,
+                    ],
+                    activeItems: [recommended],
+                    busy: false,
+                },
+                'Quickpick not updated correctly',
             );
         });
 

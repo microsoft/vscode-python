@@ -135,7 +135,7 @@ suite('ProcessService Observable', () => {
         this.timeout(7000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
-            'print(">>>CONDA-RUN-OUTPUT")',
+            'print(">>>PYTHON-EXEC-OUTPUT")',
             'import sys',
             'import time',
             'print("1")',
@@ -155,7 +155,7 @@ suite('ProcessService Observable', () => {
             'time.sleep(1)',
             'sys.stderr.write("c")',
             'sys.stderr.flush()',
-            'print("<<<CONDA-RUN-OUTPUT")',
+            'print("<<<PYTHON-EXEC-OUTPUT")',
         ];
         const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')]);
         const expectedStdout = ['1', '2', '3'];
@@ -235,7 +235,7 @@ suite('ProcessService Observable', () => {
         const procService = new ProcessService(new BufferDecoder());
         const printOutput = '1234';
         const result = await procService.shellExec(
-            `"${pythonPath}" -c "print('>>>CONDA-RUN-OUTPUT');print('${printOutput}');print('<<<CONDA-RUN-OUTPUT')"`,
+            `"${pythonPath}" -c "print('>>>PYTHON-EXEC-OUTPUT');print('${printOutput}');print('<<<PYTHON-EXEC-OUTPUT')"`,
         );
 
         expect(result).not.to.be.an('undefined', 'result is undefined');

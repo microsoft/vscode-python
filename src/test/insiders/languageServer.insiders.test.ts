@@ -7,12 +7,11 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { updateSetting } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
-import { openFileAndWaitForLS, openNotebookAndWaitForLS } from '../smoke/common';
+import { openFileAndWaitForLS } from '../smoke/common';
 
 const fileDefinitions = path.join(
     EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -22,13 +21,13 @@ const fileDefinitions = path.join(
     'definitions.py',
 );
 
-const notebookDefinitions = path.join(
-    EXTENSION_ROOT_DIR_FOR_TESTS,
-    'src',
-    'testMultiRootWkspc',
-    'smokeTests',
-    'definitions.ipynb',
-);
+// const notebookDefinitions = path.join(
+//     EXTENSION_ROOT_DIR_FOR_TESTS,
+//     'src',
+//     'testMultiRootWkspc',
+//     'smokeTests',
+//     'definitions.ipynb',
+// );
 
 suite('Insiders Test: Language Server', () => {
     suiteSetup(async function () {
@@ -83,71 +82,73 @@ suite('Insiders Test: Language Server', () => {
             assert.fail('Failed to test definitions');
         }
     });
-    test('Notebooks', async () => {
-        const startPosition = new vscode.Position(0, 6);
-        const notebookDocument = await openNotebookAndWaitForLS(notebookDefinitions);
-        let tested = false;
-        for (let i = 0; i < 5; i += 1) {
-            const locations = await vscode.commands.executeCommand<vscode.Location[]>(
-                'vscode.executeDefinitionProvider',
-                notebookDocument.cellAt(2).document.uri, // Second cell should have a function with the decorator on it
-                startPosition,
-            );
-            if (locations && locations.length > 0) {
-                expect(locations![0].uri.fsPath).to.contain(path.basename(notebookDefinitions));
+    // Commented the test out as `.edit` functionality is no longer available on `NotebookEditor` interface.
 
-                // Insert a new cell
-                const activeEditor = vscode.window.activeNotebookEditor;
-                expect(activeEditor).not.to.be.equal(undefined, 'Active editor not found in notebook');
-                await activeEditor!.edit((edit) => {
-                    edit.replaceCells(0, 0, [
-                        new vscode.NotebookCellData(vscode.NotebookCellKind.Code, PYTHON_LANGUAGE, 'x = 4'),
-                    ]);
-                });
+    // test('Notebooks', async () => {
+    //     const startPosition = new vscode.Position(0, 6);
+    //     const notebookDocument = await openNotebookAndWaitForLS(notebookDefinitions);
+    //     let tested = false;
+    //     for (let i = 0; i < 5; i += 1) {
+    //         const locations = await vscode.commands.executeCommand<vscode.Location[]>(
+    //             'vscode.executeDefinitionProvider',
+    //             notebookDocument.cellAt(2).document.uri, // Second cell should have a function with the decorator on it
+    //             startPosition,
+    //         );
+    //         if (locations && locations.length > 0) {
+    //             expect(locations![0].uri.fsPath).to.contain(path.basename(notebookDefinitions));
 
-                // Wait a bit to get diagnostics
-                await sleep(1_000);
+    //             // Insert a new cell
+    //             const activeEditor = vscode.window.activeNotebookEditor;
+    //             expect(activeEditor).not.to.be.equal(undefined, 'Active editor not found in notebook');
+    //             await activeEditor!.edit((edit) => {
+    //                 edit.replaceCells(0, 0, [
+    //                     new vscode.NotebookCellData(vscode.NotebookCellKind.Code, PYTHON_LANGUAGE, 'x = 4'),
+    //                 ]);
+    //             });
 
-                // Make sure no error diagnostics
-                let diagnostics = vscode.languages.getDiagnostics(activeEditor!.document.uri);
-                expect(diagnostics).to.have.lengthOf(0, 'Diagnostics found when shouldnt be');
+    //             // Wait a bit to get diagnostics
+    //             await sleep(1_000);
 
-                // Move the cell
-                await activeEditor!.edit((edit) => {
-                    edit.replaceCells(0, 1, []);
-                    edit.replaceCells(1, 0, [
-                        new vscode.NotebookCellData(vscode.NotebookCellKind.Code, PYTHON_LANGUAGE, 'x = 4'),
-                    ]);
-                });
+    //             // Make sure no error diagnostics
+    //             let diagnostics = vscode.languages.getDiagnostics(activeEditor!.document.uri);
+    //             expect(diagnostics).to.have.lengthOf(0, 'Diagnostics found when shouldnt be');
 
-                // Wait a bit to get diagnostics
-                await sleep(1_000);
+    //             // Move the cell
+    //             await activeEditor!.edit((edit) => {
+    //                 edit.replaceCells(0, 1, []);
+    //                 edit.replaceCells(1, 0, [
+    //                     new vscode.NotebookCellData(vscode.NotebookCellKind.Code, PYTHON_LANGUAGE, 'x = 4'),
+    //                 ]);
+    //             });
 
-                // Make sure no error diagnostics
-                diagnostics = vscode.languages.getDiagnostics(activeEditor!.document.uri);
-                expect(diagnostics).to.have.lengthOf(0, 'Diagnostics found when shouldnt be after move');
+    //             // Wait a bit to get diagnostics
+    //             await sleep(1_000);
 
-                // Delete the cell
-                await activeEditor!.edit((edit) => {
-                    edit.replaceCells(1, 1, []);
-                });
+    //             // Make sure no error diagnostics
+    //             diagnostics = vscode.languages.getDiagnostics(activeEditor!.document.uri);
+    //             expect(diagnostics).to.have.lengthOf(0, 'Diagnostics found when shouldnt be after move');
 
-                // Wait a bit to get diagnostics
-                await sleep(1_000);
+    //             // Delete the cell
+    //             await activeEditor!.edit((edit) => {
+    //                 edit.replaceCells(1, 1, []);
+    //             });
 
-                // Make sure no error diagnostics
-                diagnostics = vscode.languages.getDiagnostics(activeEditor!.document.uri);
-                expect(diagnostics).to.have.lengthOf(0, 'Diagnostics found when shouldnt be after delete');
-                tested = true;
+    //             // Wait a bit to get diagnostics
+    //             await sleep(1_000);
 
-                break;
-            } else {
-                // Wait for LS to start.
-                await sleep(5_000);
-            }
-        }
-        if (!tested) {
-            assert.fail('Failled to test notebooks');
-        }
-    });
+    //             // Make sure no error diagnostics
+    //             diagnostics = vscode.languages.getDiagnostics(activeEditor!.document.uri);
+    //             expect(diagnostics).to.have.lengthOf(0, 'Diagnostics found when shouldnt be after delete');
+    //             tested = true;
+
+    //             break;
+    //         } else {
+    //             // Wait for LS to start.
+    //             await sleep(5_000);
+    //         }
+    //     }
+    //     if (!tested) {
+    //         assert.fail('Failled to test notebooks');
+    //     }
+    // });
 });

@@ -37,7 +37,7 @@ suite('Terminal', () => {
                 instance(resourceService),
             );
 
-            terminal = {
+            terminal = ({
                 dispose: noop,
                 hide: noop,
                 name: 'Some Name',
@@ -46,8 +46,8 @@ suite('Terminal', () => {
                 sendText: noop,
                 show: noop,
                 exitStatus: { code: 0 },
-            };
-            nonActivatedTerminal = {
+            } as unknown) as Terminal;
+            nonActivatedTerminal = ({
                 dispose: noop,
                 hide: noop,
                 creationOptions: { hideFromUser: true },
@@ -56,7 +56,7 @@ suite('Terminal', () => {
                 sendText: noop,
                 show: noop,
                 exitStatus: { code: 0 },
-            };
+            } as unknown) as Terminal;
             autoActivation.register();
         });
         // teardown(() => fakeTimer.uninstall());

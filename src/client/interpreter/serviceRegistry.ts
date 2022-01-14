@@ -57,6 +57,7 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
 
     serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
     serviceManager.addSingleton<IInterpreterDisplay>(IInterpreterDisplay, InterpreterDisplay);
+    serviceManager.addBinding(IInterpreterDisplay, IExtensionSingleActivationService);
 
     serviceManager.addSingleton<IPythonPathUpdaterServiceFactory>(
         IPythonPathUpdaterServiceFactory,

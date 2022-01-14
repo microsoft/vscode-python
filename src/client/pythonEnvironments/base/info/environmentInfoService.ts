@@ -10,6 +10,7 @@ import { traceError, traceInfo } from '../../../logging';
 import { Conda, CONDA_ACTIVATION_TIMEOUT, isCondaEnvironment } from '../../common/environmentManagers/conda';
 import { PythonEnvInfo, PythonEnvKind } from '.';
 import { normCasePath } from '../../common/externalDependencies';
+import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
 
 export enum EnvironmentInfoServiceQueuePriority {
     Default,
@@ -24,7 +25,7 @@ export interface IEnvironmentInfoService {
 }
 
 async function buildEnvironmentInfo(env: PythonEnvInfo): Promise<InterpreterInformation | undefined> {
-    const python = [env.executable.filename];
+    const python = [env.executable.filename, OUTPUT_MARKER_SCRIPT];
     const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(python, undefined, env.executable.filename));
     return interpreterInfo;
 }

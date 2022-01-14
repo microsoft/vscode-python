@@ -6,10 +6,10 @@
 import { inject, injectable } from 'inversify';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
-import { QuickPick, QuickPickItem } from 'vscode';
+import { QuickPick, QuickPickItem, QuickPickItemKind } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands, Octicons } from '../../../../common/constants';
-import { arePathsSame } from '../../../../common/platform/fs-paths';
+import { arePathsSame, isParentPath } from '../../../../common/platform/fs-paths';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
 import { getIcon } from '../../../../common/utils/icons';
@@ -22,6 +22,7 @@ import {
 } from '../../../../common/utils/multiStepInput';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
 import { REFRESH_BUTTON_ICON } from '../../../../debugger/extension/attachQuickPick/types';
+import { EnvironmentType } from '../../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { IInterpreterService, PythonEnvironmentsChangedEvent } from '../../../contracts';
@@ -36,7 +37,7 @@ import { BaseInterpreterSelectorCommand } from './base';
 const untildify = require('untildify');
 
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
-type QuickPickType = IInterpreterQuickPickItem | ISpecialQuickPickItem;
+type QuickPickType = IInterpreterQuickPickItem | ISpecialQuickPickItem | QuickPickItem;
 
 function isInterpreterQuickPickItem(item: QuickPickType): item is IInterpreterQuickPickItem {
     return 'interpreter' in item;
@@ -46,6 +47,23 @@ function isSpecialQuickPickItem(item: QuickPickType): item is ISpecialQuickPickI
     return 'alwaysShow' in item;
 }
 
+function isSeparatorItem(item: QuickPickType): item is QuickPickItem {
+    return 'kind' in item && item.kind === QuickPickItemKind.Separator;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace EnvGroups {
+    export const Workspace = InterpreterQuickPickList.workspaceGroupName();
+    export const Conda = 'Conda';
+    export const Global = InterpreterQuickPickList.globalGroupName();
+    export const VirtualEnv = 'VirtualEnv';
+    export const PipEnv = 'PipEnv';
+    export const Pyenv = 'Pyenv';
+    export const Venv = 'Venv';
+    export const Poetry = 'Poetry';
+    export const VirtualEnvWrapper = 'VirtualEnvWrapper';
+    export const Recommended = Common.recommended();
+}
 @injectable()
 export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     private readonly manualEntrySuggestion: ISpecialQuickPickItem = {
@@ -149,15 +167,35 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         if (defaultInterpreterPathSuggestion) {
             suggestions.push(defaultInterpreterPathSuggestion);
         }
-        const interpreterSuggestions = this.interpreterSelector.getSuggestions(resource);
+        const interpreterSuggestions = this.getSuggestions(resource);
         this.setRecommendedItem(interpreterSuggestions, resource);
         suggestions.push(...interpreterSuggestions);
         return suggestions;
     }
 
+    private getSuggestions(resource: Resource): QuickPickType[] {
+        const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
+        const items = this.interpreterSelector.getSuggestions(resource, !!this.interpreterService.refreshPromise);
+        if (this.interpreterService.refreshPromise) {
+            // We cannot put items in groups while the list is loading as group of an item can change.
+            return items;
+        }
+        const itemsWithFullName = this.interpreterSelector.getSuggestions(resource, true);
+        const recommended = this.interpreterSelector.getRecommendedSuggestion(
+            itemsWithFullName,
+            this.workspaceService.getWorkspaceFolder(resource)?.uri,
+        );
+        if (recommended && arePathsSame(items[0].interpreter.path, recommended.interpreter.path)) {
+            items.shift();
+        }
+        return getGroupedQuickPickItems(items, recommended, workspaceFolder?.uri.fsPath);
+    }
+
     private getActiveItem(resource: Resource, suggestions: QuickPickType[]) {
         const currentPythonPath = this.configurationService.getSettings(resource).pythonPath;
-        const activeInterpreter = suggestions.filter((i) => i.path === currentPythonPath);
+        const activeInterpreter = suggestions.filter(
+            (i) => isInterpreterQuickPickItem(i) && i.path === currentPythonPath,
+        );
         if (activeInterpreter.length > 0) {
             return activeInterpreter[0];
         }
@@ -175,7 +213,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         if (defaultInterpreterPathValue && defaultInterpreterPathValue !== 'python') {
             return {
                 label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label()}`,
-                detail: this.pathUtils.getDisplayName(
+                description: this.pathUtils.getDisplayName(
                     defaultInterpreterPathValue,
                     resource ? resource.fsPath : undefined,
                 ),
@@ -222,6 +260,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         resource: Resource,
     ): QuickPickType[] {
         const updatedItems = [...items.values()];
+        const areItemsGrouped = items.find((item) => isSeparatorItem(item));
         const env = event.old ?? event.new;
         let envIndex = -1;
         if (env) {
@@ -230,11 +269,19 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             );
         }
         if (event.new) {
-            const newSuggestion: QuickPickType = this.interpreterSelector.suggestionToQuickPickItem(
+            const newSuggestion = this.interpreterSelector.suggestionToQuickPickItem(
                 event.new,
                 resource,
+                !areItemsGrouped,
             );
             if (envIndex === -1) {
+                if (areItemsGrouped) {
+                    addSeparatorIfApplicable(
+                        updatedItems,
+                        newSuggestion,
+                        this.workspaceService.getWorkspaceFolder(resource)?.uri.fsPath,
+                    );
+                }
                 updatedItems.push(newSuggestion);
             } else {
                 updatedItems[envIndex] = newSuggestion;
@@ -248,12 +295,22 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     }
 
     private setRecommendedItem(items: QuickPickType[], resource: Resource) {
-        const interpreterSuggestions = this.interpreterSelector.getSuggestions(resource);
+        const interpreterSuggestions = this.interpreterSelector.getSuggestions(resource, true);
         if (!this.interpreterService.refreshPromise && interpreterSuggestions.length > 0) {
-            // List is in the final state, so first suggestion is the recommended one.
-            const recommended = cloneDeep(interpreterSuggestions[0]);
+            const suggestion = this.interpreterSelector.getRecommendedSuggestion(
+                interpreterSuggestions,
+                this.workspaceService.getWorkspaceFolder(resource)?.uri,
+            );
+            if (!suggestion) {
+                return;
+            }
+            const areItemsGrouped = items.find((item) => isSeparatorItem(item) && item.label === EnvGroups.Recommended);
+            const recommended = cloneDeep(suggestion);
             recommended.label = `${Octicons.Star} ${recommended.label}`;
-            recommended.description = Common.recommended();
+            recommended.description = areItemsGrouped
+                ? // No need to add a tag as "Recommended" group already exists.
+                  recommended.description
+                : `${recommended.description ?? ''} - ${Common.recommended()}`;
             const index = items.findIndex(
                 (item) =>
                     isInterpreterQuickPickItem(item) &&
@@ -359,5 +416,57 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTERED_EXISTS, undefined, { discovered });
 
         return undefined;
+    }
+}
+
+function getGroupedQuickPickItems(
+    items: IInterpreterQuickPickItem[],
+    recommended: IInterpreterQuickPickItem | undefined,
+    workspacePath?: string,
+): QuickPickType[] {
+    const updatedItems: QuickPickType[] = [];
+    if (recommended) {
+        updatedItems.push({ label: EnvGroups.Recommended, kind: QuickPickItemKind.Separator }, recommended);
+    }
+    let previousGroup = EnvGroups.Recommended;
+    for (const item of items) {
+        previousGroup = addSeparatorIfApplicable(updatedItems, item, workspacePath, previousGroup);
+        updatedItems.push(item);
+    }
+    return updatedItems;
+}
+
+function addSeparatorIfApplicable(
+    items: QuickPickType[],
+    newItem: IInterpreterQuickPickItem,
+    workspacePath?: string,
+    previousGroup?: string | undefined,
+) {
+    if (!previousGroup) {
+        const lastItem = items.length ? items[items.length - 1] : undefined;
+        previousGroup =
+            lastItem && isInterpreterQuickPickItem(lastItem) ? getGroup(lastItem, workspacePath) : undefined;
+    }
+    const currentGroup = getGroup(newItem, workspacePath);
+    if (!previousGroup || currentGroup !== previousGroup) {
+        const separatorItem: QuickPickItem = { label: currentGroup, kind: QuickPickItemKind.Separator };
+        items.push(separatorItem);
+        previousGroup = currentGroup;
+    }
+    return previousGroup;
+}
+
+function getGroup(item: IInterpreterQuickPickItem, workspacePath?: string) {
+    if (workspacePath && isParentPath(item.path, workspacePath)) {
+        return EnvGroups.Workspace;
+    }
+    switch (item.interpreter.envType) {
+        case EnvironmentType.Global:
+        case EnvironmentType.System:
+        case EnvironmentType.Unknown:
+        case EnvironmentType.WindowsStore:
+            return EnvGroups.Global;
+        default:
+            return EnvGroups[item.interpreter.envType];
     }
 }

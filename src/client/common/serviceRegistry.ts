@@ -36,7 +36,6 @@ import { DebugSessionTelemetry } from './application/debugSessionTelemetry';
 import { DocumentManager } from './application/documentManager';
 import { Extensions } from './application/extensions';
 import { LanguageService } from './application/languageService';
-import { VSCodeNotebook } from './application/notebook';
 import { TerminalManager } from './application/terminalManager';
 import {
     IActiveResourceService,
@@ -50,7 +49,6 @@ import {
     IJupyterExtensionDependencyManager,
     ILanguageService,
     ITerminalManager,
-    IVSCodeNotebook,
     IWorkspaceService,
 } from './application/types';
 import { WorkspaceService } from './application/workspace';
@@ -123,7 +121,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<ITerminalServiceFactory>(ITerminalServiceFactory, TerminalServiceFactory);
     serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
-    serviceManager.addSingleton<IVSCodeNotebook>(IVSCodeNotebook, VSCodeNotebook);
     serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
     serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);

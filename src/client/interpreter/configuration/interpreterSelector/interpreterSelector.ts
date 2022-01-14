@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, Uri } from 'vscode';
+import { arePathsSame } from '../../../common/platform/fs-paths';
 import { IPathUtils, Resource } from '../../../common/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { IInterpreterService } from '../../contracts';
@@ -24,11 +25,11 @@ export class InterpreterSelector implements IInterpreterSelector {
         this.disposables.forEach((disposable) => disposable.dispose());
     }
 
-    public getSuggestions(resource: Resource): IInterpreterQuickPickItem[] {
+    public getSuggestions(resource: Resource, useFullDisplayName = false): IInterpreterQuickPickItem[] {
         const interpreters = this.interpreterManager.getInterpreters(resource);
         interpreters.sort(this.envTypeComparer.compare.bind(this.envTypeComparer));
 
-        return interpreters.map((item) => this.suggestionToQuickPickItem(item, resource));
+        return interpreters.map((item) => this.suggestionToQuickPickItem(item, resource, useFullDisplayName));
     }
 
     public async getAllSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]> {
@@ -38,14 +39,30 @@ export class InterpreterSelector implements IInterpreterSelector {
         return Promise.all(interpreters.map((item) => this.suggestionToQuickPickItem(item, resource)));
     }
 
-    public suggestionToQuickPickItem(suggestion: PythonEnvironment, workspaceUri?: Uri): IInterpreterQuickPickItem {
+    public suggestionToQuickPickItem(
+        suggestion: PythonEnvironment,
+        workspaceUri?: Uri,
+        useDetailedName = false,
+    ): IInterpreterQuickPickItem {
         const detail = this.pathUtils.getDisplayName(suggestion.path, workspaceUri ? workspaceUri.fsPath : undefined);
         const cachedPrefix = suggestion.cachedEntry ? '(cached) ' : '';
         return {
-            label: suggestion.displayName || 'Python',
-            detail: `${cachedPrefix}${detail}`,
+            label: (useDetailedName ? suggestion.detailedDisplayName : suggestion.displayName) || 'Python',
+            description: `${cachedPrefix}${detail}`,
             path: suggestion.path,
             interpreter: suggestion,
         };
+    }
+
+    public getRecommendedSuggestion(
+        suggestions: IInterpreterQuickPickItem[],
+        resource: Resource,
+    ): IInterpreterQuickPickItem | undefined {
+        const envs = this.interpreterManager.getInterpreters(resource);
+        const recommendedEnv = this.envTypeComparer.getRecommended(envs, resource);
+        if (!recommendedEnv) {
+            return undefined;
+        }
+        return suggestions.find((item) => arePathsSame(item.interpreter.path, recommendedEnv.path));
     }
 }

@@ -23,6 +23,15 @@ export enum EnvironmentType {
     System = 'System',
 }
 
+export const virtualEnvTypes = [
+    EnvironmentType.Poetry,
+    EnvironmentType.Pipenv,
+    EnvironmentType.Venv,
+    EnvironmentType.VirtualEnvWrapper,
+    EnvironmentType.Conda,
+    EnvironmentType.VirtualEnv,
+];
+
 /**
  * The IModuleInstaller implementations.
  */
@@ -68,6 +77,7 @@ export type InterpreterInformation = {
 export type PythonEnvironment = InterpreterInformation & {
     companyDisplayName?: string;
     displayName?: string;
+    detailedDisplayName?: string;
     envType: EnvironmentType;
     envName?: string;
     envPath?: string;

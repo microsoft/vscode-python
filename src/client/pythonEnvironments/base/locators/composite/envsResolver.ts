@@ -6,7 +6,7 @@ import { Event, EventEmitter } from 'vscode';
 import { identifyEnvironment } from '../../../common/environmentIdentifier';
 import { IEnvironmentInfoService } from '../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
-import { getEnvDisplayString } from '../../info/env';
+import { setEnvDisplayString } from '../../info/env';
 import { InterpreterInformation } from '../../info/interpreter';
 import {
     BasicEnvInfo,
@@ -145,6 +145,6 @@ function getResolvedEnv(interpreterInfo: InterpreterInformation, environment: Py
     resolvedEnv.executable.sysPrefix = interpreterInfo.executable.sysPrefix;
     resolvedEnv.arch = interpreterInfo.arch;
     // Display name should be set after all the properties as we need other properties to build display name.
-    resolvedEnv.display = getEnvDisplayString(resolvedEnv);
+    setEnvDisplayString(resolvedEnv);
     return resolvedEnv;
 }

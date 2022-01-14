@@ -88,6 +88,11 @@ suite('Interpreters - Auto Selection', () => {
                     envPath: path.join('some', 'pipenv', 'env'),
                     version: { major: 3, minor: 10, patch: 0 },
                 } as PythonEnvironment,
+                {
+                    envType: EnvironmentType.Pyenv,
+                    envPath: path.join('some', 'pipenv', 'env'),
+                    version: { major: 3, minor: 5, patch: 0 },
+                } as PythonEnvironment,
             ]),
         );
 

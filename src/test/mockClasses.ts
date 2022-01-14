@@ -23,6 +23,10 @@ export class MockOutputChannel implements vscode.OutputChannel {
         this.append('\n');
     }
 
+    public replace(value: string): void {
+        this.output = value;
+    }
+
     public clear() {}
     public show(preservceFocus?: boolean): void;
     public show(column?: vscode.ViewColumn, preserveFocus?: boolean): void;
@@ -39,13 +43,15 @@ export class MockOutputChannel implements vscode.OutputChannel {
 
 export class MockStatusBarItem implements vscode.StatusBarItem {
     backgroundColor: vscode.ThemeColor | undefined;
-    accessibilityInformation?: vscode.AccessibilityInformation | undefined;
+    accessibilityInformation: vscode.AccessibilityInformation | undefined;
     public alignment!: vscode.StatusBarAlignment;
     public priority!: number;
     public text!: string;
     public tooltip!: string;
     public color!: string;
     public command!: string;
+    public id: string = '';
+    public name: string = '';
 
     public show(): void {}
 
