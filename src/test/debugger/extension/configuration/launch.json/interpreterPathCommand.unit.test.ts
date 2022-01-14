@@ -74,4 +74,14 @@ suite('Interpreter Path Command', () => {
         const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
         expect(setting).to.equal('settingValue');
     });
+
+    test('If `args[1]` is not a valid uri', async () => {
+        const args = ['command', '${input:some_input}'];
+        when(configService.getSettings(anything())).thenCall((arg) => {
+            assert.deepEqual(arg, undefined);
+            return { pythonPath: 'settingValue' } as any;
+        });
+        const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
+        expect(setting).to.equal('settingValue');
+    });
 });
