@@ -141,14 +141,15 @@ def build_test_tree(
         if test_id.startswith("unittest.loader._FailedTest"):
             errors.append(test_case._exception.__str__())  # type: ignore
         else:
-            # Get test path components.
-            folders = test_id.split(".")
-            function_name, class_name, filename = folders[:3]
+            # Get the static test path components: filename, class name and function name.
+            components = test_id.split(".")
+            filename, class_name, function_name = components[:3]
             py_filename = f"{filename}.py"
+            folders = components[:-3]
 
             current_node = root
 
-            # Find/build folder nodes.
+            # Find/build nodes for the intermediate folders in the test path.
             for folder in folders:
                 current_node = get_child_node(
                     folder,

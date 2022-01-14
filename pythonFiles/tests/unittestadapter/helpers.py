@@ -27,6 +27,6 @@ def is_same_tree(tree1, tree2) -> bool:
             return all(is_same_tree(*pair) for pair in zip(children1, children2))
     elif "id_" in tree1 and "id_" in tree2:
         # Compare test items.
-        return any(tree1[key] != tree2[key] for key in ["id_", "lineno"])
+        return all(tree1[key] == tree2[key] for key in ["id_", "lineno"])
 
     return False

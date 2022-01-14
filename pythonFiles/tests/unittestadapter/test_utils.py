@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import sys
 import pytest
 
 import unittest
@@ -18,43 +17,36 @@ from unittestadapter.utils import (
 from .helpers import TEST_DATA_PATH, is_same_tree
 
 
-def test_simple_test_cases() -> None:
-    """The get_test_case fuction should return tests from the test suite."""
+@pytest.mark.parametrize(
+    "directory, pattern, expected",
+    [
+        (
+            ".",
+            "utils_simple_cases*",
+            [
+                "utils_simple_cases.CaseOne.test_one",
+                "utils_simple_cases.CaseOne.test_two",
+            ],
+        ),
+        (
+            "utils_nested_cases",
+            "file*",
+            [
+                "file_one.CaseTwoFileOne.test_one",
+                "file_one.CaseTwoFileOne.test_two",
+                "folder.file_two.CaseTwoFileTwo.test_one",
+                "folder.file_two.CaseTwoFileTwo.test_two",
+            ],
+        ),
+    ],
+)
+def test_simple_test_cases(directory, pattern, expected) -> None:
+    """The get_test_case fuction should return tests from all test suites."""
 
-    expected = [
-        "utils_simple_cases.CaseOne.test_one",
-        "utils_simple_cases.CaseOne.test_two",
-    ]
     actual = []
 
-    # Discover tests in .data/utils_simple_cases.py.
-    start_dir = TEST_DATA_PATH.__str__()
-    pattern = "utils_simple_cases*"
-
-    loader = unittest.TestLoader()
-    suite = loader.discover(start_dir, pattern)
-
-    # Iterate on get_test_case and save the test id.
-    for test in get_test_case(suite):
-        actual.append(test.id())
-
-    assert expected == actual
-
-
-def test_nested_test_cases() -> None:
-    """The get_test_case fuction should return tests from all test suites, even those in subfolders."""
-
-    expected = [
-        "file_one.CaseTwoFileOne.test_one",
-        "file_one.CaseTwoFileOne.test_two",
-        "folder.file_two.CaseTwoFileTwo.test_one",
-        "folder.file_two.CaseTwoFileTwo.test_two",
-    ]
-    actual = []
-
-    # Discover tests in .data/utils_nested_cases/.
-    start_dir = PurePath(TEST_DATA_PATH, "utils_nested_cases").__str__()
-    pattern = "file*"
+    # Discover tests in .data/<directory>.
+    start_dir = PurePath(TEST_DATA_PATH, directory).__str__()
 
     loader = unittest.TestLoader()
     suite = loader.discover(start_dir, pattern)
