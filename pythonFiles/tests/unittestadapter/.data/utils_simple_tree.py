@@ -5,8 +5,8 @@ import unittest
 
 
 class TreeOne(unittest.TestCase):
-    """
-    Test class for the test_build_simple_tree test.
+    """Test class for the test_build_simple_tree test.
+
     build_test_tree should build a test tree with these test cases.
     """
 

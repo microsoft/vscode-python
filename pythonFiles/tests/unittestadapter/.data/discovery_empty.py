@@ -5,8 +5,8 @@ import unittest
 
 
 class DiscoveryEmpty(unittest.TestCase):
-    """
-    Test class for the test_empty_discovery test.
+    """Test class for the test_empty_discovery test.
+
     The discover_tests function should return a dictionary with a "success" status, no errors, and no test tree
     if unittest discovery was performed successfully but no tests were found.
     """

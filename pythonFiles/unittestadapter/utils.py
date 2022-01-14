@@ -36,9 +36,7 @@ class TestNode(TestData):
 
 
 def get_test_case(suite):
-    """
-    Iterate through a unittest test suite and return all test cases.
-    """
+    """Iterate through a unittest test suite and return all test cases."""
     for test in suite:
         if isinstance(test, unittest.TestCase):
             yield test
@@ -48,9 +46,7 @@ def get_test_case(suite):
 
 
 def get_source_line(obj) -> str:
-    """
-    Get the line number of a test case start line.
-    """
+    """Get the line number of a test case start line."""
     try:
         sourcelines, lineno = inspect.getsourcelines(obj)
     except:
@@ -70,9 +66,7 @@ def get_source_line(obj) -> str:
 
 
 def build_test_node(path: str, name: str, type_: TestNodeTypeEnum) -> TestNode:
-    """
-    Build a test node with no children. A test node can be a folder, a file or a class.
-    """
+    """Build a test node with no children. A test node can be a folder, a file or a class."""
     return {
         "path": path,
         "name": name,
@@ -84,10 +78,7 @@ def build_test_node(path: str, name: str, type_: TestNodeTypeEnum) -> TestNode:
 def get_child_node(
     name: str, path: str, type_: TestNodeTypeEnum, root: TestNode
 ) -> TestNode:
-    """
-    Find a child node in a test tree given its name and type.
-    If the node doesn't exist, create it.
-    """
+    """Find a child node in a test tree given its name and type. If the node doesn't exist, create it."""
     try:
         result = next(
             node
@@ -104,10 +95,10 @@ def get_child_node(
 def build_test_tree(
     suite: unittest.TestSuite, test_directory: str
 ) -> Tuple[Union[TestNode, None], List[str]]:
-    """
-    Build a test tree from a unittest test suite.
+    """Build a test tree from a unittest test suite.
+
     This function returns the test tree, and any errors found by unittest.
-    If no tests were discovered, return None and a list of errors (if any).
+    If no tests were discovered, return `None` and a list of errors (if any).
 
     Test tree structure:
     {
@@ -150,7 +141,7 @@ def build_test_tree(
         if test_id.startswith("unittest.loader._FailedTest"):
             errors.append(test_case._exception.__str__())  # type: ignore
         else:
-            # Get test path components
+            # Get test path components.
             folders = test_id.split(".")
             function_name, class_name, filename = folders[:3]
             py_filename = f"{filename}.py"
@@ -166,23 +157,23 @@ def build_test_tree(
                     current_node,
                 )
 
-            # Find/build file node
+            # Find/build file node.
             path_components = [test_directory] + folders + [py_filename]
             file_path = pathlib.PurePath("/".join(path_components)).__str__()
             current_node = get_child_node(
                 py_filename, file_path, TestNodeTypeEnum.file, current_node
             )
 
-            # Find/build class node
+            # Find/build class node.
             current_node = get_child_node(
                 class_name, file_path, TestNodeTypeEnum.class_, current_node
             )
 
-            # Get test line number
+            # Get test line number.
             test_method = getattr(test_case, test_case._testMethodName)
             lineno = get_source_line(test_method)
 
-            # Add test
+            # Add test node.
             test_node: TestItem = {
                 "id_": test_id,
                 "name": function_name,

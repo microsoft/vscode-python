@@ -3,6 +3,6 @@
 
 import sys
 
-# Ignore the contents of this folder for Python2 tests.
+# Ignore the contents of this folder for Python 2 tests.
 if sys.version_info[0] < 3:
     collect_ignore_glob = ["*.py"]

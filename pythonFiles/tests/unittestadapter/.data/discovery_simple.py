@@ -5,8 +5,8 @@ import unittest
 
 
 class DiscoverySimple(unittest.TestCase):
-    """
-    Test class for the test_simple_discovery test.
+    """Test class for the test_simple_discovery test.
+
     The discover_tests function should return a dictionary with a "success" status, no errors, and a test tree
     if unittest discovery was performed successfully.
     """

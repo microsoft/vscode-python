@@ -26,12 +26,12 @@ DEFAULT_PORT = 45454
 
 
 def parse_port(args: List[Arguments]) -> int:
+    """Parse command-line arguments that should be processed by the script.
+
+    So far that only includes the port number that it needs to connect to.
+    The port is passed to the discovery.py script when it is executed, and
+    defaults to DEFAULT_PORT if it can't be parsed.
     """
-    Parse command-line arguments that should be processed by the script,
-    for example the port number that it needs to connect to.
-    """
-    # The port is passed to the discovery.py script when it is executed,
-    # defaults to DEFAULT_PORT if it can't be parsed.
     port = DEFAULT_PORT
     for opt in args:
         if opt[0] == "--port":
@@ -40,9 +40,9 @@ def parse_port(args: List[Arguments]) -> int:
 
 
 def parse_unittest_args(args: List[Arguments]) -> Tuple[str, str, Union[str, None]]:
-    """
-    Parse command-line arguments that should be forwarded to unittest.
-    Unittest arguments are: -v, -s, -p, -t.
+    """Parse command-line arguments that should be forwarded to unittest.
+    Valid unittest arguments are: -v, -s, -p, -t and their long-form counterparts,
+    however we only care about the last three.
     """
     pattern: str = "test*.py"
     start_dir: str = "."
@@ -60,12 +60,33 @@ def parse_unittest_args(args: List[Arguments]) -> Tuple[str, str, Union[str, Non
 
 
 def discover_tests(start_dir, pattern, top_level_dir) -> Dict[str, Any]:
-    """
-    Unittest test discovery function, that returns a payload dictionary with the following keys:
+    """Unittest test discovery function, that returns a payload dictionary with the discovery status and results.
+
+    The payload can contain the following keys:
     - cwd: Absolute path to the test start directory;
     - status: Test discovery status, can be "success" or "error";
     - tests: Discoverered tests if any, not present otherwise. Note that the status can be "error" but the payload can still contain tests;
     - errors: Discovery errors if any, not present otherwise.
+
+    Payload format for a successful discovery:
+    {
+        "status": "success",
+        "cwd": <test discovery directory>,
+        "tests": <test tree>
+    }
+
+    Payload format for a successful discovery with no tests:
+    {
+        "status": "success",
+        "cwd": <test discovery directory>,
+    }
+
+    Payload format when there are errors:
+    {
+        "cwd": <test discovery directory>
+        "errors": [list of errors]
+        "status": "error",
+    }
     """
     cwd = os.path.abspath(start_dir)
     payload = {"cwd": cwd, "status": "success"}
@@ -87,33 +108,11 @@ def discover_tests(start_dir, pattern, top_level_dir) -> Dict[str, Any]:
         payload["status"] = "error"
         payload["errors"] = errors
 
-    # Connect to the TypeScript side and send payload.
-
-    # Payload format for a successful discovery:
-    # {
-    #     "status": "success",
-    #     "cwd": <test discovery directory>,
-    #     "tests": <test tree>
-    # }
-
-    # Payload format for a successful discovery with no tests:
-    # {
-    #     "status": "success",
-    #     "cwd": <test discovery directory>,
-    # }
-
-    # Payload format when there are errors:
-    # {
-    #     "cwd": <test discovery directory>
-    #     "errors": [list of errors]
-    #     "status": "error",
-    # }
-
     return payload
 
 
 if __name__ == "__main__":
-    # Get unittest discovery arguments
+    # Get unittest discovery arguments.
     argv = sys.argv[1:]
     index = argv.index("--udiscovery")
 

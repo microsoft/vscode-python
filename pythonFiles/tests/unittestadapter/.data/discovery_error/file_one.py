@@ -7,8 +7,8 @@ import something_else  # type: ignore
 
 
 class DiscoveryErrorOne(unittest.TestCase):
-    """
-    Test class for the test_error_discovery test.
+    """Test class for the test_error_discovery test.
+
     The discover_tests function should return a dictionary with an "error" status, the discovered tests, and a list of errors
     if unittest discovery failed at some point.
     """

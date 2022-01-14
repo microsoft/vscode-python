@@ -17,11 +17,8 @@ from unittestadapter.utils import TestNodeTypeEnum
 from .helpers import TEST_DATA_PATH, is_same_tree
 
 
-@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_parse_port_option() -> None:
-    """
-    The parse_port function should parse and return the port passed as a command-line option.
-    """
+    """The parse_port function should parse and return the port passed as a command-line option."""
     expected = 9999
     args = [("--port", expected)]
 
@@ -30,11 +27,8 @@ def test_parse_port_option() -> None:
     assert expected == actual
 
 
-@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_parse_no_port_option() -> None:
-    """
-    The parse_port function should return a default port value if there was no --port command-line option.
-    """
+    """The parse_port function should return a default port value if there was no --port command-line option."""
     args = [("--foo", "something"), ("--bar", "another")]
 
     actual = parse_port(args)
@@ -42,10 +36,8 @@ def test_parse_no_port_option() -> None:
     assert DEFAULT_PORT == actual
 
 
-@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_parse_short_unittest_args() -> None:
-    """
-    The parse_unittest_args function should return the values for the start_dir, pattern, and top_level_dir arguments
+    """The parse_unittest_args function should return the values for the start_dir, pattern, and top_level_dir arguments
     when passed as command-line options with their shorthand form.
     """
     expected_start_dir = "foo"
@@ -64,10 +56,8 @@ def test_parse_short_unittest_args() -> None:
     assert expected_top_level_dir == actual_top_level_dir
 
 
-@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_parse_long_unittest_args() -> None:
-    """
-    The parse_unittest_args function should return the values for the start_dir, pattern, and top_level_dir arguments
+    """The parse_unittest_args function should return the values for the start_dir, pattern, and top_level_dir arguments
     when passed as command-line options with their long form.
     """
     expected_start_dir = "foo"
@@ -86,10 +76,8 @@ def test_parse_long_unittest_args() -> None:
     assert expected_top_level_dir == actual_top_level_dir
 
 
-@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_parse_no_unittest_args() -> None:
-    """
-    The parse_unittest_args function should return default values for the start_dir, pattern, and top_level_dir arguments
+    """The parse_unittest_args function should return default values for the start_dir, pattern, and top_level_dir arguments
     if they were not passed as command-line options, and ignore unrecognized arguments.
     """
     expected_start_dir = "."
@@ -106,10 +94,8 @@ def test_parse_no_unittest_args() -> None:
     assert expected_top_level_dir == actual_top_level_dir
 
 
-@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_simple_discovery() -> None:
-    """
-    The discover_tests function should return a dictionary with a "success" status, no errors, and a test tree
+    """The discover_tests function should return a dictionary with a "success" status, no errors, and a test tree
     if unittest discovery was performed successfully.
     """
     start_dir = TEST_DATA_PATH.__str__()
@@ -159,10 +145,8 @@ def test_simple_discovery() -> None:
     assert "errors" not in actual
 
 
-@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_empty_discovery() -> None:
-    """
-    The discover_tests function should return a dictionary with a "success" status, no errors, and no test tree
+    """The discover_tests function should return a dictionary with a "success" status, no errors, and no test tree
     if unittest discovery was performed successfully but no tests were found.
     """
     start_dir = TEST_DATA_PATH.__str__()
@@ -175,13 +159,11 @@ def test_empty_discovery() -> None:
     assert "errors" not in actual
 
 
-@pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3 or higher")
 def test_error_discovery() -> None:
-    """
-    The discover_tests function should return a dictionary with an "error" status, the discovered tests, and a list of errors
+    """The discover_tests function should return a dictionary with an "error" status, the discovered tests, and a list of errors
     if unittest discovery failed at some point.
     """
-    # Discover tests in .data/discovery_error/
+    # Discover tests in .data/discovery_error/.
     start_dir = PurePath(TEST_DATA_PATH, "discovery_error").__str__()
     pattern = "file*"
 

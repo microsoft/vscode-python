@@ -5,8 +5,8 @@ import unittest
 
 
 class CaseTwoFileTwo(unittest.TestCase):
-    """
-    Test class for the test_nested_test_cases test.
+    """Test class for the test_nested_test_cases test.
+
     get_test_case should return tests from the test suites in this folder.
     """
 

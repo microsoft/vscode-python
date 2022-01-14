@@ -5,8 +5,8 @@ import unittest
 
 
 class CaseOne(unittest.TestCase):
-    """
-    Test class for the test_simple_test_cases test.
+    """Test class for the test_simple_test_cases test.
+
     get_test_case should return tests from the test suite.
     """
 
