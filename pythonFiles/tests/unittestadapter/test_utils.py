@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import os
 import pathlib
 import unittest
 
@@ -46,7 +47,7 @@ def test_simple_test_cases(directory, pattern, expected) -> None:
     actual = []
 
     # Discover tests in .data/<directory>.
-    start_dir = pathlib.PurePath(TEST_DATA_PATH, directory).__str__()
+    start_dir = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, directory))
 
     loader = unittest.TestLoader()
     suite = loader.discover(start_dir, pattern)
@@ -152,9 +153,9 @@ def test_build_simple_tree() -> None:
     """The build_test_tree function should build and return a test tree from discovered test suites, and an empty list of errors if there are none in the discovered data."""
 
     # Discovery tests in utils_simple_tree.py.
-    start_dir = TEST_DATA_PATH.__str__()
+    start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "utils_simple_tree*"
-    file_path = pathlib.PurePath(TEST_DATA_PATH, "utils_simple_tree.py").__str__()
+    file_path = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, "utils_simple_tree.py"))
 
     expected: TestNode = {
         "path": start_dir,
@@ -203,7 +204,7 @@ def test_build_simple_tree() -> None:
 def test_build_empty_tree() -> None:
     """The build_test_tree function should return None if there are no discovered test suites, and an empty list of errors if there are none in the discovered data."""
 
-    start_dir = TEST_DATA_PATH.__str__()
+    start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "does_not_exist*"
 
     expected = None

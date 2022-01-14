@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import inspect
+import os
 import pathlib
 import unittest
 
@@ -140,7 +141,7 @@ def build_test_tree(
     for test_case in get_test_case(suite):
         test_id = test_case.id()
         if test_id.startswith("unittest.loader._FailedTest"):
-            errors.append(test_case._exception.__str__())  # type: ignore
+            errors.append(str(test_case._exception))  # type: ignore
         else:
             # Get the static test path components: filename, class name and function name.
             components = test_id.split(".")
@@ -154,14 +155,14 @@ def build_test_tree(
             for folder in folders:
                 current_node = get_child_node(
                     folder,
-                    pathlib.PurePath(current_node["path"], folder).__str__(),
+                    os.fsdecode(pathlib.PurePath(current_node["path"], folder)),
                     TestNodeTypeEnum.folder,
                     current_node,
                 )
 
             # Find/build file node.
             path_components = [test_directory] + folders + [py_filename]
-            file_path = pathlib.PurePath("/".join(path_components)).__str__()
+            file_path = os.fsdecode(pathlib.PurePath("/".join(path_components)))
             current_node = get_child_node(
                 py_filename, file_path, TestNodeTypeEnum.file, current_node
             )

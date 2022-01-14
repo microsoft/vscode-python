@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import os
 import pathlib
 
 import pytest
@@ -73,9 +74,9 @@ def test_simple_discovery() -> None:
     """The discover_tests function should return a dictionary with a "success" status, no errors, and a test tree
     if unittest discovery was performed successfully.
     """
-    start_dir = TEST_DATA_PATH.__str__()
+    start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "discovery_simple*"
-    file_path = pathlib.PurePath(TEST_DATA_PATH, "discovery_simple.py").__str__()
+    file_path = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, "discovery_simple.py"))
 
     expected = {
         "path": start_dir,
@@ -124,7 +125,7 @@ def test_empty_discovery() -> None:
     """The discover_tests function should return a dictionary with a "success" status, no errors, and no test tree
     if unittest discovery was performed successfully but no tests were found.
     """
-    start_dir = TEST_DATA_PATH.__str__()
+    start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "discovery_empty*"
 
     actual = discover_tests(start_dir, pattern, None)
@@ -139,10 +140,10 @@ def test_error_discovery() -> None:
     if unittest discovery failed at some point.
     """
     # Discover tests in .data/discovery_error/.
-    start_dir = pathlib.PurePath(TEST_DATA_PATH, "discovery_error").__str__()
+    start_dir = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, "discovery_error"))
     pattern = "file*"
 
-    file_path = pathlib.PurePath(start_dir, "file_two.py").__str__()
+    file_path = os.fsdecode(pathlib.PurePath(start_dir, "file_two.py"))
 
     expected = {
         "path": start_dir,
