@@ -1,15 +1,18 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import argparse
+import enum
 import getopt
 import os
 import sys
 import traceback
 import unittest
+from typing import Any, List, Literal, Optional, Tuple, TypedDict, Union
 
-from typing import Any, Dict, List, Tuple, Union
+from typing_extensions import NotRequired
 
-from .utils import build_test_tree
+from .utils import TestNode, build_test_tree
 
 # Add the lib path to our sys path to find the httpx module.
 EXTENSION_ROOT = os.path.dirname(
@@ -30,38 +33,51 @@ def parse_port(args: List[Arguments]) -> int:
     So far that only includes the port number that it needs to connect to.
     The port is passed to the discovery.py script when it is executed, and
     defaults to DEFAULT_PORT if it can't be parsed.
+    If there are several --port arguments, the value returned by parse_port will be the value of the last --port argument.
     """
-    port = DEFAULT_PORT
-    for opt in args:
-        if opt[0] == "--port":
-            port = opt[1]
-    return port
+    return dict(args).get("--port", DEFAULT_PORT)
 
 
-def parse_unittest_args(args: List[Arguments]) -> Tuple[str, str, Union[str, None]]:
+def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
     """Parse command-line arguments that should be forwarded to unittest.
+
     Valid unittest arguments are: -v, -s, -p, -t and their long-form counterparts,
     however we only care about the last three.
+
+    The returned tuple contains the following items
+    - start_directory: The directory where to start discovery, defaults to .
+    - pattern: The pattern to match test files, defaults to test*.py
+    - top_level_directory: The top-level directory of the project, defaults to None, and unittest will use start_directory behind the scenes.
     """
-    pattern: str = "test*.py"
-    start_dir: str = "."
-    top_level_dir: Union[str, None] = None
 
-    for opt in args:
-        if opt[0] in ("-s", "--start-directory"):
-            start_dir = opt[1]
-        elif opt[0] in ("-p", "--pattern"):
-            pattern = opt[1]
-        elif opt[0] in ("-t", "--top-level-directory"):
-            top_level_dir = opt[1]
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("--start-directory", "-s", default=".")
+    arg_parser.add_argument("--pattern", "-p", default="test*.py")
+    arg_parser.add_argument("--top-level-directory", "-t", default=None)
 
-    return start_dir, pattern, top_level_dir
+    parsed_args, _ = arg_parser.parse_known_args(args)
+
+    return (
+        parsed_args.start_directory,
+        parsed_args.pattern,
+        parsed_args.top_level_directory,
+    )
 
 
-def discover_tests(start_dir, pattern, top_level_dir) -> Dict[str, Any]:
-    """Unittest test discovery function, that returns a payload dictionary with the discovery status and results.
+class PayloadDict(TypedDict):
+    cwd: str
+    status: Literal["success", "error"]
+    tests: NotRequired[TestNode]
+    errors: NotRequired[List[str]]
 
-    The payload can contain the following keys:
+
+def discover_tests(
+    start_dir: str, pattern: str, top_level_dir: Optional[str]
+) -> PayloadDict:
+    """Returns a dictionary containing details of the discovered tests.
+
+    The returned dict has the following keys:
+
     - cwd: Absolute path to the test start directory;
     - status: Test discovery status, can be "success" or "error";
     - tests: Discoverered tests if any, not present otherwise. Note that the status can be "error" but the payload can still contain tests;
@@ -88,7 +104,7 @@ def discover_tests(start_dir, pattern, top_level_dir) -> Dict[str, Any]:
     }
     """
     cwd = os.path.abspath(start_dir)
-    payload = {"cwd": cwd, "status": "success"}
+    payload: PayloadDict = {"cwd": cwd, "status": "success"}
     tests = None
     errors = []
 
@@ -116,16 +132,10 @@ if __name__ == "__main__":
     index = argv.index("--udiscovery")
 
     script_args, _ = getopt.getopt(argv[:index], "", ["port="])
-    unittest_args, _ = getopt.getopt(
-        argv[index + 1 :],
-        "vs:p:t:",
-        ["start-directory=", "pattern=", "top-level-directory="],
-    )
-
-    start_dir, pattern, top_level_dir = parse_unittest_args(unittest_args)
+    start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
 
     # Perform test discovery & send it over.
     payload = discover_tests(start_dir, pattern, top_level_dir)
 
     port = parse_port(script_args)
-    httpx.post(f"http://localhost:{port}", data=payload)
+    httpx.post(f"http://localhost:{port}", data=payload)  # type: ignore

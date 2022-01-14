@@ -54,4 +54,6 @@ sniffio==1.2.0 \
 typing-extensions==4.0.1 \
     --hash=sha256:4ca091dea149f945ec56afb48dae714f21e8692ef22a395223bcd328961b6a0e \
     --hash=sha256:7f001e5ac290a0c0401508864c7ec868be4e701886d5b573a9528ed3973d9d3b
-    # via anyio
+    # via
+    #   -r requirements.in
+    #   anyio

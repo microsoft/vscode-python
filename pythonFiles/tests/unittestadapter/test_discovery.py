@@ -22,12 +22,14 @@ from .helpers import TEST_DATA_PATH, is_same_tree
     [
         ([("--port", 9999)], 9999),
         ([("--foo", "something"), ("--bar", "another")], DEFAULT_PORT),
+        ([("--port", 4444), ("--foo", "something"), ("--port", 9999)], 9999),
     ],
 )
 def test_parse_port_option(args, expected) -> None:
     """The parse_port function should parse and return the port passed as a command-line option.
 
-    If there was no --port command-line option, it should return a default port value.
+    If there was no --port command-line option, it should return the default port value.
+    If there are multiple --port options, the last one wins.
     """
     actual = parse_port(args)
 
@@ -38,30 +40,27 @@ def test_parse_port_option(args, expected) -> None:
     "args, expected",
     [
         (
+            ["-s", "something", "-p", "other*", "-t", "else"],
+            ("something", "other*", "else"),
+        ),
+        (
             [
-                ("-s", "foo"),
-                ("-p", "bar*"),
-                ("-t", "baz"),
+                "--start-directory",
+                "foo",
+                "--pattern",
+                "bar*",
+                "--top-level-directory",
+                "baz",
             ],
             ("foo", "bar*", "baz"),
         ),
         (
-            [
-                ("--start-directory", "foo"),
-                ("--pattern", "bar*"),
-                ("--top-level-directory", "baz"),
-            ],
-            ("foo", "bar*", "baz"),
-        ),
-        (
-            [
-                ("--foo", "something"),
-            ],
+            ["--foo", "something"],
             (".", "test*.py", None),
         ),
     ],
 )
-def test_parse_short_unittest_args(args, expected) -> None:
+def test_parse_unittest_args(args, expected) -> None:
     """The parse_unittest_args function should return values for the start_dir, pattern, and top_level_dir arguments
     when passed as command-line options, and ignore unrecognized arguments.
     """
@@ -117,7 +116,7 @@ def test_simple_discovery() -> None:
     actual = discover_tests(start_dir, pattern, None)
 
     assert actual["status"] == "success"
-    assert is_same_tree(actual["tests"], expected)
+    assert is_same_tree(actual.get("tests"), expected)
     assert "errors" not in actual
 
 
@@ -184,5 +183,5 @@ def test_error_discovery() -> None:
     actual = discover_tests(start_dir, pattern, None)
 
     assert actual["status"] == "error"
-    assert is_same_tree(expected, actual["tests"])
-    assert len(actual["errors"]) == 1
+    assert is_same_tree(expected, actual.get("tests"))
+    assert len(actual.get("errors", [])) == 1

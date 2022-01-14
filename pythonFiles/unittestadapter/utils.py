@@ -1,18 +1,18 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import enum
 import inspect
 import os
 import pathlib
 import unittest
 
-from enum import Enum
 from typing import List, Tuple, TypedDict, Union
 
 # Types
 
 
-class TestNodeTypeEnum(str, Enum):
+class TestNodeTypeEnum(enum.Enum):
     class_ = "class"
     file = "file"
     folder = "folder"
