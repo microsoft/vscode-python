@@ -77,7 +77,7 @@ def discover_tests(start_dir, pattern, top_level_dir) -> Dict[str, Any]:
         suite = loader.discover(start_dir, pattern, top_level_dir)
 
         tests, errors = build_test_tree(suite, cwd)
-    except:
+    except Exception:
         errors.append(traceback.format_exc())
 
     if tests is not None:
@@ -126,7 +126,7 @@ if __name__ == "__main__":
 
     start_dir, pattern, top_level_dir = parse_unittest_args(unittest_args)
 
-    # Perform test discovery & send it over
+    # Perform test discovery & send it over.
     payload = discover_tests(start_dir, pattern, top_level_dir)
 
     port = parse_port(script_args)

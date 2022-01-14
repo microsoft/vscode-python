@@ -152,14 +152,12 @@ def build_test_tree(
         else:
             # Get test path components
             folders = test_id.split(".")
-            function_name = folders.pop()
-            class_name = folders.pop()
-            filename = folders.pop()
+            function_name, class_name, filename = folders[:3]
             py_filename = f"{filename}.py"
 
             current_node = root
 
-            # Find/build folder nodes
+            # Find/build folder nodes.
             for folder in folders:
                 current_node = get_child_node(
                     folder,
@@ -194,7 +192,7 @@ def build_test_tree(
             }
             current_node["children"].append(test_node)
 
-    if len(root["children"]) == 0:
+    if not root["children"]:
         root = None
 
     return root, errors
