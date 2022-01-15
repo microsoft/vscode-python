@@ -5,7 +5,6 @@ import os
 import pathlib
 
 import pytest
-
 from unittestadapter.discovery import (
     DEFAULT_PORT,
     discover_tests,
@@ -20,9 +19,9 @@ from .helpers import TEST_DATA_PATH, is_same_tree
 @pytest.mark.parametrize(
     "args, expected",
     [
-        ([("--port", 9999)], 9999),
-        ([("--foo", "something"), ("--bar", "another")], DEFAULT_PORT),
-        ([("--port", 4444), ("--foo", "something"), ("--port", 9999)], 9999),
+        (["--port", "6767"], 6767),
+        (["--foo", "something", "--bar", "another"], int(DEFAULT_PORT)),
+        (["--port", "4444", "--foo", "something", "--port", "9999"], 9999),
     ],
 )
 def test_parse_port_option(args, expected) -> None:

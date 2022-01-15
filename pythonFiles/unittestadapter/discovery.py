@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import argparse
-import enum
 import getopt
 import os
 import sys
@@ -22,12 +21,10 @@ sys.path.insert(0, os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python"))
 
 import httpx
 
-Arguments = Tuple[str, Any]
-
-DEFAULT_PORT = 45454
+DEFAULT_PORT = "45454"
 
 
-def parse_port(args: List[Arguments]) -> int:
+def parse_port(args: List[str]) -> int:
     """Parse command-line arguments that should be processed by the script.
 
     So far that only includes the port number that it needs to connect to.
@@ -35,7 +32,11 @@ def parse_port(args: List[Arguments]) -> int:
     defaults to DEFAULT_PORT if it can't be parsed.
     If there are several --port arguments, the value returned by parse_port will be the value of the last --port argument.
     """
-    return dict(args).get("--port", DEFAULT_PORT)
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("--port", default=DEFAULT_PORT)
+    parsed_args, _ = arg_parser.parse_known_args(args)
+
+    return int(parsed_args.port)
 
 
 def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
@@ -131,11 +132,10 @@ if __name__ == "__main__":
     argv = sys.argv[1:]
     index = argv.index("--udiscovery")
 
-    script_args, _ = getopt.getopt(argv[:index], "", ["port="])
     start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
 
     # Perform test discovery & send it over.
     payload = discover_tests(start_dir, pattern, top_level_dir)
 
-    port = parse_port(script_args)
+    port = parse_port(argv[:index])
     httpx.post(f"http://localhost:{port}", data=payload)  # type: ignore

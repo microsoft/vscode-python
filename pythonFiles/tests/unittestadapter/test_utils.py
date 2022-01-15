@@ -6,7 +6,6 @@ import pathlib
 import unittest
 
 import pytest
-
 from unittestadapter.utils import (
     TestNode,
     TestNodeTypeEnum,
@@ -95,12 +94,11 @@ def test_get_existing_child_node() -> None:
         ],
     }
 
-    initial_len = len(tree["children"])
-    result = get_child_node("childTwo", "child/two", TestNodeTypeEnum.folder, tree)
-    post_len = len(tree["children"])
+    get_child_node("childTwo", "child/two", TestNodeTypeEnum.folder, tree)
+    tree_copy = tree.copy()
 
-    assert result is not None
-    assert initial_len == post_len
+    # Check that the tree didn't get mutated by get_child_node.
+    assert is_same_tree(tree, tree_copy)
 
 
 def test_no_existing_child_node() -> None:
@@ -139,14 +137,21 @@ def test_no_existing_child_node() -> None:
         ],
     }
 
-    initial_len = len(tree["children"])
-    result = get_child_node("childThree", "child/three", TestNodeTypeEnum.folder, tree)
-    post_len = len(tree["children"])
-    last_child = tree["children"][-1]
+    # Make a separate copy of tree["children"].
+    tree_before = tree.copy()
+    tree_before["children"] = tree["children"][:]
 
-    assert result is not None
+    get_child_node("childThree", "child/three", TestNodeTypeEnum.folder, tree)
+
+    tree_after = tree.copy()
+    tree_after["children"] = tree_after["children"][:-1]
+
+    # Check that all pre-existing items in the tree didn't get mutated by get_child_node.
+    assert is_same_tree(tree_before, tree_after)
+
+    # Check for the added node.
+    last_child = tree["children"][-1]
     assert last_child["name"] == "childThree"
-    assert initial_len < post_len
 
 
 def test_build_simple_tree() -> None:
