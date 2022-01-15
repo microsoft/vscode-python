@@ -46,7 +46,7 @@ def test_simple_test_cases(directory, pattern, expected) -> None:
     actual = []
 
     # Discover tests in .data/<directory>.
-    start_dir = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, directory))
+    start_dir = os.fsdecode(TEST_DATA_PATH / directory)
 
     loader = unittest.TestLoader()
     suite = loader.discover(start_dir, pattern)

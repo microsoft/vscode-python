@@ -3,7 +3,7 @@
 
 import pathlib
 
-TEST_DATA_PATH = pathlib.Path(pathlib.Path(__file__).parent, ".data")
+TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 
 
 def is_same_tree(tree1, tree2) -> bool:

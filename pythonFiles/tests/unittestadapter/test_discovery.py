@@ -74,7 +74,7 @@ def test_simple_discovery() -> None:
     """
     start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "discovery_simple*"
-    file_path = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, "discovery_simple.py"))
+    file_path = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH / "discovery_simple.py"))
 
     expected = {
         "path": start_dir,
@@ -138,10 +138,11 @@ def test_error_discovery() -> None:
     if unittest discovery failed at some point.
     """
     # Discover tests in .data/discovery_error/.
-    start_dir = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, "discovery_error"))
+    start_path = pathlib.PurePath(TEST_DATA_PATH / "discovery_error")
+    start_dir = os.fsdecode(start_path)
     pattern = "file*"
 
-    file_path = os.fsdecode(pathlib.PurePath(start_dir, "file_two.py"))
+    file_path = os.fsdecode(start_path / "file_two.py")
 
     expected = {
         "path": start_dir,
