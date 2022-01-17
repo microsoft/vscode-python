@@ -135,10 +135,10 @@
                     {
                         "id": "python.createPythonFile",
                         "title": "Create a Python file",
-                        "description": "Create a new file and save it as \".py\" to start with your Python development. \n[Create Python File](command:toSide:workbench.action.files.newUntitledFile)",
+                        "description": "[Open](command:toSide:workbench.action.files.openFile) or [create](command:toSide:workbench.action.files.newUntitledFile) a Python file - make sure to save it as \".py\".",
                         "media": {
                             "svg": "resources/walkthrough/open-folder.svg",
-                            "altText": "Open a a Python file or a folder with a Python project."
+                            "altText": "Open a Python file or a folder with a Python project."
                         },
                         "when": ""
                     },
