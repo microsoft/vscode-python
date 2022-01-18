@@ -4,12 +4,15 @@
 import * as typemoq from 'typemoq';
 import { expect } from 'chai';
 import { Uri } from 'vscode';
-import { IProposedExtensionAPI } from '../client/apiTypes';
+import { InterpreterDetails, IProposedExtensionAPI } from '../client/apiTypes';
 import { IConfigurationService, IInterpreterPathService, IPythonSettings } from '../client/common/types';
 import { IComponentAdapter } from '../client/interpreter/contracts';
 import { IServiceContainer } from '../client/ioc/types';
 import { buildProposedApi } from '../client/proposedApi';
 import { IDiscoveryAPI } from '../client/pythonEnvironments/base/locator';
+import { EnvironmentType } from '../client/pythonEnvironments/info';
+import { PythonEnvKind, PythonEnvSource } from '../client/pythonEnvironments/base/info';
+import { Architecture } from '../client/common/utils/platform';
 
 suite('Proposed Extension API', () => {
     let serviceContainer: typemoq.IMock<IServiceContainer>;
@@ -56,7 +59,7 @@ suite('Proposed Extension API', () => {
         discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
         pyenvs.setup((p) => p.getInterpreterDetails(typemoq.It.isAny())).returns(() => Promise.resolve(undefined));
 
-        const pythonPath = 'this/is/a/test/path';
+        const pythonPath = 'this/is/a/test/path (without cache)';
         const actual = await proposed.environment.getInterpreterDetails(pythonPath);
         expect(actual).to.be.equal(undefined);
     });
@@ -68,5 +71,141 @@ suite('Proposed Extension API', () => {
         const pythonPath = 'this/is/a/test/path';
         const actual = await proposed.environment.getInterpreterDetails(pythonPath, { useCache: true });
         expect(actual).to.be.equal(undefined);
+    });
+
+    test('getInterpreterDetails: without cache', async () => {
+        const pythonPath = 'this/is/a/test/path';
+
+        const expected: InterpreterDetails = {
+            path: pythonPath,
+            version: ['3', '9', '0'],
+            environmentType: [`${EnvironmentType.System}`],
+            metadata: {
+                sysPrefix: 'prefix/path',
+                bitness: Architecture.x64,
+            },
+        };
+
+        discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
+        pyenvs
+            .setup((p) => p.getInterpreterDetails(pythonPath))
+            .returns(() =>
+                Promise.resolve({
+                    path: pythonPath,
+                    version: {
+                        raw: '3.9.0',
+                        major: 3,
+                        minor: 9,
+                        patch: 0,
+                        build: [],
+                        prerelease: [],
+                    },
+                    envType: EnvironmentType.System,
+                    architecture: Architecture.x64,
+                    sysPrefix: 'prefix/path',
+                }),
+            );
+
+        const actual = await proposed.environment.getInterpreterDetails(pythonPath, { useCache: false });
+        expect(actual).to.be.deep.equal(expected);
+    });
+
+    test('getInterpreterDetails: from cache', async () => {
+        const pythonPath = 'this/is/a/test/path';
+
+        const expected: InterpreterDetails = {
+            path: pythonPath,
+            version: ['3', '9', '0'],
+            environmentType: [`${PythonEnvKind.System}`],
+            metadata: {
+                sysPrefix: 'prefix/path',
+                bitness: Architecture.x64,
+            },
+        };
+
+        discoverAPI
+            .setup((d) => d.getEnvs())
+            .returns(() => [
+                {
+                    executable: {
+                        filename: pythonPath,
+                        ctime: 1,
+                        mtime: 2,
+                        sysPrefix: 'prefix/path',
+                    },
+                    version: {
+                        major: 3,
+                        minor: 9,
+                        micro: 0,
+                    },
+                    kind: PythonEnvKind.System,
+                    arch: Architecture.x64,
+                    name: '',
+                    location: '',
+                    source: [PythonEnvSource.PathEnvVar],
+                    distro: {
+                        org: '',
+                    },
+                },
+            ]);
+        pyenvs
+            .setup((p) => p.getInterpreterDetails(pythonPath))
+            .returns(() =>
+                Promise.resolve({
+                    path: pythonPath,
+                    version: {
+                        raw: '3.9.0',
+                        major: 3,
+                        minor: 9,
+                        patch: 0,
+                        build: [],
+                        prerelease: [],
+                    },
+                    envType: EnvironmentType.System,
+                    architecture: Architecture.x64,
+                    sysPrefix: 'prefix/path',
+                }),
+            );
+
+        const actual = await proposed.environment.getInterpreterDetails(pythonPath, { useCache: true });
+        expect(actual).to.be.deep.equal(expected);
+    });
+
+    test('getInterpreterDetails: cache miss', async () => {
+        const pythonPath = 'this/is/a/test/path';
+
+        const expected: InterpreterDetails = {
+            path: pythonPath,
+            version: ['3', '9', '0'],
+            environmentType: [`${EnvironmentType.System}`],
+            metadata: {
+                sysPrefix: 'prefix/path',
+                bitness: Architecture.x64,
+            },
+        };
+
+        // Force this API to return empty to cause a cache miss.
+        discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
+        pyenvs
+            .setup((p) => p.getInterpreterDetails(pythonPath))
+            .returns(() =>
+                Promise.resolve({
+                    path: pythonPath,
+                    version: {
+                        raw: '3.9.0',
+                        major: 3,
+                        minor: 9,
+                        patch: 0,
+                        build: [],
+                        prerelease: [],
+                    },
+                    envType: EnvironmentType.System,
+                    architecture: Architecture.x64,
+                    sysPrefix: 'prefix/path',
+                }),
+            );
+
+        const actual = await proposed.environment.getInterpreterDetails(pythonPath, { useCache: true });
+        expect(actual).to.be.deep.equal(expected);
     });
 });

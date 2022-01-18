@@ -27,13 +27,14 @@ export function reportActiveInterpreterChanged(e: ActiveInterpreterChangedParams
 }
 
 function getVersionString(env: PythonEnvInfo): string[] {
-    return [
-        `${env.version.major}`,
-        `${env.version.minor}`,
-        `${env.version.micro}`,
-        `${env.version.release ?? ''}`,
-        `${env.version.sysVersion ?? ''}`,
-    ];
+    const ver = [`${env.version.major}`, `${env.version.minor}`, `${env.version.micro}`];
+    if (env.version.release) {
+        ver.push(`${env.version.release}`);
+        if (env.version.sysVersion) {
+            ver.push(`${env.version.release}`);
+        }
+    }
+    return ver;
 }
 
 function getVersionString2(env: PythonEnvironment): string[] {
@@ -69,6 +70,7 @@ export function buildProposedApi(
                             environmentType: [`${interpreter.kind}`],
                             metadata: {
                                 sysPrefix: interpreter.executable.sysPrefix,
+                                bitness: interpreter.arch,
                             },
                         };
                     }
@@ -82,6 +84,7 @@ export function buildProposedApi(
                         environmentType: [`${interpreter.envType}`],
                         metadata: {
                             sysPrefix: interpreter.sysPrefix,
+                            bitness: interpreter.architecture,
                         },
                     };
                 }
