@@ -37,7 +37,7 @@ suite('Workspace test adapter', () => {
                 }),
             } as unknown) as IConfigurationService;
 
-            // For some reason the 'tests' namespace in the proposed API is not reachable.
+            // For some reason the 'tests' namespace in vscode returns undefined.
             // While I figure out how to expose to the tests, they will run
             // against a stub test controller and stub test items.
             const testItem = ({
@@ -185,7 +185,7 @@ suite('Workspace test adapter', () => {
         });
 
         /**
-         * To test:
+         * TODO To test:
          * - successful discovery but no data: delete everything from the test controller
          * - successful discovery with error status: add error node to tree
          * - single root: populate tree if there's no root node
