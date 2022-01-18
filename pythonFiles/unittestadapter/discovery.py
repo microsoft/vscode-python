@@ -2,24 +2,25 @@
 # Licensed under the MIT License.
 
 import argparse
-import getopt
+import json
 import os
 import sys
 import traceback
 import unittest
-from typing import Any, List, Literal, Optional, Tuple, TypedDict, Union
+from typing import List, Literal, Optional, Tuple, TypedDict, Union
+
+from utils import TestNode, build_test_tree
+
+# Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
+PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, PYTHON_FILES)
+
+from testing_tools import socket_manager
+
+# Add the lib path to sys.path to find the typing_extensions module.
+sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
 
 from typing_extensions import NotRequired
-
-from .utils import TestNode, build_test_tree
-
-# Add the lib path to our sys path to find the httpx module.
-EXTENSION_ROOT = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-)
-sys.path.insert(0, os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python"))
-
-import httpx
 
 DEFAULT_PORT = "45454"
 
@@ -134,8 +135,19 @@ if __name__ == "__main__":
 
     start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
 
-    # Perform test discovery & send it over.
+    # Perform test discovery.
     payload = discover_tests(start_dir, pattern, top_level_dir)
 
     port = parse_port(argv[:index])
-    httpx.post(f"http://localhost:{port}", data=payload)  # type: ignore
+    addr = ('localhost', port)
+
+    # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
+    with socket_manager.SocketManager(addr) as s:
+        data = json.dumps(payload)
+        request = f"""POST / HTTP/1.1
+Host: localhost:{port}
+Content-Length: {len(data)}
+Content-Type: application/json
+
+{data}"""
+        result = s.socket.sendall(request.encode("utf-8")) # type: ignore
