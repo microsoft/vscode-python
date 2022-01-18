@@ -208,4 +208,61 @@ suite('Proposed Extension API', () => {
         const actual = await proposed.environment.getInterpreterDetails(pythonPath, { useCache: true });
         expect(actual).to.be.deep.equal(expected);
     });
+
+    test('getInterpreterPaths: no pythons found', async () => {
+        discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
+        const actual = await proposed.environment.getInterpreterPaths();
+        expect(actual).to.be.deep.equal([]);
+    });
+
+    test('getInterpreterPaths: python found', async () => {
+        discoverAPI
+            .setup((d) => d.getEnvs())
+            .returns(() => [
+                {
+                    executable: {
+                        filename: 'this/is/a/test/python/path1',
+                        ctime: 1,
+                        mtime: 2,
+                        sysPrefix: 'prefix/path',
+                    },
+                    version: {
+                        major: 3,
+                        minor: 9,
+                        micro: 0,
+                    },
+                    kind: PythonEnvKind.System,
+                    arch: Architecture.x64,
+                    name: '',
+                    location: '',
+                    source: [PythonEnvSource.PathEnvVar],
+                    distro: {
+                        org: '',
+                    },
+                },
+                {
+                    executable: {
+                        filename: 'this/is/a/test/python/path2',
+                        ctime: 1,
+                        mtime: 2,
+                        sysPrefix: 'prefix/path',
+                    },
+                    version: {
+                        major: 3,
+                        minor: 10,
+                        micro: 0,
+                    },
+                    kind: PythonEnvKind.Venv,
+                    arch: Architecture.x64,
+                    name: '',
+                    location: '',
+                    source: [PythonEnvSource.PathEnvVar],
+                    distro: {
+                        org: '',
+                    },
+                },
+            ]);
+        const actual = await proposed.environment.getInterpreterPaths();
+        expect(actual).to.be.deep.equal(['this/is/a/test/python/path1', 'this/is/a/test/python/path2']);
+    });
 });
