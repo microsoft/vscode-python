@@ -18,7 +18,13 @@
     },
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
-    "enabledApiProposals": ["languageStatus", "quickPickSortByLabel", "quickPickSeparators", "testObserver", "notebookEditor"],
+    "enabledApiProposals": [
+        "languageStatus",
+        "quickPickSortByLabel",
+        "quickPickSeparators",
+        "testObserver",
+        "notebookEditor"
+    ],
     "author": {
         "name": "Microsoft Corporation"
     },
