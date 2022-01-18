@@ -40,72 +40,88 @@ suite('ProcessLogger suite', () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess('test', ['--foo', '--bar'], options);
 
-        traceInfoStub.calledOnceWithExactly(`> test --foo --bar`);
-        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${options.cwd}`);
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `> test --foo --bar`);
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `${Logging.currentWorkingDirectory()} ${options.cwd}`);
     });
 
     test('Logger adds quotes around arguments if they contain spaces', async () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess('test', ['--foo', '--bar', 'import test'], options);
 
-        traceInfoStub.calledOnceWithExactly(`> test --foo --bar "import test"`);
-        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${path.join('debug', 'path')}`);
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `> test --foo --bar "import test"`);
+        sinon.assert.calledOnceWithExactly(
+            traceInfoStub,
+            `${Logging.currentWorkingDirectory()} ${path.join('debug', 'path')}`,
+        );
     });
 
     test('Logger preserves quotes around arguments if they contain spaces', async () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess('test', ['--foo', '--bar', '"import test"'], options);
 
-        traceInfoStub.calledOnceWithExactly(`> test --foo --bar "import test"`);
-        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${path.join('debug', 'path')}`);
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `> test --foo --bar "import test"`);
+        sinon.assert.calledOnceWithExactly(
+            traceInfoStub,
+            `${Logging.currentWorkingDirectory()} ${path.join('debug', 'path')}`,
+        );
     });
 
     test('Logger converts single quotes around arguments to double quotes if they contain spaces', async () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess('test', ['--foo', '--bar', "'import test'"], options);
 
-        traceInfoStub.calledOnceWithExactly(`> test --foo --bar "import test"`);
-        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${path.join('debug', 'path')}`);
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `> test --foo --bar "import test"`);
+        sinon.assert.calledOnceWithExactly(
+            traceInfoStub,
+            `${Logging.currentWorkingDirectory()} ${path.join('debug', 'path')}`,
+        );
     });
 
     test('Logger removes single quotes around arguments if they do not contain spaces', async () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess('test', ['--foo', '--bar', "'importtest'"], options);
 
-        traceInfoStub.calledOnceWithExactly(`> test --foo --bar importtest`);
-        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${path.join('debug', 'path')}`);
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `> test --foo --bar importtest`);
+        sinon.assert.calledOnceWithExactly(
+            traceInfoStub,
+            `${Logging.currentWorkingDirectory()} ${path.join('debug', 'path')}`,
+        );
     });
 
     test('Logger replaces the path/to/home with ~ in the current working directory', async () => {
         const options = { cwd: path.join(untildify('~'), 'debug', 'path') };
         logger.logProcess('test', ['--foo', '--bar'], options);
 
-        traceInfoStub.calledOnceWithExactly(`> test --foo --bar`);
-        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${path.join('~', 'debug', 'path')}`);
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `> test --foo --bar`);
+        sinon.assert.calledOnceWithExactly(
+            traceInfoStub,
+            `${Logging.currentWorkingDirectory()} ${path.join('~', 'debug', 'path')}`,
+        );
     });
 
     test('Logger replaces the path/to/home with ~ in the command path', async () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
 
-        traceInfoStub.calledOnceWithExactly(`> ${path.join('~', 'test')} --foo --bar`);
-        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${options.cwd}`);
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `> ${path.join('~', 'test')} --foo --bar`);
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `${Logging.currentWorkingDirectory()} ${options.cwd}`);
     });
 
     test('Logger replaces the path/to/home with ~ if shell command is provided', async () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess(`"${path.join(untildify('~'), 'test')}" "--foo" "--bar"`, undefined, options);
 
-        traceInfoStub.calledOnceWithExactly(`> "${path.join('~', 'test')}" "--foo" "--bar"`);
-        traceInfoStub.calledOnceWithExactly(`${Logging.currentWorkingDirectory()} ${options.cwd}`);
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `> "${path.join('~', 'test')}" "--foo" "--bar"`);
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `${Logging.currentWorkingDirectory()} ${options.cwd}`);
     });
 
     test('Logger replaces the path to workspace with . if exactly one workspace folder is opened', async () => {
         const options = { cwd: path.join('path', 'to', 'workspace', 'debug', 'path') };
         logger.logProcess(`"${path.join('path', 'to', 'workspace', 'test')}" "--foo" "--bar"`, undefined, options);
 
-        traceInfoStub.calledOnceWithExactly(`> ".${path.sep}test" "--foo" "--bar"`);
-        traceInfoStub.calledOnceWithExactly(
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `> ".${path.sep}test" "--foo" "--bar"`);
+        sinon.assert.calledOnceWithExactly(
+            traceInfoStub,
             `${Logging.currentWorkingDirectory()} .${path.sep + path.join('debug', 'path')}`,
         );
     });
@@ -118,8 +134,9 @@ suite('ProcessLogger suite', () => {
 
         logger.logProcess(`"${path.join('path', 'to', 'workspace', 'test')}" "--foo" "--bar"`, undefined, options);
 
-        traceInfoStub.calledOnceWithExactly(`> ".${path.sep}test" "--foo" "--bar"`);
-        traceInfoStub.calledOnceWithExactly(
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `> ".${path.sep}test" "--foo" "--bar"`);
+        sinon.assert.calledOnceWithExactly(
+            traceInfoStub,
             `${Logging.currentWorkingDirectory()} .${path.sep + path.join('debug', 'path')}`,
         );
         traceInfoStub.resetHistory();
@@ -127,8 +144,9 @@ suite('ProcessLogger suite', () => {
         options = { cwd: path.join('path\\to\\workspace', 'debug', 'path') };
         logger.logProcess(`"${path.join('path', 'to', 'workspace', 'test')}" "--foo" "--bar"`, undefined, options);
 
-        traceInfoStub.calledOnceWithExactly(`> ".${path.sep}test" "--foo" "--bar"`);
-        traceInfoStub.calledOnceWithExactly(
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `> ".${path.sep}test" "--foo" "--bar"`);
+        sinon.assert.calledOnceWithExactly(
+            traceInfoStub,
             `${Logging.currentWorkingDirectory()} .${path.sep + path.join('debug', 'path')}`,
         );
     });
@@ -136,13 +154,13 @@ suite('ProcessLogger suite', () => {
     test("Logger doesn't display the working directory line if there is no options parameter", async () => {
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar']);
 
-        traceInfoStub.calledOnceWithExactly(`> ${path.join('~', 'test')} --foo --bar`);
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `> ${path.join('~', 'test')} --foo --bar`);
     });
 
     test("Logger doesn't display the working directory line if there is no cwd key in the options parameter", async () => {
         const options = {};
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
 
-        traceInfoStub.calledOnceWithExactly(`> ${path.join('~', 'test')} --foo --bar\n`);
+        sinon.assert.calledOnceWithExactly(traceInfoStub, `> ${path.join('~', 'test')} --foo --bar\n`);
     });
 });
