@@ -52,6 +52,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
         return iterator;
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private async *iterEnvsIterator(
         iterator: IPythonEnvsIterator<BasicEnvInfo>,
         didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
@@ -73,10 +74,9 @@ export class PythonEnvsResolver implements IResolvingLocator {
                         'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in resolver',
                     );
                 } else if (seen[event.index] !== undefined) {
-                    const old = seen[event.index];
+                    // const old = seen[event.index];
                     seen[event.index] = await resolveBasicEnv(event.update);
-                    didUpdate.fire({ old, index: event.index, update: seen[event.index] });
-                    this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
+                    // this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
                 } else {
                     // This implies a problem in a downstream locator
                     traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
@@ -91,7 +91,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
             const currEnv = await resolveBasicEnv(result.value);
             seen.push(currEnv);
             yield currEnv;
-            this.resolveInBackground(seen.indexOf(currEnv), state, didUpdate, seen).ignoreErrors();
+            // this.resolveInBackground(seen.indexOf(currEnv), state, didUpdate, seen).ignoreErrors();
             result = await iterator.next();
         }
         if (iterator.onUpdated === undefined) {
@@ -100,28 +100,28 @@ export class PythonEnvsResolver implements IResolvingLocator {
         }
     }
 
-    private async resolveInBackground(
-        envIndex: number,
-        state: { done: boolean; pending: number },
-        didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
-        seen: PythonEnvInfo[],
-    ) {
-        state.pending += 1;
-        // It's essential we increment the pending call count before any asynchronus calls in this method.
-        // We want this to be run even when `resolveInBackground` is called in background.
-        const info = await this.environmentInfoService.getEnvironmentInfo(seen[envIndex]);
-        const old = seen[envIndex];
-        if (info) {
-            const resolvedEnv = getResolvedEnv(info, seen[envIndex]);
-            seen[envIndex] = resolvedEnv;
-            didUpdate.fire({ old, index: envIndex, update: resolvedEnv });
-        } else {
-            // Send update that the environment is not valid.
-            didUpdate.fire({ old, index: envIndex, update: undefined });
-        }
-        state.pending -= 1;
-        checkIfFinishedAndNotify(state, didUpdate);
-    }
+    // private async resolveInBackground(
+    //     envIndex: number,
+    //     state: { done: boolean; pending: number },
+    //     didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
+    //     seen: PythonEnvInfo[],
+    // ) {
+    //     state.pending += 1;
+    //     // It's essential we increment the pending call count before any asynchronus calls in this method.
+    //     // We want this to be run even when `resolveInBackground` is called in background.
+    //     const info = await this.environmentInfoService.getEnvironmentInfo(seen[envIndex]);
+    //     const old = seen[envIndex];
+    //     if (info) {
+    //         const resolvedEnv = getResolvedEnv(info, seen[envIndex]);
+    //         seen[envIndex] = resolvedEnv;
+    //         didUpdate.fire({ old, index: envIndex, update: resolvedEnv });
+    //     } else {
+    //         // Send update that the environment is not valid.
+    //         didUpdate.fire({ old, index: envIndex, update: undefined });
+    //     }
+    //     state.pending -= 1;
+    //     checkIfFinishedAndNotify(state, didUpdate);
+    // }
 }
 
 /**
