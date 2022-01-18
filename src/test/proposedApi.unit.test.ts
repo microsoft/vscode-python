@@ -3,7 +3,7 @@
 
 import * as typemoq from 'typemoq';
 import { expect } from 'chai';
-import { Uri } from 'vscode';
+import { ConfigurationTarget, Uri } from 'vscode';
 import { InterpreterDetails, IProposedExtensionAPI } from '../client/apiTypes';
 import { IConfigurationService, IInterpreterPathService, IPythonSettings } from '../client/common/types';
 import { IComponentAdapter } from '../client/interpreter/contracts';
@@ -264,5 +264,27 @@ suite('Proposed Extension API', () => {
             ]);
         const actual = await proposed.environment.getInterpreterPaths();
         expect(actual).to.be.deep.equal(['this/is/a/test/python/path1', 'this/is/a/test/python/path2']);
+    });
+
+    test('setActiveInterpreter: no resource', async () => {
+        interpreterPathService
+            .setup((i) => i.update(undefined, ConfigurationTarget.Workspace, 'this/is/a/test/python/path'))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+
+        await proposed.environment.setActiveInterpreter('this/is/a/test/python/path');
+
+        interpreterPathService.verifyAll();
+    });
+    test('setActiveInterpreter: with resource', async () => {
+        const resource = Uri.parse('a');
+        interpreterPathService
+            .setup((i) => i.update(resource, ConfigurationTarget.Workspace, 'this/is/a/test/python/path'))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+
+        await proposed.environment.setActiveInterpreter('this/is/a/test/python/path', resource);
+
+        interpreterPathService.verifyAll();
     });
 });
