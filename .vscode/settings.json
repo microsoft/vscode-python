@@ -23,7 +23,10 @@
         ".vscode test": true
     },
     "[python]": {
-        "editor.formatOnSave": true
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+        }
     },
     "[typescript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
