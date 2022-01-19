@@ -287,4 +287,72 @@ suite('Proposed Extension API', () => {
 
         interpreterPathService.verifyAll();
     });
+
+    test('refreshInterpreters: common scenario', async () => {
+        discoverAPI
+            .setup((d) => d.triggerRefresh(undefined))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+        discoverAPI
+            .setup((d) => d.getEnvs())
+            .returns(() => [
+                {
+                    executable: {
+                        filename: 'this/is/a/test/python/path1',
+                        ctime: 1,
+                        mtime: 2,
+                        sysPrefix: 'prefix/path',
+                    },
+                    version: {
+                        major: 3,
+                        minor: 9,
+                        micro: 0,
+                    },
+                    kind: PythonEnvKind.System,
+                    arch: Architecture.x64,
+                    name: '',
+                    location: '',
+                    source: [PythonEnvSource.PathEnvVar],
+                    distro: {
+                        org: '',
+                    },
+                },
+                {
+                    executable: {
+                        filename: 'this/is/a/test/python/path2',
+                        ctime: 1,
+                        mtime: 2,
+                        sysPrefix: 'prefix/path',
+                    },
+                    version: {
+                        major: 3,
+                        minor: 10,
+                        micro: 0,
+                    },
+                    kind: PythonEnvKind.Venv,
+                    arch: Architecture.x64,
+                    name: '',
+                    location: '',
+                    source: [PythonEnvSource.PathEnvVar],
+                    distro: {
+                        org: '',
+                    },
+                },
+            ]);
+
+        const actual = await proposed.environment.refreshInterpreters();
+        expect(actual).to.be.deep.equal(['this/is/a/test/python/path1', 'this/is/a/test/python/path2']);
+        discoverAPI.verifyAll();
+    });
+
+    test('getRefreshPromise: common scenario', () => {
+        const expected = Promise.resolve();
+        discoverAPI.setup((d) => d.refreshPromise).returns(() => expected);
+        const actual = proposed.environment.getRefreshPromise();
+
+        // We are comparing instances here, they should be the same instance.
+        // So '==' is ok here.
+        // eslint-disable-next-line eqeqeq
+        expect(actual == expected).is.equal(true);
+    });
 });
