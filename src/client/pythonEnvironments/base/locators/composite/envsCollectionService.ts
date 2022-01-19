@@ -6,6 +6,7 @@ import '../../../../common/extensions';
 import { createDeferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
 import { traceError } from '../../../../logging';
+import { reportInterpretersChanged } from '../../../../proposedApi';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { PythonEnvInfo } from '../../info';
@@ -91,6 +92,13 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     private startRefresh(query: PythonLocatorQuery | undefined): Promise<void> {
         const stopWatch = new StopWatch();
         const deferred = createDeferred<void>();
+
+        if (!query) {
+            // `undefined` query means this is full refresh of environments.
+            // Trigger an event indicating that we need to clear everything and start
+            // fresh.
+            reportInterpretersChanged([{ path: undefined, type: 'clear-all' }]);
+        }
         // Ensure we set this before we trigger the promise to accurately track when a refresh has started.
         this.refreshPromises.set(query, deferred.promise);
         this.refreshStarted.fire();

@@ -149,7 +149,8 @@ export interface IProposedExtensionAPI {
         setActiveInterpreter(interpreterPath: string, resource?: Resource): Promise<void>;
         /**
          * This API will re-trigger environment discovery. Extensions can wait on the returned
-         * promise to get the updated interpreters list.
+         * promise to get the updated interpreters list. If there is a refresh already going on
+         * then it returns the promise for that refresh.
          */
         refreshInterpreters(): Promise<string[] | undefined>;
         /**
@@ -159,7 +160,7 @@ export interface IProposedExtensionAPI {
         getRefreshPromise(): Promise<void> | undefined;
         /**
          * This event is triggered when the known interpreters list changes, like when a interpreter
-         * is found, or existing interpreter is removed.
+         * is found, existing interpreter is removed, or some details changed on an interpreter.
          */
         onDidInterpretersChanged: Event<InterpretersChangedParams[]>;
         /**
