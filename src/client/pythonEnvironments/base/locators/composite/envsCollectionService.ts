@@ -6,7 +6,6 @@ import '../../../../common/extensions';
 import { createDeferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
 import { traceError } from '../../../../logging';
-import { reportInterpretersChanged } from '../../../../proposedApi';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { PythonEnvInfo } from '../../info';
@@ -94,10 +93,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         const deferred = createDeferred<void>();
 
         if (query?.clearCache) {
-            // Trigger an event indicating that we need to clear everything and start
-            // fresh.
             this.cache.clearCache();
-            reportInterpretersChanged([{ path: undefined, type: 'clear-all' }]);
         }
         // Ensure we set this before we trigger the promise to accurately track when a refresh has started.
         this.refreshPromises.set(query, deferred.promise);

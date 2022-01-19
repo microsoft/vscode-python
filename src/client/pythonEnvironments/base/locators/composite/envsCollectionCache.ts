@@ -141,6 +141,10 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
     }
 
     public clearCache(): Promise<void> {
+        this.envs.forEach((e) => {
+            this.fire({ old: e, new: undefined });
+        });
+        reportInterpretersChanged([{ path: undefined, type: 'clear-all' }]);
         this.envs = [];
         return Promise.resolve();
     }
