@@ -5,12 +5,8 @@ import os
 import pathlib
 
 import pytest
-from unittestadapter.discovery import (
-    DEFAULT_PORT,
-    discover_tests,
-    parse_port,
-    parse_unittest_args,
-)
+from unittestadapter.discovery import (DEFAULT_PORT, discover_tests,
+                                       parse_cli_args, parse_unittest_args)
 from unittestadapter.utils import TestNodeTypeEnum
 
 from .helpers import TEST_DATA_PATH, is_same_tree
@@ -24,15 +20,15 @@ from .helpers import TEST_DATA_PATH, is_same_tree
         (["--port", "4444", "--foo", "something", "--port", "9999"], 9999),
     ],
 )
-def test_parse_port_option(args, expected) -> None:
-    """The parse_port function should parse and return the port passed as a command-line option.
+def test_parse_cli_args(args, expected) -> None:
+    """The parse_cli_args function should parse and return the port passed as a command-line option.
 
     If there was no --port command-line option, it should return the default port value.
     If there are multiple --port options, the last one wins.
     """
-    actual = parse_port(args)
+    port, _ = parse_cli_args(args)
 
-    assert expected == actual
+    assert expected == port
 
 
 @pytest.mark.parametrize(
@@ -112,7 +108,7 @@ def test_simple_discovery() -> None:
         ],
     }
 
-    actual = discover_tests(start_dir, pattern, None)
+    actual = discover_tests(start_dir, pattern, None, None)
 
     assert actual["status"] == "success"
     assert is_same_tree(actual.get("tests"), expected)
@@ -126,7 +122,7 @@ def test_empty_discovery() -> None:
     start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "discovery_empty*"
 
-    actual = discover_tests(start_dir, pattern, None)
+    actual = discover_tests(start_dir, pattern, None, None)
 
     assert actual["status"] == "success"
     assert "tests" not in actual
@@ -180,7 +176,7 @@ def test_error_discovery() -> None:
         ],
     }
 
-    actual = discover_tests(start_dir, pattern, None)
+    actual = discover_tests(start_dir, pattern, None, None)
 
     assert actual["status"] == "error"
     assert is_same_tree(expected, actual.get("tests"))

@@ -4,7 +4,7 @@
 import * as path from 'path';
 import * as util from 'util';
 import { CancellationToken, Position, Range, TestController, TestItem, Uri } from 'vscode';
-import { IPythonExecutionFactory } from '../../common/process/types';
+// import { IPythonExecutionFactory } from '../../common/process/types';
 import { IConfigurationService } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
@@ -13,8 +13,14 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestProvider } from '../types';
 import { createErrorTestItem, DebugTestTag, ErrorTestItemOptions, RunTestTag } from './common/testItemUtilities';
-import { DiscoveredTestItem, DiscoveredTestNode, DiscoveredTestType, ITestDiscoveryAdapter } from './common/types';
-import { DEFAULT_TEST_PORT } from './common/utils';
+import {
+    DiscoveredTestItem,
+    DiscoveredTestNode,
+    DiscoveredTestType,
+    ITestDiscoveryAdapter,
+    ITestServer,
+} from './common/types';
+// import { DEFAULT_TEST_PORT } from './common/utils';
 import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
 
 /**
@@ -23,7 +29,7 @@ import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
  * It gets instantiated by the `PythonTestController` class in charge of reflecting test data in the UI,
  * and then instantiates provider-specific adapters under the hood depending on settings.
  *
- * This class formats the JSON test data returned by the `UnittestTestDiscoveryAdapter` into test UI elements,
+ * This class formats the JSON test data returned by the `[Unittest|Pytest]TestDiscoveryAdapter` into test UI elements,
  * and uses them to insert/update/remove items in the `TestController` instance behind the testing UI whenever the `PythonTestController` requests a refresh.
  */
 export class WorkspaceTestAdapter {
@@ -39,18 +45,19 @@ export class WorkspaceTestAdapter {
     constructor(
         private testProvider: TestProvider,
         private workspaceUri: Uri,
-        index: number,
-        executionFactory: IPythonExecutionFactory,
+        // index: number,
+        // executionFactory: IPythonExecutionFactory,
         configSettings: IConfigurationService,
+        testServer: ITestServer,
     ) {
         if (this.testProvider === 'unittest') {
-            const port = DEFAULT_TEST_PORT + index * 10;
+            // const port = DEFAULT_TEST_PORT + index * 10;
 
-            this.discoveryAdapter = new UnittestTestDiscoveryAdapter(executionFactory, configSettings, port);
+            this.discoveryAdapter = new UnittestTestDiscoveryAdapter(testServer, configSettings);
         } else {
             // TODO: PYTEST DISCOVERY ADAPTER
             // this is a placeholder for now
-            this.discoveryAdapter = new UnittestTestDiscoveryAdapter(executionFactory, configSettings, 45454);
+            this.discoveryAdapter = new UnittestTestDiscoveryAdapter(testServer, configSettings);
         }
     }
 

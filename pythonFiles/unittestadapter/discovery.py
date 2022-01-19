@@ -25,20 +25,21 @@ from typing_extensions import NotRequired
 DEFAULT_PORT = "45454"
 
 
-def parse_port(args: List[str]) -> int:
+def parse_cli_args(args: List[str]) -> Tuple[int, Union[str, None]]:
     """Parse command-line arguments that should be processed by the script.
 
-    So far that only includes the port number that it needs to connect to.
+    So far this includes the port number that it needs to connect to, and the uuid passed by the TS side.
     The port is passed to the discovery.py script when it is executed, and
     defaults to DEFAULT_PORT if it can't be parsed.
-    If there are several --port arguments, the value returned by parse_port will be the value of the last --port argument.
+    The uuid should be passed to the discovery.py script when it is executed, and defaults to None if it can't be parsed.
+    If the arguments appear several times, the value returned by parse_cli_args will be the value of the last argument.
     """
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--port", default=DEFAULT_PORT)
+    arg_parser.add_argument("--uuid")
     parsed_args, _ = arg_parser.parse_known_args(args)
 
-    return int(parsed_args.port)
-
+    return int(parsed_args.port), parsed_args.uuid
 
 def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
     """Parse command-line arguments that should be forwarded to unittest.
@@ -68,13 +69,14 @@ def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
 
 class PayloadDict(TypedDict):
     cwd: str
+    uuid: Union[str, None]
     status: Literal["success", "error"]
     tests: NotRequired[TestNode]
     errors: NotRequired[List[str]]
 
 
 def discover_tests(
-    start_dir: str, pattern: str, top_level_dir: Optional[str]
+    start_dir: str, pattern: str, top_level_dir: Optional[str], uuid: Optional[str]
 ) -> PayloadDict:
     """Returns a dictionary containing details of the discovered tests.
 
@@ -106,7 +108,7 @@ def discover_tests(
     }
     """
     cwd = os.path.abspath(start_dir)
-    payload: PayloadDict = {"cwd": cwd, "status": "success"}
+    payload: PayloadDict = {"cwd": cwd, "status": "success", "uuid": uuid}
     tests = None
     errors = []
 
@@ -136,12 +138,11 @@ if __name__ == "__main__":
     start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
 
     # Perform test discovery.
-    payload = discover_tests(start_dir, pattern, top_level_dir)
-
-    port = parse_port(argv[:index])
-    addr = ('localhost', port)
+    port, uuid = parse_cli_args(argv[:index])
+    payload = discover_tests(start_dir, pattern, top_level_dir, uuid)
 
     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
+    addr = ('localhost', port)
     with socket_manager.SocketManager(addr) as s:
         data = json.dumps(payload)
         request = f"""POST / HTTP/1.1

@@ -11,7 +11,7 @@ import {
     Uri,
     WorkspaceFolder,
 } from 'vscode';
-import { IPythonExecutionFactory } from '../../../common/process/types';
+// import { IPythonExecutionFactory } from '../../../common/process/types';
 import { IConfigurationService } from '../../../common/types';
 import { TestDiscoveryOptions } from '../../common/types';
 
@@ -88,42 +88,6 @@ export type TestRunOptions = {
     token: CancellationToken;
 };
 
-export interface ITestDiscoveryAdapter {
-    executionFactory: IPythonExecutionFactory;
-    configSettings: IConfigurationService;
-    port: number;
-    discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
-}
-
-// New test discovery adapter types
-
-// Same types as in pythonFiles/unittestadapter/utils.py
-// Trailing underscore to avoid collision with the 'types' Python keyword.
-export type DiscoveredTestType = 'folder' | 'file' | 'class' | 'test';
-
-export type DiscoveredTestCommon = {
-    path: string;
-    name: string;
-    type_: DiscoveredTestType;
-};
-
-export type DiscoveredTestItem = DiscoveredTestCommon & {
-    lineno: number;
-    // Trailing underscore to avoid collision with the 'id' Python keyword.
-    id_: string;
-};
-
-export type DiscoveredTestNode = DiscoveredTestCommon & {
-    children: (DiscoveredTestNode | DiscoveredTestItem)[];
-};
-
-export type DiscoveredTestPayload = {
-    cwd: string;
-    tests?: DiscoveredTestNode;
-    status: 'success' | 'error';
-    errors?: string[];
-};
-
 // We expose these here as a convenience and to cut down on churn
 // elsewhere in the code.
 type RawTestNode = {
@@ -159,4 +123,57 @@ export type RawDiscoveredTests = {
     root: string;
     parents: RawTestParent[];
     tests: RawTest[];
+};
+
+// New test discovery adapter types
+
+export type DataReceivedEvent = {
+    cwd: string;
+    data: string;
+};
+
+/**
+ * Interface describing the server that will send test commands to the Python side, and process responses.
+ *
+ * Consumers will call sendCommand in order to execute Python-related code,
+ * and will subscribe to the onDataReceived event to wait for the results.
+ */
+export interface ITestServer {
+    readonly onDataReceived: Event<DataReceivedEvent>;
+    readonly port: number;
+    sendCommand(options: TestDiscoveryOptions): Promise<void>;
+}
+
+export interface ITestDiscoveryAdapter {
+    // executionFactory: IPythonExecutionFactory;
+    configSettings: IConfigurationService;
+    // port: number;
+    discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
+}
+
+// Same types as in pythonFiles/unittestadapter/utils.py
+export type DiscoveredTestType = 'folder' | 'file' | 'class' | 'test';
+
+export type DiscoveredTestCommon = {
+    path: string;
+    name: string;
+    // Trailing underscore to avoid collision with the 'type' Python keyword.
+    type_: DiscoveredTestType;
+};
+
+export type DiscoveredTestItem = DiscoveredTestCommon & {
+    lineno: number;
+    // Trailing underscore to avoid collision with the 'id' Python keyword.
+    id_: string;
+};
+
+export type DiscoveredTestNode = DiscoveredTestCommon & {
+    children: (DiscoveredTestNode | DiscoveredTestItem)[];
+};
+
+export type DiscoveredTestPayload = {
+    cwd: string;
+    tests?: DiscoveredTestNode;
+    status: 'success' | 'error';
+    errors?: string[];
 };

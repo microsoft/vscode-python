@@ -7,7 +7,8 @@ import {
     SpawnOptions,
 } from '../../../common/process/types';
 import { createDeferred } from '../../../common/utils/async';
-import { TestCommandOptions } from '../../common/types';
+import { TestDiscoveryOptions } from '../../common/types';
+import { DEFAULT_TEST_PORT } from './utils';
 
 /**
  * Helper function that will communicate with a Python script via a "client/server" architecture.
@@ -17,7 +18,7 @@ import { TestCommandOptions } from '../../common/types';
  */
 export async function runTestCommand(
     executionFactory: IPythonExecutionFactory,
-    options: TestCommandOptions,
+    options: TestDiscoveryOptions,
 ): Promise<string> {
     const deferred = createDeferred<string>();
     let server: http.Server;
@@ -58,7 +59,7 @@ export async function runTestCommand(
     server = http.createServer(requestListener);
     server.maxConnections = 1;
 
-    server.listen(options.port, async () => {
+    server.listen(DEFAULT_TEST_PORT, async () => {
         if (options.outChannel) {
             options.outChannel.appendLine(`python ${options.args.join(' ')}`);
         }

@@ -25,8 +25,10 @@ import { traceVerbose } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
+import { PythonTestServer } from './common/server';
 import { DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
 import { ITestController, ITestFrameworkController, TestRefreshOptions } from './common/types';
+import { DEFAULT_TEST_PORT } from './common/utils';
 import { WorkspaceTestAdapter } from './workspaceTestAdapter';
 
 @injectable()
@@ -48,6 +50,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     private readonly runWithoutConfigurationEvent: EventEmitter<WorkspaceFolder[]> = new EventEmitter<
         WorkspaceFolder[]
     >();
+
+    private pythonTestServer: PythonTestServer;
 
     public readonly onRefreshingCompleted = this.refreshingCompletedEvent.event;
 
@@ -98,10 +102,33 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             ),
         );
         this.testController.resolveHandler = this.resolveChildren.bind(this);
+
+        this.pythonTestServer = new PythonTestServer(this.pythonExecFactory, DEFAULT_TEST_PORT);
     }
 
     public async activate(): Promise<void> {
-        this.watchForTestChanges();
+        const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
+        for (let i = 0; i < workspaces.length; i += 1) {
+            const workspace = workspaces[i];
+            console.warn(`instantiating test adapters - workspace name: ${workspace.name}`);
+            const settings = this.configSettings.getSettings(workspace.uri);
+            const workspaceTestAdapter = new WorkspaceTestAdapter(
+                'unittest',
+                workspace.uri,
+                // i,
+                // this.pythonExecFactory,
+                this.configSettings,
+                this.pythonTestServer,
+            );
+
+            this.testAdapters.set(workspace.uri, workspaceTestAdapter);
+
+            if (settings.testing.autoTestDiscoverOnSaveEnabled) {
+                traceVerbose(`Testing: Setting up watcher for ${workspace.uri.fsPath}`);
+                this.watchForSettingsChanges(workspace);
+                this.watchForTestContentChanges(workspace);
+            }
+        }
     }
 
     public refreshTestData(uri?: Resource, options?: TestRefreshOptions): Promise<void> {
@@ -293,30 +320,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 item.invalidateResults();
             }
         });
-    }
-
-    private watchForTestChanges(): void {
-        const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
-        for (let i = 0; i < workspaces.length; i += 1) {
-            const workspace = workspaces[i];
-            console.warn(`instantiating test adapters - workspace name: ${workspace.name}`);
-            const settings = this.configSettings.getSettings(workspace.uri);
-            const workspaceTestAdapter = new WorkspaceTestAdapter(
-                'unittest',
-                workspace.uri,
-                i,
-                this.pythonExecFactory,
-                this.configSettings,
-            );
-
-            this.testAdapters.set(workspace.uri, workspaceTestAdapter);
-
-            if (settings.testing.autoTestDiscoverOnSaveEnabled) {
-                traceVerbose(`Testing: Setting up watcher for ${workspace.uri.fsPath}`);
-                this.watchForSettingsChanges(workspace);
-                this.watchForTestContentChanges(workspace);
-            }
-        }
     }
 
     private watchForSettingsChanges(workspace: WorkspaceFolder): void {
