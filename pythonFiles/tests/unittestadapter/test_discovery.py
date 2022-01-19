@@ -15,20 +15,21 @@ from .helpers import TEST_DATA_PATH, is_same_tree
 @pytest.mark.parametrize(
     "args, expected",
     [
-        (["--port", "6767"], 6767),
-        (["--foo", "something", "--bar", "another"], int(DEFAULT_PORT)),
-        (["--port", "4444", "--foo", "something", "--port", "9999"], 9999),
+        (["--port", "6767", "--uuid", "some-uuid"], (6767, "some-uuid")),
+        (["--foo", "something", "--bar", "another"], (int(DEFAULT_PORT), None)),
+        (["--port", "4444", "--foo", "something", "--port", "9999"], (9999, None)),
+        (["--uuid", "first-uuid", "--bar", "other", "--uuid", "second-uuid"], (int(DEFAULT_PORT), "second-uuid")),
     ],
 )
 def test_parse_cli_args(args, expected) -> None:
-    """The parse_cli_args function should parse and return the port passed as a command-line option.
+    """The parse_cli_args function should parse and return the port and uuid passed as command-line options.
 
-    If there was no --port command-line option, it should return the default port value.
-    If there are multiple --port options, the last one wins.
+    If there were no --port or --uuid command-line option, it should return default values).
+    If there are multiple options, the last one wins.
     """
-    port, _ = parse_cli_args(args)
+    actual = parse_cli_args(args)
 
-    assert expected == port
+    assert expected == actual
 
 
 @pytest.mark.parametrize(
