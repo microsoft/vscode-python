@@ -2,25 +2,24 @@
 // Licensed under the MIT License.
 
 import * as http from 'http';
-import { randomUUID } from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 import { Event, EventEmitter } from 'vscode';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
-import { DataReceivedEvent, ITestServer } from './types';
-import { TestDiscoveryOptions } from '../../common/types';
+import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 
 export class PythonTestServer implements ITestServer {
     private _onDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
 
-    private uuids: string[];
+    private uuids: Map<string, string>;
 
     private server: http.Server;
 
-    constructor(private executionFactory: IPythonExecutionFactory, readonly port: number) {
-        this.uuids = [];
+    constructor(private executionFactory: IPythonExecutionFactory, private readonly port: number) {
+        this.uuids = new Map();
 
         const requestListener: http.RequestListener = async (request, response) => {
             const buffers = [];
@@ -33,14 +32,14 @@ export class PythonTestServer implements ITestServer {
 
             response.end();
 
-            const { uuid, cwd } = JSON.parse(data);
+            const { uuid } = JSON.parse(data);
 
             // Check if the uuid we received exists in the list of active ones.
             // If yes, process the response, if not, ignore it.
-            const index = this.uuids.indexOf(uuid);
-            if (index !== -1) {
+            const cwd = this.uuids.get(uuid);
+            if (cwd) {
                 this._onDataReceived.fire({ cwd, data });
-                this.uuids.splice(index, 1);
+                this.uuids.delete(uuid);
             }
         };
 
@@ -57,9 +56,9 @@ export class PythonTestServer implements ITestServer {
         return this._onDataReceived.event;
     }
 
-    async sendCommand(options: TestDiscoveryOptions): Promise<void> {
-        const uuid = randomUUID();
-        this.uuids.push(uuid);
+    async sendCommand(options: TestCommandOptions): Promise<void> {
+        const uuid = uuidv4();
+        this.uuids.set(uuid, options.cwd);
 
         const spawnOptions: SpawnOptions = {
             token: options.token,
@@ -75,7 +74,9 @@ export class PythonTestServer implements ITestServer {
         const execService = await this.executionFactory.createActivatedEnvironment(creationOptions);
 
         // Append the generated UUID to the data to be sent (expecting to receive it back).
-        const args = options.args.concat('--uuid', uuid);
+        const args = [options.command.script, '--port', this.port.toString(), '--uuid', uuid].concat(
+            options.command.args,
+        );
 
         if (options.outChannel) {
             options.outChannel.appendLine(`python ${args.join(' ')}`);

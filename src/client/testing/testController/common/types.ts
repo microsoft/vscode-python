@@ -4,6 +4,7 @@
 import {
     CancellationToken,
     Event,
+    OutputChannel,
     TestController,
     TestItem,
     TestRun,
@@ -132,6 +133,19 @@ export type DataReceivedEvent = {
     data: string;
 };
 
+export type TestDiscoveryCommand = {
+    script: string;
+    args: string[];
+};
+
+export type TestCommandOptions = {
+    workspaceFolder: Uri;
+    cwd: string;
+    command: TestDiscoveryCommand;
+    token?: CancellationToken;
+    outChannel?: OutputChannel;
+};
+
 /**
  * Interface describing the server that will send test commands to the Python side, and process responses.
  *
@@ -140,8 +154,7 @@ export type DataReceivedEvent = {
  */
 export interface ITestServer {
     readonly onDataReceived: Event<DataReceivedEvent>;
-    readonly port: number;
-    sendCommand(options: TestDiscoveryOptions): Promise<void>;
+    sendCommand(options: TestCommandOptions): Promise<void>;
 }
 
 export interface ITestDiscoveryAdapter {

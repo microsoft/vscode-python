@@ -11,7 +11,8 @@ from typing import List, Tuple, TypedDict, Union
 # Types
 
 
-class TestNodeTypeEnum(enum.Enum):
+# Inherit from str so it's JSON serializable.
+class TestNodeTypeEnum(str, enum.Enum):
     class_ = "class"
     file = "file"
     folder = "folder"

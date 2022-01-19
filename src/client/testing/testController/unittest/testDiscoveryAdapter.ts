@@ -3,13 +3,17 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
-// import { IPythonExecutionFactory } from '../../../common/process/types';
 import { IConfigurationService } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { TestDiscoveryOptions } from '../../common/types';
-// import { runTestCommand } from '../common/commandRunner';
-import { DataReceivedEvent, DiscoveredTestPayload, ITestDiscoveryAdapter, ITestServer } from '../common/types';
+import {
+    DataReceivedEvent,
+    DiscoveredTestPayload,
+    ITestDiscoveryAdapter,
+    ITestServer,
+    TestCommandOptions,
+    TestDiscoveryCommand,
+} from '../common/types';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.
@@ -19,12 +23,8 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
     private cwd: string | undefined;
 
-    constructor(
-        public testServer: ITestServer,
-        // public executionFactory: IPythonExecutionFactory,
-        public configSettings: IConfigurationService, // public port: number,
-    ) {
-        testServer.onDataReceived(this.onDataReceivedHandler);
+    constructor(public testServer: ITestServer, public configSettings: IConfigurationService) {
+        testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
     public onDataReceivedHandler({ cwd, data }: DataReceivedEvent): void {
@@ -41,16 +41,14 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             const settings = this.configSettings.getSettings(uri);
             const { unittestArgs } = settings.testing;
 
-            const command = this.buildDiscoveryCommand(unittestArgs);
+            const command = buildDiscoveryCommand(unittestArgs);
 
             this.cwd = uri.fsPath;
 
-            const options: TestDiscoveryOptions = {
+            const options: TestCommandOptions = {
                 workspaceFolder: uri,
-                // port: this.port,
-                args: command,
+                command,
                 cwd: this.cwd,
-                ignoreCache: false,
             };
 
             this.deferred = createDeferred<DiscoveredTestPayload>();
@@ -61,14 +59,14 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         }
 
         return this.deferred.promise;
-        // const result = await runTestCommand(this.executionFactory, options);
-        // const testData = JSON.parse(result);
-
-        // return Promise.resolve(testData);
     }
+}
 
-    private buildDiscoveryCommand(args: string[]): string[] {
-        const discoveryScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'discovery.py');
-        return [discoveryScript, '--port', `${this.testServer.port}`, '--udiscovery', ...args];
-    }
+function buildDiscoveryCommand(args: string[]): TestDiscoveryCommand {
+    const discoveryScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'discovery.py');
+
+    return {
+        script: discoveryScript,
+        args: ['--udiscovery', ...args],
+    };
 }

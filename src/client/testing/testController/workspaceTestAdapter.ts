@@ -4,7 +4,6 @@
 import * as path from 'path';
 import * as util from 'util';
 import { CancellationToken, Position, Range, TestController, TestItem, Uri } from 'vscode';
-// import { IPythonExecutionFactory } from '../../common/process/types';
 import { IConfigurationService } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
