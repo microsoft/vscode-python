@@ -8,6 +8,7 @@ import {
     InterpreterDetailsOptions,
     InterpretersChangedParams,
     IProposedExtensionAPI,
+    RefreshInterpretersOptions,
 } from './apiTypes';
 import { IConfigurationService, IInterpreterPathService, Resource } from './common/types';
 import { IComponentAdapter } from './interpreter/contracts';
@@ -97,8 +98,8 @@ export function buildProposedApi(
             setActiveInterpreter(interpreterPath: string, resource?: Resource): Promise<void> {
                 return interpreterPathService.update(resource, ConfigurationTarget.Workspace, interpreterPath);
             },
-            async refreshInterpreters(): Promise<string[] | undefined> {
-                await discoveryApi.triggerRefresh(undefined);
+            async refreshInterpreters(options?: RefreshInterpretersOptions): Promise<string[] | undefined> {
+                await discoveryApi.triggerRefresh(options ? { clearCache: options.clearCache } : undefined);
                 const paths = discoveryApi.getEnvs().map((e) => e.executable.filename);
                 return Promise.resolve(paths);
             },

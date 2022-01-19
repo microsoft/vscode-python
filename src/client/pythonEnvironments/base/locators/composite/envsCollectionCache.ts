@@ -51,6 +51,11 @@ export interface IEnvsCollectionCache {
      * validating cache.
      */
     validateCache(): Promise<void>;
+
+    /**
+     * Clears the in-memory cache. This can be used for hard refresh.
+     */
+    clearCache(): Promise<void>;
 }
 
 export type PythonEnvCompleteInfo = { hasCompleteInfo?: boolean } & PythonEnvInfo;
@@ -133,6 +138,11 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             });
             await this.persistentStorage.store(this.envs);
         }
+    }
+
+    public clearCache(): Promise<void> {
+        this.envs = [];
+        return Promise.resolve();
     }
 }
 

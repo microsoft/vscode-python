@@ -158,7 +158,6 @@ suite('Python envs locator - Environments Collection', async () => {
             }),
         );
 
-        sinon.assert.calledWithExactly(reportInterpretersChangedStub, [{ path: undefined, type: 'clear-all' }]);
         envs.forEach((e) => {
             sinon.assert.calledWithExactly(reportInterpretersChangedStub, [
                 {
@@ -167,9 +166,7 @@ suite('Python envs locator - Environments Collection', async () => {
                 },
             ]);
         });
-
-        // One for each environment and one for global 'clear-all' event.
-        sinon.assert.callCount(reportInterpretersChangedStub, envs.length + 1);
+        sinon.assert.callCount(reportInterpretersChangedStub, envs.length);
     });
 
     test('triggerRefresh() refreshes the collection and storage with any new environments', async () => {
@@ -204,7 +201,6 @@ suite('Python envs locator - Environments Collection', async () => {
         assertEnvsEqual(storage, expected);
 
         const eventData = [
-            { path: undefined, type: 'clear-all' },
             {
                 path: path.join(TEST_LAYOUT_ROOT, 'doesNotExist'),
                 type: 'remove',
@@ -307,7 +303,6 @@ suite('Python envs locator - Environments Collection', async () => {
         assertEnvsEqual(envs, expected);
 
         const eventData = [
-            { path: undefined, type: 'clear-all' },
             {
                 path: path.join(TEST_LAYOUT_ROOT, 'doesNotExist'),
                 type: 'remove',
@@ -404,7 +399,6 @@ suite('Python envs locator - Environments Collection', async () => {
         );
 
         const eventData = [
-            { path: undefined, type: 'clear-all' },
             {
                 path: path.join(TEST_LAYOUT_ROOT, 'doesNotExist'),
                 type: 'remove',
@@ -447,7 +441,6 @@ suite('Python envs locator - Environments Collection', async () => {
         expect(isFired).to.equal(true);
 
         const eventData = [
-            { path: undefined, type: 'clear-all' },
             {
                 path: path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
                 type: 'add',
@@ -614,12 +607,6 @@ suite('Python envs locator - Environments Collection', async () => {
             downstreamEvents.sort((a, b) => (a.type && b.type ? a.type?.localeCompare(b.type) : 0)),
         );
 
-        [
-            { path: undefined, type: 'clear-all' },
-            { path: undefined, type: 'clear-all' },
-        ].forEach((d) => {
-            sinon.assert.calledWithExactly(reportInterpretersChangedStub, [d]);
-        });
-        sinon.assert.calledTwice(reportInterpretersChangedStub);
+        sinon.assert.notCalled(reportInterpretersChangedStub);
     });
 });

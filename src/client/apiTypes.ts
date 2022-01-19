@@ -108,6 +108,10 @@ export interface ActiveInterpreterChangedParams {
     resource?: Uri;
 }
 
+export interface RefreshInterpretersOptions {
+    clearCache?: boolean;
+}
+
 export interface IProposedExtensionAPI {
     environment: {
         /**
@@ -151,8 +155,11 @@ export interface IProposedExtensionAPI {
          * This API will re-trigger environment discovery. Extensions can wait on the returned
          * promise to get the updated interpreters list. If there is a refresh already going on
          * then it returns the promise for that refresh.
+         * @param options : [optional]
+         *     * clearCache : When true, this will clear the cache before interpreter refresh
+         *                    is triggered.
          */
-        refreshInterpreters(): Promise<string[] | undefined>;
+        refreshInterpreters(options?: RefreshInterpretersOptions): Promise<string[] | undefined>;
         /**
          * Returns a promise for the ongoing refresh. Returns `undefined` if there are no active
          * refreshes going on.
