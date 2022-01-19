@@ -103,7 +103,7 @@ suite('ProcessLogger suite', () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
 
-        sinon.assert.calledWithExactly(traceLogStub, `> "${path.join('~', 'test')}" --foo --bar`);
+        sinon.assert.calledWithExactly(traceLogStub, `> ${path.join('~', 'test')} --foo --bar`);
         sinon.assert.calledWithExactly(traceLogStub, `${Logging.currentWorkingDirectory()} ${options.cwd}`);
     });
 
@@ -154,13 +154,13 @@ suite('ProcessLogger suite', () => {
     test("Logger doesn't display the working directory line if there is no options parameter", async () => {
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar']);
 
-        sinon.assert.calledWithExactly(traceLogStub, `> "${path.join('~', 'test')}" --foo --bar`);
+        sinon.assert.calledWithExactly(traceLogStub, `> ${path.join('~', 'test')} --foo --bar`);
     });
 
     test("Logger doesn't display the working directory line if there is no cwd key in the options parameter", async () => {
         const options = {};
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
 
-        sinon.assert.calledWithExactly(traceLogStub, `> "${path.join('~', 'test')}" --foo --bar`);
+        sinon.assert.calledWithExactly(traceLogStub, `> ${path.join('~', 'test')} --foo --bar`);
     });
 });
