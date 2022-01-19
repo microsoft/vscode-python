@@ -558,7 +558,9 @@ suite('Python envs locator - Environments Collection', async () => {
         const envs = collectionService.getEnvs();
         expect(resolved?.hasCompleteInfo).to.equal(true);
         assertEnvsEqual(envs, [resolved]);
-        sinon.assert.calledOnce(reportInterpretersChangedStub);
+        sinon.assert.calledOnceWithExactly(reportInterpretersChangedStub, [
+            { path: resolved?.executable.filename, type: 'add' },
+        ]);
     });
 
     test('Ensure events from downstream locators do not trigger new refreshes if a refresh is already scheduled', async () => {

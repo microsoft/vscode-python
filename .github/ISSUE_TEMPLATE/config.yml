@@ -1,20 +1,20 @@
 blank_issues_enabled: false
 contact_links:
-  - name: "Bug 🐜"
+  - name: 'Bug 🐜'
     url: https://aka.ms/pvsc-bug
-    about: "Use the `Python: Report Issue...` command (follow the link for instructions)"
-  - name: "Pylance"
+    about: 'Use the `Python: Report Issue...` command (follow the link for instructions)'
+  - name: 'Pylance'
     url: https://github.com/microsoft/pylance-release/issues
-    about: "For issues relating to the Pylance language server extension"
-  - name: "Jupyter"
+    about: 'For issues relating to the Pylance language server extension'
+  - name: 'Jupyter'
     url: https://github.com/microsoft/vscode-jupyter/issues
-    about: "For issues relating to the Jupyter extension (including the interactive window)"
-  - name: "Debugpy"
+    about: 'For issues relating to the Jupyter extension (including the interactive window)'
+  - name: 'Debugpy'
     url: https://github.com/microsoft/debugpy/issues
-    about: "For issues relating to the debugpy debugger"
+    about: 'For issues relating to the debugpy debugger'
   - name: Help/Support
     url: https://github.com/microsoft/vscode-python/discussions/categories/q-a
-    about: "Having trouble with the extension? Need help getting something to work?"
-  - name: "Chat"
+    about: 'Having trouble with the extension? Need help getting something to work?'
+  - name: 'Chat'
     url: https://aka.ms/python-discord
-    about: "You can ask for help or chat in the `#vscode` channel of our microsoft-python Discord server"
+    about: 'You can ask for help or chat in the `#vscode` channel of our microsoft-python Discord server'
