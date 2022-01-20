@@ -5,16 +5,16 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 
 import { TestController, TestItem, Uri } from 'vscode';
-import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/testDiscoveryAdapter';
 import { WorkspaceTestAdapter } from '../../../client/testing/testController/workspaceTestAdapter';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
+import { ITestServer } from '../../../client/testing/testController/common/types';
 
 suite('Workspace test adapter', () => {
     suite('Test discovery', () => {
-        let stubExecutionFactory: IPythonExecutionFactory;
+        let stubTestServer: ITestServer;
         let stubConfigSettings: IConfigurationService;
 
         let discoverTestsStub: sinon.SinonStub;
@@ -29,13 +29,20 @@ suite('Workspace test adapter', () => {
         const sandbox = sinon.createSandbox();
 
         setup(() => {
-            stubExecutionFactory = ({} as unknown) as IPythonExecutionFactory;
-
             stubConfigSettings = ({
                 getSettings: () => ({
                     testing: { unittestArgs: ['--foo'] },
                 }),
             } as unknown) as IConfigurationService;
+
+            stubTestServer = ({
+                sendCommand(): Promise<void> {
+                    return Promise.resolve();
+                },
+                onDataReceived: () => {
+                    // no body
+                },
+            } as unknown) as ITestServer;
 
             // For some reason the 'tests' namespace in vscode returns undefined.
             // While I figure out how to expose to the tests, they will run
@@ -104,9 +111,8 @@ suite('Workspace test adapter', () => {
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
                 Uri.parse('foo'),
-                1,
-                stubExecutionFactory,
                 stubConfigSettings,
+                stubTestServer,
             );
 
             await workspaceTestAdapter.discoverTests(testController);
@@ -128,9 +134,8 @@ suite('Workspace test adapter', () => {
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
                 Uri.parse('foo'),
-                1,
-                stubExecutionFactory,
                 stubConfigSettings,
+                stubTestServer,
             );
 
             // Try running discovery twice
@@ -148,9 +153,8 @@ suite('Workspace test adapter', () => {
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
                 Uri.parse('foo'),
-                1,
-                stubExecutionFactory,
                 stubConfigSettings,
+                stubTestServer,
             );
 
             await workspaceTestAdapter.discoverTests(testController);
@@ -168,9 +172,8 @@ suite('Workspace test adapter', () => {
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
                 Uri.parse('foo'),
-                1,
-                stubExecutionFactory,
                 stubConfigSettings,
+                stubTestServer,
             );
 
             await workspaceTestAdapter.discoverTests(testController);

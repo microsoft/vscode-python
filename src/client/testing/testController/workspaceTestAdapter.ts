@@ -19,7 +19,6 @@ import {
     ITestDiscoveryAdapter,
     ITestServer,
 } from './common/types';
-// import { DEFAULT_TEST_PORT } from './common/utils';
 import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
 
 /**
@@ -44,14 +43,10 @@ export class WorkspaceTestAdapter {
     constructor(
         private testProvider: TestProvider,
         private workspaceUri: Uri,
-        // index: number,
-        // executionFactory: IPythonExecutionFactory,
         configSettings: IConfigurationService,
         testServer: ITestServer,
     ) {
         if (this.testProvider === 'unittest') {
-            // const port = DEFAULT_TEST_PORT + index * 10;
-
             this.discoveryAdapter = new UnittestTestDiscoveryAdapter(testServer, configSettings);
         } else {
             // TODO: PYTEST DISCOVERY ADAPTER
