@@ -3,7 +3,6 @@
 
 import * as assert from 'assert';
 import * as path from 'path';
-import * as sinon from 'sinon';
 import { Uri } from 'vscode';
 import { IConfigurationService } from '../../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
@@ -13,18 +12,12 @@ import { UnittestTestDiscoveryAdapter } from '../../../../client/testing/testCon
 suite('Unittest test discovery adapter', () => {
     let stubConfigSettings: IConfigurationService;
 
-    const sandbox = sinon.createSandbox();
-
     setup(() => {
         stubConfigSettings = ({
             getSettings: () => ({
                 testing: { unittestArgs: ['-v', '-s', '.', '-p', 'test*'] },
             }),
         } as unknown) as IConfigurationService;
-    });
-
-    teardown(() => {
-        sandbox.restore();
     });
 
     test('discoverTests should send the discovery command to the test server', async () => {
