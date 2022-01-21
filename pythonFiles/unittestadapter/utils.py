@@ -53,6 +53,7 @@ def get_source_line(obj) -> str:
         sourcelines, lineno = inspect.getsourcelines(obj)
     except:
         try:
+            # tornado-specific, see https://github.com/microsoft/vscode-python/issues/17285.
             sourcelines, lineno = inspect.getsourcelines(obj.orig_method)
         except:
             return "*"
