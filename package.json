@@ -265,61 +265,6 @@
                 "when": "false",
                 "steps": [
                     {
-                        "id": "python.installPythonWinDS",
-                        "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python from the [Microsoft Store](https://aka.ms/AAd9rms).\n\n[Install Python](https://aka.ms/AAd9rms)\n",
-                        "media": {
-                            "markdown": "resources/walkthrough/install-python-windows.md"
-                        },
-                        "when": "false"
-                    },
-                    {
-                        "id": "python.installPythonMacDS",
-                        "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Open Terminal](command:workbench.action.terminal.new)\n",
-                        "media": {
-                            "markdown": "resources/walkthrough/install-python-macos.md"
-                        },
-                        "when": "false",
-                        "command": "workbench.action.terminal.new"
-                    },
-                    {
-                        "id": "python.installPythonLinuxDS",
-                        "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Open Terminal](command:workbench.action.terminal.new)\n",
-                        "media": {
-                            "markdown": "resources/walkthrough/install-python-linux.md"
-                        },
-                        "when": "false",
-                        "command": "workbench.action.terminal.new"
-                    },
-                    {
-                        "id": "python.openFolderMac",
-                        "title": "Open an existing Python project",
-                        "description": "If you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFileFolder)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
-                        "media": {
-                            "svg": "resources/walkthrough/open-folder.svg",
-                            "altText": "Open a folder"
-                        },
-                        "completionEvents": [
-                            "onCommand:workbench.action.files.openFileFolder"
-                        ],
-                        "when": "false"
-                    },
-                    {
-                        "id": "python.openFolder",
-                        "title": "Open an existing Python project",
-                        "description": "To start, open a Python folder/project.\nIf you already have an existing Python project on your machine:\n[Open Folder](command:workbench.action.files.openFolder)\n \nIf you would like to clone a Python project from GitHub:\n[Clone a Git repository](command:git.clone)",
-                        "media": {
-                            "svg": "resources/walkthrough/open-folder.svg",
-                            "altText": "Open a folder"
-                        },
-                        "completionEvents": [
-                            "onCommand:workbench.action.files.openFolder"
-                        ],
-                        "when": "false"
-                    },
-                    {
                         "id": "python.installJupyterExt",
                         "title": "Install Jupyter extension",
                         "description": "If you haven't already, install the [Jupyter extension](command:workbench.extensions.search?\"ms-toolsai.jupyter\") to take full advantage of notebooks experiences in VS Code!\n \n[Search Jupyter extension](command:workbench.extensions.search?\"ms-toolsai.jupyter\")",
