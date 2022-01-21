@@ -42,8 +42,9 @@ runs:
       shell: bash
 
     - name: Install Python dependencies
-      run: python -m pip --disable-pip-version-check install --require-hashes -t ./pythonFiles/lib/python --implementation py --no-deps --upgrade -r requirements.txt
-      shell: bash
+      uses: brettcannon/pip-secure-install@v1.0.0
+      with:
+        options: '-t ./pythonFiles/lib/python --implementation py'
 
     - name: Install debugpy
       run: |
