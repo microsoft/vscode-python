@@ -51,7 +51,7 @@ export class WorkspaceTestAdapter {
         } else {
             // TODO: PYTEST DISCOVERY ADAPTER
             // this is a placeholder for now
-            this.discoveryAdapter = new UnittestTestDiscoveryAdapter(testServer, configSettings); // NOSONAR
+            this.discoveryAdapter = new UnittestTestDiscoveryAdapter(testServer, { ...configSettings });
         }
     }
 
