@@ -108,15 +108,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
     public async activate(): Promise<void> {
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
-        for (let i = 0; i < workspaces.length; i += 1) {
-            const workspace = workspaces[i];
-            console.warn(`instantiating test adapters - workspace name: ${workspace.name}`);
+        workspaces.forEach((workspace) => {
             const settings = this.configSettings.getSettings(workspace.uri);
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
                 workspace.uri,
-                // i,
-                // this.pythonExecFactory,
                 this.configSettings,
                 this.pythonTestServer,
             );
@@ -128,7 +124,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 this.watchForSettingsChanges(workspace);
                 this.watchForTestContentChanges(workspace);
             }
-        }
+        });
     }
 
     public refreshTestData(uri?: Resource, options?: TestRefreshOptions): Promise<void> {
