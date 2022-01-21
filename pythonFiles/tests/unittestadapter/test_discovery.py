@@ -5,8 +5,12 @@ import os
 import pathlib
 
 import pytest
-from unittestadapter.discovery import (DEFAULT_PORT, discover_tests,
-                                       parse_cli_args, parse_unittest_args)
+from unittestadapter.discovery import (
+    DEFAULT_PORT,
+    discover_tests,
+    parse_cli_args,
+    parse_unittest_args,
+)
 from unittestadapter.utils import TestNodeTypeEnum
 
 from .helpers import TEST_DATA_PATH, is_same_tree
@@ -18,7 +22,10 @@ from .helpers import TEST_DATA_PATH, is_same_tree
         (["--port", "6767", "--uuid", "some-uuid"], (6767, "some-uuid")),
         (["--foo", "something", "--bar", "another"], (int(DEFAULT_PORT), None)),
         (["--port", "4444", "--foo", "something", "--port", "9999"], (9999, None)),
-        (["--uuid", "first-uuid", "--bar", "other", "--uuid", "second-uuid"], (int(DEFAULT_PORT), "second-uuid")),
+        (
+            ["--uuid", "first-uuid", "--bar", "other", "--uuid", "second-uuid"],
+            (int(DEFAULT_PORT), "second-uuid"),
+        ),
     ],
 )
 def test_parse_cli_args(args, expected) -> None:
@@ -109,7 +116,7 @@ def test_simple_discovery() -> None:
         ],
     }
 
-    uuid = 'some-uuid'
+    uuid = "some-uuid"
     actual = discover_tests(start_dir, pattern, None, uuid)
 
     assert actual["status"] == "success"
@@ -125,7 +132,7 @@ def test_empty_discovery() -> None:
     start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "discovery_empty*"
 
-    uuid = 'some-uuid'
+    uuid = "some-uuid"
     actual = discover_tests(start_dir, pattern, None, uuid)
 
     assert actual["status"] == "success"
@@ -181,7 +188,7 @@ def test_error_discovery() -> None:
         ],
     }
 
-    uuid = 'some-uuid'
+    uuid = "some-uuid"
     actual = discover_tests(start_dir, pattern, None, uuid)
 
     assert actual["status"] == "error"

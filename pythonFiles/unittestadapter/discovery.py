@@ -41,6 +41,7 @@ def parse_cli_args(args: List[str]) -> Tuple[int, Union[str, None]]:
 
     return int(parsed_args.port), parsed_args.uuid
 
+
 def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
     """Parse command-line arguments that should be forwarded to unittest.
 
@@ -143,7 +144,7 @@ if __name__ == "__main__":
     payload = discover_tests(start_dir, pattern, top_level_dir, uuid)
 
     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
-    addr = ('localhost', port)
+    addr = ("localhost", port)
     with socket_manager.SocketManager(addr) as s:
         data = json.dumps(payload)
         request = f"""POST / HTTP/1.1
@@ -152,4 +153,4 @@ Content-Length: {len(data)}
 Content-Type: application/json
 
 {data}"""
-        result = s.socket.sendall(request.encode("utf-8")) # type: ignore
+        result = s.socket.sendall(request.encode("utf-8"))  # type: ignore
