@@ -66,7 +66,7 @@ def test_parse_unittest_args(args, expected) -> None:
 
 
 def test_simple_discovery() -> None:
-    """The discover_tests function should return a dictionary with a "success" status, no errors, and a test tree
+    """The discover_tests function should return a dictionary with a "success" status, a uuid, no errors, and a test tree
     if unittest discovery was performed successfully.
     """
     start_dir = os.fsdecode(TEST_DATA_PATH)
@@ -109,29 +109,33 @@ def test_simple_discovery() -> None:
         ],
     }
 
-    actual = discover_tests(start_dir, pattern, None, None)
+    uuid = 'some-uuid'
+    actual = discover_tests(start_dir, pattern, None, uuid)
 
     assert actual["status"] == "success"
+    assert actual["uuid"] == uuid
     assert is_same_tree(actual.get("tests"), expected)
     assert "errors" not in actual
 
 
 def test_empty_discovery() -> None:
-    """The discover_tests function should return a dictionary with a "success" status, no errors, and no test tree
+    """The discover_tests function should return a dictionary with a "success" status, a uuid, no errors, and no test tree
     if unittest discovery was performed successfully but no tests were found.
     """
     start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "discovery_empty*"
 
-    actual = discover_tests(start_dir, pattern, None, None)
+    uuid = 'some-uuid'
+    actual = discover_tests(start_dir, pattern, None, uuid)
 
     assert actual["status"] == "success"
+    assert actual["uuid"] == uuid
     assert "tests" not in actual
     assert "errors" not in actual
 
 
 def test_error_discovery() -> None:
-    """The discover_tests function should return a dictionary with an "error" status, the discovered tests, and a list of errors
+    """The discover_tests function should return a dictionary with an "error" status, a uuid, the discovered tests, and a list of errors
     if unittest discovery failed at some point.
     """
     # Discover tests in .data/discovery_error/.
@@ -177,8 +181,10 @@ def test_error_discovery() -> None:
         ],
     }
 
-    actual = discover_tests(start_dir, pattern, None, None)
+    uuid = 'some-uuid'
+    actual = discover_tests(start_dir, pattern, None, uuid)
 
     assert actual["status"] == "error"
+    assert actual["uuid"] == uuid
     assert is_same_tree(expected, actual.get("tests"))
     assert len(actual.get("errors", [])) == 1
