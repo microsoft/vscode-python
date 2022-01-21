@@ -18,7 +18,13 @@
     },
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
-    "enabledApiProposals": ["languageStatus", "quickPickSortByLabel", "quickPickSeparators", "testObserver", "notebookEditor"],
+    "enabledApiProposals": [
+        "languageStatus",
+        "quickPickSortByLabel",
+        "quickPickSeparators",
+        "testObserver",
+        "notebookEditor"
+    ],
     "author": {
         "name": "Microsoft Corporation"
     },
@@ -133,11 +139,21 @@
                         "command": "workbench.action.terminal.new"
                     },
                     {
+                        "id": "python.createPythonFile",
+                        "title": "Create a Python file",
+                        "description": "[Open](command:toSide:workbench.action.files.openFile) or [create](command:toSide:workbench.action.files.newUntitledFile) a Python file - make sure to save it as \".py\".\n[Create Python File](command:toSide:workbench.action.files.newUntitledFile)",
+                        "media": {
+                            "svg": "resources/walkthrough/open-folder.svg",
+                            "altText": "Open a Python file or a folder with a Python project."
+                        },
+                        "when": ""
+                    },
+                    {
                         "id": "python.selectInterpreter",
                         "title": "Select a Python Interpreter",
-                        "description": "Choose which Python interpreter/environment you want to use for your Python project.\n[Select Python Interpreter](command:python.setInterpreter)\nTip: Reload the window if you installed Python but don't see it in the list (``Developer: Reload Window`` command in the [Command Palette](command:workbench.action.showCommands))",
+                        "description": "Choose which Python interpreter/environment you want to use for your Python project.\n[Select Python Interpreter](command:python.setInterpreter)\n**Tip**: Run the ``Python: Select Interpreter`` command in the [Command Palette](command:workbench.action.showCommands).\nReload the window if you installed Python but don't see it in the list (``Developer: Reload Window`` command). ",
                         "media": {
-                            "svg": "resources/walkthrough/python-interpreter.svg",
+                            "svg": "resources/walkthrough/python-interpreter-v2.svg",
                             "altText": "Selecting a python interpreter from the status bar"
                         },
                         "when": ""
@@ -145,7 +161,7 @@
                     {
                         "id": "python.runAndDebug",
                         "title": "Run and debug your Python file",
-                        "description": "[Open](command:toSide:workbench.action.files.openFile) or [create](command:toSide:welcome.showNewFileEntries) a Python file - make sure to save it as \".py\". \n Click on the play button on the top right of the editor, or press F5 when on the file and select \"Python File\" to run with the debugger. \n  \n[Learn more](https://code.visualstudio.com/docs/python/python-tutorial#_run-hello-world)",
+                        "description": "Open your Python file  and click on the play button on the top right of the editor, or press F5 when on the file and select \"Python File\" to run with the debugger. \n  \n[Learn more](https://code.visualstudio.com/docs/python/python-tutorial#_run-hello-world)",
                         "media": {
                             "svg": "resources/walkthrough/rundebug2.svg",
                             "altText": "How to run and debug in VS Code with F5 or the play button on the top right."

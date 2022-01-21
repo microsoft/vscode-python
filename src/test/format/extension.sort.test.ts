@@ -107,7 +107,7 @@ suite('Sorting', () => {
         await window.showTextDocument(textDocument);
         await commands.executeCommand(Commands.Sort_Imports);
         assert.notStrictEqual(originalContent, textDocument.getText(), 'Contents have not changed');
-    });
+    }).timeout(TEST_TIMEOUT * 3);
 
     test('With Config', async () => {
         const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
@@ -130,7 +130,7 @@ suite('Sorting', () => {
         await window.showTextDocument(textDocument);
         await commands.executeCommand(Commands.Sort_Imports);
         assert.notStrictEqual(originalContent, textDocument.getText(), 'Contents have not changed');
-    });
+    }).timeout(TEST_TIMEOUT * 3);
 
     test('With Changes and Config in Args', async () => {
         await updateSetting(
@@ -164,7 +164,7 @@ suite('Sorting', () => {
         const originalContent = textDocument.getText();
         await commands.executeCommand(Commands.Sort_Imports);
         assert.notStrictEqual(originalContent, textDocument.getText(), 'Contents have not changed');
-    }).timeout(TEST_TIMEOUT * 2);
+    }).timeout(TEST_TIMEOUT * 3);
 
     test('With Changes and Config implicit from cwd', async () => {
         const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);

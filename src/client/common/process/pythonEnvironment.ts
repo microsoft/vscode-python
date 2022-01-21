@@ -145,15 +145,11 @@ export function createCondaEnv(
     } else {
         runArgs.push('-n', condaInfo.name);
     }
-    const pythonArgv = [condaFile, ...runArgs, 'python'];
+    const pythonArgv = [condaFile, ...runArgs, '--no-capture-output', 'python'];
     const deps = createDeps(
         async (filename) => fs.pathExists(filename),
         pythonArgv,
-
-        // TODO: Use pythonArgv here once 'conda run' can be
-        // run without buffering output.
-        // See https://github.com/microsoft/vscode-python/issues/8473.
-        undefined,
+        pythonArgv,
         (file, args, opts) => procs.exec(file, args, opts),
         (command, opts) => procs.shellExec(command, opts),
     );

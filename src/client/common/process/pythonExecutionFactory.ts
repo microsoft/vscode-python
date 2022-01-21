@@ -29,8 +29,8 @@ import { IInterpreterAutoSelectionService } from '../../interpreter/autoSelectio
 import { sleep } from '../utils/async';
 import { traceError } from '../../logging';
 
-// Minimum version number of conda required to be able to use 'conda run'
-export const CONDA_RUN_VERSION = '4.6.0';
+// Minimum version number of conda required to be able to use 'conda run' and '--no-capture--output' option
+export const CONDA_RUN_VERSION = '4.9.0';
 
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
@@ -83,6 +83,11 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         }
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
 
+        const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
+        if (condaExecutionService) {
+            return condaExecutionService;
+        }
+
         const windowsStoreInterpreterCheck = this.pyenvs.isWindowsStoreInterpreter.bind(this.pyenvs);
 
         return createPythonService(
@@ -117,11 +122,14 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         processService.on('exec', this.logger.logProcess.bind(this.logger));
         this.disposables.push(processService);
 
+        const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
+        if (condaExecutionService) {
+            return condaExecutionService;
+        }
+
         return createPythonService(pythonPath, processService, this.fileSystem);
     }
 
-    // Not using this function for now because there are breaking issues with conda run (conda 4.8, PVSC 2020.1).
-    // See https://github.com/microsoft/vscode-python/issues/9490
     public async createCondaExecutionService(
         pythonPath: string,
         processService?: IProcessService,
@@ -144,6 +152,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 procService.on('exec', this.logger.logProcess.bind(this.logger));
                 this.disposables.push(procService);
             }
+
             return createPythonService(
                 pythonPath,
                 procService,

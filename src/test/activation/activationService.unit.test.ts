@@ -601,7 +601,7 @@ suite('Language Server Activation - ActivationService', () => {
 
                 await activationService.get(resource, interpreter);
 
-                traceLogStub.calledOnceWithExactly(outputString);
+                sinon.assert.calledOnceWithExactly(traceLogStub, outputString);
                 activator.verify((a) => a.start(resource, interpreter), TypeMoq.Times.once());
             });
         });
@@ -624,7 +624,7 @@ suite('Language Server Activation - ActivationService', () => {
 
             await activationService.get(resource, interpreter);
 
-            traceLogStub.calledOnceWithExactly(LanguageService.startingPylance());
+            sinon.assert.calledOnceWithExactly(traceLogStub, LanguageService.startingPylance());
             activator.verify((a) => a.start(resource, interpreter), TypeMoq.Times.once());
         });
     });

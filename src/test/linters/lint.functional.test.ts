@@ -625,6 +625,11 @@ class TestFixture extends BaseTestFixture {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         const configService = TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
         const processLogger = TypeMoq.Mock.ofType<IProcessLogger>(undefined, TypeMoq.MockBehavior.Strict);
+        const componentAdapter = TypeMoq.Mock.ofType<IComponentAdapter>(undefined, TypeMoq.MockBehavior.Strict);
+        componentAdapter
+            .setup((c) => c.getCondaEnvironment(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
+
         const filesystem = new FileSystem();
         processLogger
             .setup((p) => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -637,6 +642,9 @@ class TestFixture extends BaseTestFixture {
         serviceContainer
             .setup((s) => s.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny()))
             .returns(() => filesystem);
+        serviceContainer
+            .setup((s) => s.get(TypeMoq.It.isValue(IComponentAdapter), TypeMoq.It.isAny()))
+            .returns(() => componentAdapter.object);
 
         const platformService = new PlatformService();
 

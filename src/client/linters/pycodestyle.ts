@@ -14,7 +14,7 @@ export class Pycodestyle extends BaseLinter {
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
         const messages = await this.run(
-            ['--format=%(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', document.uri.fsPath],
+            ['--format= %(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', document.uri.fsPath],
             document,
             cancellation,
         );

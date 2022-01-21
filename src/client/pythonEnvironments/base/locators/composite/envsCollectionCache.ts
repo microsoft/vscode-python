@@ -3,6 +3,7 @@
 
 import { Event } from 'vscode';
 import { traceInfo } from '../../../../logging';
+import { reportInterpretersChanged } from '../../../../proposedApi';
 import { pathExists } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
 import { areSameEnv } from '../../info/env';
@@ -50,6 +51,11 @@ export interface IEnvsCollectionCache {
      * validating cache.
      */
     validateCache(): Promise<void>;
+
+    /**
+     * Clears the in-memory cache. This can be used for hard refresh.
+     */
+    clearCache(): Promise<void>;
 }
 
 export type PythonEnvCompleteInfo = { hasCompleteInfo?: boolean } & PythonEnvInfo;
@@ -82,6 +88,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         invalidIndexes.forEach((index) => {
             const env = this.envs.splice(index, 1)[0];
             this.fire({ old: env, new: undefined });
+            reportInterpretersChanged([{ path: env.executable.filename, type: 'remove' }]);
         });
     }
 
@@ -97,6 +104,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             }
             this.envs.push(env);
             this.fire({ new: env });
+            reportInterpretersChanged([{ path: env.executable.filename, type: 'add' }]);
         }
     }
 
@@ -109,6 +117,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
                 this.envs[index] = newValue;
             }
             this.fire({ old: oldValue, new: newValue });
+            reportInterpretersChanged([{ path: oldValue.executable.filename, type: newValue ? 'update' : 'remove' }]);
         }
     }
 
@@ -129,6 +138,15 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             });
             await this.persistentStorage.store(this.envs);
         }
+    }
+
+    public clearCache(): Promise<void> {
+        this.envs.forEach((e) => {
+            this.fire({ old: e, new: undefined });
+        });
+        reportInterpretersChanged([{ path: undefined, type: 'clear-all' }]);
+        this.envs = [];
+        return Promise.resolve();
     }
 }
 

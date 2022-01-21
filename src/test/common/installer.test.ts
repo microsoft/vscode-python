@@ -115,7 +115,7 @@ import { rootWorkspaceUri, updateSetting } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
-import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
+import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST, TEST_TIMEOUT } from '../initialize';
 
 suite('Installer', () => {
     let ioc: UnitTestIocContainer;
@@ -313,7 +313,7 @@ suite('Installer', () => {
             await testCheckingIfProductIsInstalled(prod.value);
 
             return undefined;
-        });
+        }).timeout(TEST_TIMEOUT * 3);
     });
 
     async function testInstallingProduct(product: Product) {
@@ -351,6 +351,6 @@ suite('Installer', () => {
             await testInstallingProduct(prod.value);
 
             return undefined;
-        });
+        }).timeout(TEST_TIMEOUT * 3);
     });
 });

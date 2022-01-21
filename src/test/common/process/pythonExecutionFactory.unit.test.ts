@@ -257,9 +257,7 @@ suite('Process - PythonExecutionFactory', () => {
                 assert.strictEqual(createInvoked, false);
             });
 
-            test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
-                return this.skip();
-
+            test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async () => {
                 const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);
 
@@ -284,9 +282,7 @@ suite('Process - PythonExecutionFactory', () => {
                 verify(condaService.getCondaFile()).once();
             });
 
-            test('Ensure `create` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function () {
-                return this.skip();
-
+            test('Ensure `create` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async () => {
                 const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);
                 when(processFactory.create(resource)).thenResolve(processService.object);
@@ -305,9 +301,7 @@ suite('Process - PythonExecutionFactory', () => {
                 verify(condaService.getCondaFile()).once();
             });
 
-            test('Ensure `createActivatedEnvironment` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
-                return this.skip();
-
+            test('Ensure `createActivatedEnvironment` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async () => {
                 const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);
 
@@ -336,9 +330,7 @@ suite('Process - PythonExecutionFactory', () => {
                 }
             });
 
-            test('Ensure `createActivatedEnvironment` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function () {
-                return this.skip();
-
+            test('Ensure `createActivatedEnvironment` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async () => {
                 let createInvoked = false;
                 const pythonPath = 'path/to/python';
                 const mockExecService = 'mockService';

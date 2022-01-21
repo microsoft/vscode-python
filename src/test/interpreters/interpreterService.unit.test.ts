@@ -8,6 +8,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { Container } from 'inversify';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
+import * as sinon from 'sinon';
 import { ConfigurationTarget, Disposable, TextDocument, TextEditor, Uri, WorkspaceConfiguration } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { InterpreterStatusBarPosition } from '../../client/common/experiments/groups';
@@ -34,6 +35,7 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { PYTHON_PATH } from '../common';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
+import * as proposedApi from '../../client/proposedApi';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -56,8 +58,9 @@ suite('Interpreters service', () => {
     let interpreterPathService: TypeMoq.IMock<IInterpreterPathService>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let experiments: TypeMoq.IMock<IExperimentService>;
+    let reportActiveInterpreterChangedStub: sinon.SinonStub;
 
-    function setupSuite() {
+    setup(() => {
         const cont = new Container();
         serviceManager = new ServiceManager(cont);
         serviceContainer = new ServiceContainer(cont);
@@ -131,9 +134,14 @@ suite('Interpreters service', () => {
             MockAutoSelectionService,
         );
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService.object);
-    }
 
-    setup(setupSuite);
+        reportActiveInterpreterChangedStub = sinon.stub(proposedApi, 'reportActiveInterpreterChanged');
+    });
+
+    teardown(() => {
+        sinon.restore();
+    });
+
     [undefined, Uri.file('xyz')].forEach((resource) => {
         const resourceTestSuffix = `(${resource ? 'with' : 'without'} a resource)`;
 
@@ -249,6 +257,10 @@ suite('Interpreters service', () => {
             .verifiable(TypeMoq.Times.once());
         service._onConfigChanged(resource);
         interpreterDisplay.verifyAll();
+        sinon.assert.calledOnceWithExactly(reportActiveInterpreterChangedStub, {
+            interpreterPath: 'current path',
+            resource,
+        });
     });
 
     test('If stored setting is not equal to current interpreter path setting, refresh the interpreter display', async () => {
@@ -263,6 +275,10 @@ suite('Interpreters service', () => {
             .verifiable(TypeMoq.Times.once());
         service._onConfigChanged(resource);
         interpreterDisplay.verifyAll();
+        sinon.assert.calledOnceWithExactly(reportActiveInterpreterChangedStub, {
+            interpreterPath: 'current path',
+            resource,
+        });
     });
 
     test('If stored setting is equal to current interpreter path setting, do not refresh the interpreter display', async () => {
@@ -277,5 +293,6 @@ suite('Interpreters service', () => {
             .verifiable(TypeMoq.Times.never());
         service._onConfigChanged(resource);
         interpreterDisplay.verifyAll();
+        expect(reportActiveInterpreterChangedStub.notCalled).to.be.equal(true);
     });
 });

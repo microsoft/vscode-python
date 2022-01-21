@@ -142,12 +142,12 @@ suite('Linting - Arguments', () => {
                     }
                     test('Flake8', async () => {
                         const linter = new Flake8(serviceContainer);
-                        const expectedArgs = ['--format=%(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', fileUri.fsPath];
+                        const expectedArgs = ['--format= %(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', fileUri.fsPath];
                         await testLinter(linter, expectedArgs);
                     });
                     test('Pycodestyle', async () => {
                         const linter = new Pycodestyle(serviceContainer);
-                        const expectedArgs = ['--format=%(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', fileUri.fsPath];
+                        const expectedArgs = ['--format= %(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', fileUri.fsPath];
                         await testLinter(linter, expectedArgs);
                     });
                     test('Prospector', async () => {
