@@ -108,7 +108,7 @@
                 "id": "pythonWelcome",
                 "title": "Get started with Python development",
                 "description": "Your first steps to set up a Python project with all the powerful tools and features that the Python extension has to offer!",
-                "when": "webworker != true",
+                "when": "workspacePlatform != webworker",
                 "steps": [
                     {
                         "id": "python.installPythonWin",
@@ -178,16 +178,6 @@
                             "svg": "resources/walkthrough/learnmore.svg"
                         },
                         "when": ""
-                    },
-                    {
-                        "id": "python.learnMoreWithDS",
-                        "title": "Explore more resources",
-                        "description": "🎨 Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands). \n 📈 Learn more about getting started with [data science](command:workbench.action.openWalkthrough?%7B%22category%22%3A%22ms-python.python%23pythonDataScienceWelcome%22%2C%22step%22%3A%22ms-python.python%23python.createNewNotebook%22%7D) in Python. \n 💌 [Sign up](https://aka.ms/python-vscode-mailinglist) for tips and tutorials through our mailing list. \n ✨ Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features. \n \n[Learn More](https://aka.ms/AA8dqti)",
-                        "media": {
-                            "altText": "Image representing our documentation page and mailing list resources.",
-                            "svg": "resources/walkthrough/learnmore.svg"
-                        },
-                        "when": "false"
                     }
                 ]
             },
@@ -2109,7 +2099,7 @@
         "ts-node": "^8.3.0",
         "tsconfig-paths-webpack-plugin": "^3.2.0",
         "typemoq": "^2.1.0",
-        "typescript": "^4.1.5",
+        "typescript": "4.1.5",
         "typescript-formatter": "^7.1.0",
         "uuid": "^3.3.2",
         "vsce": "^1.96.1",
