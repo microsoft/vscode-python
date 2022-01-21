@@ -3,7 +3,7 @@
 
 import * as http from 'http';
 import { v4 as uuidv4 } from 'uuid';
-import { Event, EventEmitter } from 'vscode';
+import { Disposable, Event, EventEmitter } from 'vscode';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
@@ -11,7 +11,7 @@ import {
 } from '../../../common/process/types';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 
-export class PythonTestServer implements ITestServer {
+export class PythonTestServer implements ITestServer, Disposable {
     private _onDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
 
     private uuids: Map<string, string>;
@@ -58,13 +58,13 @@ export class PythonTestServer implements ITestServer {
 
     async sendCommand(options: TestCommandOptions): Promise<void> {
         const uuid = uuidv4();
-        this.uuids.set(uuid, options.cwd);
-
         const spawnOptions: SpawnOptions = {
             token: options.token,
             cwd: options.cwd,
             throwOnStdErr: true,
         };
+
+        this.uuids.set(uuid, options.cwd);
 
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
@@ -73,7 +73,7 @@ export class PythonTestServer implements ITestServer {
         };
         const execService = await this.executionFactory.createActivatedEnvironment(creationOptions);
 
-        // Append the generated UUID to the data to be sent (expecting to receive it back).
+        // Add the generated UUID to the data to be sent (expecting to receive it back).
         const args = [options.command.script, '--port', this.port.toString(), '--uuid', uuid].concat(
             options.command.args,
         );
@@ -85,7 +85,14 @@ export class PythonTestServer implements ITestServer {
         try {
             await execService.exec(args, spawnOptions);
         } catch (ex) {
-            // No catch statement.
+            this.uuids.delete(uuid);
+            this._onDataReceived.fire({
+                cwd: options.cwd,
+                data: JSON.stringify({
+                    status: 'error',
+                    errors: [ex.message],
+                }),
+            });
         }
     }
 }
