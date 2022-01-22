@@ -29,7 +29,7 @@ jobs:
           cache-dependency-path: '.github/assign-reviewers/requirements.txt'
 
       - name: Install dependencies
-        uses: brettcannon/pip-secure-install@v1.0.0
+        uses: brettcannon/pip-secure-install@v1
         with:
           requirements-file: '.github/assign-reviewers/requirements.txt'
 

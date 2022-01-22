@@ -33,7 +33,7 @@ runs:
       shell: bash
 
     - name: Install Python requirements
-      uses: brettcannon/pip-secure-install@v1.0.0
+      uses: brettcannon/pip-secure-install@v1
       with:
         options: '-t ./pythonFiles/lib/python --implementation py'
 
