@@ -17,6 +17,7 @@ import { OSType } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { clearPythonPathInWorkspaceFolder, isOs, isPythonVersion } from '../../common';
 import { getExtensionSettings } from '../../extensionSettings';
+import { registerForIOC } from '../../pythonEnvironments/legacyIOC';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 
 use(chaiAsPromised);
@@ -35,7 +36,9 @@ suite('PythonExecutableService', () => {
             this.skip();
         }
         await clearPythonPathInWorkspaceFolder(workspace4Path);
-        serviceContainer = (await initialize()).serviceContainer;
+        const api = await initialize();
+        await registerForIOC(api.serviceManager, api.serviceContainer);
+        serviceContainer = api.serviceContainer;
     });
     setup(async () => {
         configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
