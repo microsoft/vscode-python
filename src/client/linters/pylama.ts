@@ -6,7 +6,7 @@ import { BaseLinter } from './baseLinter';
 import { ILintMessage, LintMessageSeverity } from './types';
 
 const REGEX =
-    '(?<file>.py):(?<line>\\d+):(?<column>\\d+): \\[(?<type>\\w+)\\] (?<code>\\w\\d+):? (?<message>.*)\\r?(\\n|$)';
+    '(?<file>.py):(?<line>\\d+):(?<column>\\d+):? \\[(?<type>\\w+)\\] (?<code>\\w\\d+):? (?<message>.*)\\r?(\\n|$)';
 const COLUMN_OFF_SET = 1;
 
 export class PyLama extends BaseLinter {
