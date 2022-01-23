@@ -107,7 +107,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             interpreterDisplay.registerVisibilityFilter(filter);
         }
         disposables.push(
-            this.onDidChangeInterpreters((e) => {
+            this.onDidChangeInterpreters((e): void => {
                 const interpreter = e.old ?? e.new;
                 if (interpreter) {
                     this.didChangeInterpreterInformation.fire(interpreter);
@@ -119,7 +119,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 // To handle scenario when language mode is set to "python"
                 filter.interpreterVisibilityEmitter.fire();
             }),
-            documentManager.onDidChangeActiveTextEditor((e) => {
+            documentManager.onDidChangeActiveTextEditor((e): void => {
                 filter.interpreterVisibilityEmitter.fire();
                 if (e && e.document) {
                     this.refresh(e.document.uri);
@@ -129,7 +129,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const pySettings = this.configService.getSettings();
         this._pythonPathSetting = pySettings.pythonPath;
         disposables.push(
-            this.interpreterPathService.onDidChange((i) => {
+            this.interpreterPathService.onDidChange((i): void => {
                 this._onConfigChanged(i.uri);
             }),
         );
