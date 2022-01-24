@@ -102,7 +102,6 @@ src/test/common/process/decoder.test.ts
 src/test/common/process/processFactory.unit.test.ts
 src/test/common/process/pythonToolService.unit.test.ts
 src/test/common/process/proc.observable.test.ts
-src/test/common/process/pythonProc.simple.multiroot.test.ts
 src/test/common/process/logger.unit.test.ts
 src/test/common/process/proc.exec.test.ts
 src/test/common/process/pythonProcess.unit.test.ts
