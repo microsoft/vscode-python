@@ -44,7 +44,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.63.0"
+        "vscode": "^1.63.1"
     },
     "keywords": [
         "python",
