@@ -124,7 +124,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Install Python requirements
+      - name: Install debugpy
         run: |
           # We need to have debugpy so that tests relying on it keep passing, but we don't need install_debugpy's logic in the test phase.
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
@@ -132,14 +132,15 @@ jobs:
       - name: Install base Python requirements
         uses: brettcannon/pip-secure-install@v1
         with:
-          options: '-t ./pythonFiles/lib/python --no-cache-dir --implementation py'
+          requirements-file: ${{ env.special-working-directory-relative }}/requirements.txt
+          options: '-t ${{ env.special-working-directory-relative }}/pythonFiles/lib/python --no-cache-dir --implementation py'
         if: startsWith(matrix.python, 3.)
 
       - name: Install Jedi requirements
         uses: brettcannon/pip-secure-install@v1
         with:
-          requirements-file: './pythonFiles/jedilsp_requirements/requirements.txt'
-          options: 't ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py'
+          requirements-file: '${{ env.special-working-directory-relative }}/pythonFiles/jedilsp_requirements/requirements.txt'
+          options: 't ${{ env.special-working-directory-relative }}/pythonFiles/lib/jedilsp --no-cache-dir --implementation py'
         if: startsWith(matrix.python, 3.)
 
       - name: Install test requirements
