@@ -366,7 +366,7 @@ jobs:
         uses: brettcannon/pip-secure-install@v1
         with:
           requirements-file: './pythonFiles/jedilsp_requirements/requirements.txt'
-          options: 't ./pythonFiles/lib/jedilsp --implementation py'
+          options: '-t ./pythonFiles/lib/jedilsp --implementation py'
 
       - name: Install other debugpy
         run: |
