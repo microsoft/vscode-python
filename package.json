@@ -1957,6 +1957,7 @@
         "minimatch": "^3.0.4",
         "named-js-regexp": "^1.3.3",
         "node-stream-zip": "^1.6.0",
+        "react": "^17.0.2",
         "reflect-metadata": "^0.1.12",
         "request": "^2.87.0",
         "request-progress": "^3.0.0",
