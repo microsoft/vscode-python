@@ -12,7 +12,7 @@ import { EnvironmentType, PythonEnvironment } from '../../info';
 import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
 import { traceError, traceVerbose } from '../../../logging';
-import { _SCRIPTS_DIR } from '../../../common/process/internal/scripts/constants';
+import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 
@@ -202,9 +202,8 @@ export async function getPythonVersionFromConda(interpreterPath: string): Promis
 
 // Minimum version number of conda required to be able to use 'conda run' with '--no-capture-output' flag.
 export const CONDA_RUN_VERSION = '4.9.0';
-export const CONDA_RUN_TIMEOUT = 45000;
-
-export const CONDA_RUN_SCRIPT = path.join(_SCRIPTS_DIR, 'conda_run_script.py');
+export const CONDA_ACTIVATION_TIMEOUT = 45000;
+const CONDA_GENERAL_TIMEOUT = 50000;
 
 /** Wraps the "conda" utility, and exposes its functionality.
  */
@@ -226,7 +225,6 @@ export class Conda {
     constructor(readonly command: string) {}
 
     public static async getConda(): Promise<Conda | undefined> {
-        traceVerbose(`Searching for conda.`);
         if (this.condaPromise === undefined || isTestExecution()) {
             this.condaPromise = Conda.locate();
         }
@@ -240,6 +238,7 @@ export class Conda {
      * @return A Conda instance corresponding to the binary, if successful; otherwise, undefined.
      */
     private static async locate(): Promise<Conda | undefined> {
+        traceVerbose(`Searching for conda.`);
         const home = getUserHomeDir();
         const suffix = getOSType() === OSType.Windows ? 'Scripts\\conda.exe' : 'bin/conda';
 
@@ -338,11 +337,12 @@ export class Conda {
                 // Failed to spawn because the binary doesn't exist or isn't on PATH, or the current
                 // user doesn't have execute permissions for it, or this conda couldn't handle command
                 // line arguments that we passed (indicating an old version that we do not support).
-                traceVerbose(ex);
+                traceVerbose('Failed to spawn conda binary', condaPath, ex);
             }
         }
 
         // Didn't find anything.
+        traceVerbose("Couldn't locate the conda binary.");
         return undefined;
     }
 
@@ -360,7 +360,7 @@ export class Conda {
     @cache(30_000, true, 10_000)
     // eslint-disable-next-line class-methods-use-this
     private async getInfoCached(command: string): Promise<CondaInfo> {
-        const result = await exec(command, ['info', '--json'], { timeout: 50000 });
+        const result = await exec(command, ['info', '--json'], { timeout: CONDA_GENERAL_TIMEOUT });
         traceVerbose(`conda info --json: ${result.stdout}`);
         return JSON.parse(result.stdout);
     }
@@ -416,7 +416,7 @@ export class Conda {
         } else {
             args.push('-p', env.prefix);
         }
-        return [this.command, 'run', ...args, '--no-capture-output', 'python', CONDA_RUN_SCRIPT];
+        return [this.command, 'run', ...args, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT];
     }
 
     /**
@@ -429,7 +429,7 @@ export class Conda {
         if (info && info.conda_version) {
             versionString = info.conda_version;
         } else {
-            const stdOut = await exec(this.command, ['--version'], { timeout: 50000 })
+            const stdOut = await exec(this.command, ['--version'], { timeout: CONDA_GENERAL_TIMEOUT })
                 .then((result) => result.stdout.trim())
                 .catch<string | undefined>(() => undefined);
 

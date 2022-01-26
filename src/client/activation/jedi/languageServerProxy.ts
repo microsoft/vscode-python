@@ -11,8 +11,7 @@ import {
 } from 'vscode-languageclient/node';
 
 import { ChildProcess } from 'child_process';
-import { DeprecatePythonPath } from '../../common/experiments/groups';
-import { IExperimentService, IInterpreterPathService, Resource } from '../../common/types';
+import { IInterpreterPathService, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -37,7 +36,6 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
 
     constructor(
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
-        @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
     ) {}
 
@@ -148,18 +146,16 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         const progressReporting = new ProgressReporting(this.languageClient!);
         this.disposables.push(progressReporting);
 
-        if (this.experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
-            this.disposables.push(
-                this.interpreterPathService.onDidChange(() => {
-                    // Manually send didChangeConfiguration in order to get the server to re-query
-                    // the workspace configurations (to then pick up pythonPath set in the middleware).
-                    // This is needed as interpreter changes via the interpreter path service happen
-                    // outside of VS Code's settings (which would mean VS Code sends the config updates itself).
-                    this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, {
-                        settings: null,
-                    });
-                }),
-            );
-        }
+        this.disposables.push(
+            this.interpreterPathService.onDidChange(() => {
+                // Manually send didChangeConfiguration in order to get the server to re-query
+                // the workspace configurations (to then pick up pythonPath set in the middleware).
+                // This is needed as interpreter changes via the interpreter path service happen
+                // outside of VS Code's settings (which would mean VS Code sends the config updates itself).
+                this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, {
+                    settings: null,
+                });
+            }),
+        );
     }
 }

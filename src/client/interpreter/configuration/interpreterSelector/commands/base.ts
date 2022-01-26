@@ -8,10 +8,12 @@ import * as path from 'path';
 import { ConfigurationTarget, Disposable, QuickPickItem, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
-import { IDisposable, Resource } from '../../../../common/types';
-import { Interpreters } from '../../../../common/utils/localize';
+import { IConfigurationService, IDisposable, IPathUtils, Resource } from '../../../../common/types';
+import { Common, Interpreters } from '../../../../common/utils/localize';
 import { IPythonPathUpdaterServiceManager } from '../../types';
-
+export interface WorkspaceSelectionQuickPickItem extends QuickPickItem {
+    uri?: Uri;
+}
 @injectable()
 export abstract class BaseInterpreterSelectorCommand implements IExtensionSingleActivationService, IDisposable {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
@@ -21,6 +23,8 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
         @unmanaged() protected readonly commandManager: ICommandManager,
         @unmanaged() protected readonly applicationShell: IApplicationShell,
         @unmanaged() protected readonly workspaceService: IWorkspaceService,
+        @unmanaged() protected readonly pathUtils: IPathUtils,
+        @unmanaged() protected readonly configurationService: IConfigurationService,
     ) {
         this.disposables.push(this);
     }
@@ -31,52 +35,85 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
 
     public abstract activate(): Promise<void>;
 
-    protected async getConfigTarget(): Promise<
+    protected async getConfigTargets(options?: {
+        resetTarget?: boolean;
+    }): Promise<
         | {
               folderUri: Resource;
               configTarget: ConfigurationTarget;
-          }
+          }[]
         | undefined
     > {
-        if (
-            !Array.isArray(this.workspaceService.workspaceFolders) ||
-            this.workspaceService.workspaceFolders.length === 0
-        ) {
-            return {
-                folderUri: undefined,
-                configTarget: ConfigurationTarget.Global,
-            };
+        const workspaceFolders = this.workspaceService.workspaceFolders;
+        if (workspaceFolders === undefined || workspaceFolders.length === 0) {
+            return [
+                {
+                    folderUri: undefined,
+                    configTarget: ConfigurationTarget.Global,
+                },
+            ];
         }
-        if (!this.workspaceService.workspaceFile && this.workspaceService.workspaceFolders.length === 1) {
-            return {
-                folderUri: this.workspaceService.workspaceFolders[0].uri,
-                configTarget: ConfigurationTarget.WorkspaceFolder,
-            };
+        if (!this.workspaceService.workspaceFile && workspaceFolders.length === 1) {
+            return [
+                {
+                    folderUri: workspaceFolders[0].uri,
+                    configTarget: ConfigurationTarget.WorkspaceFolder,
+                },
+            ];
         }
 
         // Ok we have multiple workspaces, get the user to pick a folder.
 
-        type WorkspaceSelectionQuickPickItem = QuickPickItem & { uri: Uri };
-        const quickPickItems: WorkspaceSelectionQuickPickItem[] = [
-            ...this.workspaceService.workspaceFolders.map((w) => ({
-                label: w.name,
-                description: path.dirname(w.uri.fsPath),
-                uri: w.uri,
-            })),
+        let quickPickItems: WorkspaceSelectionQuickPickItem[] = options?.resetTarget
+            ? [
+                  {
+                      label: Common.clearAll(),
+                  },
+              ]
+            : [];
+        quickPickItems.push(
+            ...workspaceFolders.map((w) => {
+                const selectedInterpreter = this.pathUtils.getDisplayName(
+                    this.configurationService.getSettings(w.uri).pythonPath,
+                    w.uri.fsPath,
+                );
+                return {
+                    label: w.name,
+                    description: this.pathUtils.getDisplayName(path.dirname(w.uri.fsPath)),
+                    uri: w.uri,
+                    detail: selectedInterpreter,
+                };
+            }),
             {
-                label: Interpreters.entireWorkspace(),
-                uri: this.workspaceService.workspaceFolders[0].uri,
+                label: options?.resetTarget ? Interpreters.clearAtWorkspace() : Interpreters.entireWorkspace(),
+                uri: workspaceFolders[0].uri,
             },
-        ];
+        );
 
         const selection = await this.applicationShell.showQuickPick(quickPickItems, {
-            placeHolder: 'Select the workspace to set the interpreter',
+            placeHolder: options?.resetTarget
+                ? 'Select the workspace folder to clear the interpreter for'
+                : 'Select the workspace folder to set the interpreter',
         });
 
+        if (selection?.label === Common.clearAll()) {
+            const folderTargets: {
+                folderUri: Resource;
+                configTarget: ConfigurationTarget;
+            }[] = workspaceFolders.map((w) => ({
+                folderUri: w.uri,
+                configTarget: ConfigurationTarget.WorkspaceFolder,
+            }));
+            return [
+                ...folderTargets,
+                { folderUri: workspaceFolders[0].uri, configTarget: ConfigurationTarget.Workspace },
+            ];
+        }
+
         return selection
-            ? selection.label === Interpreters.entireWorkspace()
-                ? { folderUri: selection.uri, configTarget: ConfigurationTarget.Workspace }
-                : { folderUri: selection.uri, configTarget: ConfigurationTarget.WorkspaceFolder }
+            ? selection.label === Interpreters.entireWorkspace() || selection.label === Interpreters.clearAtWorkspace()
+                ? [{ folderUri: selection.uri, configTarget: ConfigurationTarget.Workspace }]
+                : [{ folderUri: selection.uri, configTarget: ConfigurationTarget.WorkspaceFolder }]
             : undefined;
     }
 }

@@ -7,8 +7,7 @@ import { TextEditor } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
-import { NativeTensorBoard } from '../common/experiments/groups';
-import { IDisposableRegistry, IExperimentService } from '../common/types';
+import { IDisposableRegistry } from '../common/types';
 import { getDocumentLines } from '../telemetry/importTracker';
 import { TensorBoardEntrypointTrigger } from './constants';
 import { containsTensorBoardImport } from './helpers';
@@ -26,13 +25,9 @@ export class TensorBoardUsageTracker implements IExtensionSingleActivationServic
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(TensorBoardPrompt) private prompt: TensorBoardPrompt,
-        @inject(IExperimentService) private experimentService: IExperimentService,
     ) {}
 
     public async activate(): Promise<void> {
-        if (!(await this.experimentService.inExperiment(NativeTensorBoard.experiment))) {
-            return;
-        }
         if (testExecution) {
             await this.activateInternal();
         } else {

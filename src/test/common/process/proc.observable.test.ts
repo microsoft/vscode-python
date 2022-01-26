@@ -7,7 +7,8 @@ import { CancellationTokenSource } from 'vscode';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { createDeferred } from '../../../client/common/utils/async';
-import { getExtensionSettings, isOs, OSType } from '../../common';
+import { isOs, OSType } from '../../common';
+import { getExtensionSettings } from '../../extensionSettings';
 import { initialize } from './../../initialize';
 
 use(chaiAsPromised);
@@ -198,7 +199,7 @@ suite('ProcessService', () => {
         this.timeout(20000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
-            'print(">>>CONDA-RUN-OUTPUT")',
+            'print(">>>PYTHON-EXEC-OUTPUT")',
             'import sys',
             'import time',
             'print("1")',
@@ -219,7 +220,7 @@ suite('ProcessService', () => {
             'sys.stderr.write("c")',
             'sys.stderr.flush()',
             'time.sleep(2)',
-            'print("<<<CONDA-RUN-OUTPUT")',
+            'print("<<<PYTHON-EXEC-OUTPUT")',
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = [

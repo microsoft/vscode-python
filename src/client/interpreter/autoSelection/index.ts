@@ -14,7 +14,6 @@ import { compareSemVerLikeVersions } from '../../pythonEnvironments/base/info/py
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { EnvTypeHeuristic, getEnvTypeHeuristic } from '../configuration/environmentTypeComparer';
 import { IInterpreterComparer } from '../configuration/types';
 import { IInterpreterHelper, IInterpreterService } from '../contracts';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSelectionProxyService } from './types';
@@ -204,19 +203,14 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         const interpreters = await this.interpreterService.getAllInterpreters(resource);
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
 
-        // When auto-selecting an intepreter for a workspace, we either want to return a local one
-        // or fallback on a globally-installed interpreter, and we don't want want to suggest a global environment
-        // because we would have to add a way to match environments to a workspace.
-        const filteredInterpreters = interpreters.filter(
-            (i) => getEnvTypeHeuristic(i, workspaceUri?.folderUri.fsPath || '') !== EnvTypeHeuristic.Global,
-        );
-
-        filteredInterpreters.sort(this.envTypeComparer.compare.bind(this.envTypeComparer));
-
+        const recommendedInterpreter = this.envTypeComparer.getRecommended(interpreters, workspaceUri?.folderUri);
+        if (!recommendedInterpreter) {
+            return;
+        }
         if (workspaceUri) {
-            this.setWorkspaceInterpreter(workspaceUri.folderUri, filteredInterpreters[0]);
+            this.setWorkspaceInterpreter(workspaceUri.folderUri, recommendedInterpreter);
         } else {
-            this.setGlobalInterpreter(filteredInterpreters[0]);
+            this.setGlobalInterpreter(recommendedInterpreter);
         }
 
         queriedState.updateValue(true);

@@ -70,7 +70,9 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
         if (languageClient) {
             // Turn our item into a ProtocolCompletionItem before we convert it. This preserves the .data
             // attribute that it has and is needed to match on the language server side.
-            const protoItem: ProtocolCompletionItem = new ProtocolCompletionItem(item.label);
+            const protoItem: ProtocolCompletionItem = new ProtocolCompletionItem(
+                typeof item.label === 'string' ? item.label : item.label.label,
+            );
             Object.assign(protoItem, item);
 
             const args = languageClient.code2ProtocolConverter.asCompletionItem(protoItem);

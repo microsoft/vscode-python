@@ -91,6 +91,7 @@ export namespace Common {
     export const and = localize('Common.and', 'and');
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
     export const recommended = localize('Common.recommended', 'Recommended');
+    export const clearAll = localize('Common.clearAll', 'Clear all');
 }
 
 export namespace CommonSurvey {
@@ -282,6 +283,7 @@ export namespace Interpreters {
         'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?',
     );
     export const entireWorkspace = localize('Interpreters.entireWorkspace', 'Select at workspace level');
+    export const clearAtWorkspace = localize('Interpreters.clearAtWorkspace', 'Clear at workspace level');
     export const selectInterpreterTip = localize(
         'Interpreters.selectInterpreterTip',
         'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar',
@@ -290,9 +292,11 @@ export namespace Interpreters {
 }
 
 export namespace InterpreterQuickPickList {
+    export const globalGroupName = localize('InterpreterQuickPickList.globalGroupName', 'Global');
+    export const workspaceGroupName = localize('InterpreterQuickPickList.workspaceGroupName', 'Workspace');
     export const quickPickListPlaceholder = localize(
         'InterpreterQuickPickList.quickPickListPlaceholder',
-        'Current: {0}',
+        'Selected Interpreter: {0}',
     );
     export const enterPath = {
         label: localize('InterpreterQuickPickList.enterPath.label', 'Enter interpreter path...'),

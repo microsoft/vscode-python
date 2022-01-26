@@ -5,7 +5,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { uniq } from 'lodash';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, UNKNOWN_PYTHON_VERSION, virtualEnvKinds } from '../../info';
-import { buildEnvInfo, comparePythonVersionSpecificity, getEnvDisplayString, getEnvMatcher } from '../../info/env';
+import { buildEnvInfo, comparePythonVersionSpecificity, setEnvDisplayString, getEnvMatcher } from '../../info/env';
 import {
     getEnvironmentDirFromPath,
     getInterpreterPathFromDir,
@@ -52,7 +52,7 @@ export async function resolveBasicEnv({ kind, executablePath, source }: BasicEnv
         // We can update env further using information we can get from the Windows registry.
         await updateEnvUsingRegistry(resolvedEnv);
     }
-    resolvedEnv.display = getEnvDisplayString(resolvedEnv);
+    setEnvDisplayString(resolvedEnv);
     return resolvedEnv;
 }
 

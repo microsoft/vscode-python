@@ -80,7 +80,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return query ? cachedEnvs.filter(getQueryFilter(query)) : cachedEnvs;
     }
 
-    public triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
+    public triggerRefresh(query?: PythonLocatorQuery & { clearCache?: boolean }): Promise<void> {
         let refreshPromise = this.getRefreshPromiseForQuery(query);
         if (!refreshPromise) {
             refreshPromise = this.startRefresh(query);
@@ -88,9 +88,13 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return refreshPromise;
     }
 
-    private startRefresh(query: PythonLocatorQuery | undefined): Promise<void> {
+    private startRefresh(query: (PythonLocatorQuery & { clearCache?: boolean }) | undefined): Promise<void> {
         const stopWatch = new StopWatch();
         const deferred = createDeferred<void>();
+
+        if (query?.clearCache) {
+            this.cache.clearCache();
+        }
         // Ensure we set this before we trigger the promise to accurately track when a refresh has started.
         this.refreshPromises.set(query, deferred.promise);
         this.refreshStarted.fire();

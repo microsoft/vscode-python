@@ -36,6 +36,15 @@ export const virtualEnvKinds = [
     PythonEnvKind.Conda,
     PythonEnvKind.VirtualEnv,
 ];
+
+export const globallyInstalledEnvKinds = [
+    PythonEnvKind.OtherGlobal,
+    PythonEnvKind.Unknown,
+    PythonEnvKind.WindowsStore,
+    PythonEnvKind.System,
+    PythonEnvKind.Custom,
+];
+
 /**
  * Information about a file.
  */
@@ -168,11 +177,13 @@ type _PythonEnvInfo = PythonEnvBaseInfo & PythonBuildInfo;
  *
  * @prop distro - the installed Python distro that this env is using or belongs to
  * @prop display - the text to use when showing the env to users
+ * @prop detailedDisplayName - display name containing all details
  * @prop searchLocation - the root under which a locator found this env, if any
  */
 export type PythonEnvInfo = _PythonEnvInfo & {
     distro: PythonDistroInfo;
     display?: string;
+    detailedDisplayName?: string;
     searchLocation?: Uri;
 };
 

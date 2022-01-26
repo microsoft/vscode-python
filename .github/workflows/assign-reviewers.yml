@@ -29,7 +29,9 @@ jobs:
           cache-dependency-path: '.github/assign-reviewers/requirements.txt'
 
       - name: Install dependencies
-        run: python -m pip install --require-hashes --no-deps --requirement .github/assign-reviewers/requirements.txt
+        uses: brettcannon/pip-secure-install@v1
+        with:
+          requirements-file: '.github/assign-reviewers/requirements.txt'
 
       - name: Run script
         run: python .github/assign-reviewers/ ${{ secrets.GITHUB_TOKEN }}

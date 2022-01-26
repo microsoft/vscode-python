@@ -8,9 +8,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { Container } from 'inversify';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
+import * as sinon from 'sinon';
 import { ConfigurationTarget, Disposable, TextDocument, TextEditor, Uri, WorkspaceConfiguration } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
-import { DeprecatePythonPath } from '../../client/common/experiments/groups';
+import { InterpreterStatusBarPosition } from '../../client/common/experiments/groups';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import {
@@ -34,6 +35,7 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { PYTHON_PATH } from '../common';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
+import * as proposedApi from '../../client/proposedApi';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -54,15 +56,15 @@ suite('Interpreters service', () => {
     let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let interpreterPathService: TypeMoq.IMock<IInterpreterPathService>;
-    let experimentService: TypeMoq.IMock<IExperimentService>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
+    let experiments: TypeMoq.IMock<IExperimentService>;
+    let reportActiveInterpreterChangedStub: sinon.SinonStub;
 
-    function setupSuite() {
+    setup(() => {
         const cont = new Container();
         serviceManager = new ServiceManager(cont);
         serviceContainer = new ServiceContainer(cont);
 
-        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
         interpreterPathService = TypeMoq.Mock.ofType<IInterpreterPathService>();
         updater = TypeMoq.Mock.ofType<IPythonPathUpdaterServiceManager>();
         pyenvs = TypeMoq.Mock.ofType<IComponentAdapter>();
@@ -75,6 +77,8 @@ suite('Interpreters service', () => {
         pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
         pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        experiments = TypeMoq.Mock.ofType<IExperimentService>();
+        experiments.setup((e) => e.inExperimentSync(InterpreterStatusBarPosition.Pinned)).returns(() => false);
 
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         pythonSettings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
@@ -95,6 +99,7 @@ suite('Interpreters service', () => {
                 return state as any;
             });
 
+        serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, experiments.object);
         serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, []);
         serviceManager.addSingletonInstance<IInterpreterHelper>(IInterpreterHelper, helper.object);
         serviceManager.addSingletonInstance<IPythonPathUpdaterServiceManager>(
@@ -103,7 +108,6 @@ suite('Interpreters service', () => {
         );
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fileSystem.object);
-        serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, experimentService.object);
         serviceManager.addSingletonInstance<IInterpreterPathService>(
             IInterpreterPathService,
             interpreterPathService.object,
@@ -130,9 +134,14 @@ suite('Interpreters service', () => {
             MockAutoSelectionService,
         );
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService.object);
-    }
 
-    setup(setupSuite);
+        reportActiveInterpreterChangedStub = sinon.stub(proposedApi, 'reportActiveInterpreterChanged');
+    });
+
+    teardown(() => {
+        sinon.restore();
+    });
+
     [undefined, Uri.file('xyz')].forEach((resource) => {
         const resourceTestSuffix = `(${resource ? 'with' : 'without'} a resource)`;
 
@@ -153,7 +162,6 @@ suite('Interpreters service', () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
-        experimentService.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
         workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
         workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
         let activeTextEditorChangeHandler: (e: TextEditor | undefined) => any | undefined;
@@ -180,7 +188,6 @@ suite('Interpreters service', () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
-        experimentService.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
         workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
         workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
         let activeTextEditorChangeHandler: (e?: TextEditor | undefined) => any | undefined;
@@ -202,7 +209,6 @@ suite('Interpreters service', () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
-        experimentService.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
         workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
         workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
         let interpreterPathServiceHandler: (e: InterpreterConfigurationScope) => any | undefined = () => 0;
@@ -251,6 +257,10 @@ suite('Interpreters service', () => {
             .verifiable(TypeMoq.Times.once());
         service._onConfigChanged(resource);
         interpreterDisplay.verifyAll();
+        sinon.assert.calledOnceWithExactly(reportActiveInterpreterChangedStub, {
+            interpreterPath: 'current path',
+            resource,
+        });
     });
 
     test('If stored setting is not equal to current interpreter path setting, refresh the interpreter display', async () => {
@@ -265,6 +275,10 @@ suite('Interpreters service', () => {
             .verifiable(TypeMoq.Times.once());
         service._onConfigChanged(resource);
         interpreterDisplay.verifyAll();
+        sinon.assert.calledOnceWithExactly(reportActiveInterpreterChangedStub, {
+            interpreterPath: 'current path',
+            resource,
+        });
     });
 
     test('If stored setting is equal to current interpreter path setting, do not refresh the interpreter display', async () => {
@@ -279,5 +293,6 @@ suite('Interpreters service', () => {
             .verifiable(TypeMoq.Times.never());
         service._onConfigChanged(resource);
         interpreterDisplay.verifyAll();
+        expect(reportActiveInterpreterChangedStub.notCalled).to.be.equal(true);
     });
 });

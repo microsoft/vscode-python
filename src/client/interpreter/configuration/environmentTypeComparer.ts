@@ -3,22 +3,22 @@
 
 import { injectable, inject } from 'inversify';
 import { getArchitectureDisplayName } from '../../common/platform/registry';
+import { Resource } from '../../common/types';
 import { isParentPath } from '../../pythonEnvironments/common/externalDependencies';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment, virtualEnvTypes } from '../../pythonEnvironments/info';
 import { PythonVersion } from '../../pythonEnvironments/info/pythonVersion';
 import { IInterpreterHelper } from '../contracts';
 import { IInterpreterComparer } from './types';
 
-/*
- * Enum description:
- * - Local environments (.venv);
- * - Global environments (pipenv, conda);
- * - Globally-installed interpreters (/usr/bin/python3, Windows Store).
- */
-export enum EnvTypeHeuristic {
+export enum EnvLocationHeuristic {
+    /**
+     * Environments inside the workspace.
+     */
     Local = 1,
+    /**
+     * Environments outside the workspace.
+     */
     Global = 2,
-    GlobalInterpreters = 3,
 }
 
 @injectable()
@@ -41,8 +41,14 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
      * Always sort with newest version of Python first within each subgroup.
      */
     public compare(a: PythonEnvironment, b: PythonEnvironment): number {
+        // Check environment location.
+        const envLocationComparison = compareEnvironmentLocation(a, b, this.workspaceFolderPath);
+        if (envLocationComparison !== 0) {
+            return envLocationComparison;
+        }
+
         // Check environment type.
-        const envTypeComparison = compareEnvironmentType(a, b, this.workspaceFolderPath);
+        const envTypeComparison = compareEnvironmentType(a, b);
         if (envTypeComparison !== 0) {
             return envTypeComparison;
         }
@@ -53,18 +59,13 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
             return versionComparison;
         }
 
-        // Prioritize non-Conda environments.
-        if (isCondaEnvironment(a) && !isCondaEnvironment(b)) {
-            return 1;
-        }
-
-        if (!isCondaEnvironment(a) && isCondaEnvironment(b)) {
-            return -1;
-        }
-
         // If we have the "base" Conda env, put it last in its Python version subgroup.
         if (isBaseCondaEnvironment(a)) {
             return 1;
+        }
+
+        if (isBaseCondaEnvironment(b)) {
+            return -1;
         }
 
         // Check alphabetical order.
@@ -75,6 +76,25 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
         }
 
         return nameA > nameB ? 1 : -1;
+    }
+
+    public getRecommended(interpreters: PythonEnvironment[], resource: Resource): PythonEnvironment | undefined {
+        // When recommending an intepreter for a workspace, we either want to return a local one
+        // or fallback on a globally-installed interpreter, and we don't want want to suggest a global environment
+        // because we would have to add a way to match environments to a workspace.
+        const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
+        const filteredInterpreters = interpreters.filter((i) => {
+            if (getEnvLocationHeuristic(i, workspaceUri?.folderUri.fsPath || '') === EnvLocationHeuristic.Local) {
+                return true;
+            }
+            if (virtualEnvTypes.includes(i.envType)) {
+                // We're not sure if these envs were created for the workspace, so do not recommend them.
+                return false;
+            }
+            return true;
+        });
+        filteredInterpreters.sort(this.compare.bind(this));
+        return filteredInterpreters.length ? filteredInterpreters[0] : undefined;
     }
 }
 
@@ -113,12 +133,11 @@ function getSortName(info: PythonEnvironment, interpreterHelper: IInterpreterHel
     return `${sortNameParts.join(' ')} ${envSuffix}`.trim();
 }
 
-function isCondaEnvironment(environment: PythonEnvironment): boolean {
-    return environment.envType === EnvironmentType.Conda;
-}
-
 function isBaseCondaEnvironment(environment: PythonEnvironment): boolean {
-    return isCondaEnvironment(environment) && (environment.envName === 'base' || environment.envName === 'miniconda');
+    return (
+        environment.envType === EnvironmentType.Conda &&
+        (environment.envName === 'base' || environment.envName === 'miniconda')
+    );
 }
 
 /**
@@ -151,11 +170,11 @@ function comparePythonVersionDescending(a: PythonVersion | undefined, b: PythonV
 }
 
 /**
- * Compare 2 environment types: return 0 if they are the same, -1 if a comes before b, 1 otherwise.
+ * Compare 2 environment locations: return 0 if they are the same, -1 if a comes before b, 1 otherwise.
  */
-function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment, workspacePath: string): number {
-    const aHeuristic = getEnvTypeHeuristic(a, workspacePath);
-    const bHeuristic = getEnvTypeHeuristic(b, workspacePath);
+function compareEnvironmentLocation(a: PythonEnvironment, b: PythonEnvironment, workspacePath: string): number {
+    const aHeuristic = getEnvLocationHeuristic(a, workspacePath);
+    const bHeuristic = getEnvLocationHeuristic(b, workspacePath);
 
     return Math.sign(aHeuristic - bHeuristic);
 }
@@ -163,28 +182,38 @@ function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment, work
 /**
  * Return a heuristic value depending on the environment type.
  */
-export function getEnvTypeHeuristic(environment: PythonEnvironment, workspacePath: string): EnvTypeHeuristic {
-    const { envType } = environment;
-
+export function getEnvLocationHeuristic(environment: PythonEnvironment, workspacePath: string): EnvLocationHeuristic {
     if (
         workspacePath.length > 0 &&
         ((environment.envPath && isParentPath(environment.envPath, workspacePath)) ||
             (environment.path && isParentPath(environment.path, workspacePath)))
     ) {
-        return EnvTypeHeuristic.Local;
+        return EnvLocationHeuristic.Local;
     }
+    return EnvLocationHeuristic.Global;
+}
 
-    switch (envType) {
-        case EnvironmentType.Venv:
-        case EnvironmentType.Conda:
-        case EnvironmentType.VirtualEnv:
-        case EnvironmentType.VirtualEnvWrapper:
-        case EnvironmentType.Pipenv:
-        case EnvironmentType.Poetry:
-            return EnvTypeHeuristic.Global;
-        // The default case covers global environments.
-        // For now this includes: pyenv, Windows Store, Global, System and Unknown environment types.
-        default:
-            return EnvTypeHeuristic.GlobalInterpreters;
-    }
+/**
+ * Compare 2 environment types: return 0 if they are the same, -1 if a comes before b, 1 otherwise.
+ */
+function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment): number {
+    const envTypeByPriority = getPrioritizedEnvironmentType();
+    return Math.sign(envTypeByPriority.indexOf(a.envType) - envTypeByPriority.indexOf(b.envType));
+}
+
+function getPrioritizedEnvironmentType(): EnvironmentType[] {
+    return [
+        // Prioritize non-Conda environments.
+        EnvironmentType.Poetry,
+        EnvironmentType.Pipenv,
+        EnvironmentType.VirtualEnvWrapper,
+        EnvironmentType.Venv,
+        EnvironmentType.VirtualEnv,
+        EnvironmentType.Conda,
+        EnvironmentType.Pyenv,
+        EnvironmentType.WindowsStore,
+        EnvironmentType.Global,
+        EnvironmentType.System,
+        EnvironmentType.Unknown,
+    ];
 }

@@ -6,8 +6,8 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import {
     EnvironmentTypeComparer,
-    EnvTypeHeuristic,
-    getEnvTypeHeuristic,
+    EnvLocationHeuristic,
+    getEnvLocationHeuristic,
 } from '../../client/interpreter/configuration/environmentTypeComparer';
 import { IInterpreterHelper } from '../../client/interpreter/contracts';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
@@ -250,9 +250,9 @@ suite('getEnvTypeHeuristic tests', () => {
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment;
 
-            const envTypeHeuristic = getEnvTypeHeuristic(environment, workspacePath);
+            const envTypeHeuristic = getEnvLocationHeuristic(environment, workspacePath);
 
-            assert.strictEqual(envTypeHeuristic, EnvTypeHeuristic.Local);
+            assert.strictEqual(envTypeHeuristic, EnvLocationHeuristic.Local);
         });
 
         test('If the path to an environment does not start with the workspace path it should be marked as global', () => {
@@ -262,9 +262,9 @@ suite('getEnvTypeHeuristic tests', () => {
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment;
 
-            const envTypeHeuristic = getEnvTypeHeuristic(environment, workspacePath);
+            const envTypeHeuristic = getEnvLocationHeuristic(environment, workspacePath);
 
-            assert.strictEqual(envTypeHeuristic, EnvTypeHeuristic.Global);
+            assert.strictEqual(envTypeHeuristic, EnvLocationHeuristic.Global);
         });
 
         test('If envPath is not set, fallback to path', () => {
@@ -274,9 +274,9 @@ suite('getEnvTypeHeuristic tests', () => {
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment;
 
-            const envTypeHeuristic = getEnvTypeHeuristic(environment, workspacePath);
+            const envTypeHeuristic = getEnvLocationHeuristic(environment, workspacePath);
 
-            assert.strictEqual(envTypeHeuristic, EnvTypeHeuristic.Local);
+            assert.strictEqual(envTypeHeuristic, EnvLocationHeuristic.Local);
         });
     });
 
@@ -296,9 +296,9 @@ suite('getEnvTypeHeuristic tests', () => {
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment;
 
-            const envTypeHeuristic = getEnvTypeHeuristic(environment, workspacePath);
+            const envTypeHeuristic = getEnvLocationHeuristic(environment, workspacePath);
 
-            assert.strictEqual(envTypeHeuristic, EnvTypeHeuristic.GlobalInterpreters);
+            assert.strictEqual(envTypeHeuristic, EnvLocationHeuristic.Global);
         });
     });
 });

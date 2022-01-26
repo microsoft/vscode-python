@@ -10,7 +10,8 @@ import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { StdErrError } from '../../../client/common/process/types';
 import { OSType } from '../../../client/common/utils/platform';
-import { getExtensionSettings, isOs, isPythonVersion } from '../../common';
+import { isOs, isPythonVersion } from '../../common';
+import { getExtensionSettings } from '../../extensionSettings';
 import { initialize } from './../../initialize';
 
 use(chaiAsPromised);
@@ -134,7 +135,7 @@ suite('ProcessService Observable', () => {
         this.timeout(7000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = [
-            'print(">>>CONDA-RUN-OUTPUT")',
+            'print(">>>PYTHON-EXEC-OUTPUT")',
             'import sys',
             'import time',
             'print("1")',
@@ -154,7 +155,7 @@ suite('ProcessService Observable', () => {
             'time.sleep(1)',
             'sys.stderr.write("c")',
             'sys.stderr.flush()',
-            'print("<<<CONDA-RUN-OUTPUT")',
+            'print("<<<PYTHON-EXEC-OUTPUT")',
         ];
         const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')]);
         const expectedStdout = ['1', '2', '3'];
@@ -234,7 +235,7 @@ suite('ProcessService Observable', () => {
         const procService = new ProcessService(new BufferDecoder());
         const printOutput = '1234';
         const result = await procService.shellExec(
-            `"${pythonPath}" -c "print('>>>CONDA-RUN-OUTPUT');print('${printOutput}');print('<<<CONDA-RUN-OUTPUT')"`,
+            `"${pythonPath}" -c "print('>>>PYTHON-EXEC-OUTPUT');print('${printOutput}');print('<<<PYTHON-EXEC-OUTPUT')"`,
         );
 
         expect(result).not.to.be.an('undefined', 'result is undefined');

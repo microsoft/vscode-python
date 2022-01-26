@@ -6,7 +6,7 @@ import { Event, EventEmitter } from 'vscode';
 import { identifyEnvironment } from '../../../common/environmentIdentifier';
 import { IEnvironmentInfoService } from '../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
-import { getEnvDisplayString } from '../../info/env';
+import { setEnvDisplayString } from '../../info/env';
 import { InterpreterInformation } from '../../info/interpreter';
 import {
     BasicEnvInfo,
@@ -73,7 +73,9 @@ export class PythonEnvsResolver implements IResolvingLocator {
                         'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in resolver',
                     );
                 } else if (seen[event.index] !== undefined) {
+                    const old = seen[event.index];
                     seen[event.index] = await resolveBasicEnv(event.update);
+                    didUpdate.fire({ old, index: event.index, update: seen[event.index] });
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
                 } else {
                     // This implies a problem in a downstream locator
@@ -145,6 +147,6 @@ function getResolvedEnv(interpreterInfo: InterpreterInformation, environment: Py
     resolvedEnv.executable.sysPrefix = interpreterInfo.executable.sysPrefix;
     resolvedEnv.arch = interpreterInfo.arch;
     // Display name should be set after all the properties as we need other properties to build display name.
-    resolvedEnv.display = getEnvDisplayString(resolvedEnv);
+    setEnvDisplayString(resolvedEnv);
     return resolvedEnv;
 }

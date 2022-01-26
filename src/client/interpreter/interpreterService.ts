@@ -1,8 +1,8 @@
+// eslint-disable-next-line max-classes-per-file
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import '../common/extensions';
-import { IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { DeprecatePythonPath } from '../common/experiments/groups';
+import { IDocumentManager } from '../common/application/types';
 import { IPythonExecutionFactory } from '../common/process/types';
 import {
     IConfigurationService,
@@ -16,10 +16,14 @@ import {
     IComponentAdapter,
     IInterpreterDisplay,
     IInterpreterService,
+    IInterpreterStatusbarVisibilityFilter,
     PythonEnvironmentsChangedEvent,
 } from './contracts';
 import { PythonLocatorQuery } from '../pythonEnvironments/base/locator';
 import { traceError } from '../logging';
+import { PYTHON_LANGUAGE } from '../common/constants';
+import { InterpreterStatusBarPosition } from '../common/experiments/groups';
+import { reportActiveInterpreterChanged } from '../proposedApi';
 
 type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
 
@@ -65,8 +69,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     private readonly interpreterPathService: IInterpreterPathService;
 
-    private readonly experimentsManager: IExperimentService;
-
     private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
 
     private readonly didChangeInterpreterInformation = new EventEmitter<PythonEnvironment>();
@@ -77,7 +79,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
     ) {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-        this.experimentsManager = this.serviceContainer.get<IExperimentService>(IExperimentService);
         this.onDidChangeInterpreters = pyenvs.onChanged;
     }
 
@@ -89,33 +90,49 @@ export class InterpreterService implements Disposable, IInterpreterService {
     public initialize(): void {
         const disposables = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
+        const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
+        const filter = new (class implements IInterpreterStatusbarVisibilityFilter {
+            constructor(private readonly docManager: IDocumentManager) {}
+
+            public readonly interpreterVisibilityEmitter = new EventEmitter<void>();
+
+            public readonly changed = this.interpreterVisibilityEmitter.event;
+
+            get hidden() {
+                return this.docManager.activeTextEditor?.document.languageId !== PYTHON_LANGUAGE;
+            }
+        })(documentManager);
+        const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
+        if (experiments.inExperimentSync(InterpreterStatusBarPosition.Pinned)) {
+            interpreterDisplay.registerVisibilityFilter(filter);
+        }
         disposables.push(
-            documentManager.onDidChangeActiveTextEditor((e) =>
-                e && e.document ? this.refresh(e.document.uri) : undefined,
-            ),
+            this.onDidChangeInterpreters((e) => {
+                const interpreter = e.old ?? e.new;
+                if (interpreter) {
+                    this.didChangeInterpreterInformation.fire(interpreter);
+                }
+            }),
         );
-        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        disposables.push(
+            documentManager.onDidOpenTextDocument(() => {
+                // To handle scenario when language mode is set to "python"
+                filter.interpreterVisibilityEmitter.fire();
+            }),
+            documentManager.onDidChangeActiveTextEditor((e) => {
+                filter.interpreterVisibilityEmitter.fire();
+                if (e && e.document) {
+                    this.refresh(e.document.uri);
+                }
+            }),
+        );
         const pySettings = this.configService.getSettings();
         this._pythonPathSetting = pySettings.pythonPath;
-        if (this.experimentsManager.inExperimentSync(DeprecatePythonPath.experiment)) {
-            disposables.push(
-                this.interpreterPathService.onDidChange((i) => {
-                    this._onConfigChanged(i.uri);
-                }),
-            );
-        } else {
-            const workspacesUris: (Uri | undefined)[] = workspaceService.hasWorkspaceFolders
-                ? workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
-                : [undefined];
-            const disposable = workspaceService.onDidChangeConfiguration((e) => {
-                const workspaceUriIndex = workspacesUris.findIndex((uri) =>
-                    e.affectsConfiguration('python.pythonPath', uri),
-                );
-                const workspaceUri = workspaceUriIndex === -1 ? undefined : workspacesUris[workspaceUriIndex];
-                this._onConfigChanged(workspaceUri);
-            });
-            disposables.push(disposable);
-        }
+        disposables.push(
+            this.interpreterPathService.onDidChange((i) => {
+                this._onConfigChanged(i.uri);
+            }),
+        );
     }
 
     public getInterpreters(resource?: Uri): PythonEnvironment[] {
@@ -160,6 +177,10 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (this._pythonPathSetting === '' || this._pythonPathSetting !== pySettings.pythonPath) {
             this._pythonPathSetting = pySettings.pythonPath;
             this.didChangeInterpreterEmitter.fire();
+            reportActiveInterpreterChanged({
+                interpreterPath: pySettings.pythonPath === '' ? undefined : pySettings.pythonPath,
+                resource,
+            });
             const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
             interpreterDisplay.refresh().catch((ex) => traceError('Python Extension: display.refresh', ex));
         }

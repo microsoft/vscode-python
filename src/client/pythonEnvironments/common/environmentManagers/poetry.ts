@@ -84,6 +84,8 @@ export async function isPoetryEnvironment(interpreterPath: string): Promise<bool
     return false;
 }
 
+const POETRY_TIMEOUT = 50000;
+
 /** Wraps the "poetry" utility, and exposes its functionality.
  */
 export class Poetry {
@@ -120,7 +122,6 @@ export class Poetry {
             // This check is not expensive and may change during a session, so we need not cache it.
             return undefined;
         }
-        traceVerbose(`Getting poetry for cwd ${cwd}`);
         if (Poetry.poetryPromise.get(cwd) === undefined || isTestExecution()) {
             Poetry.poetryPromise.set(cwd, Poetry.locate(cwd));
         }
@@ -131,6 +132,7 @@ export class Poetry {
         // First thing this method awaits on should be poetry command execution, hence perform all operations
         // before that synchronously.
 
+        traceVerbose(`Getting poetry for cwd ${cwd}`);
         // Produce a list of candidate binaries to be probed by exec'ing them.
         function* getCandidates() {
             const customPoetryPath = getPythonSetting<string>('poetryPath');
@@ -158,6 +160,7 @@ export class Poetry {
                 traceVerbose(`Found poetry via filesystem probing for ${cwd}: ${poetryPath}`);
                 return poetry;
             }
+            traceVerbose(`Failed to find poetry for ${cwd}: ${poetryPath}`);
         }
 
         // Didn't find anything.
@@ -261,11 +264,12 @@ export class Poetry {
 
     private async safeShellExecute(command: string, logVerbose = false) {
         // It has been observed that commands related to conda or poetry binary take upto 10-15 seconds unlike
-        // python binaries. So for now no timeouts on them.
+        // python binaries. So have a large timeout.
         const stopWatch = new StopWatch();
         const result = await shellExecute(command, {
             cwd: this.cwd,
             throwOnStdErr: true,
+            timeout: POETRY_TIMEOUT,
         }).catch((ex) => {
             if (logVerbose) {
                 traceVerbose(ex);

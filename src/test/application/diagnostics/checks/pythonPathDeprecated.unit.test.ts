@@ -26,7 +26,6 @@ import {
     IDiagnosticHandlerService,
 } from '../../../../client/application/diagnostics/types';
 import { IWorkspaceService } from '../../../../client/common/application/types';
-import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
 import { IDisposableRegistry, IExperimentService, Resource } from '../../../../client/common/types';
 import { Common, Diagnostics } from '../../../../client/common/utils/localize';
 import { IServiceContainer } from '../../../../client/ioc/types';
@@ -227,31 +226,7 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
             commandFactory.verifyAll();
         });
 
-        test('If not in DeprecatePythonPath experiment, empty diagnostics is returned', async () => {
-            experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
-            const workspaceConfig = typemoq.Mock.ofType<WorkspaceConfiguration>();
-            workspaceService
-                .setup((w) => w.getConfiguration('python', resource))
-                .returns(() => workspaceConfig.object)
-                .verifiable(typemoq.Times.never());
-            workspaceConfig
-                .setup((w) => w.inspect('pythonPath'))
-                .returns(
-                    () =>
-                        ({
-                            workspaceFolderValue: 'workspaceFolderValue',
-                            workspaceValue: 'workspaceValue',
-                        } as any),
-                );
-
-            const diagnostics = await diagnosticService.diagnose(resource);
-            assert.deepEqual(diagnostics, []);
-
-            workspaceService.verifyAll();
-        });
-
         test('If a workspace is opened and only workspace value is set, diagnostic with appropriate message is returned', async () => {
-            experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
             const workspaceConfig = typemoq.Mock.ofType<WorkspaceConfiguration>();
             workspaceService.setup((w) => w.workspaceFile).returns(() => Uri.parse('path/to/workspaceFile'));
             workspaceService
@@ -276,7 +251,6 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
         });
 
         test('If folder is directly opened and workspace folder value is set, diagnostic with appropriate message is returned', async () => {
-            experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
             const workspaceConfig = typemoq.Mock.ofType<WorkspaceConfiguration>();
             workspaceService.setup((w) => w.workspaceFile).returns(() => undefined);
             workspaceService
@@ -302,7 +276,6 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
         });
 
         test('If a workspace is opened and both workspace folder value & workspace value is set, diagnostic with appropriate message is returned', async () => {
-            experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
             const workspaceConfig = typemoq.Mock.ofType<WorkspaceConfiguration>();
             workspaceService.setup((w) => w.workspaceFile).returns(() => Uri.parse('path/to/workspaceFile'));
             workspaceService
@@ -328,7 +301,6 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
         });
 
         test('Otherwise an empty diagnostic is returned', async () => {
-            experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
             const workspaceConfig = typemoq.Mock.ofType<WorkspaceConfiguration>();
             workspaceService.setup((w) => w.workspaceFile).returns(() => Uri.parse('path/to/workspaceFile'));
             workspaceService

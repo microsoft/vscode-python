@@ -10,14 +10,11 @@ import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import * as windowsUtils from '../../../../client/pythonEnvironments/common/windowsUtils';
-import {
-    Conda,
-    CondaInfo,
-    CONDA_RUN_SCRIPT,
-} from '../../../../client/pythonEnvironments/common/environmentManagers/conda';
+import { Conda, CondaInfo } from '../../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { CondaEnvironmentLocator } from '../../../../client/pythonEnvironments/base/locators/lowLevel/condaLocator';
 import { createBasicEnv } from '../../base/common';
 import { assertBasicEnvsEqual } from '../../base/locators/envTestUtils';
+import { OUTPUT_MARKER_SCRIPT } from '../../../../client/common/process/internal/scripts';
 
 suite('Conda and its environments are located correctly', () => {
     // getOSType() is stubbed to return this.
@@ -484,14 +481,14 @@ suite('Conda and its environments are located correctly', () => {
         expect(args).to.not.equal(undefined);
         assert.deepStrictEqual(
             args,
-            ['conda', 'run', '-n', 'envName', '--no-capture-output', 'python', CONDA_RUN_SCRIPT],
+            ['conda', 'run', '-n', 'envName', '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT],
             'Incorrect args for case 1',
         );
 
         args = await conda?.getRunPythonArgs({ name: '', prefix: 'envPrefix' });
         assert.deepStrictEqual(
             args,
-            ['conda', 'run', '-p', 'envPrefix', '--no-capture-output', 'python', CONDA_RUN_SCRIPT],
+            ['conda', 'run', '-p', 'envPrefix', '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT],
             'Incorrect args for case 2',
         );
     });

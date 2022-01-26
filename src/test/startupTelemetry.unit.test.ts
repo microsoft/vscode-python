@@ -5,9 +5,8 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { Uri, WorkspaceConfiguration } from 'vscode';
+import { Uri } from 'vscode';
 import { IWorkspaceService } from '../client/common/application/types';
-import { DeprecatePythonPath } from '../client/common/experiments/groups';
 import { IExperimentService, IInterpreterPathService } from '../client/common/types';
 import { IServiceContainer } from '../client/ioc/types';
 import { hasUserDefinedPythonPath } from '../client/startupTelemetry';
@@ -28,26 +27,12 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
         serviceContainer.setup((s) => s.get(IInterpreterPathService)).returns(() => interpreterPathService.object);
     });
 
-    function setupConfigProvider(): TypeMoq.IMock<WorkspaceConfiguration> {
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        workspaceService
-            .setup((w) => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isValue(resource)))
-            .returns(() => workspaceConfig.object);
-        return workspaceConfig;
-    }
-
     [undefined, 'python'].forEach((globalValue) => {
         [undefined, 'python'].forEach((workspaceValue) => {
             [undefined, 'python'].forEach((workspaceFolderValue) => {
                 test(`Return false if using settings equals {globalValue: ${globalValue}, workspaceValue: ${workspaceValue}, workspaceFolderValue: ${workspaceFolderValue}}`, () => {
-                    experimentsManager
-                        .setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment))
-                        .returns(() => false);
-                    const workspaceConfig = setupConfigProvider();
-
-                    workspaceConfig
-                        .setup((w) => w.inspect('pythonPath'))
-
+                    interpreterPathService
+                        .setup((i) => i.inspect(resource))
                         .returns(() => ({ globalValue, workspaceValue, workspaceFolderValue } as any));
                     const result = hasUserDefinedPythonPath(resource, serviceContainer.object);
                     expect(result).to.equal(false, 'Should be false');
@@ -57,21 +42,10 @@ suite('Startup Telemetry - hasUserDefinedPythonPath()', async () => {
     });
 
     test('Return true if using setting value equals something else', () => {
-        experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => false);
-        const workspaceConfig = setupConfigProvider();
-
-        workspaceConfig.setup((w) => w.inspect('pythonPath')).returns(() => ({ globalValue: 'something else' } as any));
-        const result = hasUserDefinedPythonPath(resource, serviceContainer.object);
-        expect(result).to.equal(true, 'Should be true');
-    });
-
-    test('If in Deprecate PythonPath experiment, use the new API to inspect settings', () => {
-        experimentsManager.setup((e) => e.inExperimentSync(DeprecatePythonPath.experiment)).returns(() => true);
         interpreterPathService
             .setup((i) => i.inspect(resource))
-            .returns(() => ({}))
-            .verifiable(TypeMoq.Times.once());
-        hasUserDefinedPythonPath(resource, serviceContainer.object);
-        interpreterPathService.verifyAll();
+            .returns(() => ({ globalValue: 'something else' } as any));
+        const result = hasUserDefinedPythonPath(resource, serviceContainer.object);
+        expect(result).to.equal(true, 'Should be true');
     });
 });

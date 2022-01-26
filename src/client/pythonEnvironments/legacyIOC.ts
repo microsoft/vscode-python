@@ -75,6 +75,7 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
         env.companyDisplayName = distro.org;
     }
     env.displayName = info.display;
+    env.detailedDisplayName = info.detailedDisplayName;
     // We do not worry about using distro.defaultDisplayName.
 
     return env;

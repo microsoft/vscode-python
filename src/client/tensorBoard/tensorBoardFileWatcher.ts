@@ -5,8 +5,7 @@ import { inject, injectable } from 'inversify';
 import { FileSystemWatcher, RelativePattern, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IWorkspaceService } from '../common/application/types';
-import { NativeTensorBoard } from '../common/experiments/groups';
-import { IDisposableRegistry, IExperimentService } from '../common/types';
+import { IDisposableRegistry } from '../common/types';
 import { TensorBoardEntrypointTrigger } from './constants';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 
@@ -22,7 +21,6 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(TensorBoardPrompt) private tensorBoardPrompt: TensorBoardPrompt,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IExperimentService) private experimentService: IExperimentService,
     ) {}
 
     public async activate(): Promise<void> {
@@ -30,10 +28,6 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
     }
 
     private async activateInternal() {
-        if (!(await this.experimentService.inExperiment(NativeTensorBoard.experiment))) {
-            return;
-        }
-
         const folders = this.workspaceService.workspaceFolders;
         if (!folders) {
             return;

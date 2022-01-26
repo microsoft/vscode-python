@@ -76,7 +76,6 @@ export type ExecutionFactoryCreateWithEnvironmentOptions = {
      *
      * @type {boolean}
      */
-    bypassCondaExecution?: boolean;
 };
 export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;

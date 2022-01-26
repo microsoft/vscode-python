@@ -51,7 +51,6 @@
     "Interpreters.entireWorkspace": "完整工作區",
     "Interpreters.pythonInterpreterPath": "Python 直譯器路徑: {0}",
     "Logging.CurrentWorkingDirectory": "cwd:",
-    "InterpreterQuickPickList.quickPickListPlaceholder": "目前: {0}",
     "InterpreterQuickPickList.enterPath.label": "輸入直譯器路徑...",
     "InterpreterQuickPickList.enterPath.placeholder": "輸入 Python 直譯器的路徑。",
     "InterpreterQuickPickList.refreshInterpreterList": "重新整理直譯器清單",

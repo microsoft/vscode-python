@@ -578,11 +578,6 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    replaceNotebookMetadata(_uri: vscode.Uri, _value: vscode.NotebookDocumentMetadata): void {
-        // Noop.
-    }
-
-    // eslint-disable-next-line class-methods-use-this
     replaceNotebookCells(
         _uri: vscode.Uri,
         _start: number,
@@ -598,16 +593,6 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
         _uri: vscode.Uri,
         _index: number,
         _outputs: vscode.NotebookCellOutput[],
-        _metadata?: vscode.WorkspaceEditEntryMetadata,
-    ): void {
-        // Noop.
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    replaceNotebookCellMetadata(
-        _uri: vscode.Uri,
-        _index: number,
-        _cellMetadata: vscode.NotebookCellMetadata,
         _metadata?: vscode.WorkspaceEditEntryMetadata,
     ): void {
         // Noop.
@@ -1540,6 +1525,8 @@ export enum TaskPanelKind {
 
 export class TaskGroup implements vscode.TaskGroup {
     private _id: string;
+
+    public isDefault = undefined;
 
     public static Clean: TaskGroup = new TaskGroup('clean', 'Clean');
 

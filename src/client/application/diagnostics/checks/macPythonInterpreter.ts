@@ -3,15 +3,12 @@
 
 // eslint-disable-next-line max-classes-per-file
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, DiagnosticSeverity, Uri } from 'vscode';
-import { IWorkspaceService } from '../../../common/application/types';
-import { DeprecatePythonPath } from '../../../common/experiments/groups';
+import { DiagnosticSeverity } from 'vscode';
 import '../../../common/extensions';
 import { IPlatformService } from '../../../common/platform/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IInterpreterPathService,
     InterpreterConfigurationScope,
     Resource,
@@ -148,40 +145,15 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
     }
 
     protected addPythonPathChangedHandler(): void {
-        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-        const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
-        if (experiments.inExperimentSync(DeprecatePythonPath.experiment)) {
-            disposables.push(interpreterPathService.onDidChange((i) => this.onDidChangeConfiguration(undefined, i)));
-        }
-        disposables.push(workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
+        disposables.push(interpreterPathService.onDidChange((i) => this.onDidChangeConfiguration(i)));
     }
 
     protected async onDidChangeConfiguration(
-        event?: ConfigurationChangeEvent,
-        interpreterConfigurationScope?: InterpreterConfigurationScope,
+        interpreterConfigurationScope: InterpreterConfigurationScope,
     ): Promise<void> {
-        let workspaceUri: Resource;
-        if (event) {
-            const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-            const workspacesUris: (Uri | undefined)[] = workspaceService.hasWorkspaceFolders
-                ? workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
-                : [undefined];
-            const workspaceUriIndex = workspacesUris.findIndex((uri) =>
-                event.affectsConfiguration('python.pythonPath', uri),
-            );
-            if (workspaceUriIndex === -1) {
-                return;
-            }
-            workspaceUri = workspacesUris[workspaceUriIndex];
-        } else if (interpreterConfigurationScope) {
-            workspaceUri = interpreterConfigurationScope.uri;
-        } else {
-            throw new Error(
-                'One of `interpreterConfigurationScope` or `event` should be defined when calling `onDidChangeConfiguration`.',
-            );
-        }
+        const workspaceUri = interpreterConfigurationScope.uri;
         // Lets wait, for more changes, dirty simple throttling.
         if (this.timeOut && typeof this.timeOut !== 'number') {
             clearTimeout(this.timeOut);

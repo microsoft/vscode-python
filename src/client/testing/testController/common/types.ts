@@ -14,7 +14,7 @@ import {
 import { TestDiscoveryOptions } from '../../common/types';
 
 export type TestRunInstanceOptions = TestRunOptions & {
-    exclude?: TestItem[];
+    exclude?: readonly TestItem[];
     debug: boolean;
 };
 
@@ -51,8 +51,8 @@ export interface ITestController {
 }
 
 export interface ITestRun {
-    includes: TestItem[];
-    excludes: TestItem[];
+    includes: readonly TestItem[];
+    excludes: readonly TestItem[];
     runKind: TestRunProfileKind;
     runInstance: TestRun;
 }

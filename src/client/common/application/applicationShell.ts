@@ -7,10 +7,13 @@ import {
     CancellationToken,
     CancellationTokenSource,
     Disposable,
+    DocumentSelector,
     env,
     Event,
     InputBox,
     InputBoxOptions,
+    languages,
+    LanguageStatusItem,
     MessageItem,
     MessageOptions,
     OpenDialogOptions,
@@ -148,5 +151,8 @@ export class ApplicationShell implements IApplicationShell {
     }
     public createOutputChannel(name: string): OutputChannel {
         return window.createOutputChannel(name);
+    }
+    public createLanguageStatusItem(id: string, selector: DocumentSelector): LanguageStatusItem {
+        return languages.createLanguageStatusItem(id, selector);
     }
 }

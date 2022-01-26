@@ -8,7 +8,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IFileSystem } from '../platform/types';
-import { IConfigurationService, IDisposableRegistry, IInterpreterPathProxyService } from '../types';
+import { IConfigurationService, IDisposableRegistry, IInterpreterPathService } from '../types';
 import { ProcessService } from './proc';
 import { createCondaEnv, createPythonEnv, createWindowsStoreEnv } from './pythonEnvironment';
 import { createPythonProcessService } from './pythonProcess';
@@ -43,7 +43,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
-        @inject(IInterpreterPathProxyService) private readonly interpreterPathExpHelper: IInterpreterPathProxyService,
+        @inject(IInterpreterPathService) private readonly interpreterPathExpHelper: IInterpreterPathService,
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
@@ -114,14 +114,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         processService.on('exec', this.logger.logProcess.bind(this.logger));
         this.disposables.push(processService);
 
-        // Allow parts of the code to ignore conda run.
-        if (!options.bypassCondaExecution) {
-            const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
-            if (condaExecutionService) {
-                return condaExecutionService;
-            }
+        const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
+        if (condaExecutionService) {
+            return condaExecutionService;
         }
-
         const env = createPythonEnv(pythonPath, processService, this.fileSystem);
         return createPythonService(processService, env);
     }
