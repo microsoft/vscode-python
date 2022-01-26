@@ -84,8 +84,11 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
          * exist.
          */
         const areEnvsValid = await Promise.all(this.envs.map((e) => pathExists(e.executable.filename)));
-        const invalidIndexes = areEnvsValid.map((isValid, index) => (isValid ? -1 : index)).filter((i) => i !== -1);
-        invalidIndexes.reverse().forEach((index) => {
+        const invalidIndexes = areEnvsValid
+            .map((isValid, index) => (isValid ? -1 : index))
+            .filter((i) => i !== -1)
+            .reverse();
+        invalidIndexes.forEach((index) => {
             const env = this.envs.splice(index, 1)[0];
             this.fire({ old: env, new: undefined });
             reportInterpretersChanged([{ path: env.executable.filename, type: 'remove' }]);
