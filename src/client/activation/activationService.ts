@@ -60,7 +60,8 @@ function logStartup(serverType: LanguageServerType): void {
 
 @injectable()
 export class LanguageServerExtensionActivationService
-    implements IExtensionActivationService, ILanguageServerCache, Disposable {
+    implements IExtensionActivationService, ILanguageServerCache, Disposable
+{
     private cache = new Map<string, Promise<RefCountedLanguageServer>>();
 
     private activatedServer?: IActivatedServer;

@@ -10,9 +10,11 @@ import { noop } from '../common/utils/misc';
 // matches the 'main' module.
 
 // RegEx to match `import torch.profiler` or `from torch import profiler`
-export const TorchProfilerImportRegEx = /^\s*(?:import (?:(\w+, )*torch\.profiler(, \w+)*))|(?:from torch import (?:(\w+, )*profiler(, \w+)*))/;
+export const TorchProfilerImportRegEx =
+    /^\s*(?:import (?:(\w+, )*torch\.profiler(, \w+)*))|(?:from torch import (?:(\w+, )*profiler(, \w+)*))/;
 // RegEx to match `from torch.utils import tensorboard`, `import torch.utils.tensorboard`, `import tensorboardX`, `import tensorboard`
-const TensorBoardImportRegEx = /^\s*(?:from torch\.utils\.tensorboard import \w+)|(?:from torch\.utils import (?:(\w+, )*tensorboard(, \w+)*))|(?:from tensorboardX import \w+)|(?:import (\w+, )*((torch\.utils\.tensorboard)|(tensorboardX)|(tensorboard))(, \w+)*)/;
+const TensorBoardImportRegEx =
+    /^\s*(?:from torch\.utils\.tensorboard import \w+)|(?:from torch\.utils import (?:(\w+, )*tensorboard(, \w+)*))|(?:from tensorboardX import \w+)|(?:import (\w+, )*((torch\.utils\.tensorboard)|(tensorboardX)|(tensorboard))(, \w+)*)/;
 
 export function containsTensorBoardImport(lines: (string | undefined)[]): boolean {
     try {

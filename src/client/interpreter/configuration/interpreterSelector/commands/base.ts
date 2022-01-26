@@ -35,9 +35,7 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
 
     public abstract activate(): Promise<void>;
 
-    protected async getConfigTargets(options?: {
-        resetTarget?: boolean;
-    }): Promise<
+    protected async getConfigTargets(options?: { resetTarget?: boolean }): Promise<
         | {
               folderUri: Resource;
               configTarget: ConfigurationTarget;

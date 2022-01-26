@@ -45,8 +45,10 @@ class InvalidPythonPathInDebuggerDiagnostic extends BaseDiagnostic {
 export const InvalidPythonPathInDebuggerServiceId = 'InvalidPythonPathInDebuggerServiceId';
 
 @injectable()
-export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
-    implements IInvalidPythonPathInDebuggerService {
+export class InvalidPythonPathInDebuggerService
+    extends BaseDiagnosticsService
+    implements IInvalidPythonPathInDebuggerService
+{
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
