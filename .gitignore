@@ -22,7 +22,9 @@ cucumber-report.json
 **/.venv*/
 port.txt
 precommit.hook
-pythonFiles/lib/**
+pythonFiles/lib/python/bin
+pythonFiles/lib/python/isort
+pythonFiles/lib/python/isort-5.10.0.dist-info
 debug_coverage*/**
 languageServer/**
 languageServer.*/**
