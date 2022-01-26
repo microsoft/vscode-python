@@ -103,11 +103,11 @@ export interface IPythonExecutionService {
 
 export interface IPythonEnvironment {
     getInterpreterInformation(): Promise<InterpreterInformation | undefined>;
-    getExecutionObservableInfo(pythonArgs?: string[]): PythonExecInfo;
+    getExecutionObservableInfo(pythonArgs?: string[], pythonExecutable?: string): PythonExecInfo;
     getExecutablePath(): Promise<string>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
     getModuleVersion(moduleName: string): Promise<string | undefined>;
-    getExecutionInfo(pythonArgs?: string[]): PythonExecInfo;
+    getExecutionInfo(pythonArgs?: string[], pythonExecutable?: string): PythonExecInfo;
 }
 
 export class StdErrError extends Error {

@@ -28,13 +28,13 @@ class PythonEnvironment implements IPythonEnvironment {
         },
     ) {}
 
-    public getExecutionInfo(pythonArgs: string[] = []): PythonExecInfo {
+    public getExecutionInfo(pythonArgs: string[] = [], pythonExecutable?: string): PythonExecInfo {
         const python = this.deps.getPythonArgv(this.pythonPath);
-        return buildPythonExecInfo(python, pythonArgs);
+        return buildPythonExecInfo(python, pythonArgs, pythonExecutable);
     }
-    public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecInfo {
+    public getExecutionObservableInfo(pythonArgs: string[] = [], pythonExecutable?: string): PythonExecInfo {
         const python = this.deps.getObservablePythonArgv(this.pythonPath);
-        return buildPythonExecInfo(python, pythonArgs);
+        return buildPythonExecInfo(python, pythonArgs, pythonExecutable);
     }
 
     public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
