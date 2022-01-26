@@ -65,9 +65,9 @@ suite('Debugging - Adapter Factory', () => {
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
         const configurationService = mock(ConfigurationService);
-        when(configurationService.getSettings(undefined)).thenReturn(({
+        when(configurationService.getSettings(undefined)).thenReturn({
             experiments: { enabled: true },
-        } as any) as IPythonSettings);
+        } as any as IPythonSettings);
 
         interpreterService = mock(InterpreterService);
         appShell = mock(ApplicationShell);

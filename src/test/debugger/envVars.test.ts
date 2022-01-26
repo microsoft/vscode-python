@@ -55,13 +55,13 @@ suite('Resolving Environment Variables when Debugging', () => {
     }
 
     async function testBasicProperties(console: ConsoleType, expectedNumberOfVariables: number) {
-        const args = ({
+        const args = {
             program: '',
             pythonPath: '',
             args: [],
             envFile: '',
             console,
-        } as any) as LaunchRequestArguments;
+        } as any as LaunchRequestArguments;
 
         const envVars = await debugEnvParser.getEnvironmentVariables(args);
         expect(envVars).not.be.undefined;
@@ -96,14 +96,14 @@ suite('Resolving Environment Variables when Debugging', () => {
         env[prop2] = prop2;
         mockProcess.env[prop3] = prop3;
 
-        const args = ({
+        const args = {
             program: '',
             pythonPath: '',
             args: [],
             envFile: '',
             console,
             env,
-        } as any) as LaunchRequestArguments;
+        } as any as LaunchRequestArguments;
 
         const envVars = await debugEnvParser.getEnvironmentVariables(args);
 
@@ -161,14 +161,14 @@ suite('Resolving Environment Variables when Debugging', () => {
         env[prop2] = prop2;
         mockProcess.env[prop3] = prop3;
 
-        const args = ({
+        const args = {
             program: '',
             pythonPath: '',
             args: [],
             envFile: '',
             console,
             env,
-        } as any) as LaunchRequestArguments;
+        } as any as LaunchRequestArguments;
 
         const envVars = await debugEnvParser.getEnvironmentVariables(args);
         expect(envVars).not.be.undefined;

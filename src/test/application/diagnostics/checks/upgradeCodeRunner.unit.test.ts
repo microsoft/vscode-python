@@ -138,7 +138,7 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
 
         test('UpgradeCodeRunnerDiagnostic is handled as expected', async () => {
             const diagnostic = new UpgradeCodeRunnerDiagnostic('message', resource);
-            const ignoreCmd = ({ cmd: 'ignoreCmd' } as any) as IDiagnosticCommand;
+            const ignoreCmd = { cmd: 'ignoreCmd' } as any as IDiagnosticCommand;
             filterService
                 .setup((f) => f.shouldIgnoreDiagnostic(typemoq.It.isValue(DiagnosticCodes.UpgradeCodeRunnerDiagnostic)))
                 .returns(() => Promise.resolve(false));

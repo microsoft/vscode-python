@@ -38,9 +38,9 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
 
     setup(() => {
         const configurationService = mock(ConfigurationService);
-        when(configurationService.getSettings(undefined)).thenReturn(({
+        when(configurationService.getSettings(undefined)).thenReturn({
             experiments: { enabled: true },
-        } as any) as IPythonSettings);
+        } as any as IPythonSettings);
 
         appShell = mock(ApplicationShell);
         browserService = mock(BrowserService);

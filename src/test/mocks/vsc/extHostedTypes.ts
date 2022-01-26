@@ -448,12 +448,12 @@ export class Selection extends Range {
     }
 
     toJSON(): [Position, Position] {
-        return ({
+        return {
             start: this.start,
             end: this.end,
             active: this.active,
             anchor: this.anchor,
-        } as unknown) as [Position, Position];
+        } as unknown as [Position, Position];
     }
 }
 
@@ -665,7 +665,7 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
     set(uri: vscUri.URI, edits: TextEdit[]): void {
         let data = this._textEdits.get(uri.toString());
         if (!data) {
-            data = { seq: this._seqPool += 1, uri, edits: [] };
+            data = { seq: (this._seqPool += 1), uri, edits: [] };
             this._textEdits.set(uri.toString(), data);
         }
         if (!edits) {
@@ -901,7 +901,7 @@ export class Diagnostic {
 
     toJSON(): { severity: DiagnosticSeverity; message: string; range: Range; source: string; code: string | number } {
         return {
-            severity: (DiagnosticSeverity[this.severity] as unknown) as DiagnosticSeverity,
+            severity: DiagnosticSeverity[this.severity] as unknown as DiagnosticSeverity,
             message: this.message,
             range: this.range,
             source: this.source,
@@ -953,7 +953,7 @@ export class DocumentHighlight {
     toJSON(): { range: Range; kind: DocumentHighlightKind } {
         return {
             range: this.range,
-            kind: (DocumentHighlightKind[this.kind] as unknown) as DocumentHighlightKind,
+            kind: DocumentHighlightKind[this.kind] as unknown as DocumentHighlightKind,
         };
     }
 }
@@ -1028,7 +1028,7 @@ export class SymbolInformation {
     toJSON(): { name: string; kind: SymbolKind; location: Location; containerName: string } {
         return {
             name: this.name,
-            kind: (SymbolKind[this.kind] as unknown) as SymbolKind,
+            kind: SymbolKind[this.kind] as unknown as SymbolKind,
             location: this.location,
             containerName: this.containerName,
         };
@@ -1289,7 +1289,7 @@ export class CompletionItem {
         return {
             label: this.label,
             label2: this.label2,
-            kind: this.kind && ((CompletionItemKind[this.kind] as unknown) as CompletionItemKind),
+            kind: this.kind && (CompletionItemKind[this.kind] as unknown as CompletionItemKind),
             detail: this.detail,
             documentation: this.documentation,
             sortText: this.sortText,

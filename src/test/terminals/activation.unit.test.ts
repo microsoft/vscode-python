@@ -37,7 +37,7 @@ suite('Terminal', () => {
                 instance(resourceService),
             );
 
-            terminal = ({
+            terminal = {
                 dispose: noop,
                 hide: noop,
                 name: 'Some Name',
@@ -46,8 +46,8 @@ suite('Terminal', () => {
                 sendText: noop,
                 show: noop,
                 exitStatus: { code: 0 },
-            } as unknown) as Terminal;
-            nonActivatedTerminal = ({
+            } as unknown as Terminal;
+            nonActivatedTerminal = {
                 dispose: noop,
                 hide: noop,
                 creationOptions: { hideFromUser: true },
@@ -56,7 +56,7 @@ suite('Terminal', () => {
                 sendText: noop,
                 show: noop,
                 exitStatus: { code: 0 },
-            } as unknown) as Terminal;
+            } as unknown as Terminal;
             autoActivation.register();
         });
         // teardown(() => fakeTimer.uninstall());
@@ -64,7 +64,7 @@ suite('Terminal', () => {
         test('Should activate terminal', async () => {
             // Trigger opening a terminal.
 
-            await ((onDidOpenTerminalEventEmitter.fire(terminal) as unknown) as Promise<void>);
+            await (onDidOpenTerminalEventEmitter.fire(terminal) as unknown as Promise<void>);
 
             // The terminal should get activated.
             verify(activator.activateEnvironmentInTerminal(terminal, anything())).once();
@@ -72,7 +72,7 @@ suite('Terminal', () => {
         test('Should not activate terminal if name starts with specific prefix', async () => {
             // Trigger opening a terminal.
 
-            await ((onDidOpenTerminalEventEmitter.fire(nonActivatedTerminal) as unknown) as Promise<void>);
+            await (onDidOpenTerminalEventEmitter.fire(nonActivatedTerminal) as unknown as Promise<void>);
 
             // The terminal should get activated.
             verify(activator.activateEnvironmentInTerminal(anything(), anything())).never();

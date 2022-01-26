@@ -41,7 +41,7 @@ suite('Proposed Extension API', () => {
         const pythonPath = 'this/is/a/test/path';
         configService
             .setup((c) => c.getSettings(undefined))
-            .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
+            .returns(() => ({ pythonPath } as unknown as IPythonSettings));
         const actual = await proposed.environment.getActiveInterpreterPath();
         expect(actual).to.be.equals(pythonPath);
     });
@@ -50,7 +50,7 @@ suite('Proposed Extension API', () => {
         const pythonPath = 'this/is/a/test/path';
         configService
             .setup((c) => c.getSettings(resource))
-            .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
+            .returns(() => ({ pythonPath } as unknown as IPythonSettings));
         const actual = await proposed.environment.getActiveInterpreterPath(resource);
         expect(actual).to.be.equals(pythonPath);
     });

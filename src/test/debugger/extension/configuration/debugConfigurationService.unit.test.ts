@@ -43,9 +43,9 @@ suite('Debugging - Configuration Service', () => {
         );
     });
     test('Should use attach resolver when passing attach config', async () => {
-        const config = ({
+        const config = {
             request: 'attach',
-        } as any) as AttachRequestArguments;
+        } as any as AttachRequestArguments;
         const folder = { name: '1', index: 0, uri: Uri.parse('1234') };
         const expectedConfig = { yay: 1 };
 
@@ -74,7 +74,7 @@ suite('Debugging - Configuration Service', () => {
                 .setup((a) =>
                     a.resolveDebugConfiguration(
                         typemoq.It.isValue(folder),
-                        typemoq.It.isValue((config as any) as LaunchRequestArguments),
+                        typemoq.It.isValue(config as any as LaunchRequestArguments),
                         typemoq.It.isAny(),
                     ),
                 )
@@ -92,7 +92,7 @@ suite('Debugging - Configuration Service', () => {
         });
     });
     test('Picker should be displayed', async () => {
-        const state = ({ configs: [], folder: {}, token: undefined } as any) as DebugConfigurationState;
+        const state = { configs: [], folder: {}, token: undefined } as any as DebugConfigurationState;
         const multiStepInput = typemoq.Mock.ofType<IMultiStepInput<DebugConfigurationState>>();
         multiStepInput
             .setup((i) => i.showQuickPick(typemoq.It.isAny()))
@@ -104,7 +104,7 @@ suite('Debugging - Configuration Service', () => {
         multiStepInput.verifyAll();
     });
     test('Existing Configuration items must be removed before displaying picker', async () => {
-        const state = ({ configs: [1, 2, 3], folder: {}, token: undefined } as any) as DebugConfigurationState;
+        const state = { configs: [1, 2, 3], folder: {}, token: undefined } as any as DebugConfigurationState;
         const multiStepInput = typemoq.Mock.ofType<IMultiStepInput<DebugConfigurationState>>();
         multiStepInput
             .setup((i) => i.showQuickPick(typemoq.It.isAny()))
