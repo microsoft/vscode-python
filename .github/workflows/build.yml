@@ -86,7 +86,7 @@ jobs:
       - name: Install core Python requirements
         uses: brettcannon/pip-secure-install@v1
         with:
-          options: '-t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-user'
+          options: '-t ./pythonFiles/lib/python --no-cache-dir --implementation py'
 
       - name: Install Jedi requirements
         uses: brettcannon/pip-secure-install@v1
@@ -153,14 +153,15 @@ jobs:
       - name: Install core Python requirements
         uses: brettcannon/pip-secure-install@v1
         with:
-          options: '-t ./pythonFiles/lib/python --no-cache-dir --implementation py'
+          requirements-file: '"${{ env.special-working-directory-relative }}/requirements.txt"'
+          options: '-t "${{ env.special-working-directory-relative }}/pythonFiles/lib/python" --no-cache-dir --implementation py'
         if: startsWith(matrix.python, 3.)
 
       - name: Install Jedi requirements
         uses: brettcannon/pip-secure-install@v1
         with:
-          requirements-file: './pythonFiles/jedilsp_requirements/requirements.txt'
-          options: '-t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py'
+          requirements-file: '"${{ env.special-working-directory-relative }}/pythonFiles/jedilsp_requirements/requirements.txt"'
+          options: '-t "${{ env.special-working-directory-relative }}/pythonFiles/lib/jedilsp" --no-cache-dir --implementation py'
         if: startsWith(matrix.python, 3.)
 
       - name: Install test requirements
