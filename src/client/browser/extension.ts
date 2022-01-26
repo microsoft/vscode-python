@@ -97,20 +97,27 @@ async function runPylance(
                 ),
             );
 
-            languageClient.onTelemetry((telemetryEvent: { EventName: EventName; Properties: { method: string; }; Measurements: number | Record<string, number> | undefined; Exception: Error | undefined; }) => {
-                const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
-                const formattedProperties = {
-                    ...telemetryEvent.Properties,
-                    // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
-                    method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
-                };
-                sendTelemetryEventBrowser(
-                    eventName,
-                    telemetryEvent.Measurements,
-                    formattedProperties,
-                    telemetryEvent.Exception,
-                );
-            });
+            languageClient.onTelemetry(
+                (telemetryEvent: {
+                    EventName: EventName;
+                    Properties: { method: string };
+                    Measurements: number | Record<string, number> | undefined;
+                    Exception: Error | undefined;
+                }) => {
+                    const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
+                    const formattedProperties = {
+                        ...telemetryEvent.Properties,
+                        // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
+                        method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
+                    };
+                    sendTelemetryEventBrowser(
+                        eventName,
+                        telemetryEvent.Measurements,
+                        formattedProperties,
+                        telemetryEvent.Exception,
+                    );
+                },
+            );
         });
 
         const disposable = languageClient.start();

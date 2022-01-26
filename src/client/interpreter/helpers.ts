@@ -67,17 +67,18 @@ export class InterpreterHelper implements IInterpreterHelper {
         return this.pyenvs.getInterpreterInformation(pythonPath);
     }
 
-    public async getInterpreters({ resource, source }: { resource?: Uri; source?: PythonEnvSource[]; } = {}): Promise<PythonEnvironment[]> {
+    public async getInterpreters({ resource, source }: { resource?: Uri; source?: PythonEnvSource[] } = {}): Promise<
+        PythonEnvironment[]
+    > {
         const interpreters = await this.pyenvs.getInterpreters(resource, source);
         return sortInterpreters(interpreters);
     }
 
     public async getInterpreterPath(pythonPath: string): Promise<string> {
-        const interpreterInfo : any = await this.getInterpreterInformation(pythonPath);
+        const interpreterInfo: any = await this.getInterpreterInformation(pythonPath);
         if (interpreterInfo) {
             return interpreterInfo.path;
-        }
-        else {
+        } else {
             return pythonPath;
         }
     }
