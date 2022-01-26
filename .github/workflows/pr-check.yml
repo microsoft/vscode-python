@@ -58,11 +58,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
-      - name: Install Python requirements
+      - name: Install base Python requirements
+        uses: brettcannon/pip-secure-install@v1
+        with:
+          options: '-t ./pythonFiles/lib/python --no-cache-dir --implementation py'
+
+      - name: Install Jedi requirements
+        uses: brettcannon/pip-secure-install@v1
+        with:
+          requirements-file: './pythonFiles/jedilsp_requirements/requirements.txt'
+          options: '-t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py'
+
+      - name: Install other Python requirements
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt --no-user
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py --no-deps --upgrade -r ./pythonFiles/jedilsp_requirements/requirements.txt
           python -m pip install --upgrade -r build/test-requirements.txt
 
       - name: Run Pyright
@@ -115,15 +124,23 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Install Python requirements
+      - name: Install debugpy
         run: |
           # We need to have debugpy so that tests relying on it keep passing, but we don't need install_debugpy's logic in the test phase.
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
 
-      - name: Install Python 3 requirements
-        run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt --no-user
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py --no-deps --upgrade -r ./pythonFiles/jedilsp_requirements/requirements.txt
+      - name: Install base Python requirements
+        uses: brettcannon/pip-secure-install@v1
+        with:
+          requirements-file: '"${{ env.special-working-directory-relative }}/requirements.txt"'
+          options: '-t "${{ env.special-working-directory-relative }}/pythonFiles/lib/python" --no-cache-dir --implementation py'
+        if: startsWith(matrix.python, 3.)
+
+      - name: Install Jedi requirements
+        uses: brettcannon/pip-secure-install@v1
+        with:
+          requirements-file: '"${{ env.special-working-directory-relative }}/pythonFiles/jedilsp_requirements/requirements.txt"'
+          options: '-t "${{ env.special-working-directory-relative }}/pythonFiles/lib/jedilsp" --no-cache-dir --implementation py'
         if: startsWith(matrix.python, 3.)
 
       - name: Install test requirements
@@ -303,71 +320,6 @@ jobs:
           node_version: ${{ env.NODE_VERSION }}
           artifact_name: ${{ env.ARTIFACT_NAME_VSIX }}
 
-  #   insider-tests:
-  #     name: Insider tests
-  #     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
-  #     runs-on: ${{ matrix.os }}
-  #     strategy:
-  #       fail-fast: false
-  #       matrix:
-  #         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-  #         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-  #         os: [ubuntu-latest]
-  #         python: [3.8]
-  #     steps:
-  #       # Need the source to have the tests available.
-  #       - name: Checkout
-  #         uses: actions/checkout@v2
-
-  #       - name: Install Node
-  #         uses: actions/setup-node@v2
-  #         with:
-  #           node-version: ${{ env.NODE_VERSION }}
-  #           cache: 'npm'
-
-  #       - name: Use Python ${{ matrix.python }}
-  #         uses: actions/setup-python@v2
-  #         with:
-  #           python-version: ${{ matrix.python }}
-
-  #       - name: Install dependencies (npm ci)
-  #         run: npm ci --prefer-offline
-
-  #       - name: pip install system test requirements
-  #         run: |
-  #           python -m pip install --upgrade -r build/test-requirements.txt
-  #           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-  #           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
-  #         shell: bash
-
-  #       - name: pip install smoke test requirements
-  #         run: |
-  #           python -m pip install --upgrade -r build/smoke-test-requirements.txt
-  #         shell: bash
-
-  #       # Compile the test files.
-  #       - name: Prepare for insiders tests
-  #         run: npm run prePublish
-  #         shell: bash
-
-  #       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
-  #         run: |
-  #           echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
-  #           echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV
-  #         shell: bash
-
-  #       - name: Run insider tests
-  #         env:
-  #           DISPLAY: 10
-  #           INSTALL_JUPYTER_EXTENSION: true
-  #           INSTALL_PYLANCE_EXTENSION: true
-  #           VSC_PYTHON_CI_TEST_VSC_CHANNEL: insiders
-  #           TEST_FILES_SUFFIX: insiders.test
-  #           CODE_TESTS_WORKSPACE: ./src/testMultiRootWkspc/smokeTests
-  #         uses: GabrielBB/xvfb-action@v1.6
-  #         with:
-  #           run: node --no-force-async-hooks-checks ./out/test/standardTest.js
-
   ### Coverage run
   coverage:
     name: Coverage
@@ -406,12 +358,21 @@ jobs:
             build/test-requirements.txt
             build/functional-test-requirements.txt
 
-      - name: Install Python requirements
+      - name: Install base Python requirements
+        uses: brettcannon/pip-secure-install@v1
+        with:
+          options: '-t ./pythonFiles/lib/python --implementation py'
+
+      - name: Install Jedi requirements
+        uses: brettcannon/pip-secure-install@v1
+        with:
+          requirements-file: './pythonFiles/jedilsp_requirements/requirements.txt'
+          options: '-t ./pythonFiles/lib/jedilsp --implementation py'
+
+      - name: Install debugpy
         run: |
-          python -m pip --disable-pip-version-check install --require-hashes -t ./pythonFiles/lib/python --implementation py --no-deps --upgrade -r requirements.txt --no-user
           # We need to have debugpy so that tests relying on it keep passing, but we don't need install_debugpy's logic in the test phase.
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --implementation py --no-deps --upgrade --pre debugpy
-          python -m pip --disable-pip-version-check install --require-hashes -t ./pythonFiles/lib/jedilsp --implementation py --no-deps --upgrade -r ./pythonFiles/jedilsp_requirements/requirements.txt
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
