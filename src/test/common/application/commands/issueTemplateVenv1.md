@@ -1,5 +1,7 @@
 <!-- Please fill in all XXX markers -->
+
 # Behaviour
+
 ## Expected vs. Actual
 
 XXX
@@ -13,6 +15,7 @@ XXX
 -->
 
 <!-- **NOTE**: Everything below is auto-generated; no editing required. -->
+
 # Diagnostic data
 
 -   Python version (& distribution if applicable, e.g. Anaconda): 3.9.0

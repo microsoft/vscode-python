@@ -4,8 +4,7 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 
 ## Web support
 
-The Python extension offers [limited support]((https://github.com/microsoft/vscode-python/wiki/Partial-mode)) when running on the web (for example, on [github.dev](http://github.dev/)), by providing partial IntelliSense for open files on the editor.
-
+The Python extension offers [limited support](<(https://github.com/microsoft/vscode-python/wiki/Partial-mode)>) when running on the web (for example, on [github.dev](http://github.dev/)), by providing partial IntelliSense for open files on the editor.
 
 ## Installed extensions
 

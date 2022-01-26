@@ -4,13 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
+    // https://github.com/microsoft/vscode/issues/73904
 
-	// https://github.com/microsoft/vscode/issues/73904
-
-	export interface QuickPick<T extends QuickPickItem> extends QuickInput {
-		/**
-		 * An optional flag to sort the final results by index of first query match in label. Defaults to true.
-		 */
-		sortByLabel: boolean;
-	}
+    export interface QuickPick<T extends QuickPickItem> extends QuickInput {
+        /**
+         * An optional flag to sort the final results by index of first query match in label. Defaults to true.
+         */
+        sortByLabel: boolean;
+    }
 }
