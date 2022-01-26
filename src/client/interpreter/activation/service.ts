@@ -240,7 +240,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                             throw new Error(`StdErr from ShellExec, ${result.stderr} for ${command}`);
                         }
                     }
-                } catch (exc : any) {
+                } catch (exc) {
                     // Special case. Conda for some versions will state a file is in use. If
                     // that's the case, wait and try again. This happens especially on AzDo
                     const excString = exc.toString();
