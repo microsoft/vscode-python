@@ -87,7 +87,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         const invalidIndexes = areEnvsValid
             .map((isValid, index) => (isValid ? -1 : index))
             .filter((i) => i !== -1)
-            .reverse();
+            .reverse();    // Reversed so indexes do not change when deleting
         invalidIndexes.forEach((index) => {
             const env = this.envs.splice(index, 1)[0];
             this.fire({ old: env, new: undefined });
