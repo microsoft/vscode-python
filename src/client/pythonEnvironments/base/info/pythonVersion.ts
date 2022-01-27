@@ -235,7 +235,9 @@ function compareVersionRelease(left: PythonVersion, right: PythonVersion): [numb
  * Remarks: primarily used to convert to old type of environment info.
  * @deprecated
  */
-export function toSemverLikeVersion(version: PythonVersion): {
+export function toSemverLikeVersion(
+    version: PythonVersion,
+): {
     raw: string;
     major: number;
     minor: number;

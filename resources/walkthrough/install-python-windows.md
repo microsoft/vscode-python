@@ -9,7 +9,6 @@ python --version
 ```
 
 You should see something similar to the following:
-
 ```
 Python 3.9.5
 ```

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 /**
- * @typedef {Object} SplitLinesOptions
- * @property {boolean} [trim=true] - Whether to trim the lines.
- * @property {boolean} [removeEmptyEntries=true] - Whether to remove empty entries.
- */
+* @typedef {Object} SplitLinesOptions
+* @property {boolean} [trim=true] - Whether to trim the lines.
+* @property {boolean} [removeEmptyEntries=true] - Whether to remove empty entries.
+*/
 
 // https://stackoverflow.com/questions/39877156/how-to-extend-string-prototype-and-use-it-next-in-typescript
 
@@ -15,7 +15,7 @@ declare interface String {
      * By default lines are trimmed and empty lines are removed.
      * @param {SplitLinesOptions=} splitOptions - Options used for splitting the string.
      */
-    splitLines(splitOptions?: { trim: boolean; removeEmptyEntries?: boolean }): string[];
+    splitLines(splitOptions?: { trim: boolean, removeEmptyEntries?: boolean }): string[];
     /**
      * Appropriately formats a string so it can be used as an argument for a command in a shell.
      * E.g. if an argument contains a space, then it will be enclosed within double quotes.
@@ -37,6 +37,7 @@ declare interface String {
      */
     trimQuotes(): string;
 }
+
 
 declare interface Promise<T> {
     /**

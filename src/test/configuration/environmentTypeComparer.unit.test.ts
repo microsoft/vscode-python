@@ -22,10 +22,10 @@ suite('Environment sorting', () => {
         getActiveWorkspaceUriStub = sinon.stub().returns({ folderUri: { fsPath: workspacePath } });
         getInterpreterTypeDisplayNameStub = sinon.stub();
 
-        interpreterHelper = {
+        interpreterHelper = ({
             getActiveWorkspaceUri: getActiveWorkspaceUriStub,
             getInterpreterTypeDisplayName: getInterpreterTypeDisplayNameStub,
-        } as unknown as IInterpreterHelper;
+        } as unknown) as IInterpreterHelper;
     });
 
     teardown(() => {
@@ -189,7 +189,8 @@ suite('Environment sorting', () => {
             expected: 1,
         },
         {
-            title: "If 2 global environments have the same Python version and there's a Conda one, the Conda env should not come first",
+            title:
+                "If 2 global environments have the same Python version and there's a Conda one, the Conda env should not come first",
             envA: {
                 envType: EnvironmentType.Conda,
                 envName: 'conda-env',
@@ -203,7 +204,8 @@ suite('Environment sorting', () => {
             expected: 1,
         },
         {
-            title: 'If 2 global environments are of the same type and have the same Python version, they should be sorted by name',
+            title:
+                'If 2 global environments are of the same type and have the same Python version, they should be sorted by name',
             envA: {
                 envType: EnvironmentType.Conda,
                 envName: 'conda-foo',

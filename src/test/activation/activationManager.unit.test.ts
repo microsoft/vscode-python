@@ -198,8 +198,8 @@ suite('Activation Manager', () => {
             const disposable2 = typemoq.Mock.ofType<IDisposable>();
             when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(() => disposable.object);
             when(workspaceService.workspaceFolders).thenReturn([
-                1 as unknown as WorkspaceFolder,
-                2 as unknown as WorkspaceFolder,
+                (1 as unknown) as WorkspaceFolder,
+                (2 as unknown) as WorkspaceFolder,
             ]);
             when(workspaceService.hasWorkspaceFolders).thenReturn(true);
             const eventDef = () => disposable2.object;
@@ -229,8 +229,8 @@ suite('Activation Manager', () => {
             const disposable2 = typemoq.Mock.ofType<IDisposable>();
             when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(() => disposable.object);
             when(workspaceService.workspaceFolders).thenReturn([
-                1 as unknown as WorkspaceFolder,
-                2 as unknown as WorkspaceFolder,
+                (1 as unknown) as WorkspaceFolder,
+                (2 as unknown) as WorkspaceFolder,
             ]);
             when(workspaceService.hasWorkspaceFolders).thenReturn(true);
             const eventDef = () => disposable2.object;
@@ -356,7 +356,7 @@ suite('Activation Manager', () => {
                 languageId: 'NOT PYTHON',
             };
 
-            managerTest.onDocOpened(doc as unknown as TextDocument);
+            managerTest.onDocOpened((doc as unknown) as TextDocument);
             verify(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).never();
         });
 
@@ -368,7 +368,7 @@ suite('Activation Manager', () => {
             when(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).thenReturn('');
             when(workspaceService.hasWorkspaceFolders).thenReturn(true);
 
-            managerTest.onDocOpened(doc as unknown as TextDocument);
+            managerTest.onDocOpened((doc as unknown) as TextDocument);
 
             verify(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).once();
             verify(workspaceService.getWorkspaceFolder(doc.uri)).never();
@@ -382,7 +382,7 @@ suite('Activation Manager', () => {
             when(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).thenReturn('key');
             managerTest.activatedWorkspaces.add('key');
 
-            managerTest.onDocOpened(doc as unknown as TextDocument);
+            managerTest.onDocOpened((doc as unknown) as TextDocument);
 
             verify(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).once();
             verify(workspaceService.getWorkspaceFolder(doc.uri)).never();

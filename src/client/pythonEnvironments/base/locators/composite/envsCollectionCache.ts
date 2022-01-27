@@ -68,10 +68,8 @@ interface IPersistentStorage {
 /**
  * Environment info cache using persistent storage to save and retrieve pre-cached env info.
  */
-export class PythonEnvInfoCache
-    extends PythonEnvsWatcher<PythonEnvCollectionChangedEvent>
-    implements IEnvsCollectionCache
-{
+export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionChangedEvent>
+    implements IEnvsCollectionCache {
     private envs: PythonEnvCompleteInfo[] = [];
 
     constructor(private readonly persistentStorage: IPersistentStorage) {

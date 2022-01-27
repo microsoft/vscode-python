@@ -203,7 +203,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 DiagnosticCodes.NoPythonInterpretersDiagnostic,
                 undefined,
             );
-            const cmd = {} as any as IDiagnosticCommand;
+            const cmd = ({} as any) as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
             messageHandler
                 .setup((i) => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
@@ -233,7 +233,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
                 undefined,
             );
-            const cmd = {} as any as IDiagnosticCommand;
+            const cmd = ({} as any) as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
             messageHandler
                 .setup((i) => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
@@ -267,7 +267,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
                 undefined,
             );
-            const cmd = {} as any as IDiagnosticCommand;
+            const cmd = ({} as any) as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
             messageHandler
                 .setup((i) => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
@@ -298,7 +298,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         });
         test('Handling an empty diagnostic should not show a message nor return a command', async () => {
             const diagnostics: IDiagnostic[] = [];
-            const cmd = {} as any as IDiagnosticCommand;
+            const cmd = ({} as any) as IDiagnosticCommand;
 
             messageHandler
                 .setup((i) => i.handle(typemoq.It.isAny(), typemoq.It.isAny()))
@@ -327,10 +327,10 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
                 undefined,
             );
-            const cmd = {} as any as IDiagnosticCommand;
-            const diagnosticServiceMock = typemoq.Mock.ofInstance(
-                diagnosticService,
-            ) as any as typemoq.IMock<InvalidPythonInterpreterService>;
+            const cmd = ({} as any) as IDiagnosticCommand;
+            const diagnosticServiceMock = (typemoq.Mock.ofInstance(diagnosticService) as any) as typemoq.IMock<
+                InvalidPythonInterpreterService
+            >;
 
             diagnosticServiceMock.setup((f) => f.canHandle(typemoq.It.isAny())).returns(() => Promise.resolve(false));
             messageHandler
@@ -357,7 +357,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         });
         test('Getting command prompts for an unsupported diagnostic code should throw an error', async () => {
             const diagnostic = new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.JustMyCodeDiagnostic, undefined);
-            const cmd = {} as any as IDiagnosticCommand;
+            const cmd = ({} as any) as IDiagnosticCommand;
 
             messageHandler
                 .setup((i) => i.handle(typemoq.It.isAny(), typemoq.It.isAny()))

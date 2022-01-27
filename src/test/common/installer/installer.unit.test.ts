@@ -693,7 +693,7 @@ suite('Module Installer only', () => {
                         'Use black',
                         'Use yapf',
                     ),
-                ).thenReturn(undefined as unknown as Thenable<string | undefined>);
+                ).thenReturn((undefined as unknown) as Thenable<string | undefined>);
 
                 const response = await installer.promptToInstallImplementation(product, resource);
 
@@ -720,7 +720,7 @@ suite('Module Installer only', () => {
                         'Use black',
                         'Use yapf',
                     ),
-                ).thenReturn('Yes' as unknown as Thenable<string | undefined>);
+                ).thenReturn(('Yes' as unknown) as Thenable<string | undefined>);
                 const response = await installer.promptToInstallImplementation(product, resource);
 
                 verify(
@@ -747,7 +747,7 @@ suite('Module Installer only', () => {
                         'Use black',
                         'Use yapf',
                     ),
-                ).thenReturn('Use black' as unknown as Thenable<string | undefined>);
+                ).thenReturn(('Use black' as unknown) as Thenable<string | undefined>);
                 when(configService.updateSetting('formatting.provider', 'black', resource)).thenResolve();
 
                 const response = await installer.promptToInstallImplementation(product, resource);
@@ -777,7 +777,7 @@ suite('Module Installer only', () => {
                         'Use black',
                         'Use yapf',
                     ),
-                ).thenReturn('Use yapf' as unknown as Thenable<string | undefined>);
+                ).thenReturn(('Use yapf' as unknown) as Thenable<string | undefined>);
                 when(configService.updateSetting('formatting.provider', 'yapf', resource)).thenResolve();
 
                 const response = await installer.promptToInstallImplementation(product, resource);
@@ -879,7 +879,7 @@ suite('Module Installer only', () => {
             const productName = ProductNames.get(product)!;
             when(
                 appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
-            ).thenResolve('Select Linter' as unknown as void);
+            ).thenResolve(('Select Linter' as unknown) as void);
             when(cmdManager.executeCommand(Commands.Set_Linter)).thenResolve(undefined);
 
             const response = await installer.promptToInstallImplementation(product, resource);
@@ -896,7 +896,7 @@ suite('Module Installer only', () => {
             const productName = ProductNames.get(product)!;
             when(
                 appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
-            ).thenResolve('Install' as unknown as void);
+            ).thenResolve(('Install' as unknown) as void);
             when(cmdManager.executeCommand(Commands.Set_Linter)).thenResolve(undefined);
             const install = sinon.stub(LinterInstaller.prototype, 'install');
             install.resolves(InstallerResponse.Installed);

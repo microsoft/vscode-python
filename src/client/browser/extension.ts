@@ -151,7 +151,6 @@ function getTelemetryReporter() {
     return telemetryReporter;
 }
 
-// eslint-disable-next-line consistent-return
 function sendTelemetryEventBrowser(
     eventName: EventName,
     measuresOrDurationMs?: Record<string, number> | number,
@@ -192,8 +191,6 @@ function sendTelemetryEventBrowser(
                 console.error(`Failed to serialize ${prop} for ${eventName}`, exception);
             }
         });
-    } else {
-        return undefined;
     }
 
     // Add shared properties to telemetry props (we may overwrite existing ones).

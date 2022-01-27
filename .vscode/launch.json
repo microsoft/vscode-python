@@ -235,7 +235,9 @@
             "name": "Node: Current File",
             "program": "${file}",
             "request": "launch",
-            "skipFiles": ["<node_internals>/**"],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
             "type": "pwa-node"
         },
         {

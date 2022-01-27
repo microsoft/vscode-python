@@ -34,22 +34,21 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
     suite('Diagnostics', () => {
         const resource = Uri.file('test.py');
 
-        function createConfigurationAndWorkspaceServices(languageServer: LanguageServerType): {
-            configurationService: IConfigurationService;
-            workspaceService: IWorkspaceService;
-        } {
-            const configurationService = {
+        function createConfigurationAndWorkspaceServices(
+            languageServer: LanguageServerType,
+        ): { configurationService: IConfigurationService; workspaceService: IWorkspaceService } {
+            const configurationService = ({
                 getSettings: () => ({ languageServer }),
                 updateSetting: () => Promise.resolve(),
-            } as unknown as IConfigurationService;
+            } as unknown) as IConfigurationService;
 
-            const workspaceService = {
+            const workspaceService = ({
                 getConfiguration: () => ({
                     inspect: () => ({
                         workspaceValue: languageServer,
                     }),
                 }),
-            } as unknown as IWorkspaceService;
+            } as unknown) as IWorkspaceService;
 
             return { configurationService, workspaceService };
         }
@@ -71,9 +70,9 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
             );
 
             const service = new JediPython27NotSupportedDiagnosticService(
-                {
+                ({
                     get: () => ({}),
-                } as unknown as IServiceContainer,
+                } as unknown) as IServiceContainer,
                 interpreterService,
                 workspaceService,
                 configurationService,
@@ -96,9 +95,9 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
             );
 
             const service = new JediPython27NotSupportedDiagnosticService(
-                {
+                ({
                     get: () => ({}),
-                } as unknown as IServiceContainer,
+                } as unknown) as IServiceContainer,
                 interpreterService,
                 workspaceService,
                 configurationService,
@@ -128,9 +127,9 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
             );
 
             const service = new JediPython27NotSupportedDiagnosticService(
-                {
+                ({
                     get: () => ({}),
-                } as unknown as IServiceContainer,
+                } as unknown) as IServiceContainer,
                 interpreterService,
                 workspaceService,
                 configurationService,
@@ -162,9 +161,9 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
             );
 
             const service = new JediPython27NotSupportedDiagnosticService(
-                {
+                ({
                     get: () => ({}),
-                } as unknown as IServiceContainer,
+                } as unknown) as IServiceContainer,
                 interpreterService,
                 workspaceService,
                 configurationService,
@@ -196,9 +195,9 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
             );
 
             const service = new JediPython27NotSupportedDiagnosticService(
-                {
+                ({
                     get: () => ({}),
-                } as unknown as IServiceContainer,
+                } as unknown) as IServiceContainer,
                 interpreterService,
                 workspaceService,
                 configurationService,
@@ -228,9 +227,9 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
             );
 
             const service = new JediPython27NotSupportedDiagnosticService(
-                {
+                ({
                     get: () => ({}),
-                } as unknown as IServiceContainer,
+                } as unknown) as IServiceContainer,
                 interpreterService,
                 workspaceService,
                 configurationService,
@@ -266,10 +265,10 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
         } as IInterpreterService;
 
         setup(() => {
-            serviceContainer = {
+            serviceContainer = ({
                 get: (serviceIdentifier: symbol) => services[serviceIdentifier.toString()] as IWorkspaceService,
                 tryGet: () => ({}),
-            } as unknown as IServiceContainer;
+            } as unknown) as IServiceContainer;
 
             workspaceService = new WorkspaceService();
             services = {
@@ -280,9 +279,9 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
             updateSettingStub = sinon.stub(ConfigurationService.prototype, 'updateSetting');
 
             const getSettingsStub = sinon.stub(ConfigurationService.prototype, 'getSettings');
-            getSettingsStub.returns({
+            getSettingsStub.returns(({
                 getSettings: () => ({ languageServer: LanguageServerType.Jedi }),
-            } as unknown as IPythonSettings);
+            } as unknown) as IPythonSettings);
         });
 
         teardown(() => {
@@ -298,9 +297,9 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
             const configurationService = new ConfigurationService(serviceContainer);
 
             const service = new JediPython27NotSupportedDiagnosticService(
-                {
+                ({
                     get: () => ({}),
-                } as unknown as IServiceContainer,
+                } as unknown) as IServiceContainer,
                 interpreterService,
                 workspaceService,
                 configurationService,
@@ -329,9 +328,9 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
             const configurationService = new ConfigurationService(serviceContainer);
 
             const service = new JediPython27NotSupportedDiagnosticService(
-                {
+                ({
                     get: () => ({}),
-                } as unknown as IServiceContainer,
+                } as unknown) as IServiceContainer,
                 interpreterService,
                 workspaceService,
                 configurationService,
@@ -360,9 +359,9 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
             const configurationService = new ConfigurationService(serviceContainer);
 
             const service = new JediPython27NotSupportedDiagnosticService(
-                {
+                ({
                     get: () => ({}),
-                } as unknown as IServiceContainer,
+                } as unknown) as IServiceContainer,
                 interpreterService,
                 workspaceService,
                 configurationService,
@@ -385,9 +384,9 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
             const configurationService = new ConfigurationService(serviceContainer);
 
             const service = new JediPython27NotSupportedDiagnosticService(
-                {
+                ({
                     get: () => ({}),
-                } as unknown as IServiceContainer,
+                } as unknown) as IServiceContainer,
                 interpreterService,
                 workspaceService,
                 configurationService,
@@ -466,9 +465,9 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
         test('Handling a diagnostic that should be ignored does not display a prompt', async () => {
             const diagnosticHandlerService = new DiagnosticCommandPromptHandlerService(serviceContainer);
 
-            services['Symbol(IDiagnosticFilterService)'] = {
+            services['Symbol(IDiagnosticFilterService)'] = ({
                 shouldIgnoreDiagnostic: async () => Promise.resolve(true),
-            } as unknown as IDiagnosticFilterService;
+            } as unknown) as IDiagnosticFilterService;
 
             const service = new TestJediPython27NotSupportedDiagnosticService(
                 serviceContainer,
@@ -488,9 +487,9 @@ suite('Application Diagnostics - Jedi with Python 2.7 deprecated', () => {
             const diagnosticHandlerService = new DiagnosticCommandPromptHandlerService(serviceContainer);
             const configurationService = new ConfigurationService(serviceContainer);
 
-            services['Symbol(IDiagnosticFilterService)'] = {
+            services['Symbol(IDiagnosticFilterService)'] = ({
                 shouldIgnoreDiagnostic: () => Promise.resolve(false),
-            } as unknown as IDiagnosticFilterService;
+            } as unknown) as IDiagnosticFilterService;
 
             const service = new TestJediPython27NotSupportedDiagnosticService(
                 serviceContainer,

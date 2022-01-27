@@ -7,7 +7,7 @@ import { TerminalShellType } from '../types';
 import { ActivationScripts, VenvBaseActivationCommandProvider } from './baseActivationProvider';
 
 // For a given shell the scripts are in order of precedence.
-const SCRIPTS: ActivationScripts = {
+const SCRIPTS: ActivationScripts = ({
     // Group 1
     [TerminalShellType.wsl]: ['activate.sh', 'activate'],
     [TerminalShellType.ksh]: ['activate.sh', 'activate'],
@@ -19,7 +19,7 @@ const SCRIPTS: ActivationScripts = {
     [TerminalShellType.cshell]: ['activate.csh'],
     // Group 3
     [TerminalShellType.fish]: ['activate.fish'],
-} as unknown as ActivationScripts;
+} as unknown) as ActivationScripts;
 
 export function getAllScripts(): string[] {
     const scripts: string[] = [];

@@ -16,7 +16,7 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
     ) {
-        this.onDidChangeCodeLenses = workspaceService.onDidChangeConfiguration as any as Event<void>;
+        this.onDidChangeCodeLenses = (workspaceService.onDidChangeConfiguration as any) as Event<void>;
     }
     public async detectShebang(
         document: TextDocument,

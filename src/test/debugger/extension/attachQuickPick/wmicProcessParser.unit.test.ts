@@ -70,7 +70,8 @@ ProcessId=6028\r\n\
             {
                 label: 'python.exe',
                 description: '6028',
-                detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
+                detail:
+                    'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
                 id: '6028',
                 processName: 'python.exe',
                 commandLine:
@@ -147,7 +148,8 @@ ProcessId=6028\r\n\
             {
                 label: 'python.exe',
                 description: '6028',
-                detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
+                detail:
+                    'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
                 id: '6028',
                 processName: 'python.exe',
                 commandLine:
@@ -197,7 +199,8 @@ ProcessId=6028\r\n\
             {
                 label: 'python.exe',
                 description: '6028',
-                detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
+                detail:
+                    'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
                 id: '6028',
                 processName: 'python.exe',
                 commandLine:
