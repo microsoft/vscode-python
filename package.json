@@ -21,7 +21,6 @@
     "enabledApiProposals": [
         "languageStatus",
         "quickPickSortByLabel",
-        "quickPickSeparators",
         "testObserver",
         "notebookEditor"
     ],
