@@ -100,6 +100,7 @@ export interface IPythonExecutionService {
 
     exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
     execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
+    execForLinter(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
 
 export class StdErrError extends Error {
@@ -117,4 +118,5 @@ export interface IPythonToolExecutionService {
         resource: Uri,
     ): Promise<ObservableExecutionResult<string>>;
     exec(executionInfo: ExecutionInfo, options: SpawnOptions, resource: Uri): Promise<ExecutionResult<string>>;
+    execForLinter(executionInfo: ExecutionInfo, options: SpawnOptions, resource: Uri): Promise<ExecutionResult<string>>;
 }

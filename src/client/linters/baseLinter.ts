@@ -165,7 +165,7 @@ export abstract class BaseLinter implements ILinter {
             IPythonToolExecutionService,
         );
         try {
-            const result = await pythonToolsExecutionService.exec(
+            const result = await pythonToolsExecutionService.execForLinter(
                 executionInfo,
                 { cwd, token: cancellation, mergeStdOutErr: false },
                 document.uri,

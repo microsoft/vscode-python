@@ -191,5 +191,6 @@ function createPythonService(
         execModuleObservable: (m, a, o) => procs.execModuleObservable(m, a, o),
         exec: (a, o) => procs.exec(a, o),
         execModule: (m, a, o) => procs.execModule(m, a, o),
+        execForLinter: (m, a, o) => procs.execForLinter(m, a, o),
     };
 }

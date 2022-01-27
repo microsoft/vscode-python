@@ -216,6 +216,7 @@ suite('Terminal - Django Shell Code Execution', () => {
             execModuleObservable: procs.execModuleObservable,
             exec: procs.exec,
             execModule: procs.execModule,
+            execForLinter: procs.execForLinter,
         };
         const expectedTerminalArgs = [...terminalArgs, 'manage.py', 'shell'];
         pythonExecutionFactory

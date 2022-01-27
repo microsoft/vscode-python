@@ -3,6 +3,7 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
+import { linterScript } from '../common/process/internal/scripts';
 import { ExecutionInfo, IConfigurationService, ILintingSettings, Product } from '../common/types';
 import { ILinterInfo, LinterId } from './types';
 
@@ -74,13 +75,20 @@ export class LinterInfo implements ILinterInfo {
     public getExecutionInfo(customArgs: string[], resource?: Uri): ExecutionInfo {
         const execPath = this.pathName(resource);
         const args = this.linterArgs(resource).concat(customArgs);
-        let moduleName: string | undefined;
-
-        // If path information is not available, then treat it as a module,
+        const script = linterScript();
         if (path.basename(execPath) === execPath) {
-            moduleName = execPath;
+            return {
+                execPath: undefined,
+                args: [script, '-m', this.id, ...args],
+                product: this.product,
+                moduleName: execPath,
+            };
         }
-
-        return { execPath, moduleName, args, product: this.product };
+        return {
+            execPath,
+            moduleName: this.id,
+            args: [script, '-p', this.id, execPath, ...args],
+            product: this.product,
+        };
     }
 }

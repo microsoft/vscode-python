@@ -367,6 +367,7 @@ suite('Terminal - Code Execution', () => {
                     execModuleObservable: procs.execModuleObservable,
                     exec: procs.exec,
                     execModule: procs.execModule,
+                    execForLinter: procs.execForLinter,
                 };
                 pythonExecutionFactory
                     .setup((p) =>
@@ -479,6 +480,7 @@ suite('Terminal - Code Execution', () => {
                     execModuleObservable: procs.execModuleObservable,
                     exec: procs.exec,
                     execModule: procs.execModule,
+                    execForLinter: procs.execForLinter,
                 };
                 pythonExecutionFactory
                     .setup((p) =>

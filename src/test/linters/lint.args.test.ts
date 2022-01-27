@@ -142,12 +142,12 @@ suite('Linting - Arguments', () => {
                     }
                     test('Flake8', async () => {
                         const linter = new Flake8(serviceContainer);
-                        const expectedArgs = ['--format= %(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', fileUri.fsPath];
+                        const expectedArgs = [fileUri.fsPath];
                         await testLinter(linter, expectedArgs);
                     });
                     test('Pycodestyle', async () => {
                         const linter = new Pycodestyle(serviceContainer);
-                        const expectedArgs = ['--format= %(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', fileUri.fsPath];
+                        const expectedArgs = [fileUri.fsPath];
                         await testLinter(linter, expectedArgs);
                     });
                     test('Prospector', async () => {
@@ -155,12 +155,12 @@ suite('Linting - Arguments', () => {
                         const expectedPath = workspaceUri
                             ? fileUri.fsPath.substring(workspaceUri.length + 2)
                             : path.basename(fileUri.fsPath);
-                        const expectedArgs = ['--absolute-paths', '--output-format=json', expectedPath];
+                        const expectedArgs = [expectedPath];
                         await testLinter(linter, expectedArgs);
                     });
                     test('Pylama', async () => {
                         const linter = new PyLama(serviceContainer);
-                        const expectedArgs = ['--format=parsable', fileUri.fsPath];
+                        const expectedArgs = [fileUri.fsPath];
                         await testLinter(linter, expectedArgs);
                     });
                     test('MyPy', async () => {
@@ -175,29 +175,12 @@ suite('Linting - Arguments', () => {
                     });
                     test('Pylint', async () => {
                         const linter = new Pylint(serviceContainer);
-                        document.setup((d) => d.uri).returns(() => fileUri);
-
-                        let invoked = false;
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        (linter as any).run = (args: any[]) => {
-                            expect(args[args.length - 1]).to.equal(fileUri.fsPath);
-                            invoked = true;
-                            return Promise.resolve([]);
-                        };
-                        await linter.lint(document.object, cancellationToken);
-                        expect(invoked).to.be.equal(true, 'method not invoked');
+                        const expectedArgs = [fileUri.fsPath];
+                        await testLinter(linter, expectedArgs);
                     });
                     test('Bandit', async () => {
                         const linter = new Bandit(serviceContainer);
-                        const expectedArgs = [
-                            '-f',
-                            'custom',
-                            '--msg-template',
-                            '{line},{col},{severity},{test_id}:{msg}',
-                            '-n',
-                            '-1',
-                            fileUri.fsPath,
-                        ];
+                        const expectedArgs = [fileUri.fsPath];
                         await testLinter(linter, expectedArgs);
                     });
                 },

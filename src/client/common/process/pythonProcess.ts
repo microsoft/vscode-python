@@ -64,6 +64,26 @@ class PythonProcessService {
 
         return result;
     }
+
+    public async execForLinter(
+        moduleName: string,
+        args: string[],
+        options: SpawnOptions,
+    ): Promise<ExecutionResult<string>> {
+        const opts: SpawnOptions = { ...options };
+        const executable = this.deps.getExecutionInfo(args);
+        const result = await this.deps.exec(executable.command, executable.args, opts);
+
+        // If a module is not installed we'll have something in stderr.
+        if (moduleName && ErrorUtils.outputHasModuleNotInstalledError(moduleName, result.stderr)) {
+            const isInstalled = await this.deps.isModuleInstalled(moduleName);
+            if (!isInstalled) {
+                throw new ModuleNotInstalledError(moduleName);
+            }
+        }
+
+        return result;
+    }
 }
 
 export function createPythonProcessService(
