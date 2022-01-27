@@ -759,7 +759,7 @@ suite('Linting Functional Tests', () => {
         sinon.restore();
     });
 
-    const pythonPath = childProcess.execSync(`${PYTHON_PATH} -c "import sys;print(sys.executable)"`);
+    const pythonPath = childProcess.execSync(`"${PYTHON_PATH}" -c "import sys;print(sys.executable)"`);
 
     console.log(`Testing linter with python ${pythonPath}`);
 

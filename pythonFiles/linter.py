@@ -46,7 +46,10 @@ def main():
         linter = sys.argv[2]
         args = [sys.argv[3]] + linter_settings[linter]["args"] + sys.argv[4:]
 
-    subprocess.run(args, encoding="utf-8", stdout=sys.stdout, stderr=sys.stderr)
+    if hasattr(subprocess, "run"):
+        subprocess.run(args, encoding="utf-8", stdout=sys.stdout, stderr=sys.stderr)
+    else:
+        subprocess.call(args, stdout=sys.stdout, stderr=sys.stderr)
 
 
 if __name__ == "__main__":
