@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 
-import { ICommandManager, IDocumentManager } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
@@ -97,7 +97,8 @@ export class CodeExecutionManager implements ICodeExecutionManager {
     private async executeSelection(executionService: ICodeExecutionService): Promise<void> {
         const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor) {
-            vscode.window.showErrorMessage('Open an active editor before executing code');
+            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+            appShell.showErrorMessage('Open an active editor before executing code');
             return;
         }
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
