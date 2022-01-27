@@ -25,12 +25,13 @@ export class Pylint extends BaseLinter {
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
-        const args = [document.uri.fsPath];
+        const { uri } = document;
+        const settings = this.configService.getSettings(uri);
+        const args = [uri.fsPath];
         const messages = await this.run(args, document, cancellation);
         messages.forEach((msg) => {
-            msg.severity = this.parseMessagesSeverity(msg.type, this.pythonSettings.linting.pylintCategorySeverity);
+            msg.severity = this.parseMessagesSeverity(msg.type, settings.linting.pylintCategorySeverity);
         });
-
         return messages;
     }
 
