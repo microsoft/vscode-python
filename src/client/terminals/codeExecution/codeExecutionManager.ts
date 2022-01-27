@@ -17,8 +17,6 @@ import { traceError } from '../../logging';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../terminals/types';
-import * as vscode from 'vscode';
-
 @injectable()
 export class CodeExecutionManager implements ICodeExecutionManager {
     private eventEmitter: EventEmitter<string> = new EventEmitter<string>();
