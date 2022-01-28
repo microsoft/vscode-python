@@ -42,10 +42,14 @@ export async function initialize(): Promise<IExtensionTestApi> {
     return (api as any) as IExtensionTestApi;
 }
 export async function activateExtension() {
+    console.timeLog('Getting python extension from VS code');
     const extension = vscode.extensions.getExtension<IExtensionApi>(PVSC_EXTENSION_ID_FOR_TESTS)!;
+    console.timeLog('Got python extension from VS code, activating');
     const api = await extension.activate();
+    console.timeLog('activate() done');
     // Wait until its ready to use.
     await api.ready;
+    console.timeLog('extension ready done');
     return api;
 }
 

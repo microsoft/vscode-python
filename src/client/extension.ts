@@ -118,21 +118,28 @@ async function activateUnsafe(
     //===============================================
     // activation starts here
 
+    console.timeLog('initializeGlobals called');
     // First we initialize.
     const ext = initializeGlobals(context);
     activatedServiceContainer = ext.legacyIOC.serviceContainer;
     // Note standard utils especially experiment and platform code are fundamental to the extension
     // and should be available before we activate anything else.Hence register them first.
+    console.timeLog('initializeStandard called');
     initializeStandard(ext);
     // We need to activate experiments before initializing components as objects are created or not created based on experiments.
     const experimentService = activatedServiceContainer.get<IExperimentService>(IExperimentService);
     // This guarantees that all experiment information has loaded & all telemetry will contain experiment info.
+    console.timeLog('experimentService.activate() called');
     await experimentService.activate();
+    console.timeLog('initializeComponents called');
     const components = await initializeComponents(ext);
 
     // Then we finish activating.
+    console.timeLog('activateComponents called');
     const componentsActivated = await activateComponents(ext, components);
+    console.timeLog('componentsActivated done');
     const nonBlocking = componentsActivated.map((r) => r.fullyReady);
+    console.timeLog('construct non-blocking');
     const activationPromise = (async () => {
         await Promise.all(nonBlocking);
     })();
@@ -140,6 +147,7 @@ async function activateUnsafe(
     //===============================================
     // activation ends here
 
+    console.timeLog('post activation started');
     startupDurations.totalActivateTime = startupStopWatch.elapsedTime - startupDurations.startActivateTime;
     activationDeferred.resolve();
 
@@ -158,8 +166,10 @@ async function activateUnsafe(
         runAfterActivation();
     });
 
+    console.timeLog('api building');
     const api = buildApi(activationPromise, ext.legacyIOC.serviceManager, ext.legacyIOC.serviceContainer);
     const proposedApi = buildProposedApi(components.pythonEnvs, ext.legacyIOC.serviceContainer);
+    console.timeLog('api building done');
     return [{ ...api, ...proposedApi }, activationPromise, ext.legacyIOC.serviceContainer];
 }
 

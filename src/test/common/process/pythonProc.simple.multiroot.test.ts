@@ -37,7 +37,6 @@ suite('PythonExecutableService', () => {
         await clearPythonPathInWorkspaceFolder(workspace4Path);
         const api: IExtensionTestApi = await initialize();
         serviceContainer = api.serviceContainer;
-        await api.ready;
     });
     setup(async () => {
         initializeExternalDependencies(serviceContainer);
