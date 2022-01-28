@@ -13,6 +13,7 @@ import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
 import { traceError, traceVerbose } from '../../../logging';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
+import { StopWatch } from '../../../common/utils/stopWatch';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 
@@ -360,8 +361,9 @@ export class Conda {
     @cache(30_000, true, 10_000)
     // eslint-disable-next-line class-methods-use-this
     private async getInfoCached(command: string): Promise<CondaInfo> {
+        const stopWatch = new StopWatch();
         const result = await exec(command, ['info', '--json'], { timeout: CONDA_GENERAL_TIMEOUT });
-        traceVerbose(`conda info --json: ${result.stdout}`);
+        traceVerbose(`conda info --json: ${result.stdout}, time taken: ${stopWatch.elapsedTime}`);
         return JSON.parse(result.stdout);
     }
 
