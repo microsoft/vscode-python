@@ -10,6 +10,7 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionManager } from '../../../client/terminals/codeExecution/codeExecutionManager';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../../client/terminals/types';
+import * as vscode from 'vscode';
 
 suite('Terminal - Code Execution Manager', () => {
     let executionManager: ICodeExecutionManager;
@@ -274,6 +275,14 @@ suite('Terminal - Code Execution Manager', () => {
         );
         helper.verifyAll();
     }
+    async function checkErrorMessage(this: any): Promise<void> {
+        const activeEditor = this.documentManager.activeTextEditor;
+        if (!activeEditor) {
+            vscode.window.showErrorMessage('Open an active editor before executing code');
+        } else {
+            return undefined;
+        }
+    }
     test('Ensure executeSelectionInTerminal will normalize selected text and send it to the terminal', async () => {
         await testExecutionOfSelectionIsSentToTerminal(Commands.Exec_Selection_In_Terminal, 'standard');
     });
@@ -281,4 +290,8 @@ suite('Terminal - Code Execution Manager', () => {
     test('Ensure executeSelectionInDjangoShell will normalize selected text and send it to the terminal', async () => {
         await testExecutionOfSelectionIsSentToTerminal(Commands.Exec_Selection_In_Django_Shell, 'djangoShell');
     });
+    test('Ensure Pop Up Window Activates if no Active Text Editor has been found'),
+        async () => {
+            await checkErrorMessage();
+        };
 });
