@@ -17,7 +17,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { initializeExternalDependencies } from '../../../client/pythonEnvironments/common/externalDependencies';
 import { clearPythonPathInWorkspaceFolder, IExtensionTestApi } from '../../common';
 import { getExtensionSettings } from '../../extensionSettings';
-import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
+import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_TIMEOUT } from '../../initialize';
 
 use(chaiAsPromised);
 
@@ -71,9 +71,7 @@ suite('PythonExecutableService', () => {
         });
 
         await expect(promise).to.eventually.be.rejectedWith(StdErrError);
-
-        return undefined;
-    });
+    }).timeout(TEST_TIMEOUT * 3);
 
     test('Importing with a valid PYTHONPATH from .env file should succeed', async () => {
         await configService.updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
@@ -84,9 +82,7 @@ suite('PythonExecutableService', () => {
         });
 
         await expect(promise).to.eventually.have.property('stdout', `Hello${EOL}`);
-
-        return undefined;
-    });
+    }).timeout(TEST_TIMEOUT * 3);
 
     test("Known modules such as 'os' and 'sys' should be deemed 'installed'", async () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
@@ -94,9 +90,7 @@ suite('PythonExecutableService', () => {
         const sysModuleIsInstalled = pythonExecService.isModuleInstalled('sys');
         await expect(osModuleIsInstalled).to.eventually.equal(true, 'os module is not installed');
         await expect(sysModuleIsInstalled).to.eventually.equal(true, 'sys module is not installed');
-
-        return undefined;
-    });
+    }).timeout(TEST_TIMEOUT * 3);
 
     test("Unknown modules such as 'xyzabc123' be deemed 'not installed'", async () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
@@ -106,9 +100,7 @@ suite('PythonExecutableService', () => {
             false,
             `Random module '${randomModuleName}' is installed`,
         );
-
-        return undefined;
-    });
+    }).timeout(TEST_TIMEOUT * 3);
 
     test('Ensure correct path to executable is returned', async () => {
         const { pythonPath } = getExtensionSettings(workspace4Path);
@@ -125,7 +117,5 @@ suite('PythonExecutableService', () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const executablePath = await pythonExecService.getExecutablePath();
         expect(executablePath).to.equal(expectedExecutablePath, 'Executable paths are not the same');
-
-        return undefined;
-    });
+    }).timeout(TEST_TIMEOUT * 3);
 });
