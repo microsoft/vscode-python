@@ -1,13 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-import { gte } from 'semver';
 
-import { Uri } from 'vscode';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { IComponentAdapter, ICondaService } from '../../interpreter/contracts';
+import { IComponentAdapter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { CondaEnvironmentInfo } from '../../pythonEnvironments/common/environmentManagers/conda';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IFileSystem } from '../platform/types';
@@ -22,15 +19,13 @@ import {
     IProcessLogger,
     IProcessService,
     IProcessServiceFactory,
+    IPythonEnvironment,
     IPythonExecutionFactory,
     IPythonExecutionService,
 } from './types';
 import { IInterpreterAutoSelectionService } from '../../interpreter/autoSelection/types';
 import { sleep } from '../utils/async';
 import { traceError } from '../../logging';
-
-// Minimum version number of conda required to be able to use 'conda run' and '--no-capture--output' option
-export const CONDA_RUN_VERSION = '4.9.0';
 
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
@@ -45,7 +40,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
@@ -90,13 +84,11 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
         const windowsStoreInterpreterCheck = this.pyenvs.isWindowsStoreInterpreter.bind(this.pyenvs);
 
-        return createPythonService(
-            pythonPath,
-            processService,
-            this.fileSystem,
-            undefined,
-            await windowsStoreInterpreterCheck(pythonPath),
-        );
+        const env = (await windowsStoreInterpreterCheck(pythonPath))
+            ? createWindowsStoreEnv(pythonPath, processService)
+            : createPythonEnv(pythonPath, processService, this.fileSystem);
+
+        return createPythonService(processService, env);
     }
 
     public async createActivatedEnvironment(
@@ -126,60 +118,28 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         if (condaExecutionService) {
             return condaExecutionService;
         }
-
-        return createPythonService(pythonPath, processService, this.fileSystem);
+        const env = createPythonEnv(pythonPath, processService, this.fileSystem);
+        return createPythonService(processService, env);
     }
 
     public async createCondaExecutionService(
         pythonPath: string,
-        processService?: IProcessService,
-        resource?: Uri,
+        processService: IProcessService,
     ): Promise<IPythonExecutionService | undefined> {
-        const processServicePromise = processService
-            ? Promise.resolve(processService)
-            : this.processServiceFactory.create(resource);
         const condaLocatorService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
-        const [condaVersion, condaEnvironment, condaFile, procService] = await Promise.all([
-            this.condaService.getCondaVersion(),
-            condaLocatorService.getCondaEnvironment(pythonPath),
-            this.condaService.getCondaFile(),
-            processServicePromise,
-        ]);
-
-        if (condaVersion && gte(condaVersion, CONDA_RUN_VERSION) && condaEnvironment && condaFile && procService) {
-            // Add logging to the newly created process service
-            if (!processService) {
-                procService.on('exec', this.logger.logProcess.bind(this.logger));
-                this.disposables.push(procService);
-            }
-
-            return createPythonService(
-                pythonPath,
-                procService,
-                this.fileSystem,
-                // This is what causes a CondaEnvironment to be returned:
-                [condaFile, condaEnvironment],
-            );
+        const [condaEnvironment] = await Promise.all([condaLocatorService.getCondaEnvironment(pythonPath)]);
+        if (!condaEnvironment) {
+            return undefined;
         }
-
-        return Promise.resolve(undefined);
+        const env = await createCondaEnv(condaEnvironment, pythonPath, processService, this.fileSystem);
+        if (!env) {
+            return undefined;
+        }
+        return createPythonService(processService, env);
     }
 }
 
-function createPythonService(
-    pythonPath: string,
-    procService: IProcessService,
-    fs: IFileSystem,
-    conda?: [string, CondaEnvironmentInfo],
-    isWindowsStore?: boolean,
-): IPythonExecutionService {
-    let env = createPythonEnv(pythonPath, procService, fs);
-    if (conda) {
-        const [condaPath, condaInfo] = conda;
-        env = createCondaEnv(condaPath, condaInfo, pythonPath, procService, fs);
-    } else if (isWindowsStore) {
-        env = createWindowsStoreEnv(pythonPath, procService);
-    }
+function createPythonService(procService: IProcessService, env: IPythonEnvironment): IPythonExecutionService {
     const procs = createPythonProcessService(procService, env);
     return {
         getInterpreterInformation: () => env.getInterpreterInformation(),
@@ -191,5 +151,6 @@ function createPythonService(
         execModuleObservable: (m, a, o) => procs.execModuleObservable(m, a, o),
         exec: (a, o) => procs.exec(a, o),
         execModule: (m, a, o) => procs.execModule(m, a, o),
+        execForLinter: (m, a, o) => procs.execForLinter(m, a, o),
     };
 }

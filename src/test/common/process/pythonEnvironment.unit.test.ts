@@ -3,6 +3,7 @@
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import * as sinon from 'sinon';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../../client/common/platform/types';
@@ -13,6 +14,8 @@ import {
 } from '../../../client/common/process/pythonEnvironment';
 import { IProcessService, StdErrError } from '../../../client/common/process/types';
 import { Architecture } from '../../../client/common/utils/platform';
+import { Conda } from '../../../client/pythonEnvironments/common/environmentManagers/conda';
+import { OUTPUT_MARKER_SCRIPT } from '../../../client/common/process/internal/scripts';
 
 use(chaiAsPromised);
 
@@ -275,64 +278,67 @@ suite('CondaEnvironment', () => {
     const condaFile = 'path/to/conda';
 
     setup(() => {
+        sinon.stub(Conda, 'getConda').resolves(new Conda(condaFile));
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
     });
 
-    test('getExecutionInfo with a named environment should return execution info using the environment name', () => {
+    teardown(() => sinon.restore());
+
+    test('getExecutionInfo with a named environment should return execution info using the environment name', async () => {
         const condaInfo = { name: 'foo', path: 'bar' };
-        const env = createCondaEnv(condaFile, condaInfo, pythonPath, processService.object, fileSystem.object);
+        const env = await createCondaEnv(condaInfo, pythonPath, processService.object, fileSystem.object);
 
-        const result = env.getExecutionInfo(args);
+        const result = env?.getExecutionInfo(args, pythonPath);
 
         expect(result).to.deep.equal({
             command: condaFile,
-            args: ['run', '-n', condaInfo.name, '--no-capture-output', 'python', ...args],
-            python: [condaFile, 'run', '-n', condaInfo.name, '--no-capture-output', 'python'],
-            pythonExecutable: 'python',
+            args: ['run', '-n', condaInfo.name, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT, ...args],
+            python: [condaFile, 'run', '-n', condaInfo.name, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT],
+            pythonExecutable: pythonPath,
         });
     });
 
-    test('getExecutionInfo with a non-named environment should return execution info using the environment path', () => {
+    test('getExecutionInfo with a non-named environment should return execution info using the environment path', async () => {
         const condaInfo = { name: '', path: 'bar' };
-        const env = createCondaEnv(condaFile, condaInfo, pythonPath, processService.object, fileSystem.object);
+        const env = await createCondaEnv(condaInfo, pythonPath, processService.object, fileSystem.object);
 
-        const result = env.getExecutionInfo(args);
+        const result = env?.getExecutionInfo(args, pythonPath);
 
         expect(result).to.deep.equal({
             command: condaFile,
-            args: ['run', '-p', condaInfo.path, '--no-capture-output', 'python', ...args],
-            python: [condaFile, 'run', '-p', condaInfo.path, '--no-capture-output', 'python'],
-            pythonExecutable: 'python',
+            args: ['run', '-p', condaInfo.path, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT, ...args],
+            python: [condaFile, 'run', '-p', condaInfo.path, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT],
+            pythonExecutable: pythonPath,
         });
     });
 
-    test('getExecutionObservableInfo with a named environment should return execution info using conda full path with the name', () => {
+    test('getExecutionObservableInfo with a named environment should return execution info using conda full path with the name', async () => {
         const condaInfo = { name: 'foo', path: 'bar' };
         const expected = {
             command: condaFile,
-            args: ['run', '-n', condaInfo.name, '--no-capture-output', 'python', ...args],
-            python: [condaFile, 'run', '-n', condaInfo.name, '--no-capture-output', 'python'],
-            pythonExecutable: 'python',
+            args: ['run', '-n', condaInfo.name, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT, ...args],
+            python: [condaFile, 'run', '-n', condaInfo.name, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT],
+            pythonExecutable: pythonPath,
         };
-        const env = createCondaEnv(condaFile, condaInfo, pythonPath, processService.object, fileSystem.object);
+        const env = await createCondaEnv(condaInfo, pythonPath, processService.object, fileSystem.object);
 
-        const result = env.getExecutionObservableInfo(args);
+        const result = env?.getExecutionObservableInfo(args, pythonPath);
 
         expect(result).to.deep.equal(expected);
     });
 
-    test('getExecutionObservableInfo with a non-named environment should return execution info using conda full path', () => {
+    test('getExecutionObservableInfo with a non-named environment should return execution info using conda full path', async () => {
         const condaInfo = { name: '', path: 'bar' };
         const expected = {
             command: condaFile,
-            args: ['run', '-p', condaInfo.path, '--no-capture-output', 'python', ...args],
-            python: [condaFile, 'run', '-p', condaInfo.path, '--no-capture-output', 'python'],
-            pythonExecutable: 'python',
+            args: ['run', '-p', condaInfo.path, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT, ...args],
+            python: [condaFile, 'run', '-p', condaInfo.path, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT],
+            pythonExecutable: pythonPath,
         };
-        const env = createCondaEnv(condaFile, condaInfo, pythonPath, processService.object, fileSystem.object);
+        const env = await createCondaEnv(condaInfo, pythonPath, processService.object, fileSystem.object);
 
-        const result = env.getExecutionObservableInfo(args);
+        const result = env?.getExecutionObservableInfo(args, pythonPath);
 
         expect(result).to.deep.equal(expected);
     });
