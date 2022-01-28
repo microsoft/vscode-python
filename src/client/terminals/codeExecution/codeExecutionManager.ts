@@ -93,11 +93,11 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         await this.executeSelection(executionService);
     }
 
-    private async executeSelection(executionService: ICodeExecutionService): Promise<void> {
+    private async executeSelection(executionService: ICodeExecutionService): Promise<any> {
         const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor) {
             vscode.window.showErrorMessage('Open an active editor before executing code');
-            return;
+            return [new Error('No active editor')];
         }
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
         const codeToExecute = await codeExecutionHelper.getSelectedTextToExecute(activeEditor!);
