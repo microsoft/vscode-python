@@ -75,8 +75,6 @@ export class ExperimentService implements IExperimentService {
             telemetryReporter,
             this.globalState,
         );
-
-        this.logExperiments();
     }
 
     public async activate(): Promise<void> {
@@ -99,6 +97,7 @@ export class ExperimentService implements IExperimentService {
                 await this.experimentationService.initialFetch;
                 sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_INIT_PERFORMANCE, Date.now() - initStart);
             }
+            this.logExperiments();
         }
         sendOptInOptOutTelemetry(this._optInto, this._optOutFrom, this.appEnvironment.packageJson);
     }

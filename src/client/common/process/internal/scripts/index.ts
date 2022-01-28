@@ -144,3 +144,10 @@ export function tensorboardLauncher(args: string[]): string[] {
     const script = path.join(SCRIPTS_DIR, 'tensorboard_launcher.py');
     return [script, ...args];
 }
+
+// linter.py
+
+export function linterScript(): string {
+    const script = path.join(SCRIPTS_DIR, 'linter.py');
+    return script;
+}

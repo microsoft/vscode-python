@@ -645,7 +645,7 @@ class TestFixture extends BaseTestFixture {
 
     public setStdout(stdout: string) {
         this.pythonToolExecService
-            .setup((s) => s.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((s) => s.execForLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout }));
     }
 }

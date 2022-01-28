@@ -138,16 +138,21 @@ suite('Experimentation service', () => {
             assert.deepEqual(experimentService._optOutFrom, ['Foo - experiment']);
         });
 
-        test('Experiment data in Memento storage should be logged if it starts with "python"', () => {
+        test('Experiment data in Memento storage should be logged if it starts with "python"', async () => {
             const experiments = ['ExperimentOne', 'pythonExperiment'];
             globalMemento = mock(MockMemento);
             configureSettings(true, [], []);
-            configureApplicationEnvironment('stable', extensionVersion);
+            configureApplicationEnvironment('stable', extensionVersion, { configuration: { properties: {} } });
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             when(globalMemento.get(anything(), anything())).thenReturn({ features: experiments } as any);
 
-            new ExperimentService(instance(workspaceService), instance(appEnvironment), instance(globalMemento));
+            const exp = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                instance(globalMemento),
+            );
+            await exp.activate();
             const output = `${Experiments.inGroup().format('pythonExperiment')}\n`;
 
             assert.strictEqual(outputChannel.output, output);

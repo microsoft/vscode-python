@@ -40,7 +40,7 @@ class MockPythonToolExecService extends PythonToolExecutionService {
 ]`;
 
     // Depending on moduleName being exec'd, return the appropriate sample.
-    public async exec(
+    public async execForLinter(
         executionInfo: ExecutionInfo,
         _options: SpawnOptions,
         _resource: Uri,
