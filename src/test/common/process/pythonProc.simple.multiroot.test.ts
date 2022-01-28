@@ -13,10 +13,9 @@ import { ConfigurationTarget, Uri } from 'vscode';
 import { IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
-import { OSType } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { initializeExternalDependencies } from '../../../client/pythonEnvironments/common/externalDependencies';
-import { clearPythonPathInWorkspaceFolder, isOs } from '../../common';
+import { clearPythonPathInWorkspaceFolder, IExtensionTestApi } from '../../common';
 import { getExtensionSettings } from '../../extensionSettings';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
 
@@ -36,10 +35,12 @@ suite('PythonExecutableService', () => {
             this.skip();
         }
         await clearPythonPathInWorkspaceFolder(workspace4Path);
-        serviceContainer = (await initialize()).serviceContainer;
-        initializeExternalDependencies(serviceContainer);
+        const api: IExtensionTestApi = await initialize();
+        serviceContainer = api.serviceContainer;
+        await api.ready;
     });
     setup(async () => {
+        initializeExternalDependencies(serviceContainer);
         configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
 
@@ -56,12 +57,7 @@ suite('PythonExecutableService', () => {
         clearCache();
     });
 
-    test('Importing without a valid PYTHONPATH should fail', async function () {
-        // Timing out on Windows, tracked by #18337.
-        if (isOs(OSType.Windows)) {
-            return this.skip();
-        }
-
+    test('Importing without a valid PYTHONPATH should fail', async () => {
         await configService.updateSetting(
             'envFile',
             'someInvalidFile.env',
@@ -80,12 +76,7 @@ suite('PythonExecutableService', () => {
         return undefined;
     });
 
-    test('Importing with a valid PYTHONPATH from .env file should succeed', async function () {
-        // Timing out on Windows, tracked by #18337.
-        if (isOs(OSType.Windows)) {
-            return this.skip();
-        }
-
+    test('Importing with a valid PYTHONPATH from .env file should succeed', async () => {
         await configService.updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], {
@@ -98,12 +89,7 @@ suite('PythonExecutableService', () => {
         return undefined;
     });
 
-    test("Known modules such as 'os' and 'sys' should be deemed 'installed'", async function () {
-        // Timing out on Windows, tracked by #18337.
-        if (isOs(OSType.Windows)) {
-            return this.skip();
-        }
-
+    test("Known modules such as 'os' and 'sys' should be deemed 'installed'", async () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const osModuleIsInstalled = pythonExecService.isModuleInstalled('os');
         const sysModuleIsInstalled = pythonExecService.isModuleInstalled('sys');
@@ -113,12 +99,7 @@ suite('PythonExecutableService', () => {
         return undefined;
     });
 
-    test("Unknown modules such as 'xyzabc123' be deemed 'not installed'", async function () {
-        // Timing out on Windows, tracked by #18337.
-        if (isOs(OSType.Windows)) {
-            return this.skip();
-        }
-
+    test("Unknown modules such as 'xyzabc123' be deemed 'not installed'", async () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const randomModuleName = `xyz123${new Date().getSeconds()}`;
         const randomModuleIsInstalled = pythonExecService.isModuleInstalled(randomModuleName);
@@ -130,12 +111,7 @@ suite('PythonExecutableService', () => {
         return undefined;
     });
 
-    test('Ensure correct path to executable is returned', async function () {
-        // Timing out on Windows, tracked by #18337.
-        if (isOs(OSType.Windows)) {
-            return this.skip();
-        }
-
+    test('Ensure correct path to executable is returned', async () => {
         const { pythonPath } = getExtensionSettings(workspace4Path);
         let expectedExecutablePath: string;
         if (await fs.pathExists(pythonPath)) {
