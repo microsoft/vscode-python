@@ -556,7 +556,7 @@
                         "enum": [
                             "All",
                             "pythonDeprecatePythonPath",
-                            "pythonSurveyNotification"
+                            "pythonSurveyNotification",
                             "pythonInterpreterInfoPinned",
                             "pythonInterpreterInfoUnpinned"
                         ]
