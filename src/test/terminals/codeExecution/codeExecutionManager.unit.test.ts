@@ -74,7 +74,7 @@ suite('Terminal - Code Execution Manager', () => {
         ]);
     });
 
-    test('Ensure executeFileInterTerminal will do nothing if no file is avialble', async () => {
+    test('Ensure executeFileInterTerminal will do nothing if no file is available', async () => {
         let commandHandler: undefined | (() => Promise<void>);
         commandManager
             .setup((c) => c.registerCommand as any)
