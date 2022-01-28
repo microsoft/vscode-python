@@ -541,7 +541,9 @@
                         "enum": [
                             "All",
                             "pythonDeprecatePythonPath",
-                            "pythonSurveyNotification"
+                            "pythonSurveyNotification",
+                            "pythonInterpreterInfoPinned",
+                            "pythonInterpreterInfoUnpinned"
                         ]
                     },
                     "scope": "machine",
@@ -555,6 +557,8 @@
                             "All",
                             "pythonDeprecatePythonPath",
                             "pythonSurveyNotification"
+                            "pythonInterpreterInfoPinned",
+                            "pythonInterpreterInfoUnpinned"
                         ]
                     },
                     "scope": "machine",
