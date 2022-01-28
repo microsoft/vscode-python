@@ -15,7 +15,7 @@ import { IConfigurationService } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { initializeExternalDependencies } from '../../../client/pythonEnvironments/common/externalDependencies';
-import { clearPythonPathInWorkspaceFolder, IExtensionTestApi } from '../../common';
+import { clearPythonPathInWorkspaceFolder } from '../../common';
 import { getExtensionSettings } from '../../extensionSettings';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_TIMEOUT } from '../../initialize';
 
@@ -35,8 +35,7 @@ suite('PythonExecutableService', () => {
             this.skip();
         }
         await clearPythonPathInWorkspaceFolder(workspace4Path);
-        const api: IExtensionTestApi = await initialize();
-        serviceContainer = api.serviceContainer;
+        serviceContainer = (await initialize()).serviceContainer;
     });
     setup(async () => {
         initializeExternalDependencies(serviceContainer);
