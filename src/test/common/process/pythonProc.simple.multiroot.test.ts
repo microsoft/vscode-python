@@ -57,24 +57,20 @@ suite('PythonExecutableService', () => {
     });
 
     test('Importing without a valid PYTHONPATH should fail', async () => {
-        console.log('Test started, updating settings');
         await configService.updateSetting(
             'envFile',
             'someInvalidFile.env',
             workspace4PyFile,
             ConfigurationTarget.WorkspaceFolder,
         );
-        console.log('Getting execution factory');
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
-        console.log('executing using exec');
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], {
             cwd: path.dirname(workspace4PyFile.fsPath),
             throwOnStdErr: true,
         });
 
         await expect(promise).to.eventually.be.rejectedWith(StdErrError);
-        console.log('done running test');
 
         return undefined;
     });
