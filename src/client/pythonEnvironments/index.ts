@@ -52,7 +52,7 @@ export async function initialize(ext: ExtensionState): Promise<IDiscoveryAPI> {
 /**
  * Make use of the component (e.g. register with VS Code).
  */
-export async function activate(api: IDiscoveryAPI, _ext: ExtensionState): Promise<ActivationResult> {
+export async function activate(_api: IDiscoveryAPI, _ext: ExtensionState): Promise<ActivationResult> {
     /**
      * Force an initial background refresh of the environments.
      *
@@ -65,7 +65,7 @@ export async function activate(api: IDiscoveryAPI, _ext: ExtensionState): Promis
      * Once `onInterpretersChanged` event is exposed via API, we can probably expect extensions to rely on that and
      * discovery can be triggered after activation, especially in the second case.
      */
-    api.triggerRefresh().ignoreErrors();
+    // api.triggerRefresh().ignoreErrors();
 
     return {
         fullyReady: Promise.resolve(),
