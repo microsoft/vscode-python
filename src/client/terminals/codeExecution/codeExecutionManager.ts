@@ -64,7 +64,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         if (!fileToExecute) {
             const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
             const errorMessage = appShell;
-            errorMessage.showErrorMessage('Open a file before executing code');
+            errorMessage.showErrorMessage('Open a file before executing code', '1');
             return [new Error('Open a file')];
         }
         await codeExecutionHelper.saveFileIfDirty(fileToExecute);
@@ -99,7 +99,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         if (!activeEditor) {
             const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
             const errorMessage = appShell;
-            errorMessage.showErrorMessage('Open an active editor before executing code');
+            errorMessage.showErrorMessage('Open an active editor before executing code', '1');
             return [new Error('No active editor')];
         }
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
