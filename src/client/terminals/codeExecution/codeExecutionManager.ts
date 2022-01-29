@@ -93,7 +93,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         await this.executeSelection(executionService);
     }
 
-    private async executeSelection(executionService: ICodeExecutionService): Promise<any> {
+    private async executeSelection(executionService: ICodeExecutionService): Promise<string | undefined> {
         const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor) {
             const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
@@ -103,7 +103,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         const codeToExecute = await codeExecutionHelper.getSelectedTextToExecute(activeEditor!);
         const normalizedCode = await codeExecutionHelper.normalizeLines(codeToExecute!);
         if (!normalizedCode || normalizedCode.trim().length === 0) {
-            return;
+            return undefined;
         }
 
         try {
@@ -113,7 +113,6 @@ export class CodeExecutionManager implements ICodeExecutionManager {
             // for telemetry
             noop();
         }
-
         await executionService.execute(normalizedCode, activeEditor!.document.uri);
     }
 }
