@@ -67,7 +67,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         file = file instanceof Uri ? file : undefined;
         const fileToExecute = file ? file : await codeExecutionHelper.getFileToExecute();
         if (!fileToExecute) {
-            const appShell: IAppShell = (window as any) as IAppShell;
+            const appShell: IAppShell = (window as unknown) as IAppShell;
             appShell.showErrorMessage('Open an file before executing code');
             return [new Error('No file to execute')];
         }
@@ -101,7 +101,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
     private async executeSelection(executionService: ICodeExecutionService): Promise<Error[] | undefined> {
         const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor) {
-            const appShell: IAppShell = (window as any) as IAppShell;
+            const appShell: IAppShell = (window as unknown) as IAppShell;
             appShell.showErrorMessage('Open an active editor before executing code');
             return [new Error('No active editor')];
         }
