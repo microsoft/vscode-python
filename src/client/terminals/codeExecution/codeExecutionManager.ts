@@ -63,9 +63,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         const fileToExecute = file ? file : await codeExecutionHelper.getFileToExecute();
         if (!fileToExecute) {
             const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            const errorMessage = appShell;
-            errorMessage.showErrorMessage('Open a file before executing code', '1');
-            return [new Error('Open a file')];
+            return appShell.showErrorMessage('No file selected');
         }
         await codeExecutionHelper.saveFileIfDirty(fileToExecute);
 
@@ -94,13 +92,11 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         await this.executeSelection(executionService);
     }
 
-    private async executeSelection(executionService: ICodeExecutionService): Promise<Error[] | undefined> {
+    private async executeSelection(executionService: ICodeExecutionService): Promise<string | undefined> {
         const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor) {
             const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            const errorMessage = appShell;
-            errorMessage.showErrorMessage('Open an active editor before executing code', '1');
-            return [new Error('No active editor')];
+            return appShell.showErrorMessage('No editor selected');
         }
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
         const codeToExecute = await codeExecutionHelper.getSelectedTextToExecute(activeEditor!);
