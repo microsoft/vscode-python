@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 
-import { ICommandManager, IDocumentManager } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
@@ -17,7 +17,7 @@ import { traceError } from '../../logging';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../terminals/types';
-import * as vscode from 'vscode';
+
 @injectable()
 export class CodeExecutionManager implements ICodeExecutionManager {
     private eventEmitter: EventEmitter<string> = new EventEmitter<string>();
@@ -63,10 +63,9 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         file = file instanceof Uri ? file : undefined;
         const fileToExecute = file ? file : await codeExecutionHelper.getFileToExecute();
         if (!fileToExecute) {
-            vscode.window.showErrorMessage(
-                'No file selected. Please select a file to execute or open a file to be executed.',
-            );
-            return [new Error('No file selected')];
+            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+            appShell.showErrorMessage('Open a file before executing code');
+            return [new Error('No file to execute')];
         }
         await codeExecutionHelper.saveFileIfDirty(fileToExecute);
 
@@ -98,9 +97,8 @@ export class CodeExecutionManager implements ICodeExecutionManager {
     private async executeSelection(executionService: ICodeExecutionService): Promise<Error[] | undefined> {
         const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor) {
-            vscode.window.showErrorMessage(
-                'No editor opened. Please open an active editor before attempting to execute a file.',
-            );
+            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+            appShell.showErrorMessage('Open an active editor before executing code');
             return [new Error('No active editor')];
         }
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
