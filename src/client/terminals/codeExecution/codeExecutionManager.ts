@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 
-import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
+import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
@@ -17,6 +17,10 @@ import { traceError } from '../../logging';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../terminals/types';
+
+interface IAppShell {
+    showErrorMessage(message: string, ...items: string[]): Promise<string | undefined>;
+}
 
 @injectable()
 export class CodeExecutionManager implements ICodeExecutionManager {
@@ -63,8 +67,8 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         file = file instanceof Uri ? file : undefined;
         const fileToExecute = file ? file : await codeExecutionHelper.getFileToExecute();
         if (!fileToExecute) {
-            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            appShell.showErrorMessage('Open a file before executing code');
+            const appShell: IAppShell = (window as any) as IAppShell;
+            appShell.showErrorMessage('Open an file before executing code');
             return [new Error('No file to execute')];
         }
         await codeExecutionHelper.saveFileIfDirty(fileToExecute);
@@ -97,7 +101,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
     private async executeSelection(executionService: ICodeExecutionService): Promise<Error[] | undefined> {
         const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor) {
-            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+            const appShell: IAppShell = (window as any) as IAppShell;
             appShell.showErrorMessage('Open an active editor before executing code');
             return [new Error('No active editor')];
         }
