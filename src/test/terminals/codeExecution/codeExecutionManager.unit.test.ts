@@ -10,10 +10,7 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionManager } from '../../../client/terminals/codeExecution/codeExecutionManager';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../../client/terminals/types';
-
-interface IAppShell {
-    showErrorMessage(message: string, ...items: string[]): Promise<string | undefined>;
-}
+import * as vscode from 'vscode';
 
 suite('Terminal - Code Execution Manager', () => {
     let executionManager: ICodeExecutionManager;
@@ -278,12 +275,10 @@ suite('Terminal - Code Execution Manager', () => {
         );
         helper.verifyAll();
     }
-    async function checkErrorMessage(this: any): Promise<Error[] | undefined> {
+    async function checkErrorMessage(this: any): Promise<void> {
         const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor) {
-            const appShell: IAppShell = (window as any) as IAppShell;
-            appShell.showErrorMessage('Open an active editor before executing code');
-            return [new Error('No active editor')];
+            vscode.window.showErrorMessage('Open an active editor before executing code');
         } else {
             return undefined;
         }
