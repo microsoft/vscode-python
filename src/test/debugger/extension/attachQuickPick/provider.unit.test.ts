@@ -397,8 +397,7 @@ ProcessId=8026\r
                 {
                     label: 'python.exe',
                     description: '8026',
-                    detail:
-                        'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/foo_bar.py',
+                    detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/foo_bar.py',
                     id: '8026',
                     processName: 'python.exe',
                     commandLine:
@@ -407,8 +406,7 @@ ProcessId=8026\r
                 {
                     label: 'python.exe',
                     description: '6028',
-                    detail:
-                        'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
+                    detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
                     id: '6028',
                     processName: 'python.exe',
                     commandLine:

@@ -36,9 +36,9 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
     setup(() => {
         const configurationService = mock(ConfigurationService);
 
-        when(configurationService.getSettings(undefined)).thenReturn(({
+        when(configurationService.getSettings(undefined)).thenReturn({
             experiments: { enabled: true },
-        } as any) as IPythonSettings);
+        } as any as IPythonSettings);
         attachFactory = mock(AttachProcessProviderFactory);
 
         debugService = mock(DebugService);

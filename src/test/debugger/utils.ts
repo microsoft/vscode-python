@@ -80,9 +80,9 @@ class DebugAdapterTracker {
             this.tracked.dapHandler(src, msg);
         }
         if (msg.type === 'event') {
-            const event = ((msg as unknown) as DebugProtocol.Event).event;
+            const event = (msg as unknown as DebugProtocol.Event).event;
             if (event === 'output') {
-                this.onOutputEvent((msg as unknown) as DebugProtocol.OutputEvent);
+                this.onOutputEvent(msg as unknown as DebugProtocol.OutputEvent);
             }
         }
     }
@@ -233,12 +233,12 @@ class DebuggerSession {
 
     public handleDAPMessage(_src: DAPSource, baseMsg: DebugProtocol.ProtocolMessage) {
         if (baseMsg.type === 'event') {
-            const event = ((baseMsg as unknown) as DebugProtocol.Event).event;
+            const event = (baseMsg as unknown as DebugProtocol.Event).event;
             if (event === 'stopped') {
-                const msg = (baseMsg as unknown) as DebugProtocol.StoppedEvent;
+                const msg = baseMsg as unknown as DebugProtocol.StoppedEvent;
                 this.stopped = {
                     breakpoint: msg.body.reason === 'breakpoint',
-                    threadId: (msg.body.threadId as unknown) as number,
+                    threadId: msg.body.threadId as unknown as number,
                 };
             } else {
                 // For now there aren't any other events we care about.

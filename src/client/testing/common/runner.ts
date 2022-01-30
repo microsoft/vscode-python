@@ -58,9 +58,8 @@ async function run(serviceContainer: IServiceContainer, testProvider: TestProvid
             executionService.execModuleObservable(executionInfo.moduleName!, executionInfo.args, options),
         );
     } else {
-        const pythonToolsExecutionService = serviceContainer.get<IPythonToolExecutionService>(
-            IPythonToolExecutionService,
-        );
+        const pythonToolsExecutionService =
+            serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
         promise = pythonToolsExecutionService.execObservable(executionInfo, spawnOptions, options.workspaceFolder);
     }
 

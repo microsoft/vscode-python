@@ -47,7 +47,7 @@ suite('Linting - Linter Commands', () => {
     });
 
     test('Run Linting method will lint all open files', async () => {
-        when(lintingEngine.lintOpenPythonFiles()).thenResolve(('Hello' as unknown) as DiagnosticCollection);
+        when(lintingEngine.lintOpenPythonFiles()).thenResolve('Hello' as unknown as DiagnosticCollection);
 
         const result = await linterCommands.runLinting();
 
@@ -119,7 +119,7 @@ suite('Linting - Linter Commands', () => {
 
     test('Set Linter should display a quickpick and currently active linter when only one is enabled', async () => {
         const linterId = 'Hello World';
-        const activeLinters: ILinterInfo[] = [({ id: linterId } as unknown) as ILinterInfo];
+        const activeLinters: ILinterInfo[] = [{ id: linterId } as unknown as ILinterInfo];
         when(manager.getAllLinterInfos()).thenReturn([]);
         when(manager.getActiveLinters(anything())).thenResolve(activeLinters);
         when(shell.showQuickPick(anything(), anything())).thenResolve();
@@ -137,7 +137,7 @@ suite('Linting - Linter Commands', () => {
     });
 
     test('Set Linter should display a quickpick and with message about multiple linters being enabled', async () => {
-        const activeLinters: ILinterInfo[] = ([{ id: 'linterId' }, { id: 'linterId2' }] as unknown) as ILinterInfo[];
+        const activeLinters: ILinterInfo[] = [{ id: 'linterId' }, { id: 'linterId2' }] as unknown as ILinterInfo[];
         when(manager.getAllLinterInfos()).thenReturn([]);
         when(manager.getActiveLinters(anything())).thenResolve(activeLinters);
         when(shell.showQuickPick(anything(), anything())).thenResolve();
@@ -155,12 +155,12 @@ suite('Linting - Linter Commands', () => {
     });
 
     test('Selecting a linter should display warning message about multiple linters', async () => {
-        const linters: ILinterInfo[] = ([
+        const linters: ILinterInfo[] = [
             { id: '1' },
             { id: '2' },
             { id: '3', product: 'Three' },
-        ] as unknown) as ILinterInfo[];
-        const activeLinters: ILinterInfo[] = ([{ id: '1' }, { id: '3' }] as unknown) as ILinterInfo[];
+        ] as unknown as ILinterInfo[];
+        const activeLinters: ILinterInfo[] = [{ id: '1' }, { id: '3' }] as unknown as ILinterInfo[];
         when(manager.getAllLinterInfos()).thenReturn(linters);
         when(manager.getActiveLinters(anything())).thenResolve(activeLinters);
         when(shell.showQuickPick(anything(), anything())).thenReturn(Promise.resolve('3'));
@@ -177,6 +177,6 @@ suite('Linting - Linter Commands', () => {
         verify(shell.showWarningMessage(anything(), 'Yes', 'No')).once();
         const quickPickOptions = capture(shell.showQuickPick).last()[1];
         expect(quickPickOptions).to.deep.equal(expectedQuickPickOptions);
-        verify(manager.setActiveLintersAsync(deepEqual([('Three' as unknown) as Product]), anything())).once();
+        verify(manager.setActiveLintersAsync(deepEqual(['Three' as unknown as Product]), anything())).once();
     });
 });

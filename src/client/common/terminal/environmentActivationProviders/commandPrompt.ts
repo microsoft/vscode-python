@@ -9,13 +9,13 @@ import { TerminalShellType } from '../types';
 import { ActivationScripts, VenvBaseActivationCommandProvider } from './baseActivationProvider';
 
 // For a given shell the scripts are in order of precedence.
-const SCRIPTS: ActivationScripts = ({
+const SCRIPTS: ActivationScripts = {
     // Group 1
     [TerminalShellType.commandPrompt]: ['activate.bat', 'Activate.ps1'],
     // Group 2
     [TerminalShellType.powershell]: ['Activate.ps1', 'activate.bat'],
     [TerminalShellType.powershellCore]: ['Activate.ps1', 'activate.bat'],
-} as unknown) as ActivationScripts;
+} as unknown as ActivationScripts;
 
 export function getAllScripts(pathJoin: (...p: string[]) => string): string[] {
     const scripts: string[] = [];
@@ -40,7 +40,7 @@ export class CommandPromptAndPowerShell extends VenvBaseActivationCommandProvide
     protected readonly scripts: ActivationScripts;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
-        this.scripts = ({} as unknown) as ActivationScripts;
+        this.scripts = {} as unknown as ActivationScripts;
         for (const key of Object.keys(SCRIPTS)) {
             const shell = key as TerminalShellType;
             const scripts: string[] = [];

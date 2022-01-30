@@ -211,7 +211,8 @@ interface IEmitter<E extends PythonEnvsChangedEvent> {
  * `BasicPythonEnvsChangedEvent`.
  */
 abstract class LocatorBase<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
-    implements ILocator<I, E> {
+    implements ILocator<I, E>
+{
     public readonly onChanged: Event<E>;
 
     protected readonly emitter: IEmitter<E>;

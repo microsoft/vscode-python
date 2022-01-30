@@ -29,12 +29,11 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
 
     private readonly autoSelectedInterpreterByWorkspace = new Map<string, PythonEnvironment | undefined>();
 
-    private globallyPreferredInterpreter: IPersistentState<
-        PythonEnvironment | undefined
-    > = this.stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
-        preferredGlobalInterpreter,
-        undefined,
-    );
+    private globallyPreferredInterpreter: IPersistentState<PythonEnvironment | undefined> =
+        this.stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
+            preferredGlobalInterpreter,
+            undefined,
+        );
 
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,

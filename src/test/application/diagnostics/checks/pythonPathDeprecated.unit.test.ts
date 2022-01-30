@@ -140,11 +140,11 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
         test('Python Path Deprecated Diagnostic is handled as expected', async () => {
             let invoked = false;
             const diagnostic = new PythonPathDeprecatedDiagnostic('message', resource);
-            const ignoreCmd = ({
+            const ignoreCmd = {
                 invoke: () => {
                     invoked = true;
                 },
-            } as any) as IDiagnosticCommand;
+            } as any as IDiagnosticCommand;
             filterService
                 .setup((f) =>
                     f.shouldIgnoreDiagnostic(typemoq.It.isValue(DiagnosticCodes.PythonPathDeprecatedDiagnostic)),

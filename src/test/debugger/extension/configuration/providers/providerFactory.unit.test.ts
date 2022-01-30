@@ -15,7 +15,7 @@ suite('Debugging - Configuration Provider Factory', () => {
     setup(() => {
         mappedProviders = new Map<DebugConfigurationType, IDebugConfigurationProvider>();
         getNamesAndValues<DebugConfigurationType>(DebugConfigurationType).forEach((item) => {
-            mappedProviders.set(item.value, (item.value as any) as IDebugConfigurationProvider);
+            mappedProviders.set(item.value, item.value as any as IDebugConfigurationProvider);
         });
         factory = new DebugConfigurationProviderFactory(
             mappedProviders.get(DebugConfigurationType.launchFastAPI)!,
