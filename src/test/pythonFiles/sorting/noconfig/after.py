@@ -1,4 +1,7 @@
-import io; sys; json
+import io
+
+sys
+json
 import traceback
 
 import rope

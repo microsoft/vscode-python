@@ -1,4 +1,7 @@
-import io; sys; json
+import io
+
+sys
+json
 import traceback
 import rope
 
@@ -12,7 +15,7 @@ ROPE_PROJECT_FOLDER = sys.argv[2]
 def test():
     pass
 
+
 from rope.base import libutils
 from rope.refactor.rename import Rename
 from rope.refactor.extract import ExtractMethod, ExtractVariable
-    
