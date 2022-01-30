@@ -317,8 +317,8 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
                 undefined,
             );
-            const cmd = {} as any as IDiagnosticCommand;
-            const cmdIgnore = {} as any as IDiagnosticCommand;
+            const cmd = ({} as any) as IDiagnosticCommand;
+            const cmdIgnore = ({} as any) as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
             messageHandler
                 .setup((i) => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
@@ -364,9 +364,9 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
                 undefined,
             );
-            const cmdDownload = {} as any as IDiagnosticCommand;
-            const cmdLearn = {} as any as IDiagnosticCommand;
-            const cmdIgnore = {} as any as IDiagnosticCommand;
+            const cmdDownload = ({} as any) as IDiagnosticCommand;
+            const cmdLearn = ({} as any) as IDiagnosticCommand;
+            const cmdIgnore = ({} as any) as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
             messageHandler
                 .setup((i) => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))

@@ -97,7 +97,7 @@ suite('Terminal - Code Execution Helper', () => {
             .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((_, args: string[]) => {
                 execArgs = args.join(' ');
-                return {} as unknown as ObservableExecutionResult<string>;
+                return ({} as unknown) as ObservableExecutionResult<string>;
             });
 
         await helper.normalizeLines('print("hello")');

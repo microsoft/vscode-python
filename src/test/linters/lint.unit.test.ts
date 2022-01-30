@@ -806,7 +806,7 @@ suite('Linting Products', () => {
             .map((key) => Product[Number(key)]);
 
         products.forEach((p) => {
-            const product = p as unknown as Product;
+            const product = (p as unknown) as Product;
             if (prodService.getProductType(product) === ProductType.Linter) {
                 const found = LINTERID_BY_PRODUCT.get(product);
                 assert.notStrictEqual(found, undefined, `did find linter ${Product[product]}`);

@@ -20,7 +20,7 @@ export class HttpClient implements IHttpClient {
     }
 
     public async downloadFile(uri: string): Promise<requestTypes.Request> {
-        const request = (await import('request')) as any as typeof requestTypes;
+        const request = ((await import('request')) as any) as typeof requestTypes;
         return request(uri, this.requestOptions);
     }
 

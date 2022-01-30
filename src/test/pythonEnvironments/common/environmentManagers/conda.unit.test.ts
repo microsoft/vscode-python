@@ -139,19 +139,21 @@ suite('Conda and its environments are located correctly', () => {
                     return names;
                 }
 
-                return names.map((name): fs.Dirent => {
-                    const isFile = typeof dir[name] === 'string';
-                    return {
-                        name,
-                        isFile: () => isFile,
-                        isDirectory: () => !isFile,
-                        isBlockDevice: () => false,
-                        isCharacterDevice: () => false,
-                        isSymbolicLink: () => false,
-                        isFIFO: () => false,
-                        isSocket: () => false,
-                    };
-                });
+                return names.map(
+                    (name): fs.Dirent => {
+                        const isFile = typeof dir[name] === 'string';
+                        return {
+                            name,
+                            isFile: () => isFile,
+                            isDirectory: () => !isFile,
+                            isBlockDevice: () => false,
+                            isCharacterDevice: () => false,
+                            isSymbolicLink: () => false,
+                            isFIFO: () => false,
+                            isSocket: () => false,
+                        };
+                    },
+                );
             });
 
         sinon

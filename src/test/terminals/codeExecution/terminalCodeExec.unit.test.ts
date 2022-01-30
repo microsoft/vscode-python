@@ -522,7 +522,7 @@ suite('Terminal - Code Execution', () => {
                 await executor.execute('');
                 await executor.execute('   ');
 
-                await executor.execute(undefined as any as string);
+                await executor.execute((undefined as any) as string);
 
                 terminalService.verify(
                     async (t) => t.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()),

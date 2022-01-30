@@ -14,8 +14,7 @@ import { DummyFormatter } from '../formatters/dummyFormatter';
 import { YapfFormatter } from '../formatters/yapfFormatter';
 
 export class PythonFormattingEditProvider
-    implements vscode.DocumentFormattingEditProvider, vscode.DocumentRangeFormattingEditProvider, vscode.Disposable
-{
+    implements vscode.DocumentFormattingEditProvider, vscode.DocumentRangeFormattingEditProvider, vscode.Disposable {
     private readonly config: IConfigurationService;
 
     private readonly workspace: IWorkspaceService;

@@ -28,9 +28,8 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
         clientOptions: LanguageClientOptions,
     ): Promise<LanguageClient> {
         // this must exist for node language client
-        const commandArgs = (
-            clientOptions.connectionOptions?.cancellationStrategy as FileBasedCancellationStrategy
-        ).getCommandLineArguments();
+        const commandArgs = (clientOptions.connectionOptions
+            ?.cancellationStrategy as FileBasedCancellationStrategy).getCommandLineArguments();
 
         const folderName = await this.languageServerFolderService.getLanguageServerFolderName(resource);
         const languageServerFolder = path.isAbsolute(folderName)

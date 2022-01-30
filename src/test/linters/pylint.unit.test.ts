@@ -40,7 +40,7 @@ suite('Pylint - Function runLinter()', () => {
 
         // eslint-disable-next-line class-methods-use-this
         public parseMessagesSeverity(_error: string, _categorySeverity: unknown): LintMessageSeverity {
-            return 'Severity' as unknown as LintMessageSeverity;
+            return ('Severity' as unknown) as LintMessageSeverity;
         }
 
         // eslint-disable-next-line class-methods-use-this
@@ -91,7 +91,7 @@ suite('Pylint - Function runLinter()', () => {
         fileSystem
             .setup((x) => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
             .returns((a, b) => a === b);
-        manager.setup((m) => m.getLinterInfo(TypeMoq.It.isAny())).returns(() => undefined as unknown as ILinterInfo);
+        manager.setup((m) => m.getLinterInfo(TypeMoq.It.isAny())).returns(() => (undefined as unknown) as ILinterInfo);
         _info.setup((x) => x.id).returns(() => LinterId.PyLint);
     });
 
@@ -143,7 +143,7 @@ suite('Pylint - Function runLinter()', () => {
         parseMessagesSeverity.callsFake(() => 'LintMessageSeverity');
         const pylint = new PylintTest(serviceContainer.object);
         const result = await pylint.runLinter(doc as vscode.TextDocument, mock(vscode.CancellationTokenSource).token);
-        assert.deepEqual(result, expectedResult as unknown as ILintMessage[]);
+        assert.deepEqual(result, (expectedResult as unknown) as ILintMessage[]);
         assert.ok(parseMessagesSeverity.calledOnce);
         assert.ok(run.calledOnce);
     });

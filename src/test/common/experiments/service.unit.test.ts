@@ -174,9 +174,9 @@ suite('Experimentation service', () => {
                 });
 
             getTreatmentVariable = sinon.stub().returns(Promise.resolve(true));
-            sinon.stub(tasClient, 'getExperimentationService').returns({
+            sinon.stub(tasClient, 'getExperimentationService').returns(({
                 getTreatmentVariable,
-            } as unknown as tasClient.IExperimentationService);
+            } as unknown) as tasClient.IExperimentationService);
 
             configureApplicationEnvironment('stable', extensionVersion);
         });
@@ -327,9 +327,9 @@ suite('Experimentation service', () => {
 
         setup(() => {
             getTreatmentVariableStub = sinon.stub().returns(Promise.resolve('value'));
-            sinon.stub(tasClient, 'getExperimentationService').returns({
+            sinon.stub(tasClient, 'getExperimentationService').returns(({
                 getTreatmentVariable: getTreatmentVariableStub,
-            } as unknown as tasClient.IExperimentationService);
+            } as unknown) as tasClient.IExperimentationService);
 
             configureApplicationEnvironment('stable', extensionVersion);
         });

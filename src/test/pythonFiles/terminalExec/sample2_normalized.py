@@ -3,6 +3,5 @@ def add(x, y):
     # Some comment
     return x + y
 
-
 v = add(1, 7)
 print(v)

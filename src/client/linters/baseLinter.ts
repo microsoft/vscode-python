@@ -142,7 +142,7 @@ export abstract class BaseLinter implements ILinter {
                     return LintMessageSeverity.Warning;
                 default: {
                     if (LintMessageSeverity[severityName]) {
-                        return LintMessageSeverity[severityName] as unknown as LintMessageSeverity;
+                        return (LintMessageSeverity[severityName] as unknown) as LintMessageSeverity;
                     }
                 }
             }
@@ -161,8 +161,9 @@ export abstract class BaseLinter implements ILinter {
         }
         const executionInfo = this.info.getExecutionInfo(args, document.uri);
         const cwd = this.getWorkingDirectoryPath(document);
-        const pythonToolsExecutionService =
-            this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
+        const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(
+            IPythonToolExecutionService,
+        );
         try {
             const result = await pythonToolsExecutionService.execForLinter(
                 executionInfo,
