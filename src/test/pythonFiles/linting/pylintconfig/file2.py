@@ -10,7 +10,7 @@ class Foo(object):
 
     def meth1(self, arg):
         """meth1"""
-        print self.blop
+        print (self.blop)
 
     def meth2(self, arg):
         """meth2"""
