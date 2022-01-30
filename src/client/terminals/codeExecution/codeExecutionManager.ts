@@ -17,11 +17,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { traceError } from '../../logging';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../terminals/types';
-
-interface IAppShell {
-    showErrorMessage(message: string, ...items: string[]): Promise<string | undefined>;
-}
+import { IAppShell, ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../terminals/types';
 
 @injectable()
 export class CodeExecutionManager implements ICodeExecutionManager {
@@ -62,6 +58,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
             ),
         );
     }
+
     private async executeFileInTerminal(file: Resource, trigger: 'command' | 'icon') {
         sendTelemetryEvent(EventName.EXECUTION_CODE, undefined, { scope: 'file', trigger });
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
