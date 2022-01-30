@@ -103,7 +103,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor) {
             const appShell: IAppShell = (window as any) as IAppShell;
-            appShell.showErrorMessage('Open an active editor before executing code');
+            appShell.showErrorMessage('Open an active editor before executing code.');
             return [new Error('No active editor')];
         }
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
