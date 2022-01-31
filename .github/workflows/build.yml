@@ -301,7 +301,7 @@ jobs:
         with:
           run: npm run testMultiWorkspace
           working-directory: ${{ env.special-working-directory }}
-        if: matrix.test-suite == 'multi-workspace'
+        if: matrix.test-suite == 'multi-workspace' && matrix.python != 2.7
 
       - name: Run debugger tests
         env:
