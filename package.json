@@ -2042,7 +2042,7 @@
         "node-has-native-dependencies": "^1.0.2",
         "node-loader": "^1.0.2",
         "nyc": "^15.0.0",
-        "prettier": "^2.0.2",
+        "prettier": "^2.5.1",
         "rewiremock": "^3.13.0",
         "rimraf": "^3.0.2",
         "shortid": "^2.2.8",
