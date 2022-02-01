@@ -13,7 +13,7 @@ import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import {
     PYTHON_PATH,
     resetGlobalInterpreterPathSetting,
-    setGlobalInterpreterPath,
+    setPythonPathInWorkspaceRoot,
     updateSetting,
     waitForCondition,
 } from '../../../common';
@@ -36,7 +36,7 @@ suite('Activation of Environments in Terminal', () => {
     const envsLocation =
         PYTHON_VIRTUAL_ENVS_LOCATION !== undefined
             ? path.join(EXTENSION_ROOT_DIR_FOR_TESTS, PYTHON_VIRTUAL_ENVS_LOCATION)
-            : path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'tmp', 'envPaths.json');
+            : path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'envPaths.json');
     const waitTimeForActivation = 5000;
     type EnvPath = {
         condaExecPath: string;
@@ -149,8 +149,9 @@ suite('Activation of Environments in Terminal', () => {
             vscode.workspace.workspaceFolders![0].uri,
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
-        await setGlobalInterpreterPath(envPath);
-        console.log('Setting global interpreter path', envPath);
+        console.log('Setting workspace default interpreter path', envPath);
+        await setPythonPathInWorkspaceRoot(envPath);
+        console.log('Finished setting workspace default interpreter path', envPath);
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
     }
