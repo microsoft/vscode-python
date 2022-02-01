@@ -13,7 +13,7 @@ import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import {
     PYTHON_PATH,
     resetGlobalInterpreterPathSetting,
-    setPythonPathInWorkspaceRoot,
+    setGlobalInterpreterPath,
     updateSetting,
     waitForCondition,
 } from '../../../common';
@@ -150,7 +150,7 @@ suite('Activation of Environments in Terminal', () => {
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
         console.log('Setting workspace default interpreter path', envPath);
-        await setPythonPathInWorkspaceRoot(envPath);
+        await setGlobalInterpreterPath(envPath);
         console.log('Finished setting workspace default interpreter path', envPath);
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
