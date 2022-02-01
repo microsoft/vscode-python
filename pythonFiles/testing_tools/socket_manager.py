@@ -19,8 +19,8 @@ class SocketManager(object):
     """
 
     def __init__(self, addr):
-        self.socket = None
         self.addr = addr
+        self.socket = None
 
     def __enter__(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
@@ -33,7 +33,7 @@ class SocketManager(object):
 
         return self
 
-    def __exit__(self, type, value, tb):
+    def __exit__(self, *_):
         if self.socket:
             try:
                 self.socket.shutdown(socket.SHUT_RDWR)
