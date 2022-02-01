@@ -155,7 +155,9 @@ def test_no_existing_child_node() -> None:
 
 
 def test_build_simple_tree() -> None:
-    """The build_test_tree function should build and return a test tree from discovered test suites, and an empty list of errors if there are none in the discovered data."""
+    """The build_test_tree function should build and return a test tree from discovered test suites,
+    and an empty list of errors if there are none in the discovered data.
+    """
 
     # Discovery tests in utils_simple_tree.py.
     start_dir = os.fsdecode(TEST_DATA_PATH)
