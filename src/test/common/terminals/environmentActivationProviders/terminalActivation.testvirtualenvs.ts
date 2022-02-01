@@ -168,8 +168,6 @@ suite('Activation of Environments in Terminal', () => {
         if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
             this.skip();
         }
-        // https://github.com/microsoft/vscode-python/issues/17666
-        this.skip();
         await testActivation(envPaths.venvPath);
     });
     test('Should activate with pipenv', async function () {
