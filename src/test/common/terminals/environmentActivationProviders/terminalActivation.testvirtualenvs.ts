@@ -12,8 +12,8 @@ import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import {
     PYTHON_PATH,
-    resetGlobalInterpreterPathSetting,
-    setGlobalInterpreterPath,
+    restorePythonPathInWorkspaceRoot,
+    setPythonPathInWorkspaceRoot,
     updateSetting,
     waitForCondition,
 } from '../../../common';
@@ -56,7 +56,6 @@ suite('Activation of Environments in Terminal', () => {
     const sandbox = sinon.createSandbox();
     suiteSetup(async () => {
         envPaths = await fs.readJson(envsLocation);
-        console.log('Beginning suite', envPaths);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders![0].uri);
         pythonSettings = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders![0].uri);
         defaultShell.Windows = terminalSettings.inspect('integrated.defaultProfile.windows').globalValue;
@@ -108,7 +107,7 @@ suite('Activation of Environments in Terminal', () => {
             vscode.ConfigurationTarget.Global,
         );
         await pythonSettings.update('condaPath', undefined, vscode.ConfigurationTarget.Global);
-        await resetGlobalInterpreterPathSetting();
+        await restorePythonPathInWorkspaceRoot();
     }
 
     /**
@@ -149,9 +148,7 @@ suite('Activation of Environments in Terminal', () => {
             vscode.workspace.workspaceFolders![0].uri,
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
-        console.log('Setting workspace default interpreter path', envPath);
-        await setGlobalInterpreterPath(envPath);
-        console.log('Finished setting workspace default interpreter path', envPath);
+        await setPythonPathInWorkspaceRoot(envPath);
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
     }
