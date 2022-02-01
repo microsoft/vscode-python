@@ -56,6 +56,7 @@ suite('Activation of Environments in Terminal', () => {
     const sandbox = sinon.createSandbox();
     suiteSetup(async () => {
         envPaths = await fs.readJson(envsLocation);
+        console.log('Beginning suite', envPaths);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders![0].uri);
         pythonSettings = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders![0].uri);
         defaultShell.Windows = terminalSettings.inspect('integrated.defaultProfile.windows').globalValue;
@@ -149,6 +150,7 @@ suite('Activation of Environments in Terminal', () => {
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
         await setGlobalInterpreterPath(envPath);
+        console.log('Setting global interpreter path', envPath);
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
     }
