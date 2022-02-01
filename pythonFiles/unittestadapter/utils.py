@@ -146,9 +146,8 @@ def build_test_tree(
         else:
             # Get the static test path components: filename, class name and function name.
             components = test_id.split(".")
-            filename, class_name, function_name = components[:3]
+            *folders, filename, class_name, function_name = components
             py_filename = f"{filename}.py"
-            folders = components[:-3]
 
             current_node = root
 
