@@ -171,6 +171,9 @@ suite('Activation of Environments in Terminal', () => {
         await testActivation(envPaths.venvPath);
     });
     test('Should activate with pipenv', async function () {
+        if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
+            this.skip();
+        }
         await testActivation(envPaths.pipenvPath);
     });
     test('Should activate with virtualenv', async function () {
