@@ -23,12 +23,12 @@ class SocketManager(object):
         self.socket = None
 
     def __enter__(self):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
         if sys.platform == "win32":
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+            addr_use = socket.SO_EXCLUSIVEADDRUSE
         else:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket = sock
+            addr_use = socket.SO_REUSEADDR
+        self.sock.setsockopt(socket.SOL_SOCKET, addr_use, 1)
         sock.connect(self.addr)
 
         return self
