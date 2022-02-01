@@ -71,7 +71,6 @@ export class InterpreterPathService implements IInterpreterPathService {
         }
         const defaultInterpreterPath: InspectInterpreterSettingType =
             this.workspaceService.getConfiguration('python', resource)?.inspect<string>('defaultInterpreterPath') ?? {};
-        console.log('DEFAULT SETTING', JSON.stringify(defaultInterpreterPath), resource?.fsPath);
         return {
             globalValue: defaultInterpreterPath.globalValue,
             workspaceFolderValue: workspaceFolderSetting?.value || defaultInterpreterPath.workspaceFolderValue,
@@ -81,7 +80,6 @@ export class InterpreterPathService implements IInterpreterPathService {
 
     public get(resource: Resource): string {
         const settings = this.inspect(resource);
-        console.log('SETTING', JSON.stringify(settings));
         const value =
             settings.workspaceFolderValue ||
             settings.workspaceValue ||

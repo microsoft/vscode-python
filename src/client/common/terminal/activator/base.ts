@@ -31,7 +31,6 @@ export class BaseTerminalActivator implements ITerminalActivator {
             for (const command of activationCommands) {
                 terminal.show(options?.preserveFocus);
                 terminal.sendText(command);
-                console.log(`ACTIVATION COMMAND (sent): ${command}`);
                 await this.waitForCommandToProcess(terminalShellType);
                 activated = true;
             }
