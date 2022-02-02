@@ -293,10 +293,6 @@ export class LinterInstaller extends BaseInstaller {
         cancel?: CancellationToken,
         _flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse> {
-        sendTelemetryEvent(EventName.LINTER_INSTALL_PROMPT, undefined, {
-            prompt: 'old',
-        });
-
         return this.oldPromptForInstallation(product, resource, cancel);
     }
 

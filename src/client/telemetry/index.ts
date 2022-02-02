@@ -956,24 +956,6 @@ export interface IEventNamePropertyMapping {
     };
 
     /**
-     * Telemetry event sent before showing the linter prompt to install
-     * pylint or flake8.
-     */
-    /* __GDPR__
-       "linter_install_prompt" : {
-          "prompt" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
-       }
-     */
-    [EventName.LINTER_INSTALL_PROMPT]: {
-        /**
-         * Identify which prompt was shown.
-         *
-         * @type {('old' | 'noPrompt' | 'pylintFirst' | 'flake8first')}
-         */
-        prompt: 'old' | 'noPrompt' | 'pylintFirst' | 'flake8first';
-    };
-
-    /**
      * Telemetry event sent when installing modules
      */
     /* __GDPR__
