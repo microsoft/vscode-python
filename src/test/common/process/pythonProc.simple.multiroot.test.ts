@@ -7,7 +7,6 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { execFile } from 'child_process';
 import * as fs from 'fs-extra';
-import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
@@ -75,12 +74,12 @@ suite('PythonExecutableService', () => {
     test('Importing with a valid PYTHONPATH from .env file should succeed', async () => {
         await configService.updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
-        const promise = pythonExecService.exec([workspace4PyFile.fsPath], {
+        const result = await pythonExecService.exec([workspace4PyFile.fsPath], {
             cwd: path.dirname(workspace4PyFile.fsPath),
             throwOnStdErr: true,
         });
 
-        await expect(promise).to.eventually.have.property('stdout', `Hello${EOL}`);
+        expect(result.stdout.startsWith('Hello')).to.be.equals(true);
     }).timeout(TEST_TIMEOUT * 3);
 
     test("Known modules such as 'os' and 'sys' should be deemed 'installed'", async () => {
