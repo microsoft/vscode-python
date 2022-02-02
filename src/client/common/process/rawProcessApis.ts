@@ -164,8 +164,8 @@ function filterOutputUsingCondaRunMarkers(stdout: string) {
     // run, see `get_output_via_markers.py`.
     const regex = />>>PYTHON-EXEC-OUTPUT([\s\S]*)<<<PYTHON-EXEC-OUTPUT/;
     const match = stdout.match(regex);
-    const filteredOut = match !== null && match.length >= 2 ? match[1].trim() : '';
-    return filteredOut.length ? filteredOut : stdout;
+    const filteredOut = match !== null && match.length >= 2 ? match[1].trim() : undefined;
+    return filteredOut !== undefined ? filteredOut : stdout;
 }
 
 function removeCondaRunMarkers(out: string) {
