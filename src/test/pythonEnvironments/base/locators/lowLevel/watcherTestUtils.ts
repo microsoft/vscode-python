@@ -180,7 +180,7 @@ export function testLocatorWatcher(
             deferred.resolve();
         });
 
-        const { executable, envDir } = await venvs.create('one');
+        const { executable, envDir } = await venvs.createDummyEnv('one', PythonEnvKind.Venv);
         await waitForChangeToBeDetected(deferred);
         if (!options?.doNotVerifyIfLocated) {
             const isFound = await isLocated(executable);
