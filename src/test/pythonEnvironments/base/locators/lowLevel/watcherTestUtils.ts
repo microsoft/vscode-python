@@ -151,10 +151,7 @@ export function testLocatorWatcher(
         return items.some((item) => externalDeps.arePathsSame(item.executablePath, executable));
     }
 
-    suiteSetup(async function () {
-        if (getOSType() === OSType.Linux) {
-            this.skip();
-        }
+    suiteSetup(async () => {
         await venvs.cleanUp();
     });
     async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
