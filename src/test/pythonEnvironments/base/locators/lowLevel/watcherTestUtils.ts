@@ -8,6 +8,7 @@ import { FileChangeType } from '../../../../../client/common/platform/fileSystem
 import { createDeferred, Deferred, sleep } from '../../../../../client/common/utils/async';
 import { getOSType, OSType } from '../../../../../client/common/utils/platform';
 import { IDisposable } from '../../../../../client/common/utils/resourceLifecycle';
+import { StopWatch } from '../../../../../client/common/utils/stopWatch';
 import { traceWarn } from '../../../../../client/logging';
 import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
 import { BasicEnvInfo, ILocator } from '../../../../../client/pythonEnvironments/base/locator';
@@ -139,10 +140,12 @@ export function testLocatorWatcher(
     const venvs = new Venvs(root);
 
     async function waitForChangeToBeDetected(deferred: Deferred<void>) {
+        const stopwatch = new StopWatch();
         const timeout = setTimeout(() => {
             clearTimeout(timeout);
+            console.log('Time taken venv', stopwatch.elapsedTime);
             deferred.reject(new Error('Environment not detected'));
-        }, TEST_TIMEOUT);
+        }, TEST_TIMEOUT * 2);
         await deferred.promise;
     }
 
