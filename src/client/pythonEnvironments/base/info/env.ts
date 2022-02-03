@@ -228,7 +228,11 @@ export function haveSameExecutables(envs1: PythonEnvInfo[], envs2: PythonEnvInfo
     return true;
 }
 
-export function getEnvID(env: Partial<PythonEnvInfo>): string {
+/**
+ * Gets unique identifier for an environment. Note this should only be used after basic env info
+ * is in it's final state i.e cannot be used when env info isn't complete.
+ */
+export function getEnvID(env: PythonEnvInfo): string {
     const basicEnv = {
         executablePath: env.executable?.filename ?? '',
         kind: env.kind ?? PythonEnvKind.Unknown,
@@ -265,7 +269,11 @@ export function areSameEnv(
     const leftFilename = leftInfo.executable!.filename;
     const rightFilename = rightInfo.executable!.filename;
 
-    if (getEnvID(leftInfo) === getEnvID(rightInfo)) {
+    if (leftInfo.kind === PythonEnvKind.Conda && rightInfo.kind === PythonEnvKind.Conda) {
+        return leftInfo.location === rightInfo.location;
+    }
+
+    if (arePathsSame(leftFilename, rightFilename)) {
         return true;
     }
 
