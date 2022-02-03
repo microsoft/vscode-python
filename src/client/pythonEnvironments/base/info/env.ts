@@ -183,9 +183,7 @@ export function getEnvExecutable(env: string | Partial<PythonEnvInfo>): string {
  * If insufficient data is provided to generate a minimal object, such
  * that it is not identifiable, then `undefined` is returned.
  */
-export function getMinimalPartialInfo(
-    env: string | Partial<PythonEnvInfo> | BasicEnvInfo,
-): Partial<PythonEnvInfo> | undefined {
+function getMinimalPartialInfo(env: string | PythonEnvInfo | BasicEnvInfo): Partial<PythonEnvInfo> | undefined {
     if (typeof env === 'string') {
         if (env === '') {
             return undefined;
@@ -211,10 +209,6 @@ export function getMinimalPartialInfo(
             kind: env.kind,
             source: env.source,
         };
-    }
-    const executable = env.executable?.filename;
-    if (executable === undefined || executable === '') {
-        return undefined;
     }
     return env;
 }
@@ -259,8 +253,8 @@ export function getEnvID(env: Partial<PythonEnvInfo>): string {
  * where multiple versions of python executables are all put in the same directory.
  */
 export function areSameEnv(
-    left: string | Partial<PythonEnvInfo> | BasicEnvInfo,
-    right: string | Partial<PythonEnvInfo> | BasicEnvInfo,
+    left: string | PythonEnvInfo | BasicEnvInfo,
+    right: string | PythonEnvInfo | BasicEnvInfo,
     allowPartialMatch = true,
 ): boolean | undefined {
     const leftInfo = getMinimalPartialInfo(left);

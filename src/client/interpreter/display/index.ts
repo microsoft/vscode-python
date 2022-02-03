@@ -34,7 +34,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
     private readonly workspaceService: IWorkspaceService;
     private readonly pathUtils: IPathUtils;
     private readonly interpreterService: IInterpreterService;
-    private currentlySelectedInterpreterPath?: string;
+    private currentlySelectedInterpreterDisplay?: string;
     private currentlySelectedWorkspaceFolder: Resource;
     private interpreterPath: string | undefined;
     private statusBarCanBeDisplayed?: boolean;
@@ -100,7 +100,10 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
         }
     }
     private onDidChangeInterpreterInformation(info: PythonEnvironment) {
-        if (!this.currentlySelectedInterpreterPath || this.currentlySelectedInterpreterPath === info.path) {
+        if (
+            !this.currentlySelectedInterpreterDisplay ||
+            this.currentlySelectedInterpreterDisplay === info.detailedDisplayName
+        ) {
             this.updateDisplay(this.currentlySelectedWorkspaceFolder).ignoreErrors();
         }
     }
@@ -124,12 +127,12 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
                     text = text.startsWith('Python') ? text.substring('Python'.length).trim() : text;
                 }
                 this.statusBar.text = text;
-                this.currentlySelectedInterpreterPath = interpreter.path;
+                this.currentlySelectedInterpreterDisplay = interpreter.detailedDisplayName;
             } else {
                 this.statusBar.tooltip = '';
                 this.statusBar.color = '';
                 this.statusBar.text = '$(alert) Select Python Interpreter';
-                this.currentlySelectedInterpreterPath = undefined;
+                this.currentlySelectedInterpreterDisplay = undefined;
             }
         } else if (this.languageStatus) {
             if (interpreter) {
@@ -145,11 +148,11 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
                 let text = interpreter.detailedDisplayName!;
                 text = text.startsWith('Python') ? text.substring('Python'.length).trim() : text;
                 this.languageStatus.text = text;
-                this.currentlySelectedInterpreterPath = interpreter.path;
+                this.currentlySelectedInterpreterDisplay = interpreter.detailedDisplayName;
             } else {
                 this.languageStatus.text = '$(alert) No Interpreter Selected';
                 this.languageStatus.detail = undefined;
-                this.currentlySelectedInterpreterPath = undefined;
+                this.currentlySelectedInterpreterDisplay = undefined;
             }
         }
         this.statusBarCanBeDisplayed = true;

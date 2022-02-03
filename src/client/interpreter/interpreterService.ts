@@ -62,7 +62,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.didChangeInterpreterConfigurationEmitter.event;
     }
 
-    public _pythonPathSetting = '';
+    public _pythonPathSetting: string | undefined = '';
 
     private readonly didChangeInterpreterConfigurationEmitter = new EventEmitter<Uri | undefined>();
 
@@ -127,8 +127,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 }
             }),
         );
-        const pySettings = this.configService.getSettings();
-        this._pythonPathSetting = pySettings.pythonPath;
         disposables.push(
             this.interpreterPathService.onDidChange((i): void => {
                 this._onConfigChanged(i.uri);
@@ -179,13 +177,14 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.pyenvs.getInterpreterDetails(pythonPath);
     }
 
-    public _onConfigChanged = (resource?: Uri): void => {
+    public async _onConfigChanged(resource?: Uri): Promise<void> {
         this.didChangeInterpreterConfigurationEmitter.fire(resource);
         // Check if we actually changed our python path
-        const pySettings = this.configService.getSettings(resource);
-        if (this._pythonPathSetting === '' || this._pythonPathSetting !== pySettings.pythonPath) {
-            this._pythonPathSetting = pySettings.pythonPath;
+        const interpreter = await this.getActiveInterpreter(resource);
+        if (this._pythonPathSetting === '' || this._pythonPathSetting !== interpreter?.detailedDisplayName) {
+            this._pythonPathSetting = interpreter?.detailedDisplayName;
             this.didChangeInterpreterEmitter.fire();
+            const pySettings = this.configService.getSettings(resource);
             reportActiveInterpreterChanged({
                 interpreterPath: pySettings.pythonPath === '' ? undefined : pySettings.pythonPath,
                 resource,
@@ -193,5 +192,5 @@ export class InterpreterService implements Disposable, IInterpreterService {
             const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
             interpreterDisplay.refresh().catch((ex) => traceError('Python Extension: display.refresh', ex));
         }
-    };
+    }
 }
