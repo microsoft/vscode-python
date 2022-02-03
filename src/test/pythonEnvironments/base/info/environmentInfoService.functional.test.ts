@@ -5,7 +5,6 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { ImportMock } from 'ts-mock-imports';
 import { SemVer } from 'semver';
 import { ExecutionResult } from '../../../../client/common/process/types';
 import { IDisposableRegistry } from '../../../../client/common/types';
@@ -42,9 +41,8 @@ suite('Environment Info Service', () => {
 
     setup(() => {
         disposables = [];
-        stubShellExec = ImportMock.mockFunction(
-            ExternalDep,
-            'shellExecute',
+        stubShellExec = sinon.stub(ExternalDep, 'shellExecute');
+        stubShellExec.returns(
             new Promise<ExecutionResult<string>>((resolve) => {
                 resolve({
                     stdout:

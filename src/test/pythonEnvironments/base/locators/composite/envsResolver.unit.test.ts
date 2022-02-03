@@ -5,7 +5,6 @@ import { assert } from 'chai';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { ImportMock } from 'ts-mock-imports';
 import { EventEmitter, Uri } from 'vscode';
 import { ExecutionResult } from '../../../../../client/common/process/types';
 import { IDisposableRegistry } from '../../../../../client/common/types';
@@ -92,9 +91,8 @@ suite('Python envs locator - Environments Resolver', () => {
         let stubShellExec: sinon.SinonStub;
         setup(() => {
             sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
-            stubShellExec = ImportMock.mockFunction(
-                externalDependencies,
-                'shellExecute',
+            stubShellExec = sinon.stub(externalDependencies, 'shellExecute');
+            stubShellExec.returns(
                 new Promise<ExecutionResult<string>>((resolve) => {
                     resolve({
                         stdout:
@@ -243,9 +241,8 @@ suite('Python envs locator - Environments Resolver', () => {
         let stubShellExec: sinon.SinonStub;
         setup(() => {
             sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
-            stubShellExec = ImportMock.mockFunction(
-                externalDependencies,
-                'shellExecute',
+            stubShellExec = sinon.stub(externalDependencies, 'shellExecute');
+            stubShellExec.returns(
                 new Promise<ExecutionResult<string>>((resolve) => {
                     resolve({
                         stdout:
