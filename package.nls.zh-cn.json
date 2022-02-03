@@ -56,7 +56,6 @@
     "InterpreterQuickPickList.browsePath.detail": "浏览文件系统来选择一个 Python 解释器。",
     "InterpreterQuickPickList.browsePath.title": "选择 Python 解释器",
     "InterpreterQuickPickList.defaultInterpreterPath.label": "使用默认 Python 解释器路径",
-    "diagnostics.upgradeCodeRunner": "请更新 Code Runner 扩展，使其与 Python 扩展兼容。",
     "Common.bannerLabelYes": "是",
     "Common.bannerLabelNo": "否",
     "Common.doNotShowAgain": "不再提示",

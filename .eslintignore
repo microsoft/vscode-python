@@ -142,7 +142,6 @@ src/test/telemetry/index.unit.test.ts
 src/test/telemetry/envFileTelemetry.unit.test.ts
 
 src/test/application/diagnostics/checks/macPythonInterpreter.unit.test.ts
-src/test/application/diagnostics/checks/upgradeCodeRunner.unit.test.ts
 src/test/application/diagnostics/checks/pythonPathDeprecated.unit.test.ts
 src/test/application/diagnostics/checks/pythonInterpreter.unit.test.ts
 src/test/application/diagnostics/checks/invalidLaunchJsonDebugger.unit.test.ts
