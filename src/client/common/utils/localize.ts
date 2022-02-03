@@ -27,10 +27,6 @@ export namespace Diagnostics {
         'diagnostics.lsNotSupported',
         'Your operating system does not meet the minimum requirements of the Python Language Server. Reverting to the alternative autocompletion provider, Jedi.',
     );
-    export const upgradeCodeRunner = localize(
-        'diagnostics.upgradeCodeRunner',
-        'Please update the Code Runner extension for it to be compatible with the Python extension.',
-    );
     export const removedPythonPathFromSettings = localize(
         'diagnostics.removedPythonPathFromSettings',
         'The "python.pythonPath" setting in your settings.json is no longer used by the Python extension. If you want, you can use a new setting called "python.defaultInterpreterPath" instead. Keep in mind that you need to change the value of this setting manually as the Python extension doesn’t modify it when you change interpreters. [Learn more](https://aka.ms/AA7jfor).',

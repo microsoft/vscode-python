@@ -41,10 +41,6 @@ import {
     SwitchToDefaultLanguageServerDiagnosticService,
     SwitchToDefaultLanguageServerDiagnosticServiceId,
 } from '../../../client/application/diagnostics/checks/switchToDefaultLS';
-import {
-    UpgradeCodeRunnerDiagnosticService,
-    UpgradeCodeRunnerDiagnosticServiceId,
-} from '../../../client/application/diagnostics/checks/upgradeCodeRunner';
 import { DiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/factory';
 import { IDiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/types';
 import { DiagnosticFilterService } from '../../../client/application/diagnostics/filter';
@@ -93,13 +89,6 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
                 IDiagnosticsService,
                 InvalidLaunchJsonDebuggerService,
                 InvalidLaunchJsonDebuggerServiceId,
-            ),
-        );
-        verify(
-            serviceManager.addSingleton<IDiagnosticsService>(
-                IDiagnosticsService,
-                UpgradeCodeRunnerDiagnosticService,
-                UpgradeCodeRunnerDiagnosticServiceId,
             ),
         );
         verify(
