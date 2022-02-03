@@ -150,14 +150,18 @@ async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
         let executable = await getInterpreterPathFromDir(prefix);
         const currEnv: BasicEnvInfo = { executablePath: executable ?? '', kind: PythonEnvKind.Conda, envPath: prefix };
         if (areSameEnv(env, currEnv)) {
-            executable = env.executablePath;
+            if (env.executablePath.length > 0) {
+                executable = env.executablePath;
+            } else {
+                executable = await conda?.getInterpreterPathForEnvironment({ name, prefix });
+            }
             const info = buildEnvInfo({
                 executable,
                 kind: PythonEnvKind.Conda,
                 org: AnacondaCompanyName,
                 location: prefix,
                 source: [],
-                version: await getPythonVersionFromPath(executable),
+                version: executable ? await getPythonVersionFromPath(executable) : undefined,
             });
             if (name) {
                 info.name = name;

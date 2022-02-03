@@ -89,8 +89,8 @@ export function getWorkspaceFolders(): string[] {
     return vscode.workspace.workspaceFolders?.map((w) => w.uri.fsPath) ?? [];
 }
 
-export async function resolveSymbolicLink(absPath: string): Promise<string> {
-    const stats = await fsapi.lstat(absPath);
+export async function resolveSymbolicLink(absPath: string, stats?: fsapi.Stats): Promise<string> {
+    stats = stats ?? (await fsapi.lstat(absPath));
     if (stats.isSymbolicLink()) {
         const link = await fsapi.readlink(absPath);
         // Result from readlink is not guaranteed to be an absolute path. For eg. on Mac it resolves
@@ -101,6 +101,16 @@ export async function resolveSymbolicLink(absPath: string): Promise<string> {
         return resolveSymbolicLink(absLinkPath);
     }
     return absPath;
+}
+
+export async function isFile(filePath: string): Promise<boolean> {
+    const stats = await fsapi.lstat(filePath);
+    if (stats.isSymbolicLink()) {
+        const resolvedPath = await resolveSymbolicLink(filePath, stats);
+        const resolvedStats = await fsapi.lstat(resolvedPath);
+        return resolvedStats.isFile();
+    }
+    return stats.isFile();
 }
 
 /**

@@ -19,6 +19,7 @@ import {
 import { PythonEnvsChangedEvent } from '../../watcher';
 import { resolveBasicEnv } from './resolverUtils';
 import { traceVerbose } from '../../../../logging';
+import { isExecutableOrEnvPath } from '../../../common/commonUtils';
 
 /**
  * Calls environment info service which runs `interpreterInfo.py` script on environments received
@@ -34,9 +35,18 @@ export class PythonEnvsResolver implements IResolvingLocator {
         private readonly environmentInfoService: IEnvironmentInfoService,
     ) {}
 
-    public async resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
-        const kind = await identifyEnvironment(executablePath);
-        const environment = await resolveBasicEnv({ kind, executablePath });
+    public async resolveEnv(path: string): Promise<PythonEnvInfo | undefined> {
+        const kind = await identifyEnvironment(path);
+        let envPath: string;
+        let executablePath: string;
+        if (await isExecutableOrEnvPath(path)) {
+            executablePath = path;
+            envPath = '';
+        } else {
+            executablePath = '';
+            envPath = path;
+        }
+        const environment = await resolveBasicEnv({ kind, executablePath, envPath });
         const info = await this.environmentInfoService.getEnvironmentInfo(environment);
         if (!info) {
             return undefined;

@@ -92,7 +92,7 @@ export async function parseCondaInfo(
         .then((interpreters) => interpreters.map((interpreter) => interpreter!));
 }
 
-export function getCondaMetaPaths(interpreterPath: string): string[] {
+export function getCondaMetaPaths(interpreterPathOrEnvPath: string): string[] {
     const condaMetaDir = 'conda-meta';
 
     // Check if the conda-meta directory is in the same directory as the interpreter.
@@ -100,7 +100,7 @@ export function getCondaMetaPaths(interpreterPath: string): string[] {
     // env
     // |__ conda-meta  <--- check if this directory exists
     // |__ python.exe  <--- interpreterPath
-    const condaEnvDir1 = path.join(path.dirname(interpreterPath), condaMetaDir);
+    const condaEnvDir1 = path.join(path.dirname(interpreterPathOrEnvPath), condaMetaDir);
 
     // Check if the conda-meta directory is in the parent directory relative to the interpreter.
     // This layout is common on linux/Mac.
@@ -108,16 +108,18 @@ export function getCondaMetaPaths(interpreterPath: string): string[] {
     // |__ conda-meta  <--- check if this directory exists
     // |__ bin
     //     |__ python  <--- interpreterPath
-    const condaEnvDir2 = path.join(path.dirname(path.dirname(interpreterPath)), condaMetaDir);
+    const condaEnvDir2 = path.join(path.dirname(path.dirname(interpreterPathOrEnvPath)), condaMetaDir);
+
+    const condaEnvDir3 = path.join(interpreterPathOrEnvPath, condaMetaDir);
 
     // The paths are ordered in the most common to least common
-    return [condaEnvDir1, condaEnvDir2];
+    return [condaEnvDir1, condaEnvDir2, condaEnvDir3];
 }
 
 /**
  * Checks if the given interpreter path belongs to a conda environment. Using
  * known folder layout, and presence of 'conda-meta' directory.
- * @param {string} interpreterPath: Absolute path to any python interpreter.
+ * @param {string} interpreterPathOrEnvPath: Absolute path to any python interpreter.
  *
  * Remarks: This is what we will use to begin with. Another approach we can take
  * here is to parse ~/.conda/environments.txt. This file will have list of conda
@@ -144,8 +146,8 @@ export function getCondaMetaPaths(interpreterPath: string): string[] {
  *   ]
  * }
  */
-export async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
-    const condaMetaPaths = getCondaMetaPaths(interpreterPath);
+export async function isCondaEnvironment(interpreterPathOrEnvPath: string): Promise<boolean> {
+    const condaMetaPaths = getCondaMetaPaths(interpreterPathOrEnvPath);
     // We don't need to test all at once, testing each one here
     for (const condaMeta of condaMetaPaths) {
         if (await pathExists(condaMeta)) {
@@ -213,10 +215,14 @@ export async function getPythonVersionFromConda(interpreterPath: string): Promis
 /**
  * Return the interpreter's filename for the given environment.
  */
-function getInterpreterPath(condaEnvironmentPath: string): string {
+async function getInterpreterPath(condaEnvironmentPath: string): Promise<string | undefined> {
     // where to find the Python binary within a conda env.
     const relativePath = getOSType() === OSType.Windows ? 'python.exe' : path.join('bin', 'python');
-    return path.join(condaEnvironmentPath, relativePath);
+    const filePath = path.join(condaEnvironmentPath, relativePath);
+    if (await pathExists(filePath)) {
+        return filePath;
+    }
+    return undefined;
 }
 
 // Minimum version number of conda required to be able to use 'conda run' with '--no-capture-output' flag.
@@ -426,7 +432,7 @@ export class Conda {
 
     @cache(-1, true)
     public async getInterpreterPathForEnvironment(condaEnv: CondaEnvInfo): Promise<string | undefined> {
-        let executablePath = getInterpreterPath(condaEnv.prefix);
+        let executablePath = await getInterpreterPath(condaEnv.prefix);
         if (executablePath) {
             return executablePath;
         }
@@ -444,6 +450,9 @@ export class Conda {
                 );
                 const result = await shellExecute(quoted, { timeout: CONDA_ACTIVATION_TIMEOUT });
                 executablePath = parseOutput(result.stdout);
+                if (executablePath === '') {
+                    return undefined;
+                }
             } catch (ex) {
                 traceError(`Failed to process environment: ${JSON.stringify(condaEnv)}`, ex);
             }
