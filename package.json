@@ -2057,7 +2057,7 @@
         "typescript": "4.1.5",
         "typescript-formatter": "^7.1.0",
         "uuid": "^3.3.2",
-        "vsce": "^1.96.1",
+        "vsce": "^2.6.6",
         "vscode-debugadapter-testsupport": "^1.27.0",
         "vscode-telemetry-extractor": "^1.9.5",
         "webpack": "^4.33.0",

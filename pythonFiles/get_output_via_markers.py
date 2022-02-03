@@ -13,8 +13,10 @@ module = sys.argv[1]
 try:
     if module == "-c":
         ns = {}
-        for code in sys.argv[2:]:
-            exec(code, ns, ns)
+        code = sys.argv[2]
+        del sys.argv[2]
+        del sys.argv[0]
+        exec(code, ns, ns)
     elif module.startswith("-m"):
         moduleName = sys.argv[2]
         sys.argv = sys.argv[2:]  # It should begin with the module name.
