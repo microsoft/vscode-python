@@ -3,7 +3,6 @@ import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import '../common/extensions';
 import { IDocumentManager } from '../common/application/types';
-import { IPythonExecutionFactory } from '../common/process/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -150,20 +149,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
-        // During shutdown we might not be able to get items out of the service container.
-        const pythonExecutionFactory = this.serviceContainer.tryGet<IPythonExecutionFactory>(IPythonExecutionFactory);
-        const pythonExecutionService = pythonExecutionFactory
-            ? await pythonExecutionFactory.create({ resource })
-            : undefined;
-        const fullyQualifiedPath = pythonExecutionService
-            ? await pythonExecutionService.getExecutablePath().catch(() => undefined)
-            : undefined;
-        // Python path is invalid or python isn't installed.
-        if (!fullyQualifiedPath) {
-            return undefined;
-        }
-
-        return this.getInterpreterDetails(fullyQualifiedPath);
+        const path = this.configService.getSettings(resource).pythonPath;
+        return this.getInterpreterDetails(path);
     }
 
     public async getInterpreterDetails(pythonPath: string): Promise<StoredPythonEnvironment | undefined> {
