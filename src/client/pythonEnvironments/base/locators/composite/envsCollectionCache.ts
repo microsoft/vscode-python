@@ -4,7 +4,7 @@
 import { Event } from 'vscode';
 import { traceInfo } from '../../../../logging';
 import { reportInterpretersChanged } from '../../../../proposedApi';
-import { pathExists } from '../../../common/externalDependencies';
+import { arePathsSame, pathExists } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
 import { areSameEnv } from '../../info/env';
 import {
@@ -124,8 +124,12 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         }
     }
 
-    public getCompleteInfo(executablePath: string): PythonEnvInfo | undefined {
-        const env = this.envs.find((e) => areSameEnv(e, executablePath));
+    public getCompleteInfo(path: string): PythonEnvInfo | undefined {
+        let env = this.envs.find((e) => arePathsSame(e.location, path));
+        if (env?.hasCompleteInfo) {
+            return env;
+        }
+        env = this.envs.find((e) => areSameEnv(e, path));
         return env?.hasCompleteInfo ? env : undefined;
     }
 

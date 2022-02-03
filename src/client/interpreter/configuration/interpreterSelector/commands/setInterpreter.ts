@@ -155,7 +155,8 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             return this._enterOrBrowseInterpreterPath(input, state, suggestions);
         } else {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'selected' });
-            state.path = (selection as IInterpreterQuickPickItem).path;
+            const { interpreter } = selection as IInterpreterQuickPickItem;
+            state.path = interpreter.envType === EnvironmentType.Conda ? interpreter.envPath : interpreter.path;
         }
 
         return undefined;

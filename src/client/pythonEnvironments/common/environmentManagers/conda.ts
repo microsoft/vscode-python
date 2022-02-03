@@ -2,7 +2,15 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { lt, parse, SemVer } from 'semver';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
-import { arePathsSame, exec, getPythonSetting, isParentPath, pathExists, readFile } from '../externalDependencies';
+import {
+    arePathsSame,
+    exec,
+    getPythonSetting,
+    isParentPath,
+    pathExists,
+    readFile,
+    shellExecute,
+} from '../externalDependencies';
 
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../base/info';
 import { parseVersion } from '../../base/info/pythonVersion';
@@ -13,6 +21,8 @@ import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
 import { traceError, traceVerbose } from '../../../logging';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
+import { getExecutable } from '../../../common/process/internal/python';
+import { buildPythonExecInfo, copyPythonExecInfo } from '../../exec';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 
@@ -82,7 +92,7 @@ export async function parseCondaInfo(
         .then((interpreters) => interpreters.map((interpreter) => interpreter!));
 }
 
-function getCondaMetaPaths(interpreterPath: string): string[] {
+export function getCondaMetaPaths(interpreterPath: string): string[] {
     const condaMetaDir = 'conda-meta';
 
     // Check if the conda-meta directory is in the same directory as the interpreter.
@@ -198,6 +208,15 @@ export async function getPythonVersionFromConda(interpreterPath: string): Promis
     }
 
     return UNKNOWN_PYTHON_VERSION;
+}
+
+/**
+ * Return the interpreter's filename for the given environment.
+ */
+function getInterpreterPath(condaEnvironmentPath: string): string {
+    // where to find the Python binary within a conda env.
+    const relativePath = getOSType() === OSType.Windows ? 'python.exe' : path.join('bin', 'python');
+    return path.join(condaEnvironmentPath, relativePath);
 }
 
 // Minimum version number of conda required to be able to use 'conda run' with '--no-capture-output' flag.
@@ -403,6 +422,33 @@ export class Conda {
     public async getCondaEnvironment(executable: string): Promise<CondaEnvInfo | undefined> {
         const envList = await this.getEnvList();
         return envList.find((e) => isParentPath(executable, e.prefix));
+    }
+
+    @cache(-1, true)
+    public async getInterpreterPathForEnvironment(condaEnv: CondaEnvInfo): Promise<string | undefined> {
+        let executablePath = getInterpreterPath(condaEnv.prefix);
+        if (executablePath) {
+            return executablePath;
+        }
+        const runArgs = await this.getRunPythonArgs(condaEnv);
+        if (runArgs) {
+            try {
+                const [args, parseOutput] = getExecutable();
+                const python = buildPythonExecInfo(runArgs);
+                const info = copyPythonExecInfo(python, args);
+                const argv = [info.command, ...info.args];
+                // Concat these together to make a set of quoted strings
+                const quoted = argv.reduce(
+                    (p, c) => (p ? `${p} ${c.toCommandArgument()}` : `${c.toCommandArgument()}`),
+                    '',
+                );
+                const result = await shellExecute(quoted, { timeout: CONDA_ACTIVATION_TIMEOUT });
+                executablePath = parseOutput(result.stdout);
+            } catch (ex) {
+                traceError(`Failed to process environment: ${JSON.stringify(condaEnv)}`, ex);
+            }
+        }
+        return executablePath;
     }
 
     public async getRunPythonArgs(env: CondaEnvInfo, executeAsAProcess = true): Promise<string[] | undefined> {
