@@ -6,10 +6,6 @@ import { IDisposable } from '../common/types';
 
 export const ICodeExecutionService = Symbol('ICodeExecutionService');
 
-export interface IAppShell {
-    showErrorMessage(message: string, ...items: string[]): Promise<string | undefined>;
-}
-
 export interface ICodeExecutionService {
     execute(code: string, resource?: Uri): Promise<void>;
     executeFile(file: Uri): Promise<void>;
