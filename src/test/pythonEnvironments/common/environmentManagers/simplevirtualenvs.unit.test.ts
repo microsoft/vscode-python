@@ -5,7 +5,6 @@ import * as assert from 'assert';
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { ImportMock } from 'ts-mock-imports';
 import * as platformUtils from '../../../../client/common/utils/platform';
 import { PythonReleaseLevel, PythonVersion } from '../../../../client/pythonEnvironments/base/info';
 import * as fileUtils from '../../../../client/pythonEnvironments/common/externalDependencies';
@@ -25,11 +24,11 @@ suite('isVenvEnvironment Tests', () => {
     let fileExistsStub: sinon.SinonStub;
 
     setup(() => {
-        fileExistsStub = ImportMock.mockFunction(fileUtils, 'pathExists');
+        fileExistsStub = sinon.stub(fileUtils, 'pathExists');
     });
 
     teardown(() => {
-        fileExistsStub.restore();
+        sinon.restore();
     });
 
     test('pyvenv.cfg does not exist', async () => {
