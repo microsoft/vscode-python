@@ -7,7 +7,7 @@ import { Uri } from 'vscode';
 import { getArchitectureDisplayName } from '../../../common/platform/registry';
 import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
-import { arePathsSame } from '../../common/externalDependencies';
+import { arePathsSame, normCasePath } from '../../common/externalDependencies';
 import { getKindDisplayName } from './envKind';
 import { areIdenticalVersion, areSimilarVersions, getVersionDisplayString, isVersionEmpty } from './pythonVersion';
 
@@ -20,6 +20,7 @@ import {
     PythonVersion,
     virtualEnvKinds,
 } from '.';
+import { BasicEnvInfo } from '../locator';
 
 /**
  * Create a new info object with all values empty.
@@ -182,7 +183,9 @@ export function getEnvExecutable(env: string | Partial<PythonEnvInfo>): string {
  * If insufficient data is provided to generate a minimal object, such
  * that it is not identifiable, then `undefined` is returned.
  */
-export function getMinimalPartialInfo(env: string | Partial<PythonEnvInfo>): Partial<PythonEnvInfo> | undefined {
+export function getMinimalPartialInfo(
+    env: string | Partial<PythonEnvInfo> | BasicEnvInfo,
+): Partial<PythonEnvInfo> | undefined {
     if (typeof env === 'string') {
         if (env === '') {
             return undefined;
@@ -196,30 +199,24 @@ export function getMinimalPartialInfo(env: string | Partial<PythonEnvInfo>): Par
             },
         };
     }
-    if (env.executable === undefined) {
-        return undefined;
+    if ('executablePath' in env) {
+        return {
+            executable: {
+                filename: env.executablePath,
+                sysPrefix: '',
+                ctime: -1,
+                mtime: -1,
+            },
+            location: env.envPath,
+            kind: env.kind,
+            source: env.source,
+        };
     }
-    if (env.executable.filename === '') {
+    const executable = env.executable?.filename;
+    if (executable === undefined || executable === '') {
         return undefined;
     }
     return env;
-}
-
-/**
- * Create a function that decides if the given "query" matches some env info.
- *
- * The returned function is compatible with `Array.filter()`.
- */
-export function getEnvMatcher(query: string): (env: string) => boolean {
-    const executable = getEnvExecutable(query);
-    if (executable === '') {
-        // We could throw an exception error, but skipping it is fine.
-        return () => false;
-    }
-    function matchEnv(candidateExecutable: string): boolean {
-        return arePathsSame(executable, candidateExecutable);
-    }
-    return matchEnv;
 }
 
 /**
@@ -237,6 +234,18 @@ export function haveSameExecutables(envs1: PythonEnvInfo[], envs2: PythonEnvInfo
     return true;
 }
 
+export function getEnvID(env: Partial<PythonEnvInfo>): string {
+    const basicEnv = {
+        executablePath: env.executable?.filename ?? '',
+        kind: env.kind ?? PythonEnvKind.Unknown,
+        envPath: env.location,
+    };
+    if (env.kind === PythonEnvKind.Conda && basicEnv.envPath) {
+        return normCasePath(basicEnv.envPath);
+    }
+    return normCasePath(basicEnv.executablePath);
+}
+
 /**
  * Checks if two environments are same.
  * @param {string | PythonEnvInfo} left: environment to compare.
@@ -250,8 +259,8 @@ export function haveSameExecutables(envs1: PythonEnvInfo[], envs2: PythonEnvInfo
  * where multiple versions of python executables are all put in the same directory.
  */
 export function areSameEnv(
-    left: string | Partial<PythonEnvInfo>,
-    right: string | Partial<PythonEnvInfo>,
+    left: string | Partial<PythonEnvInfo> | BasicEnvInfo,
+    right: string | Partial<PythonEnvInfo> | BasicEnvInfo,
     allowPartialMatch = true,
 ): boolean | undefined {
     const leftInfo = getMinimalPartialInfo(left);
@@ -262,19 +271,15 @@ export function areSameEnv(
     const leftFilename = leftInfo.executable!.filename;
     const rightFilename = rightInfo.executable!.filename;
 
-    // For now we assume that matching executable means they are the same.
-    if (arePathsSame(leftFilename, rightFilename)) {
+    if (getEnvID(leftInfo) === getEnvID(rightInfo)) {
         return true;
     }
 
-    if (arePathsSame(path.dirname(leftFilename), path.dirname(rightFilename))) {
-        const leftVersion = typeof left === 'string' ? undefined : left.version;
-        const rightVersion = typeof right === 'string' ? undefined : right.version;
+    if (allowPartialMatch && arePathsSame(path.dirname(leftFilename), path.dirname(rightFilename))) {
+        const leftVersion = typeof left === 'string' ? undefined : leftInfo.version;
+        const rightVersion = typeof right === 'string' ? undefined : rightInfo.version;
         if (leftVersion && rightVersion) {
-            if (
-                areIdenticalVersion(leftVersion, rightVersion) ||
-                (allowPartialMatch && areSimilarVersions(leftVersion, rightVersion))
-            ) {
+            if (areIdenticalVersion(leftVersion, rightVersion) || areSimilarVersions(leftVersion, rightVersion)) {
                 return true;
             }
         }
