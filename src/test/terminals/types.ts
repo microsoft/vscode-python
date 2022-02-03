@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Event, Terminal, TextEditor, Uri } from 'vscode';
-import { IDisposable } from '../common/types';
+import { IDisposable } from '../../client/common/types';
 
 export const ICodeExecutionService = Symbol('ICodeExecutionService');
 

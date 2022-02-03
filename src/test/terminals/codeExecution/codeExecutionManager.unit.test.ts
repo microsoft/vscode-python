@@ -5,6 +5,7 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
+import { IAppShell } from '../types';
 import { Commands } from '../../../client/common/constants';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -73,7 +74,7 @@ suite('Terminal - Code Execution Manager', () => {
         ]);
     });
 
-    test('Ensure executeFileInterTerminal will do nothing if no file is avialble', async () => {
+    test('Ensure executeFileInterTerminal will do nothing if no file is available', async () => {
         let commandHandler: undefined | (() => Promise<void>);
         commandManager
             .setup((c) => c.registerCommand as any)
@@ -274,6 +275,16 @@ suite('Terminal - Code Execution Manager', () => {
         );
         helper.verifyAll();
     }
+    async function checkErrorMessage(this: any): Promise<void | Error[]> {
+        const activeEditor = this.documentManager.activeTextEditor;
+        if (!activeEditor) {
+            const appShell: IAppShell = (window as any) as IAppShell;
+            appShell.showErrorMessage('Open an active editor before executing code.');
+            return [new Error('No active editor')];
+        } else {
+            return undefined;
+        }
+    }
     test('Ensure executeSelectionInTerminal will normalize selected text and send it to the terminal', async () => {
         await testExecutionOfSelectionIsSentToTerminal(Commands.Exec_Selection_In_Terminal, 'standard');
     });
@@ -281,4 +292,8 @@ suite('Terminal - Code Execution Manager', () => {
     test('Ensure executeSelectionInDjangoShell will normalize selected text and send it to the terminal', async () => {
         await testExecutionOfSelectionIsSentToTerminal(Commands.Exec_Selection_In_Django_Shell, 'djangoShell');
     });
+    test('Ensure Pop Up Window Activates if no Active Text Editor has been found'),
+        async () => {
+            await checkErrorMessage();
+        };
 });
