@@ -161,11 +161,11 @@ export interface ILocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEve
 interface IResolver {
     /**
      * Find as much info about the given Python environment as possible.
-     * If executable passed is invalid, then `undefined` is returned.
+     * If path passed is invalid, then `undefined` is returned.
      *
-     * @param env - the Python executable path to resolve more information about
+     * @param path - Python executable path or environment path to resolve more information about
      */
-    resolveEnv(env: string): Promise<PythonEnvInfo | undefined>;
+    resolveEnv(path: string): Promise<PythonEnvInfo | undefined>;
 }
 
 export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ILocator<I> {}
@@ -194,9 +194,11 @@ export interface IDiscoveryAPI {
     getEnvs(query?: PythonLocatorQuery): PythonEnvInfo[];
     /**
      * Find as much info about the given Python environment as possible.
-     * If executable passed is invalid, then `undefined` is returned.
+     * If path passed is invalid, then `undefined` is returned.
+     *
+     * @param path - Python executable path or environment path to resolve more information about
      */
-    resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined>;
+    resolveEnv(path: string): Promise<PythonEnvInfo | undefined>;
 }
 
 interface IEmitter<E extends PythonEnvsChangedEvent> {

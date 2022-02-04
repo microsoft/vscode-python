@@ -62,7 +62,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.didChangeInterpreterConfigurationEmitter.event;
     }
 
-    public _pythonPathSetting: string | undefined = '';
+    public _currentInterpreterDisplay: string | undefined = '';
 
     private readonly didChangeInterpreterConfigurationEmitter = new EventEmitter<Uri | undefined>();
 
@@ -181,8 +181,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.didChangeInterpreterConfigurationEmitter.fire(resource);
         // Check if we actually changed our python path
         const interpreter = await this.getActiveInterpreter(resource);
-        if (this._pythonPathSetting === '' || this._pythonPathSetting !== interpreter?.detailedDisplayName) {
-            this._pythonPathSetting = interpreter?.detailedDisplayName;
+        if (
+            this._currentInterpreterDisplay === '' ||
+            this._currentInterpreterDisplay !== interpreter?.detailedDisplayName
+        ) {
+            this._currentInterpreterDisplay = interpreter?.detailedDisplayName;
             this.didChangeInterpreterEmitter.fire();
             const pySettings = this.configService.getSettings(resource);
             reportActiveInterpreterChanged({

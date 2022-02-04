@@ -36,8 +36,10 @@ export interface IEnvsCollectionCache {
     addEnv(env: PythonEnvInfo, hasCompleteInfo?: boolean): void;
 
     /**
-     * Return cached environment information for a given interpreter path if it exists and
+     * Return cached environment information for a given path if it exists and
      * has complete info, otherwise return `undefined`.
+     *
+     * @param path - Python executable path or path to environment
      */
     getCompleteInfo(path: string): PythonEnvInfo | undefined;
 
@@ -125,6 +127,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
     }
 
     public getCompleteInfo(path: string): PythonEnvInfo | undefined {
+        // `path` can either be path to environment or executable path
         let env = this.envs.find((e) => arePathsSame(e.location, path));
         if (env?.hasCompleteInfo) {
             return env;

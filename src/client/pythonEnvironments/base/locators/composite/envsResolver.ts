@@ -19,11 +19,7 @@ import {
 import { PythonEnvsChangedEvent } from '../../watcher';
 import { resolveBasicEnv } from './resolverUtils';
 import { traceVerbose } from '../../../../logging';
-import {
-    getEnvironmentDirFromPath,
-    getInterpreterPathFromDir,
-    isExecutableOrEnvPath,
-} from '../../../common/commonUtils';
+import { getEnvironmentDirFromPath, getInterpreterPathFromDir, isPythonExecutable } from '../../../common/commonUtils';
 
 /**
  * Calls environment info service which runs `interpreterInfo.py` script on environments received
@@ -161,13 +157,13 @@ function getResolvedEnv(interpreterInfo: InterpreterInformation, environment: Py
 async function getExecutablePathAndEnvPath(path: string) {
     let executablePath: string;
     let envPath: string;
-    const isPathAnExecutable = await isExecutableOrEnvPath(path);
+    const isPathAnExecutable = await isPythonExecutable(path);
     if (isPathAnExecutable) {
         executablePath = path;
-        envPath = getEnvironmentDirFromPath(path);
+        envPath = getEnvironmentDirFromPath(executablePath);
     } else {
-        executablePath = (await getInterpreterPathFromDir(path)) ?? '';
         envPath = path;
+        executablePath = (await getInterpreterPathFromDir(envPath)) ?? '';
     }
     return [executablePath, envPath];
 }

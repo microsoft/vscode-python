@@ -29,13 +29,11 @@ import { traceError, traceWarn } from '../../../../logging';
 
 function getResolvers(): Map<PythonEnvKind, (env: BasicEnvInfo) => Promise<PythonEnvInfo>> {
     const resolvers = new Map<PythonEnvKind, (_: BasicEnvInfo) => Promise<PythonEnvInfo>>();
-    const defaultResolver = (k: PythonEnvKind) => (e: BasicEnvInfo) => resolveGloballyInstalledEnv(e, k);
-    const defaultVirtualEnvResolver = (k: PythonEnvKind) => (e: BasicEnvInfo) => resolveSimpleEnv(e, k);
     Object.values(PythonEnvKind).forEach((k) => {
-        resolvers.set(k, defaultResolver(k));
+        resolvers.set(k, resolveGloballyInstalledEnv);
     });
     virtualEnvKinds.forEach((k) => {
-        resolvers.set(k, defaultVirtualEnvResolver(k));
+        resolvers.set(k, resolveSimpleEnv);
     });
     resolvers.set(PythonEnvKind.Conda, resolveCondaEnv);
     resolvers.set(PythonEnvKind.WindowsStore, resolveWindowsStoreEnv);
@@ -110,7 +108,7 @@ async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
     }
 }
 
-async function resolveGloballyInstalledEnv(env: BasicEnvInfo, kind: PythonEnvKind): Promise<PythonEnvInfo> {
+async function resolveGloballyInstalledEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     const { executablePath } = env;
     let version;
     try {
@@ -119,17 +117,17 @@ async function resolveGloballyInstalledEnv(env: BasicEnvInfo, kind: PythonEnvKin
         version = UNKNOWN_PYTHON_VERSION;
     }
     const envInfo = buildEnvInfo({
-        kind,
+        kind: env.kind,
         version,
         executable: executablePath,
     });
     return envInfo;
 }
 
-async function resolveSimpleEnv(env: BasicEnvInfo, kind: PythonEnvKind): Promise<PythonEnvInfo> {
+async function resolveSimpleEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     const { executablePath } = env;
     const envInfo = buildEnvInfo({
-        kind,
+        kind: env.kind,
         version: await getPythonVersionFromPath(executablePath),
         executable: executablePath,
     });
@@ -173,7 +171,7 @@ async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
         `${executablePath} identified as a Conda environment but is not returned via '${conda?.command} info' command`,
     );
     // Environment could still be valid, resolve as a simple env.
-    return resolveSimpleEnv(env, PythonEnvKind.Conda);
+    return resolveSimpleEnv(env);
 }
 
 async function resolvePyenvEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {

@@ -20,16 +20,18 @@ const matchPythonBinFilename =
 type FileFilterFunc = (filename: string) => boolean;
 
 /**
- * Returns `true` if path provides is likely an executable and not path to environment folder
+ * Returns `true` if path provided is likely a python executable.
  */
-export async function isExecutableOrEnvPath(filePath: string): Promise<boolean> {
-    const matchesExecutableRegex = matchPythonBinFilename(filePath);
-    if (!matchesExecutableRegex) {
+export async function isPythonExecutable(filePath: string): Promise<boolean> {
+    const isMatch = matchPythonBinFilename(filePath);
+    if (!isMatch) {
         return false;
     }
+    // On Windows it's fair to assume a path ending with `.exe` denotes a file.
     if (getOSType() === OSType.Windows) {
         return true;
     }
+    // For other operating systems verify if it's a file.
     if (await isFile(filePath)) {
         return true;
     }
