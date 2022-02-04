@@ -8,8 +8,8 @@ yapf
 pylint ; python_version > '2.7'
 pycodestyle
 pydocstyle
-prospector ; python_version > '2.7'
-pytest ; python_version > '2.7'
+prospector>=1.6.0 ; python_version > '2.7'
+pytest<7.0.0 ; python_version > '2.7'
 flask
 fastapi ; python_version > '2.7'
 uvicorn ; python_version > '2.7'
