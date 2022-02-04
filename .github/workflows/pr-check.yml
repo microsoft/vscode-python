@@ -127,6 +127,10 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
+      - name: Install pip 22.0.1
+        run: python -m pip install --upgrade pip==22.0.1
+        if: matrix.python != 2.7
+
       - name: Install debugpy
         run: |
           # We need to have debugpy so that tests relying on it keep passing, but we don't need install_debugpy's logic in the test phase.
@@ -360,6 +364,9 @@ jobs:
             pythonFiles/jedilsp_requirements/requirements.txt
             build/test-requirements.txt
             build/functional-test-requirements.txt
+
+      - name: Install pip 22.0.1
+        run: python -m pip install --upgrade pip==22.0.1
 
       - name: Install base Python requirements
         uses: brettcannon/pip-secure-install@v1
