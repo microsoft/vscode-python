@@ -104,7 +104,10 @@ export interface InterpretersChangedParams {
 }
 
 export interface ActiveInterpreterChangedParams {
-    interpreterPath?: string;
+    /**
+     * Interpreter path or environment path that uniquely identifies an environment.
+     */
+    path?: string;
     resource?: Uri;
 }
 

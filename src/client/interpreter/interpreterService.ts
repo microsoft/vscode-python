@@ -62,7 +62,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.didChangeInterpreterConfigurationEmitter.event;
     }
 
-    public _currentInterpreterDisplay: string | undefined = '';
+    public _pythonPathSetting: string | undefined = '';
 
     private readonly didChangeInterpreterConfigurationEmitter = new EventEmitter<Uri | undefined>();
 
@@ -180,20 +180,16 @@ export class InterpreterService implements Disposable, IInterpreterService {
     public async _onConfigChanged(resource?: Uri): Promise<void> {
         this.didChangeInterpreterConfigurationEmitter.fire(resource);
         // Check if we actually changed our python path
-        const interpreter = await this.getActiveInterpreter(resource);
-        if (
-            this._currentInterpreterDisplay === '' ||
-            this._currentInterpreterDisplay !== interpreter?.detailedDisplayName
-        ) {
-            this._currentInterpreterDisplay = interpreter?.detailedDisplayName;
+        const pySettings = this.configService.getSettings(resource);
+        if (this._pythonPathSetting === '' || this._pythonPathSetting !== pySettings.pythonPath) {
+            this._pythonPathSetting = pySettings.pythonPath;
             this.didChangeInterpreterEmitter.fire();
-            const pySettings = this.configService.getSettings(resource);
             reportActiveInterpreterChanged({
-                interpreterPath: pySettings.pythonPath === '' ? undefined : pySettings.pythonPath,
+                path: pySettings.pythonPath === '' ? undefined : pySettings.pythonPath,
                 resource,
             });
-            const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
-            interpreterDisplay.refresh().catch((ex) => traceError('Python Extension: display.refresh', ex));
         }
+        const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
+        interpreterDisplay.refresh().catch((ex) => traceError('Python Extension: display.refresh', ex));
     }
 }

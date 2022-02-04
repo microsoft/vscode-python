@@ -109,6 +109,12 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
     }
     private async updateDisplay(workspaceFolder?: Uri) {
         const interpreter = await this.interpreterService.getActiveInterpreter(workspaceFolder);
+        if (
+            this.currentlySelectedInterpreterDisplay &&
+            this.currentlySelectedInterpreterDisplay === interpreter?.detailedDisplayName
+        ) {
+            return;
+        }
         this.currentlySelectedWorkspaceFolder = workspaceFolder;
         if (this.statusBar) {
             if (interpreter) {

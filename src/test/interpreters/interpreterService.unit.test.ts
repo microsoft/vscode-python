@@ -248,7 +248,7 @@ suite('Interpreters service', () => {
     test('If stored setting is an empty string, refresh the interpreter display', async () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
         const resource = Uri.parse('a');
-        service._currentInterpreterDisplay = '';
+        service._pythonPathSetting = '';
         configService.reset();
         configService.setup((c) => c.getSettings(resource)).returns(() => ({ pythonPath: 'current path' } as any));
         interpreterDisplay
@@ -266,7 +266,7 @@ suite('Interpreters service', () => {
     test('If stored setting is not equal to current interpreter path setting, refresh the interpreter display', async () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
         const resource = Uri.parse('a');
-        service._currentInterpreterDisplay = 'stored setting';
+        service._pythonPathSetting = 'stored setting';
         configService.reset();
         configService.setup((c) => c.getSettings(resource)).returns(() => ({ pythonPath: 'current path' } as any));
         interpreterDisplay
@@ -284,7 +284,7 @@ suite('Interpreters service', () => {
     test('If stored setting is equal to current interpreter path setting, do not refresh the interpreter display', async () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
         const resource = Uri.parse('a');
-        service._currentInterpreterDisplay = 'setting';
+        service._pythonPathSetting = 'setting';
         configService.reset();
         configService.setup((c) => c.getSettings(resource)).returns(() => ({ pythonPath: 'setting' } as any));
         interpreterDisplay
