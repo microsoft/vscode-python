@@ -285,15 +285,30 @@ suite('Terminal - Code Execution Manager', () => {
             return undefined;
         }
     }
+
+    async function executeFileInTerminal(this: any, file: any): Promise<void | Error[]> {
+        file = file instanceof Uri ? file : undefined;
+        const fileToExecute = file ? file : this.documentManager.activeTextEditor?.document.uri;
+        if (!fileToExecute) {
+            const appShell: IAppShell = (window as any) as IAppShell;
+            appShell.showErrorMessage('Open a file before executing code.');
+            return [new Error('No file to execute')];
+        }
+    }
+
     test('Ensure executeSelectionInTerminal will normalize selected text and send it to the terminal', async () => {
         await testExecutionOfSelectionIsSentToTerminal(Commands.Exec_Selection_In_Terminal, 'standard');
-    });
 
-    test('Ensure executeSelectionInDjangoShell will normalize selected text and send it to the terminal', async () => {
-        await testExecutionOfSelectionIsSentToTerminal(Commands.Exec_Selection_In_Django_Shell, 'djangoShell');
+        test('Ensure executeSelectionInDjangoShell will normalize selected text and send it to the terminal', async () => {
+            await testExecutionOfSelectionIsSentToTerminal(Commands.Exec_Selection_In_Django_Shell, 'djangoShell');
+        });
+        test('Ensure Pop Up Window Activates if no Active Text Editor has been found'),
+            async () => {
+                await checkErrorMessage();
+            };
+        test('Ensure Pop Up Window Activates if no File has been found to execute'),
+            async () => {
+                await executeFileInTerminal(undefined);
+            };
     });
-    test('Ensure Pop Up Window Activates if no Active Text Editor has been found'),
-        async () => {
-            await checkErrorMessage();
-        };
 });

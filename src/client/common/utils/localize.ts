@@ -566,6 +566,11 @@ export namespace SwitchToDefaultLS {
     );
 }
 
+export namespace Terminals {
+    export const noActiveEditorFound = localize('Terminal.noActiveEditor', 'No active editor found.');
+    export const noFileToExecute = localize('Terminal.noFileToExecute', 'No file to execute');
+}
+
 function localize(key: string, defValue?: string) {
     // Return a pointer to function so that we refetch it on each call.
     return (): string => getString(key, defValue);
