@@ -447,4 +447,12 @@ export class Conda {
         traceError(`Unable to parse version of Conda, ${versionString}`);
         return new SemVer('0.0.1');
     }
+
+    public async isCondaRunSupported(): Promise<boolean> {
+        const condaVersion = await this.getCondaVersion();
+        if (condaVersion && lt(condaVersion, CONDA_RUN_VERSION)) {
+            return false;
+        }
+        return true;
+    }
 }
