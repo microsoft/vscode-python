@@ -21,8 +21,8 @@ import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
 import { traceError, traceVerbose } from '../../../logging';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
-import { getExecutable } from '../../../common/process/internal/python';
-import { buildPythonExecInfo, copyPythonExecInfo } from '../../exec';
+import { buildPythonExecInfo } from '../../exec';
+import { getExecutablePath } from '../../info/executable';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 
@@ -439,20 +439,8 @@ export class Conda {
         const runArgs = await this.getRunPythonArgs(condaEnv);
         if (runArgs) {
             try {
-                const [args, parseOutput] = getExecutable();
                 const python = buildPythonExecInfo(runArgs);
-                const info = copyPythonExecInfo(python, args);
-                const argv = [info.command, ...info.args];
-                // Concat these together to make a set of quoted strings
-                const quoted = argv.reduce(
-                    (p, c) => (p ? `${p} ${c.toCommandArgument()}` : `${c.toCommandArgument()}`),
-                    '',
-                );
-                const result = await shellExecute(quoted, { timeout: CONDA_ACTIVATION_TIMEOUT });
-                executablePath = parseOutput(result.stdout);
-                if (executablePath === '') {
-                    return undefined;
-                }
+                executablePath = await getExecutablePath(python, shellExecute, CONDA_ACTIVATION_TIMEOUT);
             } catch (ex) {
                 traceError(`Failed to process environment: ${JSON.stringify(condaEnv)}`, ex);
             }
