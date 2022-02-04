@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as path from 'path';
 import { traceError, traceInfo } from '../../logging';
 import { Conda, CondaEnvironmentInfo } from '../../pythonEnvironments/common/environmentManagers/conda';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
@@ -56,7 +57,7 @@ class PythonEnvironment implements IPythonEnvironment {
             return result;
         }
         const python = this.getExecutionInfo();
-        const promise = getExecutablePath(python, this.deps.exec);
+        const promise = getExecutablePath(python, this.deps.shellExec);
         this.cachedExecutablePath.set(this.pythonPath, promise);
         return promise;
     }
@@ -106,8 +107,18 @@ function createDeps(
     shellExec: (command: string, options?: ShellOptions) => Promise<ExecutionResult<string>>,
 ) {
     return {
-        getPythonArgv: (python: string) => pythonArgv || [python],
-        getObservablePythonArgv: (python: string) => observablePythonArgv || [python],
+        getPythonArgv: (python: string) => {
+            if (path.basename(python) === python) {
+                pythonArgv = python.split(' ');
+            }
+            return pythonArgv || [python];
+        },
+        getObservablePythonArgv: (python: string) => {
+            if (path.basename(python) === python) {
+                observablePythonArgv = python.split(' ');
+            }
+            return observablePythonArgv || [python];
+        },
         isValidExecutable,
         exec: async (cmd: string, args: string[]) => exec(cmd, args, { throwOnStdErr: true }),
         shellExec: async (text: string, timeout: number) => shellExec(text, { timeout }),

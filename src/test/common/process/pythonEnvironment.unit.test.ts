@@ -192,9 +192,8 @@ suite('PythonEnvironment', () => {
     test('getExecutablePath should not return pythonPath if pythonPath is not a file', async () => {
         const executablePath = 'path/to/dummy/executable';
         fileSystem.setup((f) => f.pathExists(pythonPath)).returns(() => Promise.resolve(false));
-        const argv = ['-c', 'import sys;print(sys.executable)'];
         processService
-            .setup((p) => p.exec(pythonPath, argv, { throwOnStdErr: true }))
+            .setup((p) => p.shellExec(`${pythonPath} -c "import sys;print(sys.executable)"`, TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: executablePath }));
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
 
@@ -206,9 +205,8 @@ suite('PythonEnvironment', () => {
     test('getExecutablePath should throw if the result of exec() writes to stderr', async () => {
         const stderr = 'bar';
         fileSystem.setup((f) => f.pathExists(pythonPath)).returns(() => Promise.resolve(false));
-        const argv = ['-c', 'import sys;print(sys.executable)'];
         processService
-            .setup((p) => p.exec(pythonPath, argv, { throwOnStdErr: true }))
+            .setup((p) => p.shellExec(`${pythonPath} -c "import sys;print(sys.executable)"`, TypeMoq.It.isAny()))
             .returns(() => Promise.reject(new StdErrError(stderr)));
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
 
