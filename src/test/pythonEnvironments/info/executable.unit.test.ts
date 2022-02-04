@@ -3,12 +3,12 @@
 
 import { expect } from 'chai';
 import { IMock, Mock, MockBehavior, It } from 'typemoq';
-import { ExecutionResult, StdErrError } from '../../../client/common/process/types';
+import { ExecutionResult, ShellOptions, StdErrError } from '../../../client/common/process/types';
 import { buildPythonExecInfo } from '../../../client/pythonEnvironments/exec';
 import { getExecutablePath } from '../../../client/pythonEnvironments/info/executable';
 
 interface IDeps {
-    shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
+    shellExec(command: string, options: ShellOptions | undefined): Promise<ExecutionResult<string>>;
 }
 
 suite('getExecutablePath()', () => {
@@ -24,7 +24,7 @@ suite('getExecutablePath()', () => {
         deps.setup((d) => d.shellExec(`${python.command} -c "import sys;print(sys.executable)"`, It.isAny()))
             // Return the expected value.
             .returns(() => Promise.resolve({ stdout: expected }));
-        const exec = async (c: string, a: number) => deps.object.shellExec(c, a);
+        const exec = async (c: string, a: ShellOptions | undefined) => deps.object.shellExec(c, a);
 
         const result = await getExecutablePath(python, exec);
 
@@ -37,7 +37,7 @@ suite('getExecutablePath()', () => {
         deps.setup((d) => d.shellExec(`${python.command} -c "import sys;print(sys.executable)"`, It.isAny()))
             // Throw an error.
             .returns(() => Promise.reject(new StdErrError(stderr)));
-        const exec = async (c: string, a: number) => deps.object.shellExec(c, a);
+        const exec = async (c: string, a: ShellOptions | undefined) => deps.object.shellExec(c, a);
 
         const promise = getExecutablePath(python, exec);
 

@@ -111,6 +111,8 @@ export interface IPythonEnvironment {
     getExecutionInfo(pythonArgs?: string[], pythonExecutable?: string): PythonExecInfo;
 }
 
+export type ShellExecFunc = (command: string, options?: ShellOptions | undefined) => Promise<ExecutionResult<string>>;
+
 export class StdErrError extends Error {
     constructor(message: string) {
         super(message);

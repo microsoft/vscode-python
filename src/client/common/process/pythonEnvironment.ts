@@ -25,7 +25,7 @@ class PythonEnvironment implements IPythonEnvironment {
             isValidExecutable(python: string): Promise<boolean>;
             // from ProcessService:
             exec(file: string, args: string[]): Promise<ExecutionResult<string>>;
-            shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
+            shellExec(command: string, options?: ShellOptions): Promise<ExecutionResult<string>>;
         },
     ) {}
 
@@ -122,7 +122,7 @@ function createDeps(
         },
         isValidExecutable,
         exec: async (cmd: string, args: string[]) => exec(cmd, args, { throwOnStdErr: true }),
-        shellExec: async (text: string, timeout: number) => shellExec(text, { timeout }),
+        shellExec,
     };
 }
 

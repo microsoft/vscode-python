@@ -2,10 +2,8 @@
 // Licensed under the MIT License.
 
 import { getExecutable } from '../../common/process/internal/python';
-import { ExecutionResult } from '../../common/process/types';
+import { ShellExecFunc } from '../../common/process/types';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
-
-type ShellExecFunc = (command: string, timeout: number) => Promise<ExecutionResult<string>>;
 
 /**
  * Find the filename for the corresponding Python executable.
@@ -25,6 +23,10 @@ export async function getExecutablePath(
     const argv = [info.command, ...info.args];
     // Concat these together to make a set of quoted strings
     const quoted = argv.reduce((p, c) => (p ? `${p} ${c.toCommandArgument()}` : `${c.toCommandArgument()}`), '');
-    const result = await shellExec(quoted, timeout ?? 15000);
-    return parse(result.stdout.trim());
+    const result = await shellExec(quoted, { timeout: timeout ?? 15000 });
+    const executable = parse(result.stdout.trim());
+    if (executable === '') {
+        throw new Error(`${quoted} resulted in empty stdout`);
+    }
+    return executable;
 }
