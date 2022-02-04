@@ -1,5 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
 import { inject, injectable } from 'inversify';
+import * as pathUtils from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import '../common/extensions';
 import { IDocumentManager } from '../common/application/types';
@@ -23,6 +24,7 @@ import { traceError } from '../logging';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { InterpreterStatusBarPosition } from '../common/experiments/groups';
 import { reportActiveInterpreterChanged } from '../proposedApi';
+import { IPythonExecutionFactory } from '../common/process/types';
 
 type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
 
@@ -149,7 +151,27 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
-        const path = this.configService.getSettings(resource).pythonPath;
+        let path = this.configService.getSettings(resource).pythonPath;
+        if (pathUtils.basename(path) === path) {
+            // Value can be `python`, `python3`, `python3.9` etc.
+            // During shutdown we might not be able to get items out of the service container.
+            const pythonExecutionFactory = this.serviceContainer.tryGet<IPythonExecutionFactory>(
+                IPythonExecutionFactory,
+            );
+            const pythonExecutionService = pythonExecutionFactory
+                ? await pythonExecutionFactory.create({ resource })
+                : undefined;
+            const fullyQualifiedPath = pythonExecutionService
+                ? await pythonExecutionService.getExecutablePath().catch((ex) => {
+                      traceError(ex);
+                  })
+                : undefined;
+            // Python path is invalid or python isn't installed.
+            if (!fullyQualifiedPath) {
+                return undefined;
+            }
+            path = fullyQualifiedPath;
+        }
         return this.getInterpreterDetails(path);
     }
 
