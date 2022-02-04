@@ -95,7 +95,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
         python: ['2.7', '3.x']
-        test-suite: [ts-unit, python-unit, venv, single-workspace, debugger, functional, multi-workspace]
+        test-suite: [ts-unit, python-unit, venv, single-workspace, debugger, functional]
         exclude:
           # For fast PR turn-around, skip 2.7 under Windows.
           - os: windows-latest
@@ -282,7 +282,7 @@ jobs:
         with:
           run: npm run testMultiWorkspace
           working-directory: ${{ env.special-working-directory }}
-        if: matrix.test-suite == 'multi-workspace' && matrix.os == 'ubuntu-latest'
+        if: matrix.test-suite == 'multi-workspace'
 
       - name: Run debugger tests
         env:
