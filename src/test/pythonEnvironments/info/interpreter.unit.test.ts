@@ -4,8 +4,8 @@
 import { expect } from 'chai';
 import { join as pathJoin } from 'path';
 import { SemVer } from 'semver';
-import { IMock, It as TypeMoqIt, Mock, MockBehavior } from 'typemoq';
-import { StdErrError } from '../../../client/common/process/types';
+import { IMock, It, It as TypeMoqIt, Mock, MockBehavior } from 'typemoq';
+import { ShellOptions, StdErrError } from '../../../client/common/process/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { buildPythonExecInfo } from '../../../client/pythonEnvironments/exec';
 import { getInterpreterInfo } from '../../../client/pythonEnvironments/info/interpreter';
@@ -22,7 +22,7 @@ type ShellExecResult = {
     stderr?: string;
 };
 interface IDeps {
-    shellExec(command: string, timeout: number): Promise<ShellExecResult>;
+    shellExec(command: string, options?: ShellOptions | undefined): Promise<ShellExecResult>;
 }
 
 suite('getInterpreterInfo()', () => {
@@ -43,13 +43,13 @@ suite('getInterpreterInfo()', () => {
         const cmd = `"${python.command}" "${script}"`;
         deps
             // Checking the args is the key point of this test.
-            .setup((d) => d.shellExec(cmd, 15000))
+            .setup((d) => d.shellExec(cmd, It.isAny()))
             .returns(() =>
                 Promise.resolve({
                     stdout: JSON.stringify(json),
                 }),
             );
-        const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
+        const shellExec = async (c: string, t: ShellOptions | undefined) => deps.object.shellExec(c, t);
 
         await getInterpreterInfo(python, shellExec);
 
@@ -67,13 +67,13 @@ suite('getInterpreterInfo()', () => {
         const cmd = `" path to /my python " "${script}"`;
         deps
             // Checking the args is the key point of this test.
-            .setup((d) => d.shellExec(cmd, 15000))
+            .setup((d) => d.shellExec(cmd, It.isAny()))
             .returns(() =>
                 Promise.resolve({
                     stdout: JSON.stringify(json),
                 }),
             );
-        const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
+        const shellExec = async (c: string, t: ShellOptions | undefined) => deps.object.shellExec(c, t);
 
         await getInterpreterInfo(_python, shellExec);
 
@@ -91,13 +91,13 @@ suite('getInterpreterInfo()', () => {
         const cmd = `"path/to/conda" "run" "-n" "my-env" "python" "${script}"`;
         deps
             // Checking the args is the key point of this test.
-            .setup((d) => d.shellExec(cmd, 15000))
+            .setup((d) => d.shellExec(cmd, It.isAny()))
             .returns(() =>
                 Promise.resolve({
                     stdout: JSON.stringify(json),
                 }),
             );
-        const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
+        const shellExec = async (c: string, t: ShellOptions | undefined) => deps.object.shellExec(c, t);
 
         await getInterpreterInfo(_python, shellExec);
 
@@ -126,7 +126,7 @@ suite('getInterpreterInfo()', () => {
                     stdout: JSON.stringify(json),
                 }),
             );
-        const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
+        const shellExec = async (c: string, t: ShellOptions | undefined) => deps.object.shellExec(c, t);
 
         const result = await getInterpreterInfo(python, shellExec);
 
@@ -156,7 +156,7 @@ suite('getInterpreterInfo()', () => {
                     stdout: JSON.stringify(json),
                 }),
             );
-        const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
+        const shellExec = async (c: string, t: ShellOptions | undefined) => deps.object.shellExec(c, t);
 
         const result = await getInterpreterInfo(python, shellExec);
 
@@ -186,7 +186,7 @@ suite('getInterpreterInfo()', () => {
                     stdout: JSON.stringify(json),
                 }),
             );
-        const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
+        const shellExec = async (c: string, t: ShellOptions | undefined) => deps.object.shellExec(c, t);
 
         const result = await getInterpreterInfo(python, shellExec);
 
@@ -200,7 +200,7 @@ suite('getInterpreterInfo()', () => {
             // We check the args in other tests.
             .setup((d) => d.shellExec(TypeMoqIt.isAny(), TypeMoqIt.isAny()))
             .returns(() => Promise.reject(err));
-        const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
+        const shellExec = async (c: string, t: ShellOptions | undefined) => deps.object.shellExec(c, t);
 
         const result = getInterpreterInfo(python, shellExec);
 
@@ -214,7 +214,7 @@ suite('getInterpreterInfo()', () => {
             // We check the args in other tests.
             .setup((d) => d.shellExec(TypeMoqIt.isAny(), TypeMoqIt.isAny()))
             .returns(() => Promise.reject(err));
-        const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
+        const shellExec = async (c: string, t: ShellOptions | undefined) => deps.object.shellExec(c, t);
 
         const result = getInterpreterInfo(python, shellExec);
 
@@ -227,7 +227,7 @@ suite('getInterpreterInfo()', () => {
             // We check the args in other tests.
             .setup((d) => d.shellExec(TypeMoqIt.isAny(), TypeMoqIt.isAny()))
             .returns(() => Promise.resolve({ stdout: 'bad json' }));
-        const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
+        const shellExec = async (c: string, t: ShellOptions | undefined) => deps.object.shellExec(c, t);
 
         const result = getInterpreterInfo(python, shellExec);
 
