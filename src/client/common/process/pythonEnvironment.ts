@@ -109,6 +109,7 @@ function createDeps(
     return {
         getPythonArgv: (python: string) => {
             if (path.basename(python) === python) {
+                // Say when python is `py -3.8` or `conda run python`
                 pythonArgv = python.split(' ');
             }
             return pythonArgv || [python];
