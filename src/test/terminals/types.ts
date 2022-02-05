@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Event, Terminal, TextEditor, Uri } from 'vscode';
+import { IApplicationShell } from '../../client/common/application/types';
 import { IDisposable } from '../../client/common/types';
 
 export const ICodeExecutionService = Symbol('ICodeExecutionService');
@@ -37,3 +38,5 @@ export interface ITerminalAutoActivation extends IDisposable {
     register(): void;
     disableAutoActivation(terminal: Terminal): void;
 }
+
+export const window = IApplicationShell;

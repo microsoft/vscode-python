@@ -39,4 +39,4 @@ export interface ITerminalAutoActivation extends IDisposable {
     disableAutoActivation(terminal: Terminal): void;
 }
 
-export const window: any = IApplicationShell;
+export const window = IApplicationShell;

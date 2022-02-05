@@ -11,6 +11,7 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionManager } from '../../../client/terminals/codeExecution/codeExecutionManager';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../../client/terminals/types';
+import { window } from '../types';
 
 suite('Terminal - Code Execution Manager', () => {
     let executionManager: ICodeExecutionManager;
