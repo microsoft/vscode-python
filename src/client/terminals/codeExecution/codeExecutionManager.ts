@@ -4,9 +4,9 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { Disposable, Event, EventEmitter, Uri, window } from 'vscode';
 
-import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
+import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
@@ -17,7 +17,6 @@ import { traceError } from '../../logging';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IAppShell, ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../terminals/types';
-import { window } from '../types';
 
 @injectable()
 export class CodeExecutionManager implements ICodeExecutionManager {
@@ -65,7 +64,6 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         file = file instanceof Uri ? file : undefined;
         const fileToExecute = file ? file : await codeExecutionHelper.getFileToExecute();
         if (!fileToExecute) {
-            const window: any = IApplicationShell;
             const appShell: IAppShell = (window as any) as IAppShell;
             appShell.showErrorMessage('Open an file before executing code');
             return [new Error('No file to execute')];

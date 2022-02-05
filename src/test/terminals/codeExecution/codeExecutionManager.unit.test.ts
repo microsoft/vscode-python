@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
+import { Disposable, TextDocument, TextEditor, Uri, window } from 'vscode';
 
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
 import { IAppShell } from '../types';
@@ -11,7 +11,6 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionManager } from '../../../client/terminals/codeExecution/codeExecutionManager';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../../client/terminals/types';
-import { window } from '../types';
 
 suite('Terminal - Code Execution Manager', () => {
     let executionManager: ICodeExecutionManager;
