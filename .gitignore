@@ -42,4 +42,3 @@ pydevd*.log
 nodeLanguageServer/**
 nodeLanguageServer.*/**
 dist/**
-.gitpod.yml
