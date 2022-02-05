@@ -6,7 +6,6 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 
-import { window } from 'vscode';
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import '../../common/extensions';
