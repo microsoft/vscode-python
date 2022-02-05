@@ -91,10 +91,12 @@ suite('Terminal - Code Execution Manager', () => {
         expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
 
         const helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
-        serviceContainer.setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
+        serviceContainer
+            .setup((s): unknown => s.get(TypeMoq.It.isValue(ICodeExecutionHelper)))
+            .returns(() => helper.object);
 
         await commandHandler!();
-        helper.verify(async (h) => h.getFileToExecute(), TypeMoq.Times.once());
+        helper.verify(async (h): Promise<Uri | undefined> => h.getFileToExecute(), TypeMoq.Times.once());
     });
 
     test('Ensure executeFileInterTerminal will use provided file', async () => {
@@ -114,23 +116,28 @@ suite('Terminal - Code Execution Manager', () => {
         expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
 
         const helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
-        serviceContainer.setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
+        serviceContainer
+            .setup((s): unknown => s.get(TypeMoq.It.isValue(ICodeExecutionHelper)))
+            .returns(() => helper.object);
 
         const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
         serviceContainer
-            .setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('standard')))
+            .setup((s): unknown => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('standard')))
             .returns(() => executionService.object);
 
         const fileToExecute = Uri.file('x');
         await commandHandler!(fileToExecute);
-        helper.verify(async (h) => h.getFileToExecute(), TypeMoq.Times.never());
-        executionService.verify(async (e) => e.executeFile(TypeMoq.It.isValue(fileToExecute)), TypeMoq.Times.once());
+        helper.verify(async (h): Promise<Uri | undefined> => h.getFileToExecute(), TypeMoq.Times.never());
+        executionService.verify(
+            async (e): Promise<void> => e.executeFile(TypeMoq.It.isValue(fileToExecute)),
+            TypeMoq.Times.once(),
+        );
     });
 
     test('Ensure executeFileInterTerminal will use active file', async () => {
         let commandHandler: undefined | ((file: Uri) => Promise<void>);
         commandManager
-            .setup((c) => c.registerCommand as any)
+            .setup((c): any => c.registerCommand as any)
             .returns(() => {
                 return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
                     if (command === Commands.Exec_In_Terminal) {
@@ -159,7 +166,7 @@ suite('Terminal - Code Execution Manager', () => {
     async function testExecutionOfSelectionWithoutAnyActiveDocument(commandId: string, executionSericeId: string) {
         let commandHandler: undefined | (() => Promise<void>);
         commandManager
-            .setup((c) => c.registerCommand as any)
+            .setup((c): any => c.registerCommand as any)
             .returns(() => {
                 return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
                     if (command === commandId) {
@@ -173,15 +180,19 @@ suite('Terminal - Code Execution Manager', () => {
         expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
 
         const helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
-        serviceContainer.setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
+        serviceContainer
+            .setup((s): unknown => s.get(TypeMoq.It.isValue(ICodeExecutionHelper)))
+            .returns(() => helper.object);
         const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
         serviceContainer
-            .setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue(executionSericeId)))
+            .setup((s): unknown =>
+                s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue(executionSericeId)),
+            )
             .returns(() => executionService.object);
-        documentManager.setup((d) => d.activeTextEditor).returns(() => undefined);
+        documentManager.setup((d): TextEditor | undefined => d.activeTextEditor).returns(() => undefined);
 
         await commandHandler!();
-        executionService.verify(async (e) => e.execute(TypeMoq.It.isAny()), TypeMoq.Times.never());
+        executionService.verify(async (e): Promise<void> => e.execute(TypeMoq.It.isAny()), TypeMoq.Times.never());
     }
 
     test('Ensure executeSelectionInTerminal will do nothing if theres no active document', async () => {
@@ -195,7 +206,7 @@ suite('Terminal - Code Execution Manager', () => {
     async function testExecutionOfSlectionWithoutAnythingSelected(commandId: string, executionServiceId: string) {
         let commandHandler: undefined | (() => Promise<void>);
         commandManager
-            .setup((c) => c.registerCommand as any)
+            .setup((c): any => c.registerCommand as any)
             .returns(() => {
                 return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
                     if (command === commandId) {
@@ -209,20 +220,26 @@ suite('Terminal - Code Execution Manager', () => {
         expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
 
         const helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
-        serviceContainer.setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
-        helper.setup((h) => h.getSelectedTextToExecute).returns(() => () => Promise.resolve(''));
+        serviceContainer
+            .setup((s): unknown => s.get(TypeMoq.It.isValue(ICodeExecutionHelper)))
+            .returns(() => helper.object);
+        helper
+            .setup((h): ((textEditor: TextEditor) => Promise<string | undefined>) => h.getSelectedTextToExecute)
+            .returns(() => () => Promise.resolve(''));
         const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
         serviceContainer
-            .setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue(executionServiceId)))
+            .setup((s): unknown =>
+                s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue(executionServiceId)),
+            )
             .returns(() => executionService.object);
         documentManager
-            .setup((d) => d.activeTextEditor)
+            .setup((d): TextEditor | undefined => d.activeTextEditor)
             .returns(() => {
                 return {} as any;
             });
 
         await commandHandler!();
-        executionService.verify(async (e) => e.execute(TypeMoq.It.isAny()), TypeMoq.Times.never());
+        executionService.verify(async (e): Promise<void> => e.execute(TypeMoq.It.isAny()), TypeMoq.Times.never());
     }
 
     test('Ensure executeSelectionInTerminal will do nothing if no text is selected', async () => {
@@ -236,7 +253,7 @@ suite('Terminal - Code Execution Manager', () => {
     async function testExecutionOfSelectionIsSentToTerminal(commandId: string, executionServiceId: string) {
         let commandHandler: undefined | (() => Promise<void>);
         commandManager
-            .setup((c) => c.registerCommand as any)
+            .setup((c): any => c.registerCommand as any)
             .returns(() => {
                 return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
                     if (command === commandId) {
@@ -252,25 +269,32 @@ suite('Terminal - Code Execution Manager', () => {
         const textSelected = 'abcd';
         const activeDocumentUri = Uri.file('abc');
         const helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
-        serviceContainer.setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
-        helper.setup((h) => h.getSelectedTextToExecute).returns(() => () => Promise.resolve(textSelected));
+        serviceContainer
+            .setup((s): unknown => s.get(TypeMoq.It.isValue(ICodeExecutionHelper)))
+            .returns(() => helper.object);
         helper
-            .setup((h) => h.normalizeLines)
+            .setup((h): ((textEditor: TextEditor) => Promise<string | undefined>) => h.getSelectedTextToExecute)
+            .returns(() => () => Promise.resolve(textSelected));
+        helper
+            .setup((h): ((code: string) => Promise<string>) => h.normalizeLines)
             .returns(() => () => Promise.resolve(textSelected))
             .verifiable(TypeMoq.Times.once());
         const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
         serviceContainer
-            .setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue(executionServiceId)))
+            .setup((s): unknown =>
+                s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue(executionServiceId)),
+            )
             .returns(() => executionService.object);
         const document = TypeMoq.Mock.ofType<TextDocument>();
-        document.setup((d) => d.uri).returns(() => activeDocumentUri);
+        document.setup((d): Uri => d.uri).returns(() => activeDocumentUri);
         const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
-        activeEditor.setup((e) => e.document).returns(() => document.object);
-        documentManager.setup((d) => d.activeTextEditor).returns(() => activeEditor.object);
+        activeEditor.setup((e): TextDocument => e.document).returns(() => document.object);
+        documentManager.setup((d): TextEditor | undefined => d.activeTextEditor).returns(() => activeEditor.object);
 
         await commandHandler!();
         executionService.verify(
-            async (e) => e.execute(TypeMoq.It.isValue(textSelected), TypeMoq.It.isValue(activeDocumentUri)),
+            async (e): Promise<void> =>
+                e.execute(TypeMoq.It.isValue(textSelected), TypeMoq.It.isValue(activeDocumentUri)),
             TypeMoq.Times.once(),
         );
         helper.verifyAll();
