@@ -301,10 +301,10 @@ suite('Terminal - Code Execution Manager', () => {
     });
     test('Ensure when no active editor, a pop up message is displayed'),
         async () => {
-            await noActiveEditor();
+            await noActiveEditor.call(this);
         };
     test('Ensure when no file to execute, a pop up message is displayed'),
         async () => {
-            await noFileToExecute(undefined);
+            await noFileToExecute.call(this, undefined);
         };
 });
