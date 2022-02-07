@@ -3,7 +3,7 @@ import { injectable } from 'inversify';
 import * as md5 from 'md5';
 import { EOL } from 'os';
 import * as path from 'path';
-import { Position, Range, TextDocument, TextEdit, Uri, WorkspaceEdit } from 'vscode';
+import { Position, Range, TextDocument, TextEdit, Uri, WorkspaceEdit, window } from 'vscode';
 import { IFileSystem } from '../common/platform/types';
 import { traceError } from '../logging';
 import { WrappedError } from './errors/errorUtils';
@@ -75,7 +75,7 @@ export function getTextEditsFromPatch(before: string, patch: string): TextEdit[]
 
     // Add line feeds and build the text edits
     patches.forEach((p) => {
-        p.diffs.forEach((diff) => {
+        p.diffs.forEach((diff: string[]) => {
             diff[1] += EOL;
         });
         getTextEditsInternal(before, p.diffs, p.start1).forEach((edit) => textEdits.push(edit.apply()));
@@ -134,7 +134,7 @@ export function getWorkspaceEditsFromPatch(
 
         // Add line feeds and build the text edits
         patches.forEach((p) => {
-            p.diffs.forEach((diff) => {
+            p.diffs.forEach((diff: string[]) => {
                 diff[1] += EOL;
             });
 
@@ -270,7 +270,7 @@ export async function getTempFileWithDocumentContents(document: TextDocument, fs
  * @return {!Array.<!diff_match_patch.patch_obj>} Array of Patch objects.
  * @throws {!Error} If invalid input.
  */
-function patch_fromText(textline: string): Patch[] {
+async function patch_fromText(textline: string): Promise<Patch[]> {
     const patches: Patch[] = [];
     if (!textline) {
         return patches;
@@ -282,8 +282,18 @@ function patch_fromText(textline: string): Patch[] {
     const patchHeader = /^@@ -(\d+),?(\d*) \+(\d+),?(\d*) @@$/;
     while (textPointer < text.length) {
         const m: any = text[textPointer].match(patchHeader);
-        if (!m && !text[textPointer].match(/^@@/)) {
-            throw new Error(`Invalid patch string: ${text[textPointer]}`);
+        const iSort = await window.showInformationMessage('Is Isort Installed on Your Computer?', 'Yes', 'No');
+
+        if (iSort == 'Yes') {
+            continue;
+        } else if (iSort == 'No') {
+            if (!m && !text[textPointer].match(/^@@/)) {
+                throw new Error(`Invalid patch string: ${text[textPointer]}`);
+            } else if (!m) {
+                throw new Error(`Invalid patch string: ${text[textPointer]}`);
+            } else {
+                continue;
+            }
         }
 
         const patch = new (<any>diff_match_patch).patch_obj();
@@ -374,7 +384,7 @@ export class EditorUtils implements IEditorUtils {
 
         // Add line feeds and build the text edits
         patches.forEach((p) => {
-            p.diffs.forEach((diff) => {
+            p.diffs.forEach((diff: string[]) => {
                 diff[1] += EOL;
             });
             getTextEditsInternal(originalContents, p.diffs, p.start1).forEach((edit) => {
