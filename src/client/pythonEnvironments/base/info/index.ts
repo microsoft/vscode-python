@@ -95,7 +95,6 @@ export enum PythonEnvSource {
  * @prop source - the locator[s] which found the environment.
  */
 type PythonEnvBaseInfo = {
-    id?: string;
     kind: PythonEnvKind;
     executable: PythonExecutableInfo;
     // One of (name, location) must be non-empty.

@@ -7,7 +7,7 @@ import { Uri } from 'vscode';
 import { getArchitectureDisplayName } from '../../../common/platform/registry';
 import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
-import { arePathsSame, normCasePath } from '../../common/externalDependencies';
+import { arePathsSame } from '../../common/externalDependencies';
 import { getKindDisplayName } from './envKind';
 import { areIdenticalVersion, areSimilarVersions, getVersionDisplayString, isVersionEmpty } from './pythonVersion';
 
@@ -226,22 +226,6 @@ export function haveSameExecutables(envs1: PythonEnvInfo[], envs2: PythonEnvInfo
         return false;
     }
     return true;
-}
-
-/**
- * Gets unique identifier for an environment. Note this should only be used after basic env info
- * is in it's final state i.e cannot be used when env info isn't complete.
- */
-export function getEnvID(env: PythonEnvInfo): string {
-    const basicEnv = {
-        executablePath: env.executable?.filename ?? '',
-        kind: env.kind ?? PythonEnvKind.Unknown,
-        envPath: env.location,
-    };
-    if (env.kind === PythonEnvKind.Conda && basicEnv.envPath) {
-        return normCasePath(basicEnv.envPath);
-    }
-    return normCasePath(basicEnv.executablePath);
 }
 
 /**

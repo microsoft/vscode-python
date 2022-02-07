@@ -99,13 +99,20 @@ export interface InterpreterDetails {
 }
 
 export interface InterpretersChangedParams {
+    /**
+     * Path to environment folder or path to interpreter that uniquely identifies an environment.
+     * Virtual environments are identified by environment folder paths, whereas other envs can be
+     * identified using interpreter path.
+     */
     path?: string;
     type: 'add' | 'remove' | 'update' | 'clear-all';
 }
 
 export interface ActiveInterpreterChangedParams {
     /**
-     * Interpreter path or environment path that uniquely identifies an environment.
+     * Path to environment folder or path to interpreter that uniquely identifies an environment.
+     * Virtual environments are identified by environment folder paths, whereas other envs can be
+     * identified using interpreter path.
      */
     path?: string;
     resource?: Uri;
