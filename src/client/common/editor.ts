@@ -281,7 +281,7 @@ function patch_fromText(textline: string): Patch[] {
     let textPointer = 0;
     const patchHeader = /^@@ -(\d+),?(\d*) \+(\d+),?(\d*) @@$/;
     while (textPointer < text.length) {
-        const m: any = text[textPointer].match(patchHeader);
+        const m: RegExpMatchArray | null = text[textPointer].match(patchHeader);
         if (!m && !text[textPointer].match(/^@@/)) {
             throw new Error(`Invalid patch string: ${text[textPointer]}`);
         } else if (!m) {
