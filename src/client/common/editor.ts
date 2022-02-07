@@ -287,6 +287,7 @@ async function patch_fromText(textline: string): Promise<Patch[]> {
         if (iSort == 'Yes') {
             continue;
         } else if (iSort == 'No') {
+            window.showInformationMessage('Isort is not installed but continuing with sorting imports');
             if (!m && !text[textPointer].match(/^@@/)) {
                 throw new Error(`Invalid patch string: ${text[textPointer]}`);
             } else if (!m) {
