@@ -3,7 +3,7 @@ import { injectable } from 'inversify';
 import * as md5 from 'md5';
 import { EOL } from 'os';
 import * as path from 'path';
-import { Position, Range, TextDocument, TextEdit, Uri, WorkspaceEdit, window } from 'vscode';
+import { Position, Range, TextDocument, TextEdit, Uri, WorkspaceEdit } from 'vscode';
 import { IFileSystem } from '../common/platform/types';
 import { traceError } from '../logging';
 import { WrappedError } from './errors/errorUtils';
@@ -282,21 +282,12 @@ async function patch_fromText(textline: string): Promise<Patch[]> {
     const patchHeader = /^@@ -(\d+),?(\d*) \+(\d+),?(\d*) @@$/;
     while (textPointer < text.length) {
         const m: any = text[textPointer].match(patchHeader);
-        const iSort = await window.showInformationMessage('Is Isort Installed on Your Computer?', 'Yes', 'No');
 
-        if (iSort == 'Yes') {
-            continue;
-        } else if (iSort == 'No') {
-            window.showInformationMessage('Isort is not installed but continuing with sorting imports');
-            if (!m && !text[textPointer].match(/^@@/)) {
-                throw new Error(`Invalid patch string: ${text[textPointer]}`);
-            } else if (!m) {
-                throw new Error(`Invalid patch string: ${text[textPointer]}`);
-            } else {
-                continue;
-            }
+        if (!m && text[textPointer].length > 0) {
+            throw new Error('Invalid patch string: ' + text[textPointer]);
+        } else if (!m) {
+            break;
         }
-
         const patch = new (<any>diff_match_patch).patch_obj();
         patches.push(patch);
         patch.start1 = parseInt(m[1], 10);
