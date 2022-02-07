@@ -284,6 +284,11 @@ function patch_fromText(textline: string): Patch[] {
         const m: any = text[textPointer].match(patchHeader);
         if (!m && !text[textPointer].match(/^@@/)) {
             throw new Error(`Invalid patch string: ${text[textPointer]}`);
+        } else if (!m) {
+            const patch = new Patch();
+            patches.push(patch);
+            textPointer += 1;
+            continue;
         }
 
         const patch = new (<any>diff_match_patch).patch_obj();
