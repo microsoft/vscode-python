@@ -29,7 +29,6 @@ initializeFileLogging(logDispose);
 // loading starts here
 
 import { ProgressLocation, ProgressOptions, window } from 'vscode';
-
 import { buildApi } from './api';
 import { IApplicationShell, IWorkspaceService } from './common/application/types';
 import { IAsyncDisposableRegistry, IDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
@@ -193,6 +192,6 @@ function notifyUser(msg: string) {
         }
         appShell.showErrorMessage(msg).ignoreErrors();
     } catch (ex) {
-        traceError('failed to notify user', ex);
+        traceError('Failed to Notify User', ex);
     }
 }

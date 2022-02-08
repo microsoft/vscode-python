@@ -11,7 +11,9 @@ import {
 import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
 import { IConfigurationService, Product, ProductType } from '../../client/common/types';
+import { OSType } from '../../client/common/utils/platform';
 import { ILinter, ILinterManager } from '../../client/linters/types';
+import { isOs } from '../common';
 import { TEST_TIMEOUT } from '../constants';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
@@ -87,24 +89,52 @@ suite('Multiroot Linting', () => {
         assert.strictEqual(messages.length > 0, mustHaveErrors, errorMessage);
     }
 
-    test('Enabling Pylint in root and also in Workspace, should return errors', async () => {
+    test('Enabling Pylint in root and also in Workspace, should return errors', async function () {
+        // Timing out on Windows, tracked by #18337.
+        if (isOs(OSType.Windows)) {
+            return this.skip();
+        }
+
         await runTest(Product.pylint, true, true, pylintSetting);
+
+        return undefined;
     }).timeout(TEST_TIMEOUT * 2);
     test('Enabling Pylint in root and disabling in Workspace, should not return errors', async () => {
         await runTest(Product.pylint, true, false, pylintSetting);
     }).timeout(TEST_TIMEOUT * 2);
-    test('Disabling Pylint in root and enabling in Workspace, should return errors', async () => {
+    test('Disabling Pylint in root and enabling in Workspace, should return errors', async function () {
+        // Timing out on Windows, tracked by #18337.
+        if (isOs(OSType.Windows)) {
+            return this.skip();
+        }
+
         await runTest(Product.pylint, false, true, pylintSetting);
+
+        return undefined;
     }).timeout(TEST_TIMEOUT * 2);
 
-    test('Enabling Flake8 in root and also in Workspace, should return errors', async () => {
+    test('Enabling Flake8 in root and also in Workspace, should return errors', async function () {
+        // Timing out on Windows, tracked by #18337.
+        if (isOs(OSType.Windows)) {
+            return this.skip();
+        }
+
         await runTest(Product.flake8, true, true, flake8Setting);
+
+        return undefined;
     }).timeout(TEST_TIMEOUT * 2);
     test('Enabling Flake8 in root and disabling in Workspace, should not return errors', async () => {
         await runTest(Product.flake8, true, false, flake8Setting);
     }).timeout(TEST_TIMEOUT * 2);
-    test('Disabling Flake8 in root and enabling in Workspace, should return errors', async () => {
+    test('Disabling Flake8 in root and enabling in Workspace, should return errors', async function () {
+        // Timing out on Windows, tracked by #18337.
+        if (isOs(OSType.Windows)) {
+            return this.skip();
+        }
+
         await runTest(Product.flake8, false, true, flake8Setting);
+
+        return undefined;
     }).timeout(TEST_TIMEOUT * 2);
 
     async function runTest(product: Product, global: boolean, wks: boolean, setting: string): Promise<void> {

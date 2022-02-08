@@ -237,19 +237,12 @@ gulp.task('installPythonRequirements', async () => {
         '-r',
         './requirements.txt',
     ];
-    let success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args, undefined, true)
+    await spawnAsync(process.env.CI_PYTHON_PATH || 'python', args, undefined, true)
         .then(() => true)
         .catch((ex) => {
-            console.error("Failed to install Python Libs using 'python3'", ex);
+            console.error("Failed to install requirements using 'python'", ex);
             return false;
         });
-    if (!success) {
-        console.info("Failed to install Python Libs using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', args).catch((ex) =>
-            console.error("Failed to install Python Libs using 'python'", ex),
-        );
-        return;
-    }
 
     args = [
         '-m',
@@ -267,18 +260,12 @@ gulp.task('installPythonRequirements', async () => {
         '-r',
         './pythonFiles/jedilsp_requirements/requirements.txt',
     ];
-    success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args, undefined, true)
+    await spawnAsync(process.env.CI_PYTHON_PATH || 'python', args, undefined, true)
         .then(() => true)
         .catch((ex) => {
-            console.error("Failed to install Python Libs using 'python3'", ex);
+            console.error("Failed to install Jedi LSP requirements using 'python'", ex);
             return false;
         });
-    if (!success) {
-        console.info("Failed to install Python Libs using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', args).catch((ex) =>
-            console.error("Failed to install Python Libs using 'python'", ex),
-        );
-    }
 });
 
 // See https://github.com/microsoft/vscode-python/issues/7136
@@ -295,36 +282,22 @@ gulp.task('installDebugpy', async () => {
         '-r',
         './build/debugger-install-requirements.txt',
     ];
-    const successWithWheelsDeps = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', depsArgs, undefined, true)
+    await spawnAsync(process.env.CI_PYTHON_PATH || 'python', depsArgs, undefined, true)
         .then(() => true)
         .catch((ex) => {
-            console.error("Failed to install new DEBUGPY wheels using 'python3'", ex);
+            console.error("Failed to install dependencies need by 'install_debugpy.py' using 'python'", ex);
             return false;
         });
-    if (!successWithWheelsDeps) {
-        console.info(
-            "Failed to install dependencies need by 'install_debugpy.py' using 'python3', attempting to install using 'python'",
-        );
-        await spawnAsync('python', depsArgs).catch((ex) =>
-            console.error("Failed to install dependencies need by 'install_debugpy.py' using 'python'", ex),
-        );
-    }
 
     // Install new DEBUGPY with wheels for python 3.7
     const wheelsArgs = ['./pythonFiles/install_debugpy.py'];
     const wheelsEnv = { PYTHONPATH: './pythonFiles/lib/temp' };
-    const successWithWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', wheelsArgs, wheelsEnv, true)
+    await spawnAsync(process.env.CI_PYTHON_PATH || 'python', wheelsArgs, wheelsEnv, true)
         .then(() => true)
         .catch((ex) => {
-            console.error("Failed to install new DEBUGPY wheels using 'python3'", ex);
+            console.error("Failed to install DEBUGPY wheels using 'python'", ex);
             return false;
         });
-    if (!successWithWheels) {
-        console.info("Failed to install new DEBUGPY wheels using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', wheelsArgs, wheelsEnv).catch((ex) =>
-            console.error("Failed to install DEBUGPY wheels using 'python'", ex),
-        );
-    }
 
     rmrf.sync('./pythonFiles/lib/temp');
 });

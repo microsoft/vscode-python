@@ -83,7 +83,7 @@ async function runPylance(
 
         const languageClient = new LanguageClient('python', 'Python Language Server', clientOptions, worker);
 
-        languageClient.onDidChangeState((e) => {
+        languageClient.onDidChangeState((e): void => {
             // The client's on* methods must be called after the client has started, but if called too
             // late the server may have already sent a message (which leads to failures). Register
             // these on the state change to running to ensure they are ready soon enough.
@@ -97,20 +97,27 @@ async function runPylance(
                 ),
             );
 
-            languageClient.onTelemetry((telemetryEvent) => {
-                const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
-                const formattedProperties = {
-                    ...telemetryEvent.Properties,
-                    // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
-                    method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
-                };
-                sendTelemetryEventBrowser(
-                    eventName,
-                    telemetryEvent.Measurements,
-                    formattedProperties,
-                    telemetryEvent.Exception,
-                );
-            });
+            languageClient.onTelemetry(
+                (telemetryEvent: {
+                    EventName: EventName;
+                    Properties: { method: string };
+                    Measurements: number | Record<string, number> | undefined;
+                    Exception: Error | undefined;
+                }) => {
+                    const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
+                    const formattedProperties = {
+                        ...telemetryEvent.Properties,
+                        // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
+                        method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
+                    };
+                    sendTelemetryEventBrowser(
+                        eventName,
+                        telemetryEvent.Measurements,
+                        formattedProperties,
+                        telemetryEvent.Exception,
+                    );
+                },
+            );
         });
 
         const disposable = languageClient.start();

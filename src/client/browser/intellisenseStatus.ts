@@ -22,5 +22,5 @@ export function createStatusItem(): vscode.Disposable {
         return statusItem;
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    return { dispose: () => {} };
+    return { dispose: () => undefined };
 }

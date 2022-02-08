@@ -57,4 +57,23 @@ export class PythonToolExecutionService implements IPythonToolExecutionService {
             return processService.exec(executionInfo.execPath!, executionInfo.args, { ...options });
         }
     }
+
+    public async execForLinter(
+        executionInfo: ExecutionInfo,
+        options: SpawnOptions,
+        resource: Uri,
+    ): Promise<ExecutionResult<string>> {
+        if (options.env) {
+            throw new Error('Environment variables are not supported');
+        }
+        const pythonExecutionService = await this.serviceContainer
+            .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+            .create({ resource });
+
+        if (executionInfo.execPath) {
+            return pythonExecutionService.exec(executionInfo.args, options);
+        }
+
+        return pythonExecutionService.execForLinter(executionInfo.moduleName!, executionInfo.args, options);
+    }
 }

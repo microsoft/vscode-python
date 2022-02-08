@@ -58,7 +58,6 @@
     "InterpreterQuickPickList.browsePath.detail": "瀏覽檔案來選擇 Python 直譯器。",
     "InterpreterQuickPickList.browsePath.title": "選擇 Python 直譯器",
     "InterpreterQuickPickList.defaultInterpreterPath.label": "使用 `python.defaultInterpreterPath` 設定",
-    "diagnostics.upgradeCodeRunner": "請更新 Code Runner 延伸模組以相容 Python 延伸模組。",
     "Common.doNotShowAgain": "不再顯示",
     "Common.reload": "重新載入",
     "Common.moreInfo": "更多資訊",

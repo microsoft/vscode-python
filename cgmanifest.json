@@ -113,9 +113,9 @@
         {
             "Component": {
                 "Other": {
-                    "Name": "get-pip.py",
+                    "Name": "get-pip",
                     "Version": "21.3.1",
-                    "DownloadUrl": "https://github.com/pypa/get-pip/blob/main/public/get-pip.py"
+                    "DownloadUrl": "https://github.com/pypa/get-pip"
                 },
                 "Type": "other"
             },

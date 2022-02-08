@@ -7,6 +7,7 @@ import {
     interpreterInfo as getInterpreterInfoCommand,
     InterpreterInfoJson,
 } from '../../common/process/internal/scripts';
+import { ShellExecFunc } from '../../common/process/types';
 import { Architecture } from '../../common/utils/platform';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
 
@@ -45,12 +46,6 @@ function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): Inter
     };
 }
 
-type ShellExecResult = {
-    stdout: string;
-    stderr?: string;
-};
-type ShellExecFunc = (command: string, timeout: number) => Promise<ShellExecResult>;
-
 type Logger = {
     info(msg: string): void;
     error(msg: string): void;
@@ -81,7 +76,7 @@ export async function getInterpreterInfo(
     // See these two bugs:
     // https://github.com/microsoft/vscode-python/issues/7569
     // https://github.com/microsoft/vscode-python/issues/7760
-    const result = await shellExec(quoted, 15000);
+    const result = await shellExec(quoted, { timeout: 15000 });
     if (result.stderr) {
         if (logger) {
             logger.error(`Failed to parse interpreter information for ${argv} stderr: ${result.stderr}`);

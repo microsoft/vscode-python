@@ -15,7 +15,7 @@ export class PyLama extends BaseLinter {
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
-        const messages = await this.run(['--format=parsable', document.uri.fsPath], document, cancellation, REGEX);
+        const messages = await this.run([document.uri.fsPath], document, cancellation, REGEX);
         // All messages in pylama are treated as warnings for now.
         messages.forEach((msg) => {
             msg.severity = LintMessageSeverity.Warning;

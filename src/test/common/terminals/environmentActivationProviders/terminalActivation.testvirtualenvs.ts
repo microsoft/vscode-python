@@ -12,8 +12,8 @@ import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import {
     PYTHON_PATH,
-    resetGlobalInterpreterPathSetting,
-    setGlobalInterpreterPath,
+    restorePythonPathInWorkspaceRoot,
+    setPythonPathInWorkspaceRoot,
     updateSetting,
     waitForCondition,
 } from '../../../common';
@@ -107,7 +107,7 @@ suite('Activation of Environments in Terminal', () => {
             vscode.ConfigurationTarget.Global,
         );
         await pythonSettings.update('condaPath', undefined, vscode.ConfigurationTarget.Global);
-        await resetGlobalInterpreterPathSetting();
+        await restorePythonPathInWorkspaceRoot();
     }
 
     /**
@@ -148,7 +148,7 @@ suite('Activation of Environments in Terminal', () => {
             vscode.workspace.workspaceFolders![0].uri,
             vscode.ConfigurationTarget.WorkspaceFolder,
         );
-        await setGlobalInterpreterPath(envPath);
+        await setPythonPathInWorkspaceRoot(envPath);
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
     }
@@ -168,22 +168,18 @@ suite('Activation of Environments in Terminal', () => {
         if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
             this.skip();
         }
-        // https://github.com/microsoft/vscode-python/issues/17666
-        this.skip();
         await testActivation(envPaths.venvPath);
     });
     test('Should activate with pipenv', async function () {
-        // https://github.com/microsoft/vscode-python/issues/17666
-        this.skip();
+        if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
+            this.skip();
+        }
         await testActivation(envPaths.pipenvPath);
     });
     test('Should activate with virtualenv', async function () {
-        // https://github.com/microsoft/vscode-python/issues/17666
-        this.skip();
         await testActivation(envPaths.virtualEnvPath);
     });
     test('Should activate with conda', async function () {
-        this.skip();
         // Powershell does not work with conda by default, hence use cmd.
         await terminalSettings.update(
             'integrated.defaultProfile.windows',

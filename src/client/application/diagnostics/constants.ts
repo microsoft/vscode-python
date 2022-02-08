@@ -18,7 +18,6 @@ export enum DiagnosticCodes {
     JustMyCodeDiagnostic = 'JustMyCodeDiagnostic',
     ConsoleTypeDiagnostic = 'ConsoleTypeDiagnostic',
     ConfigPythonPathDiagnostic = 'ConfigPythonPathDiagnostic',
-    UpgradeCodeRunnerDiagnostic = 'UpgradeCodeRunnerDiagnostic',
     PylanceDefaultDiagnostic = 'PylanceDefaultDiagnostic',
     JediPython27NotSupportedDiagnostic = 'JediPython27NotSupportedDiagnostic',
     SwitchToDefaultLanguageServerDiagnostic = 'SwitchToDefaultLanguageServerDiagnostic',

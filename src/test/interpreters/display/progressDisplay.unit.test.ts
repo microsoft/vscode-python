@@ -7,6 +7,7 @@ import { expect } from 'chai';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
 import { CancellationToken, Disposable, Progress, ProgressOptions } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
+import { Commands } from '../../../client/common/constants';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { Interpreters } from '../../../client/common/utils/localize';
 import { IComponentAdapter } from '../../../client/interpreter/contracts';
@@ -46,7 +47,7 @@ suite('Interpreters - Display Progress', () => {
         refreshingCallback(undefined);
 
         const options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
-        expect(options.title).to.be.equal(Interpreters.discovering());
+        expect(options.title).to.be.equal(`[${Interpreters.discovering()}](command:${Commands.Set_Interpreter})`);
     });
 
     test('Display refreshing message when refreshing interpreters for the second time', async () => {
@@ -58,12 +59,12 @@ suite('Interpreters - Display Progress', () => {
         refreshingCallback(undefined);
 
         let options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
-        expect(options.title).to.be.equal(Interpreters.discovering());
+        expect(options.title).to.be.equal(`[${Interpreters.discovering()}](command:${Commands.Set_Interpreter})`);
 
         refreshingCallback(undefined);
 
         options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
-        expect(options.title).to.be.equal(Interpreters.refreshing());
+        expect(options.title).to.be.equal(`[${Interpreters.refreshing()}](command:${Commands.Set_Interpreter})`);
     });
 
     test('Progress message is hidden when loading has completed', async () => {
@@ -78,7 +79,7 @@ suite('Interpreters - Display Progress', () => {
         const callback = capture(shell.withProgress as never).last()[1] as ProgressTask<void>;
         const promise = callback(undefined as never, undefined as never);
 
-        expect(options.title).to.be.equal(Interpreters.discovering());
+        expect(options.title).to.be.equal(`[${Interpreters.discovering()}](command:${Commands.Set_Interpreter})`);
 
         refreshDeferred.resolve();
         // Promise must resolve when refreshed callback is invoked.

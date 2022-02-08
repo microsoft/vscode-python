@@ -82,8 +82,7 @@ export interface IPythonExecutionFactory {
     createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
     createCondaExecutionService(
         pythonPath: string,
-        processService?: IProcessService,
-        resource?: Uri,
+        processService: IProcessService,
     ): Promise<IPythonExecutionService | undefined>;
 }
 export const IPythonExecutionService = Symbol('IPythonExecutionService');
@@ -100,7 +99,19 @@ export interface IPythonExecutionService {
 
     exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
     execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
+    execForLinter(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
+
+export interface IPythonEnvironment {
+    getInterpreterInformation(): Promise<InterpreterInformation | undefined>;
+    getExecutionObservableInfo(pythonArgs?: string[], pythonExecutable?: string): PythonExecInfo;
+    getExecutablePath(): Promise<string>;
+    isModuleInstalled(moduleName: string): Promise<boolean>;
+    getModuleVersion(moduleName: string): Promise<string | undefined>;
+    getExecutionInfo(pythonArgs?: string[], pythonExecutable?: string): PythonExecInfo;
+}
+
+export type ShellExecFunc = (command: string, options?: ShellOptions | undefined) => Promise<ExecutionResult<string>>;
 
 export class StdErrError extends Error {
     constructor(message: string) {
@@ -117,4 +128,5 @@ export interface IPythonToolExecutionService {
         resource: Uri,
     ): Promise<ObservableExecutionResult<string>>;
     exec(executionInfo: ExecutionInfo, options: SpawnOptions, resource: Uri): Promise<ExecutionResult<string>>;
+    execForLinter(executionInfo: ExecutionInfo, options: SpawnOptions, resource: Uri): Promise<ExecutionResult<string>>;
 }

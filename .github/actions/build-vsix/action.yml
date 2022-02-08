@@ -42,8 +42,9 @@ runs:
       shell: bash
 
     - name: Install Python dependencies
-      run: python -m pip --disable-pip-version-check install --require-hashes -t ./pythonFiles/lib/python --implementation py --no-deps --upgrade -r requirements.txt
-      shell: bash
+      uses: brettcannon/pip-secure-install@v1
+      with:
+        options: '-t ./pythonFiles/lib/python --implementation py'
 
     - name: Install debugpy
       run: |
@@ -52,9 +53,10 @@ runs:
       shell: bash
 
     - name: Install Jedi LSP
-      run: |
-        python -m pip --disable-pip-version-check install --require-hashes -t ./pythonFiles/lib/jedilsp --implementation py --platform any --abi none --no-deps --only-binary :all: --upgrade -r ./pythonFiles/jedilsp_requirements/requirements.txt
-      shell: bash
+      uses: brettcannon/pip-secure-install@v1
+      with:
+        requirements-file: './pythonFiles/jedilsp_requirements/requirements.txt'
+        options: '-t ./pythonFiles/lib/jedilsp --implementation py --platform any --abi none'
 
     - name: Run npm ci
       run: npm ci --prefer-offline

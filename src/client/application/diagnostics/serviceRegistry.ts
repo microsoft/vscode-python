@@ -40,7 +40,6 @@ import {
     SwitchToDefaultLanguageServerDiagnosticService,
     SwitchToDefaultLanguageServerDiagnosticServiceId,
 } from './checks/switchToDefaultLS';
-import { UpgradeCodeRunnerDiagnosticService, UpgradeCodeRunnerDiagnosticServiceId } from './checks/upgradeCodeRunner';
 import { DiagnosticsCommandFactory } from './commands/factory';
 import { IDiagnosticsCommandFactory } from './commands/types';
 import { DiagnosticFilterService } from './filter';
@@ -92,12 +91,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IDiagnosticsService,
         PythonPathDeprecatedDiagnosticService,
         PythonPathDeprecatedDiagnosticServiceId,
-    );
-
-    serviceManager.addSingleton<IDiagnosticsService>(
-        IDiagnosticsService,
-        UpgradeCodeRunnerDiagnosticService,
-        UpgradeCodeRunnerDiagnosticServiceId,
     );
 
     serviceManager.addSingleton<IDiagnosticsService>(

@@ -3,6 +3,7 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
@@ -17,11 +18,14 @@ import {
 } from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
+import { Conda, CONDA_RUN_VERSION } from '../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/codeExecution/djangoShellCodeExecution';
 import { ReplProvider } from '../../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../../client/terminals/codeExecution/terminalCodeExecution';
 import { ICodeExecutionService } from '../../../client/terminals/types';
 import { PYTHON_PATH } from '../../common';
+import * as sinon from 'sinon';
+import assert from 'assert';
 
 suite('Terminal - Code Execution', () => {
     ['Terminal Execution', 'Repl Execution', 'Django Execution'].forEach((testSuiteName) => {
@@ -47,7 +51,7 @@ suite('Terminal - Code Execution', () => {
                     disposable.dispose();
                 }
             });
-
+            sinon.restore();
             disposables = [];
         });
 
@@ -307,9 +311,7 @@ suite('Terminal - Code Execution', () => {
                 terminalSettings.setup((t) => t.executeInFileDir).returns(() => false);
                 workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
                 pythonExecutionFactory
-                    .setup((p) =>
-                        p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-                    )
+                    .setup((p) => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(undefined));
 
                 await executor.executeFile(file);
@@ -355,7 +357,12 @@ suite('Terminal - Code Execution', () => {
 
                 const condaFile = 'conda';
                 const procService = TypeMoq.Mock.ofType<IProcessService>();
-                const env = createCondaEnv(condaFile, condaEnv, pythonPath, procService.object, fileSystem.object);
+                sinon.stub(Conda, 'getConda').resolves(new Conda(condaFile));
+                sinon.stub(Conda.prototype, 'getCondaVersion').resolves(new SemVer(CONDA_RUN_VERSION));
+                const env = await createCondaEnv(condaEnv, pythonPath, procService.object, fileSystem.object);
+                if (!env) {
+                    assert(false, 'Should not be undefined for conda version 4.9.0');
+                }
                 const procs = createPythonProcessService(procService.object, env);
                 const condaExecutionService = {
                     getInterpreterInformation: env.getInterpreterInformation,
@@ -367,11 +374,10 @@ suite('Terminal - Code Execution', () => {
                     execModuleObservable: procs.execModuleObservable,
                     exec: procs.exec,
                     execModule: procs.execModule,
+                    execForLinter: procs.execForLinter,
                 };
                 pythonExecutionFactory
-                    .setup((p) =>
-                        p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-                    )
+                    .setup((p) => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(condaExecutionService));
 
                 await executor.executeFile(file);
@@ -407,9 +413,7 @@ suite('Terminal - Code Execution', () => {
                 terminalArgs: string[],
             ) {
                 pythonExecutionFactory
-                    .setup((p) =>
-                        p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-                    )
+                    .setup((p) => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(undefined));
                 platform.setup((p) => p.isWindows).returns(() => isWindows);
                 settings.setup((s) => s.pythonPath).returns(() => pythonPath);
@@ -467,7 +471,12 @@ suite('Terminal - Code Execution', () => {
 
                 const condaFile = 'conda';
                 const procService = TypeMoq.Mock.ofType<IProcessService>();
-                const env = createCondaEnv(condaFile, condaEnv, pythonPath, procService.object, fileSystem.object);
+                sinon.stub(Conda, 'getConda').resolves(new Conda(condaFile));
+                sinon.stub(Conda.prototype, 'getCondaVersion').resolves(new SemVer(CONDA_RUN_VERSION));
+                const env = await createCondaEnv(condaEnv, pythonPath, procService.object, fileSystem.object);
+                if (!env) {
+                    assert(false, 'Should not be undefined for conda version 4.9.0');
+                }
                 const procs = createPythonProcessService(procService.object, env);
                 const condaExecutionService = {
                     getInterpreterInformation: env.getInterpreterInformation,
@@ -479,11 +488,10 @@ suite('Terminal - Code Execution', () => {
                     execModuleObservable: procs.execModuleObservable,
                     exec: procs.exec,
                     execModule: procs.execModule,
+                    execForLinter: procs.execForLinter,
                 };
                 pythonExecutionFactory
-                    .setup((p) =>
-                        p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-                    )
+                    .setup((p) => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(condaExecutionService));
 
                 const djangoArgs = isDjangoRepl ? ['manage.py', 'shell'] : [];

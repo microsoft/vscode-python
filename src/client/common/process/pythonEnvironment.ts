@@ -1,17 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as path from 'path';
 import { traceError, traceInfo } from '../../logging';
-import { CondaEnvironmentInfo } from '../../pythonEnvironments/common/environmentManagers/conda';
+import { Conda, CondaEnvironmentInfo } from '../../pythonEnvironments/common/environmentManagers/conda';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { getExecutablePath } from '../../pythonEnvironments/info/executable';
 import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from './internal/python';
-import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types';
+import { ExecutionResult, IProcessService, IPythonEnvironment, ShellOptions, SpawnOptions } from './types';
 
-class PythonEnvironment {
+class PythonEnvironment implements IPythonEnvironment {
     private cachedExecutablePath: Map<string, Promise<string>> = new Map<string, Promise<string>>();
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
 
@@ -24,17 +25,17 @@ class PythonEnvironment {
             isValidExecutable(python: string): Promise<boolean>;
             // from ProcessService:
             exec(file: string, args: string[]): Promise<ExecutionResult<string>>;
-            shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
+            shellExec(command: string, options?: ShellOptions): Promise<ExecutionResult<string>>;
         },
     ) {}
 
-    public getExecutionInfo(pythonArgs: string[] = []): PythonExecInfo {
+    public getExecutionInfo(pythonArgs: string[] = [], pythonExecutable?: string): PythonExecInfo {
         const python = this.deps.getPythonArgv(this.pythonPath);
-        return buildPythonExecInfo(python, pythonArgs);
+        return buildPythonExecInfo(python, pythonArgs, pythonExecutable);
     }
-    public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecInfo {
+    public getExecutionObservableInfo(pythonArgs: string[] = [], pythonExecutable?: string): PythonExecInfo {
         const python = this.deps.getObservablePythonArgv(this.pythonPath);
-        return buildPythonExecInfo(python, pythonArgs);
+        return buildPythonExecInfo(python, pythonArgs, pythonExecutable);
     }
 
     public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
@@ -56,7 +57,7 @@ class PythonEnvironment {
             return result;
         }
         const python = this.getExecutionInfo();
-        const promise = getExecutablePath(python, this.deps.exec);
+        const promise = getExecutablePath(python, this.deps.shellExec);
         this.cachedExecutablePath.set(this.pythonPath, promise);
         return promise;
     }
@@ -106,11 +107,22 @@ function createDeps(
     shellExec: (command: string, options?: ShellOptions) => Promise<ExecutionResult<string>>,
 ) {
     return {
-        getPythonArgv: (python: string) => pythonArgv || [python],
-        getObservablePythonArgv: (python: string) => observablePythonArgv || [python],
+        getPythonArgv: (python: string) => {
+            if (path.basename(python) === python) {
+                // Say when python is `py -3.8` or `conda run python`
+                pythonArgv = python.split(' ');
+            }
+            return pythonArgv || [python];
+        },
+        getObservablePythonArgv: (python: string) => {
+            if (path.basename(python) === python) {
+                observablePythonArgv = python.split(' ');
+            }
+            return observablePythonArgv || [python];
+        },
         isValidExecutable,
         exec: async (cmd: string, args: string[]) => exec(cmd, args, { throwOnStdErr: true }),
-        shellExec: async (text: string, timeout: number) => shellExec(text, { timeout }),
+        shellExec,
     };
 }
 
@@ -131,21 +143,18 @@ export function createPythonEnv(
     return new PythonEnvironment(pythonPath, deps);
 }
 
-export function createCondaEnv(
-    condaFile: string,
+export async function createCondaEnv(
     condaInfo: CondaEnvironmentInfo,
     pythonPath: string,
     // These are used to generate the deps.
     procs: IProcessService,
     fs: IFileSystem,
-): PythonEnvironment {
-    const runArgs = ['run'];
-    if (condaInfo.name === '') {
-        runArgs.push('-p', condaInfo.path);
-    } else {
-        runArgs.push('-n', condaInfo.name);
+): Promise<PythonEnvironment | undefined> {
+    const conda = await Conda.getConda();
+    const pythonArgv = await conda?.getRunPythonArgs({ name: condaInfo.name, prefix: condaInfo.path });
+    if (!pythonArgv) {
+        return undefined;
     }
-    const pythonArgv = [condaFile, ...runArgs, '--no-capture-output', 'python'];
     const deps = createDeps(
         async (filename) => fs.pathExists(filename),
         pythonArgv,

@@ -4,6 +4,7 @@ import { IDocumentManager, IWorkspaceService } from '../common/application/types
 import { FileSystemPaths } from '../common/platform/fs-paths';
 import { Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import { PythonEnvSource } from '../pythonEnvironments/base/info';
 import { compareSemVerLikeVersions } from '../pythonEnvironments/base/info/pythonVersion';
 import { EnvironmentType, getEnvironmentTypeName, PythonEnvironment } from '../pythonEnvironments/info';
 import { IComponentAdapter, IInterpreterHelper, WorkspacePythonPath } from './contracts';
@@ -64,6 +65,22 @@ export class InterpreterHelper implements IInterpreterHelper {
 
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
         return this.pyenvs.getInterpreterInformation(pythonPath);
+    }
+
+    public async getInterpreters({ resource, source }: { resource?: Uri; source?: PythonEnvSource[] } = {}): Promise<
+        PythonEnvironment[]
+    > {
+        const interpreters = await this.pyenvs.getInterpreters(resource, source);
+        return sortInterpreters(interpreters);
+    }
+
+    public async getInterpreterPath(pythonPath: string): Promise<string> {
+        const interpreterInfo: any = await this.getInterpreterInformation(pythonPath);
+        if (interpreterInfo) {
+            return interpreterInfo.path;
+        } else {
+            return pythonPath;
+        }
     }
 
     public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean> {

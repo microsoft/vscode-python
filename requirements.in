@@ -7,4 +7,4 @@
 typing-extensions==4.0.1
 
 # Sort Imports
-isort==5.10.0
+isort==5.10.1
