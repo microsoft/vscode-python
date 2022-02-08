@@ -4,8 +4,8 @@
 
 ### Fixes
 
-1. Fix for debugging when using older version of `conda`.
-   ([#18437](https://github.com/microsoft/vscode-python/issues/18437))
+1. Revert to old way of running debugger if conda version less than 4.9.0.
+   ([#18436](https://github.com/Microsoft/vscode-python/issues/18436))
 
 ### Thanks
 
