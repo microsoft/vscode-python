@@ -107,35 +107,38 @@ export class WorkspaceTestAdapter {
             // then parse and insert test data.
             testController.items.delete(`DiscoveryError:${workspacePath}`);
 
-            // If we are in a multiroot workspace scenario, find the overall root in the test UI (should be the workspace file name),
-            // then wrap the current folder's test result in a tree under the overall root + the current folder name.
-            let workspaceNode: TestItem | undefined;
-            if (isMultiroot && workspaceFilePath) {
-                const rootFilename = path.basename(workspaceFilePath);
-                workspaceNode = testController.items.get(workspaceFilePath);
+            // Wrap the data under a root node named after the test provider.
+            const wrappedTests = rawTestData.tests;
 
-                const wrappedTests = rawTestData.tests;
+            // If we are in a multiroot workspace scenario, wrap the current folder's test result in a tree under the overall root + the current folder name.
+            let rootPath = workspacePath;
+            let childrenRootPath = rootPath;
+            let childrenRootName = path.basename(rootPath);
 
-                const children = [
-                    {
-                        path: workspacePath,
-                        name: path.basename(workspacePath),
-                        type_: 'folder' as DiscoveredTestType,
-                        children: wrappedTests ? [wrappedTests] : [],
-                    },
-                ];
-
-                rawTestData.tests = {
-                    path: workspaceFilePath,
-                    name: rootFilename,
-                    type_: 'folder',
-                    children,
-                };
-            } else {
-                // Find the root for this test data in the test controller.
-                const rootPath = rawTestData.cwd;
-                workspaceNode = testController.items.get(rootPath);
+            if (isMultiroot) {
+                rootPath = workspaceFilePath!;
+                childrenRootPath = workspacePath;
+                childrenRootName = path.basename(workspacePath);
             }
+
+            const children = [
+                {
+                    path: childrenRootPath,
+                    name: childrenRootName,
+                    type_: 'folder' as DiscoveredTestType,
+                    children: wrappedTests ? [wrappedTests] : [],
+                },
+            ];
+
+            // Update the raw test data with the wrapped data.
+            rawTestData.tests = {
+                path: rootPath,
+                name: this.testProvider,
+                type_: 'folder',
+                children,
+            };
+
+            const workspaceNode = testController.items.get(rootPath);
 
             if (rawTestData.tests) {
                 // If the test root for this folder exists: Workspace refresh, update its children.
