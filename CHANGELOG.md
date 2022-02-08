@@ -4,6 +4,8 @@
 
 ### Fixes
 
+1. Fix `invalid patch string` error when using conda.
+   ([#18455](https://github.com/Microsoft/vscode-python/issues/18455))
 1. Revert to old way of running debugger if conda version less than 4.9.0.
    ([#18436](https://github.com/Microsoft/vscode-python/issues/18436))
 
