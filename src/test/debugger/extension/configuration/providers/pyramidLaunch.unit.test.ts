@@ -138,6 +138,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
             args: ['xyz.ini'],
             pyramid: true,
             jinja: true,
+            justMyCode: true,
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -159,6 +160,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
             args: ['hello'],
             pyramid: true,
             jinja: true,
+            justMyCode: true,
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -183,6 +185,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
             args: [defaultIni],
             pyramid: true,
             jinja: true,
+            justMyCode: true,
         };
 
         expect(state.config).to.be.deep.equal(config);

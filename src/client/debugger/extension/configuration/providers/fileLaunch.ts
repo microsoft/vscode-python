@@ -24,9 +24,9 @@ export class FileLaunchDebugConfigurationProvider implements IDebugConfiguration
             name: DebugConfigStrings.file.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
-
             program: '${file}',
             console: 'integratedTerminal',
+            justMyCode: true,
         };
         Object.assign(state.config, config);
     }
