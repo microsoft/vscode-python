@@ -425,9 +425,13 @@ export class Conda {
         }));
     }
 
-    public async getCondaEnvironment(executable: string): Promise<CondaEnvInfo | undefined> {
+    /**
+     * Returns conda environment related to path provided.
+     * @param executableOrEnvPath Path to environment folder or path to interpreter that uniquely identifies an environment.
+     */
+    public async getCondaEnvironment(executableOrEnvPath: string): Promise<CondaEnvInfo | undefined> {
         const envList = await this.getEnvList();
-        return envList.find((e) => isParentPath(executable, e.prefix));
+        return envList.find((e) => isParentPath(executableOrEnvPath, e.prefix));
     }
 
     @cache(-1, true)
