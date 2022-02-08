@@ -88,7 +88,6 @@ export namespace Common {
     export const and = localize('Common.and', 'and');
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
     export const recommended = localize('Common.recommended', 'Recommended');
-    export const workspace = localize('Common.workspace', 'Workspace');
     export const clearAll = localize('Common.clearAll', 'Clear all');
 }
 
