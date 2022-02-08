@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter, Uri, window } from 'vscode';
+import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
@@ -16,7 +16,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { traceError } from '../../logging';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { IAppShell, ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../terminals/types';
+import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../terminals/types';
 
 @injectable()
 export class CodeExecutionManager implements ICodeExecutionManager {
@@ -57,16 +57,13 @@ export class CodeExecutionManager implements ICodeExecutionManager {
             ),
         );
     }
-
     private async executeFileInTerminal(file: Resource, trigger: 'command' | 'icon') {
         sendTelemetryEvent(EventName.EXECUTION_CODE, undefined, { scope: 'file', trigger });
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
         file = file instanceof Uri ? file : undefined;
         const fileToExecute = file ? file : await codeExecutionHelper.getFileToExecute();
         if (!fileToExecute) {
-            const appShell: IAppShell = (window as any) as IAppShell;
-            appShell.showErrorMessage('Open an file before executing code');
-            return [new Error('No file to execute')];
+            return;
         }
         await codeExecutionHelper.saveFileIfDirty(fileToExecute);
 
@@ -86,6 +83,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
     @captureTelemetry(EventName.EXECUTION_CODE, { scope: 'selection' }, false)
     private async executeSelectionInTerminal(): Promise<void> {
         const executionService = this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService, 'standard');
+
         await this.executeSelection(executionService);
     }
 
@@ -95,18 +93,16 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         await this.executeSelection(executionService);
     }
 
-    private async executeSelection(executionService: ICodeExecutionService): Promise<Error[] | undefined> {
+    private async executeSelection(executionService: ICodeExecutionService): Promise<void> {
         const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor) {
-            const appShell: IAppShell = (window as any) as IAppShell;
-            appShell.showErrorMessage('Open an active editor before executing code');
-            return [new Error('No active editor')];
+            return;
         }
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
         const codeToExecute = await codeExecutionHelper.getSelectedTextToExecute(activeEditor!);
         const normalizedCode = await codeExecutionHelper.normalizeLines(codeToExecute!);
         if (!normalizedCode || normalizedCode.trim().length === 0) {
-            return undefined;
+            return;
         }
 
         try {
@@ -116,6 +112,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
             // for telemetry
             noop();
         }
+
         await executionService.execute(normalizedCode, activeEditor!.document.uri);
     }
 }
