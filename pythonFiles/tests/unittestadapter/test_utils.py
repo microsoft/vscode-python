@@ -208,6 +208,61 @@ def test_build_simple_tree() -> None:
     assert not errors
 
 
+def test_build_decorated_tree() -> None:
+    """The build_test_tree function should build and return a test tree from discovered test suites,
+    with correct line numbers for decorated test,
+    and an empty list of errors if there are none in the discovered data.
+    """
+
+    # Discovery tests in utils_decorated_tree.py.
+    start_dir = os.fsdecode(TEST_DATA_PATH)
+    pattern = "utils_decorated_tree*"
+    file_path = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, "utils_decorated_tree.py"))
+
+    expected: TestNode = {
+        "path": start_dir,
+        "type_": TestNodeTypeEnum.folder,
+        "name": ".data",
+        "children": [
+            {
+                "name": "utils_decorated_tree.py",
+                "type_": TestNodeTypeEnum.file,
+                "path": file_path,
+                "children": [
+                    {
+                        "name": "TreeOne",
+                        "path": file_path,
+                        "type_": TestNodeTypeEnum.class_,
+                        "children": [
+                            {
+                                "id_": "utils_decorated_tree.TreeOne.test_one",
+                                "name": "test_one",
+                                "path": file_path,
+                                "type_": TestNodeTypeEnum.test,
+                                "lineno": "24",
+                            },
+                            {
+                                "id_": "utils_decorated_tree.TreeOne.test_two",
+                                "name": "test_two",
+                                "path": file_path,
+                                "type_": TestNodeTypeEnum.test,
+                                "lineno": "28",
+                            },
+                        ],
+                    }
+                ],
+            }
+        ],
+    }
+
+    loader = unittest.TestLoader()
+    suite = loader.discover(start_dir, pattern)
+    tests, errors = build_test_tree(suite, start_dir)
+
+    assert is_same_tree(expected, tests)
+    assert not errors
+
+
 def test_build_empty_tree() -> None:
     """The build_test_tree function should return None if there are no discovered test suites, and an empty list of errors if there are none in the discovered data."""
 

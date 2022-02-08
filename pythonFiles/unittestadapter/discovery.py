@@ -9,13 +9,14 @@ import traceback
 import unittest
 from typing import List, Literal, Optional, Tuple, TypedDict, Union
 
-from .utils import TestNode, build_test_tree
-
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PYTHON_FILES)
 
 from testing_tools import socket_manager
+
+# If I use from utils then there will be an import error in test_discovery.py.
+from unittestadapter.utils import TestNode, build_test_tree
 
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
