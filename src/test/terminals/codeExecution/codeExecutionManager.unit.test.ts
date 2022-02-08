@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { Disposable, TextDocument, TextEditor, Uri, window } from 'vscode';
+import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
@@ -10,7 +10,6 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionManager } from '../../../client/terminals/codeExecution/codeExecutionManager';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../../client/terminals/types';
-import { IAppShell } from '../types';
 
 suite('Terminal - Code Execution Manager', () => {
     let executionManager: ICodeExecutionManager;
@@ -74,7 +73,7 @@ suite('Terminal - Code Execution Manager', () => {
         ]);
     });
 
-    test('Ensure executeFileInterTerminal will do nothing if no file is available', async () => {
+    test('Ensure executeFileInterTerminal will do nothing if no file is avialble', async () => {
         let commandHandler: undefined | (() => Promise<void>);
         commandManager
             .setup((c) => c.registerCommand as any)
@@ -275,23 +274,6 @@ suite('Terminal - Code Execution Manager', () => {
         );
         helper.verifyAll();
     }
-    async function noActiveEditor(this: any) {
-        const activeEditor = this.documentManager.activeTextEditor;
-        if (!activeEditor) {
-            const appShell: IAppShell = (window as any) as IAppShell;
-            appShell.showErrorMessage('Open an active editor before executing code');
-            return [new Error('No active editor')];
-        }
-    }
-    async function noFileToExecute(this: any, file: Uri | undefined): Promise<void | Error[]> {
-        file = file instanceof Uri ? file : undefined;
-        const fileToExecute = file ? file : this.documentManager.activeTextEditor?.document.uri;
-        if (!fileToExecute) {
-            const appShell: IAppShell = (window as any) as IAppShell;
-            appShell.showErrorMessage('Open a file before executing code.');
-            return [new Error('No file to execute')];
-        }
-    }
     test('Ensure executeSelectionInTerminal will normalize selected text and send it to the terminal', async () => {
         await testExecutionOfSelectionIsSentToTerminal(Commands.Exec_Selection_In_Terminal, 'standard');
     });
@@ -299,12 +281,4 @@ suite('Terminal - Code Execution Manager', () => {
     test('Ensure executeSelectionInDjangoShell will normalize selected text and send it to the terminal', async () => {
         await testExecutionOfSelectionIsSentToTerminal(Commands.Exec_Selection_In_Django_Shell, 'djangoShell');
     });
-    test('Ensure when no active editor, a pop up message is displayed'),
-        async () => {
-            await noActiveEditor.call(this);
-        };
-    test('Ensure when no file to execute, a pop up message is displayed'),
-        async () => {
-            await noFileToExecute.call(this, undefined);
-        };
 });

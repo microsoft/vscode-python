@@ -169,8 +169,8 @@ function filterOutputUsingCondaRunMarkers(stdout: string) {
 }
 
 function removeCondaRunMarkers(out: string) {
-    out = out.replace('>>>PYTHON-EXEC-OUTPUT', '');
-    return out.replace('<<<PYTHON-EXEC-OUTPUT', '');
+    out = out.replace('>>>PYTHON-EXEC-OUTPUT\r\n', '').replace('>>>PYTHON-EXEC-OUTPUT\n', '');
+    return out.replace('<<<PYTHON-EXEC-OUTPUT\r\n', '').replace('<<<PYTHON-EXEC-OUTPUT\n', '');
 }
 
 export function execObservable(

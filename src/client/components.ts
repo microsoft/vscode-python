@@ -19,7 +19,6 @@ export type ExtensionState = {
     };
 };
 
-
 /**
  * The result of activating a component of the extension.
  *
