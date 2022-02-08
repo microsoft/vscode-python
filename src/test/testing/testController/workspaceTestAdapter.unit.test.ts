@@ -105,15 +105,12 @@ suite('Workspace test adapter', () => {
             sandbox.restore();
         });
 
-        test('If the test provider is unittest, the workspace test adapter uses an instance of UnittestTestDiscoveryAdapter', async () => {
+        test("When discovering tests, the workspace test adapter should call the test discovery adapter's discoverTest method", async () => {
             discoverTestsStub.resolves();
 
-            const workspaceTestAdapter = new WorkspaceTestAdapter(
-                'unittest',
-                Uri.parse('foo'),
-                stubConfigSettings,
-                stubTestServer,
-            );
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings);
+
+            const workspaceTestAdapter = new WorkspaceTestAdapter('unittest', testDiscoveryAdapter, Uri.parse('foo'));
 
             await workspaceTestAdapter.discoverTests(testController);
 
@@ -131,12 +128,9 @@ suite('Workspace test adapter', () => {
                     }),
             );
 
-            const workspaceTestAdapter = new WorkspaceTestAdapter(
-                'unittest',
-                Uri.parse('foo'),
-                stubConfigSettings,
-                stubTestServer,
-            );
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings);
+
+            const workspaceTestAdapter = new WorkspaceTestAdapter('unittest', testDiscoveryAdapter, Uri.parse('foo'));
 
             // Try running discovery twice
             const one = workspaceTestAdapter.discoverTests(testController);
@@ -150,12 +144,9 @@ suite('Workspace test adapter', () => {
         test('If discovery succeeds, send a telemetry event with the "failed" key set to false', async () => {
             discoverTestsStub.resolves({ status: 'success' });
 
-            const workspaceTestAdapter = new WorkspaceTestAdapter(
-                'unittest',
-                Uri.parse('foo'),
-                stubConfigSettings,
-                stubTestServer,
-            );
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings);
+
+            const workspaceTestAdapter = new WorkspaceTestAdapter('unittest', testDiscoveryAdapter, Uri.parse('foo'));
 
             await workspaceTestAdapter.discoverTests(testController);
 
@@ -169,12 +160,9 @@ suite('Workspace test adapter', () => {
         test('If discovery failed, send a telemetry event with the "failed" key set to true, and add an error node to the test controller', async () => {
             discoverTestsStub.rejects(new Error('foo'));
 
-            const workspaceTestAdapter = new WorkspaceTestAdapter(
-                'unittest',
-                Uri.parse('foo'),
-                stubConfigSettings,
-                stubTestServer,
-            );
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings);
+
+            const workspaceTestAdapter = new WorkspaceTestAdapter('unittest', testDiscoveryAdapter, Uri.parse('foo'));
 
             await workspaceTestAdapter.discoverTests(testController);
 

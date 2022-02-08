@@ -4,7 +4,6 @@
 import * as path from 'path';
 import * as util from 'util';
 import { CancellationToken, Position, Range, TestController, TestItem, Uri } from 'vscode';
-import { IConfigurationService } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
 import { traceError } from '../../logging';
@@ -12,14 +11,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestProvider } from '../types';
 import { createErrorTestItem, DebugTestTag, ErrorTestItemOptions, RunTestTag } from './common/testItemUtilities';
-import {
-    DiscoveredTestItem,
-    DiscoveredTestNode,
-    DiscoveredTestType,
-    ITestDiscoveryAdapter,
-    ITestServer,
-} from './common/types';
-import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
+import { DiscoveredTestItem, DiscoveredTestNode, DiscoveredTestType, ITestDiscoveryAdapter } from './common/types';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -31,29 +23,17 @@ import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
  * and uses them to insert/update/remove items in the `TestController` instance behind the testing UI whenever the `PythonTestController` requests a refresh.
  */
 export class WorkspaceTestAdapter {
-    private discoveryAdapter: ITestDiscoveryAdapter;
-
     private discovering: Deferred<void> | undefined = undefined;
 
     private testData: DiscoveredTestNode | undefined;
 
-    // TODO: Implement test running
-    // private running: ITestRunningAdapter;
-
     constructor(
         private testProvider: TestProvider,
+        private discoveryAdapter: ITestDiscoveryAdapter,
+        // TODO: Implement test running
+        // private runningAdapter: ITestRunningAdapter,
         private workspaceUri: Uri,
-        configSettings: IConfigurationService,
-        testServer: ITestServer,
-    ) {
-        if (this.testProvider === 'unittest') {
-            this.discoveryAdapter = new UnittestTestDiscoveryAdapter(testServer, configSettings);
-        } else {
-            // TODO: PYTEST DISCOVERY ADAPTER
-            // this is a placeholder for now
-            this.discoveryAdapter = new UnittestTestDiscoveryAdapter(testServer, { ...configSettings });
-        }
-    }
+    ) {}
 
     public async discoverTests(
         testController: TestController,

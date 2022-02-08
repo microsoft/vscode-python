@@ -21,14 +21,17 @@ import { IWorkspaceService } from '../../common/application/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
+import { Common } from '../../common/utils/localize';
 import { traceVerbose } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
+import { TestProvider } from '../types';
 import { PythonTestServer } from './common/server';
 import { DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
-import { ITestController, ITestFrameworkController, TestRefreshOptions } from './common/types';
+import { ITestController, ITestDiscoveryAdapter, ITestFrameworkController, TestRefreshOptions } from './common/types';
 import { DEFAULT_TEST_PORT } from './common/utils';
+import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
 import { WorkspaceTestAdapter } from './workspaceTestAdapter';
 
 @injectable()
@@ -110,12 +113,20 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
         workspaces.forEach((workspace) => {
             const settings = this.configSettings.getSettings(workspace.uri);
-            const workspaceTestAdapter = new WorkspaceTestAdapter(
-                'unittest',
-                workspace.uri,
-                this.configSettings,
-                this.pythonTestServer,
-            );
+
+            let discoveryAdapter: ITestDiscoveryAdapter;
+            let testProvider: TestProvider;
+            if (settings.testing.unittestEnabled) {
+                discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);
+                testProvider = UNITTEST_PROVIDER;
+            } else {
+                // TODO: PYTEST DISCOVERY ADAPTER
+                // this is a placeholder for now
+                discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, { ...this.configSettings });
+                testProvider = PYTEST_PROVIDER;
+            }
+
+            const workspaceTestAdapter = new WorkspaceTestAdapter(testProvider, discoveryAdapter, workspace.uri);
 
             this.testAdapters.set(workspace.uri, workspaceTestAdapter);
 

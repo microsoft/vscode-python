@@ -12,7 +12,6 @@ import {
     Uri,
     WorkspaceFolder,
 } from 'vscode';
-import { IConfigurationService } from '../../../common/types';
 import { TestDiscoveryOptions } from '../../common/types';
 
 export type TestRunInstanceOptions = TestRunOptions & {
@@ -157,9 +156,6 @@ export interface ITestServer {
 }
 
 export interface ITestDiscoveryAdapter {
-    // executionFactory: IPythonExecutionFactory;
-    configSettings: IConfigurationService;
-    // port: number;
     discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
 }
 
