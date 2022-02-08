@@ -416,7 +416,7 @@ export class Conda {
         } else {
             args.push('-p', env.prefix);
         }
-        return [this.command, 'run', ...args, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT];
+        return [this.command, 'run', ...args, '--no-capture-output', '--live-stream', 'python', OUTPUT_MARKER_SCRIPT];
     }
 
     /**
