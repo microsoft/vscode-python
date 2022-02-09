@@ -9,10 +9,8 @@ import { OutputChannel, Uri } from 'vscode';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { PythonTestServer } from '../../../client/testing/testController/common/server';
-import { DEFAULT_TEST_PORT } from '../../../client/testing/testController/common/utils';
 
 suite('Python Test Server', () => {
-    const port = DEFAULT_TEST_PORT;
     const fakeUuid = 'fake-uuid';
 
     let stubExecutionFactory: IPythonExecutionFactory;
@@ -52,9 +50,10 @@ suite('Python Test Server', () => {
             cwd: '/foo/bar',
         };
 
-        server = new PythonTestServer(stubExecutionFactory, port);
+        server = new PythonTestServer(stubExecutionFactory);
 
         await server.sendCommand(options);
+        const { port } = server;
 
         assert.deepStrictEqual(execArgs, ['myscript', '--port', `${port}`, '--uuid', fakeUuid, '-foo', 'foo']);
     });
@@ -72,11 +71,13 @@ suite('Python Test Server', () => {
             cwd: '/foo/bar',
             outChannel,
         };
-        const expected = ['python', 'myscript', '--port', `${port}`, '--uuid', fakeUuid, '-foo', 'foo'].join(' ');
 
-        server = new PythonTestServer(stubExecutionFactory, port);
+        server = new PythonTestServer(stubExecutionFactory);
 
         await server.sendCommand(options);
+
+        const { port } = server;
+        const expected = ['python', 'myscript', '--port', `${port}`, '--uuid', fakeUuid, '-foo', 'foo'].join(' ');
 
         assert.deepStrictEqual(output, [expected]);
     });
@@ -95,7 +96,7 @@ suite('Python Test Server', () => {
             cwd: '/foo/bar',
         };
 
-        server = new PythonTestServer(stubExecutionFactory, port);
+        server = new PythonTestServer(stubExecutionFactory);
         server.onDataReceived(({ data }) => {
             eventData = JSON.parse(data);
         });
@@ -116,7 +117,7 @@ suite('Python Test Server', () => {
 
         let response;
 
-        server = new PythonTestServer(stubExecutionFactory, port);
+        server = new PythonTestServer(stubExecutionFactory);
         server.onDataReceived(({ data }) => {
             response = data;
             deferred.resolve();
@@ -125,6 +126,7 @@ suite('Python Test Server', () => {
         await server.sendCommand(options);
 
         // Send data back.
+        const { port } = server;
         const requestOptions = {
             hostname: 'localhost',
             method: 'POST',
@@ -153,7 +155,7 @@ suite('Python Test Server', () => {
 
         let response;
 
-        server = new PythonTestServer(stubExecutionFactory, port);
+        server = new PythonTestServer(stubExecutionFactory);
         server.onDataReceived(({ data }) => {
             response = data;
             deferred.resolve();
@@ -162,6 +164,7 @@ suite('Python Test Server', () => {
         await server.sendCommand(options);
 
         // Send data back.
+        const { port } = server;
         const requestOptions = {
             hostname: 'localhost',
             method: 'POST',
@@ -190,7 +193,7 @@ suite('Python Test Server', () => {
 
         let response;
 
-        server = new PythonTestServer(stubExecutionFactory, port);
+        server = new PythonTestServer(stubExecutionFactory);
         server.onDataReceived(({ data }) => {
             response = data;
             deferred.resolve();
@@ -199,6 +202,7 @@ suite('Python Test Server', () => {
         await server.sendCommand(options);
 
         // Send data back.
+        const { port } = server;
         const requestOptions = {
             hostname: 'localhost',
             method: 'POST',

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as http from 'http';
+import * as net from 'net';
 import { v4 as uuidv4 } from 'uuid';
 import { Disposable, Event, EventEmitter } from 'vscode';
 import {
@@ -10,6 +11,7 @@ import {
     SpawnOptions,
 } from '../../../common/process/types';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
+import { DEFAULT_TEST_PORT } from './utils';
 
 export class PythonTestServer implements ITestServer, Disposable {
     private _onDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
@@ -18,8 +20,12 @@ export class PythonTestServer implements ITestServer, Disposable {
 
     private server: http.Server;
 
-    constructor(private executionFactory: IPythonExecutionFactory, private readonly port: number) {
+    public port: number;
+
+    constructor(private executionFactory: IPythonExecutionFactory) {
         this.uuids = new Map();
+
+        this.port = DEFAULT_TEST_PORT;
 
         const requestListener: http.RequestListener = async (request, response) => {
             const buffers = [];
@@ -44,7 +50,9 @@ export class PythonTestServer implements ITestServer, Disposable {
         };
 
         this.server = http.createServer(requestListener);
-        this.server.listen(port);
+        this.server.listen(() => {
+            this.port = (this.server.address() as net.AddressInfo).port;
+        });
     }
 
     public dispose(): void {

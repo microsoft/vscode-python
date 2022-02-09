@@ -29,7 +29,6 @@ import { TestProvider } from '../types';
 import { PythonTestServer } from './common/server';
 import { DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
 import { ITestController, ITestDiscoveryAdapter, ITestFrameworkController, TestRefreshOptions } from './common/types';
-import { DEFAULT_TEST_PORT } from './common/utils';
 import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
 import { WorkspaceTestAdapter } from './workspaceTestAdapter';
 
@@ -105,7 +104,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         );
         this.testController.resolveHandler = this.resolveChildren.bind(this);
 
-        this.pythonTestServer = new PythonTestServer(this.pythonExecFactory, DEFAULT_TEST_PORT);
+        this.pythonTestServer = new PythonTestServer(this.pythonExecFactory);
     }
 
     public async activate(): Promise<void> {
