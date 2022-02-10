@@ -62,6 +62,7 @@ def get_source_line(obj) -> str:
     for i, v in enumerate(sourcelines):
         if v.strip().startswith(("def", "async def")):
             return str(lineno + i)
+
     return "*"
 
 
