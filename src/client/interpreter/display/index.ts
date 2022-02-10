@@ -35,8 +35,8 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
     private readonly pathUtils: IPathUtils;
     private readonly interpreterService: IInterpreterService;
     private currentlySelectedInterpreterDisplay?: string;
+    private currentlySelectedInterpreterPath?: string;
     private currentlySelectedWorkspaceFolder: Resource;
-    private interpreterPath: string | undefined;
     private statusBarCanBeDisplayed?: boolean;
     private visibilityFilters: IInterpreterStatusbarVisibilityFilter[] = [];
     private disposableRegistry: Disposable[];
@@ -100,10 +100,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
         }
     }
     private onDidChangeInterpreterInformation(info: PythonEnvironment) {
-        if (
-            !this.currentlySelectedInterpreterDisplay ||
-            this.currentlySelectedInterpreterDisplay === info.detailedDisplayName
-        ) {
+        if (!this.currentlySelectedInterpreterPath || this.currentlySelectedInterpreterPath === info.path) {
             this.updateDisplay(this.currentlySelectedWorkspaceFolder).ignoreErrors();
         }
     }
@@ -120,13 +117,13 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
             if (interpreter) {
                 this.statusBar.color = '';
                 this.statusBar.tooltip = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath);
-                if (this.interpreterPath !== interpreter.path) {
+                if (this.currentlySelectedInterpreterPath !== interpreter.path) {
                     traceLog(
                         Interpreters.pythonInterpreterPath().format(
                             this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath),
                         ),
                     );
-                    this.interpreterPath = interpreter.path;
+                    this.currentlySelectedInterpreterPath = interpreter.path;
                 }
                 let text = interpreter.detailedDisplayName!;
                 if (this.experiments.inExperimentSync(InterpreterStatusBarPosition.Pinned)) {
@@ -143,13 +140,13 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
         } else if (this.languageStatus) {
             if (interpreter) {
                 this.languageStatus.detail = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath);
-                if (this.interpreterPath !== interpreter.path) {
+                if (this.currentlySelectedInterpreterPath !== interpreter.path) {
                     traceLog(
                         Interpreters.pythonInterpreterPath().format(
                             this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath),
                         ),
                     );
-                    this.interpreterPath = interpreter.path;
+                    this.currentlySelectedInterpreterPath = interpreter.path;
                 }
                 let text = interpreter.detailedDisplayName!;
                 text = text.startsWith('Python') ? text.substring('Python'.length).trim() : text;
