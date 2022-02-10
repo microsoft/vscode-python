@@ -10,6 +10,7 @@ import {
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
+import { traceLog } from '../../../logging';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { DEFAULT_TEST_PORT } from './utils';
 
@@ -30,22 +31,27 @@ export class PythonTestServer implements ITestServer, Disposable {
         const requestListener: http.RequestListener = async (request, response) => {
             const buffers = [];
 
-            for await (const chunk of request) {
-                buffers.push(chunk);
-            }
+            try {
+                for await (const chunk of request) {
+                    buffers.push(chunk);
+                }
 
-            const data = Buffer.concat(buffers).toString();
+                const data = Buffer.concat(buffers).toString();
 
-            response.end();
+                response.end();
 
-            const { uuid } = JSON.parse(data);
+                const { uuid } = JSON.parse(data);
 
-            // Check if the uuid we received exists in the list of active ones.
-            // If yes, process the response, if not, ignore it.
-            const cwd = this.uuids.get(uuid);
-            if (cwd) {
-                this._onDataReceived.fire({ cwd, data });
-                this.uuids.delete(uuid);
+                // Check if the uuid we received exists in the list of active ones.
+                // If yes, process the response, if not, ignore it.
+                const cwd = this.uuids.get(uuid);
+                if (cwd) {
+                    this._onDataReceived.fire({ cwd, data });
+                    this.uuids.delete(uuid);
+                }
+            } catch (ex) {
+                traceLog(`Error processing test server request: ${ex}`);
+                this._onDataReceived.fire({ cwd: '', data: '' });
             }
         };
 

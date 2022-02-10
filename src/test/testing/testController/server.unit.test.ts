@@ -9,6 +9,7 @@ import { OutputChannel, Uri } from 'vscode';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { PythonTestServer } from '../../../client/testing/testController/common/server';
+import * as logging from '../../../client/logging';
 
 suite('Python Test Server', () => {
     const fakeUuid = 'fake-uuid';
@@ -19,10 +20,12 @@ suite('Python Test Server', () => {
     let sandbox: sinon.SinonSandbox;
     let execArgs: string[];
     let v4Stub: sinon.SinonStub;
+    let traceLogStub: sinon.SinonStub;
 
     setup(() => {
         sandbox = sinon.createSandbox();
         v4Stub = sandbox.stub(uuid, 'v4');
+        traceLogStub = sandbox.stub(logging, 'traceLog');
 
         v4Stub.returns(fakeUuid);
         stubExecutionService = ({
@@ -143,6 +146,44 @@ suite('Python Test Server', () => {
         await deferred.promise;
 
         assert.deepStrictEqual(response, postData);
+    });
+    test('If the server receives malformed data, it should display a log message, and not fire an event', async () => {
+        const deferred = createDeferred();
+        const options = {
+            command: { script: 'myscript', args: ['-foo', 'foo'] },
+            workspaceFolder: Uri.file('/foo/bar'),
+            cwd: '/foo/bar',
+        };
+
+        let response;
+
+        server = new PythonTestServer(stubExecutionFactory);
+        server.onDataReceived(({ data }) => {
+            response = data;
+            deferred.resolve();
+        });
+
+        await server.sendCommand(options);
+
+        // Send data back.
+        const { port } = server;
+        const requestOptions = {
+            hostname: 'localhost',
+            method: 'POST',
+            port,
+        };
+
+        const request = http.request(requestOptions, (res) => {
+            res.setEncoding('utf8');
+        });
+        const postData = '[test';
+        request.write(postData);
+        request.end();
+
+        await deferred.promise;
+
+        sinon.assert.calledOnce(traceLogStub);
+        assert.deepStrictEqual(response, '');
     });
 
     test('If the server receives data, it should not fire an event if it is an unknown uuid', async () => {
