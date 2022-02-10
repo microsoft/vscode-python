@@ -9,7 +9,7 @@ import * as path from 'path';
 import { QuickPick, QuickPickItem, QuickPickItemKind } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands, Octicons } from '../../../../common/constants';
-import { arePathsSame, isParentPath } from '../../../../common/platform/fs-paths';
+import { isParentPath } from '../../../../common/platform/fs-paths';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
 import { getIcon } from '../../../../common/utils/icons';
@@ -22,7 +22,7 @@ import {
 } from '../../../../common/utils/multiStepInput';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
 import { REFRESH_BUTTON_ICON } from '../../../../debugger/extension/attachQuickPick/types';
-import { EnvironmentType, PythonEnvironment } from '../../../../pythonEnvironments/info';
+import { EnvironmentType } from '../../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { IInterpreterService, PythonEnvironmentsChangedEvent } from '../../../contracts';
@@ -65,12 +65,6 @@ export namespace EnvGroups {
     export const Recommended = Common.recommended();
 }
 
-function areEnvsSame(env1: PythonEnvironment, env2: PythonEnvironment) {
-    if (env1.envPath?.length && env2.envPath?.length) {
-        return arePathsSame(env1.envPath, env2.envPath);
-    }
-    return arePathsSame(env1.path, env2.path);
-}
 @injectable()
 export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     private readonly manualEntrySuggestion: ISpecialQuickPickItem = {
@@ -193,7 +187,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             itemsWithFullName,
             this.workspaceService.getWorkspaceFolder(resource)?.uri,
         );
-        if (recommended && areEnvsSame(items[0].interpreter, recommended.interpreter)) {
+        if (recommended && items[0].interpreter.id === recommended.interpreter.id) {
             items.shift();
         }
         return getGroupedQuickPickItems(items, recommended, workspaceFolder?.uri.fsPath);
@@ -247,7 +241,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         const activeItem = activeItemBeforeUpdate
             ? quickPick.items.find((item) => {
                   if (isInterpreterQuickPickItem(item) && isInterpreterQuickPickItem(activeItemBeforeUpdate)) {
-                      return areEnvsSame(item.interpreter, activeItemBeforeUpdate.interpreter);
+                      return item.interpreter.id === activeItemBeforeUpdate.interpreter.id;
                   }
                   if (isSpecialQuickPickItem(item) && isSpecialQuickPickItem(activeItemBeforeUpdate)) {
                       // 'label' is a constant here instead of 'path'.
@@ -273,7 +267,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         let envIndex = -1;
         if (env) {
             envIndex = updatedItems.findIndex(
-                (item) => isInterpreterQuickPickItem(item) && areEnvsSame(item.interpreter, env),
+                (item) => isInterpreterQuickPickItem(item) && item.interpreter.id === env.id,
             );
         }
         if (event.new) {
@@ -320,7 +314,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                   recommended.description
                 : `${recommended.description ?? ''} - ${Common.recommended()}`;
             const index = items.findIndex(
-                (item) => isInterpreterQuickPickItem(item) && areEnvsSame(item.interpreter, recommended.interpreter),
+                (item) => isInterpreterQuickPickItem(item) && item.interpreter.id === recommended.interpreter.id,
             );
             if (index !== -1) {
                 items[index] = recommended;

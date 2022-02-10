@@ -5,7 +5,13 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { uniq } from 'lodash';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, UNKNOWN_PYTHON_VERSION, virtualEnvKinds } from '../../info';
-import { buildEnvInfo, comparePythonVersionSpecificity, setEnvDisplayString, areSameEnv } from '../../info/env';
+import {
+    buildEnvInfo,
+    comparePythonVersionSpecificity,
+    setEnvDisplayString,
+    areSameEnv,
+    getEnvID,
+} from '../../info/env';
 import {
     getEnvironmentDirFromPath,
     getInterpreterPathFromDir,
@@ -52,6 +58,7 @@ export async function resolveBasicEnv(env: BasicEnvInfo): Promise<PythonEnvInfo>
         await updateEnvUsingRegistry(resolvedEnv);
     }
     setEnvDisplayString(resolvedEnv);
+    resolvedEnv.id = getEnvID(resolvedEnv);
     return resolvedEnv;
 }
 
