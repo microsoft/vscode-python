@@ -185,7 +185,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             this._pythonPathSetting = pySettings.pythonPath;
             this.didChangeInterpreterEmitter.fire();
             reportActiveInterpreterChanged({
-                path: pySettings.pythonPath === '' ? undefined : pySettings.pythonPath,
+                path: pySettings.pythonPath,
                 resource,
             });
         }

@@ -12,6 +12,7 @@ import { getKindDisplayName } from './envKind';
 import { areIdenticalVersion, areSimilarVersions, getVersionDisplayString, isVersionEmpty } from './pythonVersion';
 
 import {
+    EnvPathType,
     globallyInstalledEnvKinds,
     PythonEnvInfo,
     PythonEnvKind,
@@ -229,21 +230,22 @@ export function haveSameExecutables(envs1: PythonEnvInfo[], envs2: PythonEnvInfo
 }
 
 /**
- * Gets unique identifier for an environment. Note this should only be used after basic env info
- * is in it's final state i.e cannot be used when env info isn't complete.
+ * Returns path to environment folder or path to interpreter that uniquely identifies an environment.
  */
-export function getEnvID(env: Partial<PythonEnvInfo>): string {
-    const basicEnv = {
-        executablePath: env.executable?.filename ?? '',
-        envPath: env.location ?? '',
-    };
-    if (
-        basicEnv.envPath === '' ||
-        (basicEnv.executablePath.length && isParentPath(basicEnv.executablePath, basicEnv.envPath))
-    ) {
-        return normCasePath(basicEnv.executablePath);
+export function getEnvPath(interpreterPath: string, envFolderPath?: string): EnvPathType {
+    let envPath: EnvPathType = { path: interpreterPath, pathType: 'interpreterPath' };
+    if (envFolderPath && !isParentPath(interpreterPath, envFolderPath)) {
+        // Executable is not inside the environment folder, env folder is the ID.
+        envPath = { path: envFolderPath, pathType: 'envFolderPath' };
     }
-    return normCasePath(basicEnv.envPath);
+    return envPath;
+}
+
+/**
+ * Gets unique identifier for an environment.
+ */
+export function getEnvID(interpreterPath: string, envFolderPath?: string): string {
+    return normCasePath(getEnvPath(interpreterPath, envFolderPath).path);
 }
 
 /**
@@ -271,7 +273,7 @@ export function areSameEnv(
     const leftFilename = leftInfo.executable!.filename;
     const rightFilename = rightInfo.executable!.filename;
 
-    if (getEnvID(leftInfo) === getEnvID(rightInfo)) {
+    if (getEnvID(leftFilename, leftInfo.location) === getEnvID(rightFilename, rightInfo.location)) {
         return true;
     }
 

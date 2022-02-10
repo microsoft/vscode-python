@@ -4,6 +4,7 @@
 import { Event, Uri } from 'vscode';
 import { Resource } from './common/types';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './jupyter/types';
+import { EnvPathType } from './pythonEnvironments/base/info';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -87,38 +88,39 @@ export interface IExtensionApi {
     };
 }
 
-export interface InterpreterDetailsOptions {
+export interface EnvironmentDetailsOptions {
     useCache: boolean;
 }
 
-export interface InterpreterDetails {
-    path: string;
+export interface EnvironmentDetails {
+    interpreterPath: string;
+    envFolderPath?: string;
     version: string[];
     environmentType: string[];
     metadata: Record<string, unknown>;
 }
 
-export interface InterpretersChangedParams {
+export interface EnvironmentsChangedParams {
     /**
      * Path to environment folder or path to interpreter that uniquely identifies an environment.
-     * Virtual environments are identified by environment folder paths, whereas other envs can be
-     * identified using interpreter path.
+     * Virtual environments lacking an interpreter are identified by environment folder paths,
+     * whereas other envs can be identified using interpreter path.
      */
     path?: string;
     type: 'add' | 'remove' | 'update' | 'clear-all';
 }
 
-export interface ActiveInterpreterChangedParams {
+export interface ActiveEnvironmentChangedParams {
     /**
      * Path to environment folder or path to interpreter that uniquely identifies an environment.
-     * Virtual environments are identified by environment folder paths, whereas other envs can be
-     * identified using interpreter path.
+     * Virtual environments lacking an interpreter are identified by environment folder paths,
+     * whereas other envs can be identified using interpreter path.
      */
-    path?: string;
+    path: string;
     resource?: Uri;
 }
 
-export interface RefreshInterpretersOptions {
+export interface RefreshEnvironmentsOptions {
     clearCache?: boolean;
 }
 
@@ -132,57 +134,60 @@ export interface IProposedExtensionAPI {
          * returns what ever is set for the workspace.
          * @param resource : Uri of a file or workspace
          */
-        getActiveInterpreterPath(resource?: Resource): Promise<string | undefined>;
+        getActiveEnvironmentPath(resource?: Resource): Promise<EnvPathType | undefined>;
         /**
          * Returns details for the given interpreter. Details such as absolute interpreter path,
          * version, type (conda, pyenv, etc). Metadata such as `sysPrefix` can be found under
          * metadata field.
-         * @param interpreterPath : Path of the interpreter whose details you need.
+         * @param path : Path to environment folder or path to interpreter whose details you need.
          * @param options : [optional]
          *     * useCache : When true, cache is checked first for any data, returns even if there
          *                  is partial data.
          */
-        getInterpreterDetails(
-            interpreterPath: string,
-            options?: InterpreterDetailsOptions,
-        ): Promise<InterpreterDetails | undefined>;
+        getEnvironmentDetails(
+            path: string,
+            options?: EnvironmentDetailsOptions,
+        ): Promise<EnvironmentDetails | undefined>;
         /**
-         * Returns paths to interpreters found by the extension at the time of calling. This API
-         * will *not* trigger a refresh. If a refresh is going on it will *not* wait for the refresh
-         * to finish. This will return what is known so far. To get complete list `await` on promise
-         * returned by `getRefreshPromise()`.
+         * Returns paths to environments that uniquely identifies an environment found by the extension
+         * at the time of calling. This API will *not* trigger a refresh. If a refresh is going on it
+         * will *not* wait for the refresh to finish. This will return what is known so far. To get
+         * complete list `await` on promise returned by `getRefreshPromise()`.
+         *
+         * Virtual environments lacking an interpreter are identified by environment folder paths,
+         * whereas other envs can be identified using interpreter path.
          */
-        getInterpreterPaths(): Promise<string[] | undefined>;
+        getEnvironmentPaths(): Promise<EnvPathType[] | undefined>;
         /**
-         * Sets the active interpreter path for the python extension. Configuration target will
-         * always be the workspace.
-         * @param interpreterPath : Interpreter path to set for a given workspace.
+         * Sets the active environment path for the python extension. Configuration target will
+         * always be the workspace folder.
+         * @param path : Interpreter path to set for a given workspace.
          * @param resource : [optional] Uri of a file ro workspace to scope to a particular workspace
          *                   folder.
          */
-        setActiveInterpreter(interpreterPath: string, resource?: Resource): Promise<void>;
+        setActiveEnvironment(path: string, resource?: Resource): Promise<void>;
         /**
          * This API will re-trigger environment discovery. Extensions can wait on the returned
-         * promise to get the updated interpreters list. If there is a refresh already going on
+         * promise to get the updated environment list. If there is a refresh already going on
          * then it returns the promise for that refresh.
          * @param options : [optional]
          *     * clearCache : When true, this will clear the cache before interpreter refresh
          *                    is triggered.
          */
-        refreshInterpreters(options?: RefreshInterpretersOptions): Promise<string[] | undefined>;
+        refreshEnvironment(options?: RefreshEnvironmentsOptions): Promise<EnvPathType[] | undefined>;
         /**
          * Returns a promise for the ongoing refresh. Returns `undefined` if there are no active
          * refreshes going on.
          */
         getRefreshPromise(): Promise<void> | undefined;
         /**
-         * This event is triggered when the known interpreters list changes, like when a interpreter
-         * is found, existing interpreter is removed, or some details changed on an interpreter.
+         * This event is triggered when the known environment list changes, like when a environment
+         * is found, existing environment is removed, or some details changed on an environment.
          */
-        onDidInterpretersChanged: Event<InterpretersChangedParams[]>;
+        onDidEnvironmentsChanged: Event<EnvironmentsChangedParams[]>;
         /**
-         * This event is triggered when the active interpreter changes.
+         * This event is triggered when the active environment changes.
          */
-        onDidActiveInterpreterChanged: Event<ActiveInterpreterChangedParams>;
+        onDidActiveEnvironmentChanged: Event<ActiveEnvironmentChangedParams>;
     };
 }

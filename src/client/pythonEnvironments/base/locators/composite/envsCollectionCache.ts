@@ -6,7 +6,7 @@ import { traceInfo } from '../../../../logging';
 import { reportInterpretersChanged } from '../../../../proposedApi';
 import { arePathsSame, pathExists } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
-import { areSameEnv } from '../../info/env';
+import { areSameEnv, getEnvPath } from '../../info/env';
 import {
     BasicPythonEnvCollectionChangedEvent,
     PythonEnvCollectionChangedEvent,
@@ -93,7 +93,9 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         invalidIndexes.forEach((index) => {
             const env = this.envs.splice(index, 1)[0];
             this.fire({ old: env, new: undefined });
-            reportInterpretersChanged([{ path: env.executable.filename, type: 'remove' }]);
+            reportInterpretersChanged([
+                { path: getEnvPath(env.executable.filename, env.location).path, type: 'remove' },
+            ]);
         });
     }
 
@@ -109,7 +111,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             }
             this.envs.push(env);
             this.fire({ new: env });
-            reportInterpretersChanged([{ path: env.executable.filename, type: 'add' }]);
+            reportInterpretersChanged([{ path: getEnvPath(env.executable.filename, env.location).path, type: 'add' }]);
         }
     }
 
@@ -122,7 +124,12 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
                 this.envs[index] = newValue;
             }
             this.fire({ old: oldValue, new: newValue });
-            reportInterpretersChanged([{ path: oldValue.executable.filename, type: newValue ? 'update' : 'remove' }]);
+            reportInterpretersChanged([
+                {
+                    path: getEnvPath(oldValue.executable.filename, oldValue.location).path,
+                    type: newValue ? 'update' : 'remove',
+                },
+            ]);
         }
     }
 

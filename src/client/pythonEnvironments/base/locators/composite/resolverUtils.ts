@@ -58,7 +58,7 @@ export async function resolveBasicEnv(env: BasicEnvInfo): Promise<PythonEnvInfo>
         await updateEnvUsingRegistry(resolvedEnv);
     }
     setEnvDisplayString(resolvedEnv);
-    resolvedEnv.id = getEnvID(resolvedEnv);
+    resolvedEnv.id = getEnvID(resolvedEnv.executable.filename, resolvedEnv.location);
     return resolvedEnv;
 }
 

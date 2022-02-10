@@ -4,7 +4,7 @@
 import * as typemoq from 'typemoq';
 import { expect } from 'chai';
 import { ConfigurationTarget, Uri } from 'vscode';
-import { InterpreterDetails, IProposedExtensionAPI } from '../client/apiTypes';
+import { EnvironmentDetails, IProposedExtensionAPI } from '../client/apiTypes';
 import { IConfigurationService, IInterpreterPathService, IPythonSettings } from '../client/common/types';
 import { IComponentAdapter } from '../client/interpreter/contracts';
 import { IServiceContainer } from '../client/ioc/types';
@@ -42,7 +42,7 @@ suite('Proposed Extension API', () => {
         configService
             .setup((c) => c.getSettings(undefined))
             .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
-        const actual = await proposed.environment.getActiveInterpreterPath();
+        const actual = await proposed.environment.getActiveEnvironmentPath();
         expect(actual).to.be.equals(pythonPath);
     });
     test('getActiveInterpreterPath: With resource', async () => {
@@ -51,7 +51,7 @@ suite('Proposed Extension API', () => {
         configService
             .setup((c) => c.getSettings(resource))
             .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
-        const actual = await proposed.environment.getActiveInterpreterPath(resource);
+        const actual = await proposed.environment.getActiveEnvironmentPath(resource);
         expect(actual).to.be.equals(pythonPath);
     });
 
@@ -60,7 +60,7 @@ suite('Proposed Extension API', () => {
         pyenvs.setup((p) => p.getInterpreterDetails(typemoq.It.isAny())).returns(() => Promise.resolve(undefined));
 
         const pythonPath = 'this/is/a/test/path (without cache)';
-        const actual = await proposed.environment.getInterpreterDetails(pythonPath);
+        const actual = await proposed.environment.getEnvironmentDetails(pythonPath);
         expect(actual).to.be.equal(undefined);
     });
 
@@ -69,15 +69,15 @@ suite('Proposed Extension API', () => {
         pyenvs.setup((p) => p.getInterpreterDetails(typemoq.It.isAny())).returns(() => Promise.resolve(undefined));
 
         const pythonPath = 'this/is/a/test/path';
-        const actual = await proposed.environment.getInterpreterDetails(pythonPath, { useCache: true });
+        const actual = await proposed.environment.getEnvironmentDetails(pythonPath, { useCache: true });
         expect(actual).to.be.equal(undefined);
     });
 
     test('getInterpreterDetails: without cache', async () => {
         const pythonPath = 'this/is/a/test/path';
 
-        const expected: InterpreterDetails = {
-            path: pythonPath,
+        const expected: EnvironmentDetails = {
+            interpreterPath: pythonPath,
             version: ['3', '9', '0'],
             environmentType: [`${EnvironmentType.System}`],
             metadata: {
@@ -106,15 +106,15 @@ suite('Proposed Extension API', () => {
                 }),
             );
 
-        const actual = await proposed.environment.getInterpreterDetails(pythonPath, { useCache: false });
+        const actual = await proposed.environment.getEnvironmentDetails(pythonPath, { useCache: false });
         expect(actual).to.be.deep.equal(expected);
     });
 
     test('getInterpreterDetails: from cache', async () => {
         const pythonPath = 'this/is/a/test/path';
 
-        const expected: InterpreterDetails = {
-            path: pythonPath,
+        const expected: EnvironmentDetails = {
+            interpreterPath: pythonPath,
             version: ['3', '9', '0'],
             environmentType: [`${PythonEnvKind.System}`],
             metadata: {
@@ -167,15 +167,15 @@ suite('Proposed Extension API', () => {
                 }),
             );
 
-        const actual = await proposed.environment.getInterpreterDetails(pythonPath, { useCache: true });
+        const actual = await proposed.environment.getEnvironmentDetails(pythonPath, { useCache: true });
         expect(actual).to.be.deep.equal(expected);
     });
 
     test('getInterpreterDetails: cache miss', async () => {
         const pythonPath = 'this/is/a/test/path';
 
-        const expected: InterpreterDetails = {
-            path: pythonPath,
+        const expected: EnvironmentDetails = {
+            interpreterPath: pythonPath,
             version: ['3', '9', '0'],
             environmentType: [`${EnvironmentType.System}`],
             metadata: {
@@ -205,13 +205,13 @@ suite('Proposed Extension API', () => {
                 }),
             );
 
-        const actual = await proposed.environment.getInterpreterDetails(pythonPath, { useCache: true });
+        const actual = await proposed.environment.getEnvironmentDetails(pythonPath, { useCache: true });
         expect(actual).to.be.deep.equal(expected);
     });
 
     test('getInterpreterPaths: no pythons found', async () => {
         discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
-        const actual = await proposed.environment.getInterpreterPaths();
+        const actual = await proposed.environment.getEnvironmentPaths();
         expect(actual).to.be.deep.equal([]);
     });
 
@@ -262,7 +262,7 @@ suite('Proposed Extension API', () => {
                     },
                 },
             ]);
-        const actual = await proposed.environment.getInterpreterPaths();
+        const actual = await proposed.environment.getEnvironmentPaths();
         expect(actual).to.be.deep.equal(['this/is/a/test/python/path1', 'this/is/a/test/python/path2']);
     });
 
@@ -272,7 +272,7 @@ suite('Proposed Extension API', () => {
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
-        await proposed.environment.setActiveInterpreter('this/is/a/test/python/path');
+        await proposed.environment.setActiveEnvironment('this/is/a/test/python/path');
 
         interpreterPathService.verifyAll();
     });
@@ -283,7 +283,7 @@ suite('Proposed Extension API', () => {
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
-        await proposed.environment.setActiveInterpreter('this/is/a/test/python/path', resource);
+        await proposed.environment.setActiveEnvironment('this/is/a/test/python/path', resource);
 
         interpreterPathService.verifyAll();
     });
@@ -340,7 +340,7 @@ suite('Proposed Extension API', () => {
                 },
             ]);
 
-        const actual = await proposed.environment.refreshInterpreters();
+        const actual = await proposed.environment.refreshEnvironment();
         expect(actual).to.be.deep.equal(['this/is/a/test/python/path1', 'this/is/a/test/python/path2']);
         discoverAPI.verifyAll();
     });

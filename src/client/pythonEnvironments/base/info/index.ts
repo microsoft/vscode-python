@@ -28,6 +28,16 @@ export enum PythonEnvKind {
     OtherVirtual = 'virt-other',
 }
 
+export interface EnvPathType {
+    /**
+     * Path to environment folder or path to interpreter that uniquely identifies an environment.
+     * Virtual environments lacking an interpreter are identified by environment folder paths,
+     * whereas other envs can be identified using interpreter path.
+     */
+    path: string;
+    pathType: 'envFolderPath' | 'interpreterPath';
+}
+
 export const virtualEnvKinds = [
     PythonEnvKind.Poetry,
     PythonEnvKind.Pipenv,
