@@ -5,7 +5,6 @@ import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { getArchitectureDisplayName } from '../../../common/platform/registry';
-import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame, isParentPath, normCasePath } from '../../common/externalDependencies';
 import { getKindDisplayName } from './envKind';
@@ -168,17 +167,6 @@ function buildEnvDisplayString(env: PythonEnvInfo, getAllDetails = false): strin
 }
 
 /**
- * Determine the corresponding Python executable filename, if any.
- */
-export function getEnvExecutable(env: string | Partial<PythonEnvInfo>): string {
-    const executable = typeof env === 'string' ? env : env.executable?.filename || '';
-    if (executable === '') {
-        return '';
-    }
-    return normalizeFilename(executable);
-}
-
-/**
  * For the given data, build a normalized partial info object.
  *
  * If insufficient data is provided to generate a minimal object, such
@@ -212,21 +200,6 @@ function getMinimalPartialInfo(env: string | PythonEnvInfo | BasicEnvInfo): Part
         };
     }
     return env;
-}
-
-/**
- * Decide if the two sets of executables for the given envs are the same.
- */
-export function haveSameExecutables(envs1: PythonEnvInfo[], envs2: PythonEnvInfo[]): boolean {
-    if (envs1.length !== envs2.length) {
-        return false;
-    }
-    const executables1 = envs1.map(getEnvExecutable);
-    const executables2 = envs2.map(getEnvExecutable);
-    if (!executables2.every((e) => executables1.includes(e))) {
-        return false;
-    }
-    return true;
 }
 
 /**

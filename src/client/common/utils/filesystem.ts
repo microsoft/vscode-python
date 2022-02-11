@@ -2,23 +2,8 @@
 // Licensed under the MIT License.
 
 import * as fs from 'fs';
-import * as path from 'path';
 import * as vscode from 'vscode';
 import { traceError } from '../../logging';
-import { getOSType, OSType } from './platform';
-
-/**
- * Produce a uniform representation of the given filename.
- *
- * The result is especially suitable for cases where a filename is used
- * as a key (e.g. in a mapping).
- */
-export function normalizeFilename(filename: string): string {
-    // `path.resolve()` returns the absolute path.  Note that it also
-    // has the same behavior as `path.normalize()`.
-    const resolved = path.resolve(filename);
-    return getOSType() === OSType.Windows ? resolved.toLowerCase() : resolved;
-}
 
 export import FileType = vscode.FileType;
 

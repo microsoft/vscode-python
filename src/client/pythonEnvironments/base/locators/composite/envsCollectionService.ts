@@ -8,6 +8,7 @@ import { StopWatch } from '../../../../common/utils/stopWatch';
 import { traceError } from '../../../../logging';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
+import { normalizePath } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
 import { IDiscoveryAPI, IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from '../../locator';
 import { getQueryFilter } from '../../locatorUtils';
@@ -56,6 +57,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     }
 
     public async resolveEnv(path: string): Promise<PythonEnvInfo | undefined> {
+        path = normalizePath(path);
         // Note cache may have incomplete info when a refresh is happening.
         // This API is supposed to return complete info by definition, so
         // only use cache if it has complete info on an environment.

@@ -7,7 +7,6 @@ import * as vscode from 'vscode';
 import { ExecutionResult, IProcessServiceFactory, ShellOptions, SpawnOptions } from '../../common/process/types';
 import { IDisposable, IConfigurationService } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
-import { normalizeFilename } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 
@@ -70,7 +69,9 @@ export async function isDirectory(filename: string): Promise<boolean> {
 }
 
 export function normalizePath(filename: string): string {
-    return normalizeFilename(filename);
+    // `path.resolve()` returns the absolute path.  Note that it also
+    // has the same behavior as `path.normalize()`.
+    return path.resolve(filename);
 }
 
 export function resolvePath(filename: string): string {
