@@ -12,9 +12,11 @@ import {
     FSWatchingLocator,
 } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/fsWatchingLocator';
 import * as binWatcher from '../../../../../client/pythonEnvironments/common/pythonBinariesWatcher';
+import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 
 suite('File System Watching Locator Tests', () => {
-    const baseDir = '/this/is/a/fake/path';
+    const baseDir = TEST_LAYOUT_ROOT;
+    const fakeDir = '/this/is/a/fake/path';
     const callback = async () => Promise.resolve(PythonEnvKind.System);
     let watchLocationStub: sinon.SinonStub;
 
@@ -34,7 +36,7 @@ suite('File System Watching Locator Tests', () => {
                 envStructure?: binWatcher.PythonEnvStructure;
             } = {},
         ) {
-            super(() => baseDir, callback, opts, watcherKind);
+            super(() => [baseDir, fakeDir], callback, opts, watcherKind);
         }
 
         public async initialize() {
@@ -95,6 +97,11 @@ suite('File System Watching Locator Tests', () => {
                         assert.strictEqual(watchLocationStub.callCount, expected.length);
                         expected.forEach((glob) => {
                             assert.ok(watchLocationStub.calledWithMatch(baseDir, sinon.match.any, glob));
+                            assert.strictEqual(
+                                // As directory does not exist, it should not be watched.
+                                watchLocationStub.calledWithMatch(fakeDir, sinon.match.any, glob),
+                                false,
+                            );
                         });
                     } else if (watcherKind === FSWatcherKind.Global) {
                         assert.ok(watchLocationStub.notCalled);
