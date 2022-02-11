@@ -4,7 +4,7 @@
 import { Event, Uri } from 'vscode';
 import { Resource } from './common/types';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './jupyter/types';
-import { EnvPathType } from './pythonEnvironments/base/info';
+import { EnvPathType, PythonEnvKind } from './pythonEnvironments/base/info';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -96,7 +96,7 @@ export interface EnvironmentDetails {
     interpreterPath: string;
     envFolderPath?: string;
     version: string[];
-    environmentType: string[];
+    environmentType: PythonEnvKind[];
     metadata: Record<string, unknown>;
 }
 

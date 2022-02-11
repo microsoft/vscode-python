@@ -78,7 +78,7 @@ export function buildProposedApi(
                     interpreterPath: env.executable.filename,
                     envFolderPath: env.location,
                     version: getVersionString(env),
-                    environmentType: [`${env.kind}`],
+                    environmentType: [env.kind],
                     metadata: {
                         sysPrefix: env.executable.sysPrefix,
                         bitness: env.arch,
