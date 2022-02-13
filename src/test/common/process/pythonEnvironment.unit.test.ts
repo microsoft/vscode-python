@@ -291,17 +291,8 @@ suite('CondaEnvironment', () => {
 
         expect(result).to.deep.equal({
             command: condaFile,
-            args: ['run', '-n', condaInfo.name, '--no-capture-output', '--', 'python', OUTPUT_MARKER_SCRIPT, ...args],
-            python: [
-                condaFile,
-                'run',
-                '-n',
-                condaInfo.name,
-                '--no-capture-output',
-                '--',
-                'python',
-                OUTPUT_MARKER_SCRIPT,
-            ],
+            args: ['run', '-n', condaInfo.name, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT, ...args],
+            python: [condaFile, 'run', '-n', condaInfo.name, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT],
             pythonExecutable: pythonPath,
         });
     });
@@ -314,17 +305,8 @@ suite('CondaEnvironment', () => {
 
         expect(result).to.deep.equal({
             command: condaFile,
-            args: ['run', '-p', condaInfo.path, '--no-capture-output', '--', 'python', OUTPUT_MARKER_SCRIPT, ...args],
-            python: [
-                condaFile,
-                'run',
-                '-p',
-                condaInfo.path,
-                '--no-capture-output',
-                '--',
-                'python',
-                OUTPUT_MARKER_SCRIPT,
-            ],
+            args: ['run', '-p', condaInfo.path, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT, ...args],
+            python: [condaFile, 'run', '-p', condaInfo.path, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT],
             pythonExecutable: pythonPath,
         });
     });
@@ -333,17 +315,8 @@ suite('CondaEnvironment', () => {
         const condaInfo = { name: 'foo', path: 'bar' };
         const expected = {
             command: condaFile,
-            args: ['run', '-n', condaInfo.name, '--no-capture-output', '--', 'python', OUTPUT_MARKER_SCRIPT, ...args],
-            python: [
-                condaFile,
-                'run',
-                '-n',
-                condaInfo.name,
-                '--no-capture-output',
-                '--',
-                'python',
-                OUTPUT_MARKER_SCRIPT,
-            ],
+            args: ['run', '-n', condaInfo.name, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT, ...args],
+            python: [condaFile, 'run', '-n', condaInfo.name, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT],
             pythonExecutable: pythonPath,
         };
         const env = await createCondaEnv(condaInfo, pythonPath, processService.object, fileSystem.object);
@@ -357,17 +330,8 @@ suite('CondaEnvironment', () => {
         const condaInfo = { name: '', path: 'bar' };
         const expected = {
             command: condaFile,
-            args: ['run', '-p', condaInfo.path, '--no-capture-output', '--', 'python', OUTPUT_MARKER_SCRIPT, ...args],
-            python: [
-                condaFile,
-                'run',
-                '-p',
-                condaInfo.path,
-                '--no-capture-output',
-                '--',
-                'python',
-                OUTPUT_MARKER_SCRIPT,
-            ],
+            args: ['run', '-p', condaInfo.path, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT, ...args],
+            python: [condaFile, 'run', '-p', condaInfo.path, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT],
             pythonExecutable: pythonPath,
         };
         const env = await createCondaEnv(condaInfo, pythonPath, processService.object, fileSystem.object);
