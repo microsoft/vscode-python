@@ -161,7 +161,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                             '-n',
                             interpreter.envName,
                             '--no-capture-output',
-                            '--live-stream',
+                            '--',
                             'python',
                         ];
                     } else if (interpreter.envPath) {
@@ -171,7 +171,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                             '-p',
                             interpreter.envPath,
                             '--no-capture-output',
-                            '--live-stream',
+                            '--',
                             'python',
                         ];
                     }
