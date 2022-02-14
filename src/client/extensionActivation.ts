@@ -189,25 +189,25 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
                     if (editor) {
                         if (editor.selection.isEmpty) {
                             return shell.showErrorMessage('Please Select Text before Extracting a Method');
+                        }
+                        const { selection } = editor;
+                        const { document } = editor;
+                        const text = document.getText(selection);
+                        const position = selection.start;
+                        const edit = new WorkspaceEdit();
+                        const methodName = await window.showInputBox({ prompt: 'Enter Method Name' });
+                        if (methodName) {
+                            const newText = `def ${methodName}():\n\t${text}`;
+                            edit.delete(document.uri, selection);
+                            edit.insert(document.uri, position, newText);
+                            await workspace.applyEdit(edit);
                         } else {
-                            const selection = editor.selection;
-                            const document = editor.document;
-                            const text = document.getText(selection);
-                            const position = selection.start;
-                            const edit = new WorkspaceEdit();
-                            const methodName = await window.showInputBox({ prompt: 'Enter Method Name' });
-                            if (methodName) {
-                                const newText = `def ${methodName}():\n\t${text}`;
-                                edit.delete(document.uri, selection);
-                                edit.insert(document.uri, position, newText);
-                                await workspace.applyEdit(edit);
-                            } else {
-                                return shell.showErrorMessage('Method Name is Required');
-                            }
+                            return shell.showErrorMessage('Method Name is Required');
                         }
                     } else {
                         return shell.showErrorMessage('Open an Active Editor before Extracting a Method');
                     }
+                    return undefined;
                 }),
             );
 
