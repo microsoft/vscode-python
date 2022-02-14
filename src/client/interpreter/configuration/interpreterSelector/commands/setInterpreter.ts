@@ -119,7 +119,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             items: suggestions,
             sortByLabel: !preserveOrderWhenFiltering,
             keepScrollPosition: true,
-            activeItem: this.getActiveItem(state.workspace, suggestions),
+            activeItem: await this.getActiveItem(state.workspace, suggestions),
             matchOnDetail: true,
             matchOnDescription: true,
             title: InterpreterQuickPickList.browsePath.openButtonLabel(),
@@ -193,13 +193,13 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         return getGroupedQuickPickItems(items, recommended, workspaceFolder?.uri.fsPath);
     }
 
-    private getActiveItem(resource: Resource, suggestions: QuickPickType[]) {
-        const currentPythonPath = this.configurationService.getSettings(resource).pythonPath;
-        const activeInterpreter = suggestions.filter(
-            (i) => isInterpreterQuickPickItem(i) && i.path === currentPythonPath,
+    private async getActiveItem(resource: Resource, suggestions: QuickPickType[]) {
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        const activeInterpreterItem = suggestions.find(
+            (i) => isInterpreterQuickPickItem(i) && i.interpreter.id === interpreter?.id,
         );
-        if (activeInterpreter.length > 0) {
-            return activeInterpreter[0];
+        if (activeInterpreterItem) {
+            return activeInterpreterItem;
         }
         const firstInterpreterSuggestion = suggestions.find((s) => isInterpreterQuickPickItem(s));
         if (firstInterpreterSuggestion) {
