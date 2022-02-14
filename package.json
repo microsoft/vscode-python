@@ -72,6 +72,7 @@
         "onCommand:python.setShebangInterpreter",
         "onCommand:python.viewLanguageServerOutput",
         "onCommand:python.viewOutput",
+        "onCommand:python.extractMethod",
         "onCommand:python.execSelectionInTerminal",
         "onCommand:python.execSelectionInDjangoShell",
         "onCommand:python.startREPL",
@@ -487,6 +488,11 @@
                     "light": "resources/light/repl.svg"
                 },
                 "title": "%python.command.python.viewOutput.title%"
+            },
+            {
+                "category": "Python",
+                "command": "python.extractMethod",
+                "title": "Extract Method"
             }
         ],
         "configuration": {
@@ -1809,6 +1815,12 @@
                     "category": "Python",
                     "command": "python.viewOutput",
                     "title": "%python.command.python.viewOutput.title%",
+                    "when": "!virtualWorkspace && shellExecutionSupported"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.extractMethod",
+                    "title": "Extract Method",
                     "when": "!virtualWorkspace && shellExecutionSupported"
                 }
             ],

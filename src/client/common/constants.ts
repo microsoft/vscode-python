@@ -47,6 +47,7 @@ export namespace Commands {
     export const Test_Stop_Refreshing = 'python.stopRefreshingTests';
     export const Sort_Imports = 'python.sortImports';
     export const ViewOutput = 'python.viewOutput';
+    export const ExtractMethod = 'python.extractMethod';
     export const Start_REPL = 'python.startREPL';
     export const Create_Terminal = 'python.createTerminal';
     export const Set_Linter = 'python.setLinter';

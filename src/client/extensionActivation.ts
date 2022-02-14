@@ -3,13 +3,27 @@
 
 'use strict';
 
-import { CodeActionKind, debug, DebugConfigurationProvider, languages, OutputChannel, window } from 'vscode';
+import {
+    CodeActionKind,
+    debug,
+    DebugConfigurationProvider,
+    languages,
+    OutputChannel,
+    window,
+    workspace,
+    WorkspaceEdit,
+} from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
-import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './common/application/types';
+import {
+    IApplicationEnvironment,
+    IApplicationShell,
+    ICommandManager,
+    IWorkspaceService,
+} from './common/application/types';
 import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
@@ -82,6 +96,24 @@ export async function activateComponents(
     return Promise.all([legacyActivationResult, ...promises]);
 }
 
+// function UriToFileChanges(uri: any): vscode.TextEdit[] {
+//     const result: vscode.TextEdit[] = [];
+//     for (const edit of uri) {
+//         result.push(new vscode.TextEdit(new vscode.Range(edit.range.start, edit.range.end), edit.newText));
+//     }
+//     return result;
+// }
+
+// function WorkspaceEditToVSCodeEdit(workspaceEdit: any): vscode.WorkspaceEdit {
+//     const result: any = {
+//         changes: {},
+//     };
+//     for (const key of Object.keys(workspaceEdit)) {
+//         result.changes[key] = UriToFileChanges(workspaceEdit.changes[key]);
+//     }
+//     return result;
+// }
+
 /// //////////////////////////
 // old activation code
 
@@ -149,6 +181,35 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
             const outputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
             disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
             cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
+
+            disposables.push(
+                cmdManager.registerCommand(Commands.ExtractMethod, async () => {
+                    const editor = window.activeTextEditor;
+                    const shell: IApplicationShell = serviceManager.get<IApplicationShell>(IApplicationShell);
+                    if (editor) {
+                        if (editor.selection.isEmpty) {
+                            return shell.showErrorMessage('Please Select Text before Extracting a Method');
+                        } else {
+                            const selection = editor.selection;
+                            const document = editor.document;
+                            const text = document.getText(selection);
+                            const position = selection.start;
+                            const edit = new WorkspaceEdit();
+                            const methodName = await window.showInputBox({ prompt: 'Enter Method Name' });
+                            if (methodName) {
+                                const newText = `def ${methodName}():\n\t${text}`;
+                                edit.delete(document.uri, selection);
+                                edit.insert(document.uri, position, newText);
+                                await workspace.applyEdit(edit);
+                            } else {
+                                return shell.showErrorMessage('Method Name is Required');
+                            }
+                        }
+                    } else {
+                        return shell.showErrorMessage('Open an Active Editor before Extracting a Method');
+                    }
+                }),
+            );
 
             serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
 

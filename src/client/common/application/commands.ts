@@ -33,6 +33,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
     [Commands.ViewOutput]: [];
+    [Commands.ExtractMethod]: [];
     [Commands.Set_Linter]: [];
     [Commands.Start_REPL]: [];
     [Commands.Enable_SourceMap_Support]: [];
