@@ -80,6 +80,8 @@ export class LanguageClientMiddlewareBase implements Middleware {
                     const uri = item.scopeUri ? Uri.parse(item.scopeUri) : undefined;
                     // For backwards compatibility, set python.pythonPath to the configured
                     // value as though it were in the user's settings.json file.
+                    // As this is for backwards compatibility, `ConfigService.pythonPath`
+                    // can be considered as active interpreter path.
                     settings[i].pythonPath = configService.getSettings(uri).pythonPath;
 
                     const env = await envService.getEnvironmentVariables(uri);
