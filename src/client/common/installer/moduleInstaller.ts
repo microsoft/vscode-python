@@ -15,6 +15,7 @@ import { wrapCancellationTokens } from '../cancellation';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from '../process/internal/python';
+import { IPythonExecutionFactory } from '../process/types';
 import { ITerminalServiceFactory, TerminalCreationOptions } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel, Product } from '../types';
 import { Products } from '../utils/localize';
@@ -60,12 +61,24 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
                 const settings = configService.getSettings(uri);
 
+                const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(
+                    IPythonExecutionFactory,
+                );
                 const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
                 const interpreter = isResource(resource)
                     ? await interpreterService.getActiveInterpreter(resource)
                     : resource;
-                const pythonPath = isResource(resource) ? settings.pythonPath : resource.path;
-                const args = internalPython.execModule(executionInfo.moduleName, executionInfoArgs);
+                let pythonPath: string;
+                let pythonArgs: string[] = [];
+                if (isResource(resource)) {
+                    const execInfo = (await pythonExecutionFactory.create({ resource })).getExecutionInfo();
+                    pythonArgs = execInfo.args;
+                    pythonPath = execInfo.command;
+                } else {
+                    pythonPath = resource.path;
+                }
+                const installArgs = internalPython.execModule(executionInfo.moduleName, executionInfoArgs);
+                const args = [...pythonArgs, ...installArgs];
                 if (!interpreter || interpreter.envType !== EnvironmentType.Unknown) {
                     await terminalService.sendCommand(pythonPath, args, token);
                 } else if (settings.globalModuleInstallation) {
