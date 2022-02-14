@@ -96,24 +96,6 @@ export async function activateComponents(
     return Promise.all([legacyActivationResult, ...promises]);
 }
 
-// function UriToFileChanges(uri: any): vscode.TextEdit[] {
-//     const result: vscode.TextEdit[] = [];
-//     for (const edit of uri) {
-//         result.push(new vscode.TextEdit(new vscode.Range(edit.range.start, edit.range.end), edit.newText));
-//     }
-//     return result;
-// }
-
-// function WorkspaceEditToVSCodeEdit(workspaceEdit: any): vscode.WorkspaceEdit {
-//     const result: any = {
-//         changes: {},
-//     };
-//     for (const key of Object.keys(workspaceEdit)) {
-//         result.changes[key] = UriToFileChanges(workspaceEdit.changes[key]);
-//     }
-//     return result;
-// }
-
 /// //////////////////////////
 // old activation code
 
