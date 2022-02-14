@@ -8,6 +8,7 @@ import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
+import { IInterpreterService } from '../../../../interpreter/contracts';
 import { AttachRequestArguments, DebugOptions, PathMapping } from '../../../types';
 import { BaseConfigurationResolver } from './base';
 
@@ -18,8 +19,9 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(IPlatformService) platformService: IPlatformService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
+        @inject(IInterpreterService) interpreterService: IInterpreterService,
     ) {
-        super(workspaceService, documentManager, platformService, configurationService);
+        super(workspaceService, documentManager, platformService, configurationService, interpreterService);
     }
 
     public async resolveDebugConfigurationWithSubstitutedVariables(
