@@ -1,18 +1,18 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CodeLens, Command, Event, Position, Range, TextDocument, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
+import { arePathsSame } from '../../common/platform/fs-paths';
 import { IPlatformService } from '../../common/platform/types';
 import * as internalPython from '../../common/process/internal/python';
 import { IProcessServiceFactory } from '../../common/process/types';
-import { IConfigurationService } from '../../common/types';
-import { IShebangCodeLensProvider } from '../contracts';
+import { IInterpreterService, IShebangCodeLensProvider } from '../contracts';
 
 @injectable()
 export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
     public readonly onDidChangeCodeLenses: Event<void>;
     constructor(
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
     ) {
@@ -65,9 +65,8 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
         if (!shebang) {
             return [];
         }
-        const pythonPath = this.configurationService.getSettings(document.uri).pythonPath;
-        const resolvedPythonPath = await this.getFullyQualifiedPathToInterpreter(pythonPath, document.uri);
-        if (shebang === resolvedPythonPath) {
+        const interpreter = await this.interpreterService.getActiveInterpreter(document.uri);
+        if (interpreter && arePathsSame(shebang, interpreter.path)) {
             return [];
         }
         const firstLine = document.lineAt(0);
