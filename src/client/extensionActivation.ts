@@ -189,7 +189,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
                         } else if (editor.selection.start.line !== editor.selection.end.line) {
                             const { selection } = editor;
                             const { document } = editor;
-                            var text = document.getText(selection);
+                            let text = document.getText(selection);
                             const position = selection.start;
                             const edit = new WorkspaceEdit();
                             const methodName = await window.showInputBox({ prompt: 'Enter Method Name' });
