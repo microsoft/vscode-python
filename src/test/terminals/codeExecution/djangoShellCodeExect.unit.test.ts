@@ -57,6 +57,7 @@ suite('Terminal - Django Shell Code Execution', () => {
             commandManager.object,
             fileSystem.object,
             disposables,
+            pythonExecutionFactory.object,
         );
 
         terminalFactory.setup((f) => f.getTerminalService(TypeMoq.It.isAny())).returns(() => terminalService.object);

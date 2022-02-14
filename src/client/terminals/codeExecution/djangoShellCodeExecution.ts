@@ -9,6 +9,7 @@ import { Disposable, Uri } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { copyPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
@@ -26,8 +27,16 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
+        @inject(IPythonExecutionFactory) pythonExecutionFactory: IPythonExecutionFactory,
     ) {
-        super(terminalServiceFactory, configurationService, workspace, disposableRegistry, platformService);
+        super(
+            terminalServiceFactory,
+            configurationService,
+            workspace,
+            disposableRegistry,
+            platformService,
+            pythonExecutionFactory,
+        );
         this.terminalTitle = 'Django Shell';
         disposableRegistry.push(new DjangoContextInitializer(documentManager, workspace, fileSystem, commandManager));
     }

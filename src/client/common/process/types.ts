@@ -65,6 +65,7 @@ export const IPythonExecutionFactory = Symbol('IPythonExecutionFactory');
 export type ExecutionFactoryCreationOptions = {
     resource?: Uri;
     pythonPath?: string;
+    executionInTerminal?: boolean;
 };
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
