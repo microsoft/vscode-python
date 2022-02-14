@@ -38,6 +38,7 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
             program: program || defaultProgram,
             args: ['runserver'],
             django: true,
+            justMyCode: true,
         };
         if (!program) {
             const selectedProgram = await input.showInputBox({

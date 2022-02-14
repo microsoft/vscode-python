@@ -31,6 +31,7 @@ export class FastAPILaunchDebugConfigurationProvider implements IDebugConfigurat
             module: 'uvicorn',
             args: ['main:app'],
             jinja: true,
+            justMyCode: true,
         };
 
         if (!application) {

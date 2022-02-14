@@ -25,8 +25,8 @@ suite('Debugging - Configuration Provider File', () => {
             name: DebugConfigStrings.attachPid.snippet.name(),
             type: DebuggerTypeName,
             request: 'attach',
-
             processId: '${command:pickProcess}',
+            justMyCode: true,
         };
 
         expect(state.config).to.be.deep.equal(config);

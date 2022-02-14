@@ -40,6 +40,7 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
             args: [iniPath || defaultIni],
             pyramid: true,
             jinja: true,
+            justMyCode: true,
         };
 
         if (!iniPath) {

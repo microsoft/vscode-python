@@ -25,9 +25,9 @@ suite('Debugging - Configuration Provider File', () => {
             name: DebugConfigStrings.file.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
-
             program: '${file}',
             console: 'integratedTerminal',
+            justMyCode: true,
         };
 
         expect(state.config).to.be.deep.equal(config);

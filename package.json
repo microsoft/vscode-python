@@ -1210,7 +1210,7 @@
                             },
                             "justMyCode": {
                                 "default": true,
-                                "description": "Debug only user-written code.",
+                                "description": "If true, show and debug only user-written code. If false, show and debug all code, including library calls.",
                                 "type": "boolean"
                             },
                             "listen": {

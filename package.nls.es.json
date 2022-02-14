@@ -1,7 +1,7 @@
 {
     "python.command.python.sortImports.title": "Ordenar importaciones",
-    "python.command.python.startREPL.title": "Nuevo REPL",
-    "python.command.python.createTerminal.title": "Nueva terminal",
+    "python.command.python.startREPL.title": "Crear REPL",
+    "python.command.python.createTerminal.title": "Nuevo terminal",
     "python.command.python.execInTerminal.title": "Ejecutar archivo Python en la terminal",
     "python.command.python.setInterpreter.title": "Seleccionar intérprete",
     "python.command.python.execSelectionInTerminal.title": "Ejecutar línea/selección en la terminal",
