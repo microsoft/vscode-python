@@ -8,7 +8,7 @@ import { IDisposableRegistry } from '../../../common/types';
 import { cache } from '../../../common/utils/decorators';
 import { ICondaService } from '../../../interpreter/contracts';
 import { traceDecoratorVerbose } from '../../../logging';
-import { Conda, CondaInfo } from './conda';
+import { Conda, CondaEnvironmentInfo, CondaInfo } from './conda';
 
 /**
  * Injectable version of Conda utility.
@@ -36,6 +36,12 @@ export class CondaService implements ICondaService {
             this.condaFile = Conda.getConda().then((conda) => conda?.command ?? 'conda');
         }
         return this.condaFile;
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    public async getInterpreterPathForEnvironment(condaEnv: CondaEnvironmentInfo): Promise<string | undefined> {
+        const conda = await Conda.getConda();
+        return conda?.getInterpreterPathForEnvironment({ name: condaEnv.name, prefix: condaEnv.path });
     }
 
     /**
