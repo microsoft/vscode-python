@@ -90,11 +90,9 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     }
     const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const mainWorkspaceUri = workspaceService.hasWorkspaceFolders
         ? workspaceService.workspaceFolders![0].uri
         : undefined;
-    const settings = configurationService.getSettings(mainWorkspaceUri);
     const [condaVersion, hasPython3] = await Promise.all([
         condaLocator
             .getCondaVersion()
@@ -117,7 +115,9 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         traceError('Active interpreter type is detected as Unknown', JSON.stringify(interpreter));
     }
     const usingUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
-    const usingGlobalInterpreter = isUsingGlobalInterpreterInWorkspace(settings.pythonPath, serviceContainer);
+    const usingGlobalInterpreter = interpreter
+        ? isUsingGlobalInterpreterInWorkspace(interpreter.path, serviceContainer)
+        : false;
 
     return {
         condaVersion,
