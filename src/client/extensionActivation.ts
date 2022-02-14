@@ -171,7 +171,8 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
                     if (editor) {
                         if (editor.selection.isEmpty) {
                             return shell.showErrorMessage('Please Select Text before Extracting a Method');
-                        } else if (editor.selection.start.line === editor.selection.end.line) {
+                        }
+                        if (editor.selection.start.line === editor.selection.end.line) {
                             const { selection } = editor;
                             const { document } = editor;
                             const text = document.getText(selection);
@@ -221,7 +222,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
                     } else {
                         return shell.showErrorMessage('Open an Active Editor before Extracting a Method');
                     }
-                    return undefined;
+                    return Promise.resolve();
                 }),
             );
 

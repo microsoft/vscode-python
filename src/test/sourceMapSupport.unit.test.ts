@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import rewiremock from 'rewiremock';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import { ConfigurationTarget, Disposable } from 'vscode';
 import { Diagnostics } from '../client/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../client/constants';
