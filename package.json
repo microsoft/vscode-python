@@ -1871,7 +1871,7 @@
             ],
             "file/newFile": [
                 {
-                    "title": "New Python File",
+                    "title": "Python File",
                     "command": "python.createNewFile",
                     "category": "file"
                 }
