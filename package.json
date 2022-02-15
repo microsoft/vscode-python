@@ -65,6 +65,7 @@
         "onDebugInitialConfigurations",
         "onLanguage:python",
         "onDebugResolve:python",
+        "onCommand:python.createNewFile",
         "onCommand:python.execInTerminal",
         "onCommand:python.debugInTerminal",
         "onCommand:python.sortImports",
@@ -322,6 +323,11 @@
             }
         ],
         "commands": [
+            {
+				"title": "New Python File",
+                "category": "Python",
+				"command": "python.createNewFile"
+			},
             {
                 "category": "Python",
                 "command": "python.analysis.restartLanguageServer",
@@ -1861,6 +1867,13 @@
                     "command": "python.execInTerminal",
                     "group": "Python",
                     "when": "resourceLangId == python && !virtualWorkspace && shellExecutionSupported"
+                }
+            ],
+            "file/newFile": [
+                {
+                    "title": "New Python File",
+                    "command": "python.createNewFile",
+                    "category": "file"
                 }
             ],
             "view/title": [
