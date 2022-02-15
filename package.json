@@ -324,10 +324,10 @@
         ],
         "commands": [
             {
-				"title": "New Python File",
+                "title": "New Python File",
                 "category": "Python",
-				"command": "python.createNewFile"
-			},
+                "command": "python.createNewFile"
+            },
             {
                 "category": "Python",
                 "command": "python.analysis.restartLanguageServer",
