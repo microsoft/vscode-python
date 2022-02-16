@@ -1593,6 +1593,13 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.USE_REPORT_ISSUE_COMMAND]: unknown;
     /**
+     * Telemetry event sent when the New Python File command is executed.
+     */
+    /* __GDPR__
+      "create_new_file_command" : { }
+     */
+    [EventName.CREATE_NEW_FILE_COMMAND]: unknown;
+    /**
      * Telemetry event sent once on session start with details on which experiments are opted into and opted out from.
      */
     /* __GDPR__

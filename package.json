@@ -326,7 +326,8 @@
             {
                 "title": "New Python File",
                 "category": "Python",
-                "command": "python.createNewFile"
+                "command": "python.createNewFile",
+                "when": "config.python.createNewFileEnabled"
             },
             {
                 "category": "Python",
@@ -508,6 +509,13 @@
                     "description": "Path to the conda executable to use for activation (version 4.4+).",
                     "scope": "machine",
                     "type": "string"
+                },
+                "python.createNewFileEnabled": {
+                    "default": "false",
+                    "description": "Enable the Python: New Python File command.",
+                    "scope": "machine",
+                    "type": "boolean",
+                    "tags": ["experimental"]
                 },
                 "python.defaultInterpreterPath": {
                     "default": "python",
@@ -1873,7 +1881,8 @@
                 {
                     "title": "Python File",
                     "command": "python.createNewFile",
-                    "category": "file"
+                    "category": "file",
+                    "when": "config.python.createNewFileEnabled"
                 }
             ],
             "view/title": [
