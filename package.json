@@ -1574,13 +1574,12 @@
                 ],
                 "configuration": "./languages/pip-requirements.json",
                 "filenamePatterns": [
-                    "*-constraints.txt",
-                    "*-requirements.in",
-                    "*-requirements.txt",
-                    "constraints-*.txt",
-                    "requirements-*.in",
-                    "requirements-*.txt"
-                ],
+                    "**/*-requirements.{txt, in}",
+                    "**/*-contstraints.txt",
+                    "**/requirements-*.{txt, in}",
+                    "**/constraints-*.txt",
+                    "**/requirements/*.{txt,in}",
+                    "**/constraints/*.txt"                ],
                 "filenames": [
                     "constraints.txt",
                     "requirements.in",
