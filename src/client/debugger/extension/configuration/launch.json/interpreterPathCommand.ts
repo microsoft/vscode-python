@@ -39,6 +39,8 @@ export class InterpreterPathCommand implements IExtensionSingleActivationService
                 const pythonConfig = this.configurationService.getSettings(workspaceFolderUri);
                 if (pythonConfig && pythonConfig.pythonPath) {
                     return pythonConfig.pythonPath;
+                } else {
+                    return '';
                 }
             }
         } catch (ex) {
