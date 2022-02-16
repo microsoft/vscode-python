@@ -3,27 +3,13 @@
 
 'use strict';
 
-import {
-    CodeActionKind,
-    debug,
-    DebugConfigurationProvider,
-    languages,
-    OutputChannel,
-    window,
-    workspace,
-    WorkspaceEdit,
-} from 'vscode';
+import { CodeActionKind, debug, DebugConfigurationProvider, languages, OutputChannel, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
-import {
-    IApplicationEnvironment,
-    IApplicationShell,
-    ICommandManager,
-    IWorkspaceService,
-} from './common/application/types';
+import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './common/application/types';
 import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
@@ -163,68 +149,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
             const outputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
             disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
             cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
-
-            disposables.push(
-                cmdManager.registerCommand(Commands.ExtractMethod, async () => {
-                    const editor = window.activeTextEditor;
-                    const shell: IApplicationShell = serviceManager.get<IApplicationShell>(IApplicationShell);
-                    if (editor) {
-                        if (editor.selection.isEmpty) {
-                            return shell.showErrorMessage('Please Select Text before Extracting a Method');
-                        }
-                        if (editor.selection.start.line === editor.selection.end.line) {
-                            const { selection } = editor;
-                            const { document } = editor;
-                            const text = document.getText(selection);
-                            const position = selection.start;
-                            const edit = new WorkspaceEdit();
-                            const methodName = await window.showInputBox({ prompt: 'Enter Method Name' });
-                            if (methodName) {
-                                const newText = `def ${methodName}():\n\t${text}`;
-                                edit.delete(document.uri, selection);
-                                edit.insert(document.uri, position, newText);
-                                await workspace.applyEdit(edit);
-                            } else {
-                                return shell.showErrorMessage('Method Name is Required');
-                            }
-                        } else if (editor.selection.start.line !== editor.selection.end.line) {
-                            const { selection } = editor;
-                            const { document } = editor;
-                            let text = document.getText(selection);
-                            const position = selection.start;
-                            const edit = new WorkspaceEdit();
-                            const methodName = await window.showInputBox({ prompt: 'Enter Method Name' });
-                            if (methodName) {
-                                if (selection.start.line !== selection.end.line) {
-                                    if (selection.start.character === 0) {
-                                        text = text.replace(/\n/g, '\n\t');
-                                        text = `def ${methodName}():\n\t${text}`;
-                                        edit.delete(document.uri, selection);
-                                        edit.insert(document.uri, position, text);
-                                        await workspace.applyEdit(edit);
-                                    } else {
-                                        text = text.replace(/^\s+/, '');
-                                        const newText = `def ${methodName}():\n\t${text}`;
-                                        edit.delete(document.uri, selection);
-                                        edit.insert(document.uri, position, newText);
-                                        await workspace.applyEdit(edit);
-                                    }
-                                } else {
-                                    const newText = `def ${methodName}():\n\t${text}`;
-                                    edit.delete(document.uri, selection);
-                                    edit.insert(document.uri, position, newText);
-                                    await workspace.applyEdit(edit);
-                                }
-                            } else {
-                                return shell.showErrorMessage('Method Name is Required');
-                            }
-                        }
-                    } else {
-                        return shell.showErrorMessage('Open an Active Editor before Extracting a Method');
-                    }
-                    return Promise.resolve();
-                }),
-            );
 
             serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
 
