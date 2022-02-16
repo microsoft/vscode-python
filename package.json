@@ -515,7 +515,9 @@
                     "description": "Enable the Python: New Python File command.",
                     "scope": "machine",
                     "type": "boolean",
-                    "tags": ["experimental"]
+                    "tags": [
+                        "experimental"
+                    ]
                 },
                 "python.defaultInterpreterPath": {
                     "default": "python",
