@@ -318,39 +318,7 @@ export namespace InterpreterQuickPickList {
         'Refresh Interpreter list',
     );
 }
-export namespace ExtensionChannels {
-    export const yesWeekly = localize('ExtensionChannels.yesWeekly', 'Yes, weekly');
-    export const yesDaily = localize('ExtensionChannels.yesDaily', 'Yes, daily');
-    export const promptMessage = localize(
-        'ExtensionChannels.promptMessage',
-        'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?',
-    );
-    export const reloadToUseInsidersMessage = localize(
-        'ExtensionChannels.reloadToUseInsidersMessage',
-        'Please reload Visual Studio Code to use the insiders build of the Python extension.',
-    );
-    export const downloadCompletedOutputMessage = localize(
-        'ExtensionChannels.downloadCompletedOutputMessage',
-        'Insiders build download complete.',
-    );
-    export const startingDownloadOutputMessage = localize(
-        'ExtensionChannels.startingDownloadOutputMessage',
-        'Starting download for Insiders build.',
-    );
-    export const downloadingInsidersMessage = localize(
-        'ExtensionChannels.downloadingInsidersMessage',
-        'Downloading Insiders Extension... ',
-    );
-    export const installingInsidersMessage = localize(
-        'ExtensionChannels.installingInsidersMessage',
-        'Installing Insiders build of extension... ',
-    );
-    export const installingStableMessage = localize(
-        'ExtensionChannels.installingStableMessage',
-        'Installing Stable build of extension... ',
-    );
-    export const installationCompleteMessage = localize('ExtensionChannels.installationCompleteMessage', 'complete.');
-}
+
 export namespace OutputChannelNames {
     export const languageServer = localize('OutputChannelNames.languageServer', 'Python Language Server');
     export const python = localize('OutputChannelNames.python', 'Python');
@@ -564,6 +532,14 @@ export namespace SwitchToDefaultLS {
         'SwitchToDefaultLS.bannerMessage',
         'The Microsoft Python Language Server has reached end of life. Your language server has been set to the default for Python in VS Code, Pylance.\n\nIf you’d like to change your language server, you can learn about how to do so [here](https://devblogs.microsoft.com/python/python-in-visual-studio-code-may-2021-release/#configuring-your-language-server).\n\nRead Pylance’s license [here](https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license).',
     );
+}
+
+export namespace SwitchToPrereleaseExtension {
+    export const bannerMessage = localize(
+        'SwitchToPrereleaseExtension.bannerMessage',
+        'We now have a new mechanism to get pre-release (insiders) version of the extension. See [here](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#prerelease-extensions) to lean more.',
+    );
+    export const installPreRelease = localize('SwitchToPrereleaseExtension.installPreRelease', 'Install Pre-Release');
 }
 
 function localize(key: string, defValue?: string) {
