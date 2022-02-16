@@ -1,8 +1,8 @@
 import { injectable, inject } from 'inversify';
+import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { Commands } from '../../constants';
 import { ICommandManager } from '../types';
-import * as vscode from 'vscode';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 
@@ -19,6 +19,7 @@ export class CreatePythonFileCommandHandler implements IExtensionSingleActivatio
         this.commandManager.registerCommand(Commands.CreateNewFile, this.createPythonFile, this);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public async createPythonFile(): Promise<void> {
         const newFile = await vscode.workspace.openTextDocument({ language: 'python' });
         vscode.window.showTextDocument(newFile);
