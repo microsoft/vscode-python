@@ -15,7 +15,10 @@ suite('Create New Python File Commmand', () => {
         cmdManager = mock(CommandManager);
         workspaceService = mock(WorkspaceService);
 
-        createNewFileCommandHandler = new CreatePythonFileCommandHandler(instance(cmdManager));
+        createNewFileCommandHandler = new CreatePythonFileCommandHandler(
+            instance(cmdManager),
+            instance(workspaceService),
+        );
         when(cmdManager.executeCommand(anything())).thenResolve();
         when(workspaceService.getConfiguration('python')).thenReturn(
             new MockWorkspaceConfiguration({
@@ -25,10 +28,11 @@ suite('Create New Python File Commmand', () => {
         await createNewFileCommandHandler.activate();
     });
 
+    test('Create Python file command is registered', async () => {
+        verify(cmdManager.registerCommand(Commands.CreateNewFile, anything())).once();
+    });
     test('Create a Python file if command is executed', async () => {
         await createNewFileCommandHandler.createPythonFile();
-
-        verify(cmdManager.registerCommand(Commands.CreateNewFile, anything())).once();
         verify(cmdManager.executeCommand('python.createNewFile')).once();
     });
 });
