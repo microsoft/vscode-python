@@ -2,7 +2,7 @@ import { injectable, inject } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { Commands } from '../../constants';
-import { ICommandManager } from '../types';
+import { ICommandManager, IWorkspaceService } from '../types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 
@@ -10,10 +10,13 @@ import { EventName } from '../../../telemetry/constants';
 export class CreatePythonFileCommandHandler implements IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: true, virtualWorkspace: true };
 
-    constructor(@inject(ICommandManager) private readonly commandManager: ICommandManager) {}
+    constructor(
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+    ) {}
 
     public async activate(): Promise<void> {
-        if (!vscode.workspace.getConfiguration('python').get<boolean>('createNewFileEnabled')) {
+        if (!this.workspaceService.getConfiguration('python').get<boolean>('createNewFileEnabled')) {
             return;
         }
         this.commandManager.registerCommand(Commands.CreateNewFile, this.createPythonFile, this);

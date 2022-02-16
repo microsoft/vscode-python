@@ -4,6 +4,7 @@ import { CommandManager } from '../../../../client/common/application/commandMan
 import { CreatePythonFileCommandHandler } from '../../../../client/common/application/commands/createFileCommand';
 import { ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { MockWorkspaceConfiguration } from '../../../mocks/mockWorkspaceConfig';
+import { WorkspaceService } from '../../../../client/common/application/workspace';
 
 suite('Create New Python File Commmand', () => {
     let createNewFileCommandHandler: CreatePythonFileCommandHandler;
@@ -12,6 +13,7 @@ suite('Create New Python File Commmand', () => {
 
     setup(async () => {
         cmdManager = mock(CommandManager);
+        workspaceService = mock(WorkspaceService);
 
         createNewFileCommandHandler = new CreatePythonFileCommandHandler(instance(cmdManager));
         when(cmdManager.executeCommand(anything())).thenResolve();
