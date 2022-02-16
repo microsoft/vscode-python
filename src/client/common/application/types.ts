@@ -274,6 +274,19 @@ export interface IApplicationShell {
     showInputBox(options?: InputBoxOptions, token?: CancellationToken): Thenable<string | undefined>;
 
     /**
+     * Show the given document in a text editor. A {@link ViewColumn column} can be provided
+     * to control where the editor is being shown. Might change the {@link window.activeTextEditor active editor}.
+     *
+     * @param document A text document to be shown.
+     * @param column A view column in which the {@link TextEditor editor} should be shown. The default is the {@link ViewColumn.Active active}, other values
+     * are adjusted to be `Min(column, columnCount + 1)`, the {@link ViewColumn.Active active}-column is not adjusted. Use {@linkcode ViewColumn.Beside}
+     * to open the editor to the side of the currently active one.
+     * @param preserveFocus When `true` the editor will not take focus.
+     * @return A promise that resolves to an {@link TextEditor editor}.
+     */
+    showTextDocument(document: TextDocument, column?: ViewColumn, preserveFocus?: boolean): Thenable<TextEditor>;
+
+    /**
      * Creates a [QuickPick](#QuickPick) to let the user pick an item from a list
      * of items of type T.
      *
@@ -833,6 +846,16 @@ export interface IWorkspaceService {
      * @return The full configuration or a subset.
      */
     getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration;
+
+    /**
+     * Opens an untitled text document. The editor will prompt the user for a file
+     * path when the document is to be saved. The `options` parameter allows to
+     * specify the *language* and/or the *content* of the document.
+     *
+     * @param options Options to control how the document will be created.
+     * @return A promise that resolves to a {@link TextDocument document}.
+     */
+    openTextDocument(options?: { language?: string; content?: string }): Thenable<TextDocument>;
 }
 
 export const ITerminalManager = Symbol('ITerminalManager');

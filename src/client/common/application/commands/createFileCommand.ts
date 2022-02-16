@@ -1,8 +1,7 @@
 import { injectable, inject } from 'inversify';
-import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { Commands } from '../../constants';
-import { ICommandManager, IWorkspaceService } from '../types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 
@@ -13,6 +12,7 @@ export class CreatePythonFileCommandHandler implements IExtensionSingleActivatio
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
     ) {}
 
     public async activate(): Promise<void> {
@@ -24,8 +24,8 @@ export class CreatePythonFileCommandHandler implements IExtensionSingleActivatio
 
     // eslint-disable-next-line class-methods-use-this
     public async createPythonFile(): Promise<void> {
-        const newFile = await vscode.workspace.openTextDocument({ language: 'python' });
-        vscode.window.showTextDocument(newFile);
+        const newFile = await this.workspaceService.openTextDocument({ language: 'python' });
+        this.appShell.showTextDocument(newFile);
         sendTelemetryEvent(EventName.CREATE_NEW_FILE_COMMAND);
     }
 }
