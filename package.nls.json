@@ -30,6 +30,7 @@
     "python.command.python.analysis.restartLanguageServer.title": "Restart Language Server",
     "python.command.python.launchTensorBoard.title": "Launch TensorBoard",
     "python.command.python.refreshTensorBoard.title": "Refresh TensorBoard",
+    "python.menu.createNewFile.title": "Python File",
     "python.snippet.launch.standard.label": "Python: Current File",
     "python.snippet.launch.module.label": "Python: Module",
     "python.snippet.launch.module.default": "enter-your-module-name",

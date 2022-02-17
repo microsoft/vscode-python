@@ -1881,7 +1881,7 @@
             ],
             "file/newFile": [
                 {
-                    "title": "Python File",
+                    "title": "%python.menu.createNewFile.title%",
                     "command": "python.createNewFile",
                     "category": "file",
                     "when": "config.python.createNewFileEnabled"
