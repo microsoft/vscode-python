@@ -324,7 +324,7 @@
         ],
         "commands": [
             {
-                "title": "New Python File",
+                "title": "%python.command.python.createNewFile.title%",
                 "category": "Python",
                 "command": "python.createNewFile",
                 "when": "config.python.createNewFileEnabled"
