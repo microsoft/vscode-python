@@ -2052,7 +2052,6 @@
         "typescript": "4.1.5",
         "uuid": "^3.3.2",
         "vsce": "^2.6.6",
-        "webpack": "^4.46.0",
         "webpack-bundle-analyzer": "^3.6.0",
         "yargs": "^15.3.1"
     },
