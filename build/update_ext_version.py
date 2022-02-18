@@ -33,9 +33,7 @@ def get_argparse():
 
 
 def is_even(v):
-    if isinstance(v, str):
-        return int(v) % 2 == 0
-    return v % 2 == 0
+    return int(v) % 2 == 0
 
 
 def get_build_number():
@@ -82,7 +80,7 @@ def main():
         if args.for_publishing and (
             args.build_id < 0 or args.build_id > ((2**32) - 1)
         ):
-            raise Exception("Build ID must be within [0, (2^32-1)]")
+            raise Exception("Build ID must be within [0, {}]".format((2**32) - 1))
 
         package["version"] = "{}.{}.{}".format(major, minor, args.build_id)
     elif args.release:
