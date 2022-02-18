@@ -63,7 +63,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
     public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecInfo> {
         const pythonSettings = this.configurationService.getSettings(resource);
-        const executionFactory = await this.pythonExecutionFactory.create({ resource, executionInTerminal: true });
+        const executionFactory = await this.pythonExecutionFactory.create({ resource, executeAsAProcess: false });
         const execInfo = executionFactory.getExecutionInfo();
         const pythonArgs = execInfo.args;
         const command = this.platformService.isWindows ? execInfo.command.replace(/\\/g, '/') : execInfo.command;

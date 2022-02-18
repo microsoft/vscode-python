@@ -80,7 +80,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const condaExecutionService = await this.createCondaExecutionService(
             pythonPath,
             processService,
-            options.executionInTerminal,
+            options.executeAsAProcess,
         );
         if (condaExecutionService) {
             return condaExecutionService;
@@ -129,7 +129,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     public async createCondaExecutionService(
         pythonPath: string,
         processService: IProcessService,
-        executionInTerminal?: boolean,
+        executeAsAProcess?: boolean,
     ): Promise<IPythonExecutionService | undefined> {
         const condaLocatorService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
         const [condaEnvironment] = await Promise.all([condaLocatorService.getCondaEnvironment(pythonPath)]);
@@ -141,7 +141,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             pythonPath,
             processService,
             this.fileSystem,
-            executionInTerminal,
+            executeAsAProcess,
         );
         if (!env) {
             return undefined;

@@ -65,7 +65,10 @@ export const IPythonExecutionFactory = Symbol('IPythonExecutionFactory');
 export type ExecutionFactoryCreationOptions = {
     resource?: Uri;
     pythonPath?: string;
-    executionInTerminal?: boolean;
+    /**
+     * Whether to execute using `NodeJS.child_process` API, considered `true` as default.
+     */
+    executeAsAProcess?: boolean;
 };
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
