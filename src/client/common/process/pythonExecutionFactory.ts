@@ -77,11 +77,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         }
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
 
-        const condaExecutionService = await this.createCondaExecutionService(
-            pythonPath,
-            processService,
-            options.executeAsAProcess,
-        );
+        const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
         if (condaExecutionService) {
             return condaExecutionService;
         }
@@ -129,20 +125,13 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     public async createCondaExecutionService(
         pythonPath: string,
         processService: IProcessService,
-        executeAsAProcess?: boolean,
     ): Promise<IPythonExecutionService | undefined> {
         const condaLocatorService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
         const [condaEnvironment] = await Promise.all([condaLocatorService.getCondaEnvironment(pythonPath)]);
         if (!condaEnvironment) {
             return undefined;
         }
-        const env = await createCondaEnv(
-            condaEnvironment,
-            pythonPath,
-            processService,
-            this.fileSystem,
-            executeAsAProcess,
-        );
+        const env = await createCondaEnv(condaEnvironment, pythonPath, processService, this.fileSystem);
         if (!env) {
             return undefined;
         }
