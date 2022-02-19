@@ -9,6 +9,7 @@ import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
@@ -26,6 +27,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) protected readonly disposables: Disposable[],
         @inject(IPlatformService) protected readonly platformService: IPlatformService,
+        @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
     ) {}
 
     public async executeFile(file: Uri) {
@@ -61,11 +63,12 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
     public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecInfo> {
         const pythonSettings = this.configurationService.getSettings(resource);
-        const command = this.platformService.isWindows
-            ? pythonSettings.pythonPath.replace(/\\/g, '/')
-            : pythonSettings.pythonPath;
+        const executionFactory = await this.pythonExecutionFactory.create({ resource, executeAsAProcess: false });
+        const execInfo = executionFactory.getExecutionInfo();
+        const pythonArgs = execInfo.args;
+        const command = this.platformService.isWindows ? execInfo.command.replace(/\\/g, '/') : execInfo.command;
         const launchArgs = pythonSettings.terminal.launchArgs;
-        return buildPythonExecInfo(command, [...launchArgs, ...args]);
+        return buildPythonExecInfo(command, [...pythonArgs, ...launchArgs, ...args]);
     }
 
     // Overridden in subclasses, see djangoShellCodeExecution.ts
