@@ -59,6 +59,7 @@ suite('Terminal - Code Execution', () => {
             terminalFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
             terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
             terminalService = TypeMoq.Mock.ofType<ITerminalService>();
+            pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
             const configService = TypeMoq.Mock.ofType<IConfigurationService>();
             workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
             platform = TypeMoq.Mock.ofType<IPlatformService>();
@@ -66,7 +67,6 @@ suite('Terminal - Code Execution', () => {
             documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
             commandManager = TypeMoq.Mock.ofType<ICommandManager>();
             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-            pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
             settings = TypeMoq.Mock.ofType<IPythonSettings>();
             settings.setup((s) => s.terminal).returns(() => terminalSettings.object);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
@@ -79,6 +79,7 @@ suite('Terminal - Code Execution', () => {
                         workspace.object,
                         disposables,
                         platform.object,
+                        pythonExecutionFactory.object,
                     );
                     break;
                 }
@@ -89,6 +90,7 @@ suite('Terminal - Code Execution', () => {
                         workspace.object,
                         disposables,
                         platform.object,
+                        pythonExecutionFactory.object,
                     );
                     expectedTerminalTitle = 'REPL';
                     break;
@@ -111,6 +113,7 @@ suite('Terminal - Code Execution', () => {
                         commandManager.object,
                         fileSystem.object,
                         disposables,
+                        pythonExecutionFactory.object,
                     );
                     expectedTerminalTitle = 'Django Shell';
                     break;
