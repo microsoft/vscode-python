@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 // @ts-check
-// @ts-nocheck
 
 'use strict';
 
