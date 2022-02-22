@@ -513,7 +513,7 @@
                 },
                 "python.createNewFileEnabled": {
                     "default": "false",
-                    "description": "Enable the Python: New Python File command.",
+                    "description": "Enable the `Python: New Python File` command.",
                     "scope": "machine",
                     "type": "boolean",
                     "tags": [

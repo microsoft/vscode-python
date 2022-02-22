@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { TextDocument } from 'vscode';
 import { Commands } from '../../../../client/common/constants';
