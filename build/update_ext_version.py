@@ -26,7 +26,7 @@ def build_arg_parse():
         action="store",
         type=int,
         default=None,
-        help="If present will be used as a micro version.",
+        help="If present, will be used as a micro version.",
         required=False,
     )
     parser.add_argument(
@@ -83,7 +83,7 @@ def main():
     print(f"Updating build FROM: {package['version']}")
     if args.build_id:
         # If build id is provided it should fall within the 0-INT32 max range
-        # that the max allowed value for publishing to Marketplace.
+        # that the max allowed value for publishing to the Marketplace.
         if args.for_publishing and (
             args.build_id < 0 or args.build_id > ((2**32) - 1)
         ):
