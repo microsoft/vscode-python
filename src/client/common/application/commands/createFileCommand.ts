@@ -22,7 +22,6 @@ export class CreatePythonFileCommandHandler implements IExtensionSingleActivatio
         this.commandManager.registerCommand(Commands.CreateNewFile, this.createPythonFile, this);
     }
 
-    // eslint-disable-next-line class-methods-use-this
     public async createPythonFile(): Promise<void> {
         const newFile = await this.workspaceService.openTextDocument({ language: 'python' });
         this.appShell.showTextDocument(newFile);
