@@ -4,7 +4,7 @@ pr: none
 
 schedules:
   - cron: '0 19 * * 1-5' # At 19:00 (7:00 PM) on every day-of-week from Monday through Friday
-    displayName: Nightly Release Schedule
+    displayName: Nightly Pre-Release Schedule
     always: true
     branches:
       include:
@@ -29,7 +29,7 @@ extends:
 
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: '3.6'
+          versionSpec: '3.7'
           addToPath: true
           architecture: 'x64'
         displayName: Select Python version
