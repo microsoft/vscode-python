@@ -19,7 +19,7 @@ def build_arg_parse():
     parser.add_argument(
         "--release",
         action="store_true",
-        help="Treats the current build is a release build.",
+        help="Treats the current build as a release build.",
     )
     parser.add_argument(
         "--build-id",
@@ -59,7 +59,7 @@ def parse_version(version):
     except ValueError:
         micro = parts
         suffix = ""
-    return (major, minor, micro, suffix)
+    return major, minor, micro, suffix
 
 
 def main():
