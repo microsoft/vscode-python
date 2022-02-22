@@ -325,6 +325,7 @@
         "commands": [
             {
                 "title": "%python.command.python.createNewFile.title%",
+                "shortTitle": "%python.menu.createNewFile.title%",
                 "category": "Python",
                 "command": "python.createNewFile",
                 "when": "config.python.createNewFileEnabled"
@@ -1881,7 +1882,6 @@
             ],
             "file/newFile": [
                 {
-                    "title": "%python.menu.createNewFile.title%",
                     "command": "python.createNewFile",
                     "category": "file",
                     "when": "config.python.createNewFileEnabled"
