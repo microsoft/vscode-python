@@ -5,6 +5,14 @@ import { IServiceContainer } from '../ioc/types';
 import { BaseLinter } from './baseLinter';
 import { ILintMessage, LintMessageSeverity } from './types';
 
+/**
+ * Example messages to parse from PyLama
+ * 1. Linter: pycodestyle - recent version removed an extra colon (:) after line:col, hence made it optional in the regex (to be backward compatibile)
+ *      `src/test_py.py:23:60 [E] E226 missing whitespace around arithmetic operator [pycodestyle]`
+ * 2. Linter: mypy - output is missing the error code, something like `E226` - hence made it optional in the regex
+ *      `src/test_py.py:7:4 [E]  Argument 1 to "fn" has incompatible type "str"; expected "int" [mypy]`
+ */
+
 const REGEX =
     '(?<file>.py):(?<line>\\d+):(?<column>\\d+):? \\[(?<type>\\w+)\\]( (?<code>\\w\\d+)?:?)? (?<message>.*)\\r?(\\n|$)';
 const COLUMN_OFF_SET = 1;
