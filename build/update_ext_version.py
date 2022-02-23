@@ -2,7 +2,9 @@ import argparse
 import datetime
 import json
 import pathlib
-from typing import Tuple, Union
+import sys
+
+from typing import Sequence, Tuple, Union
 
 EXT_ROOT = pathlib.Path(__file__).parent.parent
 PACKAGE_JSON_PATH = EXT_ROOT / "package.json"
@@ -58,11 +60,11 @@ def parse_version(version: str) -> Tuple[str, str, str, str]:
     return major, minor, micro, suffix
 
 
-def main() -> None:
+def main(package_json: pathlib.Path, argv: Sequence[str]) -> None:
     parser = build_arg_parse()
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
-    package = json.loads(PACKAGE_JSON_PATH.read_text(encoding="utf-8"))
+    package = json.loads(package_json.read_text(encoding="utf-8"))
 
     major, minor, micro, suffix = parse_version(package["version"])
 
@@ -79,12 +81,12 @@ def main() -> None:
     if args.build_id:
         # If build id is provided it should fall within the 0-INT32 max range
         # that the max allowed value for publishing to the Marketplace.
-        if args.for_publishing and (
-            args.build_id < 0 or args.build_id > ((2**32) - 1)
+        if args.build_id < 0 or (
+            args.for_publishing and args.build_id > ((2**32) - 1)
         ):
-            raise ValueError("Build ID must be within [0, {}]".format((2**32) - 1))
+            raise ValueError(f"Build ID must be within [0, {(2**32) - 1}]")
 
-        package["version"] = ".".join((major, minor, args.build_id))
+        package["version"] = ".".join((major, minor, str(args.build_id)))
     elif args.release:
         package["version"] = ".".join((major, minor, micro))
     else:
@@ -96,10 +98,10 @@ def main() -> None:
     print(f"Updating build TO: {package['version']}")
 
     # Overwrite package.json with new data add a new-line at the end of the file.
-    PACKAGE_JSON_PATH.write_text(
+    package_json.write_text(
         json.dumps(package, indent=4, ensure_ascii=False) + "\n", encoding="utf-8"
     )
 
 
 if __name__ == "__main__":
-    main()
+    main(PACKAGE_JSON_PATH, sys.argv)
