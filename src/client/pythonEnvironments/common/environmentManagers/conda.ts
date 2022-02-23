@@ -358,7 +358,7 @@ export class Conda {
     /**
      * Cache result for this particular command.
      */
-    @cache(30_000, true, 10_000)
+    @cache(-1, true)
     // eslint-disable-next-line class-methods-use-this
     private async getInfoCached(command: string): Promise<CondaInfo> {
         const stopWatch = new StopWatch();
