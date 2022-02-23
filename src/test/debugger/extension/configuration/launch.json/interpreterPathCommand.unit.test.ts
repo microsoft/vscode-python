@@ -84,42 +84,4 @@ suite('Interpreter Path Command', () => {
         const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
         expect(setting).to.equal('settingValue');
     });
-    test('If `args[1]` is a valid uri', async () => {
-        const args: string[] = ['command', 'file:///some/path'];
-        when(configService.getSettings(anything())).thenCall((arg): any => {
-            assert.deepEqual(arg, Uri.parse('file:///some/path'));
-            return { pythonPath: 'settingValue' } as any;
-        });
-        const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
-        expect(setting).to.equal('settingValue');
-    });
-    test('If `args[1]` is not a valid uri and no workspace folder', async () => {
-        const args = ['command', '${input:some_input}'];
-        when(configService.getSettings(anything())).thenCall((arg) => {
-            assert.deepEqual(arg, undefined);
-            return { pythonPath: 'settingValue' } as any;
-        });
-        const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
-        expect(setting).to.equal('settingValue');
-    });
-    test('If `args[1]` is a valid uri and no workspace folder, but there is a python config and path'),
-        async () => {
-            const args: string[] = ['command', 'file:///some/path'];
-            when(configService.getSettings(anything())).thenCall((arg): any => {
-                assert.deepEqual(arg, Uri.parse('file:///some/path'));
-                return { pythonPath: 'settingValue' } as any;
-            });
-            const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
-            expect(setting).to.equal('settingValue');
-        };
-    test('If `args[1]` is a valid uri and no workspace folder, and there is no python config or path available'),
-        async () => {
-            const args: string[] = ['command', 'file:///some/path'];
-            when(configService.getSettings(anything())).thenCall((arg): any => {
-                assert.deepEqual(arg, Uri.parse('file:///some/path'));
-                return { pythonPath: undefined } as any;
-            });
-            const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
-            expect(setting).to.equal(undefined);
-        };
 });

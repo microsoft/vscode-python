@@ -31,7 +31,7 @@ export class InterpreterPathCommand implements IExtensionSingleActivationService
         // If `launch.json` is launching this command, `args.workspaceFolder` carries the workspaceFolder
         // If `tasks.json` is launching this command, `args[1]` carries the workspaceFolder
         const workspaceFolder = 'workspaceFolder' in args ? args.workspaceFolder : args[1] ? args[1] : undefined;
-        let workspaceFolderUri: Uri | undefined;
+        let workspaceFolderUri;
         try {
             if (workspaceFolder) {
                 workspaceFolderUri = workspaceFolder ? Uri.parse(workspaceFolder) : undefined;
