@@ -27,6 +27,9 @@ def test_minor_version(directory, version, args):
 @pytest.mark.parametrize(
     "version, args",
     [
+        ("1.0.0-rc", ["--release", "--build-id", "-1"]),
+        ("1.0.0-rc", ["--release", "--for-publishing", "--build-id", "-1"]),
+        ("1.0.0-rc", ["--release", "--for-publishing", "--build-id", "999999999999"]),
         ("1.1.0-rc", ["--build-id", "-1"]),
         ("1.1.0-rc", ["--for-publishing", "--build-id", "-1"]),
         ("1.1.0-rc", ["--for-publishing", "--build-id", "999999999999"]),
