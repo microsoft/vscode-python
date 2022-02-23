@@ -12,8 +12,8 @@ import {
     getPythonVersionFromPath,
 } from '../../../common/commonUtils';
 import { arePathsSame, getWorkspaceFolders, isParentPath } from '../../../common/externalDependencies';
-import { AnacondaCompanyName, Conda } from '../../../common/environmentManagers/conda';
-import { parsePyenvVersion } from '../../../common/environmentManagers/pyenv';
+import { AnacondaCompanyName, Conda, isCondaEnvironment } from '../../../common/environmentManagers/conda';
+import { getPyenvVersionsDir, parsePyenvVersion } from '../../../common/environmentManagers/pyenv';
 import { Architecture, getOSType, OSType } from '../../../../common/utils/platform';
 import { getPythonVersionFromPath as parsePythonVersionFromPath, parseVersion } from '../../info/pythonVersion';
 import { getRegistryInterpreters, getRegistryInterpretersSync } from '../../../common/windowsUtils';
@@ -195,8 +195,21 @@ async function resolvePyenvEnv(executablePath: string): Promise<PythonEnvInfo> {
         org: versionStrings && versionStrings.distro ? versionStrings.distro : '',
     });
 
-    envInfo.name = name;
+    if (await isBaseCondaPyenvEnvironment(executablePath)) {
+        envInfo.name = 'base';
+    } else {
+        envInfo.name = name;
+    }
     return envInfo;
+}
+
+async function isBaseCondaPyenvEnvironment(executablePath: string) {
+    if (!(await isCondaEnvironment(executablePath))) {
+        return false;
+    }
+    const location = getEnvironmentDirFromPath(executablePath);
+    const pyenvVersionDir = getPyenvVersionsDir();
+    return arePathsSame(path.dirname(location), pyenvVersionDir);
 }
 
 async function resolveWindowsStoreEnv(executablePath: string): Promise<PythonEnvInfo> {

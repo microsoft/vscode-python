@@ -19,6 +19,11 @@ export function getPyenvDir(): string {
 
     return pyenvDir;
 }
+
+export function getPyenvVersionsDir(): string {
+    return path.join(getPyenvDir(), 'versions');
+}
+
 /**
  * Checks if a given directory path is same as `pyenv` shims path. This checks
  * `~/.pyenv/shims` on posix and `~/.pyenv/pyenv-win/shims` on windows.
