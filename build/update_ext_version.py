@@ -2,14 +2,14 @@ import argparse
 import datetime
 import json
 import pathlib
+from typing import Tuple, Union
 
 EXT_ROOT = pathlib.Path(__file__).parent.parent
 PACKAGE_JSON_PATH = EXT_ROOT / "package.json"
 
 
-def build_arg_parse():
+def build_arg_parse() -> argparse.ArgumentParser:
     """Builds the arguments parser."""
-    """
     parser = argparse.ArgumentParser(
         description="This script updates the python extension micro version based on the release or pre-release channel."
     )
@@ -34,22 +34,22 @@ def build_arg_parse():
     return parser
 
 
-def is_even(v):
+def is_even(v: Union[int, str]) -> bool:
     """Returns True if `v` is even."""
     return not int(v) % 2
 
 
-def micro_build_number():
+def micro_build_number() -> str:
     """Generates the micro build number.
-    
-     The format is `1<Julian day><hour><minute>`.
+
+    The format is `1<Julian day><hour><minute>`.
     """
     return f"1{datetime.datetime.now(tz=datetime.timezone.utc).strftime('%j%H%M')}"
 
 
-def parse_version(version):
+def parse_version(version: str) -> Tuple[str, str, str, str]:
     """Parse a version string into a tuple of version parts."""
-    major, minor, parts = version.split(".",maxsplit=2)
+    major, minor, parts = version.split(".", maxsplit=2)
     try:
         micro, suffix = parts.split("-", maxsplit=1)
     except ValueError:
@@ -58,7 +58,7 @@ def parse_version(version):
     return major, minor, micro, suffix
 
 
-def main():
+def main() -> None:
     parser = build_arg_parse()
     args = parser.parse_args()
 
@@ -67,14 +67,13 @@ def main():
     major, minor, micro, suffix = parse_version(package["version"])
 
     if args.release and not is_even(minor):
-         raise ValueError(
-                f"Release version should have EVEN numbered minor version: {package['version']}"
-            )
+        raise ValueError(
+            f"Release version should have EVEN numbered minor version: {package['version']}"
+        )
     elif not args.release and is_even(minor):
         raise ValueError(
-                f"Pre-Release version should have ODD numbered minor version: {package['version']}"
-            )
-
+            f"Pre-Release version should have ODD numbered minor version: {package['version']}"
+        )
 
     print(f"Updating build FROM: {package['version']}")
     if args.build_id:
@@ -97,7 +96,9 @@ def main():
     print(f"Updating build TO: {package['version']}")
 
     # Overwrite package.json with new data add a new-line at the end of the file.
-    PACKAGE_JSON_PATH.write_text(json.dumps(package, indent=4, ensure_ascii=False) + "\n", encoding="utf-8")
+    PACKAGE_JSON_PATH.write_text(
+        json.dumps(package, indent=4, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 if __name__ == "__main__":
