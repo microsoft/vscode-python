@@ -8,10 +8,7 @@ PACKAGE_JSON_PATH = EXT_ROOT / "package.json"
 
 
 def build_arg_parse():
-    """Builds arguments parser for the following arguments.
-        --release: Validates release version number.
-        --build-id: Custom <micro> version for the build.
-        --for-publishing: Ensures that the version is parseable by marketplace.
+    """Builds the arguments parser."""
     """
     parser = argparse.ArgumentParser(
         description="This script updates the python extension micro version based on the release or pre-release channel."
@@ -38,21 +35,20 @@ def build_arg_parse():
 
 
 def is_even(v):
-    """Returns True if `v` is even.
-    """
+    """Returns True if `v` is even."""
     return not int(v) % 2
 
 
 def micro_build_number():
-    """Generates micro build number using the following format:
-    1 + <Julian day> + <hour> + <minute>
+    """Generates the micro build number.
+    
+     The format is `1<Julian day><hour><minute>`.
     """
     return f"1{datetime.datetime.now(tz=datetime.timezone.utc).strftime('%j%H%M')}"
 
 
 def parse_version(version):
-    """Returns a tuple of major, minor, micro and suffix from a given string
-    """
+    """Parse a version string into a tuple of version parts."""
     major, minor, parts = version.split(".",maxsplit=2)
     try:
         micro, suffix = parts.split("-", maxsplit=1)
@@ -87,7 +83,7 @@ def main():
         if args.for_publishing and (
             args.build_id < 0 or args.build_id > ((2**32) - 1)
         ):
-            raise Exception("Build ID must be within [0, {}]".format((2**32) - 1))
+            raise ValueError("Build ID must be within [0, {}]".format((2**32) - 1))
 
         package["version"] = ".".join((major, minor, args.build_id))
     elif args.release:
