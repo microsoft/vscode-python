@@ -48,7 +48,7 @@ suite('Resolver Utils', () => {
         teardown(() => {
             sinon.restore();
         });
-        function getExpectedPyenvInfo(): PythonEnvInfo | undefined {
+        function getExpectedPyenvInfo1(): PythonEnvInfo | undefined {
             const envInfo = buildEnvInfo({
                 kind: PythonEnvKind.Pyenv,
                 executable: path.join(testPyenvVersionsDir, '3.9.0', 'bin', 'python'),
@@ -65,9 +65,36 @@ suite('Resolver Utils', () => {
             return envInfo;
         }
 
+        function getExpectedPyenvInfo2(): PythonEnvInfo | undefined {
+            const envInfo = buildEnvInfo({
+                kind: PythonEnvKind.Pyenv,
+                executable: path.join(testPyenvVersionsDir, 'miniconda3-4.7.12', 'bin', 'python'),
+                version: {
+                    major: 3,
+                    minor: 7,
+                    micro: -1,
+                },
+                source: [],
+                org: 'miniconda3',
+            });
+            envInfo.location = path.join(testPyenvVersionsDir, 'miniconda3-4.7.12');
+            envInfo.name = 'base';
+            setEnvDisplayString(envInfo);
+            return envInfo;
+        }
+
         test('resolveEnv', async () => {
             const executablePath = path.join(testPyenvVersionsDir, '3.9.0', 'bin', 'python');
-            const expected = getExpectedPyenvInfo();
+            const expected = getExpectedPyenvInfo1();
+
+            const actual = await resolveBasicEnv({ executablePath, kind: PythonEnvKind.Pyenv });
+            assertEnvEqual(actual, expected);
+        });
+
+        test('resolveEnv (base conda env)', async () => {
+            sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Linux);
+            const executablePath = path.join(testPyenvVersionsDir, 'miniconda3-4.7.12', 'bin', 'python');
+            const expected = getExpectedPyenvInfo2();
 
             const actual = await resolveBasicEnv({ executablePath, kind: PythonEnvKind.Pyenv });
             assertEnvEqual(actual, expected);
