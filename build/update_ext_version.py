@@ -6,7 +6,6 @@ import datetime
 import json
 import pathlib
 import sys
-
 from typing import Sequence, Tuple, Union
 
 EXT_ROOT = pathlib.Path(__file__).parent.parent
@@ -46,7 +45,6 @@ def is_even(v: Union[int, str]) -> bool:
 
 def micro_build_number() -> str:
     """Generates the micro build number.
-
     The format is `1<Julian day><hour><minute>`.
     """
     return f"1{datetime.datetime.now(tz=datetime.timezone.utc).strftime('%j%H%M')}"

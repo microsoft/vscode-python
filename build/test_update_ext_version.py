@@ -21,18 +21,18 @@ def create_package_json(directory, version):
     return package_json
 
 
-@pytest.mark.parametrize(
-    "version, args", [("1.1.0-rc", ["--release"]), ("1.0.0-rc", [])]
-)
-def test_minor_version(tmp_path, version, args):
+def run_test(tmp_path, version, args):
     package_json = create_package_json(tmp_path, version)
-    with pytest.raises(ValueError):
-        update_ext_version.main(package_json, args)
+    update_ext_version.main(package_json, args)
+    package = json.loads(package_json.read_text(encoding="utf-8"))
+    return update_ext_version.parse_version(package["version"])
 
 
 @pytest.mark.parametrize(
     "version, args",
     [
+        ("1.0.0-rc", []),
+        ("1.1.0-rc", ["--release"]),
         ("1.0.0-rc", ["--release", "--build-id", "-1"]),
         ("1.0.0-rc", ["--release", "--for-publishing", "--build-id", "-1"]),
         ("1.0.0-rc", ["--release", "--for-publishing", "--build-id", "999999999999"]),
@@ -41,28 +41,9 @@ def test_minor_version(tmp_path, version, args):
         ("1.1.0-rc", ["--for-publishing", "--build-id", "999999999999"]),
     ],
 )
-def test_invalid_build_id(tmp_path, version, args):
-    package_json = create_package_json(tmp_path, version)
+def test_invalid_args(tmp_path, version, args):
     with pytest.raises(ValueError):
-        update_ext_version.main(package_json, args)
-
-
-@pytest.mark.parametrize(
-    "version, args, expected",
-    [
-        ("1.1.0-rc", [], ("1", "1", "Not 0", "rc")),
-        ("1.0.0-rc", ["--release"], ("1", "0", "0", "")),
-        ("1.1.0-rc", ["--for-publishing"], ("1", "1", "Not 0", "")),
-        ("1.0.0-rc", ["--release", "--for-publishing"], ("1", "0", "0", "")),
-    ],
-)
-def test_updated_version(tmp_path, version, args, expected):
-    package_json = create_package_json(tmp_path, version)
-    update_ext_version.main(package_json, args)
-    package = json.loads(package_json.read_text(encoding="utf-8"))
-    major, minor, micro, suffix = update_ext_version.parse_version(package["version"])
-    actual = major, minor, "0" if micro == "0" else "Not 0", suffix
-    assert actual == expected
+        run_test(tmp_path, version, args)
 
 
 @pytest.mark.parametrize(
@@ -90,19 +71,6 @@ def test_updated_version(tmp_path, version, args, expected):
             ["--build-id", "999999999999"],
             ("1", "1", "999999999999", "rc"),
         ),
-    ],
-)
-def test_with_build_id(tmp_path, version, args, expected):
-    package_json = create_package_json(tmp_path, version)
-    update_ext_version.main(package_json, args)
-    package = json.loads(package_json.read_text(encoding="utf-8"))
-    actual = update_ext_version.parse_version(package["version"])
-    assert actual == expected
-
-
-@pytest.mark.parametrize(
-    "version, args, expected",
-    [
         ("1.1.0-rc", [], ("1", "1", EXPECTED_BUILD_ID, "rc")),
         (
             "1.0.0-rc",
@@ -132,9 +100,5 @@ def test_with_build_id(tmp_path, version, args, expected):
     ],
 )
 @freezegun.freeze_time("2022-03-14 01:23:45")
-def test_without_build_id(tmp_path, version, args, expected):
-    package_json = create_package_json(tmp_path, version)
-    update_ext_version.main(package_json, args)
-    package = json.loads(package_json.read_text(encoding="utf-8"))
-    actual = update_ext_version.parse_version(package["version"])
-    assert actual == expected
+def test_update_ext_version(tmp_path, version, args, expected):
+    assert run_test(tmp_path, version, args) == expected
