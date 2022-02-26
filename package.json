@@ -65,6 +65,7 @@
         "onDebugInitialConfigurations",
         "onLanguage:python",
         "onDebugResolve:python",
+        "onCommand:python.createNewFile",
         "onCommand:python.execInTerminal",
         "onCommand:python.debugInTerminal",
         "onCommand:python.sortImports",
@@ -323,6 +324,13 @@
         ],
         "commands": [
             {
+                "title": "%python.command.python.createNewFile.title%",
+                "shortTitle": "%python.menu.createNewFile.title%",
+                "category": "Python",
+                "command": "python.createNewFile",
+                "when": "config.python.createNewFileEnabled"
+            },
+            {
                 "category": "Python",
                 "command": "python.analysis.restartLanguageServer",
                 "title": "%python.command.python.analysis.restartLanguageServer.title%"
@@ -502,6 +510,15 @@
                     "description": "Path to the conda executable to use for activation (version 4.4+).",
                     "scope": "machine",
                     "type": "string"
+                },
+                "python.createNewFileEnabled": {
+                    "default": "false",
+                    "description": "Enable the `Python: New Python File` command.",
+                    "scope": "machine",
+                    "type": "boolean",
+                    "tags": [
+                        "experimental"
+                    ]
                 },
                 "python.defaultInterpreterPath": {
                     "default": "python",
@@ -1861,6 +1878,13 @@
                     "command": "python.execInTerminal",
                     "group": "Python",
                     "when": "resourceLangId == python && !virtualWorkspace && shellExecutionSupported"
+                }
+            ],
+            "file/newFile": [
+                {
+                    "command": "python.createNewFile",
+                    "category": "file",
+                    "when": "config.python.createNewFileEnabled"
                 }
             ],
             "view/title": [

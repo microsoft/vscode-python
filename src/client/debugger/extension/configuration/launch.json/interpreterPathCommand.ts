@@ -33,16 +33,7 @@ export class InterpreterPathCommand implements IExtensionSingleActivationService
         const workspaceFolder = 'workspaceFolder' in args ? args.workspaceFolder : args[1] ? args[1] : undefined;
         let workspaceFolderUri;
         try {
-            if (workspaceFolder) {
-                workspaceFolderUri = workspaceFolder ? Uri.parse(workspaceFolder) : undefined;
-            } else {
-                const pythonConfig = this.configurationService.getSettings(workspaceFolderUri);
-                if (pythonConfig && pythonConfig.pythonPath) {
-                    return pythonConfig.pythonPath;
-                } else {
-                    return '';
-                }
-            }
+            workspaceFolderUri = workspaceFolder ? Uri.parse(workspaceFolder) : undefined;
         } catch (ex) {
             workspaceFolderUri = undefined;
         }

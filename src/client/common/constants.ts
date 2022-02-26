@@ -49,6 +49,7 @@ export namespace Commands {
     export const ViewOutput = 'python.viewOutput';
     export const Start_REPL = 'python.startREPL';
     export const Create_Terminal = 'python.createTerminal';
+    export const CreateNewFile = 'python.createNewFile';
     export const Set_Linter = 'python.setLinter';
     export const Enable_Linter = 'python.enableLinting';
     export const Run_Linter = 'python.runLinting';
