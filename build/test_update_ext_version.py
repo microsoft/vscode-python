@@ -2,26 +2,32 @@
 # Licensed under the MIT License.
 
 import json
-import pathlib
+
+import freezegun
 import pytest
+import update_ext_version
 
-from update_ext_version import main as update_version, parse_version
+TEST_DATETIME = "2022-03-14 01:23:45"
+EXPECTED_BUILD_ID = "10730123"
+"""Calculated like this:
+   `"1" + datetime.datetime.strptime(TEST_DATETIME,"%Y-%m-%d %H:%M:%S").strftime('%j%H%M')`
+"""
 
 
-@pytest.fixture
-def directory(tmpdir):
-    """Fixture to create a temp directory wrapped in a pathlib.Path object."""
-    return pathlib.Path(tmpdir)
+def create_package_json(directory, version):
+    """Create `package.json` in `directory` with a specified version of `version`."""
+    package_json = directory / "package.json"
+    package_json.write_text(json.dumps({"version": version}), encoding="utf-8")
+    return package_json
 
 
 @pytest.mark.parametrize(
     "version, args", [("1.1.0-rc", ["--release"]), ("1.0.0-rc", [])]
 )
-def test_minor_version(directory, version, args):
-    package_json = directory / "package.json"
-    package_json.write_text(json.dumps({"version": version}), encoding="utf-8")
+def test_minor_version(tmp_path, version, args):
+    package_json = create_package_json(tmp_path, version)
     with pytest.raises(ValueError):
-        update_version(package_json, args)
+        update_ext_version.main(package_json, args)
 
 
 @pytest.mark.parametrize(
@@ -35,11 +41,10 @@ def test_minor_version(directory, version, args):
         ("1.1.0-rc", ["--for-publishing", "--build-id", "999999999999"]),
     ],
 )
-def test_invalid_build_id(directory, version, args):
-    package_json = directory / "package.json"
-    package_json.write_text(json.dumps({"version": version}), encoding="utf-8")
+def test_invalid_build_id(tmp_path, version, args):
+    package_json = create_package_json(tmp_path, version)
     with pytest.raises(ValueError):
-        update_version(package_json, args)
+        update_ext_version.main(package_json, args)
 
 
 @pytest.mark.parametrize(
@@ -51,13 +56,12 @@ def test_invalid_build_id(directory, version, args):
         ("1.0.0-rc", ["--release", "--for-publishing"], ("1", "0", "0", "")),
     ],
 )
-def test_updated_version(directory, version, args, expected):
-    package_json = directory / "package.json"
-    package_json.write_text(json.dumps({"version": version}), encoding="utf-8")
-    update_version(package_json, args)
+def test_updated_version(tmp_path, version, args, expected):
+    package_json = create_package_json(tmp_path, version)
+    update_ext_version.main(package_json, args)
     package = json.loads(package_json.read_text(encoding="utf-8"))
-    major, minor, micro, suffix = parse_version(package["version"])
-    actual = (major, minor, "0" if micro == "0" else "Not 0", suffix)
+    major, minor, micro, suffix = update_ext_version.parse_version(package["version"])
+    actual = major, minor, "0" if micro == "0" else "Not 0", suffix
     assert actual == expected
 
 
@@ -88,10 +92,49 @@ def test_updated_version(directory, version, args, expected):
         ),
     ],
 )
-def test_with_build_id(directory, version, args, expected):
-    package_json = directory / "package.json"
-    package_json.write_text(json.dumps({"version": version}), encoding="utf-8")
-    update_version(package_json, args)
+def test_with_build_id(tmp_path, version, args, expected):
+    package_json = create_package_json(tmp_path, version)
+    update_ext_version.main(package_json, args)
     package = json.loads(package_json.read_text(encoding="utf-8"))
-    actual = parse_version(package["version"])
+    actual = update_ext_version.parse_version(package["version"])
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "version, args, expected",
+    [
+        ("1.1.0-rc", [], ("1", "1", EXPECTED_BUILD_ID, "rc")),
+        (
+            "1.0.0-rc",
+            ["--release"],
+            ("1", "0", "0", ""),
+        ),
+        (
+            "1.1.0-rc",
+            ["--for-publishing"],
+            ("1", "1", EXPECTED_BUILD_ID, ""),
+        ),
+        (
+            "1.0.0-rc",
+            ["--release", "--for-publishing"],
+            ("1", "0", "0", ""),
+        ),
+        (
+            "1.0.0-rc",
+            ["--release"],
+            ("1", "0", "0", ""),
+        ),
+        (
+            "1.1.0-rc",
+            [],
+            ("1", "1", EXPECTED_BUILD_ID, "rc"),
+        ),
+    ],
+)
+@freezegun.freeze_time("2022-03-14 01:23:45")
+def test_without_build_id(tmp_path, version, args, expected):
+    package_json = create_package_json(tmp_path, version)
+    update_ext_version.main(package_json, args)
+    package = json.loads(package_json.read_text(encoding="utf-8"))
+    actual = update_ext_version.parse_version(package["version"])
     assert actual == expected
