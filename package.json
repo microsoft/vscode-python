@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2022.1.0-dev",
+    "version": "2022.2.0-rc",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -1595,7 +1595,8 @@
                     "**/requirements-*.{txt, in}",
                     "**/constraints-*.txt",
                     "**/requirements/*.{txt,in}",
-                    "**/constraints/*.txt"                ],
+                    "**/constraints/*.txt"
+                ],
                 "filenames": [
                     "constraints.txt",
                     "requirements.in",
