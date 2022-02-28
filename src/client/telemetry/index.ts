@@ -1374,7 +1374,7 @@ export interface IEventNamePropertyMapping {
          * `Yes, daily` When user selects to use "daily" as extension channel in insiders prompt
          * `No, thanks` When user decides to keep using the same extension channel as before
          */
-        selection: 'preRelease' | 'closed' | undefined;
+        selection: 'preRelease' | 'stable' | 'closed' | undefined;
     };
     /**
      * Telemetry event sent with details when user clicks a button in the 'Reload to install insiders prompt'.

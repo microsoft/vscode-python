@@ -83,24 +83,29 @@ export class SwitchToPreReleaseExtensionDiagnosticService extends BaseDiagnostic
                     prompt: SwitchToPrereleaseExtension.installPreRelease(),
                     command: {
                         diagnostic,
-                        invoke: async (): Promise<void> => {
-                            sendTelemetryEvent(EventName.INSIDERS_PROMPT, undefined, { selection: 'preRelease' });
-                            const config = this.workspaceService.getConfiguration('python', diagnostic.resource);
-                            const value = config.inspect<string>('insidersChannel');
-                            if (value) {
-                                config.update('insidersChannel', undefined, ConfigurationTarget.Global);
-                            }
-                            await this.commandManager.executeCommand(
-                                `workbench.extensions.installExtension`,
-                                PVSC_EXTENSION_ID,
-                                {
-                                    installPreReleaseVersion: true,
-                                },
-                            );
-                        },
+                        invoke: (): Promise<void> => this.installExtension(true, diagnostic.resource),
+                    },
+                },
+                {
+                    prompt: SwitchToPrereleaseExtension.installStable(),
+                    command: {
+                        diagnostic,
+                        invoke: (): Promise<void> => this.installExtension(false, diagnostic.resource),
                     },
                 },
             ],
+        });
+    }
+
+    private async installExtension(preRelease: boolean, resource: Resource): Promise<void> {
+        sendTelemetryEvent(EventName.INSIDERS_PROMPT, undefined, { selection: preRelease ? 'preRelease' : 'stable' });
+        const config = this.workspaceService.getConfiguration('python', resource);
+        const setting = config.inspect<string>('insidersChannel');
+        if (setting) {
+            config.update('insidersChannel', undefined, ConfigurationTarget.Global);
+        }
+        await this.commandManager.executeCommand(`workbench.extensions.installExtension`, PVSC_EXTENSION_ID, {
+            installPreReleaseVersion: preRelease,
         });
     }
 }
