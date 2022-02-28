@@ -19,7 +19,6 @@
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
     "enabledApiProposals": [
-        "languageStatus",
         "quickPickSortByLabel",
         "testObserver",
         "notebookEditor"
