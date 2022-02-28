@@ -4679,8 +4679,8 @@ Copyright Angel Marin, Paul Johnston 2000 - 2009. Other contributors Greg Holt, 
 
 ---------------------------------------------------------
 
-ajv 6.10.1 - MIT
-https://github.com/epoberezkin/ajv
+ajv 6.12.6 - MIT
+https://github.com/ajv-validator/ajv
 
 (c) 2011 Gary Court.
 Copyright 2011 Gary Court.
@@ -5984,7 +5984,7 @@ THE SOFTWARE
 
 ---------------------------------------------------------
 
-fast-deep-equal 2.0.1 - MIT
+fast-deep-equal 3.1.3 - MIT
 https://github.com/epoberezkin/fast-deep-equal#readme
 
 Copyright (c) 2017 Evgeny Poberezkin
@@ -6129,7 +6129,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------
 
-follow-redirects 1.14.7 - MIT
+follow-redirects 1.14.8 - MIT
 https://github.com/follow-redirects/follow-redirects
 
 Copyright 2014-present Olivier Lalonde <olalonde@gmail.com> , James Talmage <james@talmage.io> , Ruben Verborgh
@@ -7245,7 +7245,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------
 
-isort 5.10.0 - MIT
+isort 5.10.1 - MIT
 
 
 Copyright 2018 Google LLC
