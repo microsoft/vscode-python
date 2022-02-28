@@ -486,6 +486,7 @@ export class TensorBoardSession {
     private async createPanel() {
         const webviewPanel = window.createWebviewPanel('tensorBoardSession', 'TensorBoard', this.globalMemento.value, {
             enableScripts: true,
+            retainContextWhenHidden: true,
         });
         webviewPanel.webview.html = await this.getHtml();
         this.webviewPanel = webviewPanel;
