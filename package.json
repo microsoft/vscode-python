@@ -1992,6 +1992,7 @@
         "sudo-prompt": "^8.2.0",
         "tmp": "^0.0.29",
         "uint64be": "^1.0.1",
+        "unicode": "^10.0.0",
         "untildify": "^3.0.2",
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
