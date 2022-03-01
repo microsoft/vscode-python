@@ -3885,7 +3885,7 @@ https://creativecommons.org/licenses/by-sa/4.0/
 
 ---------------------------------------------------------
 
-glob-parent 3.1.0 - ISC
+glob-parent 5.1.2 - ISC
 https://github.com/es128/glob-parent
 
 Copyright (c) 2015 Elan Shanker
