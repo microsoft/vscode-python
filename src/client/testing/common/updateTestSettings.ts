@@ -4,9 +4,8 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { applyEdits, findNodeAtLocation, getNodeValue, ModificationOptions, modify, parseTree } from 'jsonc-parser';
 import * as path from 'path';
-import { IExtensionActivationService, LanguageServerType } from '../../activation/types';
+import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
