@@ -166,7 +166,7 @@ suite('Module Installer only', () => {
                 });
 
                 switch (product.value) {
-                    case 404: {
+                    case 404 as Product: {
                         test(`If product type is not recognized, throw error (${
                             resource ? 'With a resource' : 'without a resource'
                         })`, async () => {

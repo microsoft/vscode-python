@@ -18,12 +18,14 @@ suite('Experimentation telemetry', () => {
     let eventProperties: Map<string, string>;
 
     setup(() => {
-        sendTelemetryEventStub = sinon
-            .stub(Telemetry, 'sendTelemetryEvent')
-            .callsFake((eventName: string, _, properties: object) => {
-                const telemetry = { eventName, properties };
-                telemetryEvents.push(telemetry);
-            });
+        sendTelemetryEventStub = sinon.stub(Telemetry, 'sendTelemetryEvent').callsFake(((
+            eventName: string,
+            _,
+            properties: object,
+        ) => {
+            const telemetry = { eventName, properties };
+            telemetryEvents.push(telemetry);
+        }) as typeof Telemetry.sendTelemetryEvent);
         setSharedPropertyStub = sinon.stub(Telemetry, 'setSharedProperty');
 
         eventProperties = new Map<string, string>();

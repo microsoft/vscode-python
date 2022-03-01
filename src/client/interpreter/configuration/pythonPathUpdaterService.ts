@@ -28,9 +28,9 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         let failed = false;
         try {
             await pythonPathUpdater.updatePythonPath(pythonPath ? path.normalize(pythonPath) : undefined);
-        } catch (reason) {
+        } catch (err) {
             failed = true;
-
+            const reason = err as Error;
             const message = reason && typeof reason.message === 'string' ? (reason.message as string) : '';
             window.showErrorMessage(`Failed to set interpreter path. Error: ${message}`);
             traceError(reason);

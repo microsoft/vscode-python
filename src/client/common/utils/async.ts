@@ -122,7 +122,7 @@ async function getNext<T>(it: AsyncIterator<T, T | void>, indexMaybe?: number): 
         const result = await it.next();
         return { index, result, err: null };
     } catch (err) {
-        return { index, err, result: null };
+        return { index, err: err as Error, result: null };
     }
 }
 

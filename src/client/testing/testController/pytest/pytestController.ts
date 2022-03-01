@@ -32,7 +32,7 @@ import {
     RawDiscoveredTests,
     ITestRun,
 } from '../common/types';
-import { preparePytestArgumentsForDiscovery, pytestGetTestFolders } from './arguments';
+import { preparePytestArgumentsForDiscovery, pytestGetTestFilesAndFolders } from './arguments';
 
 @injectable()
 export class PytestController implements ITestFrameworkController {
@@ -186,15 +186,15 @@ export class PytestController implements ITestFrameworkController {
                 token,
             };
 
-            // Get individual test directories selected by the user.
-            const testDirectories = pytestGetTestFolders(options.args);
+            // Get individual test files and directories selected by the user.
+            const testFilesAndDirectories = pytestGetTestFilesAndFolders(options.args);
 
             // Set arguments to use with pytest discovery script.
             const args = runAdapter(['discover', 'pytest', '--', ...preparePytestArgumentsForDiscovery(options)]);
 
             // Build options for each directory selected by the user.
             let discoveryRunOptions: TestDiscoveryOptions[];
-            if (testDirectories.length === 0) {
+            if (testFilesAndDirectories.length === 0) {
                 // User did not provide any directory. So we don't need to tweak arguments.
                 discoveryRunOptions = [
                     {
@@ -203,7 +203,7 @@ export class PytestController implements ITestFrameworkController {
                     },
                 ];
             } else {
-                discoveryRunOptions = testDirectories.map((testDir) => ({
+                discoveryRunOptions = testFilesAndDirectories.map((testDir) => ({
                     ...options,
                     args: [...args, testDir],
                 }));

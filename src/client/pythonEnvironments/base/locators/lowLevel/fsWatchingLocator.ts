@@ -31,8 +31,9 @@ function checkDirWatchable(dirname: string): DirUnwatchableReason {
     try {
         names = fs.readdirSync(dirname);
     } catch (err) {
-        traceError('Reading directory to watch failed', err);
-        if (err.code === 'ENOENT') {
+        const exception = err as NodeJS.ErrnoException;
+        traceError('Reading directory to watch failed', exception);
+        if (exception.code === 'ENOENT') {
             // Treat a missing directory as unwatchable since it can lead to CPU load issues:
             // https://github.com/microsoft/vscode-python/issues/18459
             return 'directory does not exist';

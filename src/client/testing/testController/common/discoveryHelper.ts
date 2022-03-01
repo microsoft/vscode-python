@@ -35,7 +35,8 @@ export class TestDiscoveryHelper implements ITestDiscoveryHelper {
         try {
             return JSON.parse(proc.stdout);
         } catch (ex) {
-            ex.stdout = proc.stdout;
+            const error = ex as SyntaxError;
+            error.message = proc.stdout;
             throw ex; // re-throw
         }
     }
