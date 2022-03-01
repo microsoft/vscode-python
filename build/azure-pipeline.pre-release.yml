@@ -3,9 +3,9 @@ trigger: none
 pr: none
 
 schedules:
-  - cron: '0 19 * * 1-5' # At 19:00 (7:00 PM) on every day-of-week from Monday through Friday
+  - cron: '0 10 * * 1-5' # 10AM UTC (2AM PDT) MON-FRI (VS Code Pre-release builds at 9PM PDT)
     displayName: Nightly Pre-Release Schedule
-    always: true
+    always: false # only run if there are source code changes
     branches:
       include:
         - main
