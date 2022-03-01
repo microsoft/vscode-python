@@ -30,7 +30,7 @@ async function run(serviceContainer: IServiceContainer, testProvider: TestProvid
     );
     const moduleName = getTestModuleName(testProvider);
     const spawnOptions = options as SpawnOptions;
-    let pythonExecutionServicePromise: Promise<IPythonExecutionService>;
+    let pythonExecutionServicePromise: Promise<IPythonExecutionService> | undefined;
     spawnOptions.mergeStdOutErr = typeof spawnOptions.mergeStdOutErr === 'boolean' ? spawnOptions.mergeStdOutErr : true;
 
     let promise: Promise<ObservableExecutionResult<string>>;

@@ -61,7 +61,7 @@ class Worker<T, R> implements IWorker {
                     const result = await this.workFunc(workItem);
                     this.postResult(workItem, result);
                 } catch (ex) {
-                    this.postResult(workItem, undefined, ex);
+                    this.postResult(workItem, undefined, ex as Error);
                 }
             } catch (ex) {
                 // Next got rejected. Likely worker pool is shutting down.

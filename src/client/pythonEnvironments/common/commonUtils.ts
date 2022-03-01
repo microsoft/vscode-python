@@ -117,8 +117,9 @@ async function readDirEntries(
         try {
             basenames = await fs.promises.readdir(dirname);
         } catch (err) {
+            const exception = err as NodeJS.ErrnoException;
             // Treat a missing directory as empty.
-            if (err.code === 'ENOENT') {
+            if (exception.code === 'ENOENT') {
                 return [];
             }
             if (ignoreErrors) {
@@ -142,8 +143,9 @@ async function readDirEntries(
     try {
         raw = await fs.promises.readdir(dirname, { withFileTypes: true });
     } catch (err) {
+        const exception = err as NodeJS.ErrnoException;
         // Treat a missing directory as empty.
-        if (err.code === 'ENOENT') {
+        if (exception.code === 'ENOENT') {
             return [];
         }
         if (ignoreErrors) {

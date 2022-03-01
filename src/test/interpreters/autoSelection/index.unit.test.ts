@@ -96,12 +96,14 @@ suite('Interpreters - Auto Selection', () => {
             ]),
         );
 
-        sendTelemetryEventStub = sinon
-            .stub(Telemetry, 'sendTelemetryEvent')
-            .callsFake((eventName: string, _, properties: Record<string, unknown>) => {
-                const telemetry = { eventName, properties };
-                telemetryEvents.push(telemetry);
-            });
+        sendTelemetryEventStub = sinon.stub(Telemetry, 'sendTelemetryEvent').callsFake(((
+            eventName: string,
+            _,
+            properties: Record<string, unknown>,
+        ) => {
+            const telemetry = { eventName, properties };
+            telemetryEvents.push(telemetry);
+        }) as typeof Telemetry.sendTelemetryEvent);
     });
 
     teardown(() => {
