@@ -6,71 +6,69 @@
 // https://github.com/microsoft/vscode/issues/129037
 
 declare module 'vscode' {
+    enum LanguageStatusSeverity {
+        Information = 0,
+        Warning = 1,
+        Error = 2,
+    }
 
-	enum LanguageStatusSeverity {
-		Information = 0,
-		Warning = 1,
-		Error = 2
-	}
+    interface LanguageStatusItem {
+        /**
+         * The identifier of this item.
+         */
+        readonly id: string;
 
-	interface LanguageStatusItem {
+        /**
+         * The short name of this item, like 'Java Language Status', etc.
+         */
+        name: string | undefined;
 
-		/**
-		 * The identifier of this item.
-		 */
-		readonly id: string;
+        /**
+         * A {@link DocumentSelector selector} that defines for what documents
+         * this item shows.
+         */
+        selector: DocumentSelector;
 
-		/**
-		 * The short name of this item, like 'Java Language Status', etc.
-		 */
-		name: string | undefined;
+        // todo@jrieken replace with boolean ala needsAttention
+        severity: LanguageStatusSeverity;
 
-		/**
-		 * A {@link DocumentSelector selector} that defines for what documents
-		 * this item shows.
-		 */
-		selector: DocumentSelector;
+        /**
+         * The text to show for the entry. You can embed icons in the text by leveraging the syntax:
+         *
+         * `My text $(icon-name) contains icons like $(icon-name) this one.`
+         *
+         * Where the icon-name is taken from the ThemeIcon [icon set](https://code.visualstudio.com/api/references/icons-in-labels#icon-listing), e.g.
+         * `light-bulb`, `thumbsup`, `zap` etc.
+         */
+        text: string;
 
-		// todo@jrieken replace with boolean ala needsAttention
-		severity: LanguageStatusSeverity;
+        /**
+         * Optional, human-readable details for this item.
+         */
+        detail?: string;
 
-		/**
-		 * The text to show for the entry. You can embed icons in the text by leveraging the syntax:
-		 *
-		 * `My text $(icon-name) contains icons like $(icon-name) this one.`
-		 *
-		 * Where the icon-name is taken from the ThemeIcon [icon set](https://code.visualstudio.com/api/references/icons-in-labels#icon-listing), e.g.
-		 * `light-bulb`, `thumbsup`, `zap` etc.
-		 */
-		text: string;
+        /**
+         * Controls whether the item is shown as "busy". Defaults to `false`.
+         */
+        busy: boolean;
 
-		/**
-		 * Optional, human-readable details for this item.
-		 */
-		detail?: string;
+        /**
+         * A {@linkcode Command command} for this item.
+         */
+        command: Command | undefined;
 
-		/**
-		 * Controls whether the item is shown as "busy". Defaults to `false`.
-		 */
-		busy: boolean;
+        /**
+         * Accessibility information used when a screen reader interacts with this item
+         */
+        accessibilityInformation?: AccessibilityInformation;
 
-		/**
-		 * A {@linkcode Command command} for this item.
-		 */
-		command: Command | undefined;
+        /**
+         * Dispose and free associated resources.
+         */
+        dispose(): void;
+    }
 
-		/**
-		 * Accessibility information used when a screen reader interacts with this item
-		 */
-		accessibilityInformation?: AccessibilityInformation;
-
-		/**
-		 * Dispose and free associated resources.
-		 */
-		dispose(): void;
-	}
-
-	namespace languages {
-		export function createLanguageStatusItem(id: string, selector: DocumentSelector): LanguageStatusItem;
-	}
+    namespace languages {
+        export function createLanguageStatusItem(id: string, selector: DocumentSelector): LanguageStatusItem;
+    }
 }
