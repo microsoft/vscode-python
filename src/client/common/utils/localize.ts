@@ -537,7 +537,7 @@ export namespace SwitchToDefaultLS {
 export namespace SwitchToPrereleaseExtension {
     export const bannerMessage = localize(
         'SwitchToPrereleaseExtension.bannerMessage',
-        'We now have a new way to get pre-release (insiders) version of the extension. See [here](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#prerelease-extensions) to lean more.',
+        'We now have a new way to get pre-release/insiders version of the Python extension. See [here](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#prerelease-extensions) to learn more.',
     );
     export const installPreRelease = localize('SwitchToPrereleaseExtension.installPreRelease', 'Install Pre-Release');
     export const installStable = localize('SwitchToPrereleaseExtension.installStable', 'Install Stable');
