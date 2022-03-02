@@ -4,9 +4,8 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { applyEdits, findNodeAtLocation, getNodeValue, ModificationOptions, modify, parseTree } from 'jsonc-parser';
 import * as path from 'path';
-import { IExtensionActivationService, LanguageServerType } from '../../activation/types';
+import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
@@ -55,7 +54,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
     // fixLanguageServerSetting provided for tests so not all tests have to
     // deal with potential whitespace changes.
     @swallowExceptions('Failed to update settings.json')
-    public async fixSettingInFile(filePath: string, fixLanguageServerSetting = true): Promise<string> {
+    public async fixSettingInFile(filePath: string): Promise<string> {
         let fileContents = await this.fs.readFile(filePath);
 
         const setting = new RegExp('"python\\.unitTest', 'g');
@@ -77,11 +76,6 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         fileContents = fileContents.replace(setting_pep8_enabled, '.pycodestyleEnabled');
         fileContents = fileContents.replace(setting_pep8_path, '.pycodestylePath');
 
-        // TODO: remove when python.jediEnabled is no longer in typical user settings.
-        if (fixLanguageServerSetting) {
-            fileContents = this.fixLanguageServerSettings(fileContents);
-        }
-
         await this.fs.writeFile(filePath, fileContents);
         return fileContents;
     }
@@ -94,7 +88,6 @@ export class UpdateTestSettingService implements IExtensionActivationService {
 
             const contents = await this.fs.readFile(filePath);
             return (
-                contents.indexOf('python.jediEnabled') > 0 ||
                 contents.indexOf('python.unitTest.') > 0 ||
                 contents.indexOf('.pyTest') > 0 ||
                 contents.indexOf('.pep8') > 0
@@ -103,56 +96,5 @@ export class UpdateTestSettingService implements IExtensionActivationService {
             traceError('Failed to check if file needs to be fixed', ex);
             return false;
         }
-    }
-
-    private fixLanguageServerSettings(fileContent: string): string {
-        // `python.jediEnabled` is deprecated:
-        //   - If missing, do nothing.
-        //   - `true`, then set to `languageServer: Jedi`.
-        //   - `false` and `languageServer` is present, do nothing.
-        //   - `false` and `languageServer` is NOT present, set `languageServer` to `None`.
-        // There is no other language server so set it to None.
-        // `jediEnabled` is NOT removed since JSONC parser may also remove comments.
-        const jediEnabledPath = ['python.jediEnabled'];
-        const languageServerPath = ['python.languageServer'];
-
-        try {
-            const ast = parseTree(fileContent);
-
-            const jediEnabledNode = findNodeAtLocation(ast, jediEnabledPath);
-            const languageServerNode = findNodeAtLocation(ast, languageServerPath);
-
-            // If missing, do nothing.
-            if (!jediEnabledNode) {
-                return fileContent;
-            }
-
-            const jediEnabled = getNodeValue(jediEnabledNode);
-
-            const modificationOptions: ModificationOptions = {
-                formattingOptions: {
-                    tabSize: 4,
-                    insertSpaces: true,
-                },
-            };
-
-            // `jediEnabled` is true, set it to Jedi.
-            if (jediEnabled) {
-                return applyEdits(
-                    fileContent,
-                    modify(fileContent, languageServerPath, LanguageServerType.Jedi, modificationOptions),
-                );
-            }
-
-            // `jediEnabled` is false, and Pylance(Node) is missing then.
-            // Then set it to None.
-            if (!languageServerNode) {
-                return applyEdits(
-                    fileContent,
-                    modify(fileContent, languageServerPath, LanguageServerType.None, modificationOptions),
-                );
-            }
-        } catch {}
-        return fileContent;
     }
 }
