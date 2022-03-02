@@ -8,10 +8,10 @@ import pytest
 import update_ext_version
 
 TEST_DATETIME = "2022-03-14 01:23:45"
+
+# The build ID is calculated via:
+#     "1" + datetime.datetime.strptime(TEST_DATETIME,"%Y-%m-%d %H:%M:%S").strftime('%j%H%M')
 EXPECTED_BUILD_ID = "10730123"
-"""Calculated like this:
-   `"1" + datetime.datetime.strptime(TEST_DATETIME,"%Y-%m-%d %H:%M:%S").strftime('%j%H%M')`
-"""
 
 
 def create_package_json(directory, version):
@@ -21,11 +21,11 @@ def create_package_json(directory, version):
     return package_json
 
 
-def run_test(tmp_path, version, args):
+def run_test(tmp_path, version, args, expected):
     package_json = create_package_json(tmp_path, version)
     update_ext_version.main(package_json, args)
     package = json.loads(package_json.read_text(encoding="utf-8"))
-    return update_ext_version.parse_version(package["version"])
+    assert expected == update_ext_version.parse_version(package["version"])
 
 
 @pytest.mark.parametrize(
@@ -43,7 +43,7 @@ def run_test(tmp_path, version, args):
 )
 def test_invalid_args(tmp_path, version, args):
     with pytest.raises(ValueError):
-        run_test(tmp_path, version, args)
+        run_test(tmp_path, version, args, None)
 
 
 @pytest.mark.parametrize(
@@ -101,4 +101,4 @@ def test_invalid_args(tmp_path, version, args):
 )
 @freezegun.freeze_time("2022-03-14 01:23:45")
 def test_update_ext_version(tmp_path, version, args, expected):
-    assert run_test(tmp_path, version, args) == expected
+    run_test(tmp_path, version, args, expected)
