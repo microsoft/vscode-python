@@ -4,14 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-    // https://github.com/microsoft/vscode/issues/74967
 
-    export enum QuickPickItemKind {
-        Separator = -1,
-        Default = 1,
-    }
+	// https://github.com/microsoft/vscode/issues/74967
 
-    export interface QuickPickItem {
-        kind?: QuickPickItemKind;
-    }
+	export enum QuickPickItemKind {
+		Separator = -1,
+		Default = 1,
+	}
+
+	export interface QuickPickItem {
+		kind?: QuickPickItemKind
+	}
 }
