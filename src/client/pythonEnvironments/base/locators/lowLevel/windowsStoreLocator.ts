@@ -24,13 +24,6 @@ import { isStorePythonInstalled, getWindowsStoreAppsRoot } from '../../../common
 const pythonExeGlob = 'python3.{[0-9],[0-9][0-9]}.exe';
 
 /**
- * This is a glob pattern which matches following dir names:
- * PythonSoftwareFoundation.Python.3.9_qbz5n2kfra8p0
- * PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0
- */
-const storePythonDirGlob = 'PythonSoftwareFoundation.Python.3.{[0-9],[0-9][0-9]}_*';
-
-/**
  * Checks if a given path ends with python3.*.exe. Not all python executables are matched as
  * we do not want to return duplicate executables.
  * @param {string} interpreterPath : Path to python interpreter.
@@ -80,7 +73,7 @@ export class WindowsStoreLocator extends FSWatchingLocator<BasicEnvInfo> {
         // and update case. Update is handled by deleting and recreating the
         // PythonSoftwareFoundation directory.
         super(getWindowsStoreAppsRoot, async () => this.kind, {
-            baseGlob: storePythonDirGlob,
+            baseGlob: pythonExeGlob,
             searchLocation: getWindowsStoreAppsRoot(),
             envStructure: PythonEnvStructure.Flat,
         });
