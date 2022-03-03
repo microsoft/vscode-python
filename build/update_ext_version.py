@@ -105,4 +105,4 @@ def main(package_json: pathlib.Path, argv: Sequence[str]) -> None:
 
 
 if __name__ == "__main__":
-    main(PACKAGE_JSON_PATH, sys.argv)
+    main(PACKAGE_JSON_PATH, sys.argv[1:])
