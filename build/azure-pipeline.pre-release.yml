@@ -60,7 +60,7 @@ extends:
           python ./build/update_ext_version.py --for-publishing
         displayName: Update build number
 
-      - run: npm run addExtensionPackDependencies
+      - script: npm run addExtensionPackDependencies
         displayName: Update optional extension dependencies
 
       - script: gulp prePublishBundle
