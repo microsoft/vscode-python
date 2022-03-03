@@ -34,34 +34,34 @@ extends:
           architecture: 'x64'
         displayName: Select Python version
 
-      - displayName: Install NPM dependencies
-        script: npm ci
+      - script: npm ci
+        displayName: Install NPM dependencies
 
-      - displayName: Upgrade pip
-        script: python -m pip install -U pip
+      - script: python -m pip install -U pip
+        displayName: Upgrade pip
 
-      - displayName: Install wheel
-        script: python -m pip install wheel
+      - script: python -m pip install wheel
+        displayName: Install wheel
 
-      - displayName: Install debugpy
-        script: |
+      - script: |
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
+        displayName: Install debugpy
 
-      - displayName: Install Python dependencies
-        script: |
+      - script: |
           python -m pip install --no-deps --require-hashes --only-binary :all: -t ./pythonFiles/lib/python --implementation py -r ./requirements.txt
+        displayName: Install Python dependencies
 
-      - displayName: Install Jedi Language Server
-        script: |
+      - script: |
           python -m pip install --no-deps --require-hashes --only-binary :all: -t ./pythonFiles/lib/jedilsp --implementation py --platform any --abi none -r ./pythonFiles/jedilsp_requirements/requirements.txt
+        displayName: Install Jedi Language Server
 
-      - displayName: Update build number
-        script: |
+      - script: |
           python ./build/update_ext_version.py --for-publishing
+        displayName: Update build number
 
-      - displayName: Update optional extension dependencies
-        run: npm run addExtensionPackDependencies
+      - run: npm run addExtensionPackDependencies
+        displayName: Update optional extension dependencies
 
       - script: gulp prePublishBundle
         displayName: Build
