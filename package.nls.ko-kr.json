@@ -1,0 +1,15 @@
+{
+    "python.command.python.sortImports.title": "Import문 정렬",
+    "python.command.python.startREPL.title": "REPL 시작",
+    "python.command.python.execInTerminal.title": "터미널에서 Python 파일 실행",
+    "python.command.python.setInterpreter.title": "인터프리터 선택",
+    "python.command.python.execSelectionInTerminal.title": "Python 터미널에서 선택 영역/줄 실행",
+    "python.command.python.execSelectionInDjangoShell.title": "Django 셸에서 선택 영역/줄 실행",
+    "python.command.python.goToPythonObject.title": " Python 객체로 이동",
+    "python.snippet.launch.standard.label": "Python: Current File",
+    "python.snippet.launch.module.label": "Python: 모듈",
+    "python.snippet.launch.django.label": "Python: Django",
+    "python.snippet.launch.flask.label": "Python: Flask",
+    "python.snippet.launch.pyramid.label": "Python: Pyramid 응용 프로그램",
+    "python.snippet.launch.attach.label": "Python: 연결"
+}

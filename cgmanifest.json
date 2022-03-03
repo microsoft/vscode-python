@@ -1,0 +1,125 @@
+{
+    "Registrations": [
+        {
+            "Component": {
+                "Pip": {
+                    "Name": "dataclasses",
+                    "Version": "0.8"
+                },
+                "Type": "pip"
+            },
+            "DevelopmentDependency": false
+        },
+        {
+            "Component": {
+                "Pip": {
+                    "Name": "docstring-to-markdown",
+                    "Version": "0.7"
+                },
+                "Type": "pip"
+            },
+            "DevelopmentDependency": false
+        },
+        {
+            "Component": {
+                "Pip": {
+                    "Name": "importlib-metadata",
+                    "Version": "3.10.0"
+                },
+                "Type": "pip"
+            },
+            "DevelopmentDependency": false
+        },
+        {
+            "Component": {
+                "Pip": {
+                    "Name": "jedi-language-server",
+                    "Version": "0.30.2"
+                },
+                "Type": "pip"
+            },
+            "DevelopmentDependency": false
+        },
+        {
+            "Component": {
+                "Pip": {
+                    "Name": "jedi",
+                    "Version": "0.18.0"
+                },
+                "Type": "pip"
+            },
+            "DevelopmentDependency": false
+        },
+        {
+            "Component": {
+                "Pip": {
+                    "Name": "parso",
+                    "Version": "0.8.1"
+                },
+                "Type": "pip"
+            },
+            "DevelopmentDependency": false
+        },
+        {
+            "Component": {
+                "Pip": {
+                    "Name": "pydantic",
+                    "Version": "1.8.1"
+                },
+                "Type": "pip"
+            },
+            "DevelopmentDependency": false
+        },
+        {
+            "Component": {
+                "Pip": {
+                    "Name": "pygls",
+                    "Version": "0.10.2"
+                },
+                "Type": "pip"
+            },
+            "DevelopmentDependency": false
+        },
+        {
+            "Component": {
+                "Pip": {
+                    "Name": "typeguard",
+                    "Version": "2.11.1"
+                },
+                "Type": "pip"
+            },
+            "DevelopmentDependency": false
+        },
+        {
+            "Component": {
+                "Pip": {
+                    "Name": "typing-extensions",
+                    "Version": "3.7.4.3"
+                },
+                "Type": "pip"
+            },
+            "DevelopmentDependency": false
+        },
+        {
+            "Component": {
+                "Pip": {
+                    "Name": "zipp",
+                    "Version": "3.4.1"
+                },
+                "Type": "pip"
+            },
+            "DevelopmentDependency": false
+        },
+        {
+            "Component": {
+                "Other": {
+                    "Name": "get-pip",
+                    "Version": "21.3.1",
+                    "DownloadUrl": "https://github.com/pypa/get-pip"
+                },
+                "Type": "other"
+            },
+            "DevelopmentDependency": false
+        }
+    ]
+}
