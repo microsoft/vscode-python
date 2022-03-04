@@ -16,10 +16,7 @@ export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
  * @interface ICommandNameWithoutArgumentTypeMapping
  */
 interface ICommandNameWithoutArgumentTypeMapping {
-    [Commands.SwitchToInsidersDaily]: [];
-    [Commands.SwitchToInsidersWeekly]: [];
     [Commands.ClearWorkspaceInterpreter]: [];
-    [Commands.SwitchOffInsidersChannel]: [];
     [Commands.Set_Interpreter]: [];
     [Commands.Set_ShebangInterpreter]: [];
     [Commands.Run_Linter]: [];
@@ -61,7 +58,14 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.quickOpen']: [string];
     ['workbench.extensions.installExtension']: [
         Uri | 'ms-python.python',
-        { installOnlyNewlyAddedFromExtensionPackVSIX?: boolean } | undefined,
+        (
+            | {
+                  installOnlyNewlyAddedFromExtensionPackVSIX?: boolean;
+                  installPreReleaseVersion?: boolean;
+                  donotSync?: boolean;
+              }
+            | undefined
+        ),
     ];
     ['workbench.action.files.openFolder']: [];
     ['workbench.action.openWorkspace']: [];

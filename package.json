@@ -81,9 +81,6 @@
         "onCommand:python.enableLinting",
         "onCommand:python.createTerminal",
         "onCommand:python.configureTests",
-        "onCommand:python.switchOffInsidersChannel",
-        "onCommand:python.switchToDailyChannel",
-        "onCommand:python.switchToWeeklyChannel",
         "onCommand:python.clearWorkspaceInterpreter",
         "onCommand:python.enableSourceMapSupport",
         "onCommand:python.launchTensorBoard",
@@ -467,21 +464,6 @@
             },
             {
                 "category": "Python",
-                "command": "python.switchOffInsidersChannel",
-                "title": "%python.command.python.switchOffInsidersChannel.title%"
-            },
-            {
-                "category": "Python",
-                "command": "python.switchToDailyChannel",
-                "title": "%python.command.python.switchToDailyChannel.title%"
-            },
-            {
-                "category": "Python",
-                "command": "python.switchToWeeklyChannel",
-                "title": "%python.command.python.switchToWeeklyChannel.title%"
-            },
-            {
-                "category": "Python",
                 "command": "python.viewLanguageServerOutput",
                 "enablement": "python.hasLanguageServerOutputChannel",
                 "title": "%python.command.python.viewLanguageServerOutput.title%"
@@ -641,17 +623,6 @@
                     "description": "Whether to install Python modules globally when not using an environment.",
                     "scope": "resource",
                     "type": "boolean"
-                },
-                "python.insidersChannel": {
-                    "default": "off",
-                    "description": "Set to \"weekly\" or \"daily\" to automatically download and install the latest Insiders builds of the python extension, which include upcoming features and bug fixes.",
-                    "enum": [
-                        "daily",
-                        "off",
-                        "weekly"
-                    ],
-                    "scope": "machine",
-                    "type": "string"
                 },
                 "python.languageServer": {
                     "default": "Default",
@@ -1802,24 +1773,6 @@
                     "enablement": "python.hasLanguageServerOutputChannel",
                     "title": "%python.command.python.viewLanguageServerOutput.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "category": "Python",
-                    "command": "python.switchOffInsidersChannel",
-                    "title": "%python.command.python.switchOffInsidersChannel.title%",
-                    "when": "config.python.insidersChannel != 'default' && !virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "category": "Python",
-                    "command": "python.switchToDailyChannel",
-                    "title": "%python.command.python.switchToDailyChannel.title%",
-                    "when": "config.python.insidersChannel != 'daily' && !virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "category": "Python",
-                    "command": "python.switchToWeeklyChannel",
-                    "title": "%python.command.python.switchToWeeklyChannel.title%",
-                    "when": "config.python.insidersChannel != 'weekly' && !virtualWorkspace && shellExecutionSupported"
                 },
                 {
                     "category": "Python",

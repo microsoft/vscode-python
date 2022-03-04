@@ -23,7 +23,6 @@ import { ITestingSettings } from '../testing/configuration/types';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { DEFAULT_INTERPRETER_SETTING, isTestExecution } from './constants';
-import { ExtensionChannels } from './insidersBuild/types';
 import { IS_WINDOWS } from './platform/constants';
 import {
     IAutoCompleteSettings,
@@ -120,8 +119,6 @@ export class PythonSettings implements IPythonSettings {
     public globalModuleInstallation = false;
 
     public autoUpdateLanguageServer = true;
-
-    public insidersChannel!: ExtensionChannels;
 
     public experiments!: IExperiments;
 
@@ -500,7 +497,6 @@ export class PythonSettings implements IPythonSettings {
                   optOutFrom: [],
               };
 
-        this.insidersChannel = pythonSettings.get<ExtensionChannels>('insidersChannel')!;
         this.tensorBoard = pythonSettings.get<ITensorBoardSettings>('tensorBoard');
     }
 
