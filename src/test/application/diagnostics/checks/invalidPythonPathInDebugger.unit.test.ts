@@ -414,4 +414,44 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         expect(valid).to.be.equal(false, 'should be invalid');
         expect(handleInvoked).to.be.equal(true, 'should be invoked');
     });
+    test('Check if the PythonPath is the same as the Python Path in launch.json'),
+        async () => {
+            const pythonPath = path.join('a', 'b');
+            const settings = typemoq.Mock.ofType<IPythonSettings>();
+            configService
+                .setup((c) => c.getSettings(typemoq.It.isAny()))
+                .returns(() => settings.object)
+                .verifiable(typemoq.Times.never());
+            helper
+                .setup((h) => h.getInterpreterInformation(typemoq.It.isValue(pythonPath)))
+                .returns(() => Promise.resolve({}))
+                .verifiable(typemoq.Times.once());
+
+            const valid = await diagnosticService.validatePythonPath(pythonPath, PythonPathSource.launchJson);
+
+            helper.verifyAll();
+            expect(valid).to.be.equal(true, 'should be valid');
+        };
+    test('Check if the PythonPath is the same as the Python Path in settings.json'),
+        async () => {
+            const pythonPath = path.join('a', 'b');
+            const settings = typemoq.Mock.ofType<IPythonSettings>();
+            settings
+                .setup((s): string => s.pythonPath)
+                .returns(() => 'p')
+                .verifiable(typemoq.Times.once());
+            configService
+                .setup((c) => c.getSettings(typemoq.It.isAny()))
+                .returns(() => settings.object)
+                .verifiable(typemoq.Times.once());
+            helper
+                .setup((h) => h.getInterpreterInformation(typemoq.It.isValue('p')))
+                .returns(() => Promise.resolve({}))
+                .verifiable(typemoq.Times.once());
+
+            const valid = await diagnosticService.validatePythonPath(pythonPath, PythonPathSource.settingsJson);
+
+            helper.verifyAll();
+            expect(valid).to.be.equal(true, 'should be valid');
+        };
 });

@@ -88,6 +88,37 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
         if (await this.interpreterHelper.getInterpreterInformation(pythonPath).catch(() => undefined)) {
             return true;
         }
+        if (pythonPathSource === PythonPathSource.launchJson) {
+            const workspaceFolder = await this.interpreterHelper
+                .getInterpreterInformation(pythonPath)
+                .catch(() => undefined);
+            if (workspaceFolder) {
+                const launchJson = this.workspace.getConfiguration(
+                    'launch',
+                    this.workspace.getWorkspaceFolder(resource),
+                );
+                const pythonPathFromLaunchJson = launchJson.get<string>('pythonPath');
+                if (pythonPathFromLaunchJson) {
+                    return this.validatePythonPath(pythonPathFromLaunchJson, PythonPathSource.launchJson);
+                }
+                pythonPath = this.configService.getSettings(resource).pythonPath;
+            }
+        } else if (pythonPathSource === PythonPathSource.settingsJson) {
+            const workspaceFolder = await this.interpreterHelper
+                .getInterpreterInformation(pythonPath)
+                .catch(() => undefined);
+            if (workspaceFolder) {
+                const settingsJson = this.workspace.getConfiguration(
+                    'python',
+                    this.workspace.getWorkspaceFolder(resource),
+                );
+                const pythonPathFromSettingsJson = settingsJson.get<string>('pythonPath');
+                if (pythonPathFromSettingsJson) {
+                    return this.validatePythonPath(pythonPathFromSettingsJson, PythonPathSource.settingsJson);
+                }
+                pythonPath = this.configService.getSettings(resource).pythonPath;
+            }
+        }
         traceError(`Invalid Python Path '${pythonPath}'`);
         if (pythonPathSource === PythonPathSource.launchJson) {
             this.handle([
