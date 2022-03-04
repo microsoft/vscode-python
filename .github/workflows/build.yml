@@ -337,25 +337,3 @@ jobs:
         with:
           node_version: ${{ env.NODE_VERSION }}
           artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}
-
-  upload:
-    name: Upload VSIX to Azure Blob Storage
-    if: github.repository == 'microsoft/vscode-python' && github.ref == 'refs/heads/main'
-    needs: [setup, tests, smoke-tests, build-vsix]
-    runs-on: ubuntu-latest
-    env:
-      BLOB_CONTAINER_NAME: extension-builds
-      BLOB_NAME: ms-python-insiders.vsix
-    steps:
-      - name: Download VSIX
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.setup.outputs.vsix_artifact_name }}
-      - name: Azure Login
-        uses: azure/login@v1.4.3
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - name: Upload to Blob Storage
-        run: az storage blob upload --file ${{ needs.setup.outputs.vsix_name }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
-      - name: Get URL to uploaded VSIX
-        run: az storage blob url --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
