@@ -43,9 +43,12 @@ class FileCancellationSenderStrategy implements CancellationSenderStrategy {
         tryRun(() => fs.mkdirSync(folder, { recursive: true }));
     }
 
+    // @ts-ignore Promise<void> vs void
     public sendCancellation(_: MessageConnection, id: CancellationId): void {
+        // return new Promise<void>((resolve, reject) => {
         const file = getCancellationFilePath(this.folderName, id);
         tryRun(() => fs.writeFileSync(file, '', { flag: 'w' }));
+        // });
     }
 
     public cleanup(id: CancellationId): void {
@@ -87,6 +90,7 @@ export class FileBasedCancellationStrategy implements CancellationStrategy, Disp
     }
 
     get sender(): CancellationSenderStrategy {
+        // @ts-ignore foo
         return this._sender;
     }
 
