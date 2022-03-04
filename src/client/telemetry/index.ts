@@ -1596,7 +1596,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the New Python File command is executed.
      */
     /* __GDPR__
-      "create_new_file_command" : { }
+      "create_new_file_command" : {  "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner" : "luabud" }
      */
     [EventName.CREATE_NEW_FILE_COMMAND]: unknown;
     /**
