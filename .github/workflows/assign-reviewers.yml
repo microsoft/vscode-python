@@ -17,7 +17,7 @@ jobs:
     if: github.repository == 'microsoft/vscode-python'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: main
 
