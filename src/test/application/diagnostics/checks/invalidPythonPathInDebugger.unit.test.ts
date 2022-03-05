@@ -416,7 +416,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
     });
     test('Check if the PythonPath is the same as the Python Path in launch.json'),
         async () => {
-            const pythonPath = path.join('a', 'b');
+            const pythonPath: string = path.join('a', 'b');
             const settings = typemoq.Mock.ofType<IPythonSettings>();
             configService
                 .setup((c) => c.getSettings(typemoq.It.isAny()))
@@ -434,7 +434,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         };
     test('Check if the PythonPath is the same as the Python Path in settings.json'),
         async () => {
-            const pythonPath = 'p';
+            const pythonPath: string = path.join('a', 'b');
             const settings = typemoq.Mock.ofType<IPythonSettings>();
             settings
                 .setup((s): string => s.pythonPath)
