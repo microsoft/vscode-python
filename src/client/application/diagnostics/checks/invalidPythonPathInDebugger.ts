@@ -78,7 +78,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
     public async validatePythonPath(
         pythonPath?: string,
         pythonPathSource?: PythonPathSource,
-        resource?: Uri,
+        resource?: Resource,
     ): Promise<boolean> {
         pythonPath = pythonPath ? this.resolveVariables(pythonPath, resource) : undefined;
 

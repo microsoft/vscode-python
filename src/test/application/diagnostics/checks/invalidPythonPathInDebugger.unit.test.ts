@@ -269,7 +269,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
     test('Ensure ${workspaceFolder} is expanded', async () => {
         const pythonPath = '${workspaceFolder}/venv/bin/python';
 
-        const workspaceFolder = { uri: Uri.parse('full/path/to/workspace'), name: '', index: 0 };
+        const workspaceFolder: any = { uri: Uri.parse('full/path/to/workspace'), name: '', index: 0 };
         const expectedPath = `${workspaceFolder.uri.fsPath}/venv/bin/python`;
 
         workspaceService
