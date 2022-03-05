@@ -419,11 +419,11 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             const pythonPath = path.join('a', 'b');
             const settings = typemoq.Mock.ofType<IPythonSettings>();
             settings
-                .setup((s) => s.pythonPath)
+                .setup((s): string => s.pythonPath)
                 .returns(() => 'p')
                 .verifiable(typemoq.Times.once());
             configService
-                .setup((c) => c.getSettings(typemoq.It.isAny()))
+                .setup((c): IPythonSettings => c.getSettings(typemoq.It.isAny()))
                 .returns(() => settings.object)
                 .verifiable(typemoq.Times.once());
             helper
@@ -443,11 +443,11 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
             const pythonPath = undefined;
             const settings = typemoq.Mock.ofType<IPythonSettings>();
             settings
-                .setup((s) => s.pythonPath)
+                .setup((s): string => s.pythonPath)
                 .returns(() => 'p')
                 .verifiable(typemoq.Times.once());
             configService
-                .setup((c) => c.getSettings(typemoq.It.isAny()))
+                .setup((c): IPythonSettings => c.getSettings(typemoq.It.isAny()))
                 .returns(() => settings.object)
                 .verifiable(typemoq.Times.once());
             helper
