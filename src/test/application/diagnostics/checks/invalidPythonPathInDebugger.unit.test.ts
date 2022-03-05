@@ -416,28 +416,34 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
     });
     test('Check if the PythonPath is the same as the Python Path in launch.json'),
         async () => {
-            const pythonPath: string = path.join('a', 'b');
+            const pythonPath = path.join('a', 'b');
             const settings = typemoq.Mock.ofType<IPythonSettings>();
+            settings
+                .setup((s) => s.pythonPath)
+                .returns(() => 'p')
+                .verifiable(typemoq.Times.once());
             configService
                 .setup((c) => c.getSettings(typemoq.It.isAny()))
                 .returns(() => settings.object)
-                .verifiable(typemoq.Times.never());
+                .verifiable(typemoq.Times.once());
             helper
-                .setup((h) => h.getInterpreterInformation(typemoq.It.isValue(pythonPath)))
+                .setup((h) => h.getInterpreterInformation(typemoq.It.isValue('p')))
                 .returns(() => Promise.resolve({}))
                 .verifiable(typemoq.Times.once());
 
             const valid = await diagnosticService.validatePythonPath(pythonPath, PythonPathSource.launchJson);
 
+            settings.verifyAll();
+            configService.verifyAll();
             helper.verifyAll();
-            expect(valid).to.be.equal(true, 'should be valid');
+            expect(valid).to.be.equal(true, 'not valid');
         };
     test('Check if the PythonPath is the same as the Python Path in settings.json'),
         async () => {
-            const pythonPath: string = path.join('a', 'b');
+            const pythonPath = undefined;
             const settings = typemoq.Mock.ofType<IPythonSettings>();
             settings
-                .setup((s): string => s.pythonPath)
+                .setup((s) => s.pythonPath)
                 .returns(() => 'p')
                 .verifiable(typemoq.Times.once());
             configService
@@ -451,7 +457,9 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
 
             const valid = await diagnosticService.validatePythonPath(pythonPath, PythonPathSource.settingsJson);
 
+            settings.verifyAll();
+            configService.verifyAll();
             helper.verifyAll();
-            expect(valid).to.be.equal(true, 'should be valid');
+            expect(valid).to.be.equal(true, 'not valid');
         };
 });
