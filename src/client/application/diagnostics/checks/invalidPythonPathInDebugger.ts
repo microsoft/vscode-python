@@ -88,6 +88,40 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
         if (await this.interpreterHelper.getInterpreterInformation(pythonPath).catch(() => undefined)) {
             return true;
         }
+        if (pythonPathSource === PythonPathSource.launchJson) {
+            const workspaceFolder = this.workspace.getWorkspaceFolder(resource);
+            if (workspaceFolder) {
+                const launchJson = this.workspace.getConfiguration('launch', workspaceFolder.uri);
+                const pythonPathFromLaunchJson = launchJson.get<string>('pythonPath');
+                if (pythonPathFromLaunchJson) {
+                    pythonPath = this.resolveVariables(pythonPathFromLaunchJson, resource);
+                    return this.validatePythonPath(pythonPath, PythonPathSource.launchJson, resource);
+                }
+            } else {
+                return this.validatePythonPath(
+                    this.configService.getSettings(resource).pythonPath,
+                    PythonPathSource.settingsJson,
+                    resource,
+                );
+            }
+        }
+        if (pythonPathSource === PythonPathSource.settingsJson) {
+            const workspaceFolder = this.workspace.getWorkspaceFolder(resource);
+            if (workspaceFolder) {
+                const settingsJson = this.workspace.getConfiguration('python', workspaceFolder.uri);
+                const pythonPathFromSettingsJson = settingsJson.get<string>('pythonPath');
+                if (pythonPathFromSettingsJson) {
+                    pythonPath = this.resolveVariables(pythonPathFromSettingsJson, resource);
+                    return this.validatePythonPath(pythonPath, PythonPathSource.settingsJson, resource);
+                }
+            } else {
+                return this.validatePythonPath(
+                    this.configService.getSettings(resource).pythonPath,
+                    PythonPathSource.settingsJson,
+                    resource,
+                );
+            }
+        }
         traceError(`Invalid Python Path '${pythonPath}'`);
         if (pythonPathSource === PythonPathSource.launchJson) {
             this.handle([
