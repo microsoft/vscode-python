@@ -765,7 +765,7 @@ export interface IWorkspaceService {
      * @param uri An uri.
      * @return A workspace folder or `undefined`
      */
-    getWorkspaceFolder(uri: Resource): WorkspaceFolder | undefined | any;
+    getWorkspaceFolder(uri: Resource): WorkspaceFolder | undefined;
 
     /**
      * Generate a key that's unique to the workspace folder (could be fsPath).
