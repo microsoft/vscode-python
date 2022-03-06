@@ -414,42 +414,44 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         expect(valid).to.be.equal(false, 'should be invalid');
         expect(handleInvoked).to.be.equal(true, 'should be invoked');
     });
-    test("Ensure if the Python Path Source is the same as the launch.json - a python path is returned"), async () => {
-        const pythonPath = path.join('a', 'b');
-        const settings = typemoq.Mock.ofType<IPythonSettings>();
-        configService
-            .setup((c) => c.getSettings(typemoq.It.isAny()))
-            .returns(() => settings.object)
-            .verifiable(typemoq.Times.never());
-        helper
-            .setup((h) => h.getInterpreterInformation(typemoq.It.isValue(pythonPath)))
-            .returns(() => Promise.resolve({}))
-            .verifiable(typemoq.Times.once());
+    test('Ensure if the Python Path Source is the same as the launch.json - a python path is returned'),
+        async () => {
+            const pythonPath = path.join('a', 'b');
+            const settings = typemoq.Mock.ofType<IPythonSettings>();
+            configService
+                .setup((c) => c.getSettings(typemoq.It.isAny()))
+                .returns(() => settings.object)
+                .verifiable(typemoq.Times.never());
+            helper
+                .setup((h) => h.getInterpreterInformation(typemoq.It.isValue(pythonPath)))
+                .returns(() => Promise.resolve({}))
+                .verifiable(typemoq.Times.once());
 
-        const valid = await diagnosticService.validatePythonPath(pythonPath, PythonPathSource.launchJson);
+            const valid = await diagnosticService.validatePythonPath(pythonPath, PythonPathSource.launchJson);
 
-        helper.verifyAll();
-        expect(valid).to.be.equal(true, 'not valid');
-    }
-    test("Ensure if the Python Path Source is the same as the settings.json - a python path is returned"), async () => {
-        const pythonPath = undefined;
-        const settings = typemoq.Mock.ofType<IPythonSettings>();
-        settings
-            .setup((s) => s.pythonPath)
-            .returns(() => 'p')
-            .verifiable(typemoq.Times.once());
-        configService
-            .setup((c) => c.getSettings(typemoq.It.isAny()))
-            .returns(() => settings.object)
-            .verifiable(typemoq.Times.once());
-        helper
-            .setup((h) => h.getInterpreterInformation(typemoq.It.isValue('p')))
-            .returns(() => Promise.resolve({}))
-            .verifiable(typemoq.Times.once());
+            helper.verifyAll();
+            expect(valid).to.be.equal(true, 'not valid');
+        };
+    test('Ensure if the Python Path Source is the same as the settings.json - a python path is returned'),
+        async () => {
+            const pythonPath = undefined;
+            const settings = typemoq.Mock.ofType<IPythonSettings>();
+            settings
+                .setup((s) => s.pythonPath)
+                .returns(() => 'p')
+                .verifiable(typemoq.Times.once());
+            configService
+                .setup((c) => c.getSettings(typemoq.It.isAny()))
+                .returns(() => settings.object)
+                .verifiable(typemoq.Times.once());
+            helper
+                .setup((h) => h.getInterpreterInformation(typemoq.It.isValue('p')))
+                .returns(() => Promise.resolve({}))
+                .verifiable(typemoq.Times.once());
 
-        const valid = await diagnosticService.validatePythonPath(pythonPath, PythonPathSource.settingsJson);
+            const valid = await diagnosticService.validatePythonPath(pythonPath, PythonPathSource.settingsJson);
 
-        helper.verifyAll();
-        expect(valid).to.be.equal(true, 'not valid');
-    }
+            helper.verifyAll();
+            expect(valid).to.be.equal(true, 'not valid');
+        };
 });
