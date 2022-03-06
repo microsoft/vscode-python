@@ -1,0 +1,31 @@
+# Install flake8 first, as both flake8 and autopep8 require pycodestyle,
+# but flake8 has a tighter pinning.
+flake8
+autopep8
+bandit ; python_version >= '3.5'
+black ; python_version > '2.7'
+yapf
+pylint ; python_version > '2.7'
+pycodestyle
+pydocstyle
+prospector>=1.6.0 ; python_version > '2.7'
+pytest<7.0.0 ; python_version > '2.7'
+flask
+fastapi ; python_version > '2.7'
+uvicorn ; python_version > '2.7'
+django
+isort
+
+# Integrated TensorBoard tests
+tensorboard ; python_version > '2.7'
+torch-tb-profiler ; python_version > '2.7'
+
+# Python 2.7 support.
+pytest==4.6.9 ; python_version == '2.7'
+py==1.10.0 ; python_version == '2.7'  # via pytest 4
+pathlib2>=2.2.0 ; python_version == '2.7'  # via pytest 4
+prospector==1.2.0 ; python_version == '2.7'
+wrapt==1.12.1 ; python_version == '2.7'
+
+# extension build tests
+freezegun

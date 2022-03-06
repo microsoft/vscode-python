@@ -1,0 +1,91 @@
+name: 'Build VSIX'
+description: "Build the extension's VSIX"
+
+inputs:
+  node_version:
+    description: 'Version of Node to install'
+    required: true
+  vsix_name:
+    description: 'Name to give the final VSIX'
+    required: true
+  artifact_name:
+    description: 'Name to give the artifact containing the VSIX'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Node
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ inputs.node_version }}
+        cache: 'npm'
+
+    # Jedi LS depends on dataclasses which is not in the stdlib in Python 3.6.
+    - name: Use Python 3.6 for JediLSP
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+        cache: 'pip'
+        cache-dependency-path: |
+          requirements.txt
+          build/debugger-install-requirements.txt
+          pythonFiles/jedilsp_requirements/requirements.txt
+
+    - name: Upgrade Pip
+      run: python -m pip install -U pip
+      shell: bash
+
+    # For faster/better builds of sdists.
+    - name: Install build pre-requisite
+      run: python -m pip install wheel
+      shell: bash
+
+    - name: Install Python dependencies
+      uses: brettcannon/pip-secure-install@v1
+      with:
+        options: '-t ./pythonFiles/lib/python --implementation py'
+
+    - name: Install debugpy
+      run: |
+        python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+        python ./pythonFiles/install_debugpy.py
+      shell: bash
+
+    - name: Install Jedi LSP
+      uses: brettcannon/pip-secure-install@v1
+      with:
+        requirements-file: './pythonFiles/jedilsp_requirements/requirements.txt'
+        options: '-t ./pythonFiles/lib/jedilsp --implementation py --platform any --abi none'
+
+    - name: Run npm ci
+      run: npm ci --prefer-offline
+      shell: bash
+
+    # Use the GITHUB_RUN_ID environment variable to update the build number.
+    # GITHUB_RUN_ID is a unique number for each run within a repository.
+    # This number does not change if you re-run the workflow run.
+    - name: Update extension build number
+      run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
+      shell: bash
+
+    - name: Update optional extension dependencies
+      run: npm run addExtensionPackDependencies
+      shell: bash
+
+    - name: Build VSIX
+      run: npm run package
+      shell: bash
+
+    - name: Rename VSIX
+      # Move to a temp name in case the specified name happens to match the default name.
+      run: mv ms-python-insiders.vsix ms-python-temp.vsix && mv ms-python-temp.vsix ${{ inputs.vsix_name }}
+      shell: bash
+
+    - name: Upload VSIX
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ inputs.artifact_name }}
+        path: ${{ inputs.vsix_name }}
+        if-no-files-found: error
+        retention-days: 7
