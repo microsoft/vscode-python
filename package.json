@@ -1562,7 +1562,7 @@
                 "configuration": "./languages/pip-requirements.json",
                 "filenamePatterns": [
                     "**/*-requirements.{txt, in}",
-                    "**/*-contstraints.txt",
+                    "**/*-constraints.txt",
                     "**/requirements-*.{txt, in}",
                     "**/constraints-*.txt",
                     "**/requirements/*.{txt,in}",
