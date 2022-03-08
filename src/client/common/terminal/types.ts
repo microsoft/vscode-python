@@ -84,6 +84,10 @@ export type TerminalCreationOptions = {
      * @type {boolean}
      */
     hideFromUser?: boolean;
+    /**
+     * Whether to activate the environment if interpreter selected is conda.
+     */
+    doNotActivateConda?: boolean;
 };
 
 export interface ITerminalServiceFactory {

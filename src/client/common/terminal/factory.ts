@@ -28,7 +28,7 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
         const title = options?.title;
         const terminalTitle = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
         const interpreter = options?.interpreter;
-        const id = this.getTerminalId(terminalTitle, resource, interpreter);
+        const id = this.getTerminalId(terminalTitle, resource, interpreter, options.doNotActivateConda);
         if (!this.terminalServices.has(id)) {
             const terminalService = new TerminalService(this.serviceContainer, options);
             this.terminalServices.set(id, terminalService);
@@ -46,13 +46,18 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
         title = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
         return new TerminalService(this.serviceContainer, { resource, title });
     }
-    private getTerminalId(title: string, resource?: Uri, interpreter?: PythonEnvironment): string {
+    private getTerminalId(
+        title: string,
+        resource?: Uri,
+        interpreter?: PythonEnvironment,
+        doNotActivate?: boolean,
+    ): string {
         if (!resource && !interpreter) {
-            return title;
+            return `${title}:${doNotActivate ? 'no' : 'yes'}`;
         }
         const workspaceFolder = this.serviceContainer
             .get<IWorkspaceService>(IWorkspaceService)
             .getWorkspaceFolder(resource || undefined);
-        return `${title}:${workspaceFolder?.uri.fsPath || ''}:${interpreter?.path}`;
+        return `${title}:${workspaceFolder?.uri.fsPath || ''}:${interpreter?.path}:${doNotActivate ? 'no' : 'yes'}`;
     }
 }

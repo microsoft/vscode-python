@@ -31,7 +31,9 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     ) {}
 
     public async executeFile(file: Uri) {
-        await this.setCwdForFileExecution(file);
+        await this.setCwdForFileExecution(file).catch((ex) => {
+            console.log(ex);
+        });
         const { command, args } = await this.getExecuteFileArgs(file, [file.fsPath.fileToCommandArgument()]);
 
         await this.getTerminalService(file).sendCommand(command, args);
@@ -80,6 +82,8 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             this._terminalService = this.terminalServiceFactory.getTerminalService({
                 resource,
                 title: this.terminalTitle,
+                // `conda run` already activates the environment when executing, so activation isn't required.
+                doNotActivateConda: true,
             });
             this.disposables.push(
                 this._terminalService.onDidCloseTerminal(() => {

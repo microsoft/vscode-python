@@ -6,6 +6,7 @@ import { CancellationToken, Disposable, Event, EventEmitter, Terminal } from 'vs
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { EnvironmentType } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITerminalAutoActivation } from '../../terminals/types';
@@ -28,6 +29,7 @@ export class TerminalService implements ITerminalService, Disposable {
     private terminalHelper: ITerminalHelper;
     private terminalActivator: ITerminalActivator;
     private terminalAutoActivator: ITerminalAutoActivation;
+    private interpreterService: IInterpreterService;
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event.bind(this.terminalClosed);
     }
@@ -42,6 +44,7 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminalAutoActivator = this.serviceContainer.get<ITerminalAutoActivation>(ITerminalAutoActivation);
         this.terminalManager.onDidCloseTerminal(this.terminalCloseHandler, this, disposableRegistry);
         this.terminalActivator = this.serviceContainer.get<ITerminalActivator>(ITerminalActivator);
+        this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
     }
     public dispose() {
         if (this.terminal) {
@@ -84,12 +87,16 @@ export class TerminalService implements ITerminalService, Disposable {
         // Sometimes the terminal takes some time to start up before it can start accepting input.
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        await this.terminalActivator.activateEnvironmentInTerminal(this.terminal!, {
-            resource: this.options?.resource,
-            preserveFocus,
-            interpreter: this.options?.interpreter,
-            hideFromUser: this.options?.hideFromUser,
-        });
+        const interpreter = await this.interpreterService.getActiveInterpreter(this.options?.resource);
+        const shouldActivate = interpreter?.envType !== EnvironmentType.Conda || !this.options?.doNotActivateConda;
+        if (shouldActivate) {
+            await this.terminalActivator.activateEnvironmentInTerminal(this.terminal!, {
+                resource: this.options?.resource,
+                preserveFocus,
+                interpreter: this.options?.interpreter,
+                hideFromUser: this.options?.hideFromUser,
+            });
+        }
 
         if (!this.options?.hideFromUser) {
             this.terminal!.show(preserveFocus);
