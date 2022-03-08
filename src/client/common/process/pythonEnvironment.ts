@@ -149,13 +149,9 @@ export async function createCondaEnv(
     // These are used to generate the deps.
     procs: IProcessService,
     fs: IFileSystem,
-    executeAsAProcess?: boolean,
 ): Promise<PythonEnvironment | undefined> {
     const conda = await Conda.getConda();
-    const pythonArgv = await conda?.getRunPythonArgs(
-        { name: condaInfo.name, prefix: condaInfo.path },
-        executeAsAProcess,
-    );
+    const pythonArgv = await conda?.getRunPythonArgs({ name: condaInfo.name, prefix: condaInfo.path });
     if (!pythonArgv) {
         return undefined;
     }
