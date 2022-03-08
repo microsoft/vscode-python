@@ -82,7 +82,8 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             this._terminalService = this.terminalServiceFactory.getTerminalService({
                 resource,
                 title: this.terminalTitle,
-                // `conda run` already activates the environment when executing, so activation isn't required.
+                // Using `conda run` on top of already activated environment is known to cause issues:
+                // https://github.com/conda/conda/issues/11305
                 doNotActivateConda: true,
             });
             this.disposables.push(
