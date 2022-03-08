@@ -134,7 +134,9 @@ suite('Terminal - Code Execution', () => {
                 terminalFactory
                     .setup((f) =>
                         f.getTerminalService(
-                            TypeMoq.It.is<TerminalCreationOptions>((a) => a.title === expectedTerminalTitle),
+                            TypeMoq.It.is<TerminalCreationOptions>(
+                                (a) => a.title === expectedTerminalTitle && a.doNotActivateConda === true,
+                            ),
                         ),
                     )
                     .returns(() => terminalService.object);

@@ -9,7 +9,9 @@ import { IPlatformService } from '../../../client/common/platform/types';
 import { TerminalService } from '../../../client/common/terminal/service';
 import { ITerminalActivator, ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { ITerminalAutoActivation } from '../../../client/terminals/types';
 import { createPythonInterpreter } from '../../utils/interpreters';
 
@@ -24,6 +26,7 @@ suite('Terminal Service', () => {
     let disposables: Disposable[] = [];
     let mockServiceContainer: TypeMoq.IMock<IServiceContainer>;
     let terminalAutoActivator: TypeMoq.IMock<ITerminalAutoActivation>;
+    let interpreterService: TypeMoq.IMock<IInterpreterService>;
     setup(() => {
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
@@ -32,6 +35,15 @@ suite('Terminal Service', () => {
         terminalHelper = TypeMoq.Mock.ofType<ITerminalHelper>();
         terminalActivator = TypeMoq.Mock.ofType<ITerminalActivator>();
         terminalAutoActivator = TypeMoq.Mock.ofType<ITerminalAutoActivation>();
+        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() =>
+                Promise.resolve(({
+                    path: 'path/to/interpreter',
+                    envType: EnvironmentType.Venv,
+                } as unknown) as PythonEnvironment),
+            );
         disposables = [];
 
         mockServiceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -42,6 +54,7 @@ suite('Terminal Service', () => {
         mockServiceContainer.setup((c) => c.get(IWorkspaceService)).returns(() => workspaceService.object);
         mockServiceContainer.setup((c) => c.get(ITerminalActivator)).returns(() => terminalActivator.object);
         mockServiceContainer.setup((c) => c.get(ITerminalAutoActivation)).returns(() => terminalAutoActivator.object);
+        mockServiceContainer.setup((c) => c.get(IInterpreterService)).returns(() => interpreterService.object);
     });
     teardown(() => {
         if (service) {
@@ -177,6 +190,35 @@ suite('Terminal Service', () => {
         terminalHelper.verifyAll();
         terminalActivator.verifyAll();
         terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
+    });
+
+    test('Ensure terminal is activated once if active interpreter is conda, and it is configured to not activate a conda environment', async () => {
+        service = new TerminalService(mockServiceContainer.object, { doNotActivateConda: true });
+        interpreterService.reset();
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() =>
+                Promise.resolve(({
+                    path: 'path/to/interpreter',
+                    envType: EnvironmentType.Conda,
+                } as unknown) as PythonEnvironment),
+            );
+        terminalActivator
+            .setup((h) => h.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.never());
+        terminalManager
+            .setup((t) => t.createTerminal(TypeMoq.It.isAny()))
+            .returns(() => terminal.object)
+            .verifiable(TypeMoq.Times.atLeastOnce());
+
+        await service.show();
+        await service.show();
+        await service.show();
+        await service.show();
+
+        terminalHelper.verifyAll();
+        terminalActivator.verifyAll();
     });
 
     test('Ensure terminal is activated once before sending text', async () => {
