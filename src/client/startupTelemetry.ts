@@ -4,7 +4,7 @@
 import { IWorkspaceService } from './common/application/types';
 import { isTestExecution } from './common/constants';
 import { ITerminalHelper } from './common/terminal/types';
-import { IConfigurationService, IInterpreterPathService, Resource } from './common/types';
+import { IInterpreterPathService, Resource } from './common/types';
 import { IStopWatch } from './common/utils/stopWatch';
 import { IInterpreterAutoSelectionService } from './interpreter/autoSelection/types';
 import { ICondaService, IInterpreterService } from './interpreter/contracts';
