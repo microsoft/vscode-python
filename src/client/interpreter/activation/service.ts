@@ -243,7 +243,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 } catch (exc) {
                     // Special case. Conda for some versions will state a file is in use. If
                     // that's the case, wait and try again. This happens especially on AzDo
-                    const excString = exc.toString();
+                    const excString = (exc as Error).toString();
                     if (condaRetryMessages.find((m) => excString.includes(m)) && tryCount < 10) {
                         traceInfo(`Conda is busy, attempting to retry ...`);
                         result = undefined;

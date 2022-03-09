@@ -145,7 +145,6 @@ src/test/application/diagnostics/checks/macPythonInterpreter.unit.test.ts
 src/test/application/diagnostics/checks/pythonPathDeprecated.unit.test.ts
 src/test/application/diagnostics/checks/pythonInterpreter.unit.test.ts
 src/test/application/diagnostics/checks/invalidLaunchJsonDebugger.unit.test.ts
-src/test/application/diagnostics/checks/updateTestSettings.unit.test.ts
 src/test/application/diagnostics/checks/powerShellActivation.unit.test.ts
 src/test/application/diagnostics/checks/invalidPythonPathInDebugger.unit.test.ts
 src/test/application/diagnostics/checks/envPathVariable.unit.test.ts
@@ -206,7 +205,6 @@ src/client/testing/configurationFactory.ts
 src/client/testing/common/debugLauncher.ts
 src/client/testing/common/constants.ts
 src/client/testing/common/testUtils.ts
-src/client/testing/common/updateTestSettings.ts
 src/client/testing/common/socketServer.ts
 src/client/testing/common/runner.ts
 

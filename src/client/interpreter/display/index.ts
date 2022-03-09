@@ -125,11 +125,11 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
                     );
                     this.currentlySelectedInterpreterPath = interpreter.path;
                 }
-                let text = interpreter.detailedDisplayName!;
+                let text = interpreter.detailedDisplayName;
                 if (this.experiments.inExperimentSync(InterpreterStatusBarPosition.Pinned)) {
-                    text = text.startsWith('Python') ? text.substring('Python'.length).trim() : text;
+                    text = text?.startsWith('Python') ? text?.substring('Python'.length)?.trim() : text;
                 }
-                this.statusBar.text = text;
+                this.statusBar.text = text ?? '';
                 this.currentlySelectedInterpreterDisplay = interpreter.detailedDisplayName;
             } else {
                 this.statusBar.tooltip = '';

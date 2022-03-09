@@ -6,7 +6,6 @@
 import { instance, mock, verify } from 'ts-mockito';
 import { InstallationChannelManager } from '../../../client/common/installer/channelManager';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
-import { InsidersBuildInstaller, StableBuildInstaller } from '../../../client/common/installer/extensionBuildInstaller';
 import { PipEnvInstaller } from '../../../client/common/installer/pipEnvInstaller';
 import { PipInstaller } from '../../../client/common/installer/pipInstaller';
 import { PoetryInstaller } from '../../../client/common/installer/poetryInstaller';
@@ -18,13 +17,10 @@ import {
 import { ProductService } from '../../../client/common/installer/productService';
 import { registerTypes } from '../../../client/common/installer/serviceRegistry';
 import {
-    IExtensionBuildInstaller,
     IInstallationChannelManager,
     IModuleInstaller,
-    INSIDERS_INSTALLER,
     IProductPathService,
     IProductService,
-    STABLE_INSTALLER,
 } from '../../../client/common/installer/types';
 import { ProductType } from '../../../client/common/types';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
@@ -49,21 +45,6 @@ suite('Common installer Service Registry', () => {
                 InstallationChannelManager,
             ),
         ).once();
-        verify(
-            serviceManager.addSingleton<IExtensionBuildInstaller>(
-                IExtensionBuildInstaller,
-                StableBuildInstaller,
-                STABLE_INSTALLER,
-            ),
-        ).once();
-        verify(
-            serviceManager.addSingleton<IExtensionBuildInstaller>(
-                IExtensionBuildInstaller,
-                InsidersBuildInstaller,
-                INSIDERS_INSTALLER,
-            ),
-        ).once();
-
         verify(serviceManager.addSingleton<IProductService>(IProductService, ProductService)).once();
         verify(
             serviceManager.addSingleton<IProductPathService>(

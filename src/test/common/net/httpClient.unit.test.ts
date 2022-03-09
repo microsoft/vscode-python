@@ -72,9 +72,10 @@ suite('Http Client', () => {
                     rejected = false;
                 } catch (ex) {
                     if (testParams.expectedErrorMessage) {
+                        const error = ex as Error;
                         // Compare error messages
-                        if (ex.message) {
-                            ex = ex.message;
+                        if (error.message) {
+                            ex = error.message;
                         }
                         expect(ex).to.equal(
                             testParams.expectedErrorMessage,

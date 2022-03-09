@@ -1361,7 +1361,7 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent with details when user clicks a button in the following prompt
-     * `Prompt message` :- 'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?'
+     * `Prompt message` :- 'We now have a new mechanism to get pre-release (insiders) version of the extension. See [here](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#prerelease-extensions) to lean more.'
      */
     /* __GDPR__
        "insiders_prompt" : {
@@ -1374,7 +1374,7 @@ export interface IEventNamePropertyMapping {
          * `Yes, daily` When user selects to use "daily" as extension channel in insiders prompt
          * `No, thanks` When user decides to keep using the same extension channel as before
          */
-        selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
+        selection: 'preRelease' | 'stable' | 'closed' | undefined;
     };
     /**
      * Telemetry event sent with details when user clicks a button in the 'Reload to install insiders prompt'.
@@ -1592,6 +1592,13 @@ export interface IEventNamePropertyMapping {
       "use_report_issue_command" : { }
      */
     [EventName.USE_REPORT_ISSUE_COMMAND]: unknown;
+    /**
+     * Telemetry event sent when the New Python File command is executed.
+     */
+    /* __GDPR__
+      "create_new_file_command" : { }
+     */
+    [EventName.CREATE_NEW_FILE_COMMAND]: unknown;
     /**
      * Telemetry event sent once on session start with details on which experiments are opted into and opted out from.
      */

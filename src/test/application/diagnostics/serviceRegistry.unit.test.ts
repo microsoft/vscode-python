@@ -41,6 +41,10 @@ import {
     SwitchToDefaultLanguageServerDiagnosticService,
     SwitchToDefaultLanguageServerDiagnosticServiceId,
 } from '../../../client/application/diagnostics/checks/switchToDefaultLS';
+import {
+    SwitchToPreReleaseExtensionDiagnosticService,
+    SwitchToPreReleaseExtensionDiagnosticServiceId,
+} from '../../../client/application/diagnostics/checks/switchToPreReleaseExtension';
 import { DiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/factory';
 import { IDiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/types';
 import { DiagnosticFilterService } from '../../../client/application/diagnostics/filter';
@@ -140,6 +144,14 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
                 SwitchToDefaultLanguageServerDiagnosticServiceId,
             ),
         );
+        verify(
+            serviceManager.addSingleton<IDiagnosticsService>(
+                IDiagnosticsService,
+                SwitchToPreReleaseExtensionDiagnosticService,
+                SwitchToPreReleaseExtensionDiagnosticServiceId,
+            ),
+        );
+
         verify(
             serviceManager.addSingleton<IDiagnosticsCommandFactory>(
                 IDiagnosticsCommandFactory,

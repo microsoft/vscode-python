@@ -27,20 +27,6 @@ import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegi
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { EditorUtils } from '../../client/common/editor';
 import { ExperimentService } from '../../client/common/experiments/service';
-import {
-    ExtensionInsidersDailyChannelRule,
-    ExtensionInsidersOffChannelRule,
-    ExtensionInsidersWeeklyChannelRule,
-} from '../../client/common/insidersBuild/downloadChannelRules';
-import { ExtensionChannelService } from '../../client/common/insidersBuild/downloadChannelService';
-import { InsidersExtensionPrompt } from '../../client/common/insidersBuild/insidersExtensionPrompt';
-import { InsidersExtensionService } from '../../client/common/insidersBuild/insidersExtensionService';
-import {
-    ExtensionChannel,
-    IExtensionChannelRule,
-    IExtensionChannelService,
-    IInsiderExtensionPrompt,
-} from '../../client/common/insidersBuild/types';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import {
@@ -239,11 +225,6 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<IShellDetector>(IShellDetector, SettingsShellDetector);
         ioc.serviceManager.addSingleton<IShellDetector>(IShellDetector, UserEnvironmentShellDetector);
         ioc.serviceManager.addSingleton<IShellDetector>(IShellDetector, VSCEnvironmentShellDetector);
-        ioc.serviceManager.addSingleton<IInsiderExtensionPrompt>(IInsiderExtensionPrompt, InsidersExtensionPrompt);
-        ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
-            IExtensionSingleActivationService,
-            InsidersExtensionService,
-        );
         ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
             IExtensionSingleActivationService,
             ReloadVSCodeCommandHandler,
@@ -252,22 +233,7 @@ suite('Installer', () => {
             IExtensionSingleActivationService,
             ReportIssueCommandHandler,
         );
-        ioc.serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
-        ioc.serviceManager.addSingleton<IExtensionChannelRule>(
-            IExtensionChannelRule,
-            ExtensionInsidersOffChannelRule,
-            ExtensionChannel.off,
-        );
-        ioc.serviceManager.addSingleton<IExtensionChannelRule>(
-            IExtensionChannelRule,
-            ExtensionInsidersDailyChannelRule,
-            ExtensionChannel.daily,
-        );
-        ioc.serviceManager.addSingleton<IExtensionChannelRule>(
-            IExtensionChannelRule,
-            ExtensionInsidersWeeklyChannelRule,
-            ExtensionChannel.weekly,
-        );
+
         ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
             IExtensionSingleActivationService,
             DebugSessionTelemetry,

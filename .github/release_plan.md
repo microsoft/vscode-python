@@ -7,10 +7,10 @@ All dates should align with VS Code's [iteration](https://github.com/microsoft/v
 # Release candidate (Monday, XXX XX)
 
 -   [ ] Update `main` for the release
-    -   [ ] Change the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) from a `-dev` suffix to `-rc` (🤖)
+    -   [ ] Change the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) to the next **even** number (🤖)
     -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) is up-to-date (🤖)
-    -   [ ] Check `pypi.org` and update the version of `debugpy` in `install_debugpy.py`.
-    -   [ ] Update `languageServerVersion` in `package.json` to point to the latest version of the [Language Server](https://github.com/Microsoft/python-language-server). Check with the language server team if this needs updating.
+    -   [ ] Check `pypi.org` and update the version of `debugpy` in `install_debugpy.py` if necessary.
+    -   [ ] Update `languageServerVersion` in `package.json` to point to the latest version of the [Language Server](https://github.com/Microsoft/python-language-server). Check with the language server team if this needs updating (🤖)
     -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/main/CHANGELOG.md) (🤖)
         -   [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/main/news) (typically `python news --final --update CHANGELOG.md | code-insiders -`)
         -   [ ] Copy over the "Thanks" section from the previous release into the "Thanks" section for the new release
@@ -25,7 +25,7 @@ All dates should align with VS Code's [iteration](https://github.com/microsoft/v
     -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[minor - 2]) you can delete them at this time
     -   [ ] Create a new `release/YYYY.minor` branch from `main`
 -   [ ] Update `main` post-release (🤖)
-    -   [ ] Bump the minor version number to the next ("YYYY.[minor+1].0-dev") release in the `main` branch. For example, if the release brach is `2022.0.0-rc` then main branch should be `2022.1.0-dev`.
+    -   [ ] Bump the minor version number to the next ("YYYY.[minor+1]") release in the `main` branch to an **odd** number (🤖)
         -   [ ] `package.json`
         -   [ ] `package-lock.json`
     -   [ ] Create a pull request against `main`
@@ -34,10 +34,8 @@ All dates should align with VS Code's [iteration](https://github.com/microsoft/v
 -   [ ] Update Component Governance (Notes are in the team OneNote under Python VS Code → Dev Process → Component Governance).
     -   [ ] Make sure there are no active alerts
     -   [ ] Manually add any repository/embedded/CG-incompatible dependencies
--   [ ] GDPR bookkeeping (@brettcannon) (🤖; Notes in OneNote under Python VS Code → Dev Process → GDPR)
 -   [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
 -   [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post. Contact the PM team for this.
--   [ ] Ask CTI to test the release candidate
 
 # Release (Wednesday, XXX XX)
 
@@ -55,28 +53,20 @@ All dates should align with VS Code's [iteration](https://github.com/microsoft/v
         -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/main/ThirdPartyNotices-Repository.txt) manually if necessary
         -   [ ] Create pull request against `release-YYYY.minor` (🤖)
         -   [ ] Merge pull request into `release-YYYY.minor`
--   [ ] Make sure component governance is happy
 
 ## Release
 
--   [ ] Publish the release (🤖)
-    -   [ ] Make sure [CI](https://github.com/microsoft/vscode-python/actions?query=workflow%3A%22Insiders+Build%22) is passing
-    -   [ ] Download the artifact containing the VSIX and make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
-    -   [ ] [Update the Marketplace](https://marketplace.visualstudio.com/manage/publishers/ms-python)
-    -   [ ] From a VS Code instance uninstall the python extension. After the publish see if the new version is available from the extensions tab. Download it and quick sanity check to make sure the extension loads.
+-   [ ] Make sure [CI](https://github.com/microsoft/vscode-python/actions?query=workflow%3A%22Insiders+Build%22) is passing (🤖)
 -   [ ] Create a [GitHub release](https://github.com/microsoft/vscode-python/releases) (🤖)
     -   [ ] Start creating a new release
     -   [ ] Make the tag match the version of the released extension
     -   [ ] Copy the changelog entry into the release as the description
+-   [ ] Run the CD pipeline
 -   [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
 -   [ ] Publish the [blog](http://aka.ms/pythonblog) post
 -   [ ] Determine if a hotfix is needed
--   [ ] Merge `release-YYYY.minor` back into `main`. Don't overwrite the main branch version or remove `-dev` in package.json. (🤖)
+-   [ ] Merge the release branch back into `main`. Don't overwrite the main branch version. (🤖)
 
-## Clean up after _this_ release
-
--   [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-python/issues?q=is%3Aopen+label%3A%22info+needed%22+sort%3Aupdated-asc) and close any that have no activity for over a month (🤖)
--   [ ] GDPR bookkeeping (🤖)
 
 ## Prep for the _next_ release
 

@@ -108,7 +108,9 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
             return newSession;
         } catch (e) {
             traceError(`Encountered error while starting new TensorBoard session: ${e}`);
-            await this.applicationShell.showErrorMessage(TensorBoard.failedToStartSessionError().format(e));
+            await this.applicationShell.showErrorMessage(
+                TensorBoard.failedToStartSessionError().format((e as Error).message),
+            );
         }
         return undefined;
     }

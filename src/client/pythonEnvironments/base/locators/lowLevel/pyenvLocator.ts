@@ -1,18 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
 import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
 import { getInterpreterPathFromDir } from '../../../common/commonUtils';
 import { getSubDirs } from '../../../common/externalDependencies';
-import { getPyenvDir } from '../../../common/environmentManagers/pyenv';
+import { getPyenvVersionsDir } from '../../../common/environmentManagers/pyenv';
 import { traceError } from '../../../../logging';
-
-function getPyenvVersionsDir(): string {
-    return path.join(getPyenvDir(), 'versions');
-}
 
 /**
  * Gets all the pyenv environments.

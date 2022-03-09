@@ -134,12 +134,9 @@ const OptionsWithoutArguments = [
     '-d',
 ];
 
-export function pytestGetTestFolders(args: string[]): string[] {
-    const positionalArgs = getPositionalArguments(args, OptionsWithArguments, OptionsWithoutArguments);
-    // Positional args in pytest are files or directories.
-    // Remove files from the args, and what's left are test directories.
+export function pytestGetTestFilesAndFolders(args: string[]): string[] {
     // If users enter test modules/methods, then its not supported.
-    return positionalArgs.filter((arg) => !arg.toUpperCase().endsWith('.PY'));
+    return getPositionalArguments(args, OptionsWithArguments, OptionsWithoutArguments);
 }
 
 export function removePositionalFoldersAndFiles(args: string[]): string[] {
