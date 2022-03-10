@@ -17,7 +17,7 @@ export type PythonEnvironmentsChangedEvent = {
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
     readonly onRefreshStart: Event<void>;
-    triggerRefresh(query?: PythonLocatorQuery): Promise<void>;
+    triggerRefresh(query?: PythonLocatorQuery & { clearCache?: boolean }): Promise<void>;
     readonly refreshPromise: Promise<void> | undefined;
     readonly onChanged: Event<PythonEnvironmentsChangedEvent>;
     // VirtualEnvPrompt

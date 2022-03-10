@@ -13,6 +13,7 @@ import { EventName } from '../../telemetry/constants';
 import { IApplicationShell } from '../application/types';
 import { wrapCancellationTokens } from '../cancellation';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { isParentPath } from '../platform/fs-paths';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from '../process/internal/python';
 import { ITerminalServiceFactory, TerminalCreationOptions } from '../terminal/types';
@@ -22,11 +23,32 @@ import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
 import { IModuleInstaller, InterpreterUri, ModuleInstallFlags } from './types';
 
+export async function doesEnvironmentContainPython(serviceContainer: IServiceContainer, resource: InterpreterUri) {
+    const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+    const environment = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
+    if (!environment) {
+        return false;
+    }
+    if (
+        environment.envPath?.length &&
+        environment.envType === EnvironmentType.Conda &&
+        !isParentPath(environment?.path, environment.envPath)
+    ) {
+        // For conda environments not containing a python interpreter, do not use pip installer due to bugs in `conda run`:
+        // https://github.com/microsoft/vscode-python/issues/18479#issuecomment-1044427511
+        // https://github.com/conda/conda/issues/11211
+        return false;
+    }
+    return true;
+}
 @injectable()
 export abstract class ModuleInstaller implements IModuleInstaller {
     public abstract get priority(): number;
+
     public abstract get name(): string;
+
     public abstract get displayName(): string;
+
     public abstract get type(): ModuleInstallerType;
 
     constructor(protected serviceContainer: IServiceContainer) {}
@@ -38,7 +60,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         flags?: ModuleInstallFlags,
     ): Promise<void> {
         const name =
-            typeof productOrModuleName == 'string'
+            typeof productOrModuleName === 'string'
                 ? productOrModuleName
                 : translateProductToModule(productOrModuleName);
         const productName = typeof productOrModuleName === 'string' ? name : ProductNames.get(productOrModuleName);
@@ -103,7 +125,11 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         } else {
             await install(cancel);
         }
+        await this.postInstall(resource);
     }
+
+    protected async postInstall(_: InterpreterUri): Promise<void> {}
+
     public abstract isSupported(resource?: InterpreterUri): Promise<boolean>;
 
     protected elevatedInstall(execPath: string, args: string[]) {
@@ -132,11 +158,13 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             }
         });
     }
+
     protected abstract getExecutionInfo(
         moduleName: string,
         resource?: InterpreterUri,
         flags?: ModuleInstallFlags,
     ): Promise<ExecutionInfo>;
+
     private async processInstallArgs(args: string[], resource?: InterpreterUri): Promise<string[]> {
         const indexOfPylint = args.findIndex((arg) => arg.toUpperCase() === 'PYLINT');
         if (indexOfPylint === -1) {
