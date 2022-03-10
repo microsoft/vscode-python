@@ -15,7 +15,7 @@ import {
 } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { LanguageService } from '../common/utils/localize';
-import { IInterpreterService } from '../interpreter/contracts';
+import { IComponentAdapter, IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
@@ -29,7 +29,7 @@ import {
     LanguageServerType,
 } from './types';
 import { StopWatch } from '../common/utils/stopWatch';
-import { traceError, traceLog } from '../logging';
+import { traceError, traceLog, traceVerbose } from '../logging';
 
 const languageServerSetting: keyof IPythonSettings = 'languageServer';
 const workspacePathNameForGlobalWorkspaces = '';
@@ -132,9 +132,12 @@ export class LanguageServerExtensionActivationService
         // Force this server to reconnect (if disconnected) as it should be the active
         // language server for all of VS code.
         this.activatedServer.server.activate();
+        traceVerbose('Time taken to start language server', stopWatch.elapsedTime);
         sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_STARTUP_DURATION, stopWatch.elapsedTime, {
             languageServerType: result.type,
         });
+        const pyenvs = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
+        pyenvs.triggerRefresh().ignoreErrors();
     }
 
     public async get(resource: Resource, interpreter?: PythonEnvironment): Promise<RefCountedLanguageServer> {
