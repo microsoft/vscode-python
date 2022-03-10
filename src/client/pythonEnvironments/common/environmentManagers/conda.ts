@@ -407,7 +407,7 @@ export class Conda {
         return envList.find((e) => isParentPath(executable, e.prefix));
     }
 
-    public async getRunPythonArgs(env: CondaEnvInfo): Promise<string[] | undefined> {
+    public async getRunPythonArgs(env: CondaEnvInfo, executeAsAProcess = true): Promise<string[] | undefined> {
         const condaVersion = await this.getCondaVersion();
         if (condaVersion && lt(condaVersion, CONDA_RUN_VERSION)) {
             return undefined;
@@ -418,7 +418,11 @@ export class Conda {
         } else {
             args.push('-p', env.prefix);
         }
-        return [this.command, 'run', ...args, '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT];
+        const pythonArgs = [this.command, 'run', ...args, '--no-capture-output', '--live-stream', 'python'];
+        if (executeAsAProcess) {
+            pythonArgs.push(OUTPUT_MARKER_SCRIPT);
+        }
+        return pythonArgs;
     }
 
     /**
@@ -448,5 +452,13 @@ export class Conda {
         // This ensures we still use conda for activation, installation etc.
         traceError(`Unable to parse version of Conda, ${versionString}`);
         return new SemVer('0.0.1');
+    }
+
+    public async isCondaRunSupported(): Promise<boolean> {
+        const condaVersion = await this.getCondaVersion();
+        if (condaVersion && lt(condaVersion, CONDA_RUN_VERSION)) {
+            return false;
+        }
+        return true;
     }
 }

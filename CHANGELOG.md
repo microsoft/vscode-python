@@ -1,5 +1,274 @@
 # Changelog
 
+## 2022.2.0-rc (28 February 2022)
+
+### Enhancements
+
+1. Implement a "New Python File" command
+   ([#18376](https://github.com/Microsoft/vscode-python/issues/18376))
+1. Use `conda run` for conda environments for running python files and installing modules.
+   ([#18479](https://github.com/Microsoft/vscode-python/issues/18479))
+1. Better filename patterns for pip-requirements.
+   (thanks [Baptiste Darthenay](https://github.com/batisteo))
+   ([#18498](https://github.com/Microsoft/vscode-python/issues/18498))
+
+### Fixes
+
+1. Ensure clicking "Discovering Python Interpreters" in the status bar shows the current discovery progress.
+   ([#18443](https://github.com/Microsoft/vscode-python/issues/18443))
+1. Fixes Pylama output parsing with MyPy. (thanks [Nicola Marella](https://github.com/nicolamarella))
+   ([#15609](https://github.com/Microsoft/vscode-python/issues/15609))
+1. Fix CPU load issue caused by poetry plugin by not watching directories which do not exist.
+   ([#18459](https://github.com/Microsoft/vscode-python/issues/18459))
+1. Explicitly add `"justMyCode": "true"` to all `launch.json` configurations.
+   (Thanks [Matt Bogosian](https://github.com/posita))
+   ([#18471](https://github.com/Microsoft/vscode-python/issues/18471))
+1. Identify base conda environments inside pyenv correctly.
+   ([#18500](https://github.com/Microsoft/vscode-python/issues/18500))
+1. Fix for a crash when loading environments with no info.
+   ([#18594](https://github.com/Microsoft/vscode-python/issues/18594))
+
+### Code Health
+
+1. Remove dependency on `ts-mock-imports`.
+   ([#14757](https://github.com/Microsoft/vscode-python/issues/14757))
+1. Update `vsce` to `v2.6.6`.
+   ([#18411](https://github.com/Microsoft/vscode-python/issues/18411))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [poetry](https://pypi.org/project/poetry/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2022.0.1 (8 February 2022)
+
+### Fixes
+
+1. Fix `invalid patch string` error when using conda.
+   ([#18455](https://github.com/Microsoft/vscode-python/issues/18455))
+1. Revert to old way of running debugger if conda version less than 4.9.0.
+   ([#18436](https://github.com/Microsoft/vscode-python/issues/18436))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [poetry](https://pypi.org/project/poetry/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2022.0.0 (3 February 2022)
+
+### Enhancements
+
+1. Add support for conda run without output, using `--no-capture-output` flag.
+   ([#7696](https://github.com/Microsoft/vscode-python/issues/7696))
+1. Add an option to clear interpreter setting for all workspace folders in multiroot scenario.
+   ([#17693](https://github.com/Microsoft/vscode-python/issues/17693))
+1. Public API for environments (proposed).
+   ([#17905](https://github.com/Microsoft/vscode-python/issues/17905))
+1. Group interpreters in interpreter quick picker using separators.
+   ([#17944](https://github.com/Microsoft/vscode-python/issues/17944))
+1. Add support for pylint error ranges. Requires Python 3.8 and pylint 2.12.2 or higher. (thanks [Marc Mueller](https://github.com/cdce8p))
+   ([#18068](https://github.com/Microsoft/vscode-python/issues/18068))
+1. Move pinned interpreter status bar item towards the right behind `pythonInterpreterInfoPinned` experiment.
+   ([#18282](https://github.com/Microsoft/vscode-python/issues/18282))
+1. Move interpreter status bar item into the `Python` language status item behind `pythonInterpreterInfoUnpinned` experiment.
+   ([#18283](https://github.com/Microsoft/vscode-python/issues/18283))
+1. Update Jedi language server to latest.
+   ([#18325](https://github.com/Microsoft/vscode-python/issues/18325))
+
+### Fixes
+
+1. Update zh-tw translations. (thanks [ted1030](https://github.com/ted1030))
+   ([#17991](https://github.com/Microsoft/vscode-python/issues/17991))
+1. Support selecting conda environments with python `3.10`.
+   ([#18128](https://github.com/Microsoft/vscode-python/issues/18128))
+1. Fixes to telemetry handler in language server middleware.
+   ([#18188](https://github.com/Microsoft/vscode-python/issues/18188))
+1. Resolve system variables in `python.defaultInterpreterPath`.
+   ([#18207](https://github.com/Microsoft/vscode-python/issues/18207))
+1. Ensures interpreters are discovered even when running `interpreterInfo.py` script prints more than just the script output.
+   ([#18234](https://github.com/Microsoft/vscode-python/issues/18234))
+1. Remove restrictions on using `purpose` in debug configuration.
+   ([#18248](https://github.com/Microsoft/vscode-python/issues/18248))
+1. Ensure Python Interpreter information in the status bar is updated if Interpreter information changes.
+   ([#18257](https://github.com/Microsoft/vscode-python/issues/18257))
+1. Fix "Run Selection/Line in Python Terminal" for Python < 3.8 when the code includes decorators.
+   ([#18258](https://github.com/Microsoft/vscode-python/issues/18258))
+1. Ignore notebook cells for pylance. Jupyter extension is handling notebooks.
+   ([#18259](https://github.com/Microsoft/vscode-python/issues/18259))
+1. Fix for UriError when using python.interpreterPath command in tasks.
+   ([#18285](https://github.com/Microsoft/vscode-python/issues/18285))
+1. Ensure linting works under `conda run` (work-around for https://github.com/conda/conda/issues/10972).
+   ([#18364](https://github.com/Microsoft/vscode-python/issues/18364))
+1. Ensure items are removed from the array in reverse order when using array indices.
+   ([#18382](https://github.com/Microsoft/vscode-python/issues/18382))
+1. Log experiments only after we finish updating active experiments list.
+   ([#18393](https://github.com/Microsoft/vscode-python/issues/18393))
+
+### Code Health
+
+1. Improve unit tests for envVarsService, in particular the variable substitution logic (Thanks [Keshav Kini](https://github.com/kini))
+   ([#17747](https://github.com/Microsoft/vscode-python/issues/17747))
+1. Remove `python.pythonPath` setting and `pythonDeprecatePythonPath` experiment.
+   ([#17977](https://github.com/Microsoft/vscode-python/issues/17977))
+1. Remove `pythonTensorboardExperiment` and `PythonPyTorchProfiler` experiments.
+   ([#18074](https://github.com/Microsoft/vscode-python/issues/18074))
+1. Reduce direct dependency on IOutputChannel.
+   ([#18132](https://github.com/Microsoft/vscode-python/issues/18132))
+1. Upgrade to Node 14 LTS (v14.18.2).
+   ([#18148](https://github.com/Microsoft/vscode-python/issues/18148))
+1. Switch `jedils_requirements.txt` to `requirements.txt` under `pythonFiles/jedilsp_requirements/`.
+   ([#18185](https://github.com/Microsoft/vscode-python/issues/18185))
+1. Removed `experiments.json` file.
+   ([#18235](https://github.com/Microsoft/vscode-python/issues/18235))
+1. Fixed typescript and namespace errors. (Thanks [Harry-Hopkinson](https://github.com/Harry-Hopkinson))
+   ([#18345](https://github.com/Microsoft/vscode-python/issues/18345))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [poetry](https://pypi.org/project/poetry/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2021.12.0 (9 December 2021)
 
 ### Enhancements

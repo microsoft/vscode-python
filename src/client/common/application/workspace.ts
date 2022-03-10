@@ -9,6 +9,7 @@ import {
     Event,
     FileSystemWatcher,
     GlobPattern,
+    TextDocument,
     Uri,
     workspace,
     WorkspaceConfiguration,
@@ -95,6 +96,10 @@ export class WorkspaceService implements IWorkspaceService {
 
     public get onDidGrantWorkspaceTrust(): Event<void> {
         return workspace.onDidGrantWorkspaceTrust;
+    }
+
+    public openTextDocument(options?: { language?: string; content?: string }): Thenable<TextDocument> {
+        return workspace.openTextDocument(options);
     }
 
     private get searchExcludes() {

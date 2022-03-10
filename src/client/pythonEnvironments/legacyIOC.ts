@@ -292,6 +292,7 @@ class ComponentAdapter implements IComponentAdapter {
         const query: PythonLocatorQuery = {
             searchLocations: {
                 roots: [workspaceFolder.uri],
+                doNotIncludeNonRooted: true,
             },
         };
         if (options?.ignoreCache) {

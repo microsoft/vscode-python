@@ -259,7 +259,8 @@ export async function getTempFileWithDocumentContents(document: TextDocument, fs
         await fs.writeFile(fileName, document.getText());
     } catch (ex) {
         traceError('Failed to create a temporary file', ex);
-        throw new WrappedError(`Failed to create a temporary file, ${ex.message}`, ex);
+        const exception = ex as Error;
+        throw new WrappedError(`Failed to create a temporary file, ${exception.message}`, exception);
     }
     return fileName;
 }

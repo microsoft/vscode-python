@@ -40,7 +40,10 @@ import {
     SwitchToDefaultLanguageServerDiagnosticService,
     SwitchToDefaultLanguageServerDiagnosticServiceId,
 } from './checks/switchToDefaultLS';
-import { UpgradeCodeRunnerDiagnosticService, UpgradeCodeRunnerDiagnosticServiceId } from './checks/upgradeCodeRunner';
+import {
+    SwitchToPreReleaseExtensionDiagnosticService,
+    SwitchToPreReleaseExtensionDiagnosticServiceId,
+} from './checks/switchToPreReleaseExtension';
 import { DiagnosticsCommandFactory } from './commands/factory';
 import { IDiagnosticsCommandFactory } from './commands/types';
 import { DiagnosticFilterService } from './filter';
@@ -96,12 +99,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
 
     serviceManager.addSingleton<IDiagnosticsService>(
         IDiagnosticsService,
-        UpgradeCodeRunnerDiagnosticService,
-        UpgradeCodeRunnerDiagnosticServiceId,
-    );
-
-    serviceManager.addSingleton<IDiagnosticsService>(
-        IDiagnosticsService,
         PylanceDefaultDiagnosticService,
         PylanceDefaultDiagnosticServiceId,
     );
@@ -116,6 +113,12 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IDiagnosticsService,
         SwitchToDefaultLanguageServerDiagnosticService,
         SwitchToDefaultLanguageServerDiagnosticServiceId,
+    );
+
+    serviceManager.addSingleton<IDiagnosticsService>(
+        IDiagnosticsService,
+        SwitchToPreReleaseExtensionDiagnosticService,
+        SwitchToPreReleaseExtensionDiagnosticServiceId,
     );
 
     serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory);

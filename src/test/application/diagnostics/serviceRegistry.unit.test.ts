@@ -42,9 +42,9 @@ import {
     SwitchToDefaultLanguageServerDiagnosticServiceId,
 } from '../../../client/application/diagnostics/checks/switchToDefaultLS';
 import {
-    UpgradeCodeRunnerDiagnosticService,
-    UpgradeCodeRunnerDiagnosticServiceId,
-} from '../../../client/application/diagnostics/checks/upgradeCodeRunner';
+    SwitchToPreReleaseExtensionDiagnosticService,
+    SwitchToPreReleaseExtensionDiagnosticServiceId,
+} from '../../../client/application/diagnostics/checks/switchToPreReleaseExtension';
 import { DiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/factory';
 import { IDiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/types';
 import { DiagnosticFilterService } from '../../../client/application/diagnostics/filter';
@@ -98,13 +98,6 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
         verify(
             serviceManager.addSingleton<IDiagnosticsService>(
                 IDiagnosticsService,
-                UpgradeCodeRunnerDiagnosticService,
-                UpgradeCodeRunnerDiagnosticServiceId,
-            ),
-        );
-        verify(
-            serviceManager.addSingleton<IDiagnosticsService>(
-                IDiagnosticsService,
                 InvalidPythonInterpreterService,
                 InvalidPythonInterpreterServiceId,
             ),
@@ -151,6 +144,14 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
                 SwitchToDefaultLanguageServerDiagnosticServiceId,
             ),
         );
+        verify(
+            serviceManager.addSingleton<IDiagnosticsService>(
+                IDiagnosticsService,
+                SwitchToPreReleaseExtensionDiagnosticService,
+                SwitchToPreReleaseExtensionDiagnosticServiceId,
+            ),
+        );
+
         verify(
             serviceManager.addSingleton<IDiagnosticsCommandFactory>(
                 IDiagnosticsCommandFactory,

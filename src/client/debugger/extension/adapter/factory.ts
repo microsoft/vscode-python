@@ -15,7 +15,9 @@ import {
 import { IApplicationShell } from '../../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { traceVerbose } from '../../../logging';
+import { traceLog, traceVerbose } from '../../../logging';
+import { Conda } from '../../../pythonEnvironments/common/environmentManagers/conda';
+import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
@@ -47,26 +49,36 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
 
         if (configuration.request === 'attach') {
             if (configuration.connect !== undefined) {
+                traceLog(
+                    `Connecting to DAP Server at:  ${configuration.connect.host ?? '127.0.0.1'}:${
+                        configuration.connect.port
+                    }`,
+                );
                 return new DebugAdapterServer(configuration.connect.port, configuration.connect.host ?? '127.0.0.1');
             } else if (configuration.port !== undefined) {
+                traceLog(`Connecting to DAP Server at:  ${configuration.host ?? '127.0.0.1'}:${configuration.port}`);
                 return new DebugAdapterServer(configuration.port, configuration.host ?? '127.0.0.1');
             } else if (configuration.listen === undefined && configuration.processId === undefined) {
                 throw new Error('"request":"attach" requires either "connect", "listen", or "processId"');
             }
         }
 
-        const pythonPath = await this.getDebugAdapterPython(configuration, session.workspaceFolder);
-        if (pythonPath.length !== 0) {
+        const command = await this.getDebugAdapterPython(configuration, session.workspaceFolder);
+        if (command.length !== 0) {
             if (configuration.request === 'attach' && configuration.processId !== undefined) {
                 sendTelemetryEvent(EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS);
             }
+
+            const executable = command.shift() ?? 'python';
 
             // "logToFile" is not handled directly by the adapter - instead, we need to pass
             // the corresponding CLI switch when spawning it.
             const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
 
             if (configuration.debugAdapterPath !== undefined) {
-                return new DebugAdapterExecutable(pythonPath, [configuration.debugAdapterPath, ...logArgs]);
+                const args = command.concat([configuration.debugAdapterPath, ...logArgs]);
+                traceLog(`DAP Server launched with command: ${executable} ${args.join(' ')}`);
+                return new DebugAdapterExecutable(executable, args);
             }
 
             const debuggerAdapterPathToUse = path.join(
@@ -78,8 +90,10 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                 'adapter',
             );
 
+            const args = command.concat([debuggerAdapterPathToUse, ...logArgs]);
+            traceLog(`DAP Server launched with command: ${executable} ${args.join(' ')}`);
             sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
-            return new DebugAdapterExecutable(pythonPath, [debuggerAdapterPathToUse, ...logArgs]);
+            return new DebugAdapterExecutable(executable, args);
         }
 
         // Unlikely scenario.
@@ -100,29 +114,72 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
     private async getDebugAdapterPython(
         configuration: LaunchRequestArguments | AttachRequestArguments,
         workspaceFolder?: WorkspaceFolder,
-    ): Promise<string> {
+    ): Promise<string[]> {
         if (configuration.debugAdapterPython !== undefined) {
-            return configuration.debugAdapterPython;
+            return this.getExecutableCommand(
+                await this.interpreterService.getInterpreterDetails(configuration.debugAdapterPython),
+            );
         } else if (configuration.pythonPath) {
-            return configuration.pythonPath;
+            return this.getExecutableCommand(
+                await this.interpreterService.getInterpreterDetails(configuration.pythonPath),
+            );
         }
 
         const resourceUri = workspaceFolder ? workspaceFolder.uri : undefined;
         const interpreter = await this.interpreterService.getActiveInterpreter(resourceUri);
         if (interpreter) {
             traceVerbose(`Selecting active interpreter as Python Executable for DA '${interpreter.path}'`);
-            return interpreter.path;
+            return this.getExecutableCommand(interpreter);
         }
 
         await this.interpreterService.hasInterpreters(); // Wait until we know whether we have an interpreter
         const interpreters = await this.interpreterService.getInterpreters(resourceUri);
         if (interpreters.length === 0) {
             this.notifySelectInterpreter().ignoreErrors();
-            return '';
+            return [];
         }
 
         traceVerbose(`Picking first available interpreter to launch the DA '${interpreters[0].path}'`);
-        return interpreters[0].path;
+        return this.getExecutableCommand(interpreters[0]);
+    }
+
+    private async getCondaCommand(): Promise<Conda | undefined> {
+        const condaCommand = await Conda.getConda();
+        const isCondaRunSupported = await condaCommand?.isCondaRunSupported();
+        return isCondaRunSupported ? condaCommand : undefined;
+    }
+
+    private async getExecutableCommand(interpreter: PythonEnvironment | undefined): Promise<string[]> {
+        if (interpreter) {
+            if (interpreter.envType === EnvironmentType.Conda) {
+                const condaCommand = await this.getCondaCommand();
+                if (condaCommand) {
+                    if (interpreter.envName) {
+                        return [
+                            condaCommand.command,
+                            'run',
+                            '-n',
+                            interpreter.envName,
+                            '--no-capture-output',
+                            '--live-stream',
+                            'python',
+                        ];
+                    } else if (interpreter.envPath) {
+                        return [
+                            condaCommand.command,
+                            'run',
+                            '-p',
+                            interpreter.envPath,
+                            '--no-capture-output',
+                            '--live-stream',
+                            'python',
+                        ];
+                    }
+                }
+            }
+            return interpreter.path.length > 0 ? [interpreter.path] : [];
+        }
+        return [];
     }
 
     /**

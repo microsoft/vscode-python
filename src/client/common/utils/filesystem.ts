@@ -64,7 +64,8 @@ export async function getFileType(
     try {
         stat = await fs.promises.lstat(filename);
     } catch (err) {
-        if (err.code === 'ENOENT') {
+        const error = err as NodeJS.ErrnoException;
+        if (error.code === 'ENOENT') {
             return undefined;
         }
         if (opts.ignoreErrors) {

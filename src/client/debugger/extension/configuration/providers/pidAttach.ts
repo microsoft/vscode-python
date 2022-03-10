@@ -24,8 +24,8 @@ export class PidAttachDebugConfigurationProvider implements IDebugConfigurationP
             name: DebugConfigStrings.attachPid.snippet.name(),
             type: DebuggerTypeName,
             request: 'attach',
-
             processId: '${command:pickProcess}',
+            justMyCode: true,
         };
         Object.assign(state.config, config);
     }

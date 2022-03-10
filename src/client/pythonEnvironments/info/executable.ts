@@ -1,13 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { getExecutable as getPythonExecutableCommand } from '../../common/process/internal/python';
+import { getExecutable } from '../../common/process/internal/python';
+import { ShellExecFunc } from '../../common/process/types';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
-
-type ExecResult = {
-    stdout: string;
-};
-type ExecFunc = (command: string, args: string[]) => Promise<ExecResult>;
 
 /**
  * Find the filename for the corresponding Python executable.
@@ -15,11 +11,22 @@ type ExecFunc = (command: string, args: string[]) => Promise<ExecResult>;
  * Effectively, we look up `sys.executable`.
  *
  * @param python - the information to use when running Python
- * @param exec - the function to use to run Python
+ * @param shellExec - the function to use to run Python
  */
-export async function getExecutablePath(python: PythonExecInfo, exec: ExecFunc): Promise<string> {
-    const [args, parse] = getPythonExecutableCommand();
+export async function getExecutablePath(
+    python: PythonExecInfo,
+    shellExec: ShellExecFunc,
+    timeout?: number,
+): Promise<string> {
+    const [args, parse] = getExecutable();
     const info = copyPythonExecInfo(python, args);
-    const result = await exec(info.command, info.args);
-    return parse(result.stdout);
+    const argv = [info.command, ...info.args];
+    // Concat these together to make a set of quoted strings
+    const quoted = argv.reduce((p, c) => (p ? `${p} ${c.toCommandArgument()}` : `${c.toCommandArgument()}`), '');
+    const result = await shellExec(quoted, { timeout: timeout ?? 15000 });
+    const executable = parse(result.stdout.trim());
+    if (executable === '') {
+        throw new Error(`${quoted} resulted in empty stdout`);
+    }
+    return executable;
 }

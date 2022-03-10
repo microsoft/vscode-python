@@ -5,7 +5,7 @@ import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
 import * as internalPython from './internal/python';
-import { ExecutionResult, IProcessService, ObservableExecutionResult, SpawnOptions } from './types';
+import { ExecutionResult, IProcessService, IPythonEnvironment, ObservableExecutionResult, SpawnOptions } from './types';
 
 class PythonProcessService {
     constructor(
@@ -89,11 +89,7 @@ class PythonProcessService {
 export function createPythonProcessService(
     procs: IProcessService,
     // from PythonEnvironment:
-    env: {
-        getExecutionInfo(pythonArgs?: string[]): PythonExecInfo;
-        getExecutionObservableInfo(pythonArgs?: string[]): PythonExecInfo;
-        isModuleInstalled(moduleName: string): Promise<boolean>;
-    },
+    env: IPythonEnvironment,
 ) {
     const deps = {
         // from PythonService:

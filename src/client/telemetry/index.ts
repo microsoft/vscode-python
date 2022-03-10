@@ -313,7 +313,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when debug in terminal button was used to debug current file.
      */
     /* __GDPR__
-        "debug_in_terminal_button" : { }
+        "debug_in_terminal_button" : { "owner": "paulacamargo25" }
     */
     [EventName.DEBUG_IN_TERMINAL_BUTTON]: never | undefined;
     /**
@@ -321,7 +321,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debug_adapter.using_wheels_path" : {
-          "usingwheels" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "usingwheels" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" }
        }
      */
 
@@ -338,9 +338,9 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debug_session.start" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" },
+          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" }
        }
      */
     [EventName.DEBUG_SESSION_START]: {
@@ -368,9 +368,9 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debug_session.error" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" },
+          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" }
 
        }
      */
@@ -399,9 +399,9 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debug_session.stop" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" },
+          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" }
        }
      */
     [EventName.DEBUG_SESSION_STOP]: {
@@ -429,9 +429,9 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debug_session.user_code_running" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" },
+          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" }
        }
      */
     [EventName.DEBUG_SESSION_USER_CODE_RUNNING]: {
@@ -459,25 +459,25 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debugger" : {
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "console" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "hasenvvars": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "hasargs": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "django": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "fastapi": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "flask": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "jinja": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "islocalhost": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "ismodule": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "issudo": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "stoponentry": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "showreturnvalue": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "pyramid": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "subprocess": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "watson": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "pyspark": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "gevent": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "scrapy": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "console" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "hasenvvars": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "hasargs": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "django": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "fastapi": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "flask": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "jinja": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "islocalhost": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "ismodule": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "issudo": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "stoponentry": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "showreturnvalue": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "pyramid": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "subprocess": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "watson": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "pyspark": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "gevent": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "scrapy": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" }
        }
      */
     [EventName.DEBUGGER]: {
@@ -609,7 +609,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debugger.attach_to_child_process" : {
-           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "paulacamargo25" }
        }
      */
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
@@ -617,7 +617,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when attaching to a local process.
      */
     /* __GDPR__
-       "debugger.attach_to_local_process" : { }
+       "debugger.attach_to_local_process" : { "owner": "paulacamargo25" }
      */
     [EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS]: never | undefined;
     /**
@@ -625,12 +625,12 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "debugger.configuration.prompts" : {
-          "configurationtype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "autodetecteddjangomanagepypath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "autodetectedpyramidinipath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "autodetectedfastapimainpypath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "autodetectedflaskapppypath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "manuallyenteredavalue" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "configurationtype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "autodetecteddjangomanagepypath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "autodetectedpyramidinipath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "autodetectedfastapimainpypath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "autodetectedflaskapppypath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "manuallyenteredavalue" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" }
        }
      */
 
@@ -677,7 +677,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when providing completion provider in launch.json. It is sent just *after* inserting the completion.
      */
     /* __GDPR__
-       "debugger.configuration.prompts.in.launch.json" : { }
+       "debugger.configuration.prompts.in.launch.json" : { "owner": "paulacamargo25" }
      */
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON]: never | undefined;
     /**
@@ -685,10 +685,10 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "diagnostics.action" : {
-          "commandname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "ignorecode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "url" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "action" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "commandname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "ignorecode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "url" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "action" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.DIAGNOSTICS_ACTION]: {
@@ -718,7 +718,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "diagnostics.message" : {
-          "code" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "code" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.DIAGNOSTICS_MESSAGE]: {
@@ -733,21 +733,21 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "editor.load" : {
-          "codeloadingtime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "condaversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "errorname" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
-          "errorstack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
-          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "installsource" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "terminal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "workspacefoldercount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "haspython3" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "startactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "totalactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "totalnonblockingactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "usinguserdefinedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "usingglobalinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "codeloadingtime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "condaversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "errorname" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "owner": "luabud" },
+          "errorstack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "owner": "luabud" },
+          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "installsource" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "terminal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "luabud" },
+          "workspacefoldercount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "haspython3" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "startactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "totalactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "totalnonblockingactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "usinguserdefinedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "usingglobalinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
        }
      */
     [EventName.EDITOR_LOAD]: {
@@ -790,7 +790,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when substituting Environment variables to calculate value of variables
      */
     /* __GDPR__
-       "envfile_variable_substitution" : { }
+       "envfile_variable_substitution" : { "owner": "luabud" }
      */
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
     /**
@@ -798,7 +798,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "envfile_workspace" : {
-          "hascustomenvpath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "hascustomenvpath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
        }
      */
 
@@ -814,8 +814,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "execution_code" : {
-          "scope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "scope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */
     [EventName.EXECUTION_CODE]: {
@@ -840,7 +840,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "execution_django" : {
-          "scope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "scope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */
     [EventName.EXECUTION_DJANGO]: {
@@ -857,12 +857,12 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "format.format" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
-          "errorname" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
-          "errorstack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "hascustomargs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "formatselection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karthiknadig" },
+          "errorname" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "errorstack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "hascustomargs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "formatselection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.FORMAT]: {
@@ -884,7 +884,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "format.format_on_type" : {
-          "enabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "enabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.FORMAT_ON_TYPE]: {
@@ -900,8 +900,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "format.sort_imports" : {
-           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
-           "originaleventname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karthiknadig" },
+           "originaleventname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.FORMAT_SORT_IMPORTS]: never | undefined;
@@ -910,7 +910,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "hashed_package_name" : {
-          "hashedname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "hashedname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
        }
      */
 
@@ -924,7 +924,7 @@ export interface IEventNamePropertyMapping {
     };
     /* __GDPR__
        "hashed_package_perf" : {
-          "propertyName" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "propertyName" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
        }
      */
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
@@ -934,8 +934,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "linter_not_installed_prompt" : {
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "action": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "action": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.LINTER_NOT_INSTALLED_PROMPT]: {
@@ -956,34 +956,16 @@ export interface IEventNamePropertyMapping {
     };
 
     /**
-     * Telemetry event sent before showing the linter prompt to install
-     * pylint or flake8.
-     */
-    /* __GDPR__
-       "linter_install_prompt" : {
-          "prompt" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
-       }
-     */
-    [EventName.LINTER_INSTALL_PROMPT]: {
-        /**
-         * Identify which prompt was shown.
-         *
-         * @type {('old' | 'noPrompt' | 'pylintFirst' | 'flake8first')}
-         */
-        prompt: 'old' | 'noPrompt' | 'pylintFirst' | 'flake8first';
-    };
-
-    /**
      * Telemetry event sent when installing modules
      */
     /* __GDPR__
        "python_install_package" : {
-          "installer" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "requiredinstaller" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "productname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "isinstalled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "envtype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "version" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "installer" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "requiredinstaller" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "productname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "isinstalled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "envtype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "version" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.PYTHON_INSTALL_PACKAGE]: {
@@ -1018,11 +1000,11 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "linting" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "hascustomargs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "executablespecified" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karthiknadig" },
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "hascustomargs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "executablespecified" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.LINTING]: {
@@ -1056,8 +1038,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "platform.info" : {
-          "failuretype" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "osversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+          "failuretype" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "luabud" },
+          "osversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "luabud" }
        }
      */
     [EventName.PLATFORM_INFO]: {
@@ -1079,7 +1061,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "select_interpreter" : {
-           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
        }
      */
     [EventName.SELECT_INTERPRETER]: never | undefined;
@@ -1087,7 +1069,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when 'Enter interpreter path' button is clicked.
      */
     /* __GDPR__
-       "select_interpreter_enter_button" : { }
+       "select_interpreter_enter_button" : { "owner": "karrtikr" }
      */
     [EventName.SELECT_INTERPRETER_ENTER_BUTTON]: never | undefined;
     /**
@@ -1095,7 +1077,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "select_interpreter_enter_choice" : {
-          "choice" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "choice" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
     */
     [EventName.SELECT_INTERPRETER_ENTER_CHOICE]: {
@@ -1111,7 +1093,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "select_interpreter_selected" : {
-          "action" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "action" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */
     [EventName.SELECT_INTERPRETER_SELECTED]: {
@@ -1125,7 +1107,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the user select to either enter or find the interpreter from the quickpick.
      */
     /* __GDPR__
-       "select_interpreter_enter_or_find" : { }
+       "select_interpreter_enter_or_find" : { "owner": "karrtikr" }
      */
 
     [EventName.SELECT_INTERPRETER_ENTER_OR_FIND]: never | undefined;
@@ -1134,7 +1116,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "select_interpreter_entered_exists" : {
-          "discovered" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+          "discovered" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" }
        }
      */
     [EventName.SELECT_INTERPRETER_ENTERED_EXISTS]: {
@@ -1148,10 +1130,10 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" },
+          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */
     [EventName.PYTHON_INTERPRETER]: {
@@ -1176,8 +1158,8 @@ export interface IEventNamePropertyMapping {
     };
     /* __GDPR__
        "python_interpreter_activation_environment_variables" : {
-          "hasenvvars" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+          "hasenvvars" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" }
        }
      */
     [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: {
@@ -1199,11 +1181,11 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter_activation_for_running_code" : {
-          "hascommands" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "hascommands" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" },
+          "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */
     [EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_RUNNING_CODE]: {
@@ -1243,11 +1225,11 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter_activation_for_terminal" : {
-          "hascommands" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "hascommands" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" },
+          "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */
     [EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL]: {
@@ -1287,7 +1269,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter_auto_selection" : {
-          "usecachedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "usecachedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */
 
@@ -1304,8 +1286,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter_discovery" : {
-           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
-          "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" },
+          "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
        }
      */
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: {
@@ -1319,7 +1301,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "pipenv_interpreter_discovery" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */
     [EventName.PIPENV_INTERPRETER_DISCOVERY]: never | undefined;
@@ -1329,7 +1311,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "conda_inherit_env_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */
     [EventName.CONDA_INHERIT_ENV_PROMPT]: {
@@ -1346,7 +1328,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter_activate_environment_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */
     [EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT]: {
@@ -1365,7 +1347,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_not_installed_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */
     [EventName.PYTHON_NOT_INSTALLED_PROMPT]: {
@@ -1379,11 +1361,11 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent with details when user clicks a button in the following prompt
-     * `Prompt message` :- 'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?'
+     * `Prompt message` :- 'We now have a new mechanism to get pre-release (insiders) version of the extension. See [here](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#prerelease-extensions) to lean more.'
      */
     /* __GDPR__
        "insiders_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.INSIDERS_PROMPT]: {
@@ -1392,7 +1374,7 @@ export interface IEventNamePropertyMapping {
          * `Yes, daily` When user selects to use "daily" as extension channel in insiders prompt
          * `No, thanks` When user decides to keep using the same extension channel as before
          */
-        selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
+        selection: 'preRelease' | 'stable' | 'closed' | undefined;
     };
     /**
      * Telemetry event sent with details when user clicks a button in the 'Reload to install insiders prompt'.
@@ -1400,7 +1382,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "insiders_reload_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.INSIDERS_RELOAD_PROMPT]: {
@@ -1417,8 +1399,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.current_selection" : {
-          "lsstartup" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "switchto" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "lsstartup" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
+          "switchto" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
 
@@ -1439,8 +1421,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.startup_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "languageservertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
+          "languageservertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP_DURATION]: {
@@ -1455,10 +1437,10 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.downloaded" : {
-          "success" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "usedssl" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "lsname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "success" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "kimadeline" },
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
+          "usedssl" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
+          "lsname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: {
@@ -1485,7 +1467,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.enabled" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: {
@@ -1496,7 +1478,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.error" : {
-          "error" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" }
+          "error" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "owner": "kimadeline" }
        }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_ERROR]: {
@@ -1510,10 +1492,10 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.extracted" : {
-          "success" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "usedssl" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "lsname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "success" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "kimadeline" },
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
+          "usedssl" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
+          "lsname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED]: {
@@ -1538,7 +1520,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent if azure blob packages are being listed
      */
     /* __GDPR__
-       "python_language_server.list_blob_store_packages" : { }
+       "python_language_server.list_blob_store_packages" : { "owner": "kimadeline" }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES]: never | undefined;
     /**
@@ -1546,8 +1528,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.platform_supported" : {
-          "supported" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "failuretype" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+          "supported" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "kimadeline" },
+          "failuretype" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "kimadeline" }
        }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED]: {
@@ -1569,7 +1551,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.ready" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline"}
        }
      */
 
@@ -1581,7 +1563,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_language_server.startup" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: {
@@ -1591,7 +1573,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry sent from language server (details of telemetry sent can be provided by LS team)
      */
     /* __GDPR__
-       "python_language_server.telemetry" : { }
+       "python_language_server.telemetry" : { "owner": "kimadeline" }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
@@ -1599,7 +1581,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_experiments_init_performance" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
        }
      */
     [EventName.PYTHON_EXPERIMENTS_INIT_PERFORMANCE]: unknown;
@@ -1607,16 +1589,23 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the user use the report issue command.
      */
     /* __GDPR__
-      "use_report_issue_command" : { }
+      "use_report_issue_command" : { "owner": "paulacamargo25" }
      */
     [EventName.USE_REPORT_ISSUE_COMMAND]: unknown;
+    /**
+     * Telemetry event sent when the New Python File command is executed.
+     */
+    /* __GDPR__
+      "create_new_file_command" : { "owner": "luabud" }
+     */
+    [EventName.CREATE_NEW_FILE_COMMAND]: unknown;
     /**
      * Telemetry event sent once on session start with details on which experiments are opted into and opted out from.
      */
     /* __GDPR__
        "python_experiments_opt_in_opt_out_settings" : {
-          "optedinto" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "optedoutfrom" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "optedinto" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "optedoutfrom" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
        }
      */
     [EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS]: {
@@ -1636,7 +1625,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "language_server_enabled" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.LANGUAGE_SERVER_ENABLED]: {
@@ -1647,7 +1636,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "language_server_ready" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.LANGUAGE_SERVER_READY]: {
@@ -1658,7 +1647,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "language_server_startup" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.LANGUAGE_SERVER_STARTUP]: {
@@ -1669,7 +1658,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "language_server_telemetry" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.LANGUAGE_SERVER_TELEMETRY]: unknown;
@@ -1680,7 +1669,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "language_server_request" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.LANGUAGE_SERVER_REQUEST]: unknown;
@@ -1689,7 +1678,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "jedi_language_server.enabled" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.JEDI_LANGUAGE_SERVER_ENABLED]: {
@@ -1700,7 +1689,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "jedi_language_server.ready" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.JEDI_LANGUAGE_SERVER_READY]: {
@@ -1711,7 +1700,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "jedi_language_server.startup" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.JEDI_LANGUAGE_SERVER_STARTUP]: {
@@ -1723,7 +1712,7 @@ export interface IEventNamePropertyMapping {
      * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     /* __GDPR__
-       "jedi_language_server.request" : { }
+       "jedi_language_server.request" : { "owner": "kimadeline" }
      */
     [EventName.JEDI_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
@@ -1731,7 +1720,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "extension_survey_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.EXTENSION_SURVEY_PROMPT]: {
@@ -1744,7 +1733,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry sent back when join mailing list prompt is shown.
      */
     /* __GDPR__
-       "join_mailing_list_prompt_displayed" : { }
+       "join_mailing_list_prompt_displayed" : { "owner": "luabud" }
      */
     [EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED]: never | undefined;
     /**
@@ -1752,7 +1741,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "join_mailing_list_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
        }
      */
     [EventName.JOIN_MAILING_LIST_PROMPT]: {
@@ -1766,7 +1755,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "repl" : {
-           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
        }
      */
     [EventName.REPL]: never | undefined;
@@ -1775,8 +1764,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "linting.select" : {
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "enabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "enabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.SELECT_LINTER]: {
@@ -1793,7 +1782,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
      */
     /* __GDPR__
-       "unittest.configure" : { }
+       "unittest.configure" : { "owner": "kimadeline" }
      */
     [EventName.UNITTEST_CONFIGURE]: never | undefined;
     /**
@@ -1801,9 +1790,9 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "unittest.configuring" : {
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "kimadeline" }
        }
      */
     [EventName.UNITTEST_CONFIGURING]: {
@@ -1830,7 +1819,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "activate_env_in_current_terminal" : {
-          "isterminalvisible" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "isterminalvisible" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */
     [EventName.ACTIVATE_ENV_IN_CURRENT_TERMINAL]: {
@@ -1844,10 +1833,10 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "terminal.create" : {
-         "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-         "triggeredby" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-         "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-         "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+         "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+         "triggeredby" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+         "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+         "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */
     [EventName.TERMINAL_CREATE]: {
@@ -1881,7 +1870,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "unittest.discovery.trigger" : {
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.UNITTEST_DISCOVERY_TRIGGER]: {
@@ -1902,7 +1891,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "unittest.discovering" : {
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.UNITTEST_DISCOVERING]: {
@@ -1918,8 +1907,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "unittest.discovery.done" : {
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.UNITTEST_DISCOVERY_DONE]: {
@@ -1940,7 +1929,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when cancelling discovering tests
      */
     /* __GDPR__
-       "unittest.discovery.stop" : { }
+       "unittest.discovery.stop" : { "owner": "kimadeline" }
      */
     [EventName.UNITTEST_DISCOVERING_STOP]: never | undefined;
     /**
@@ -1948,8 +1937,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "unittest.run" : {
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "debugging" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
+          "debugging" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
        }
      */
     [EventName.UNITTEST_RUN]: {
@@ -1966,21 +1955,21 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when cancelling running tests
      */
     /* __GDPR__
-       "unittest.run.stop" : { }
+       "unittest.run.stop" : { "owner": "kimadeline" }
      */
     [EventName.UNITTEST_RUN_STOP]: never | undefined;
     /**
      * Telemetry event sent when run all failed test command is triggered
      */
     /* __GDPR__
-       "unittest.run.all_failed" : { }
+       "unittest.run.all_failed" : { "owner": "kimadeline" }
      */
     [EventName.UNITTEST_RUN_ALL_FAILED]: never | undefined;
     /**
      * Telemetry event sent when testing is disabled for a workspace.
      */
     /* __GDPR__
-       "unittest.disabled" : { }
+       "unittest.disabled" : { "owner": "kimadeline" }
      */
     [EventName.UNITTEST_DISABLED]: never | undefined;
     /*
@@ -2006,11 +1995,11 @@ export interface IEventNamePropertyMapping {
     */
     /* __GDPR__
       "terminal_shell_identification" : {
-         "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-         "terminalprovided" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-         "shellidentificationsource" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-         "hascustomshell" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-         "hasshellinenv" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+         "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" },
+         "terminalprovided" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+         "shellidentificationsource" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+         "hascustomshell" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+         "hasshellinenv" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
       }
     */
     [EventName.TERMINAL_SHELL_IDENTIFICATION]: {
@@ -2028,8 +2017,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "activate_env_to_get_env_vars_failed" : {
-          "ispossiblycondaenv" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "terminal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+          "ispossiblycondaenv" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" },
+          "terminal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" }
        }
      */
     [EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED]: {
@@ -2054,7 +2043,7 @@ export interface IEventNamePropertyMapping {
      * `selection` is one of 'yes', 'no', or 'do not ask again'.
      */
     /* __GDPR__
-       "tensorboard.launch_prompt_selection" : { }
+       "tensorboard.launch_prompt_selection" : { "owner": "greazer" }
      */
 
     [EventName.TENSORBOARD_LAUNCH_PROMPT_SELECTION]: {
@@ -2071,8 +2060,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.session_launch" : {
-          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" },
+          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" }
        }
      */
     [EventName.TENSORBOARD_SESSION_LAUNCH]: {
@@ -2090,8 +2079,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.session_daemon_startup_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "result" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" },
+          "result" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" }
        }
      */
     [EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION]: {
@@ -2107,7 +2096,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.session_e2e_startup_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" }
        }
      */
     [EventName.TENSORBOARD_SESSION_E2E_STARTUP_DURATION]: never | undefined;
@@ -2118,7 +2107,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.session_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" }
        }
      */
     [EventName.TENSORBOARD_SESSION_DURATION]: never | undefined;
@@ -2135,8 +2124,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.entrypoint_shown" : {
-          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" },
+          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" }
        }
      */
     [EventName.TENSORBOARD_ENTRYPOINT_SHOWN]: {
@@ -2148,7 +2137,7 @@ export interface IEventNamePropertyMapping {
      * dependencies for launching an integrated TensorBoard session.
      */
     /* __GDPR__
-       "tensorboard.session_duration" : { }
+       "tensorboard.session_duration" : { "owner": "greazer" }
      */
     [EventName.TENSORBOARD_INSTALL_PROMPT_SHOWN]: never | undefined;
     /**
@@ -2158,8 +2147,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.install_prompt_selection" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "operationtype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" },
+          "operationtype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" }
        }
      */
     [EventName.TENSORBOARD_INSTALL_PROMPT_SELECTION]: {
@@ -2170,7 +2159,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when we find an active integrated terminal running tensorboard.
      */
     /* __GDPR__
-       "tensorboard_detected_in_integrated_terminal" : { }
+       "tensorboard_detected_in_integrated_terminal" : { "owner": "greazer" }
      */
     [EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL]: never | undefined;
     /**
@@ -2180,10 +2169,10 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.package_install_result" : {
-          "wasprofilerpluginattempted" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "wastensorboardattempted" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "wasprofilerplugininstalled" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-          "wastensorboardinstalled" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+          "wasprofilerpluginattempted" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "greazer" },
+          "wastensorboardattempted" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "greazer" },
+          "wasprofilerplugininstalled" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "greazer" },
+          "wastensorboardinstalled" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "greazer" }
        }
      */
 
@@ -2200,7 +2189,7 @@ export interface IEventNamePropertyMapping {
      * `from torch import profiler`.
      */
     /* __GDPR__
-       "tensorboard.torch_profiler_import" : { }
+       "tensorboard.torch_profiler_import" : { "owner": "greazer" }
      */
     [EventName.TENSORBOARD_TORCH_PROFILER_IMPORT]: never | undefined;
     /**
@@ -2209,7 +2198,7 @@ export interface IEventNamePropertyMapping {
      * PyTorch profiler TensorBoard plugin.
      */
     /* __GDPR__
-       "tensorboard_jump_to_source_request" : { }
+       "tensorboard_jump_to_source_request" : { "owner": "greazer" }
      */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_REQUEST]: never | undefined;
     /**
@@ -2219,7 +2208,7 @@ export interface IEventNamePropertyMapping {
      * on the machine currently running TensorBoard.
      */
     /* __GDPR__
-       "tensorboard_jump_to_source_file_not_found" : { }
+       "tensorboard_jump_to_source_file_not_found" : { "owner": "greazer" }
      */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND]: never | undefined;
 }

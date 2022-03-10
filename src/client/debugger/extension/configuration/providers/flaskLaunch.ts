@@ -35,6 +35,7 @@ export class FlaskLaunchDebugConfigurationProvider implements IDebugConfiguratio
             },
             args: ['run', '--no-debugger'],
             jinja: true,
+            justMyCode: true,
         };
 
         if (!application) {

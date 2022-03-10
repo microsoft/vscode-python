@@ -5,7 +5,14 @@
 
 import * as path from 'path';
 import { getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
-import { getPythonSetting, isParentPath, pathExistsSync, readFileSync, shellExecute } from '../externalDependencies';
+import {
+    getPythonSetting,
+    isParentPath,
+    pathExists,
+    pathExistsSync,
+    readFileSync,
+    shellExecute,
+} from '../externalDependencies';
 import { getEnvironmentDirFromPath } from '../commonUtils';
 import { isVirtualenvEnvironment } from './simplevirtualenvs';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -201,12 +208,16 @@ export class Poetry {
          * So we'll need to remove the string "(Activated)" after splitting lines to get the full path.
          */
         const activated = '(Activated)';
-        return result.stdout.splitLines().map((line) => {
-            if (line.endsWith(activated)) {
-                line = line.slice(0, -activated.length);
-            }
-            return line.trim();
-        });
+        const res = await Promise.all(
+            result.stdout.splitLines().map(async (line) => {
+                if (line.endsWith(activated)) {
+                    line = line.slice(0, -activated.length);
+                }
+                const folder = line.trim();
+                return (await pathExists(folder)) ? folder : undefined;
+            }),
+        );
+        return res.filter((r) => r !== undefined).map((r) => r!);
     }
 
     /**

@@ -3,13 +3,18 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { createCondaEnv } from '../../../client/common/process/pythonEnvironment';
 import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
-import { IProcessService, IPythonExecutionFactory } from '../../../client/common/process/types';
+import {
+    IProcessService,
+    IPythonExecutionFactory,
+    IPythonExecutionService,
+} from '../../../client/common/process/types';
 import {
     ITerminalService,
     ITerminalServiceFactory,
@@ -17,11 +22,15 @@ import {
 } from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
+import { Conda, CONDA_RUN_VERSION } from '../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/codeExecution/djangoShellCodeExecution';
 import { ReplProvider } from '../../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../../client/terminals/codeExecution/terminalCodeExecution';
 import { ICodeExecutionService } from '../../../client/terminals/types';
 import { PYTHON_PATH } from '../../common';
+import * as sinon from 'sinon';
+import assert from 'assert';
+import { PythonExecInfo } from '../../../client/pythonEnvironments/exec';
 
 suite('Terminal - Code Execution', () => {
     ['Terminal Execution', 'Repl Execution', 'Django Execution'].forEach((testSuiteName) => {
@@ -47,7 +56,7 @@ suite('Terminal - Code Execution', () => {
                     disposable.dispose();
                 }
             });
-
+            sinon.restore();
             disposables = [];
         });
 
@@ -55,6 +64,7 @@ suite('Terminal - Code Execution', () => {
             terminalFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
             terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
             terminalService = TypeMoq.Mock.ofType<ITerminalService>();
+            pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
             const configService = TypeMoq.Mock.ofType<IConfigurationService>();
             workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
             platform = TypeMoq.Mock.ofType<IPlatformService>();
@@ -62,7 +72,6 @@ suite('Terminal - Code Execution', () => {
             documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
             commandManager = TypeMoq.Mock.ofType<ICommandManager>();
             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-            pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
             settings = TypeMoq.Mock.ofType<IPythonSettings>();
             settings.setup((s) => s.terminal).returns(() => terminalSettings.object);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
@@ -75,6 +84,7 @@ suite('Terminal - Code Execution', () => {
                         workspace.object,
                         disposables,
                         platform.object,
+                        pythonExecutionFactory.object,
                     );
                     break;
                 }
@@ -85,6 +95,7 @@ suite('Terminal - Code Execution', () => {
                         workspace.object,
                         disposables,
                         platform.object,
+                        pythonExecutionFactory.object,
                     );
                     expectedTerminalTitle = 'REPL';
                     break;
@@ -107,6 +118,7 @@ suite('Terminal - Code Execution', () => {
                         commandManager.object,
                         fileSystem.object,
                         disposables,
+                        pythonExecutionFactory.object,
                     );
                     expectedTerminalTitle = 'Django Shell';
                     break;
@@ -136,7 +148,14 @@ suite('Terminal - Code Execution', () => {
                 platform.setup((p) => p.isWindows).returns(() => isWindows);
                 platform.setup((p) => p.isMac).returns(() => isOsx);
                 platform.setup((p) => p.isLinux).returns(() => isLinux);
-                settings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
+                const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                pythonExecutionFactory
+                    .setup((p) => p.create(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(executionService.object));
+                executionService.setup((p) => (p as any).then).returns(() => undefined);
+                executionService
+                    .setup((e) => e.getExecutionInfo())
+                    .returns(() => (({ command: PYTHON_PATH, args: [] } as unknown) as PythonExecInfo));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
 
                 await executor.initializeRepl();
@@ -169,7 +188,14 @@ suite('Terminal - Code Execution', () => {
                 workspace.setup((w) => w.rootPath).returns(() => path.join('c:', 'path', 'to'));
                 workspaceFolder.setup((w) => w.uri).returns(() => Uri.file(path.join('c:', 'path', 'to')));
                 platform.setup((p) => p.isWindows).returns(() => true);
-                settings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
+                const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                pythonExecutionFactory
+                    .setup((p) => p.create(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(executionService.object));
+                executionService.setup((p) => (p as any).then).returns(() => undefined);
+                executionService
+                    .setup((e) => e.getExecutionInfo())
+                    .returns(() => (({ command: PYTHON_PATH, args: [] } as unknown) as PythonExecInfo));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
@@ -194,7 +220,14 @@ suite('Terminal - Code Execution', () => {
                 workspace.setup((w) => w.rootPath).returns(() => path.join('c:', 'path', 'to'));
                 workspaceFolder.setup((w) => w.uri).returns(() => Uri.file(path.join('c:', 'path', 'to')));
                 platform.setup((p) => p.isWindows).returns(() => true);
-                settings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
+                const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                pythonExecutionFactory
+                    .setup((p) => p.create(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(executionService.object));
+                executionService.setup((p) => (p as any).then).returns(() => undefined);
+                executionService
+                    .setup((e) => e.getExecutionInfo())
+                    .returns(() => (({ command: PYTHON_PATH, args: [] } as unknown) as PythonExecInfo));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
@@ -210,7 +243,14 @@ suite('Terminal - Code Execution', () => {
                 workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
                 workspaceFolder.setup((w) => w.uri).returns(() => Uri.file(path.join('c', 'path', 'to')));
                 platform.setup((p) => p.isWindows).returns(() => false);
-                settings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
+                const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                pythonExecutionFactory
+                    .setup((p) => p.create(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(executionService.object));
+                executionService.setup((p) => (p as any).then).returns(() => undefined);
+                executionService
+                    .setup((e) => e.getExecutionInfo())
+                    .returns(() => (({ command: PYTHON_PATH, args: [] } as unknown) as PythonExecInfo));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
@@ -234,7 +274,14 @@ suite('Terminal - Code Execution', () => {
                 workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
                 workspaceFolder.setup((w) => w.uri).returns(() => Uri.file(path.join('c', 'path', 'to')));
                 platform.setup((p) => p.isWindows).returns(() => isWindows);
-                settings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
+                const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                pythonExecutionFactory
+                    .setup((p) => p.create(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(executionService.object));
+                executionService.setup((p) => (p as any).then).returns(() => undefined);
+                executionService
+                    .setup((e) => e.getExecutionInfo())
+                    .returns(() => (({ command: PYTHON_PATH, args: [] } as unknown) as PythonExecInfo));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
@@ -260,7 +307,14 @@ suite('Terminal - Code Execution', () => {
                     .setup((w) => w.uri)
                     .returns(() => Uri.file(path.join('c', 'path', 'to', 'file with spaces in path')));
                 platform.setup((p) => p.isWindows).returns(() => isWindows);
-                settings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
+                const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                pythonExecutionFactory
+                    .setup((p) => p.create(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(executionService.object));
+                executionService.setup((p) => (p as any).then).returns(() => undefined);
+                executionService
+                    .setup((e) => e.getExecutionInfo())
+                    .returns(() => (({ command: PYTHON_PATH, args: [] } as unknown) as PythonExecInfo));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
@@ -281,7 +335,14 @@ suite('Terminal - Code Execution', () => {
                 terminalSettings.setup((t) => t.executeInFileDir).returns(() => true);
                 workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
                 platform.setup((p) => p.isWindows).returns(() => isWindows);
-                settings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
+                const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                pythonExecutionFactory
+                    .setup((p) => p.create(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(executionService.object));
+                executionService.setup((p) => (p as any).then).returns(() => undefined);
+                executionService
+                    .setup((e) => e.getExecutionInfo())
+                    .returns(() => (({ command: PYTHON_PATH, args: [] } as unknown) as PythonExecInfo));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
@@ -302,14 +363,19 @@ suite('Terminal - Code Execution', () => {
                 file: Uri,
             ): Promise<void> {
                 platform.setup((p) => p.isWindows).returns(() => isWindows);
-                settings.setup((s) => s.pythonPath).returns(() => pythonPath);
+                const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                pythonExecutionFactory
+                    .setup((p) => p.create(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(executionService.object));
+                executionService.setup((p) => (p as any).then).returns(() => undefined);
+                executionService
+                    .setup((e) => e.getExecutionInfo())
+                    .returns(() => (({ command: pythonPath, args: [] } as unknown) as PythonExecInfo));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
                 terminalSettings.setup((t) => t.executeInFileDir).returns(() => false);
                 workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
                 pythonExecutionFactory
-                    .setup((p) =>
-                        p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-                    )
+                    .setup((p) => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(undefined));
 
                 await executor.executeFile(file);
@@ -348,14 +414,27 @@ suite('Terminal - Code Execution', () => {
                 file: Uri,
                 condaEnv: { name: string; path: string },
             ): Promise<void> {
-                settings.setup((s) => s.pythonPath).returns(() => pythonPath);
+                const condaRunArgs = 'conda run args';
+                const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                pythonExecutionFactory
+                    .setup((p) => p.create(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(executionService.object));
+                executionService.setup((p) => (p as any).then).returns(() => undefined);
+                executionService
+                    .setup((e) => e.getExecutionInfo())
+                    .returns(() => (({ command: pythonPath, args: condaRunArgs } as unknown) as PythonExecInfo));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
                 terminalSettings.setup((t) => t.executeInFileDir).returns(() => false);
                 workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
 
                 const condaFile = 'conda';
                 const procService = TypeMoq.Mock.ofType<IProcessService>();
-                const env = createCondaEnv(condaFile, condaEnv, pythonPath, procService.object, fileSystem.object);
+                sinon.stub(Conda, 'getConda').resolves(new Conda(condaFile));
+                sinon.stub(Conda.prototype, 'getCondaVersion').resolves(new SemVer(CONDA_RUN_VERSION));
+                const env = await createCondaEnv(condaEnv, pythonPath, procService.object, fileSystem.object);
+                if (!env) {
+                    assert(false, 'Should not be undefined for conda version 4.9.0');
+                }
                 const procs = createPythonProcessService(procService.object, env);
                 const condaExecutionService = {
                     getInterpreterInformation: env.getInterpreterInformation,
@@ -370,14 +449,12 @@ suite('Terminal - Code Execution', () => {
                     execForLinter: procs.execForLinter,
                 };
                 pythonExecutionFactory
-                    .setup((p) =>
-                        p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-                    )
+                    .setup((p) => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(condaExecutionService));
 
                 await executor.executeFile(file);
 
-                const expectedArgs = [...terminalArgs, file.fsPath.fileToCommandArgument()];
+                const expectedArgs = [...condaRunArgs, ...terminalArgs, file.fsPath.fileToCommandArgument()];
 
                 terminalService.verify(
                     async (t) => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedArgs)),
@@ -408,12 +485,17 @@ suite('Terminal - Code Execution', () => {
                 terminalArgs: string[],
             ) {
                 pythonExecutionFactory
-                    .setup((p) =>
-                        p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-                    )
+                    .setup((p) => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(undefined));
                 platform.setup((p) => p.isWindows).returns(() => isWindows);
-                settings.setup((s) => s.pythonPath).returns(() => pythonPath);
+                const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                pythonExecutionFactory
+                    .setup((p) => p.create(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(executionService.object));
+                executionService.setup((p) => (p as any).then).returns(() => undefined);
+                executionService
+                    .setup((e) => e.getExecutionInfo())
+                    .returns(() => (({ command: pythonPath, args: [] } as unknown) as PythonExecInfo));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
                 const expectedTerminalArgs = isDjangoRepl ? terminalArgs.concat(['manage.py', 'shell']) : terminalArgs;
 
@@ -463,12 +545,24 @@ suite('Terminal - Code Execution', () => {
                 terminalArgs: string[],
                 condaEnv: { name: string; path: string },
             ) {
-                settings.setup((s) => s.pythonPath).returns(() => pythonPath);
+                const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                pythonExecutionFactory
+                    .setup((p) => p.create(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(executionService.object));
+                executionService.setup((p) => (p as any).then).returns(() => undefined);
+                executionService
+                    .setup((e) => e.getExecutionInfo())
+                    .returns(() => (({ command: pythonPath, args: [] } as unknown) as PythonExecInfo));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
                 const condaFile = 'conda';
                 const procService = TypeMoq.Mock.ofType<IProcessService>();
-                const env = createCondaEnv(condaFile, condaEnv, pythonPath, procService.object, fileSystem.object);
+                sinon.stub(Conda, 'getConda').resolves(new Conda(condaFile));
+                sinon.stub(Conda.prototype, 'getCondaVersion').resolves(new SemVer(CONDA_RUN_VERSION));
+                const env = await createCondaEnv(condaEnv, pythonPath, procService.object, fileSystem.object);
+                if (!env) {
+                    assert(false, 'Should not be undefined for conda version 4.9.0');
+                }
                 const procs = createPythonProcessService(procService.object, env);
                 const condaExecutionService = {
                     getInterpreterInformation: env.getInterpreterInformation,
@@ -483,9 +577,7 @@ suite('Terminal - Code Execution', () => {
                     execForLinter: procs.execForLinter,
                 };
                 pythonExecutionFactory
-                    .setup((p) =>
-                        p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-                    )
+                    .setup((p) => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(condaExecutionService));
 
                 const djangoArgs = isDjangoRepl ? ['manage.py', 'shell'] : [];
@@ -530,7 +622,14 @@ suite('Terminal - Code Execution', () => {
                 const terminalArgs = ['-a', 'b', 'c'];
 
                 platform.setup((p) => p.isWindows).returns(() => false);
-                settings.setup((s) => s.pythonPath).returns(() => pythonPath);
+                const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                pythonExecutionFactory
+                    .setup((p) => p.create(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(executionService.object));
+                executionService.setup((p) => (p as any).then).returns(() => undefined);
+                executionService
+                    .setup((e) => e.getExecutionInfo())
+                    .returns(() => (({ command: pythonPath, args: [] } as unknown) as PythonExecInfo));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
                 await executor.execute('cmd1');
@@ -549,7 +648,14 @@ suite('Terminal - Code Execution', () => {
                 const pythonPath = 'usr/bin/python1234';
                 const terminalArgs = ['-a', 'b', 'c'];
                 platform.setup((p) => p.isWindows).returns(() => false);
-                settings.setup((s) => s.pythonPath).returns(() => pythonPath);
+                const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                pythonExecutionFactory
+                    .setup((p) => p.create(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(executionService.object));
+                executionService.setup((p) => (p as any).then).returns(() => undefined);
+                executionService
+                    .setup((e) => e.getExecutionInfo())
+                    .returns(() => (({ command: pythonPath, args: [] } as unknown) as PythonExecInfo));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
                 let closeTerminalCallback: undefined | (() => void);
@@ -596,7 +702,14 @@ suite('Terminal - Code Execution', () => {
                 const pythonPath = 'usr/bin/python1234';
                 const terminalArgs = ['-a', 'b', 'c'];
                 platform.setup((p) => p.isWindows).returns(() => false);
-                settings.setup((s) => s.pythonPath).returns(() => pythonPath);
+                const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                pythonExecutionFactory
+                    .setup((p) => p.create(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(executionService.object));
+                executionService.setup((p) => (p as any).then).returns(() => undefined);
+                executionService
+                    .setup((e) => e.getExecutionInfo())
+                    .returns(() => (({ command: pythonPath, args: [] } as unknown) as PythonExecInfo));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
                 await executor.execute('cmd1');

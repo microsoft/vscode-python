@@ -10,15 +10,23 @@ import sys
 print(">>>PYTHON-EXEC-OUTPUT")
 
 module = sys.argv[1]
-if module == "-c":
-    ns = {}
-    for code in sys.argv[2:]:
+try:
+    if module == "-c":
+        ns = {}
+        code = sys.argv[2]
+        del sys.argv[2]
+        del sys.argv[0]
         exec(code, ns, ns)
-elif module.startswith("-"):
-    raise NotImplementedError(sys.argv)
-elif module.endswith(".py"):
-    runpy.run_path(module, run_name="__main__")
-else:
-    runpy.run_module(module, run_name="__main__", alter_sys=True)
-
-print("<<<PYTHON-EXEC-OUTPUT")
+    elif module.startswith("-m"):
+        moduleName = sys.argv[2]
+        sys.argv = sys.argv[2:]  # It should begin with the module name.
+        runpy.run_module(moduleName, run_name="__main__", alter_sys=True)
+    elif module.endswith(".py"):
+        sys.argv = sys.argv[1:]
+        runpy.run_path(module, run_name="__main__")
+    elif module.startswith("-"):
+        raise NotImplementedError(sys.argv)
+    else:
+        runpy.run_module(module, run_name="__main__", alter_sys=True)
+finally:
+    print("<<<PYTHON-EXEC-OUTPUT")

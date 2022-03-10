@@ -19,7 +19,6 @@ import {
     WorkspaceEdit,
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
-import type { ExtensionChannels } from './insidersBuild/types';
 import type { InterpreterUri, ModuleInstallFlags } from './installer/types';
 import { EnvironmentVariables } from './variables/types';
 import { ITestingSettings } from '../testing/configuration/types';
@@ -171,7 +170,6 @@ export interface IPythonSettings {
     readonly condaPath: string;
     readonly pipenvPath: string;
     readonly poetryPath: string;
-    readonly insidersChannel: ExtensionChannels;
     readonly downloadLanguageServer: boolean;
     readonly devOptions: string[];
     readonly linting: ILintingSettings;

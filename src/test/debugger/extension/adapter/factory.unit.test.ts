@@ -106,7 +106,7 @@ suite('Debugging - Adapter Factory', () => {
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        assert.deepEqual(descriptor, debugExecutable);
+        assert.deepStrictEqual(descriptor, debugExecutable);
     });
 
     test('Return the path of the active interpreter as the current python path, it exists and configuration.pythonPath is not defined', async () => {
@@ -117,7 +117,7 @@ suite('Debugging - Adapter Factory', () => {
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        assert.deepEqual(descriptor, debugExecutable);
+        assert.deepStrictEqual(descriptor, debugExecutable);
     });
 
     test('Return the path of the first available interpreter as the current python path, configuration.pythonPath is not defined and there is no active interpreter', async () => {
@@ -126,7 +126,7 @@ suite('Debugging - Adapter Factory', () => {
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        assert.deepEqual(descriptor, debugExecutable);
+        assert.deepStrictEqual(descriptor, debugExecutable);
     });
 
     test('Display a message if no python interpreter is set', async () => {
@@ -147,7 +147,7 @@ suite('Debugging - Adapter Factory', () => {
 
         // Interpreter not needed for host/port
         verify(interpreterService.getInterpreters(anything())).never();
-        assert.deepEqual(descriptor, debugServer);
+        assert.deepStrictEqual(descriptor, debugServer);
     });
 
     test('Return Debug Adapter server if request is "attach", and connect is specified', async () => {
@@ -161,7 +161,7 @@ suite('Debugging - Adapter Factory', () => {
 
         // Interpreter not needed for connect
         verify(interpreterService.getInterpreters(anything())).never();
-        assert.deepEqual(descriptor, debugServer);
+        assert.deepStrictEqual(descriptor, debugServer);
     });
 
     test('Return Debug Adapter executable if request is "attach", and listen is specified', async () => {
@@ -171,7 +171,7 @@ suite('Debugging - Adapter Factory', () => {
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(interpreter);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
-        assert.deepEqual(descriptor, debugExecutable);
+        assert.deepStrictEqual(descriptor, debugExecutable);
     });
 
     test('Throw error if request is "attach", and neither port, processId, listen, nor connect is specified', async () => {
@@ -200,7 +200,7 @@ suite('Debugging - Adapter Factory', () => {
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        assert.deepEqual(descriptor, debugExecutable);
+        assert.deepStrictEqual(descriptor, debugExecutable);
     });
 
     test("Don't pass the --log-dir argument to debug adapter if configuration.logToFile is not set", async () => {
@@ -209,7 +209,7 @@ suite('Debugging - Adapter Factory', () => {
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        assert.deepEqual(descriptor, debugExecutable);
+        assert.deepStrictEqual(descriptor, debugExecutable);
     });
 
     test("Don't pass the --log-dir argument to debugger if configuration.logToFile is set to false", async () => {
@@ -218,7 +218,7 @@ suite('Debugging - Adapter Factory', () => {
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        assert.deepEqual(descriptor, debugExecutable);
+        assert.deepStrictEqual(descriptor, debugExecutable);
     });
 
     test('Send attach to local process telemetry if attaching to a local process', async () => {
@@ -243,16 +243,25 @@ suite('Debugging - Adapter Factory', () => {
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        assert.deepEqual(descriptor, debugExecutable);
+        assert.deepStrictEqual(descriptor, debugExecutable);
     });
 
     test('Use "debugAdapterPython" when specified', async () => {
         const session = createSession({ debugAdapterPython: '/bin/custompy' });
         const debugExecutable = new DebugAdapterExecutable('/bin/custompy', [debugAdapterPath]);
+        const customInterpreter = {
+            architecture: Architecture.Unknown,
+            path: '/bin/custompy',
+            sysPrefix: '',
+            sysVersion: '',
+            envType: EnvironmentType.Unknown,
+            version: new SemVer('3.7.4-test'),
+        };
+        when(interpreterService.getInterpreterDetails('/bin/custompy')).thenResolve(customInterpreter);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        assert.deepEqual(descriptor, debugExecutable);
+        assert.deepStrictEqual(descriptor, debugExecutable);
     });
 
     test('Do not use "python" to spawn the debug adapter', async () => {
@@ -261,6 +270,6 @@ suite('Debugging - Adapter Factory', () => {
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        assert.deepEqual(descriptor, debugExecutable);
+        assert.deepStrictEqual(descriptor, debugExecutable);
     });
 });

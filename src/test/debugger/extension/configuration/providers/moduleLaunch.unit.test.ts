@@ -32,6 +32,7 @@ suite('Debugging - Configuration Provider Module', () => {
             type: DebuggerTypeName,
             request: 'launch',
             module: DebugConfigStrings.module.snippet.default(),
+            justMyCode: true,
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -50,6 +51,7 @@ suite('Debugging - Configuration Provider Module', () => {
             type: DebuggerTypeName,
             request: 'launch',
             module: 'hello',
+            justMyCode: true,
         };
 
         expect(state.config).to.be.deep.equal(config);

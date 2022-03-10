@@ -21,7 +21,6 @@ export const PYTHON_NOTEBOOKS = [
 ];
 
 export const PVSC_EXTENSION_ID = 'ms-python.python';
-export const CODE_RUNNER_EXTENSION_ID = 'formulahendry.code-runner';
 export const PYLANCE_EXTENSION_ID = 'ms-python.vscode-pylance';
 export const JUPYTER_EXTENSION_ID = 'ms-toolsai.jupyter';
 export const AppinsightsKey = 'AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217';
@@ -50,13 +49,11 @@ export namespace Commands {
     export const ViewOutput = 'python.viewOutput';
     export const Start_REPL = 'python.startREPL';
     export const Create_Terminal = 'python.createTerminal';
+    export const CreateNewFile = 'python.createNewFile';
     export const Set_Linter = 'python.setLinter';
     export const Enable_Linter = 'python.enableLinting';
     export const Run_Linter = 'python.runLinting';
     export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
-    export const SwitchOffInsidersChannel = 'python.switchOffInsidersChannel';
-    export const SwitchToInsidersDaily = 'python.switchToDailyChannel';
-    export const SwitchToInsidersWeekly = 'python.switchToWeeklyChannel';
     export const PickLocalProcess = 'python.pickLocalProcess';
     export const GetSelectedInterpreterPath = 'python.interpreterPath';
     export const ClearStorage = 'python.clearPersistentStorage';

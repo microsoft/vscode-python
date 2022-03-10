@@ -29,13 +29,14 @@ import {
 import { IConfigurationService, IDisposableRegistry, IInterpreterPathService } from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
-import { IComponentAdapter, ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
+import { IComponentAdapter, IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { ILintMessage, LinterId, LintMessageSeverity } from '../../client/linters/types';
 import { deleteFile, PYTHON_PATH } from '../common';
 import { BaseTestFixture, getLinterID, getProductName, newMockDocument, throwUnknownProduct } from './common';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
+import { Conda } from '../../client/pythonEnvironments/common/environmentManagers/conda';
 
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const workspaceUri = Uri.file(workspaceDir);
@@ -704,9 +705,8 @@ class TestFixture extends BaseTestFixture {
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny()))
             .returns(() => interpreterService.object);
 
-        const condaService = TypeMoq.Mock.ofType<ICondaService>(undefined, TypeMoq.MockBehavior.Strict);
-        condaService.setup((c) => c.getCondaVersion()).returns(() => Promise.resolve(undefined));
-        condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve('conda'));
+        sinon.stub(Conda, 'getConda').resolves(new Conda('conda'));
+        sinon.stub(Conda.prototype, 'getCondaVersion').resolves(undefined);
 
         const processLogger = TypeMoq.Mock.ofType<IProcessLogger>(undefined, TypeMoq.MockBehavior.Strict);
         processLogger
@@ -731,7 +731,6 @@ class TestFixture extends BaseTestFixture {
             envActivationService.object,
             procServiceFactory,
             configService,
-            condaService.object,
             decoder,
             instance(pyenvs),
             instance(autoSelection),

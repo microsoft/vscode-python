@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
+import { Commands } from '../../common/constants';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Interpreters } from '../../common/utils/localize';
@@ -59,7 +60,9 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
     private createProgress() {
         const progressOptions: ProgressOptions = {
             location: ProgressLocation.Window,
-            title: this.isFirstTimeLoadingInterpreters ? Interpreters.discovering() : Interpreters.refreshing(),
+            title: `[${
+                this.isFirstTimeLoadingInterpreters ? Interpreters.discovering() : Interpreters.refreshing()
+            }](command:${Commands.Set_Interpreter})`,
         };
         this.isFirstTimeLoadingInterpreters = false;
         this.shell.withProgress(progressOptions, () => {
