@@ -111,6 +111,5 @@
         "enabled": true,
         "optInto": true,
         "optOutFrom": true
-    },
-    "insidersChannel": true
+    }
 }
