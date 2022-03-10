@@ -217,6 +217,8 @@ export class Conda {
      */
     private static condaPromise: Promise<Conda | undefined> | undefined;
 
+    private condaInfo: Promise<CondaInfo> | undefined;
+
     /**
      * Creates a Conda service corresponding to the corresponding "conda" command.
      *
@@ -351,8 +353,12 @@ export class Conda {
      * Retrieves global information about this conda.
      * Corresponds to "conda info --json".
      */
-    public async getInfo(): Promise<CondaInfo> {
-        return this.getInfoCached(this.command);
+    public async getInfo(useCache?: boolean): Promise<CondaInfo> {
+        if (useCache && this.condaInfo) {
+            return this.condaInfo;
+        }
+        this.condaInfo = this.getInfoFromTemporaryCache(this.command);
+        return this.condaInfo;
     }
 
     /**
@@ -360,7 +366,7 @@ export class Conda {
      */
     @cache(-1, true)
     // eslint-disable-next-line class-methods-use-this
-    private async getInfoCached(command: string): Promise<CondaInfo> {
+    private async getInfoFromTemporaryCache(command: string): Promise<CondaInfo> {
         const stopWatch = new StopWatch();
         const result = await exec(command, ['info', '--json'], { timeout: CONDA_GENERAL_TIMEOUT });
         traceVerbose(`conda info --json: ${result.stdout}, time taken: ${stopWatch.elapsedTime}`);
