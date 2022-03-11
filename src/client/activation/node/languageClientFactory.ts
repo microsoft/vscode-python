@@ -5,12 +5,12 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 
-import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
+import { PYLANCE_EXTENSION_ID, PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
-import { Resource } from '../../common/types';
+import { IExtensions, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
-import { ILanguageClientFactory, ILanguageServerFolderService } from '../types';
+import { ILanguageClientFactory } from '../types';
 
 const languageClientName = 'Python Tools';
 
@@ -18,12 +18,11 @@ const languageClientName = 'Python Tools';
 export class NodeLanguageClientFactory implements ILanguageClientFactory {
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(ILanguageServerFolderService)
-        private readonly languageServerFolderService: ILanguageServerFolderService,
+        @inject(IExtensions) private readonly extensions: IExtensions,
     ) {}
 
     public async createLanguageClient(
-        resource: Resource,
+        _resource: Resource,
         _interpreter: PythonEnvironment | undefined,
         clientOptions: LanguageClientOptions,
     ): Promise<LanguageClient> {
@@ -31,13 +30,10 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
         const commandArgs = (clientOptions.connectionOptions
             ?.cancellationStrategy as FileBasedCancellationStrategy).getCommandLineArguments();
 
-        const folderName = await this.languageServerFolderService.getLanguageServerFolderName(resource);
-        const languageServerFolder = path.isAbsolute(folderName)
-            ? folderName
-            : path.join(EXTENSION_ROOT_DIR, folderName);
-
-        const bundlePath = path.join(languageServerFolder, 'server.bundle.js');
-        const nonBundlePath = path.join(languageServerFolder, 'server.js');
+        const extension = this.extensions.getExtension(PYLANCE_EXTENSION_ID);
+        const languageServerFolder = extension ? extension.extensionPath : '';
+        const bundlePath = path.join(languageServerFolder, 'dist', 'server.bundle.js');
+        const nonBundlePath = path.join(languageServerFolder, 'dist', 'server.js');
         const modulePath = (await this.fs.fileExists(nonBundlePath)) ? nonBundlePath : bundlePath;
         const debugOptions = { execArgv: ['--nolazy', '--inspect=6600'] };
 

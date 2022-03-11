@@ -189,7 +189,6 @@ src/client/activation/languageClientMiddleware.ts
 src/client/activation/node/manager.ts
 src/client/activation/node/languageServerProxy.ts
 src/client/activation/node/languageClientFactory.ts
-src/client/activation/node/languageServerFolderService.ts
 src/client/activation/node/analysisOptions.ts
 src/client/activation/node/activator.ts
 src/client/activation/none/activator.ts

@@ -13,7 +13,6 @@ import { LanguageServerOutputChannel } from './common/outputChannel';
 import { NodeLanguageServerActivator } from './node/activator';
 import { NodeLanguageServerAnalysisOptions } from './node/analysisOptions';
 import { NodeLanguageClientFactory } from './node/languageClientFactory';
-import { NodeLanguageServerFolderService } from './node/languageServerFolderService';
 import { NodeLanguageServerProxy } from './node/languageServerProxy';
 import { NodeLanguageServerManager } from './node/manager';
 import { NoLanguageServerExtensionActivator } from './none/activator';
@@ -25,7 +24,6 @@ import {
     ILanguageServerActivator,
     ILanguageServerAnalysisOptions,
     ILanguageServerCache,
-    ILanguageServerFolderService,
     ILanguageServerManager,
     ILanguageServerOutputChannel,
     ILanguageServerProxy,
@@ -72,10 +70,6 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, NodeLanguageClientFactory);
         serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager);
         serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, NodeLanguageServerProxy);
-        serviceManager.addSingleton<ILanguageServerFolderService>(
-            ILanguageServerFolderService,
-            NodeLanguageServerFolderService,
-        );
     } else if (languageServerType === LanguageServerType.Jedi) {
         serviceManager.add<ILanguageServerActivator>(
             ILanguageServerActivator,

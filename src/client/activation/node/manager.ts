@@ -5,7 +5,7 @@ import '../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 
 import { ICommandManager } from '../../common/application/types';
-import { IDisposable, Resource } from '../../common/types';
+import { IDisposable, IExtensions, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -15,31 +15,32 @@ import { Commands } from '../commands';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import {
     ILanguageServerAnalysisOptions,
-    ILanguageServerFolderService,
     ILanguageServerManager,
     ILanguageServerProxy,
     LanguageServerType,
 } from '../types';
 import { traceDecoratorError, traceDecoratorVerbose } from '../../logging';
+import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 
 @injectable()
 export class NodeLanguageServerManager implements ILanguageServerManager {
-    private languageServerProxy?: ILanguageServerProxy;
     private resource!: Resource;
     private interpreter: PythonEnvironment | undefined;
     private middleware: LanguageClientMiddleware | undefined;
     private disposables: IDisposable[] = [];
     private connected: boolean = false;
     private lsVersion: string | undefined;
+    private started: boolean = false;
 
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILanguageServerAnalysisOptions)
         @named(LanguageServerType.Node)
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
-        @inject(ILanguageServerFolderService)
-        private readonly folderService: ILanguageServerFolderService,
+        @inject(ILanguageServerProxy)
+        private readonly languageServerProxy: ILanguageServerProxy,
         @inject(ICommandManager) commandManager: ICommandManager,
+        @inject(IExtensions) private readonly extensions: IExtensions,
     ) {
         this.disposables.push(
             commandManager.registerCommand(Commands.RestartLS, () => {
@@ -67,18 +68,20 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
 
     @traceDecoratorError('Failed to start language server')
     public async start(resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void> {
-        if (this.languageProxy) {
+        if (this.started) {
             throw new Error('Language server already started');
         }
         this.resource = resource;
         this.interpreter = interpreter;
         this.analysisOptions.onDidChange(this.restartLanguageServerDebounced, this, this.disposables);
 
-        const versionPair = await this.folderService.getCurrentLanguageServerDirectory();
-        this.lsVersion = versionPair?.version.format();
+        const extension = this.extensions.getExtension(PYLANCE_EXTENSION_ID);
+        this.lsVersion = extension?.packageJSON.version || '0';
 
         await this.analysisOptions.initialize(resource, interpreter);
         await this.startLanguageServer();
+
+        this.started = true;
     }
 
     public connect() {
@@ -114,8 +117,6 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     )
     @traceDecoratorVerbose('Starting language server')
     protected async startLanguageServer(): Promise<void> {
-        this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
-
         const options = await this.analysisOptions.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(
             this.serviceContainer,

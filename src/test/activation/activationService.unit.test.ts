@@ -1,17 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { expect } from 'chai';
-import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import * as sinon from 'sinon';
 import { ConfigurationChangeEvent, Disposable, EventEmitter, Uri, WorkspaceConfiguration } from 'vscode';
 
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import {
-    FolderVersionPair,
     IExtensionActivationService,
     ILanguageServerActivator,
-    ILanguageServerFolderService,
     LanguageServerType,
 } from '../../client/activation/types';
 import { IDiagnostic, IDiagnosticsService } from '../../client/application/diagnostics/types';
@@ -63,12 +60,7 @@ suite('Language Server Activation - ActivationService', () => {
                     state = TypeMoq.Mock.ofType<IPersistentState<boolean | undefined>>();
                     const configService = TypeMoq.Mock.ofType<IConfigurationService>();
                     pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-                    const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
                     const extensionsMock = TypeMoq.Mock.ofType<IExtensions>();
-                    const folderVer: FolderVersionPair = {
-                        path: '',
-                        version: new SemVer('1.2.3'),
-                    };
                     lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
 
                     workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
@@ -79,9 +71,6 @@ suite('Language Server Activation - ActivationService', () => {
                     interpreterService
                         .setup((i) => i.onDidChangeInterpreter(TypeMoq.It.isAny()))
                         .returns(() => disposable.object);
-                    langFolderServiceMock
-                        .setup((l) => l.getCurrentLanguageServerDirectory())
-                        .returns(() => Promise.resolve(folderVer));
                     stateFactory
                         .setup((f) =>
                             f.createGlobalPersistentState(
@@ -116,9 +105,6 @@ suite('Language Server Activation - ActivationService', () => {
                     serviceContainer
                         .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService)))
                         .returns(() => interpreterService.object);
-                    serviceContainer
-                        .setup((c) => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
-                        .returns(() => langFolderServiceMock.object);
                     serviceContainer
                         .setup((c) => c.get(TypeMoq.It.isValue(IExtensions)))
                         .returns(() => extensionsMock.object);
@@ -653,18 +639,10 @@ suite('Language Server Activation - ActivationService', () => {
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
             const e = new EventEmitter<void>();
             interpreterService.setup((i) => i.onDidChangeInterpreter).returns(() => e.event);
-            const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
             const extensionsMock = TypeMoq.Mock.ofType<IExtensions>();
-            const folderVer: FolderVersionPair = {
-                path: '',
-                version: new SemVer('1.2.3'),
-            };
             workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
             workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
-            langFolderServiceMock
-                .setup((l) => l.getCurrentLanguageServerDirectory())
-                .returns(() => Promise.resolve(folderVer));
             stateFactory
                 .setup((f) =>
                     f.createGlobalPersistentState(
@@ -695,9 +673,6 @@ suite('Language Server Activation - ActivationService', () => {
             serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService)))
                 .returns(() => interpreterService.object);
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
-                .returns(() => langFolderServiceMock.object);
             serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IExtensions))).returns(() => extensionsMock.object);
         });
 
@@ -806,18 +781,10 @@ suite('Language Server Activation - ActivationService', () => {
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
             const e = new EventEmitter<void>();
             interpreterService.setup((i) => i.onDidChangeInterpreter).returns(() => e.event);
-            const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
             const extensionsMock = TypeMoq.Mock.ofType<IExtensions>();
-            const folderVer: FolderVersionPair = {
-                path: '',
-                version: new SemVer('1.2.3'),
-            };
             workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
             workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
-            langFolderServiceMock
-                .setup((l) => l.getCurrentLanguageServerDirectory())
-                .returns(() => Promise.resolve(folderVer));
             stateFactory
                 .setup((f) =>
                     f.createGlobalPersistentState(
@@ -848,9 +815,6 @@ suite('Language Server Activation - ActivationService', () => {
             serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService)))
                 .returns(() => interpreterService.object);
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
-                .returns(() => langFolderServiceMock.object);
             serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IExtensions))).returns(() => extensionsMock.object);
         });
         const value = [undefined, true, false]; // Possible values of settings

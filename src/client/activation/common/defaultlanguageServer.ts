@@ -5,7 +5,6 @@ import { injectable } from 'inversify';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { IDefaultLanguageServer, IExtensions, DefaultLSType } from '../../common/types';
 import { IServiceManager } from '../../ioc/types';
-import { ILSExtensionApi } from '../node/languageServerFolderService';
 import { LanguageServerType } from '../types';
 
 @injectable()
@@ -29,7 +28,7 @@ export async function setDefaultLanguageServer(
 }
 
 async function getDefaultLanguageServer(extensions: IExtensions): Promise<DefaultLSType> {
-    if (extensions.getExtension<ILSExtensionApi>(PYLANCE_EXTENSION_ID)) {
+    if (extensions.getExtension(PYLANCE_EXTENSION_ID)) {
         return LanguageServerType.Node;
     }
 

@@ -15,7 +15,6 @@ import {
     ILanguageServerActivator,
     ILanguageServerAnalysisOptions,
     ILanguageServerCache,
-    ILanguageServerFolderService,
     ILanguageServerManager,
     ILanguageServerOutputChannel,
     ILanguageServerProxy,
@@ -26,7 +25,6 @@ import { IServiceManager } from '../../client/ioc/types';
 import { NodeLanguageServerActivator } from '../../client/activation/node/activator';
 import { NodeLanguageServerAnalysisOptions } from '../../client/activation/node/analysisOptions';
 import { NodeLanguageClientFactory } from '../../client/activation/node/languageClientFactory';
-import { NodeLanguageServerFolderService } from '../../client/activation/node/languageServerFolderService';
 import { NodeLanguageServerProxy } from '../../client/activation/node/languageServerProxy';
 import { NodeLanguageServerManager } from '../../client/activation/node/manager';
 import { JediLanguageServerActivator } from '../../client/activation/jedi/activator';
@@ -104,12 +102,6 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
         ).once();
         verify(serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager)).once();
         verify(serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, NodeLanguageServerProxy)).once();
-        verify(
-            serviceManager.addSingleton<ILanguageServerFolderService>(
-                ILanguageServerFolderService,
-                NodeLanguageServerFolderService,
-            ),
-        ).once();
     });
     test('Ensure services are registered: Jedi', async () => {
         registerTypes(instance(serviceManager), LanguageServerType.Jedi);

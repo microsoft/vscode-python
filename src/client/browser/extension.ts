@@ -6,7 +6,6 @@ import TelemetryReporter from 'vscode-extension-telemetry';
 import { LanguageClientOptions, State } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/browser';
 import { LanguageClientMiddlewareBase } from '../activation/languageClientMiddlewareBase';
-import { ILSExtensionApi } from '../activation/node/languageServerFolderService';
 import { LanguageServerType } from '../activation/types';
 import { AppinsightsKey, PVSC_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../common/constants';
 import { loadLocalizedStringsForBrowser } from '../common/utils/localizeHelpers';
@@ -20,14 +19,14 @@ interface BrowserConfig {
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     // Run in a promise and return early so that VS Code can go activate Pylance.
     await loadLocalizedStringsForBrowser();
-    const pylanceExtension = vscode.extensions.getExtension<ILSExtensionApi>(PYLANCE_EXTENSION_ID);
+    const pylanceExtension = vscode.extensions.getExtension(PYLANCE_EXTENSION_ID);
     if (pylanceExtension) {
         runPylance(context, pylanceExtension);
         return;
     }
 
     const changeDisposable = vscode.extensions.onDidChange(() => {
-        const newPylanceExtension = vscode.extensions.getExtension<ILSExtensionApi>(PYLANCE_EXTENSION_ID);
+        const newPylanceExtension = vscode.extensions.getExtension(PYLANCE_EXTENSION_ID);
         if (newPylanceExtension) {
             changeDisposable.dispose();
             runPylance(context, newPylanceExtension);
@@ -37,14 +36,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
 async function runPylance(
     context: vscode.ExtensionContext,
-    pylanceExtension: vscode.Extension<ILSExtensionApi>,
+    pylanceExtension: vscode.Extension<unknown>,
 ): Promise<void> {
-    const pylanceApi = await pylanceExtension.activate();
-    if (!pylanceApi.languageServerFolder) {
-        throw new Error('Could not find Pylance extension');
-    }
-
-    const { path: distUrl, version } = await pylanceApi.languageServerFolder();
+    const { extensionPath, packageJSON } = pylanceExtension;
+    const distUrl = `${extensionPath}/dist`;
 
     try {
         const worker = new Worker(`${distUrl}/browser.server.bundle.js`);
@@ -63,7 +58,7 @@ async function runPylance(
             undefined,
             LanguageServerType.Node,
             sendTelemetryEventBrowser,
-            version,
+            packageJSON.version,
         );
         middleware.connect();
 
