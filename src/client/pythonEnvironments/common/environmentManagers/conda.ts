@@ -434,22 +434,26 @@ export class Conda {
         return envList.find((e) => isParentPath(executableOrEnvPath, e.prefix));
     }
 
-    @cache(-1, true)
     public async getInterpreterPathForEnvironment(condaEnv: CondaEnvInfo): Promise<string | undefined> {
-        let executablePath = await getInterpreterPath(condaEnv.prefix);
+        const executablePath = await getInterpreterPath(condaEnv.prefix);
         if (executablePath) {
             return executablePath;
         }
+        return this.getInterpreterPathUsingCondaRun(condaEnv);
+    }
+
+    @cache(-1, true)
+    private async getInterpreterPathUsingCondaRun(condaEnv: CondaEnvInfo) {
         const runArgs = await this.getRunPythonArgs(condaEnv);
         if (runArgs) {
             try {
                 const python = buildPythonExecInfo(runArgs);
-                executablePath = await getExecutablePath(python, shellExecute, CONDA_ACTIVATION_TIMEOUT);
+                return getExecutablePath(python, shellExecute, CONDA_ACTIVATION_TIMEOUT);
             } catch (ex) {
                 traceError(`Failed to process environment: ${JSON.stringify(condaEnv)}`, ex);
             }
         }
-        return executablePath;
+        return undefined;
     }
 
     public async getRunPythonArgs(env: CondaEnvInfo, executeAsAProcess = true): Promise<string[] | undefined> {

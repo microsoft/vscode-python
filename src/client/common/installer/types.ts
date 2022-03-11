@@ -3,7 +3,7 @@
 
 import { CancellationToken, Uri } from 'vscode';
 import { ModuleInstallerType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { Product, ProductType, Resource } from '../types';
+import { InstallerResponse, Product, ProductInstallStatus, ProductType, Resource } from '../types';
 
 export type InterpreterUri = Resource | PythonEnvironment;
 
@@ -25,29 +25,36 @@ export interface IModuleInstaller {
      * @memberof IModuleInstaller
      */
     installModule(
-        product: string,
+        productOrModuleName: Product | string,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
         flags?: ModuleInstallFlags,
+        options?: InstallOptions,
     ): Promise<void>;
-    /**
-     * Installs a Product
-     * If a cancellation token is provided, then a cancellable progress message is dispalyed.
-     *  At this point, this method would resolve only after the module has been successfully installed.
-     * If cancellation token is not provided, its not guaranteed that module installation has completed.
-     * @param {string} name
-     * @param {InterpreterUri} [resource]
-     * @param {CancellationToken} [cancel]
-     * @returns {Promise<void>}
-     * @memberof IModuleInstaller
-     */
-    installModule(
+    isSupported(resource?: InterpreterUri): Promise<boolean>;
+}
+
+export const IBaseInstaller = Symbol('IBaseInstaller');
+export interface IBaseInstaller {
+    install(
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
         flags?: ModuleInstallFlags,
-    ): Promise<void>;
-    isSupported(resource?: InterpreterUri): Promise<boolean>;
+        options?: InstallOptions,
+    ): Promise<InstallerResponse>;
+    promptToInstall(
+        product: Product,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken,
+        flags?: ModuleInstallFlags,
+    ): Promise<InstallerResponse>;
+    isProductVersionCompatible(
+        product: Product,
+        semVerRequirement: string,
+        resource?: InterpreterUri,
+    ): Promise<ProductInstallStatus>;
+    isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean>;
 }
 
 export const IPythonInstallation = Symbol('IPythonInstallation');
@@ -77,3 +84,7 @@ export enum ModuleInstallFlags {
     reInstall = 4,
     installPipIfRequired = 8,
 }
+
+export type InstallOptions = {
+    installAsProcess?: boolean;
+};

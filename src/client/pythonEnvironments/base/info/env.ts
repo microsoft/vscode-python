@@ -246,6 +246,10 @@ export function areSameEnv(
     const leftFilename = leftInfo.executable!.filename;
     const rightFilename = rightInfo.executable!.filename;
 
+    // if (leftInfo.location && rightInfo.location && arePathsSame(leftInfo.location, rightInfo.location)) {
+    //     return true;
+    // }
+
     if (getEnvID(leftFilename, leftInfo.location) === getEnvID(rightFilename, rightInfo.location)) {
         return true;
     }

@@ -19,7 +19,7 @@ import {
     WorkspaceEdit,
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
-import type { InterpreterUri, ModuleInstallFlags } from './installer/types';
+import type { InstallOptions, InterpreterUri, ModuleInstallFlags } from './installer/types';
 import { EnvironmentVariables } from './variables/types';
 import { ITestingSettings } from '../testing/configuration/types';
 
@@ -76,6 +76,7 @@ export enum ProductType {
     TestFramework = 'TestFramework',
     RefactoringLibrary = 'RefactoringLibrary',
     DataScience = 'DataScience',
+    Python = 'Python',
 }
 
 export enum Product {
@@ -104,6 +105,7 @@ export enum Product {
     torchProfilerImportName = 26,
     pip = 27,
     ensurepip = 28,
+    python = 29,
 }
 
 export const IInstaller = Symbol('IInstaller');
@@ -120,6 +122,7 @@ export interface IInstaller {
         resource?: InterpreterUri,
         cancel?: CancellationToken,
         flags?: ModuleInstallFlags,
+        options?: InstallOptions,
     ): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean>;
     isProductVersionCompatible(

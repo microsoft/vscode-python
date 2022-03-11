@@ -168,7 +168,9 @@ async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
         }
     }
     traceError(
-        `${executablePath} identified as a Conda environment but is not returned via '${conda?.command} info' command`,
+        `${env.envPath ?? env.executablePath} identified as a Conda environment but is not returned via '${
+            conda?.command
+        } info' command`,
     );
     // Environment could still be valid, resolve as a simple env.
     return resolveSimpleEnv(env);

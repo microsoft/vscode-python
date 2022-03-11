@@ -105,13 +105,15 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
 
     public addEnv(env: PythonEnvCompleteInfo, hasCompleteInfo?: boolean): void {
         const found = this.envs.find((e) => areSameEnv(e, env));
+        if (hasCompleteInfo) {
+            env.hasCompleteInfo = true;
+        }
         if (!found) {
-            if (hasCompleteInfo) {
-                env.hasCompleteInfo = true;
-            }
             this.envs.push(env);
             this.fire({ new: env });
             reportInterpretersChanged([{ path: getEnvPath(env.executable.filename, env.location).path, type: 'add' }]);
+        } else if (hasCompleteInfo) {
+            this.updateEnv(found, env);
         }
     }
 

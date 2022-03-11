@@ -16,18 +16,19 @@ import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { isParentPath } from '../platform/fs-paths';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from '../process/internal/python';
+import { IProcessServiceFactory } from '../process/types';
 import { ITerminalServiceFactory, TerminalCreationOptions } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel, Product } from '../types';
 import { Products } from '../utils/localize';
 import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
-import { IModuleInstaller, InterpreterUri, ModuleInstallFlags } from './types';
+import { IModuleInstaller, InstallOptions, InterpreterUri, ModuleInstallFlags } from './types';
 
 export async function doesEnvironmentContainPython(serviceContainer: IServiceContainer, resource: InterpreterUri) {
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     const environment = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
     if (!environment) {
-        return false;
+        return undefined;
     }
     if (
         environment.envPath?.length &&
@@ -58,7 +59,9 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         resource?: InterpreterUri,
         cancel?: CancellationToken,
         flags?: ModuleInstallFlags,
+        options?: InstallOptions,
     ): Promise<void> {
+        const shouldExecuteInTerminal = !options?.installAsProcess;
         const name =
             typeof productOrModuleName === 'string'
                 ? productOrModuleName
@@ -66,16 +69,8 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         const productName = typeof productOrModuleName === 'string' ? name : ProductNames.get(productOrModuleName);
         sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName, productName });
         const uri = isResource(resource) ? resource : undefined;
-        const options: TerminalCreationOptions = {};
-        if (isResource(resource)) {
-            options.resource = uri;
-        } else {
-            options.interpreter = resource;
-        }
         const executionInfo = await this.getExecutionInfo(name, resource, flags);
-        const terminalService = this.serviceContainer
-            .get<ITerminalServiceFactory>(ITerminalServiceFactory)
-            .getTerminalService(options);
+
         const install = async (token?: CancellationToken) => {
             const executionInfoArgs = await this.processInstallArgs(executionInfo.args, resource);
             if (executionInfo.moduleName) {
@@ -90,22 +85,34 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 const pythonPath = isResource(resource) ? interpreterPath : resource.path;
                 const args = internalPython.execModule(executionInfo.moduleName, executionInfoArgs);
                 if (!interpreter || interpreter.envType !== EnvironmentType.Unknown) {
-                    await terminalService.sendCommand(pythonPath, args, token);
+                    await this.executeCommand(shouldExecuteInTerminal, resource, pythonPath, args, token);
                 } else if (settings.globalModuleInstallation) {
                     const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
                     if (await fs.isDirReadonly(path.dirname(pythonPath)).catch((_err) => true)) {
                         this.elevatedInstall(pythonPath, args);
                     } else {
-                        await terminalService.sendCommand(pythonPath, args, token);
+                        await this.executeCommand(shouldExecuteInTerminal, resource, pythonPath, args, token);
                     }
                 } else if (name === translateProductToModule(Product.pip)) {
                     // Pip should always be installed into the specified environment.
-                    await terminalService.sendCommand(pythonPath, args, token);
+                    await this.executeCommand(shouldExecuteInTerminal, resource, pythonPath, args, token);
                 } else {
-                    await terminalService.sendCommand(pythonPath, args.concat(['--user']), token);
+                    await this.executeCommand(
+                        shouldExecuteInTerminal,
+                        resource,
+                        pythonPath,
+                        args.concat(['--user']),
+                        token,
+                    );
                 }
             } else {
-                await terminalService.sendCommand(executionInfo.execPath!, executionInfoArgs, token);
+                await this.executeCommand(
+                    shouldExecuteInTerminal,
+                    resource,
+                    executionInfo.execPath!,
+                    executionInfoArgs,
+                    token,
+                );
             }
         };
 
@@ -125,10 +132,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         } else {
             await install(cancel);
         }
-        await this.postInstall(resource);
     }
-
-    protected async postInstall(_: InterpreterUri): Promise<void> {}
 
     public abstract isSupported(resource?: InterpreterUri): Promise<boolean>;
 
@@ -180,6 +184,32 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             return newArgs;
         }
         return args;
+    }
+
+    private async executeCommand(
+        executeInTerminal: boolean,
+        resource: InterpreterUri | undefined,
+        command: string,
+        args: string[],
+        token?: CancellationToken,
+    ) {
+        const options: TerminalCreationOptions = {};
+        if (isResource(resource)) {
+            options.resource = resource;
+        } else {
+            options.interpreter = resource;
+        }
+        if (executeInTerminal) {
+            const terminalService = this.serviceContainer
+                .get<ITerminalServiceFactory>(ITerminalServiceFactory)
+                .getTerminalService(options);
+
+            terminalService.sendCommand(command, args, token);
+        } else {
+            const processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+            const processService = await processServiceFactory.create(options.resource);
+            await processService.exec(command, args);
+        }
     }
 }
 
@@ -233,6 +263,8 @@ export function translateProductToModule(product: Product): string {
             return 'pip';
         case Product.ensurepip:
             return 'ensurepip';
+        case Product.python:
+            return 'python';
         default: {
             throw new Error(`Product ${product} cannot be installed as a Python Module.`);
         }

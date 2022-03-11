@@ -7,9 +7,8 @@ import { ICondaService, IComponentAdapter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ModuleInstallerType } from '../../pythonEnvironments/info';
 import { ExecutionInfo, IConfigurationService, Product } from '../types';
-import { sleep } from '../utils/async';
 import { isResource } from '../utils/misc';
-import { doesEnvironmentContainPython, ModuleInstaller, translateProductToModule } from './moduleInstaller';
+import { ModuleInstaller, translateProductToModule } from './moduleInstaller';
 import { InterpreterUri, ModuleInstallFlags } from './types';
 
 /**
@@ -119,16 +118,6 @@ export class CondaInstaller extends ModuleInstaller {
             args,
             execPath: condaFile,
         };
-    }
-
-    protected async postInstall(resource: InterpreterUri): Promise<void> {
-        if (!(await doesEnvironmentContainPython(this.serviceContainer, resource))) {
-            // Using `conda install` installs a python binary inside environment folder, trigger
-            // discovery so we detect the new executable.
-            const pyenvs = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
-            // Assuming install finishes in 60 seconds.
-            sleep(60000).then(() => pyenvs.triggerRefresh({ clearCache: true }).ignoreErrors());
-        }
     }
 
     /**

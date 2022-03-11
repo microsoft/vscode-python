@@ -268,6 +268,7 @@ export namespace Experiments {
     export const optedOutOf = localize('Experiments.optedOutOf', "Experiment '{0}' is inactive");
 }
 export namespace Interpreters {
+    export const installingPython = localize('Interpreters.installingPython', 'Installing Python into Environment...');
     export const discovering = localize('Interpreters.DiscoveringInterpreters', 'Discovering Python Interpreters');
     export const refreshing = localize('Interpreters.RefreshingInterpreters', 'Refreshing Python Interpreters');
     export const condaInheritEnvMessage = localize(

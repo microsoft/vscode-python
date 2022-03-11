@@ -1,14 +1,16 @@
 // eslint-disable-next-line max-classes-per-file
 import { inject, injectable } from 'inversify';
 import * as pathUtils from 'path';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { Disposable, Event, EventEmitter, ProgressLocation, ProgressOptions, Uri } from 'vscode';
 import '../common/extensions';
-import { IDocumentManager } from '../common/application/types';
+import { IApplicationShell, IDocumentManager } from '../common/application/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
+    IInstaller,
     IInterpreterPathService,
+    Product,
 } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
@@ -20,11 +22,12 @@ import {
     PythonEnvironmentsChangedEvent,
 } from './contracts';
 import { PythonLocatorQuery } from '../pythonEnvironments/base/locator';
-import { traceError } from '../logging';
-import { PYTHON_LANGUAGE } from '../common/constants';
+import { traceError, traceLog } from '../logging';
+import { Commands, PYTHON_LANGUAGE } from '../common/constants';
 import { InterpreterStatusBarPosition } from '../common/experiments/groups';
 import { reportActiveInterpreterChanged } from '../proposedApi';
 import { IPythonExecutionFactory } from '../common/process/types';
+import { Interpreters } from '../common/utils/localize';
 
 type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
 
@@ -40,7 +43,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.pyenvs.onRefreshStart;
     }
 
-    public triggerRefresh(query?: PythonLocatorQuery): Promise<void> {
+    public triggerRefresh(query?: PythonLocatorQuery & { clearCache?: boolean }): Promise<void> {
         return this.pyenvs.triggerRefresh(query);
     }
 
@@ -181,6 +184,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.didChangeInterpreterConfigurationEmitter.fire(resource);
         // Check if we actually changed our python path
         const pySettings = this.configService.getSettings(resource);
+        const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
+        interpreterDisplay.refresh().catch((ex) => traceError('Python Extension: display.refresh', ex));
         if (this._pythonPathSetting === '' || this._pythonPathSetting !== pySettings.pythonPath) {
             this._pythonPathSetting = pySettings.pythonPath;
             this.didChangeInterpreterEmitter.fire();
@@ -188,8 +193,19 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 path: pySettings.pythonPath,
                 resource,
             });
+            const installer = this.serviceContainer.get<IInstaller>(IInstaller);
+            if (!(await installer.isInstalled(Product.python))) {
+                // If Python is not installed into the environment, install it.
+                const shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+                const progressOptions: ProgressOptions = {
+                    location: ProgressLocation.Window,
+                    title: `[${Interpreters.installingPython()}](command:${Commands.ViewOutput})`,
+                };
+                traceLog('Conda envs without Python are known to not work well, fixing conda environment...');
+                const promise = installer.install(Product.python, resource);
+                shell.withProgress(progressOptions, () => promise);
+                promise.then(() => this.triggerRefresh({ clearCache: true }).ignoreErrors());
+            }
         }
-        const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
-        interpreterDisplay.refresh().catch((ex) => traceError('Python Extension: display.refresh', ex));
     }
 }

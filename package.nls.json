@@ -45,6 +45,7 @@
     "Pylance.pylanceRevertToJedi": "Revert to Jedi",
     "Experiments.inGroup": "Experiment '{0}' is active",
     "Experiments.optedOutOf": "Experiment '{0}' is inactive",
+    "Interpreters.installingPython": "Installing Python into Environment...",
     "Interpreters.clearAtWorkspace": "Clear at workspace level",
     "Interpreters.RefreshingInterpreters": "Refreshing Python Interpreters",
     "Interpreters.entireWorkspace": "Select at workspace level",
