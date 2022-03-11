@@ -1,6 +1,6 @@
 # Changelog
 
-## 2022.2.0-rc (28 February 2022)
+## 2022.2.0 (3 March 2022)
 
 ### Enhancements
 
