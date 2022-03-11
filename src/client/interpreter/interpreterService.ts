@@ -127,6 +127,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 filter.interpreterVisibilityEmitter.fire();
                 if (e && e.document) {
                     this.refresh(e.document.uri);
+                    this.ensureEnvironmentContainsPython(e.document.uri).ignoreErrors();
                 }
             }),
         );
@@ -193,19 +194,23 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 path: pySettings.pythonPath,
                 resource,
             });
-            const installer = this.serviceContainer.get<IInstaller>(IInstaller);
-            if (!(await installer.isInstalled(Product.python))) {
-                // If Python is not installed into the environment, install it.
-                const shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-                const progressOptions: ProgressOptions = {
-                    location: ProgressLocation.Window,
-                    title: `[${Interpreters.installingPython()}](command:${Commands.ViewOutput})`,
-                };
-                traceLog('Conda envs without Python are known to not work well, fixing conda environment...');
-                const promise = installer.install(Product.python, resource);
-                shell.withProgress(progressOptions, () => promise);
-                promise.then(() => this.triggerRefresh({ clearCache: true }).ignoreErrors());
-            }
+            await this.ensureEnvironmentContainsPython(resource);
+        }
+    }
+
+    private async ensureEnvironmentContainsPython(resource?: Uri) {
+        const installer = this.serviceContainer.get<IInstaller>(IInstaller);
+        if (!(await installer.isInstalled(Product.python))) {
+            // If Python is not installed into the environment, install it.
+            const shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+            const progressOptions: ProgressOptions = {
+                location: ProgressLocation.Window,
+                title: `[${Interpreters.installingPython()}](command:${Commands.ViewOutput})`,
+            };
+            traceLog('Conda envs without Python are known to not work well, fixing conda environment...');
+            const promise = installer.install(Product.python, resource);
+            shell.withProgress(progressOptions, () => promise);
+            promise.then(() => this.triggerRefresh({ clearCache: true }).ignoreErrors());
         }
     }
 }

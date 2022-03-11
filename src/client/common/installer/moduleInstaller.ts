@@ -13,7 +13,6 @@ import { EventName } from '../../telemetry/constants';
 import { IApplicationShell } from '../application/types';
 import { wrapCancellationTokens } from '../cancellation';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { isParentPath } from '../platform/fs-paths';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from '../process/internal/python';
 import { IProcessServiceFactory } from '../process/types';
@@ -24,24 +23,6 @@ import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
 import { IModuleInstaller, InstallOptions, InterpreterUri, ModuleInstallFlags } from './types';
 
-export async function doesEnvironmentContainPython(serviceContainer: IServiceContainer, resource: InterpreterUri) {
-    const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    const environment = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
-    if (!environment) {
-        return undefined;
-    }
-    if (
-        environment.envPath?.length &&
-        environment.envType === EnvironmentType.Conda &&
-        !isParentPath(environment?.path, environment.envPath)
-    ) {
-        // For conda environments not containing a python interpreter, do not use pip installer due to bugs in `conda run`:
-        // https://github.com/microsoft/vscode-python/issues/18479#issuecomment-1044427511
-        // https://github.com/conda/conda/issues/11211
-        return false;
-    }
-    return true;
-}
 @injectable()
 export abstract class ModuleInstaller implements IModuleInstaller {
     public abstract get priority(): number;

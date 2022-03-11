@@ -10,6 +10,7 @@ import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { normalizePath } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
+import { getEnvPath } from '../../info/env';
 import { IDiscoveryAPI, IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from '../../locator';
 import { getQueryFilter } from '../../locatorUtils';
 import { PythonEnvCollectionChangedEvent, PythonEnvsWatcher } from '../../watcher';
@@ -109,6 +110,10 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 deferred.resolve();
                 sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
                     interpreters: this.cache.getAllEnvs().length,
+                    environmentsWithoutPython: this.cache
+                        .getAllEnvs()
+                        .filter((e) => getEnvPath(e.executable.filename, e.location).pathType === 'envFolderPath')
+                        .length,
                 });
             })
             .catch((ex) => deferred.reject(ex));

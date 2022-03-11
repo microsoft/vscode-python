@@ -3,12 +3,12 @@
 
 import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
-import { ModuleInstallerType } from '../../pythonEnvironments/info';
+import { EnvironmentType, ModuleInstallerType } from '../../pythonEnvironments/info';
 import { IWorkspaceService } from '../application/types';
 import { IPythonExecutionFactory } from '../process/types';
 import { ExecutionInfo, IInstaller, Product } from '../types';
 import { isResource } from '../utils/misc';
-import { doesEnvironmentContainPython, ModuleInstaller, translateProductToModule } from './moduleInstaller';
+import { ModuleInstaller, translateProductToModule } from './moduleInstaller';
 import { InterpreterUri, ModuleInstallFlags } from './types';
 import * as path from 'path';
 import { _SCRIPTS_DIR } from '../process/internal/scripts/constants';
@@ -16,6 +16,26 @@ import { ProductNames } from './productNames';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterService } from '../../interpreter/contracts';
+import { isParentPath } from '../platform/fs-paths';
+
+async function doesEnvironmentContainPython(serviceContainer: IServiceContainer, resource: InterpreterUri) {
+    const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+    const environment = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
+    if (!environment) {
+        return undefined;
+    }
+    if (
+        environment.envPath?.length &&
+        environment.envType === EnvironmentType.Conda &&
+        !isParentPath(environment?.path, environment.envPath)
+    ) {
+        // For conda environments not containing a python interpreter, do not use pip installer due to bugs in `conda run`:
+        // https://github.com/microsoft/vscode-python/issues/18479#issuecomment-1044427511
+        // https://github.com/conda/conda/issues/11211
+        return false;
+    }
+    return true;
+}
 
 @injectable()
 export class PipInstaller extends ModuleInstaller {

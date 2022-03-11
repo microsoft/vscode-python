@@ -1288,6 +1288,7 @@ export interface IEventNamePropertyMapping {
        "python_interpreter_discovery" : {
            "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
           "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+          "environmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
        }
      */
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: {
@@ -1295,6 +1296,10 @@ export interface IEventNamePropertyMapping {
          * The number of the interpreters returned by locator
          */
         interpreters?: number;
+        /**
+         * The number of environments discovered not containing an interpreter
+         */
+        environmentsWithoutPython?: number;
     };
     /**
      * Telemetry event sent when pipenv interpreter discovery is executed.
