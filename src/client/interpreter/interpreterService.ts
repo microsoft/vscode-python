@@ -28,6 +28,8 @@ import { InterpreterStatusBarPosition } from '../common/experiments/groups';
 import { reportActiveInterpreterChanged } from '../proposedApi';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { Interpreters } from '../common/utils/localize';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
 
 type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
 
@@ -202,6 +204,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const installer = this.serviceContainer.get<IInstaller>(IInstaller);
         if (!(await installer.isInstalled(Product.python))) {
             // If Python is not installed into the environment, install it.
+            sendTelemetryEvent(EventName.ENVIRONMENT_WITHOUT_PYTHON_SELECTED);
             const shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
             const progressOptions: ProgressOptions = {
                 location: ProgressLocation.Window,

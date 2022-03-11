@@ -1064,6 +1064,15 @@ export interface IEventNamePropertyMapping {
            "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
        }
      */
+    [EventName.ENVIRONMENT_WITHOUT_PYTHON_SELECTED]: never | undefined;
+    /**
+     * Telemetry event sent when 'Select Interpreter' command is invoked.
+     */
+    /* __GDPR__
+       "select_interpreter" : {
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+       }
+     */
     [EventName.SELECT_INTERPRETER]: never | undefined;
     /**
      * Telemetry event sent when 'Enter interpreter path' button is clicked.
