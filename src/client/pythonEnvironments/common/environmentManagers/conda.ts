@@ -431,6 +431,12 @@ export class Conda {
      */
     public async getCondaEnvironment(executableOrEnvPath: string): Promise<CondaEnvInfo | undefined> {
         const envList = await this.getEnvList();
+        // Assuming `executableOrEnvPath` is path to env.
+        const condaEnv = envList.find((e) => arePathsSame(executableOrEnvPath, e.prefix));
+        if (condaEnv) {
+            return condaEnv;
+        }
+        // Assuming `executableOrEnvPath` is an executable.
         return envList.find((e) => isParentPath(executableOrEnvPath, e.prefix));
     }
 

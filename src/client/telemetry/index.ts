@@ -1057,7 +1057,7 @@ export interface IEventNamePropertyMapping {
         osVersion?: string;
     };
     /**
-     * Telemetry event sent when 'Select Interpreter' command is invoked.
+     * Telemetry event sent when an environment without contain a python binary is selected.
      */
     /* __GDPR__
        "environment_without_python_selected" : {
