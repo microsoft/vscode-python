@@ -230,8 +230,9 @@ suite('Terminal - Django Shell Code Execution', () => {
         const condaFile = 'conda';
         const processService = TypeMoq.Mock.ofType<IProcessService>();
         sinon.stub(Conda, 'getConda').resolves(new Conda(condaFile));
-        const env = await createCondaEnv(condaEnv, pythonPath, processService.object, fileSystem.object);
         sinon.stub(Conda.prototype, 'getCondaVersion').resolves(new SemVer(CONDA_RUN_VERSION));
+        sinon.stub(Conda.prototype, 'getInterpreterPathForEnvironment').resolves(pythonPath);
+        const env = await createCondaEnv(condaEnv, processService.object, fileSystem.object);
         if (!env) {
             assert(false, 'Should not be undefined for conda version 4.9.0');
         }

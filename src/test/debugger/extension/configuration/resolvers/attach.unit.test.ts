@@ -13,6 +13,7 @@ import { IConfigurationService } from '../../../../../client/common/types';
 import { OSType } from '../../../../../client/common/utils/platform';
 import { AttachConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/attach';
 import { AttachRequestArguments, DebugOptions } from '../../../../../client/debugger/types';
+import { IInterpreterService } from '../../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../../client/ioc/types';
 import { getOSType } from '../../../../common';
 import { getInfoPerOS, setUpOSMocks } from './common';
@@ -42,6 +43,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         let documentManager: TypeMoq.IMock<IDocumentManager>;
         let configurationService: TypeMoq.IMock<IConfigurationService>;
         let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+        let interpreterService: TypeMoq.IMock<IInterpreterService>;
         const debugOptionsAvailable = getAvailableOptions();
 
         setup(() => {
@@ -49,6 +51,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             platformService = TypeMoq.Mock.ofType<IPlatformService>();
             workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
             configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
             serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
@@ -61,6 +64,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 documentManager.object,
                 platformService.object,
                 configurationService.object,
+                interpreterService.object,
             );
         });
 

@@ -431,7 +431,8 @@ suite('Terminal - Code Execution', () => {
                 const procService = TypeMoq.Mock.ofType<IProcessService>();
                 sinon.stub(Conda, 'getConda').resolves(new Conda(condaFile));
                 sinon.stub(Conda.prototype, 'getCondaVersion').resolves(new SemVer(CONDA_RUN_VERSION));
-                const env = await createCondaEnv(condaEnv, pythonPath, procService.object, fileSystem.object);
+                sinon.stub(Conda.prototype, 'getInterpreterPathForEnvironment').resolves(pythonPath);
+                const env = await createCondaEnv(condaEnv, procService.object, fileSystem.object);
                 if (!env) {
                     assert(false, 'Should not be undefined for conda version 4.9.0');
                 }
@@ -559,7 +560,8 @@ suite('Terminal - Code Execution', () => {
                 const procService = TypeMoq.Mock.ofType<IProcessService>();
                 sinon.stub(Conda, 'getConda').resolves(new Conda(condaFile));
                 sinon.stub(Conda.prototype, 'getCondaVersion').resolves(new SemVer(CONDA_RUN_VERSION));
-                const env = await createCondaEnv(condaEnv, pythonPath, procService.object, fileSystem.object);
+                sinon.stub(Conda.prototype, 'getInterpreterPathForEnvironment').resolves(pythonPath);
+                const env = await createCondaEnv(condaEnv, procService.object, fileSystem.object);
                 if (!env) {
                     assert(false, 'Should not be undefined for conda version 4.9.0');
                 }

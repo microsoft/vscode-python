@@ -47,7 +47,7 @@ export function buildEnvInfo(init?: {
         kind: PythonEnvKind.Unknown,
         executable: {
             filename: '',
-            sysPrefix: '',
+            sysPrefix: init?.sysPrefix ?? '',
             ctime: init?.fileInfo?.ctime ?? -1,
             mtime: init?.fileInfo?.mtime ?? -1,
         },

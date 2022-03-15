@@ -285,7 +285,7 @@ suite('CondaEnvironment', () => {
 
     test('getExecutionInfo with a named environment should return execution info using the environment name', async () => {
         const condaInfo = { name: 'foo', path: 'bar' };
-        const env = await createCondaEnv(condaInfo, pythonPath, processService.object, fileSystem.object);
+        const env = await createCondaEnv(condaInfo, processService.object, fileSystem.object);
 
         const result = env?.getExecutionInfo(args, pythonPath);
 
@@ -317,7 +317,7 @@ suite('CondaEnvironment', () => {
 
     test('getExecutionInfo with a non-named environment should return execution info using the environment path', async () => {
         const condaInfo = { name: '', path: 'bar' };
-        const env = await createCondaEnv(condaInfo, pythonPath, processService.object, fileSystem.object);
+        const env = await createCondaEnv(condaInfo, processService.object, fileSystem.object);
 
         const result = env?.getExecutionInfo(args, pythonPath);
 
@@ -373,7 +373,7 @@ suite('CondaEnvironment', () => {
             ],
             pythonExecutable: pythonPath,
         };
-        const env = await createCondaEnv(condaInfo, pythonPath, processService.object, fileSystem.object);
+        const env = await createCondaEnv(condaInfo, processService.object, fileSystem.object);
 
         const result = env?.getExecutionObservableInfo(args, pythonPath);
 
@@ -406,7 +406,7 @@ suite('CondaEnvironment', () => {
             ],
             pythonExecutable: pythonPath,
         };
-        const env = await createCondaEnv(condaInfo, pythonPath, processService.object, fileSystem.object);
+        const env = await createCondaEnv(condaInfo, processService.object, fileSystem.object);
 
         const result = env?.getExecutionObservableInfo(args, pythonPath);
 

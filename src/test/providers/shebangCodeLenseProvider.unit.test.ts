@@ -9,25 +9,23 @@ import * as typemoq from 'typemoq';
 import { TextDocument, TextLine, Uri } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
-import { ConfigurationService } from '../../client/common/configuration/service';
 import { PlatformService } from '../../client/common/platform/platformService';
 import { IPlatformService } from '../../client/common/platform/types';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
-import { IConfigurationService, IPythonSettings } from '../../client/common/types';
+import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 suite('Shebang detection', () => {
-    let configurationService: IConfigurationService;
-    let pythonSettings: typemoq.IMock<IPythonSettings>;
+    let interpreterService: IInterpreterService;
     let workspaceService: IWorkspaceService;
     let provider: ShebangCodeLensProvider;
     let factory: IProcessServiceFactory;
     let processService: typemoq.IMock<IProcessService>;
     let platformService: typemoq.IMock<PlatformService>;
     setup(() => {
-        pythonSettings = typemoq.Mock.ofType<IPythonSettings>();
-        configurationService = mock(ConfigurationService);
+        interpreterService = mock<IInterpreterService>();
         workspaceService = mock(WorkspaceService);
         factory = mock(ProcessServiceFactory);
         processService = typemoq.Mock.ofType<IProcessService>();
@@ -35,11 +33,10 @@ suite('Shebang detection', () => {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((p) => (p as any).then).returns(() => undefined);
-        when(configurationService.getSettings(anything())).thenReturn(pythonSettings.object);
         when(factory.create(anything())).thenResolve(processService.object);
         provider = new ShebangCodeLensProvider(
             instance(factory),
-            instance(configurationService),
+            instance(interpreterService),
             platformService.object,
             instance(workspaceService),
         );
@@ -161,7 +158,9 @@ suite('Shebang detection', () => {
 
     test("No code lens when there's no shebang", async () => {
         const [document] = createDocument('');
-        pythonSettings.setup((p) => p.pythonPath).returns(() => 'python');
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
+            path: 'python',
+        } as unknown) as PythonEnvironment);
         processService
             .setup((p) => p.exec(typemoq.It.isValue('python'), typemoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'python' }))
@@ -175,7 +174,9 @@ suite('Shebang detection', () => {
     });
     test('No code lens when shebang is an empty string', async () => {
         const [document] = createDocument('#!');
-        pythonSettings.setup((p) => p.pythonPath).returns(() => 'python');
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
+            path: 'python',
+        } as unknown) as PythonEnvironment);
         processService
             .setup((p) => p.exec(typemoq.It.isValue('python'), typemoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'python' }))
@@ -189,7 +190,9 @@ suite('Shebang detection', () => {
     });
     test('No code lens when python path in settings is the same as that in shebang', async () => {
         const [document] = createDocument('#!python');
-        pythonSettings.setup((p) => p.pythonPath).returns(() => 'python');
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
+            path: 'python',
+        } as unknown) as PythonEnvironment);
         processService
             .setup((p) => p.exec(typemoq.It.isValue('python'), typemoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'python' }))
@@ -203,7 +206,9 @@ suite('Shebang detection', () => {
     });
     test('Code lens returned when python path in settings is different to one in shebang', async () => {
         const [document] = createDocument('#!python');
-        pythonSettings.setup((p) => p.pythonPath).returns(() => 'different');
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
+            path: 'different',
+        } as unknown) as PythonEnvironment);
         processService
             .setup((p) => p.exec(typemoq.It.isValue('different'), typemoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'different' }))

@@ -68,15 +68,19 @@ export function buildProposedApi(
                 path: string,
                 options?: EnvironmentDetailsOptions,
             ): Promise<EnvironmentDetails | undefined> {
-                const env = options?.useCache
-                    ? discoveryApi.getEnvs().find((v) => isEnvSame(path, v))
-                    : await discoveryApi.resolveEnv(path);
+                let env: PythonEnvInfo | undefined;
+                if (options?.useCache) {
+                    env = discoveryApi.getEnvs().find((v) => isEnvSame(path, v));
+                }
                 if (!env) {
-                    return undefined;
+                    env = await discoveryApi.resolveEnv(path);
+                    if (!env) {
+                        return undefined;
+                    }
                 }
                 return {
                     interpreterPath: env.executable.filename,
-                    envFolderPath: env.location,
+                    envFolderPath: env.location.length ? env.location : undefined,
                     version: getVersionString(env),
                     environmentType: [env.kind],
                     metadata: {

@@ -590,7 +590,6 @@ export class PythonInstaller implements IBaseInstaller {
             traceError('Conda installer not available for installing python in the given environment');
             return InstallerResponse.Ignore;
         }
-        // Pick an installerModule based on whether the interpreter is conda or not. Default is pip.
         const moduleName = translateProductToModule(product);
         await condaInstaller
             .installModule(Product.python, resource, undefined, undefined, { installAsProcess: true })
