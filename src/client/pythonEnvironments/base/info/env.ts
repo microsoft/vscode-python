@@ -41,7 +41,7 @@ export function buildEnvInfo(init?: {
     sysPrefix?: string;
     searchLocation?: Uri;
 }): PythonEnvInfo {
-    const env = {
+    const env: PythonEnvInfo = {
         name: init?.name ?? '',
         location: '',
         kind: PythonEnvKind.Unknown,
@@ -71,6 +71,7 @@ export function buildEnvInfo(init?: {
     if (init !== undefined) {
         updateEnv(env, init);
     }
+    env.id = getEnvPath(env.executable.filename, env.location).path;
     return env;
 }
 
