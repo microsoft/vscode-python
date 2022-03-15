@@ -152,7 +152,6 @@ src/test/application/diagnostics/applicationDiagnostics.unit.test.ts
 src/test/application/diagnostics/promptHandler.unit.test.ts
 src/test/application/diagnostics/sourceMapSupportService.unit.test.ts
 src/test/application/diagnostics/commands/ignore.unit.test.ts
-src/test/application/misc/joinMailingListPrompt.unit.test.ts
 
 src/test/performance/load.perf.test.ts
 
