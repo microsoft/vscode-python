@@ -71,7 +71,7 @@ export function buildEnvInfo(init?: {
     if (init !== undefined) {
         updateEnv(env, init);
     }
-    env.id = getEnvPath(env.executable.filename, env.location).path;
+    env.id = getEnvID(env.executable.filename, env.location);
     return env;
 }
 
