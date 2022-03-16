@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import * as sinon from 'sinon';
 import { ConfigurationTarget, Disposable, TextDocument, TextEditor, Uri, WorkspaceConfiguration } from 'vscode';
-import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { InterpreterStatusBarPosition } from '../../client/common/experiments/groups';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
@@ -18,6 +18,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
+    IInstaller,
     IInterpreterPathService,
     InterpreterConfigurationScope,
     IPersistentStateFactory,
@@ -58,6 +59,8 @@ suite('Interpreters service', () => {
     let interpreterPathService: TypeMoq.IMock<IInterpreterPathService>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let experiments: TypeMoq.IMock<IExperimentService>;
+    let installer: TypeMoq.IMock<IInstaller>;
+    let appShell: TypeMoq.IMock<IApplicationShell>;
     let reportActiveInterpreterChangedStub: sinon.SinonStub;
 
     setup(() => {
@@ -77,6 +80,8 @@ suite('Interpreters service', () => {
         pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
         pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        installer = TypeMoq.Mock.ofType<IInstaller>();
+        appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         experiments = TypeMoq.Mock.ofType<IExperimentService>();
         experiments.setup((e) => e.inExperimentSync(InterpreterStatusBarPosition.Pinned)).returns(() => false);
 
@@ -133,6 +138,9 @@ suite('Interpreters service', () => {
             IInterpreterAutoSelectionProxyService,
             MockAutoSelectionService,
         );
+        installer.setup((i) => i.isInstalled(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
+        serviceManager.addSingletonInstance<IInstaller>(IInstaller, installer.object);
+        serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService.object);
 
         reportActiveInterpreterChangedStub = sinon.stub(proposedApi, 'reportActiveInterpreterChanged');
@@ -205,7 +213,7 @@ suite('Interpreters service', () => {
         interpreterDisplay.verify((i) => i.refresh(TypeMoq.It.isValue(undefined)), TypeMoq.Times.never());
     });
 
-    test('If user belongs to Deprecate pythonPath experiment, register the correct handler', async () => {
+    test('Register the correct handler', async () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
@@ -221,10 +229,6 @@ suite('Interpreters service', () => {
         };
         configService.reset();
         configService
-            .setup((c) => c.getSettings())
-            .returns(() => pythonSettings.object)
-            .verifiable(TypeMoq.Times.once());
-        configService
             .setup((c) => c.getSettings(i.uri))
             .returns(() => pythonSettings.object)
             .verifiable(TypeMoq.Times.once());
@@ -235,11 +239,12 @@ suite('Interpreters service', () => {
             })
             .returns(() => ({ dispose: noop }));
         serviceManager.addSingletonInstance(IDocumentManager, documentManager.object);
+        interpreterDisplay.setup((a) => a.refresh()).returns(() => Promise.resolve());
 
         service.initialize();
         expect(interpreterPathServiceHandler).to.not.equal(undefined, 'Handler not set');
 
-        interpreterPathServiceHandler!(i);
+        await interpreterPathServiceHandler!(i);
 
         // Ensure correct handler was invoked
         configService.verifyAll();
@@ -255,10 +260,10 @@ suite('Interpreters service', () => {
             .setup((i) => i.refresh())
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
-        service._onConfigChanged(resource);
+        await service._onConfigChanged(resource);
         interpreterDisplay.verifyAll();
         sinon.assert.calledOnceWithExactly(reportActiveInterpreterChangedStub, {
-            interpreterPath: 'current path',
+            path: 'current path',
             resource,
         });
     });
@@ -273,10 +278,10 @@ suite('Interpreters service', () => {
             .setup((i) => i.refresh())
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
-        service._onConfigChanged(resource);
+        await service._onConfigChanged(resource);
         interpreterDisplay.verifyAll();
         sinon.assert.calledOnceWithExactly(reportActiveInterpreterChangedStub, {
-            interpreterPath: 'current path',
+            path: 'current path',
             resource,
         });
     });
@@ -291,7 +296,7 @@ suite('Interpreters service', () => {
             .setup((i) => i.refresh())
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
-        service._onConfigChanged(resource);
+        await service._onConfigChanged(resource);
         interpreterDisplay.verifyAll();
         expect(reportActiveInterpreterChangedStub.notCalled).to.be.equal(true);
     });

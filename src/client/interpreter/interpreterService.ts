@@ -134,11 +134,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 }
             }),
         );
-        disposables.push(
-            this.interpreterPathService.onDidChange((i): void => {
-                this._onConfigChanged(i.uri);
-            }),
-        );
+        disposables.push(this.interpreterPathService.onDidChange((i) => this._onConfigChanged(i.uri)));
     }
 
     public getInterpreters(resource?: Uri): PythonEnvironment[] {
@@ -188,8 +184,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.didChangeInterpreterConfigurationEmitter.fire(resource);
         // Check if we actually changed our python path
         const pySettings = this.configService.getSettings(resource);
-        const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
-        interpreterDisplay.refresh().catch((ex) => traceError('Python Extension: display.refresh', ex));
         if (this._pythonPathSetting === '' || this._pythonPathSetting !== pySettings.pythonPath) {
             this._pythonPathSetting = pySettings.pythonPath;
             this.didChangeInterpreterEmitter.fire();
@@ -197,6 +191,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 path: pySettings.pythonPath,
                 resource,
             });
+            const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
+            interpreterDisplay.refresh().catch((ex) => traceError('Python Extension: display.refresh', ex));
             await this.ensureEnvironmentContainsPython(this._pythonPathSetting);
         }
     }

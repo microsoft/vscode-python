@@ -115,6 +115,18 @@ suite('Conda and its environments are located correctly', () => {
             } as fsapi.Stats;
         });
 
+        sinon.stub(fsapi, 'pathExists').callsFake(async (filePath: string | Buffer) => {
+            if (typeof filePath !== 'string') {
+                throw new Error(`expected filePath to be string, got ${typeof filePath}`);
+            }
+            try {
+                getFile(filePath, 'throwIfMissing');
+            } catch {
+                return false;
+            }
+            return true;
+        });
+
         sinon.stub(fsapi, 'readdir').callsFake(async (filePath: string | Buffer) => {
             if (typeof filePath !== 'string') {
                 throw new Error(`expected filePath to be string, got ${typeof filePath}`);
@@ -496,7 +508,6 @@ suite('Conda and its environments are located correctly', () => {
     suite('Conda env list is parsed correctly', () => {
         setup(() => {
             homeDir = '/home/user';
-
             files = {
                 home: {
                     user: {
@@ -599,14 +610,16 @@ suite('Conda and its environments are located correctly', () => {
             assertBasicEnvsEqual(
                 envs,
                 [
-                    path.join('/home/user/miniconda3', 'bin', 'python'),
-                    path.join('/home/user/miniconda3/envs/env1', 'bin', 'python'),
+                    '/home/user/miniconda3',
+                    '/home/user/miniconda3/envs/env1',
                     // no env2, because there's no bin/python* under it
-                    path.join('/home/user/miniconda3/envs/dir/env3', 'bin', 'python'),
-                    path.join('/home/user/.conda/envs/env4', 'bin', 'python'),
+                    '/home/user/miniconda3/envs/dir/env3',
+                    '/home/user/.conda/envs/env4',
                     // no env5, because there's no bin/python* under it
-                    path.join('/env6', 'bin', 'python'),
-                ].map((executablePath) => createBasicEnv(PythonEnvKind.Conda, executablePath)),
+                    '/env6',
+                ].map((envPath) =>
+                    createBasicEnv(PythonEnvKind.Conda, path.join(envPath, 'bin', 'python'), undefined, envPath),
+                ),
             );
         });
     });
