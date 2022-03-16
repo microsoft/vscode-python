@@ -69,9 +69,7 @@ export async function isDirectory(filename: string): Promise<boolean> {
 }
 
 export function normalizePath(filename: string): string {
-    // `path.resolve()` returns the absolute path.  Note that it also
-    // has the same behavior as `path.normalize()`.
-    return path.resolve(filename);
+    return path.normalize(filename);
 }
 
 export function resolvePath(filename: string): string {

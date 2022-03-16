@@ -85,8 +85,10 @@ suite('Process - PythonExecutionFactory', () => {
             let executionService: typemoq.IMock<IPythonExecutionService>;
             let autoSelection: IInterpreterAutoSelectionService;
             let interpreterPathExpHelper: IInterpreterPathService;
+            const pythonPath = 'path/to/python';
             setup(() => {
                 sinon.stub(Conda, 'getConda').resolves(new Conda('conda'));
+                sinon.stub(Conda.prototype, 'getInterpreterPathForEnvironment').resolves(pythonPath);
                 bufferDecoder = mock(BufferDecoder);
                 activationHelper = mock(EnvironmentActivationService);
                 processFactory = mock(ProcessServiceFactory);
@@ -191,7 +193,6 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure we use an existing `create` method if there are no environment variables for the activated env', async () => {
-                const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);
 
                 when(processFactory.create(resource)).thenResolve(processService.object);
@@ -211,7 +212,6 @@ suite('Process - PythonExecutionFactory', () => {
                 assert.strictEqual(createInvoked, true);
             });
             test('Ensure we use an existing `create` method if there are no environment variables (0 length) for the activated env', async () => {
-                const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);
 
                 when(processFactory.create(resource)).thenResolve(processService.object);
@@ -256,7 +256,6 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async () => {
-                const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);
 
                 when(interpreterService.hasInterpreters()).thenResolve(true);
@@ -278,7 +277,6 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure `create` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async () => {
-                const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
@@ -295,7 +293,6 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure `createActivatedEnvironment` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async () => {
-                const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);
 
                 when(processFactory.create(resource)).thenResolve(processService.object);
@@ -323,7 +320,7 @@ suite('Process - PythonExecutionFactory', () => {
 
             test('Ensure `createActivatedEnvironment` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async () => {
                 let createInvoked = false;
-                const pythonPath = 'path/to/python';
+
                 const mockExecService = 'mockService';
                 factory.create = async () => {
                     createInvoked = true;
@@ -351,7 +348,6 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure `createCondaExecutionService` creates a CondaExecutionService instance if there is a conda environment', async () => {
-                const pythonPath = 'path/to/python';
                 when(pyenvs.getCondaEnvironment(pythonPath)).thenResolve({
                     name: 'foo',
                     path: 'path/to/foo/env',
@@ -365,7 +361,6 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure `createCondaExecutionService` returns undefined if there is no conda environment', async () => {
-                const pythonPath = 'path/to/python';
                 when(pyenvs.getCondaEnvironment(pythonPath)).thenResolve(undefined);
                 sinon.stub(Conda.prototype, 'getCondaVersion').resolves(new SemVer(CONDA_RUN_VERSION));
 
@@ -379,7 +374,6 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure `createCondaExecutionService` returns undefined if the conda version does not support conda run', async () => {
-                const pythonPath = 'path/to/python';
                 sinon.stub(Conda.prototype, 'getCondaVersion').resolves(new SemVer('1.0.0'));
 
                 const result = await factory.createCondaExecutionService(pythonPath, processService.object);
