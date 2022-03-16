@@ -277,6 +277,7 @@ suite('CondaEnvironment', () => {
 
     setup(() => {
         sinon.stub(Conda, 'getConda').resolves(new Conda(condaFile));
+        sinon.stub(Conda.prototype, 'getInterpreterPathForEnvironment').resolves(pythonPath);
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
     });

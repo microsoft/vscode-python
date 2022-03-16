@@ -8,9 +8,10 @@ import '../../../client/common/extensions';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
 import { TerminalShellType } from '../../../client/common/terminal/types';
-import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('Terminal Environment Activation (bash)', () => {
     [
@@ -27,21 +28,20 @@ suite('Terminal Environment Activation (bash)', () => {
                 (scriptFileName) => {
                     suite(`and script file is ${scriptFileName}`, () => {
                         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
+                        let interpreterService: TypeMoq.IMock<IInterpreterService>;
                         let fileSystem: TypeMoq.IMock<IFileSystem>;
                         setup(() => {
                             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
                             serviceContainer.setup((c) => c.get(IFileSystem)).returns(() => fileSystem.object);
 
-                            const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+                            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+                            interpreterService
+                                .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+                                .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
                             serviceContainer
-                                .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
-                                .returns(() => configService.object);
-                            const settings = TypeMoq.Mock.ofType<IPythonSettings>();
-                            settings.setup((s) => s.pythonPath).returns(() => pythonPath);
-                            configService
-                                .setup((c) => c.getSettings(TypeMoq.It.isAny()))
-                                .returns(() => settings.object);
+                                .setup((c) => c.get(IInterpreterService))
+                                .returns(() => interpreterService.object);
                         });
 
                         getNamesAndValues<TerminalShellType>(TerminalShellType).forEach((shellType) => {
