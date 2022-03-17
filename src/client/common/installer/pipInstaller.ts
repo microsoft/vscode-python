@@ -57,7 +57,7 @@ export class PipInstaller extends ModuleInstaller {
         super(serviceContainer);
     }
     public async isSupported(resource?: InterpreterUri): Promise<boolean> {
-        if (!(await doesEnvironmentContainPython(this.serviceContainer, resource))) {
+        if ((await doesEnvironmentContainPython(this.serviceContainer, resource)) === false) {
             return false;
         }
         return this.isPipAvailable(resource);
