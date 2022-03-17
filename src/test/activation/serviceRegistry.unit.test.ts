@@ -79,7 +79,7 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
     }
 
     test('Ensure services are registered: Node', async () => {
-        registerTypes(instance(serviceManager), LanguageServerType.Node);
+        registerTypes(instance(serviceManager));
 
         verifyCommon();
 
@@ -104,7 +104,7 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
         verify(serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, NodeLanguageServerProxy)).once();
     });
     test('Ensure services are registered: Jedi', async () => {
-        registerTypes(instance(serviceManager), LanguageServerType.Jedi);
+        registerTypes(instance(serviceManager));
 
         verifyCommon();
 

@@ -48,27 +48,27 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
     ) {}
 
     @traceDecoratorError('Failed to activate language server')
-    public async start(resource: Resource, interpreter?: PythonEnvironment): Promise<void> {
+    public async start(resource: Resource, _interpreter?: PythonEnvironment): Promise<void> {
         if (!resource) {
             resource = this.workspace.hasWorkspaceFolders ? this.workspace.workspaceFolders![0].uri : undefined;
         }
         this.resource = resource;
         await this.ensureLanguageServerIsAvailable(resource);
-        await this.manager.start(resource, interpreter);
+        // await this.manager.start(resource, interpreter);
     }
 
     public dispose(): void {
-        this.manager.dispose();
+        // this.manager.dispose();
     }
 
     public abstract ensureLanguageServerIsAvailable(resource: Resource): Promise<void>;
 
     public activate(): void {
-        this.manager.connect();
+        // this.manager.connect();
     }
 
     public deactivate(): void {
-        this.manager.disconnect();
+        // this.manager.disconnect();
     }
 
     public get connection() {

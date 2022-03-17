@@ -37,12 +37,7 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
         super(manager, workspace, fs, configurationService);
     }
 
-    public async ensureLanguageServerIsAvailable(resource: Resource): Promise<void> {
-        const settings = this.configurationService.getSettings(resource);
-        if (settings.downloadLanguageServer === false) {
-            // Development mode.
-            return;
-        }
+    public async ensureLanguageServerIsAvailable(_resource: Resource): Promise<void> {
         if (!this.extensions.getExtension(PYLANCE_EXTENSION_ID)) {
             // Pylance is not yet installed. Throw will cause activator to use Jedi
             // temporarily. Language server installation tracker will prompt for window

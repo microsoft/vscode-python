@@ -5,35 +5,37 @@ import { IServiceManager } from '../ioc/types';
 import { ExtensionActivationManager } from './activationManager';
 import { LanguageServerExtensionActivationService } from './activationService';
 import { ExtensionSurveyPrompt } from './extensionSurvey';
-import { JediLanguageServerAnalysisOptions } from './jedi/analysisOptions';
-import { JediLanguageClientFactory } from './jedi/languageClientFactory';
-import { JediLanguageServerProxy } from './jedi/languageServerProxy';
-import { JediLanguageServerManager } from './jedi/manager';
+// import { JediLanguageServerAnalysisOptions } from './jedi/analysisOptions';
+// import { JediLanguageClientFactory } from './jedi/languageClientFactory';
+// import { JediLanguageServerProxy } from './jedi/languageServerProxy';
+// import { JediLanguageServerManager } from './jedi/manager';
 import { LanguageServerOutputChannel } from './common/outputChannel';
-import { NodeLanguageServerActivator } from './node/activator';
-import { NodeLanguageServerAnalysisOptions } from './node/analysisOptions';
-import { NodeLanguageClientFactory } from './node/languageClientFactory';
-import { NodeLanguageServerProxy } from './node/languageServerProxy';
-import { NodeLanguageServerManager } from './node/manager';
+// import { NodeLanguageServerActivator } from './node/activator';
+// import { NodeLanguageServerAnalysisOptions } from './node/analysisOptions';
+// import { NodeLanguageClientFactory } from './node/languageClientFactory';
+// import { NodeLanguageServerProxy } from './node/languageServerProxy';
+// import { NodeLanguageServerManager } from './node/manager';
 import { NoLanguageServerExtensionActivator } from './none/activator';
 import {
     IExtensionActivationManager,
     IExtensionActivationService,
     IExtensionSingleActivationService,
-    ILanguageClientFactory,
+    // ILanguageClientFactory,
     ILanguageServerActivator,
-    ILanguageServerAnalysisOptions,
+    // ILanguageServerAnalysisOptions,
     ILanguageServerCache,
-    ILanguageServerManager,
+    // ILanguageServerManager,
     ILanguageServerOutputChannel,
-    ILanguageServerProxy,
+    // ILanguageServerProxy,
     LanguageServerType,
 } from './types';
-import { JediLanguageServerActivator } from './jedi/activator';
+// import { JediLanguageServerActivator } from './jedi/activator';
 import { LoadLanguageServerExtension } from './common/loadLanguageServerExtension';
 import { PartialModeStatusItem } from './partialModeStatus';
+import { ILanguageServerWatcher } from '../languageServer/types';
+import { LanguageServerWatcher } from '../languageServer/watcher';
 
-export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType): void {
+export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, PartialModeStatusItem);
     serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
     serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
@@ -56,35 +58,38 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         LoadLanguageServerExtension,
     );
 
-    if (languageServerType === LanguageServerType.Node) {
-        serviceManager.add<ILanguageServerAnalysisOptions>(
-            ILanguageServerAnalysisOptions,
-            NodeLanguageServerAnalysisOptions,
-            LanguageServerType.Node,
-        );
-        serviceManager.add<ILanguageServerActivator>(
-            ILanguageServerActivator,
-            NodeLanguageServerActivator,
-            LanguageServerType.Node,
-        );
-        serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, NodeLanguageClientFactory);
-        serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager);
-        serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, NodeLanguageServerProxy);
-    } else if (languageServerType === LanguageServerType.Jedi) {
-        serviceManager.add<ILanguageServerActivator>(
-            ILanguageServerActivator,
-            JediLanguageServerActivator,
-            LanguageServerType.Jedi,
-        );
+    serviceManager.addSingleton<ILanguageServerWatcher>(ILanguageServerWatcher, LanguageServerWatcher);
+    serviceManager.addBinding(ILanguageServerWatcher, IExtensionActivationService);
 
-        serviceManager.add<ILanguageServerAnalysisOptions>(
-            ILanguageServerAnalysisOptions,
-            JediLanguageServerAnalysisOptions,
-            LanguageServerType.Jedi,
-        );
+    // if (languageServerType === LanguageServerType.Node) {
+    // serviceManager.add<ILanguageServerAnalysisOptions>(
+    //     ILanguageServerAnalysisOptions,
+    //     NodeLanguageServerAnalysisOptions,
+    //     LanguageServerType.Node,
+    // );
+    // serviceManager.add<ILanguageServerActivator>(
+    //     ILanguageServerActivator,
+    //     NodeLanguageServerActivator,
+    //     LanguageServerType.Node,
+    // );
+    // serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, NodeLanguageClientFactory);
+    // serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager);
+    // serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, NodeLanguageServerProxy);
+    // } else if (languageServerType === LanguageServerType.Jedi) {
+    //     serviceManager.add<ILanguageServerActivator>(
+    //         ILanguageServerActivator,
+    //         JediLanguageServerActivator,
+    //         LanguageServerType.Jedi,
+    //     );
 
-        serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, JediLanguageClientFactory);
-        serviceManager.add<ILanguageServerManager>(ILanguageServerManager, JediLanguageServerManager);
-        serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, JediLanguageServerProxy);
-    }
+    //     serviceManager.add<ILanguageServerAnalysisOptions>(
+    //         ILanguageServerAnalysisOptions,
+    //         JediLanguageServerAnalysisOptions,
+    //         LanguageServerType.Jedi,
+    //     );
+
+    //     serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, JediLanguageClientFactory);
+    //     serviceManager.add<ILanguageServerManager>(ILanguageServerManager, JediLanguageServerManager);
+    //     serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, JediLanguageServerProxy);
+    // }
 }

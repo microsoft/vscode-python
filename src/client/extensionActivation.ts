@@ -125,12 +125,12 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     // Settings are dependent on Experiment service, so we need to initialize it after experiments are activated.
     serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().initialize();
-    const languageServerType = configuration.getSettings().languageServer;
+    // const languageServerType = configuration.getSettings().languageServer;
 
     // Language feature registrations.
     appRegisterTypes(serviceManager);
     providersRegisterTypes(serviceManager);
-    activationRegisterTypes(serviceManager, languageServerType);
+    activationRegisterTypes(serviceManager);
 
     // "initialize" "services"
 

@@ -4,11 +4,12 @@ import '../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, Uri } from 'vscode';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
+import { IWorkspaceService } from '../common/application/types';
+// import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExtensions,
+    // IExtensions,
     IPersistentStateFactory,
     IPythonSettings,
     Resource,
@@ -20,7 +21,7 @@ import { IServiceContainer } from '../ioc/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { LanguageServerChangeHandler } from './common/languageServerChangeHandler';
+// import { LanguageServerChangeHandler } from './common/languageServerChangeHandler';
 import { RefCountedLanguageServer } from './refCountedLanguageServer';
 import {
     IExtensionActivationService,
@@ -28,7 +29,7 @@ import {
     ILanguageServerCache,
     LanguageServerType,
 } from './types';
-import { StopWatch } from '../common/utils/stopWatch';
+// import { StopWatch } from '../common/utils/stopWatch';
 import { traceError, traceLog } from '../logging';
 
 const languageServerSetting: keyof IPythonSettings = 'languageServer';
@@ -69,11 +70,11 @@ export class LanguageServerExtensionActivationService
 
     private readonly workspaceService: IWorkspaceService;
 
-    private readonly configurationService: IConfigurationService;
+    // private readonly configurationService: IConfigurationService;
 
     private readonly interpreterService: IInterpreterService;
 
-    private readonly languageServerChangeHandler: LanguageServerChangeHandler;
+    // private readonly languageServerChangeHandler: LanguageServerChangeHandler;
 
     private resource!: Resource;
 
@@ -82,7 +83,7 @@ export class LanguageServerExtensionActivationService
         @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
     ) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        this.configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        // this.configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         disposables.push(this);
@@ -93,48 +94,48 @@ export class LanguageServerExtensionActivationService
             disposables.push(this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this)));
         }
 
-        this.languageServerChangeHandler = new LanguageServerChangeHandler(
-            this.getCurrentLanguageServerType(),
-            this.serviceContainer.get<IExtensions>(IExtensions),
-            this.serviceContainer.get<IApplicationShell>(IApplicationShell),
-            this.serviceContainer.get<ICommandManager>(ICommandManager),
-            this.workspaceService,
-            this.configurationService,
-        );
-        disposables.push(this.languageServerChangeHandler);
+        // this.languageServerChangeHandler = new LanguageServerChangeHandler(
+        //     this.getCurrentLanguageServerType(),
+        //     this.serviceContainer.get<IExtensions>(IExtensions),
+        //     this.serviceContainer.get<IApplicationShell>(IApplicationShell),
+        //     this.serviceContainer.get<ICommandManager>(ICommandManager),
+        //     this.workspaceService,
+        //     this.configurationService,
+        // );
+        // disposables.push(this.languageServerChangeHandler);
     }
 
     public async activate(resource: Resource): Promise<void> {
-        const stopWatch = new StopWatch();
+        // const stopWatch = new StopWatch();
         // Get a new server and dispose of the old one (might be the same one)
         this.resource = resource;
-        const interpreter = await this.interpreterService?.getActiveInterpreter(resource);
-        const key = await this.getKey(resource, interpreter);
+        // const interpreter = await this.interpreterService?.getActiveInterpreter(resource);
+        // const key = await this.getKey(resource, interpreter);
 
         // If we have an old server with a different key, then deactivate it as the
         // creation of the new server may fail if this server is still connected
-        if (this.activatedServer && this.activatedServer.key !== key) {
-            this.activatedServer.server.deactivate();
-        }
+        // if (this.activatedServer && this.activatedServer.key !== key) {
+        //     this.activatedServer.server.deactivate();
+        // }
 
         // Get the new item
-        const result = await this.get(resource, interpreter);
+        // const result = await this.get(resource, interpreter);
 
         // Now we dispose. This ensures the object stays alive if it's the same object because
         // we dispose after we increment the ref count.
-        if (this.activatedServer) {
-            this.activatedServer.server.dispose();
-        }
+        // if (this.activatedServer) {
+        //     this.activatedServer.server.dispose();
+        // }
 
         // Save our active server.
-        this.activatedServer = { key, server: result, jedi: result.type === LanguageServerType.Jedi };
+        // this.activatedServer = { key, server: result, jedi: result.type === LanguageServerType.Jedi };
 
         // Force this server to reconnect (if disconnected) as it should be the active
         // language server for all of VS code.
-        this.activatedServer.server.activate();
-        sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_STARTUP_DURATION, stopWatch.elapsedTime, {
-            languageServerType: result.type,
-        });
+        // this.activatedServer.server.activate();
+        // sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_STARTUP_DURATION, stopWatch.elapsedTime, {
+        //     languageServerType: result.type,
+        // });
     }
 
     public async get(resource: Resource, interpreter?: PythonEnvironment): Promise<RefCountedLanguageServer> {
@@ -292,12 +293,13 @@ export class LanguageServerExtensionActivationService
         if (
             workspacesUris.findIndex((uri) => event.affectsConfiguration(`python.${languageServerSetting}`, uri)) === -1
         ) {
-            return;
+            // return;
+            // nothing to see here.
         }
-        const lsType = this.getCurrentLanguageServerType();
-        if (this.activatedServer?.key !== lsType) {
-            await this.languageServerChangeHandler.handleLanguageServerChange(lsType);
-        }
+        // const lsType = this.getCurrentLanguageServerType();
+        // if (this.activatedServer?.key !== lsType) {
+        //     await this.languageServerChangeHandler.handleLanguageServerChange(lsType);
+        // }
     }
 
     private async getKey(resource: Resource, interpreter?: PythonEnvironment): Promise<string> {
