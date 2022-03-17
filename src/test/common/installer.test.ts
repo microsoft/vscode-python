@@ -261,7 +261,10 @@ suite('Installer', () => {
     }
     getNamesAndValues<Product>(Product).forEach((prod) => {
         test(`Ensure isInstalled for Product: '${prod.name}' executes the right command`, async function () {
-            if (new ProductService().getProductType(prod.value) === ProductType.DataScience) {
+            if (
+                new ProductService().getProductType(prod.value) === ProductType.DataScience ||
+                new ProductService().getProductType(prod.value) === ProductType.Python
+            ) {
                 return this.skip();
             }
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
@@ -299,7 +302,7 @@ suite('Installer', () => {
     getNamesAndValues<Product>(Product).forEach((prod) => {
         test(`Ensure install for Product: '${prod.name}' executes the right command in IModuleInstaller`, async function () {
             const productType = new ProductService().getProductType(prod.value);
-            if (productType === ProductType.DataScience) {
+            if (productType === ProductType.DataScience || productType === ProductType.Python) {
                 return this.skip();
             }
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
