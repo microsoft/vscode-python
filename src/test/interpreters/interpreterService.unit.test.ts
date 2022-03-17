@@ -11,7 +11,6 @@ import * as TypeMoq from 'typemoq';
 import * as sinon from 'sinon';
 import { ConfigurationTarget, Disposable, TextDocument, TextEditor, Uri, WorkspaceConfiguration } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
-import { InterpreterStatusBarPosition } from '../../client/common/experiments/groups';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import {
@@ -78,7 +77,6 @@ suite('Interpreters service', () => {
         pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         experiments = TypeMoq.Mock.ofType<IExperimentService>();
-        experiments.setup((e) => e.inExperimentSync(InterpreterStatusBarPosition.Pinned)).returns(() => false);
 
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         pythonSettings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);

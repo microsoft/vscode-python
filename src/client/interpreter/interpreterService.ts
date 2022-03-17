@@ -4,12 +4,7 @@ import * as pathUtils from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import '../common/extensions';
 import { IDocumentManager } from '../common/application/types';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentService,
-    IInterpreterPathService,
-} from '../common/types';
+import { IConfigurationService, IDisposableRegistry, IInterpreterPathService } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import {
@@ -22,7 +17,6 @@ import {
 import { PythonLocatorQuery } from '../pythonEnvironments/base/locator';
 import { traceError } from '../logging';
 import { PYTHON_LANGUAGE } from '../common/constants';
-import { InterpreterStatusBarPosition } from '../common/experiments/groups';
 import { reportActiveInterpreterChanged } from '../proposedApi';
 import { IPythonExecutionFactory } from '../common/process/types';
 
@@ -100,13 +94,14 @@ export class InterpreterService implements Disposable, IInterpreterService {
             public readonly changed = this.interpreterVisibilityEmitter.event;
 
             get hidden() {
-                return this.docManager.activeTextEditor?.document.languageId !== PYTHON_LANGUAGE;
+                const document = this.docManager.activeTextEditor?.document;
+                if (document?.fileName.endsWith('settings.json')) {
+                    return false;
+                }
+                return document?.languageId !== PYTHON_LANGUAGE;
             }
         })(documentManager);
-        const experiments = this.serviceContainer.get<IExperimentService>(IExperimentService);
-        if (experiments.inExperimentSync(InterpreterStatusBarPosition.Pinned)) {
-            interpreterDisplay.registerVisibilityFilter(filter);
-        }
+        interpreterDisplay.registerVisibilityFilter(filter);
         disposables.push(
             this.onDidChangeInterpreters((e): void => {
                 const interpreter = e.old ?? e.new;
