@@ -85,13 +85,17 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     }
 
     public connect() {
-        this.connected = true;
-        this.middleware?.connect();
+        if (!this.connected) {
+            this.connected = true;
+            this.middleware?.connect();
+        }
     }
 
     public disconnect() {
-        this.connected = false;
-        this.middleware?.disconnect();
+        if (this.connected) {
+            this.connected = false;
+            this.middleware?.disconnect();
+        }
     }
 
     @debounceSync(1000)

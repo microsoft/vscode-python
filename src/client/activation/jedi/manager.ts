@@ -26,8 +26,6 @@ import { traceDecoratorError, traceDecoratorVerbose, traceVerbose } from '../../
 
 @injectable()
 export class JediLanguageServerManager implements ILanguageServerManager {
-    private languageServerProxy?: ILanguageServerProxy;
-
     private resource!: Resource;
 
     private interpreter: PythonEnvironment | undefined;
@@ -47,6 +45,8 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         @inject(ILanguageServerAnalysisOptions)
         @named(LanguageServerType.Jedi)
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
+        @inject(ILanguageServerProxy)
+        private readonly languageServerProxy: ILanguageServerProxy,
         @inject(ICommandManager) commandManager: ICommandManager,
     ) {
         if (JediLanguageServerManager.commandDispose) {
@@ -107,13 +107,17 @@ export class JediLanguageServerManager implements ILanguageServerManager {
     }
 
     public connect(): void {
-        this.connected = true;
-        this.middleware?.connect();
+        if (!this.connected) {
+            this.connected = true;
+            this.middleware?.connect();
+        }
     }
 
     public disconnect(): void {
-        this.connected = false;
-        this.middleware?.disconnect();
+        if (this.connected) {
+            this.connected = false;
+            this.middleware?.disconnect();
+        }
     }
 
     @debounceSync(1000)
@@ -139,8 +143,6 @@ export class JediLanguageServerManager implements ILanguageServerManager {
     )
     @traceDecoratorVerbose('Starting language server')
     protected async startLanguageServer(): Promise<void> {
-        this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
-
         const options = await this.analysisOptions.getAnalysisOptions();
         this.middleware = new LanguageClientMiddleware(this.serviceContainer, LanguageServerType.Jedi, this.lsVersion);
         options.middleware = this.middleware;
