@@ -63,13 +63,15 @@ export class JediLSExtensionManager implements ILanguageServerExtensionManager {
     }
 
     stopLanguageServer(): void {
-        // TODO
-        console.warn(this.serverManager);
+        this.serverManager.disconnect();
+        this.serverProxy.dispose();
     }
 
+    // eslint-disable-next-line class-methods-use-this
     canStartLanguageServer(): boolean {
-        // TODO
-        console.warn(this.serverManager);
+        // Return true for now since it's shipped with the extension.
+        // Update this when JediLSP is pulled in a separate extension.
+
         return true;
     }
 }

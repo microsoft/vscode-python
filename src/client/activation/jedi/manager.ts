@@ -77,9 +77,6 @@ export class JediLanguageServerManager implements ILanguageServerManager {
 
     @traceDecoratorError('Failed to start language server')
     public async start(resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void> {
-        if (this.languageProxy) {
-            throw new Error('Language server already started');
-        }
         this.resource = resource;
         this.interpreter = interpreter;
         this.analysisOptions.onDidChange(this.restartLanguageServerDebounced, this, this.disposables);
