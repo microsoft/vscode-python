@@ -94,7 +94,6 @@ src/test/common/installer/pipInstaller.unit.test.ts
 src/test/common/installer/installer.invalidPath.unit.test.ts
 src/test/common/installer/pipEnvInstaller.unit.test.ts
 src/test/common/installer/productPath.unit.test.ts
-src/test/common/installer/extensionBuildInstaller.unit.test.ts
 
 src/test/common/socketCallbackHandler.test.ts
 
@@ -109,9 +108,6 @@ src/test/common/process/proc.unit.test.ts
 
 src/test/common/interpreterPathService.unit.test.ts
 
-src/test/common/insidersBuild/insidersExtensionPrompt.unit.test.ts
-src/test/common/insidersBuild/downloadChannelService.unit.test.ts
-src/test/common/insidersBuild/insidersExtensionService.unit.test.ts
 
 src/test/pythonFiles/formatting/dummy.ts
 
@@ -152,7 +148,6 @@ src/test/application/diagnostics/applicationDiagnostics.unit.test.ts
 src/test/application/diagnostics/promptHandler.unit.test.ts
 src/test/application/diagnostics/sourceMapSupportService.unit.test.ts
 src/test/application/diagnostics/commands/ignore.unit.test.ts
-src/test/application/misc/joinMailingListPrompt.unit.test.ts
 
 src/test/performance/load.perf.test.ts
 
@@ -254,7 +249,6 @@ src/client/common/utils/misc.ts
 src/client/common/utils/cacheUtils.ts
 src/client/common/utils/workerPool.ts
 src/client/common/extensions.ts
-src/client/common/logger.ts
 src/client/common/variables/serviceRegistry.ts
 src/client/common/variables/environment.ts
 src/client/common/variables/types.ts
@@ -263,7 +257,6 @@ src/client/common/cancellation.ts
 src/client/common/interpreterPathService.ts
 src/client/common/application/applicationShell.ts
 src/client/common/application/languageService.ts
-src/client/common/application/notebook.ts
 src/client/common/application/clipboard.ts
 src/client/common/application/workspace.ts
 src/client/common/application/debugSessionTelemetry.ts
@@ -275,7 +268,6 @@ src/client/common/application/terminalManager.ts
 src/client/common/application/applicationEnvironment.ts
 src/client/common/errors/errorUtils.ts
 src/client/common/installer/serviceRegistry.ts
-src/client/common/installer/extensionBuildInstaller.ts
 src/client/common/installer/channelManager.ts
 src/client/common/installer/moduleInstaller.ts
 src/client/common/installer/types.ts
@@ -294,11 +286,6 @@ src/client/common/process/logger.ts
 src/client/common/process/pythonProcess.ts
 src/client/common/process/pythonEnvironment.ts
 src/client/common/process/decoder.ts
-src/client/common/insidersBuild/insidersExtensionPrompt.ts
-src/client/common/insidersBuild/insidersExtensionService.ts
-src/client/common/insidersBuild/types.ts
-src/client/common/insidersBuild/downloadChannelService.ts
-src/client/common/insidersBuild/downloadChannelRules.ts
 
 src/client/debugger/extension/configuration/providers/moduleLaunch.ts
 src/client/debugger/extension/configuration/providers/fastapiLaunch.ts
