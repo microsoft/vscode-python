@@ -112,8 +112,13 @@ suite('Set Interpreter Command', () => {
             description: interpreterPath,
             detail: '',
             label: 'This is the selected Python path',
-            path: interpreterPath,
-            interpreter: { path: interpreterPath, envType: EnvironmentType.Conda } as PythonEnvironment,
+            path: path.dirname(interpreterPath),
+            interpreter: {
+                path: interpreterPath,
+                id: interpreterPath,
+                envType: EnvironmentType.Conda,
+                envPath: path.dirname(interpreterPath),
+            } as PythonEnvironment,
         };
         const defaultInterpreterPath = 'defaultInterpreterPath';
         const defaultInterpreterPathSuggestion = {
@@ -127,8 +132,13 @@ suite('Set Interpreter Command', () => {
             description: interpreterPath,
             detail: '',
             label: 'Refreshed path',
-            path: interpreterPath,
-            interpreter: { path: interpreterPath, envType: EnvironmentType.Conda } as PythonEnvironment,
+            path: path.dirname(interpreterPath),
+            interpreter: {
+                path: interpreterPath,
+                id: interpreterPath,
+                envType: EnvironmentType.Conda,
+                envPath: path.dirname(interpreterPath),
+            } as PythonEnvironment,
         };
         const expectedEnterInterpreterPathSuggestion = {
             label: `${Octicons.Add} ${InterpreterQuickPickList.enterPath.label()}`,
@@ -255,6 +265,7 @@ suite('Set Interpreter Command', () => {
                     label: 'This is the selected Python path',
                     path: `${workspacePath}/interpreterPath1`,
                     interpreter: {
+                        id: `${workspacePath}/interpreterPath1`,
                         path: `${workspacePath}/interpreterPath1`,
                         envType: EnvironmentType.Venv,
                     } as PythonEnvironment,
@@ -265,6 +276,7 @@ suite('Set Interpreter Command', () => {
                     label: 'This is the selected Python path',
                     path: 'interpreterPath2',
                     interpreter: {
+                        id: 'interpreterPath2',
                         path: 'interpreterPath2',
                         envType: EnvironmentType.VirtualEnvWrapper,
                     } as PythonEnvironment,
@@ -275,6 +287,7 @@ suite('Set Interpreter Command', () => {
                     label: 'This is the selected Python path',
                     path: 'interpreterPath3',
                     interpreter: {
+                        id: 'interpreterPath3',
                         path: 'interpreterPath3',
                         envType: EnvironmentType.VirtualEnvWrapper,
                     } as PythonEnvironment,
@@ -284,7 +297,11 @@ suite('Set Interpreter Command', () => {
                     detail: '',
                     label: 'This is the selected Python path',
                     path: 'interpreterPath4',
-                    interpreter: { path: 'interpreterPath4', envType: EnvironmentType.Conda } as PythonEnvironment,
+                    interpreter: {
+                        path: 'interpreterPath4',
+                        id: 'interpreterPath4',
+                        envType: EnvironmentType.Conda,
+                    } as PythonEnvironment,
                 },
                 item,
                 {
@@ -292,7 +309,11 @@ suite('Set Interpreter Command', () => {
                     detail: '',
                     label: 'This is the selected Python path',
                     path: 'interpreterPath5',
-                    interpreter: { path: 'interpreterPath5', envType: EnvironmentType.Global } as PythonEnvironment,
+                    interpreter: {
+                        path: 'interpreterPath5',
+                        id: 'interpreterPath5',
+                        envType: EnvironmentType.Global,
+                    } as PythonEnvironment,
                 },
             ];
             interpreterSelector.reset();
@@ -552,6 +573,7 @@ suite('Set Interpreter Command', () => {
                 label: 'This is the selected Python path',
                 path: `${workspacePath}/interpreterPath1`,
                 interpreter: {
+                    id: `${workspacePath}/interpreterPath1`,
                     path: `${workspacePath}/interpreterPath1`,
                     envType: EnvironmentType.Venv,
                 } as PythonEnvironment,
