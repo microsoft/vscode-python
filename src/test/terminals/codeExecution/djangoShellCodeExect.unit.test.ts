@@ -10,11 +10,7 @@ import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../c
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { createCondaEnv } from '../../../client/common/process/pythonEnvironment';
 import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
-import {
-    IProcessService,
-    IPythonExecutionFactory,
-    IPythonExecutionService,
-} from '../../../client/common/process/types';
+import { IProcessService, IPythonExecutionFactory } from '../../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
 import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/codeExecution/djangoShellCodeExecution';
@@ -23,7 +19,6 @@ import { PYTHON_PATH } from '../../common';
 import { Conda, CONDA_RUN_VERSION } from '../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { SemVer } from 'semver';
 import assert from 'assert';
-import { PythonExecInfo } from '../../../client/pythonEnvironments/exec';
 
 suite('Terminal - Django Shell Code Execution', () => {
     let executor: ICodeExecutionService;
@@ -62,7 +57,6 @@ suite('Terminal - Django Shell Code Execution', () => {
             commandManager.object,
             fileSystem.object,
             disposables,
-            pythonExecutionFactory.object,
         );
 
         terminalFactory.setup((f) => f.getTerminalService(TypeMoq.It.isAny())).returns(() => terminalService.object);
@@ -91,14 +85,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         resource?: Uri,
     ) {
         platform.setup((p) => p.isWindows).returns(() => isWindows);
-        const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
-        pythonExecutionFactory
-            .setup((p) => p.create(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(executionService.object));
-        executionService.setup((p) => (p as any).then).returns(() => undefined);
-        executionService
-            .setup((e) => e.getExecutionInfo())
-            .returns(() => (({ command: pythonPath, args: [] } as unknown) as PythonExecInfo));
+        settings.setup((s) => s.pythonPath).returns(() => pythonPath);
         terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
         const replCommandArgs = await (executor as DjangoShellCodeExecutionProvider).getExecutableInfo(resource);
@@ -217,14 +204,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         condaEnv: { name: string; path: string },
         resource?: Uri,
     ) {
-        const executionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
-        pythonExecutionFactory
-            .setup((p) => p.create(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(executionService.object));
-        executionService.setup((p) => (p as any).then).returns(() => undefined);
-        executionService
-            .setup((e) => e.getExecutionInfo())
-            .returns(() => (({ command: pythonPath, args: [] } as unknown) as PythonExecInfo));
+        settings.setup((s) => s.pythonPath).returns(() => pythonPath);
         terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
         const condaFile = 'conda';

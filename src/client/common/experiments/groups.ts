@@ -2,7 +2,3 @@
 export enum ShowExtensionSurveyPrompt {
     experiment = 'pythonSurveyNotification',
 }
-export enum InterpreterStatusBarPosition {
-    Pinned = 'pythonInterpreterInfoPinned',
-    Unpinned = 'pythonInterpreterInfoUnpinned',
-}

@@ -462,7 +462,7 @@ export class Conda {
         return undefined;
     }
 
-    public async getRunPythonArgs(env: CondaEnvInfo, executeAsAProcess = true): Promise<string[] | undefined> {
+    public async getRunPythonArgs(env: CondaEnvInfo): Promise<string[] | undefined> {
         const condaVersion = await this.getCondaVersion();
         if (condaVersion && lt(condaVersion, CONDA_RUN_VERSION)) {
             return undefined;
@@ -473,11 +473,7 @@ export class Conda {
         } else {
             args.push('-p', env.prefix);
         }
-        const pythonArgs = [this.command, 'run', ...args, '--no-capture-output', '--live-stream', 'python'];
-        if (executeAsAProcess) {
-            pythonArgs.push(OUTPUT_MARKER_SCRIPT);
-        }
-        return pythonArgs;
+        return [this.command, 'run', ...args, '--no-capture-output', '--live-stream', 'python', OUTPUT_MARKER_SCRIPT];
     }
 
     /**
