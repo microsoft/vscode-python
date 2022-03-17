@@ -28,6 +28,7 @@ import {
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from '../envTestUtils';
 import { createBasicEnv, getEnvs, getEnvsWithUpdates, SimpleLocator } from '../../common';
+import { getOSType, OSType } from '../../../../common';
 
 suite('Python envs locator - Environments Resolver', () => {
     let envInfoService: IEnvironmentInfoService;
@@ -257,7 +258,10 @@ suite('Python envs locator - Environments Resolver', () => {
             sinon.restore();
         });
 
-        test('Calls into basic resolver to get environment info, then calls environnment service to resolve environment further and return it', async () => {
+        test('Calls into basic resolver to get environment info, then calls environnment service to resolve environment further and return it', async function () {
+            if (getOSType() !== OSType.Windows) {
+                this.skip();
+            }
             const resolvedEnvReturnedByBasicResolver = createExpectedResolvedEnvInfo(
                 path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
                 PythonEnvKind.Venv,
