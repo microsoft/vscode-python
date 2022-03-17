@@ -7,6 +7,7 @@ import { NodeLanguageServerProxy } from '../activation/node/languageServerProxy'
 import { NodeLanguageServerManager } from '../activation/node/manager';
 import { ILanguageServerOutputChannel } from '../activation/types';
 import { ICommandManager, IWorkspaceService } from '../common/application/types';
+import { PYLANCE_EXTENSION_ID } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import {
     IConfigurationService,
@@ -42,7 +43,7 @@ export class PylanceLSExtensionManager implements IDisposable, ILanguageServerEx
         environmentService: IEnvironmentVariablesProvider,
         commandManager: ICommandManager,
         fileSystem: IFileSystem,
-        extensions: IExtensions,
+        private readonly extensions: IExtensions,
     ) {
         this.analysisOptions = new NodeLanguageServerAnalysisOptions(outputChannel, workspaceService);
         this.clientFactory = new NodeLanguageClientFactory(fileSystem, extensions);
@@ -76,15 +77,12 @@ export class PylanceLSExtensionManager implements IDisposable, ILanguageServerEx
     }
 
     stopLanguageServer(): void {
-        // TODO
         this.serverManager.disconnect();
-
-        console.warn(this.serverManager);
+        this.serverProxy.dispose();
     }
 
     canStartLanguageServer(): boolean {
-        // TODO
-        console.warn(this.serverManager);
-        return true;
+        const extension = this.extensions.getExtension(PYLANCE_EXTENSION_ID);
+        return !!extension;
     }
 }
