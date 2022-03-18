@@ -11,6 +11,7 @@ import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ICodeExecutionService } from '../../terminals/types';
 
@@ -26,6 +27,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) protected readonly disposables: Disposable[],
         @inject(IPlatformService) protected readonly platformService: IPlatformService,
+        @inject(IInterpreterService) protected readonly interpreterService: IInterpreterService,
     ) {}
 
     public async executeFile(file: Uri) {
@@ -61,9 +63,9 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
     public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecInfo> {
         const pythonSettings = this.configurationService.getSettings(resource);
-        const command = this.platformService.isWindows
-            ? pythonSettings.pythonPath.replace(/\\/g, '/')
-            : pythonSettings.pythonPath;
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        const interpreterPath = interpreter?.path ?? pythonSettings.pythonPath;
+        const command = this.platformService.isWindows ? interpreterPath.replace(/\\/g, '/') : interpreterPath;
         const launchArgs = pythonSettings.terminal.launchArgs;
         return buildPythonExecInfo(command, [...launchArgs, ...args]);
     }
