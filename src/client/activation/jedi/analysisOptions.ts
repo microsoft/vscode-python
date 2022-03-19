@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { inject, injectable } from 'inversify';
+
 import * as path from 'path';
 import { WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
@@ -13,15 +13,14 @@ import { ILanguageServerOutputChannel } from '../types';
 
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types, class-methods-use-this */
 
-@injectable()
 export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsWithEnv {
     private resource: Resource | undefined;
 
     constructor(
-        @inject(IEnvironmentVariablesProvider) envVarsProvider: IEnvironmentVariablesProvider,
-        @inject(ILanguageServerOutputChannel) lsOutputChannel: ILanguageServerOutputChannel,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(IWorkspaceService) workspace: IWorkspaceService,
+        envVarsProvider: IEnvironmentVariablesProvider,
+        lsOutputChannel: ILanguageServerOutputChannel,
+        private readonly configurationService: IConfigurationService,
+        workspace: IWorkspaceService,
     ) {
         super(envVarsProvider, lsOutputChannel, workspace);
         this.resource = undefined;

@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import '../../common/extensions';
-
-import { inject, injectable, named } from 'inversify';
 
 import { ICommandManager } from '../../common/application/types';
 import { IDisposable, Resource } from '../../common/types';
@@ -24,7 +23,6 @@ import {
 } from '../types';
 import { traceDecoratorError, traceDecoratorVerbose, traceVerbose } from '../../logging';
 
-@injectable()
 export class JediLanguageServerManager implements ILanguageServerManager {
     private resource!: Resource;
 
@@ -41,13 +39,10 @@ export class JediLanguageServerManager implements ILanguageServerManager {
     private lsVersion: string | undefined;
 
     constructor(
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(ILanguageServerAnalysisOptions)
-        @named(LanguageServerType.Jedi)
+        private readonly serviceContainer: IServiceContainer,
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
-        @inject(ILanguageServerProxy)
         private readonly languageServerProxy: ILanguageServerProxy,
-        @inject(ICommandManager) commandManager: ICommandManager,
+        commandManager: ICommandManager,
     ) {
         if (JediLanguageServerManager.commandDispose) {
             JediLanguageServerManager.commandDispose.dispose();

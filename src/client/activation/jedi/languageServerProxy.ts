@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 import '../../common/extensions';
-import { inject, injectable } from 'inversify';
 import {
     DidChangeConfigurationNotification,
     Disposable,
@@ -22,7 +22,6 @@ import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 import { killPid } from '../../common/process/rawProcessApis';
 import { traceDecoratorError, traceDecoratorVerbose, traceError } from '../../logging';
 
-@injectable()
 export class JediLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
 
@@ -35,8 +34,8 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
     private lsVersion: string | undefined;
 
     constructor(
-        @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
-        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
+        private readonly factory: ILanguageClientFactory,
+        private readonly interpreterPathService: IInterpreterPathService,
     ) {}
 
     private static versionTelemetryProps(instance: JediLanguageServerProxy) {

@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 import '../../common/extensions';
 
-import { inject, injectable, named } from 'inversify';
-
 import { ICommandManager } from '../../common/application/types';
 import { IDisposable, IExtensions, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
@@ -22,7 +20,6 @@ import {
 import { traceDecoratorError, traceDecoratorVerbose } from '../../logging';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 
-@injectable()
 export class NodeLanguageServerManager implements ILanguageServerManager {
     private resource!: Resource;
     private interpreter: PythonEnvironment | undefined;
@@ -33,14 +30,11 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     private started: boolean = false;
 
     constructor(
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(ILanguageServerAnalysisOptions)
-        @named(LanguageServerType.Node)
+        private readonly serviceContainer: IServiceContainer,
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
-        @inject(ILanguageServerProxy)
         private readonly languageServerProxy: ILanguageServerProxy,
-        @inject(ICommandManager) commandManager: ICommandManager,
-        @inject(IExtensions) private readonly extensions: IExtensions,
+        commandManager: ICommandManager,
+        private readonly extensions: IExtensions,
     ) {
         this.disposables.push(
             commandManager.registerCommand(Commands.RestartLS, () => {

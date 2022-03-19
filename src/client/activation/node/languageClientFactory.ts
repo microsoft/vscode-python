@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 
@@ -14,12 +13,8 @@ import { ILanguageClientFactory } from '../types';
 
 const languageClientName = 'Python Tools';
 
-@injectable()
 export class NodeLanguageClientFactory implements ILanguageClientFactory {
-    constructor(
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExtensions) private readonly extensions: IExtensions,
-    ) {}
+    constructor(private readonly fs: IFileSystem, private readonly extensions: IExtensions) {}
 
     public async createLanguageClient(
         _resource: Resource,

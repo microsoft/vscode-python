@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 import '../../common/extensions';
 
-import { inject, injectable } from 'inversify';
 import {
     DidChangeConfigurationNotification,
     Disposable,
@@ -49,7 +48,6 @@ namespace GetExperimentValue {
     }
 }
 
-@injectable()
 export class NodeLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
     private startupCompleted: Deferred<void>;
@@ -59,12 +57,12 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
     private lsVersion: string | undefined;
 
     constructor(
-        @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
-        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
-        @inject(IEnvironmentVariablesProvider) private readonly environmentService: IEnvironmentVariablesProvider,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IExtensions) private readonly extensions: IExtensions,
+        private readonly factory: ILanguageClientFactory,
+        private readonly experimentService: IExperimentService,
+        private readonly interpreterPathService: IInterpreterPathService,
+        private readonly environmentService: IEnvironmentVariablesProvider,
+        private readonly workspace: IWorkspaceService,
+        private readonly extensions: IExtensions,
     ) {
         this.startupCompleted = createDeferred<void>();
     }
