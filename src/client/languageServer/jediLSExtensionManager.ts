@@ -7,14 +7,22 @@ import { JediLanguageServerProxy } from '../activation/jedi/languageServerProxy'
 import { JediLanguageServerManager } from '../activation/jedi/manager';
 import { ILanguageServerOutputChannel } from '../activation/types';
 import { IWorkspaceService, ICommandManager } from '../common/application/types';
-import { IExperimentService, IInterpreterPathService, IConfigurationService, Resource } from '../common/types';
+import {
+    IExperimentService,
+    IInterpreterPathService,
+    IConfigurationService,
+    Resource,
+    IDisposable,
+} from '../common/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
+import { LanguageServerCapabilities } from './languageServerCapabilities';
 import { ILanguageServerExtensionManager } from './types';
 
-export class JediLSExtensionManager implements ILanguageServerExtensionManager {
+export class JediLSExtensionManager extends LanguageServerCapabilities
+    implements IDisposable, ILanguageServerExtensionManager {
     serverManager: JediLanguageServerManager;
 
     serverProxy: JediLanguageServerProxy;
@@ -34,6 +42,8 @@ export class JediLSExtensionManager implements ILanguageServerExtensionManager {
         environmentService: IEnvironmentVariablesProvider,
         commandManager: ICommandManager,
     ) {
+        super();
+
         this.analysisOptions = new JediLanguageServerAnalysisOptions(
             environmentService,
             outputChannel,

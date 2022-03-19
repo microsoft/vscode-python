@@ -3,7 +3,13 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent } from 'vscode';
-import { IExtensionActivationService, ILanguageServerOutputChannel, LanguageServerType } from '../activation/types';
+import {
+    IExtensionActivationService,
+    ILanguageServer,
+    ILanguageServerCache,
+    ILanguageServerOutputChannel,
+    LanguageServerType,
+} from '../activation/types';
 import { ICommandManager, IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
 import {
@@ -19,13 +25,20 @@ import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { traceLog } from '../logging';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JediLSExtensionManager } from './jediLSExtensionManager';
 import { NoneLSExtensionManager } from './noneLSExtensionManager';
 import { PylanceLSExtensionManager } from './pylanceLSExtensionManager';
 import { ILanguageServerExtensionManager, ILanguageServerWatcher } from './types';
 
 @injectable()
-export class LanguageServerWatcher implements IExtensionActivationService, ILanguageServerWatcher {
+/**
+ * The Language Server Watcher class implements the ILanguageServerWatcher interface, which is the one-stop shop for language server activation.
+ *
+ * It also implements the ILanguageServerCache interface needed by our Jupyter support.
+ */
+export class LanguageServerWatcher
+    implements IExtensionActivationService, ILanguageServerWatcher, ILanguageServerCache {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: true, virtualWorkspace: true };
 
     languageServerExtensionManager: ILanguageServerExtensionManager | undefined;
@@ -33,6 +46,8 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
     languageServerType: LanguageServerType;
 
     resource: Resource;
+
+    interpreter: PythonEnvironment | undefined;
 
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
@@ -51,15 +66,28 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
         this.languageServerType = this.configurationService.getSettings().languageServer;
 
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
+
+        if (this.workspaceService.isTrusted) {
+            disposables.push(this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this)));
+        }
     }
+
+    // IExtensionActivationService
 
     public async activate(resource: Resource): Promise<void> {
         this.resource = resource;
         await this.startLanguageServer(this.languageServerType);
     }
 
-    async startLanguageServer(languageServerType: LanguageServerType): Promise<void> {
+    // ILanguageServerWatcher;
+
+    public async startLanguageServer(languageServerType: LanguageServerType): Promise<void> {
         const interpreter = await this.interpreterService?.getActiveInterpreter(this.resource);
+
+        // Destroy the old language server if it's different.
+        if (interpreter !== this.interpreter) {
+            this.stopLanguageServer();
+        }
 
         // Instantiate the language server extension manager.
         this.languageServerExtensionManager = this.createLanguageServer(languageServerType);
@@ -69,7 +97,20 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
 
         logStartup(languageServerType);
         this.languageServerType = languageServerType;
+        this.interpreter = interpreter;
     }
+
+    // ILanguageServerCache
+
+    public async get(): Promise<ILanguageServer> {
+        if (!this.languageServerExtensionManager) {
+            this.startLanguageServer(this.languageServerType);
+        }
+
+        return Promise.resolve(this.languageServerExtensionManager!.get());
+    }
+
+    // Private methods
 
     private stopLanguageServer(): void {
         if (this.languageServerExtensionManager) {
@@ -132,6 +173,12 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
         if (event.affectsConfiguration('python.languageServer')) {
             await this.refreshLanguageServer();
         }
+    }
+
+    // Watch for interpreter changes.
+    private async onDidChangeInterpreter() {
+        // Reactivate the resource. It should destroy the old one if it's different.
+        return this.activate(this.resource);
     }
 }
 

@@ -78,7 +78,7 @@ export type ILanguageServerConnection = Pick<
     'sendRequest' | 'sendNotification' | 'onProgress' | 'sendProgress' | 'onNotification' | 'onRequest'
 >;
 
-interface ILanguageServer
+export interface ILanguageServer
     extends RenameProvider,
         DefinitionProvider,
         HoverProvider,

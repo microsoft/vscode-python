@@ -3,7 +3,7 @@
 
 import { IServiceManager } from '../ioc/types';
 import { ExtensionActivationManager } from './activationManager';
-import { LanguageServerExtensionActivationService } from './activationService';
+// import { LanguageServerExtensionActivationService } from './activationService';
 import { ExtensionSurveyPrompt } from './extensionSurvey';
 // import { JediLanguageServerAnalysisOptions } from './jedi/analysisOptions';
 // import { JediLanguageClientFactory } from './jedi/languageClientFactory';
@@ -15,19 +15,19 @@ import { LanguageServerOutputChannel } from './common/outputChannel';
 // import { NodeLanguageClientFactory } from './node/languageClientFactory';
 // import { NodeLanguageServerProxy } from './node/languageServerProxy';
 // import { NodeLanguageServerManager } from './node/manager';
-import { NoLanguageServerExtensionActivator } from './none/activator';
+// import { NoLanguageServerExtensionActivator } from './none/activator';
 import {
     IExtensionActivationManager,
     IExtensionActivationService,
     IExtensionSingleActivationService,
     // ILanguageClientFactory,
-    ILanguageServerActivator,
+    // ILanguageServerActivator,
     // ILanguageServerAnalysisOptions,
     ILanguageServerCache,
     // ILanguageServerManager,
     ILanguageServerOutputChannel,
     // ILanguageServerProxy,
-    LanguageServerType,
+    // LanguageServerType,
 } from './types';
 // import { JediLanguageServerActivator } from './jedi/activator';
 import { LoadLanguageServerExtension } from './common/loadLanguageServerExtension';
@@ -37,14 +37,14 @@ import { LanguageServerWatcher } from '../languageServer/watcher';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, PartialModeStatusItem);
-    serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
-    serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
+    // serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
+    // serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
-    serviceManager.add<ILanguageServerActivator>(
-        ILanguageServerActivator,
-        NoLanguageServerExtensionActivator,
-        LanguageServerType.None,
-    );
+    // serviceManager.add<ILanguageServerActivator>(
+    //     ILanguageServerActivator,
+    //     NoLanguageServerExtensionActivator,
+    //     LanguageServerType.None,
+    // );
     serviceManager.addSingleton<ILanguageServerOutputChannel>(
         ILanguageServerOutputChannel,
         LanguageServerOutputChannel,
@@ -60,6 +60,7 @@ export function registerTypes(serviceManager: IServiceManager): void {
 
     serviceManager.addSingleton<ILanguageServerWatcher>(ILanguageServerWatcher, LanguageServerWatcher);
     serviceManager.addBinding(ILanguageServerWatcher, IExtensionActivationService);
+    serviceManager.addBinding(ILanguageServerWatcher, ILanguageServerCache);
 
     // if (languageServerType === LanguageServerType.Node) {
     // serviceManager.add<ILanguageServerAnalysisOptions>(

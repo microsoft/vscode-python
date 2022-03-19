@@ -21,9 +21,11 @@ import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
+import { LanguageServerCapabilities } from './languageServerCapabilities';
 import { ILanguageServerExtensionManager } from './types';
 
-export class PylanceLSExtensionManager implements IDisposable, ILanguageServerExtensionManager {
+export class PylanceLSExtensionManager extends LanguageServerCapabilities
+    implements IDisposable, ILanguageServerExtensionManager {
     serverManager: NodeLanguageServerManager;
 
     serverProxy: NodeLanguageServerProxy;
@@ -45,6 +47,8 @@ export class PylanceLSExtensionManager implements IDisposable, ILanguageServerEx
         fileSystem: IFileSystem,
         private readonly extensions: IExtensions,
     ) {
+        super();
+
         this.analysisOptions = new NodeLanguageServerAnalysisOptions(outputChannel, workspaceService);
         this.clientFactory = new NodeLanguageClientFactory(fileSystem, extensions);
         this.serverProxy = new NodeLanguageServerProxy(
