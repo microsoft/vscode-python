@@ -125,9 +125,9 @@ async function resolveGloballyInstalledEnv(env: BasicEnvInfo): Promise<PythonEnv
 }
 
 async function resolveSimpleEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
-    const { executablePath } = env;
+    const { executablePath, kind } = env;
     const envInfo = buildEnvInfo({
-        kind: env.kind,
+        kind,
         version: await getPythonVersionFromPath(executablePath),
         executable: executablePath,
     });
