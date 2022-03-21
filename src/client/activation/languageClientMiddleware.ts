@@ -27,7 +27,6 @@ export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
 
         // Enable notebook support if jupyter support is installed
         if (jupyterDependencyManager && jupyterDependencyManager.isJupyterExtensionInstalled) {
-            // @ts-ignore foo
             this.notebookAddon = createHidingMiddleware();
         }
         disposables.push(
@@ -36,7 +35,6 @@ export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
                     if (this.notebookAddon && !jupyterDependencyManager.isJupyterExtensionInstalled) {
                         this.notebookAddon = undefined;
                     } else if (!this.notebookAddon && jupyterDependencyManager.isJupyterExtensionInstalled) {
-                        // @ts-ignore foo
                         this.notebookAddon = createHidingMiddleware();
                     }
                 }
