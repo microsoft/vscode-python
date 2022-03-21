@@ -2097,7 +2097,6 @@ export class RelativePattern implements IRelativePattern {
 
         this.baseUri = typeof base === 'string' ? vscUri.URI.parse(base) : base.uri;
         this.base = typeof base === 'string' ? base : base.uri.fsPath;
-
         this.pattern = pattern;
     }
 

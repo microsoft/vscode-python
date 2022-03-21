@@ -79,13 +79,11 @@ export class LanguageClientMiddlewareBase implements Middleware {
             for (const [i, item] of params.items.entries()) {
                 if (item.section === 'python') {
                     const uri = item.scopeUri ? Uri.parse(item.scopeUri) : undefined;
-
-                    const settingDict: LSPObject = settings[i] as LSPObject;
                     // For backwards compatibility, set python.pythonPath to the configured
                     // value as though it were in the user's settings.json file.
-
                     // As this is for backwards compatibility, `ConfigService.pythonPath`
                     // can be considered as active interpreter path.
+                    const settingDict: LSPObject = settings[i] as LSPObject;
                     settingDict.pythonPath = configService.getSettings(uri).pythonPath;
 
                     const env = await envService.getEnvironmentVariables(uri);
