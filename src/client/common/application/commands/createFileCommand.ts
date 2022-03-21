@@ -16,9 +16,6 @@ export class CreatePythonFileCommandHandler implements IExtensionSingleActivatio
     ) {}
 
     public async activate(): Promise<void> {
-        if (!this.workspaceService.getConfiguration('python').get<boolean>('createNewFileEnabled')) {
-            return;
-        }
         this.commandManager.registerCommand(Commands.CreateNewFile, this.createPythonFile, this);
     }
 

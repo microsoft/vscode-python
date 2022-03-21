@@ -7,7 +7,6 @@ import { Commands } from '../../../../client/common/constants';
 import { CommandManager } from '../../../../client/common/application/commandManager';
 import { CreatePythonFileCommandHandler } from '../../../../client/common/application/commands/createFileCommand';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
-import { MockWorkspaceConfiguration } from '../../../mocks/mockWorkspaceConfig';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 
@@ -26,11 +25,6 @@ suite('Create New Python File Commmand', () => {
             instance(cmdManager),
             instance(workspaceService),
             instance(appShell),
-        );
-        when(workspaceService.getConfiguration('python')).thenReturn(
-            new MockWorkspaceConfiguration({
-                createNewFileEnabled: true,
-            }),
         );
         when(workspaceService.openTextDocument(deepEqual({ language: 'python' }))).thenReturn(
             Promise.resolve(({} as unknown) as TextDocument),
