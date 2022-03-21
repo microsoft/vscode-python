@@ -139,7 +139,7 @@ export interface IProposedExtensionAPI {
          * Returns details for the given interpreter. Details such as absolute interpreter path,
          * version, type (conda, pyenv, etc). Metadata such as `sysPrefix` can be found under
          * metadata field.
-         * @param path : Path to environment folder or path to interpreter whose details you need.
+         * @param path : Full path to environment folder or interpreter whose details you need.
          * @param options : [optional]
          *     * useCache : When true, cache is checked first for any data, returns even if there
          *                  is partial data.
@@ -159,9 +159,9 @@ export interface IProposedExtensionAPI {
          */
         getEnvironmentPaths(): Promise<EnvPathType[] | undefined>;
         /**
-         * Sets the active environment path for the python extension. Configuration target will
-         * always be the workspace folder.
-         * @param path : Environment path to set for a given workspace.
+         * Sets the active environment path for the python extension for the resource. Configuration target
+         * will always be the workspace folder.
+         * @param path : Full path to environment folder or interpreter to set.
          * @param resource : [optional] Uri of a file ro workspace to scope to a particular workspace
          *                   folder.
          */
