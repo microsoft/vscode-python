@@ -273,7 +273,10 @@ suite('Interpreters Display', () => {
                 } else {
                     statusBar.verify((s) => (s.color = TypeMoq.It.isValue('')), TypeMoq.Times.once());
                     statusBar.verify(
-                        (s) => (s.text = TypeMoq.It.isValue('$(alert) Select Python Interpreter')),
+                        (s) =>
+                            (s.text = TypeMoq.It.isValue(
+                                `$(alert) ${InterpreterQuickPickList.browsePath.openButtonLabel()}`,
+                            )),
                         TypeMoq.Times.once(),
                     );
                 }
