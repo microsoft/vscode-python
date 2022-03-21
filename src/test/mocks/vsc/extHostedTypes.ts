@@ -2078,6 +2078,8 @@ export enum ConfigurationTarget {
 }
 
 export class RelativePattern implements IRelativePattern {
+    baseUri: vscode.Uri;
+
     base: string;
 
     pattern: string;
@@ -2093,7 +2095,9 @@ export class RelativePattern implements IRelativePattern {
             throw illegalArgument('pattern');
         }
 
+        this.baseUri = typeof base === 'string' ? vscUri.URI.parse(base) : base.uri;
         this.base = typeof base === 'string' ? base : base.uri.fsPath;
+
         this.pattern = pattern;
     }
 
