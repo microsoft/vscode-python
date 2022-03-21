@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { traceWarn } from '../../logging';
 import { PythonEnvKind } from '../base/info';
 import { getPrioritizedEnvKinds } from '../base/info/envKind';
 import { isCondaEnvironment } from './environmentManagers/conda';
@@ -46,7 +47,13 @@ export async function identifyEnvironment(path: string): Promise<PythonEnvKind> 
     const prioritizedEnvTypes = getPrioritizedEnvKinds();
     for (const e of prioritizedEnvTypes) {
         const identifier = identifiers.get(e);
-        if (identifier && (await identifier(path))) {
+        if (
+            identifier &&
+            (await identifier(path).catch((ex) => {
+                traceWarn(`Identifier for ${e} failed to identify ${path}`, ex);
+                return false;
+            }))
+        ) {
             return e;
         }
     }

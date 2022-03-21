@@ -161,7 +161,7 @@ export interface IProposedExtensionAPI {
         /**
          * Sets the active environment path for the python extension. Configuration target will
          * always be the workspace folder.
-         * @param path : Interpreter path to set for a given workspace.
+         * @param path : Environment path to set for a given workspace.
          * @param resource : [optional] Uri of a file ro workspace to scope to a particular workspace
          *                   folder.
          */
@@ -171,7 +171,7 @@ export interface IProposedExtensionAPI {
          * promise to get the updated environment list. If there is a refresh already going on
          * then it returns the promise for that refresh.
          * @param options : [optional]
-         *     * clearCache : When true, this will clear the cache before interpreter refresh
+         *     * clearCache : When true, this will clear the cache before environment refresh
          *                    is triggered.
          */
         refreshEnvironment(options?: RefreshEnvironmentsOptions): Promise<EnvPathType[] | undefined>;

@@ -127,7 +127,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
             } else {
                 this.statusBar.tooltip = '';
                 this.statusBar.color = '';
-                this.statusBar.text = '$(alert) Select Python Interpreter';
+                this.statusBar.text = `$(alert) ${InterpreterQuickPickList.browsePath.openButtonLabel()}`;
                 this.currentlySelectedInterpreterDisplay = undefined;
             }
         } else if (this.languageStatus) {

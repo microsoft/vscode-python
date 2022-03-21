@@ -66,7 +66,10 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         if (cachedEnv) {
             return cachedEnv;
         }
-        const resolved = await this.locator.resolveEnv(path);
+        const resolved = await this.locator.resolveEnv(path).catch((ex) => {
+            traceError(`Failed to resolve ${path}`, ex);
+            return undefined;
+        });
         if (resolved) {
             this.cache.addEnv(resolved, true);
         }

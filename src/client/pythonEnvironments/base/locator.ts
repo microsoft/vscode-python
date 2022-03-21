@@ -196,7 +196,7 @@ export interface IDiscoveryAPI {
      * Find as much info about the given Python environment as possible.
      * If path passed is invalid, then `undefined` is returned.
      *
-     * @param path - Python executable path or environment path to resolve more information about
+     * @param path - Full path of Python executable or environment folder to resolve more information about
      */
     resolveEnv(path: string): Promise<PythonEnvInfo | undefined>;
 }
