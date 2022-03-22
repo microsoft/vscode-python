@@ -172,8 +172,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
         try {
             let command: string | undefined;
-            // In order to make sure we know where the environment output is,
-            // put in a dummy echo we can look for
             let [args, parse] = internalScripts.printEnvVariables();
             args.forEach((arg, i) => {
                 args[i] = arg.toCommandArgument();
@@ -202,6 +200,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 }
                 // Run the activate command collect the environment from it.
                 const activationCommand = this.fixActivationCommands(activationCommands).join(' && ');
+                // In order to make sure we know where the environment output is,
+                // put in a dummy echo we can look for
                 command = `${activationCommand} && echo '${ENVIRONMENT_PREFIX}' && python ${args.join(' ')}`;
             }
 
