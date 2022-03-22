@@ -170,7 +170,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         if (!shellInfo) {
             return;
         }
-        let isPossiblyCondaEnv = false;
         try {
             let command: string | undefined;
             // In order to make sure we know where the environment output is,
@@ -201,7 +200,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
                     return;
                 }
-                isPossiblyCondaEnv = activationCommands.join(' ').toLowerCase().includes('conda');
                 // Run the activate command collect the environment from it.
                 const activationCommand = this.fixActivationCommands(activationCommands).join(' && ');
                 command = `${activationCommand} && echo '${ENVIRONMENT_PREFIX}' && python ${args.join(' ')}`;
@@ -235,7 +233,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     result = await processService.shellExec(command, {
                         env,
                         shell: shellInfo.shell,
-                        timeout: isPossiblyCondaEnv ? CONDA_ENVIRONMENT_TIMEOUT : ENVIRONMENT_TIMEOUT,
+                        timeout:
+                            interpreter?.envType === EnvironmentType.Conda
+                                ? CONDA_ENVIRONMENT_TIMEOUT
+                                : ENVIRONMENT_TIMEOUT,
                         maxBuffer: 1000 * 1000,
                         throwOnStdErr: false,
                     });
@@ -281,7 +282,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         } catch (e) {
             traceError('getActivatedEnvironmentVariables', e);
             sendTelemetryEvent(EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED, undefined, {
-                isPossiblyCondaEnv,
+                isPossiblyCondaEnv: interpreter?.envType === EnvironmentType.Conda,
                 terminal: shellInfo.shellType,
             });
 
