@@ -83,7 +83,7 @@ async function getProjectDir(envFolder: string): Promise<string | undefined> {
     if (!(await pathExists(dotProjectFile))) {
         return undefined;
     }
-    const projectDir = await readFile(dotProjectFile);
+    const projectDir = (await readFile(dotProjectFile)).trim();
     if (!(await pathExists(projectDir))) {
         traceError(
             `The .project file inside environment folder: ${envFolder} doesn't contain a valid path to the project`,
