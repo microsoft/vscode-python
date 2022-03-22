@@ -1915,7 +1915,7 @@
         "webpack": "webpack"
     },
     "dependencies": {
-        "@vscode/jupyter-lsp-middleware": "^0.2.39",
+        "@vscode/jupyter-lsp-middleware": "^0.2.40",
         "arch": "^2.1.0",
         "diff-match-patch": "^1.0.0",
         "fs-extra": "^9.1.0",
