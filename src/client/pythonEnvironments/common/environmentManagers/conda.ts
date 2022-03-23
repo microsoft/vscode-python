@@ -4,7 +4,6 @@ import { lt, parse, SemVer } from 'semver';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
 import {
     arePathsSame,
-    exec,
     getPythonSetting,
     isParentPath,
     pathExists,
@@ -390,7 +389,9 @@ export class Conda {
     @cache(30_000, true, 10_000)
     // eslint-disable-next-line class-methods-use-this
     private async getInfoCached(command: string): Promise<CondaInfo> {
-        const result = await exec(command, ['info', '--json'], { timeout: CONDA_GENERAL_TIMEOUT });
+        const quoted = [command.toCommandArgument(), 'info', '--json'].join(' ');
+        // Execute in a shell as `conda` on windows refers to `conda.bat`, which requires a shell to work.
+        const result = await shellExecute(quoted, { timeout: CONDA_GENERAL_TIMEOUT });
         traceVerbose(`conda info --json: ${result.stdout}`);
         return JSON.parse(result.stdout);
     }
@@ -491,7 +492,9 @@ export class Conda {
         if (info && info.conda_version) {
             versionString = info.conda_version;
         } else {
-            const stdOut = await exec(this.command, ['--version'], { timeout: CONDA_GENERAL_TIMEOUT })
+            const quoted = `${this.command.toCommandArgument()} --version`;
+            // Execute in a shell as `conda` on windows refers to `conda.bat`, which requires a shell to work.
+            const stdOut = await shellExecute(quoted, { timeout: CONDA_GENERAL_TIMEOUT })
                 .then((result) => result.stdout.trim())
                 .catch<string | undefined>(() => undefined);
 
