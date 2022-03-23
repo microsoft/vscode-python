@@ -247,7 +247,8 @@ suite('Resolver Utils', () => {
 
         test('resolveEnv (Windows)', async () => {
             sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
-            sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
+            sinon.stub(externalDependencies, 'shellExecute').callsFake(async (quoted: string) => {
+                const [command, ...args] = quoted.split(' ');
                 if (command === 'conda' && args[0] === 'info' && args[1] === '--json') {
                     return { stdout: JSON.stringify(condaInfo(condaPrefixWindows)) };
                 }
@@ -262,7 +263,8 @@ suite('Resolver Utils', () => {
 
         test('resolveEnv (non-Windows)', async () => {
             sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Linux);
-            sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
+            sinon.stub(externalDependencies, 'shellExecute').callsFake(async (quoted: string) => {
+                const [command, ...args] = quoted.split(' ');
                 if (command === 'conda' && args[0] === 'info' && args[1] === '--json') {
                     return { stdout: JSON.stringify(condaInfo(condaPrefixNonWindows)) };
                 }
@@ -280,7 +282,7 @@ suite('Resolver Utils', () => {
 
         test('resolveEnv: If no conda binary found, resolve as a simple environment', async () => {
             sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
-            sinon.stub(externalDependencies, 'exec').callsFake(async (command: string) => {
+            sinon.stub(externalDependencies, 'shellExecute').callsFake(async (command: string) => {
                 throw new Error(`${command} is missing or is not executable`);
             });
             const actual = await resolveBasicEnv({
@@ -603,7 +605,7 @@ suite('Resolver Utils', () => {
         });
 
         test('If data provided by registry is less informative than kind resolvers, do not use it to update environment', async () => {
-            sinon.stub(externalDependencies, 'exec').callsFake(async (command: string) => {
+            sinon.stub(externalDependencies, 'shellExecute').callsFake(async (command: string) => {
                 throw new Error(`${command} is missing or is not executable`);
             });
             const interpreterPath = path.join(regTestRoot, 'conda3', 'python.exe');
