@@ -40,9 +40,10 @@ class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
 
     public interpreter = ({} as unknown) as PythonEnvironment;
 
-    constructor(l: string, p: string) {
+    constructor(l: string, p: string, d?: string) {
         this.path = p;
         this.label = l;
+        this.description = d ?? p;
     }
 }
 
@@ -85,6 +86,7 @@ suite('Interpreters - selector', () => {
                 { displayName: '2 (virtualenv)', path: 'c:/path2/path2', envType: EnvironmentType.VirtualEnv },
                 { displayName: '3', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
                 { displayName: '4', path: 'c:/path4/path4', envType: EnvironmentType.Conda },
+                { displayName: '5', path: 'c:/path5/path', envPath: 'c:/path5', envType: EnvironmentType.Conda },
             ].map((item) => ({ ...info, ...item }));
             interpreterService
                 .setup((x) => x.getAllInterpreters(TypeMoq.It.isAny()))
@@ -99,6 +101,7 @@ suite('Interpreters - selector', () => {
                 new InterpreterQuickPickItem('2 (virtualenv)', 'c:/path2/path2'),
                 new InterpreterQuickPickItem('3', 'c:/path2/path2'),
                 new InterpreterQuickPickItem('4', 'c:/path4/path4'),
+                new InterpreterQuickPickItem('5', 'c:/path5/path', 'c:/path5'),
             ];
 
             assert.strictEqual(actual.length, expected.length, 'Suggestion lengths are different.');
@@ -106,12 +109,17 @@ suite('Interpreters - selector', () => {
                 assert.strictEqual(
                     actual[i].label,
                     expected[i].label,
-                    `Suggestion label is different at ${i}: exected '${expected[i].label}', found '${actual[i].label}'.`,
+                    `Suggestion label is different at ${i}: expected '${expected[i].label}', found '${actual[i].label}'.`,
                 );
                 assert.strictEqual(
                     actual[i].path,
                     expected[i].path,
-                    `Suggestion path is different at ${i}: exected '${expected[i].path}', found '${actual[i].path}'.`,
+                    `Suggestion path is different at ${i}: expected '${expected[i].path}', found '${actual[i].path}'.`,
+                );
+                assert.strictEqual(
+                    actual[i].description,
+                    expected[i].description,
+                    `Suggestion description is different at ${i}: expected '${expected[i].description}', found '${actual[i].description}'.`,
                 );
             }
         });
@@ -183,12 +191,12 @@ suite('Interpreters - selector', () => {
             assert.strictEqual(
                 result[i].label,
                 expected[i].label,
-                `Suggestion label is different at ${i}: exected '${expected[i].label}', found '${result[i].label}'.`,
+                `Suggestion label is different at ${i}: expected '${expected[i].label}', found '${result[i].label}'.`,
             );
             assert.strictEqual(
                 result[i].path,
                 expected[i].path,
-                `Suggestion path is different at ${i}: exected '${expected[i].path}', found '${result[i].path}'.`,
+                `Suggestion path is different at ${i}: expected '${expected[i].path}', found '${result[i].path}'.`,
             );
         }
     });

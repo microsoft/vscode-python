@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, Uri } from 'vscode';
 import { arePathsSame } from '../../../common/platform/fs-paths';
 import { IPathUtils, Resource } from '../../../common/types';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
 import { IInterpreterService } from '../../contracts';
 import { IInterpreterComparer, IInterpreterQuickPickItem, IInterpreterSelector } from '../types';
 
@@ -40,17 +40,22 @@ export class InterpreterSelector implements IInterpreterSelector {
     }
 
     public suggestionToQuickPickItem(
-        suggestion: PythonEnvironment,
+        interpreter: PythonEnvironment,
         workspaceUri?: Uri,
         useDetailedName = false,
     ): IInterpreterQuickPickItem {
-        const detail = this.pathUtils.getDisplayName(suggestion.path, workspaceUri ? workspaceUri.fsPath : undefined);
-        const cachedPrefix = suggestion.cachedEntry ? '(cached) ' : '';
+        const detail = this.pathUtils.getDisplayName(
+            interpreter.envType === EnvironmentType.Conda && interpreter.envPath
+                ? interpreter.envPath
+                : interpreter.path,
+            workspaceUri ? workspaceUri.fsPath : undefined,
+        );
+        const cachedPrefix = interpreter.cachedEntry ? '(cached) ' : '';
         return {
-            label: (useDetailedName ? suggestion.detailedDisplayName : suggestion.displayName) || 'Python',
+            label: (useDetailedName ? interpreter.detailedDisplayName : interpreter.displayName) || 'Python',
             description: `${cachedPrefix}${detail}`,
-            path: suggestion.path,
-            interpreter: suggestion,
+            path: interpreter.path,
+            interpreter,
         };
     }
 
