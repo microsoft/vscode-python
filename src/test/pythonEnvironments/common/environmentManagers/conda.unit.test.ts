@@ -16,7 +16,7 @@ import { createBasicEnv } from '../../base/common';
 import { assertBasicEnvsEqual } from '../../base/locators/envTestUtils';
 import { OUTPUT_MARKER_SCRIPT } from '../../../../client/common/process/internal/scripts';
 
-suite('xConda and its environments are located correctly', () => {
+suite('Conda and its environments are located correctly', () => {
     // getOSType() is stubbed to return this.
     let osType: platform.OSType;
 
