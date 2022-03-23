@@ -104,7 +104,11 @@ suite('Common - Conda Installer', () => {
 
         const execInfo = await installer.getExecutionInfo('abc', uri);
 
-        assert.deepEqual(execInfo, { args: ['install', '--name', condaEnv.name, 'abc', '-y'], execPath: condaPath });
+        assert.deepEqual(execInfo, {
+            args: ['install', '--name', condaEnv.name, 'abc', '-y'],
+            execPath: condaPath,
+            useShell: true,
+        });
     });
     test('Include path of environment', async () => {
         const uri = Uri.file(__filename);
@@ -126,6 +130,7 @@ suite('Common - Conda Installer', () => {
         assert.deepEqual(execInfo, {
             args: ['install', '--prefix', condaEnv.path.fileToCommandArgument(), 'abc', '-y'],
             execPath: condaPath,
+            useShell: true,
         });
     });
 });
