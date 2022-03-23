@@ -117,6 +117,8 @@ export class CondaInstaller extends ModuleInstaller {
         return {
             args,
             execPath: condaFile,
+            // Execute in a shell as `conda` on windows refers to `conda.bat`, which requires a shell to work.
+            useShell: true,
         };
     }
 

@@ -66,17 +66,38 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 const pythonPath = isResource(resource) ? interpreterPath : resource.path;
                 const args = internalPython.execModule(executionInfo.moduleName, executionInfoArgs);
                 if (!interpreter || interpreter.envType !== EnvironmentType.Unknown) {
-                    await this.executeCommand(shouldExecuteInTerminal, resource, pythonPath, args, token);
+                    await this.executeCommand(
+                        shouldExecuteInTerminal,
+                        resource,
+                        pythonPath,
+                        args,
+                        token,
+                        executionInfo.useShell,
+                    );
                 } else if (settings.globalModuleInstallation) {
                     const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
                     if (await fs.isDirReadonly(path.dirname(pythonPath)).catch((_err) => true)) {
                         this.elevatedInstall(pythonPath, args);
                     } else {
-                        await this.executeCommand(shouldExecuteInTerminal, resource, pythonPath, args, token);
+                        await this.executeCommand(
+                            shouldExecuteInTerminal,
+                            resource,
+                            pythonPath,
+                            args,
+                            token,
+                            executionInfo.useShell,
+                        );
                     }
                 } else if (name === translateProductToModule(Product.pip)) {
                     // Pip should always be installed into the specified environment.
-                    await this.executeCommand(shouldExecuteInTerminal, resource, pythonPath, args, token);
+                    await this.executeCommand(
+                        shouldExecuteInTerminal,
+                        resource,
+                        pythonPath,
+                        args,
+                        token,
+                        executionInfo.useShell,
+                    );
                 } else {
                     await this.executeCommand(
                         shouldExecuteInTerminal,
@@ -173,6 +194,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         command: string,
         args: string[],
         token?: CancellationToken,
+        useShell?: boolean,
     ) {
         const options: TerminalCreationOptions = {};
         if (isResource(resource)) {
@@ -189,7 +211,17 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         } else {
             const processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
             const processService = await processServiceFactory.create(options.resource);
-            await processService.exec(command, args);
+            if (useShell) {
+                const argv = [command, ...args];
+                // Concat these together to make a set of quoted strings
+                const quoted = argv.reduce(
+                    (p, c) => (p ? `${p} ${c.toCommandArgument()}` : `${c.toCommandArgument()}`),
+                    '',
+                );
+                await processService.shellExec(quoted);
+            } else {
+                await processService.exec(command, args);
+            }
         }
     }
 }

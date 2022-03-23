@@ -56,6 +56,7 @@ export type ExecutionInfo = {
     moduleName?: string;
     args: string[];
     product?: Product;
+    useShell?: boolean;
 };
 
 export enum InstallerResponse {
