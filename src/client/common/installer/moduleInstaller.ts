@@ -105,6 +105,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                         pythonPath,
                         args.concat(['--user']),
                         token,
+                        executionInfo.useShell,
                     );
                 }
             } else {
@@ -114,6 +115,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                     executionInfo.execPath!,
                     executionInfoArgs,
                     token,
+                    executionInfo.useShell,
                 );
             }
         };
@@ -193,8 +195,8 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         resource: InterpreterUri | undefined,
         command: string,
         args: string[],
-        token?: CancellationToken,
-        useShell?: boolean,
+        token: CancellationToken | undefined,
+        useShell: boolean | undefined,
     ) {
         const options: TerminalCreationOptions = {};
         if (isResource(resource)) {
