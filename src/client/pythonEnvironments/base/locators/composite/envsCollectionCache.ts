@@ -112,8 +112,6 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             this.envs.push(env);
             this.fire({ new: env });
             reportInterpretersChanged([{ path: getEnvPath(env.executable.filename, env.location).path, type: 'add' }]);
-        } else if (hasCompleteInfo) {
-            this.updateEnv(found, env);
         }
     }
 
