@@ -354,12 +354,35 @@ export class Conda {
                 .map((line) => path.join(line, suffix));
         }
 
+        async function getCondaBatFile(file: string) {
+            const fileDir = path.dirname(file);
+            const possibleBatch = path.join(fileDir, '..', 'condabin', 'conda.bat');
+            if (await pathExists(possibleBatch)) {
+                return possibleBatch;
+            }
+            return file;
+        }
+
         // Probe the candidates, and pick the first one that exists and does what we need.
         for await (const condaPath of getCandidates()) {
             traceVerbose(`Probing conda binary: ${condaPath}`);
             const conda = new Conda(condaPath);
             try {
                 await conda.getInfo();
+                if (getOSType() === OSType.Windows) {
+                    const condaBatFile = await getCondaBatFile(condaPath);
+                    try {
+                        // Prefer to use .bat files over .exe on windows as that is what cmd uses.
+                        if (condaBatFile) {
+                            const condaBat = new Conda(condaBatFile);
+                            await condaBat.getInfo();
+                            traceVerbose(`Found conda via filesystem probing: ${condaBatFile}`);
+                            return conda;
+                        }
+                    } catch (ex) {
+                        traceVerbose('Failed to spawn conda bat file', condaBatFile, ex);
+                    }
+                }
                 traceVerbose(`Found conda via filesystem probing: ${condaPath}`);
                 return conda;
             } catch (ex) {
