@@ -313,7 +313,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when debug in terminal button was used to debug current file.
      */
     /* __GDPR__
-        "debug_in_terminal_button" : { "owner": "paulacamargo25" }
+        "debug_in_terminal_button" : { }
     */
     [EventName.DEBUG_IN_TERMINAL_BUTTON]: never | undefined;
     /**
@@ -617,7 +617,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when attaching to a local process.
      */
     /* __GDPR__
-       "debugger.attach_to_local_process" : { "owner": "paulacamargo25" }
+       "debugger.attach_to_local_process" : { }
      */
     [EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS]: never | undefined;
     /**
@@ -677,7 +677,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when providing completion provider in launch.json. It is sent just *after* inserting the completion.
      */
     /* __GDPR__
-       "debugger.configuration.prompts.in.launch.json" : { "owner": "paulacamargo25" }
+       "debugger.configuration.prompts.in.launch.json" : { }
      */
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON]: never | undefined;
     /**
@@ -790,7 +790,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when substituting Environment variables to calculate value of variables
      */
     /* __GDPR__
-       "envfile_variable_substitution" : { "owner": "luabud" }
+       "envfile_variable_substitution" : { }
      */
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
     /**
@@ -1078,7 +1078,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when 'Enter interpreter path' button is clicked.
      */
     /* __GDPR__
-       "select_interpreter_enter_button" : { "owner": "karrtikr" }
+       "select_interpreter_enter_button" : { }
      */
     [EventName.SELECT_INTERPRETER_ENTER_BUTTON]: never | undefined;
     /**
@@ -1116,7 +1116,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the user select to either enter or find the interpreter from the quickpick.
      */
     /* __GDPR__
-       "select_interpreter_enter_or_find" : { "owner": "karrtikr" }
+       "select_interpreter_enter_or_find" : { }
      */
 
     [EventName.SELECT_INTERPRETER_ENTER_OR_FIND]: never | undefined;
@@ -1296,7 +1296,7 @@ export interface IEventNamePropertyMapping {
     /* __GDPR__
        "python_interpreter_discovery" : {
            "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" },
-          "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "karrtikr"}
+          "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "karrtikr"},
           "environmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
        }
      */
@@ -1534,7 +1534,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent if azure blob packages are being listed
      */
     /* __GDPR__
-       "python_language_server.list_blob_store_packages" : { "owner": "kimadeline" }
+       "python_language_server.list_blob_store_packages" : { }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES]: never | undefined;
     /**
@@ -1587,7 +1587,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry sent from language server (details of telemetry sent can be provided by LS team)
      */
     /* __GDPR__
-       "python_language_server.telemetry" : { "owner": "kimadeline" }
+       "python_language_server.telemetry" : { }
      */
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
@@ -1603,14 +1603,14 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the user use the report issue command.
      */
     /* __GDPR__
-      "use_report_issue_command" : { "owner": "paulacamargo25" }
+      "use_report_issue_command" : { }
      */
     [EventName.USE_REPORT_ISSUE_COMMAND]: unknown;
     /**
      * Telemetry event sent when the New Python File command is executed.
      */
     /* __GDPR__
-      "create_new_file_command" : { "owner": "luabud" }
+      "create_new_file_command" : { }
      */
     [EventName.CREATE_NEW_FILE_COMMAND]: unknown;
     /**
@@ -1726,7 +1726,7 @@ export interface IEventNamePropertyMapping {
      * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     /* __GDPR__
-       "jedi_language_server.request" : { "owner": "kimadeline" }
+       "jedi_language_server.request" : { }
      */
     [EventName.JEDI_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
@@ -1747,7 +1747,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry sent back when join mailing list prompt is shown.
      */
     /* __GDPR__
-       "join_mailing_list_prompt_displayed" : { "owner": "luabud" }
+       "join_mailing_list_prompt_displayed" : { }
      */
     [EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED]: never | undefined;
     /**
@@ -1796,7 +1796,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
      */
     /* __GDPR__
-       "unittest.configure" : { "owner": "kimadeline" }
+       "unittest.configure" : { }
      */
     [EventName.UNITTEST_CONFIGURE]: never | undefined;
     /**
@@ -1943,7 +1943,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when cancelling discovering tests
      */
     /* __GDPR__
-       "unittest.discovery.stop" : { "owner": "kimadeline" }
+       "unittest.discovery.stop" : { }
      */
     [EventName.UNITTEST_DISCOVERING_STOP]: never | undefined;
     /**
@@ -1969,21 +1969,21 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when cancelling running tests
      */
     /* __GDPR__
-       "unittest.run.stop" : { "owner": "kimadeline" }
+       "unittest.run.stop" : { }
      */
     [EventName.UNITTEST_RUN_STOP]: never | undefined;
     /**
      * Telemetry event sent when run all failed test command is triggered
      */
     /* __GDPR__
-       "unittest.run.all_failed" : { "owner": "kimadeline" }
+       "unittest.run.all_failed" : { }
      */
     [EventName.UNITTEST_RUN_ALL_FAILED]: never | undefined;
     /**
      * Telemetry event sent when testing is disabled for a workspace.
      */
     /* __GDPR__
-       "unittest.disabled" : { "owner": "kimadeline" }
+       "unittest.disabled" : { }
      */
     [EventName.UNITTEST_DISABLED]: never | undefined;
     /*
@@ -2057,7 +2057,7 @@ export interface IEventNamePropertyMapping {
      * `selection` is one of 'yes', 'no', or 'do not ask again'.
      */
     /* __GDPR__
-       "tensorboard.launch_prompt_selection" : { "owner": "greazer" }
+       "tensorboard.launch_prompt_selection" : { }
      */
 
     [EventName.TENSORBOARD_LAUNCH_PROMPT_SELECTION]: {
@@ -2151,7 +2151,7 @@ export interface IEventNamePropertyMapping {
      * dependencies for launching an integrated TensorBoard session.
      */
     /* __GDPR__
-       "tensorboard.session_duration" : { "owner": "greazer" }
+       "tensorboard.session_duration" : { }
      */
     [EventName.TENSORBOARD_INSTALL_PROMPT_SHOWN]: never | undefined;
     /**
@@ -2173,7 +2173,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when we find an active integrated terminal running tensorboard.
      */
     /* __GDPR__
-       "tensorboard_detected_in_integrated_terminal" : { "owner": "greazer" }
+       "tensorboard_detected_in_integrated_terminal" : { }
      */
     [EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL]: never | undefined;
     /**
@@ -2203,7 +2203,7 @@ export interface IEventNamePropertyMapping {
      * `from torch import profiler`.
      */
     /* __GDPR__
-       "tensorboard.torch_profiler_import" : { "owner": "greazer" }
+       "tensorboard.torch_profiler_import" : { }
      */
     [EventName.TENSORBOARD_TORCH_PROFILER_IMPORT]: never | undefined;
     /**
@@ -2212,7 +2212,7 @@ export interface IEventNamePropertyMapping {
      * PyTorch profiler TensorBoard plugin.
      */
     /* __GDPR__
-       "tensorboard_jump_to_source_request" : { "owner": "greazer" }
+       "tensorboard_jump_to_source_request" : { }
      */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_REQUEST]: never | undefined;
     /**
@@ -2222,7 +2222,7 @@ export interface IEventNamePropertyMapping {
      * on the machine currently running TensorBoard.
      */
     /* __GDPR__
-       "tensorboard_jump_to_source_file_not_found" : { "owner": "greazer" }
+       "tensorboard_jump_to_source_file_not_found" : { }
      */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND]: never | undefined;
 }
