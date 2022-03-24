@@ -106,7 +106,7 @@ suite('Interpreters - selector', () => {
                 new InterpreterQuickPickItem('2 (virtualenv)', 'c:/path2/path2'),
                 new InterpreterQuickPickItem('3', 'c:/path2/path2'),
                 new InterpreterQuickPickItem('4', 'c:/path4/path4'),
-                new InterpreterQuickPickItem('5', 'c:/path5/path', 'c:/path5/path/to/env'),
+                new InterpreterQuickPickItem('5', 'c:/path5/path/to/env', 'c:/path5/path/to/env'),
             ];
 
             assert.strictEqual(actual.length, expected.length, 'Suggestion lengths are different.');

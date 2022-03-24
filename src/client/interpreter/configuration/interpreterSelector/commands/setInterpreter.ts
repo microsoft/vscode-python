@@ -22,7 +22,6 @@ import {
 } from '../../../../common/utils/multiStepInput';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
 import { REFRESH_BUTTON_ICON } from '../../../../debugger/extension/attachQuickPick/types';
-import { getEnvPath } from '../../../../pythonEnvironments/base/info/env';
 import { EnvironmentType } from '../../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
@@ -157,11 +156,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             return this._enterOrBrowseInterpreterPath(input, state, suggestions);
         } else {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'selected' });
-            const { interpreter } = selection as IInterpreterQuickPickItem;
-            state.path =
-                interpreter.envPath && getEnvPath(interpreter.path, interpreter.envPath).pathType === 'envFolderPath'
-                    ? interpreter.envPath
-                    : interpreter.path;
+            state.path = (selection as IInterpreterQuickPickItem).path;
         }
 
         return undefined;
