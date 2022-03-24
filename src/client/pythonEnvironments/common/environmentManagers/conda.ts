@@ -279,7 +279,7 @@ export class Conda {
                 yield customCondaPath;
             }
             // Check unqualified filename first, in case it's on PATH.
-            // yield 'conda';
+            yield 'conda';
             if (getOSType() === OSType.Windows) {
                 yield* getCandidatesFromRegistry();
             }
@@ -360,13 +360,13 @@ export class Conda {
             if (await pathExists(possibleBatch)) {
                 return possibleBatch;
             }
-            return file;
+            return undefined;
         }
 
         // Probe the candidates, and pick the first one that exists and does what we need.
         for await (const condaPath of getCandidates()) {
             traceVerbose(`Probing conda binary: ${condaPath}`);
-            const conda = new Conda(condaPath);
+            let conda = new Conda(condaPath);
             try {
                 await conda.getInfo();
                 if (getOSType() === OSType.Windows) {
@@ -376,8 +376,7 @@ export class Conda {
                         if (condaBatFile) {
                             const condaBat = new Conda(condaBatFile);
                             await condaBat.getInfo();
-                            traceVerbose(`Found conda via filesystem probing: ${condaBatFile}`);
-                            return condaBat;
+                            conda = condaBat;
                         }
                     } catch (ex) {
                         traceVerbose('Failed to spawn conda bat file', condaBatFile, ex);
