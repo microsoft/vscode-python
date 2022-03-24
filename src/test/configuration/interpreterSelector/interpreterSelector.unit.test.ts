@@ -86,7 +86,12 @@ suite('Interpreters - selector', () => {
                 { displayName: '2 (virtualenv)', path: 'c:/path2/path2', envType: EnvironmentType.VirtualEnv },
                 { displayName: '3', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
                 { displayName: '4', path: 'c:/path4/path4', envType: EnvironmentType.Conda },
-                { displayName: '5', path: 'c:/path5/path', envPath: 'c:/path5', envType: EnvironmentType.Conda },
+                {
+                    displayName: '5',
+                    path: 'c:/path5/path',
+                    envPath: 'c:/path5/path/to/env',
+                    envType: EnvironmentType.Conda,
+                },
             ].map((item) => ({ ...info, ...item }));
             interpreterService
                 .setup((x) => x.getAllInterpreters(TypeMoq.It.isAny()))
@@ -101,7 +106,7 @@ suite('Interpreters - selector', () => {
                 new InterpreterQuickPickItem('2 (virtualenv)', 'c:/path2/path2'),
                 new InterpreterQuickPickItem('3', 'c:/path2/path2'),
                 new InterpreterQuickPickItem('4', 'c:/path4/path4'),
-                new InterpreterQuickPickItem('5', 'c:/path5/path', 'c:/path5'),
+                new InterpreterQuickPickItem('5', 'c:/path5/path', 'c:/path5/path/to/env'),
             ];
 
             assert.strictEqual(actual.length, expected.length, 'Suggestion lengths are different.');

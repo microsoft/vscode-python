@@ -112,12 +112,12 @@ suite('Set Interpreter Command', () => {
             description: interpreterPath,
             detail: '',
             label: 'This is the selected Python path',
-            path: path.dirname(interpreterPath),
+            path: `path/to/envFolder`,
             interpreter: {
                 path: interpreterPath,
                 id: interpreterPath,
                 envType: EnvironmentType.Conda,
-                envPath: path.dirname(interpreterPath),
+                envPath: `path/to/envFolder`,
             } as PythonEnvironment,
         };
         const defaultInterpreterPath = 'defaultInterpreterPath';
@@ -132,12 +132,12 @@ suite('Set Interpreter Command', () => {
             description: interpreterPath,
             detail: '',
             label: 'Refreshed path',
-            path: path.dirname(interpreterPath),
+            path: `path/to/envFolder`,
             interpreter: {
                 path: interpreterPath,
                 id: interpreterPath,
                 envType: EnvironmentType.Conda,
-                envPath: path.dirname(interpreterPath),
+                envPath: `path/to/envFolder`,
             } as PythonEnvironment,
         };
         const expectedEnterInterpreterPathSuggestion = {
@@ -624,7 +624,7 @@ suite('Set Interpreter Command', () => {
 
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
 
-            expect(state.path).to.equal(item.path, '');
+            expect(state.path).to.equal(item.interpreter.envPath, '');
         });
 
         test('If an item is selected, send SELECT_INTERPRETER_SELECTED telemetry with the "selected" property value', async () => {
