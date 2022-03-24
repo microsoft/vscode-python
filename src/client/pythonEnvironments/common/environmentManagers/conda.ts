@@ -269,11 +269,11 @@ export class Conda {
     private static async locate(): Promise<Conda | undefined> {
         traceVerbose(`Searching for conda.`);
         const home = getUserHomeDir();
+        const customCondaPath = getPythonSetting<string>(CONDAPATH_SETTING_KEY);
         const suffix = getOSType() === OSType.Windows ? 'Scripts\\conda.exe' : 'bin/conda';
 
         // Produce a list of candidate binaries to be probed by exec'ing them.
         async function* getCandidates() {
-            const customCondaPath = getPythonSetting<string>(CONDAPATH_SETTING_KEY);
             if (customCondaPath && customCondaPath !== 'conda') {
                 // If user has specified a custom conda path, use it first.
                 yield customCondaPath;
@@ -369,8 +369,9 @@ export class Conda {
             let conda = new Conda(condaPath);
             try {
                 await conda.getInfo();
-                if (getOSType() === OSType.Windows) {
+                if (getOSType() === OSType.Windows && (isTestExecution() || condaPath !== customCondaPath)) {
                     // Prefer to use .bat files over .exe on windows as that is what cmd works best on.
+                    // Do not translate to `.bat` file if the setting explicitly sets the executable.
                     const condaBatFile = await getCondaBatFile(condaPath);
                     try {
                         if (condaBatFile) {
