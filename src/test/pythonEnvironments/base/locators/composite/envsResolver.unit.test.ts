@@ -16,7 +16,7 @@ import {
     PythonVersion,
     UNKNOWN_PYTHON_VERSION,
 } from '../../../../../client/pythonEnvironments/base/info';
-import { parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
+import { getEmptyVersion, parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
 import { BasicEnvInfo, PythonEnvUpdatedEvent } from '../../../../../client/pythonEnvironments/base/locator';
 import { PythonEnvsResolver } from '../../../../../client/pythonEnvironments/base/locators/composite/envsResolver';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
@@ -29,6 +29,7 @@ import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from '../envTestUtils';
 import { createBasicEnv, getEnvs, getEnvsWithUpdates, SimpleLocator } from '../../common';
 import { getOSType, OSType } from '../../../../common';
+import { CondaInfo } from '../../../../../client/pythonEnvironments/common/environmentManagers/conda';
 
 suite('Python envs locator - Environments Resolver', () => {
     let envInfoService: IEnvironmentInfoService;
@@ -240,6 +241,18 @@ suite('Python envs locator - Environments Resolver', () => {
 
     suite('resolveEnv()', () => {
         let stubShellExec: sinon.SinonStub;
+        const envsWithoutPython = path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython');
+        function condaInfo(condaPrefix: string): CondaInfo {
+            return {
+                conda_version: '4.8.0',
+                python_version: '3.9.0',
+                'sys.version': '3.9.0',
+                'sys.prefix': '/some/env',
+                root_prefix: '/some/prefix',
+                envs: [condaPrefix],
+                envs_dirs: [path.dirname(condaPrefix)],
+            };
+        }
         setup(() => {
             sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
             stubShellExec = sinon.stub(externalDependencies, 'shellExecute');
@@ -278,6 +291,32 @@ suite('Python envs locator - Environments Resolver', () => {
                 expected,
                 createExpectedEnvInfo(resolvedEnvReturnedByBasicResolver, "Python 3.8.3 ('win1': venv)"),
             );
+        });
+
+        test('Resolver should return empty version info for envs lacking an interpreter', async function () {
+            if (getOSType() !== OSType.Windows) {
+                this.skip();
+            }
+            stubShellExec.restore();
+            sinon.stub(externalDependencies, 'getPythonSetting').withArgs('condaPath').returns('conda');
+            sinon.stub(externalDependencies, 'shellExecute').callsFake(async (quoted: string) => {
+                const [command, ...args] = quoted.split(' ');
+                if (command === 'conda' && args[0] === 'info' && args[1] === '--json') {
+                    return { stdout: JSON.stringify(condaInfo(path.join(envsWithoutPython, 'condaLackingPython'))) };
+                }
+                return {
+                    stdout:
+                        '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "sysVersion": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
+                };
+            });
+            const parentLocator = new SimpleLocator([]);
+            const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
+
+            const expected = await resolver.resolveEnv(path.join(envsWithoutPython, 'condaLackingPython'));
+
+            assert.deepEqual(expected?.version, getEmptyVersion());
+            assert.equal(expected?.display, "Python ('condaLackingPython')");
+            assert.equal(expected?.detailedDisplayName, "Python ('condaLackingPython': conda)");
         });
 
         test('If running interpreter info throws error, return undefined', async () => {

@@ -416,7 +416,7 @@ export class Conda {
             const parentDir = path.dirname(prefix);
             if (info.envs_dirs !== undefined) {
                 for (const envsDir of info.envs_dirs) {
-                    if (parentDir === envsDir) {
+                    if (arePathsSame(parentDir, envsDir)) {
                         return path.basename(prefix);
                     }
                 }
