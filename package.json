@@ -2025,7 +2025,6 @@
         "uuid": "^3.3.2",
         "vsce": "^2.6.6",
         "vscode-debugadapter-testsupport": "^1.27.0",
-        "vscode-dts": "^0.3.3",
         "vscode-telemetry-extractor": "^1.9.5",
         "webpack": "^4.33.0",
         "webpack-bundle-analyzer": "^3.6.0",
