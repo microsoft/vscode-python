@@ -245,6 +245,22 @@ suite('Conda and its environments are located correctly', () => {
             await expectConda('/bin/conda');
         });
 
+        test('Use conda.bat when possible over conda.exe on windows', async () => {
+            osType = platform.OSType.Windows;
+
+            getPythonSetting.withArgs('condaPath').returns('bin/conda');
+            files = {
+                bin: {
+                    conda: JSON.stringify(condaInfo('4.8.0')),
+                },
+                condabin: {
+                    'conda.bat': JSON.stringify(condaInfo('4.8.0')),
+                },
+            };
+
+            await expectConda('/condabin/conda.bat');
+        });
+
         suite('Must find conda in well-known locations', () => {
             const condaDirNames = ['Anaconda', 'anaconda', 'Miniconda', 'miniconda'];
 
