@@ -279,7 +279,7 @@ export class Conda {
                 yield customCondaPath;
             }
             // Check unqualified filename first, in case it's on PATH.
-            yield 'conda';
+            // yield 'conda';
             if (getOSType() === OSType.Windows) {
                 yield* getCandidatesFromRegistry();
             }
@@ -370,14 +370,14 @@ export class Conda {
             try {
                 await conda.getInfo();
                 if (getOSType() === OSType.Windows) {
+                    // Prefer to use .bat files over .exe on windows as that is what cmd works best on.
                     const condaBatFile = await getCondaBatFile(condaPath);
                     try {
-                        // Prefer to use .bat files over .exe on windows as that is what cmd uses.
                         if (condaBatFile) {
                             const condaBat = new Conda(condaBatFile);
                             await condaBat.getInfo();
                             traceVerbose(`Found conda via filesystem probing: ${condaBatFile}`);
-                            return conda;
+                            return condaBat;
                         }
                     } catch (ex) {
                         traceVerbose('Failed to spawn conda bat file', condaBatFile, ex);
