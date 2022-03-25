@@ -13,7 +13,7 @@ import { PythonEnvsResolver } from './base/locators/composite/envsResolver';
 import { WindowsPathEnvVarLocator } from './base/locators/lowLevel/windowsKnownPathsLocator';
 import { WorkspaceVirtualEnvironmentLocator } from './base/locators/lowLevel/workspaceVirtualEnvLocator';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
-import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './base/locators/';
+import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './base/locators/wrappers';
 import { CustomVirtualEnvironmentLocator } from './base/locators/lowLevel/customVirtualEnvLocator';
 import { CondaEnvironmentLocator } from './base/locators/lowLevel/condaLocator';
 import { GlobalVirtualEnvironmentLocator } from './base/locators/lowLevel/globalVirtualEnvronmentLocator';
@@ -152,6 +152,8 @@ function watchRoots(args: WatchRootsArgs): IDisposable {
 }
 
 function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators<BasicEnvInfo> {
+    console.warn('createWorkspaceLocator');
+    console.warn(WorkspaceLocators);
     const locators = new WorkspaceLocators<BasicEnvInfo>(watchRoots, [
         (root: vscode.Uri) => [new WorkspaceVirtualEnvironmentLocator(root.fsPath), new PoetryLocator(root.fsPath)],
         // Add an ILocator factory func here for each kind of workspace-rooted locator.
