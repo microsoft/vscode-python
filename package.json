@@ -1742,7 +1742,7 @@
             "file/newFile": [
                 {
                     "command": "python.createNewFile",
-                    "category": "file",
+                    "group": "file",
                     "when": "!virtualWorkspace"
                 }
             ],
