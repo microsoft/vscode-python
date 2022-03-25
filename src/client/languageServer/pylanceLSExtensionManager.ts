@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { promptForPylanceInstall } from '../activation/common/languageServerChangeHandler';
 import { NodeLanguageServerAnalysisOptions } from '../activation/node/analysisOptions';
 import { NodeLanguageClientFactory } from '../activation/node/languageClientFactory';
 import { NodeLanguageServerProxy } from '../activation/node/languageServerProxy';
 import { NodeLanguageServerManager } from '../activation/node/manager';
 import { ILanguageServerOutputChannel } from '../activation/types';
-import { ICommandManager, IWorkspaceService } from '../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import {
@@ -17,6 +18,7 @@ import {
     IInterpreterPathService,
     Resource,
 } from '../common/types';
+import { Pylance } from '../common/utils/localize';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
@@ -38,14 +40,15 @@ export class PylanceLSExtensionManager extends LanguageServerCapabilities
         serviceContainer: IServiceContainer,
         outputChannel: ILanguageServerOutputChannel,
         experimentService: IExperimentService,
-        workspaceService: IWorkspaceService,
-        _configurationService: IConfigurationService,
+        readonly workspaceService: IWorkspaceService,
+        readonly configurationService: IConfigurationService,
         interpreterPathService: IInterpreterPathService,
         _interpreterService: IInterpreterService,
         environmentService: IEnvironmentVariablesProvider,
-        commandManager: ICommandManager,
+        readonly commandManager: ICommandManager,
         fileSystem: IFileSystem,
         private readonly extensions: IExtensions,
+        readonly applicationShell: IApplicationShell,
     ) {
         super();
 
@@ -88,5 +91,16 @@ export class PylanceLSExtensionManager extends LanguageServerCapabilities
     canStartLanguageServer(): boolean {
         const extension = this.extensions.getExtension(PYLANCE_EXTENSION_ID);
         return !!extension;
+    }
+
+    async languageServerNotAvailable(): Promise<void> {
+        await promptForPylanceInstall(
+            this.applicationShell,
+            this.commandManager,
+            this.workspaceService,
+            this.configurationService,
+        );
+
+        throw new Error(Pylance.pylanceNotInstalledMessage());
     }
 }

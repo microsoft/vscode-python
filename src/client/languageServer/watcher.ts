@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent } from 'vscode';
+import { LanguageServerChangeHandler } from '../activation/common/languageServerChangeHandler';
 import {
     IExtensionActivationService,
     ILanguageServer,
@@ -10,7 +11,7 @@ import {
     ILanguageServerOutputChannel,
     LanguageServerType,
 } from '../activation/types';
-import { ICommandManager, IWorkspaceService } from '../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
 import {
     IConfigurationService,
@@ -49,6 +50,8 @@ export class LanguageServerWatcher
 
     interpreter: PythonEnvironment | undefined;
 
+    languageServerChangeHandler: LanguageServerChangeHandler;
+
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILanguageServerOutputChannel) private readonly lsOutputChannel: ILanguageServerOutputChannel,
@@ -61,6 +64,7 @@ export class LanguageServerWatcher
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IApplicationShell) readonly applicationShell: IApplicationShell,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
     ) {
         this.languageServerType = this.configurationService.getSettings().languageServer;
@@ -70,6 +74,22 @@ export class LanguageServerWatcher
         if (this.workspaceService.isTrusted) {
             disposables.push(this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this)));
         }
+
+        this.languageServerChangeHandler = new LanguageServerChangeHandler(
+            this.languageServerType,
+            this.extensions,
+            this.applicationShell,
+            this.commandManager,
+            this.workspaceService,
+            this.configurationService,
+        );
+        disposables.push(this.languageServerChangeHandler);
+
+        disposables.push(
+            extensions.onDidChange(async () => {
+                await this.extensionsChangeHandler();
+            }),
+        );
     }
 
     // IExtensionActivationService
@@ -92,12 +112,16 @@ export class LanguageServerWatcher
         // Instantiate the language server extension manager.
         this.languageServerExtensionManager = this.createLanguageServer(languageServerType);
 
-        // Start the language server.
-        await this.languageServerExtensionManager.startLanguageServer(this.resource, interpreter);
+        if (this.languageServerExtensionManager.canStartLanguageServer()) {
+            // Start the language server.
+            await this.languageServerExtensionManager.startLanguageServer(this.resource, interpreter);
 
-        logStartup(languageServerType);
-        this.languageServerType = languageServerType;
-        this.interpreter = interpreter;
+            logStartup(languageServerType);
+            this.languageServerType = languageServerType;
+            this.interpreter = interpreter;
+        } else {
+            await this.languageServerExtensionManager.languageServerNotAvailable();
+        }
     }
 
     // ILanguageServerCache
@@ -148,6 +172,7 @@ export class LanguageServerWatcher
                     this.commandManager,
                     this.fileSystem,
                     this.extensions,
+                    this.applicationShell,
                 );
                 break;
             case LanguageServerType.None:
@@ -176,9 +201,18 @@ export class LanguageServerWatcher
     }
 
     // Watch for interpreter changes.
-    private async onDidChangeInterpreter() {
+    private async onDidChangeInterpreter(): Promise<void> {
         // Reactivate the resource. It should destroy the old one if it's different.
         return this.activate(this.resource);
+    }
+
+    // Watch for extension changes.
+    private async extensionsChangeHandler(): Promise<void> {
+        const languageServerType = this.configurationService.getSettings().languageServer;
+
+        if (languageServerType !== this.languageServerType) {
+            await this.refreshLanguageServer();
+        }
     }
 }
 

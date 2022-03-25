@@ -84,4 +84,11 @@ export class JediLSExtensionManager extends LanguageServerCapabilities
 
         return true;
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    languageServerNotAvailable(): Promise<void> {
+        // Nothing to do here.
+        // Update this when JediLSP is pulled in a separate extension.
+        return Promise.resolve();
+    }
 }

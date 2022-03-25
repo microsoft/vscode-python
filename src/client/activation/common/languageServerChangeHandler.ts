@@ -6,7 +6,7 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../com
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { IConfigurationService, IExtensions } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
-import { Common, LanguageService, Pylance } from '../../common/utils/localize';
+import { Pylance } from '../../common/utils/localize';
 import { LanguageServerType } from '../types';
 
 export async function promptForPylanceInstall(
@@ -36,7 +36,7 @@ export async function promptForPylanceInstall(
 
         if (target) {
             await configService.updateSetting('languageServer', LanguageServerType.Jedi, undefined, target);
-            commandManager.executeCommand('workbench.action.reloadWindow');
+            // commandManager.executeCommand('workbench.action.reloadWindow');
         }
     }
 }
@@ -85,21 +85,22 @@ export class LanguageServerChangeHandler implements Disposable {
         // may get one reload prompt now and then another when Pylance is finally installed.
         // Instead, check the installation and suppress prompt if Pylance is not there.
         // Extensions change event handler will then show its own prompt.
-        let response: string | undefined;
+        // let response: string | undefined;
         if (lsType === LanguageServerType.Node && !this.isPylanceInstalled()) {
             // If not installed, point user to Pylance at the store.
             await promptForPylanceInstall(this.appShell, this.commands, this.workspace, this.configService);
             // At this point Pylance is not yet installed. Skip reload prompt
             // since we are going to show it when Pylance becomes available.
-        } else {
-            response = await this.appShell.showInformationMessage(
-                LanguageService.reloadAfterLanguageServerChange(),
-                Common.reload(),
-            );
-            if (response === Common.reload()) {
-                this.commands.executeCommand('workbench.action.reloadWindow');
-            }
         }
+        // else {
+        //     response = await this.appShell.showInformationMessage(
+        //         LanguageService.reloadAfterLanguageServerChange(),
+        //         Common.reload(),
+        //     );
+        //     if (response === Common.reload()) {
+        //         this.commands.executeCommand('workbench.action.reloadWindow');
+        //     }
+        // }
         this.currentLsType = lsType;
     }
 
@@ -109,19 +110,18 @@ export class LanguageServerChangeHandler implements Disposable {
         this.pylanceInstalled = this.isPylanceInstalled();
         if (oldInstallState === this.pylanceInstalled) {
             this.pylanceInstallCompletedDeferred.resolve();
-            return;
         }
 
-        const response = await this.appShell.showWarningMessage(
-            Pylance.pylanceInstalledReloadPromptMessage(),
-            Common.bannerLabelYes(),
-            Common.bannerLabelNo(),
-        );
+        // const response = await this.appShell.showWarningMessage(
+        //     Pylance.pylanceInstalledReloadPromptMessage(),
+        //     Common.bannerLabelYes(),
+        //     Common.bannerLabelNo(),
+        // );
 
-        this.pylanceInstallCompletedDeferred.resolve();
-        if (response === Common.bannerLabelYes()) {
-            this.commands.executeCommand('workbench.action.reloadWindow');
-        }
+        // this.pylanceInstallCompletedDeferred.resolve();
+        // if (response === Common.bannerLabelYes()) {
+        //     this.commands.executeCommand('workbench.action.reloadWindow');
+        // }
     }
 
     private isPylanceInstalled(): boolean {

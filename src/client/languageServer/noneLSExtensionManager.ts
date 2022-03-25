@@ -54,6 +54,11 @@ export class NoneLSExtensionManager implements ILanguageServer, ILanguageServerE
         return true;
     }
 
+    languageServerNotAvailable(): Promise<void> {
+        // Nothing to do here.
+        return Promise.resolve();
+    }
+
     public provideRenameEdits(
         _document: TextDocument,
         _position: Position,
