@@ -905,6 +905,7 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.FORMAT_SORT_IMPORTS]: never | undefined;
+
     /**
      * Telemetry event sent with details when tracking imports
      */
@@ -922,12 +923,7 @@ export interface IEventNamePropertyMapping {
          */
         hashedName: string;
     };
-    /* __GDPR__
-       "hashed_package_perf" : {
-          "propertyName" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
-       }
-     */
-    [EventName.HASHED_PACKAGE_PERF]: never | undefined;
+
     /**
      * Telemetry event sent with details of selection in prompt
      * `Prompt message` :- 'Linter ${productName} is not installed'

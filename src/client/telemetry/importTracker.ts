@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { clearTimeout, setTimeout } from 'timers';
 import { TextDocument } from 'vscode';
-import { captureTelemetry, sendTelemetryEvent } from '.';
+import { sendTelemetryEvent } from '.';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
@@ -106,7 +106,6 @@ export class ImportTracker implements IExtensionSingleActivationService {
         }
     }
 
-    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
     private checkDocument(document: TextDocument) {
         this.pendingChecks.delete(document.fileName);
         const lines = getDocumentLines(document);
