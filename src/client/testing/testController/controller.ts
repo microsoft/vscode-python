@@ -51,6 +51,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
     public readonly onRunWithoutConfiguration = this.runWithoutConfigurationEvent.event;
 
+    private sendTestDisabledTelemetry = true;
+
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configSettings: IConfigurationService,
@@ -137,15 +139,26 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     private async refreshTestDataInternal(uri?: Resource): Promise<void> {
         this.refreshingStartedEvent.fire();
         if (uri) {
-            traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
-
             const settings = this.configSettings.getSettings(uri);
             if (settings.testing.pytestEnabled) {
+                traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
+
+                // Ensure we send test telemetry if it gets disabled again
+                this.sendTestDisabledTelemetry = true;
+
                 await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
+                traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
+
+                // Ensure we send test telemetry if it gets disabled again
+                this.sendTestDisabledTelemetry = true;
+
                 await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else {
-                sendTelemetryEvent(EventName.UNITTEST_DISABLED);
+                if (this.sendTestDisabledTelemetry) {
+                    this.sendTestDisabledTelemetry = false;
+                    sendTelemetryEvent(EventName.UNITTEST_DISABLED);
+                }
                 // If we are here we may have to remove an existing node from the tree
                 // This handles the case where user removes test settings. Which should remove the
                 // tests for that particular case from the tree view
