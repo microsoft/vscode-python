@@ -1,5 +1,94 @@
 # Changelog
 
+## 2022.4.0-rc (28 March 2022)
+
+### Enhancements
+
+1. Use new pre-release mechanism to install insiders.
+   ([#18144](https://github.com/Microsoft/vscode-python/issues/18144))
+1. Add support for detection and selection of conda environments lacking a python interpreter.
+   ([#18357](https://github.com/Microsoft/vscode-python/issues/18357))
+1. Retains the state of the Tensorboard webview.
+   ([#18591](https://github.com/Microsoft/vscode-python/issues/18591))
+1. Move interpreter info status bar item to the right.
+   ([#18710](https://github.com/Microsoft/vscode-python/issues/18710))
+1. `debugpy` updated to latest version `v1.6.0`.
+
+### Fixes
+
+1. Properly dismiss the error popup dialog when having a linter error. (Thanks [Virgil Sisoe](https://github.com/sisoe24))
+   ([#18553](https://github.com/Microsoft/vscode-python/issues/18553))
+1. Python files are no longer excluded from Pytest arguments during test discovery.
+   (thanks [Marc Mueller](https://github.com/cdce8p/))
+   ([#18562](https://github.com/Microsoft/vscode-python/issues/18562))
+1. Fixes regression caused due to using `conda run` for executing files.
+   ([#18634](https://github.com/Microsoft/vscode-python/issues/18634))
+1. Use `conda run` to get the activated environment variables instead of activation using shell scripts.
+   ([#18698](https://github.com/Microsoft/vscode-python/issues/18698))
+
+### Code Health
+
+1. Remove old settings migrator.
+   ([#14334](https://github.com/Microsoft/vscode-python/issues/14334))
+1. Remove old language server setting migration.
+   ([#14337](https://github.com/Microsoft/vscode-python/issues/14337))
+1. Remove dependency on other file system watchers.
+   ([#18381](https://github.com/Microsoft/vscode-python/issues/18381))
+1. Update TypeScript version to 4.5.5.
+   ([#18602](https://github.com/Microsoft/vscode-python/issues/18602))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [poetry](https://pypi.org/project/poetry/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2022.2.0 (3 March 2022)
 
 ### Enhancements
