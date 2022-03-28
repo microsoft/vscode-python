@@ -19,14 +19,6 @@ export class PlatformService implements IPlatformService {
 
     public version?: SemVer;
 
-    constructor() {
-        if (this.osType === OSType.Unknown) {
-            sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
-                failureType: PlatformErrors.FailedToDetermineOS,
-            });
-        }
-    }
-
     public get pathVariableName(): 'Path' | 'PATH' {
         return getSearchPathEnvVarNames(this.osType)[0];
     }
@@ -48,17 +40,11 @@ export class PlatformService implements IPlatformService {
                 try {
                     const ver = coerce(os.release());
                     if (ver) {
-                        sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
-                            osVersion: `${ver.major}.${ver.minor}.${ver.patch}`,
-                        });
                         this.version = ver;
                         return this.version;
                     }
                     throw new Error('Unable to parse version');
                 } catch (ex) {
-                    sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
-                        failureType: PlatformErrors.FailedToParseVersion,
-                    });
                     return parseSemVerSafe(os.release());
                 }
             default:

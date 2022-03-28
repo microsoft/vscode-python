@@ -1034,29 +1034,6 @@ export interface IEventNamePropertyMapping {
         executableSpecified: boolean;
     };
     /**
-     * Telemetry event sent after fetching the OS version
-     */
-    /* __GDPR__
-       "platform.info" : {
-          "failuretype" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "luabud" },
-          "osversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "luabud" }
-       }
-     */
-    [EventName.PLATFORM_INFO]: {
-        /**
-         * If fetching OS version fails, list the failure type
-         *
-         * @type {PlatformErrors}
-         */
-        failureType?: PlatformErrors;
-        /**
-         * The OS version of the platform
-         *
-         * @type {string}
-         */
-        osVersion?: string;
-    };
-    /**
      * Telemetry event sent when an environment without contain a python binary is selected.
      */
     /* __GDPR__
