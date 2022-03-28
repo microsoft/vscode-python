@@ -742,7 +742,7 @@ export interface IEventNamePropertyMapping {
           "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "terminal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "luabud" },
           "workspacefoldercount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
-          "haspython3" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "haspythonthree" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "startactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "totalactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "totalnonblockingactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
@@ -776,7 +776,7 @@ export interface IEventNamePropertyMapping {
         /**
          * If interpreters found for the main workspace contains a python3 interpreter
          */
-        hasPython3?: boolean;
+        hasPythonThree?: boolean;
         /**
          * If user has defined an interpreter in settings.json
          */
