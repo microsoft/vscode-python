@@ -1721,27 +1721,6 @@ export interface IEventNamePropertyMapping {
         selection: 'Yes' | 'Maybe later' | 'Do not show again' | undefined;
     };
     /**
-     * Telemetry sent back when join mailing list prompt is shown.
-     */
-    /* __GDPR__
-       "join_mailing_list_prompt_displayed" : { }
-     */
-    [EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED]: never | undefined;
-    /**
-     * Telemetry sent back when user selects an option from join mailing list prompt.
-     */
-    /* __GDPR__
-       "join_mailing_list_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
-       }
-     */
-    [EventName.JOIN_MAILING_LIST_PROMPT]: {
-        /**
-         * Carries the selection of user when they are asked to join the mailing list.
-         */
-        selection: 'Yes' | 'No' | undefined;
-    };
-    /**
      * Telemetry event sent when starting REPL
      */
     /* __GDPR__
