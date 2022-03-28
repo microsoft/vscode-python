@@ -12,7 +12,8 @@
    ([#18591](https://github.com/Microsoft/vscode-python/issues/18591))
 1. Move interpreter info status bar item to the right.
    ([#18710](https://github.com/Microsoft/vscode-python/issues/18710))
-1. `debugpy` updated to latest version `v1.6.0`.
+1. `debugpy` updated to version `v1.6.0`.
+   ([#18795](https://github.com/Microsoft/vscode-python/issues/18795))
 
 ### Fixes
 
