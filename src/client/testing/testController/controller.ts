@@ -21,15 +21,22 @@ import { IWorkspaceService } from '../../common/application/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
 import { traceVerbose } from '../../logging';
-import { sendTelemetryEvent } from '../../telemetry';
+import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
 import { ITestController, ITestFrameworkController, TestRefreshOptions } from './common/types';
 
+// Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
+type EventPropertyType = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_TRIGGER];
+type TriggerKeyType = keyof EventPropertyType;
+type TriggerType = EventPropertyType[TriggerKeyType];
+
 @injectable()
 export class PythonTestController implements ITestController, IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
+
+    private readonly triggerTypes: TriggerType[] = [];
 
     private readonly testController: TestController;
 
@@ -182,7 +189,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             }
         } else {
             traceVerbose('Testing: Refreshing all test data');
-            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'auto' });
+            this.sendTriggerTelemetry('auto');
             const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
             await Promise.all(workspaces.map((workspace) => this.refreshTestDataInternal(workspace.uri)));
         }
@@ -309,21 +316,21 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.disposables.push(
             watcher.onDidChange((uri) => {
                 traceVerbose(`Testing: Trigger refresh after change in ${uri.fsPath}`);
-                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'watching' });
+                this.sendTriggerTelemetry('watching');
                 this.refreshData.trigger(uri, false);
             }),
         );
         this.disposables.push(
             watcher.onDidCreate((uri) => {
                 traceVerbose(`Testing: Trigger refresh after creating ${uri.fsPath}`);
-                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'watching' });
+                this.sendTriggerTelemetry('watching');
                 this.refreshData.trigger(uri, false);
             }),
         );
         this.disposables.push(
             watcher.onDidDelete((uri) => {
                 traceVerbose(`Testing: Trigger refresh after deleting in ${uri.fsPath}`);
-                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'watching' });
+                this.sendTriggerTelemetry('watching');
                 this.refreshData.trigger(uri, false);
             }),
         );
@@ -337,7 +344,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.disposables.push(
             watcher.onDidChange((uri) => {
                 traceVerbose(`Testing: Trigger refresh after change in ${uri.fsPath}`);
-                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'watching' });
+                this.sendTriggerTelemetry('watching');
                 // We want to invalidate tests for code change
                 this.refreshData.trigger(uri, true);
             }),
@@ -345,16 +352,30 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.disposables.push(
             watcher.onDidCreate((uri) => {
                 traceVerbose(`Testing: Trigger refresh after creating ${uri.fsPath}`);
-                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'watching' });
+                this.sendTriggerTelemetry('watching');
                 this.refreshData.trigger(uri, false);
             }),
         );
         this.disposables.push(
             watcher.onDidDelete((uri) => {
                 traceVerbose(`Testing: Trigger refresh after deleting in ${uri.fsPath}`);
-                sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, { trigger: 'watching' });
+                this.sendTriggerTelemetry('watching');
                 this.refreshData.trigger(uri, false);
             }),
         );
+    }
+
+    /**
+     * Send UNITTEST_DISCOVERY_TRIGGER telemetry event only once per trigger type.
+     *
+     * @param triggerType The trigger type to send telemetry for.
+     */
+    private sendTriggerTelemetry(trigger: TriggerType): void {
+        if (!this.triggerTypes.includes(trigger)) {
+            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, {
+                trigger,
+            });
+            this.triggerTypes.push(trigger);
+        }
     }
 }
