@@ -14,6 +14,7 @@ import {
     Event,
     Extension,
     ExtensionContext,
+    Memento,
     OutputChannel,
     Uri,
     WorkspaceEdit,
@@ -36,6 +37,11 @@ export const WORKSPACE_MEMENTO = Symbol('IWorkspaceMemento');
 
 export type Resource = Uri | undefined;
 export interface IPersistentState<T> {
+    /**
+     * Storage is exposed in this type to make sure folks always use persistent state
+     * factory to access any type of storage as all storages are tracked there.
+     */
+    readonly storage: Memento;
     readonly value: T;
     updateValue(value: T): Promise<void>;
 }

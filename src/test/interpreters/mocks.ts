@@ -2,6 +2,7 @@ import { injectable } from 'inversify';
 import { IRegistry, RegistryHive } from '../../client/common/platform/types';
 import { IPersistentState } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
+import { MockMemento } from '../mocks/mementos';
 
 @injectable()
 export class MockRegistry implements IRegistry {
@@ -44,6 +45,8 @@ export class MockRegistry implements IRegistry {
 
 export class MockState implements IPersistentState<any> {
     constructor(public data: any) {}
+
+    public readonly storage = new MockMemento();
 
     get value(): any {
         return this.data;

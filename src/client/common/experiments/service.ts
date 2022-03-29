@@ -3,15 +3,14 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
-import { Memento } from 'vscode';
+import { inject, injectable } from 'inversify';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
 import { traceLog } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
 import { PVSC_EXTENSION_ID } from '../constants';
-import { GLOBAL_MEMENTO, IExperimentService, IMemento } from '../types';
+import { IExperimentService, IPersistentStateFactory } from '../types';
 import { Experiments } from '../utils/localize';
 import { ExperimentationTelemetry } from './telemetry';
 
@@ -30,6 +29,11 @@ export class ExperimentService implements IExperimentService {
      */
     public _optOutFrom: string[] = [];
 
+    private readonly experiments = this.persistentState.createGlobalPersistentState<{ features: string[] }>(
+        EXP_MEMENTO_KEY,
+        { features: [] },
+    );
+
     private readonly enabled: boolean;
 
     private readonly experimentationService?: IExperimentationService;
@@ -37,7 +41,7 @@ export class ExperimentService implements IExperimentService {
     constructor(
         @inject(IWorkspaceService) readonly workspaceService: IWorkspaceService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
+        @inject(IPersistentStateFactory) private readonly persistentState: IPersistentStateFactory,
     ) {
         const settings = this.workspaceService.getConfiguration('python');
         // Users can only opt in or out of experiment groups, not control groups.
@@ -73,7 +77,7 @@ export class ExperimentService implements IExperimentService {
             this.appEnvironment.packageJson.version!,
             targetPopulation,
             telemetryReporter,
-            this.globalState,
+            this.experiments.storage,
         );
     }
 
@@ -82,8 +86,7 @@ export class ExperimentService implements IExperimentService {
             const initStart = Date.now();
             await this.experimentationService.initializePromise;
 
-            const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
-            if (experiments.features.length === 0) {
+            if (this.experiments.value.features.length === 0) {
                 // Only await on this if we don't have anything in cache.
                 // This means that we start the session with partial experiment info.
                 // We accept this as a compromise to avoid delaying startup.
@@ -190,9 +193,8 @@ export class ExperimentService implements IExperimentService {
             });
 
         if (!experimentsDisabled) {
-            const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
             // Log experiments that users are added to by the exp framework
-            experiments.features.forEach((exp) => {
+            this.experiments.value.features.forEach((exp) => {
                 // Filter out experiment groups that are not from the Python extension.
                 // Filter out experiment groups that are not already opted out or opted into.
                 if (

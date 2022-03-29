@@ -22,6 +22,7 @@ import { Common, Products } from '../../../client/common/utils/localize';
 import { Architecture } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, ModuleInstallerType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { MockMemento } from '../../mocks/mementos';
 
 class AlwaysInstalledDataScienceInstaller extends DataScienceInstaller {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
@@ -309,6 +310,7 @@ suite('Formatter installer', async () => {
             .returns(() => ({
                 value: false,
                 updateValue: () => Promise.resolve(),
+                storage: new MockMemento(),
             }));
 
         const formatterInstaller = new FormatterInstaller(serviceContainer.object);
@@ -340,6 +342,7 @@ suite('Formatter installer', async () => {
             .returns(() => ({
                 value: false,
                 updateValue: () => Promise.resolve(),
+                storage: new MockMemento(),
             }));
 
         const formatterInstaller = new FormatterInstaller(serviceContainer.object);
@@ -371,6 +374,7 @@ suite('Formatter installer', async () => {
             .returns(() => ({
                 value: false,
                 updateValue: () => Promise.resolve(),
+                storage: new MockMemento(),
             }));
 
         const formatterInstaller = new FormatterInstaller(serviceContainer.object);
@@ -404,6 +408,7 @@ suite('Formatter installer', async () => {
             .returns(() => ({
                 value: false,
                 updateValue: () => Promise.resolve(),
+                storage: new MockMemento(),
             }));
 
         const formatterInstaller = new FormatterInstaller(serviceContainer.object);
@@ -430,6 +435,7 @@ suite('Formatter installer', async () => {
             .returns(() => ({
                 value: true,
                 updateValue: () => Promise.resolve(),
+                storage: new MockMemento(),
             }));
 
         const formatterInstaller = new FormatterInstaller(serviceContainer.object);
@@ -465,6 +471,7 @@ suite('Formatter installer', async () => {
                     value = newValue;
                     return Promise.resolve();
                 },
+                storage: new MockMemento(),
             }));
 
         const formatterInstaller = new FormatterInstaller(serviceContainer.object);

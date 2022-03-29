@@ -14,6 +14,8 @@ import { IApplicationEnvironment, IWorkspaceService } from '../../../client/comm
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { Channel } from '../../../client/common/constants';
 import { ExperimentService } from '../../../client/common/experiments/service';
+import { PersistentState } from '../../../client/common/persistentState';
+import { IPersistentStateFactory } from '../../../client/common/types';
 import { Experiments } from '../../../client/common/utils/localize';
 import { registerLogger } from '../../../client/logging';
 import { OutputChannelLogger } from '../../../client/logging/outputChannelLogger';
@@ -25,9 +27,11 @@ import { MockMemento } from '../../mocks/mementos';
 
 suite('Experimentation service', () => {
     const extensionVersion = '1.2.3';
+    const dummyExperimentKey = 'experimentsKey';
 
     let workspaceService: IWorkspaceService;
     let appEnvironment: IApplicationEnvironment;
+    let stateFactory: IPersistentStateFactory;
     let globalMemento: MockMemento;
     let outputChannel: MockOutputChannel;
     let disposeLogger: Disposable;
@@ -35,7 +39,11 @@ suite('Experimentation service', () => {
     setup(() => {
         appEnvironment = mock(ApplicationEnvironment);
         workspaceService = mock(WorkspaceService);
+        stateFactory = mock<IPersistentStateFactory>();
         globalMemento = new MockMemento();
+        when(stateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(
+            new PersistentState(globalMemento, dummyExperimentKey, { features: [] }),
+        );
         outputChannel = new MockOutputChannel('');
         disposeLogger = registerLogger(new OutputChannelLogger(outputChannel));
     });
@@ -78,7 +86,7 @@ suite('Experimentation service', () => {
             configureApplicationEnvironment('stable', extensionVersion);
 
             // eslint-disable-next-line no-new
-            new ExperimentService(instance(workspaceService), instance(appEnvironment), globalMemento);
+            new ExperimentService(instance(workspaceService), instance(appEnvironment), instance(stateFactory));
 
             sinon.assert.calledWithExactly(
                 getExperimentationServiceStub,
@@ -97,7 +105,7 @@ suite('Experimentation service', () => {
             configureApplicationEnvironment('insiders', extensionVersion);
 
             // eslint-disable-next-line no-new
-            new ExperimentService(instance(workspaceService), instance(appEnvironment), globalMemento);
+            new ExperimentService(instance(workspaceService), instance(appEnvironment), instance(stateFactory));
 
             sinon.assert.calledWithExactly(
                 getExperimentationServiceStub,
@@ -118,7 +126,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
 
             assert.deepEqual(experimentService._optInto, ['Foo - experiment']);
@@ -132,7 +140,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
 
             assert.deepEqual(experimentService._optOutFrom, ['Foo - experiment']);
@@ -140,17 +148,14 @@ suite('Experimentation service', () => {
 
         test('Experiment data in Memento storage should be logged if it starts with "python"', async () => {
             const experiments = ['ExperimentOne', 'pythonExperiment'];
-            globalMemento = mock(MockMemento);
+            globalMemento.update(dummyExperimentKey, { features: experiments });
             configureSettings(true, [], []);
             configureApplicationEnvironment('stable', extensionVersion, { configuration: { properties: {} } });
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            when(globalMemento.get(anything(), anything())).thenReturn({ features: experiments } as any);
 
             const exp = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                instance(globalMemento),
+                instance(stateFactory),
             );
             await exp.activate();
             const output = `${Experiments.inGroup().format('pythonExperiment')}\n`;
@@ -192,7 +197,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -207,7 +212,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -222,7 +227,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -236,7 +241,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -251,7 +256,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -266,7 +271,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -281,7 +286,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -296,7 +301,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -311,7 +316,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
             const result = experimentService.inExperimentSync(experiment);
 
@@ -340,7 +345,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -354,7 +359,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -368,7 +373,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -382,7 +387,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -417,7 +422,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
 
             await experimentService.activate();
@@ -450,7 +455,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
 
             await experimentService.activate();
@@ -482,7 +487,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
 
             await experimentService.activate();
@@ -514,7 +519,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
 
             await experimentService.activate();
@@ -536,7 +541,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
 
             await experimentService.activate();
@@ -567,7 +572,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
+                instance(stateFactory),
             );
 
             await experimentService.activate();
