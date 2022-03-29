@@ -241,6 +241,8 @@ export class Conda {
      */
     private static condaPromise: Promise<Conda | undefined> | undefined;
 
+    private condaInfoCached: Promise<CondaInfo> | undefined;
+
     /**
      * Creates a Conda service corresponding to the corresponding "conda" command.
      *
@@ -402,16 +404,19 @@ export class Conda {
      * Retrieves global information about this conda.
      * Corresponds to "conda info --json".
      */
-    public async getInfo(): Promise<CondaInfo> {
-        return this.getInfoCached(this.command);
+    public async getInfo(useCache?: boolean): Promise<CondaInfo> {
+        if (!useCache || !this.condaInfoCached) {
+            this.condaInfoCached = this.getInfoImpl(this.command);
+        }
+        return this.condaInfoCached;
     }
 
     /**
-     * Cache result for this particular command.
+     * Temporarily cache result for this particular command.
      */
-    @cache(30_000, true, 10_000)
+    // @cache(30_000, true, 10_000)
     // eslint-disable-next-line class-methods-use-this
-    private async getInfoCached(command: string): Promise<CondaInfo> {
+    private async getInfoImpl(command: string): Promise<CondaInfo> {
         const quoted = [command.toCommandArgument(), 'info', '--json'].join(' ');
         // Execute in a shell as `conda` on windows refers to `conda.bat`, which requires a shell to work.
         const result = await shellExecute(quoted, { timeout: CONDA_GENERAL_TIMEOUT });
@@ -423,9 +428,9 @@ export class Conda {
      * Retrieves list of Python environments known to this conda.
      * Corresponds to "conda env list --json", but also computes environment names.
      */
-    @cache(30_000, true, 10_000)
-    public async getEnvList(): Promise<CondaEnvInfo[]> {
-        const info = await this.getInfo();
+    // @cache(30_000, true, 10_000)
+    public async getEnvList(useCache?: boolean): Promise<CondaEnvInfo[]> {
+        const info = await this.getInfo(useCache);
         const { envs } = info;
         if (envs === undefined) {
             return [];
@@ -510,7 +515,7 @@ export class Conda {
      */
     @cache(-1, true)
     public async getCondaVersion(): Promise<SemVer | undefined> {
-        const info = await this.getInfo().catch<CondaInfo | undefined>(() => undefined);
+        const info = await this.getInfo(true).catch<CondaInfo | undefined>(() => undefined);
         let versionString: string | undefined;
         if (info && info.conda_version) {
             versionString = info.conda_version;

@@ -78,7 +78,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
                     );
                 } else if (seen[event.index] !== undefined) {
                     const old = seen[event.index];
-                    seen[event.index] = await resolveBasicEnv(event.update);
+                    seen[event.index] = await resolveBasicEnv(event.update, true);
                     didUpdate.fire({ old, index: event.index, update: seen[event.index] });
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
                 } else {
@@ -92,7 +92,8 @@ export class PythonEnvsResolver implements IResolvingLocator {
 
         let result = await iterator.next();
         while (!result.done) {
-            const currEnv = await resolveBasicEnv(result.value);
+            // Use cache from the current refresh where possible.
+            const currEnv = await resolveBasicEnv(result.value, true);
             seen.push(currEnv);
             yield currEnv;
             this.resolveInBackground(seen.indexOf(currEnv), state, didUpdate, seen).ignoreErrors();
