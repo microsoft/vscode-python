@@ -6,8 +6,6 @@
 import { injectable } from 'inversify';
 import * as os from 'os';
 import { coerce, SemVer } from 'semver';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EventName, PlatformErrors } from '../../telemetry/constants';
 import { getSearchPathEnvVarNames } from '../utils/exec';
 import { Architecture, getArchitecture, getOSType, OSType } from '../utils/platform';
 import { parseSemVerSafe } from '../utils/version';
