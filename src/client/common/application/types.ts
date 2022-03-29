@@ -748,12 +748,6 @@ export interface IWorkspaceService {
      */
     readonly onDidChangeConfiguration: Event<ConfigurationChangeEvent>;
     /**
-     * Whether a workspace folder exists
-     * @type {boolean}
-     * @memberof IWorkspaceService
-     */
-    readonly hasWorkspaceFolders: boolean;
-    /**
      * Returns if we're running in a virtual workspace.
      */
     readonly isVirtualWorkspace: boolean;

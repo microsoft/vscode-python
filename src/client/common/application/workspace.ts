@@ -36,9 +36,6 @@ export class WorkspaceService implements IWorkspaceService {
     public get onDidChangeWorkspaceFolders(): Event<WorkspaceFoldersChangeEvent> {
         return workspace.onDidChangeWorkspaceFolders;
     }
-    public get hasWorkspaceFolders() {
-        return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0;
-    }
     public get workspaceFile() {
         return workspace.workspaceFile;
     }

@@ -286,9 +286,9 @@ export class LanguageServerExtensionActivationService
     }
 
     private async onDidChangeConfiguration(event: ConfigurationChangeEvent): Promise<void> {
-        const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
-            ? this.workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
-            : [undefined];
+        const workspacesUris: (Uri | undefined)[] = this.workspaceService.workspaceFolders?.map(
+            (workspace) => workspace.uri,
+        ) ?? [undefined];
         if (
             workspacesUris.findIndex((uri) => event.affectsConfiguration(`python.${languageServerSetting}`, uri)) === -1
         ) {

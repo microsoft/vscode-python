@@ -82,7 +82,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     // be able to partially populate as much as possible instead
     // (through granular try-catch statements).
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
+    const workspaceFolderCount = workspaceService.workspaceFolders?.length || 0;
     const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
     const terminalShellType = terminalHelper.identifyTerminalShell();
     if (!workspaceService.isTrusted) {
@@ -90,9 +90,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     }
     const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    const mainWorkspaceUri = workspaceService.hasWorkspaceFolders
-        ? workspaceService.workspaceFolders![0].uri
-        : undefined;
+    const mainWorkspaceUri = workspaceService.workspaceFolders ? workspaceService.workspaceFolders[0].uri : undefined;
     const [condaVersion, hasPython3] = await Promise.all([
         condaLocator
             .getCondaVersion()

@@ -72,7 +72,8 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
     }
 
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
-        if (!this.workspaceService.hasWorkspaceFolders) {
+        const hasWorkspaceFolders = (this.workspaceService.workspaceFolders?.length || 0) > 0;
+        if (!hasWorkspaceFolders) {
             return [];
         }
         const workspaceFolder = resource
@@ -86,7 +87,8 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
     }
 
     protected async fixLaunchJson(code: DiagnosticCodes): Promise<void> {
-        if (!this.workspaceService.hasWorkspaceFolders) {
+        const hasWorkspaceFolders = (this.workspaceService.workspaceFolders?.length || 0) > 0;
+        if (!hasWorkspaceFolders) {
             return;
         }
 
