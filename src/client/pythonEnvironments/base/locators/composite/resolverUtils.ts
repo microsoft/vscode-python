@@ -27,8 +27,8 @@ import { BasicEnvInfo } from '../../locator';
 import { parseVersionFromExecutable } from '../../info/executable';
 import { traceError, traceWarn } from '../../../../logging';
 
-function getResolvers(): Map<PythonEnvKind, (env: BasicEnvInfo) => Promise<PythonEnvInfo>> {
-    const resolvers = new Map<PythonEnvKind, (_: BasicEnvInfo) => Promise<PythonEnvInfo>>();
+function getResolvers(): Map<PythonEnvKind, (env: BasicEnvInfo, useCache?: boolean) => Promise<PythonEnvInfo>> {
+    const resolvers = new Map<PythonEnvKind, (_: BasicEnvInfo, useCache?: boolean) => Promise<PythonEnvInfo>>();
     Object.values(PythonEnvKind).forEach((k) => {
         resolvers.set(k, resolveGloballyInstalledEnv);
     });
@@ -46,11 +46,11 @@ function getResolvers(): Map<PythonEnvKind, (env: BasicEnvInfo) => Promise<Pytho
  * executable and returns it. Notice `undefined` is never returned, so environment
  * returned could still be invalid.
  */
-export async function resolveBasicEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
+export async function resolveBasicEnv(env: BasicEnvInfo, useCache = false): Promise<PythonEnvInfo> {
     const { kind, source } = env;
     const resolvers = getResolvers();
     const resolverForKind = resolvers.get(kind)!;
-    const resolvedEnv = await resolverForKind(env);
+    const resolvedEnv = await resolverForKind(env, useCache);
     resolvedEnv.searchLocation = getSearchLocation(resolvedEnv);
     resolvedEnv.source = uniq(resolvedEnv.source.concat(source ?? []));
     if (getOSType() === OSType.Windows && resolvedEnv.source?.includes(PythonEnvSource.WindowsRegistry)) {
@@ -137,13 +137,13 @@ async function resolveSimpleEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     return envInfo;
 }
 
-async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
+async function resolveCondaEnv(env: BasicEnvInfo, useCache?: boolean): Promise<PythonEnvInfo> {
     const { executablePath } = env;
     const conda = await Conda.getConda();
     if (conda === undefined) {
         traceWarn(`${executablePath} identified as Conda environment even though Conda is not installed`);
     }
-    const envs = (await conda?.getEnvList()) ?? [];
+    const envs = (await conda?.getEnvList(useCache)) ?? [];
     for (const { name, prefix } of envs) {
         let executable = await getInterpreterPathFromDir(prefix);
         const currEnv: BasicEnvInfo = { executablePath: executable ?? '', kind: PythonEnvKind.Conda, envPath: prefix };
