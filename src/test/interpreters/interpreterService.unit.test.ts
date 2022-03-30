@@ -168,7 +168,6 @@ suite('Interpreters service', () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
-        workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
         workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
         let activeTextEditorChangeHandler: (e: TextEditor | undefined) => any | undefined;
         documentManager
@@ -194,7 +193,6 @@ suite('Interpreters service', () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
-        workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
         workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
         let activeTextEditorChangeHandler: (e?: TextEditor | undefined) => any | undefined;
         documentManager
@@ -215,7 +213,6 @@ suite('Interpreters service', () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
-        workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
         workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
         let interpreterPathServiceHandler: (e: InterpreterConfigurationScope) => any | undefined = () => 0;
         documentManager

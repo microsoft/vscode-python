@@ -79,11 +79,6 @@ suite('Unit Tests - ConfigSettingsService', () => {
                     }
                 }
                 test('Update Test Arguments with workspace Uri without workspaces', async () => {
-                    workspaceService
-                        .setup((w) => w.hasWorkspaceFolders)
-                        .returns(() => false)
-                        .verifiable(typeMoq.Times.atLeastOnce());
-
                     const pythonConfig = typeMoq.Mock.ofType<WorkspaceConfiguration>();
                     workspaceService
                         .setup((w) => w.getConfiguration(typeMoq.It.isValue('python')))
@@ -106,11 +101,6 @@ suite('Unit Tests - ConfigSettingsService', () => {
                     pythonConfig.verifyAll();
                 });
                 test('Update Test Arguments with workspace Uri with one workspace', async () => {
-                    workspaceService
-                        .setup((w) => w.hasWorkspaceFolders)
-                        .returns(() => true)
-                        .verifiable(typeMoq.Times.atLeastOnce());
-
                     const workspaceFolder = typeMoq.Mock.ofType<WorkspaceFolder>();
                     workspaceFolder
                         .setup((w) => w.uri)
@@ -145,11 +135,6 @@ suite('Unit Tests - ConfigSettingsService', () => {
                     pythonConfig.verifyAll();
                 });
                 test('Update Test Arguments with workspace Uri with more than one workspace and uri belongs to a workspace', async () => {
-                    workspaceService
-                        .setup((w) => w.hasWorkspaceFolders)
-                        .returns(() => true)
-                        .verifiable(typeMoq.Times.atLeastOnce());
-
                     const workspaceFolder = typeMoq.Mock.ofType<WorkspaceFolder>();
                     workspaceFolder
                         .setup((w) => w.uri)
@@ -188,11 +173,6 @@ suite('Unit Tests - ConfigSettingsService', () => {
                     pythonConfig.verifyAll();
                 });
                 test('Expect an exception when updating Test Arguments with workspace Uri with more than one workspace and uri does not belong to a workspace', async () => {
-                    workspaceService
-                        .setup((w) => w.hasWorkspaceFolders)
-                        .returns(() => true)
-                        .verifiable(typeMoq.Times.atLeastOnce());
-
                     const workspaceFolder = typeMoq.Mock.ofType<WorkspaceFolder>();
                     workspaceFolder
                         .setup((w) => w.uri)

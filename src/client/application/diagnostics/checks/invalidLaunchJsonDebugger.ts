@@ -87,13 +87,13 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
     }
 
     protected async fixLaunchJson(code: DiagnosticCodes): Promise<void> {
-        const hasWorkspaceFolders = (this.workspaceService.workspaceFolders?.length || 0) > 0;
+        const hasWorkspaceFolders = (this.workspaceService.workspaceFolders?.length ?? 0) > 0;
         if (!hasWorkspaceFolders) {
             return;
         }
 
         await Promise.all(
-            this.workspaceService.workspaceFolders!.map((workspaceFolder) =>
+            (this.workspaceService.workspaceFolders ?? []).map((workspaceFolder) =>
                 this.fixLaunchJsonInWorkspace(code, workspaceFolder),
             ),
         );

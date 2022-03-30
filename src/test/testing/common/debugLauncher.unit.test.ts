@@ -47,7 +47,6 @@ suite('Unit Tests - Debug Launcher', () => {
     let settings: TypeMoq.IMock<IPythonSettings>;
     let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
     let launchJsonReader: ILaunchJsonReader;
-    let hasWorkspaceFolders: boolean;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     setup(async () => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
@@ -60,9 +59,7 @@ suite('Unit Tests - Debug Launcher', () => {
         debugService = TypeMoq.Mock.ofType<IDebugService>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IDebugService))).returns(() => debugService.object);
 
-        hasWorkspaceFolders = true;
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>(undefined, TypeMoq.MockBehavior.Strict);
-        workspaceService.setup((u) => u.hasWorkspaceFolders).returns(() => hasWorkspaceFolders);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
@@ -308,7 +305,7 @@ suite('Unit Tests - Debug Launcher', () => {
             debugService.verifyAll();
         });
         test(`Must throw an exception if there are no workspaces ${testTitleSuffix}`, async () => {
-            hasWorkspaceFolders = false;
+            workspaceService.setup((u) => u.workspaceFolders).returns(() => undefined);
             debugService
                 .setup((d) => d.startDebugging(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(undefined as any))
