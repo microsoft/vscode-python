@@ -1,6 +1,6 @@
 # Changelog
 
-## 2022.4.0-rc (28 March 2022)
+## 2022.4.0 (30 March 2022)
 
 ### Enhancements
 
@@ -8,7 +8,7 @@
    ([#18144](https://github.com/Microsoft/vscode-python/issues/18144))
 1. Add support for detection and selection of conda environments lacking a python interpreter.
    ([#18357](https://github.com/Microsoft/vscode-python/issues/18357))
-1. Retains the state of the Tensorboard webview.
+1. Retains the state of the TensorBoard webview.
    ([#18591](https://github.com/Microsoft/vscode-python/issues/18591))
 1. Move interpreter info status bar item to the right.
    ([#18710](https://github.com/Microsoft/vscode-python/issues/18710))
