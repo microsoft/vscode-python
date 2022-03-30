@@ -216,8 +216,5 @@
     "TensorBoard.launchNativeTensorBoardSessionCodeLens": "▶ Launch TensorBoard Session",
     "TensorBoard.enterRemoteUrl": "Enter remote URL",
     "TensorBoard.enterRemoteUrlDetail": "Enter a URL pointing to a remote directory containing your TensorBoard log files",
-    "SwitchToDefaultLS.bannerMessage": "The Microsoft Python Language Server has reached end of life. Your language server has been set to the default for Python in VS Code, Pylance. If you’d like to change your language server, you can learn about how to do so [here](https://devblogs.microsoft.com/python/python-in-visual-studio-code-may-2021-release/#configuring-your-language-server). Read Pylance’s license [here](https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license).",
-    "SwitchToPrereleaseExtension.bannerMessage": "We now have a new way to get pre-release (insiders) version of the Python extension. See [here](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#prerelease-extensions) to learn more.",
-    "SwitchToPrereleaseExtension.installPreRelease": "Install Pre-Release",
-    "SwitchToPrereleaseExtension.installStable": "Install Stable"
+    "SwitchToDefaultLS.bannerMessage": "The Microsoft Python Language Server has reached end of life. Your language server has been set to the default for Python in VS Code, Pylance. If you’d like to change your language server, you can learn about how to do so [here](https://devblogs.microsoft.com/python/python-in-visual-studio-code-may-2021-release/#configuring-your-language-server). Read Pylance’s license [here](https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license)."
 }

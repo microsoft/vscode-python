@@ -21,7 +21,7 @@ import {
     TensorBoardSessionStartResult,
     TensorBoardEntrypoint,
 } from '../tensorBoard/constants';
-import { EventName, PlatformErrors } from './constants';
+import { EventName } from './constants';
 import type { LinterTrigger, TestTool } from './types';
 
 /**
@@ -742,7 +742,7 @@ export interface IEventNamePropertyMapping {
           "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "terminal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "luabud" },
           "workspacefoldercount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
-          "haspython3" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "haspythonthree" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "startactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "totalactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "totalnonblockingactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
@@ -776,7 +776,7 @@ export interface IEventNamePropertyMapping {
         /**
          * If interpreters found for the main workspace contains a python3 interpreter
          */
-        hasPython3?: boolean;
+        hasPythonThree?: boolean;
         /**
          * If user has defined an interpreter in settings.json
          */
@@ -1028,29 +1028,6 @@ export interface IEventNamePropertyMapping {
          * @type {boolean}
          */
         executableSpecified: boolean;
-    };
-    /**
-     * Telemetry event sent after fetching the OS version
-     */
-    /* __GDPR__
-       "platform.info" : {
-          "failuretype" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "luabud" },
-          "osversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "luabud" }
-       }
-     */
-    [EventName.PLATFORM_INFO]: {
-        /**
-         * If fetching OS version fails, list the failure type
-         *
-         * @type {PlatformErrors}
-         */
-        failureType?: PlatformErrors;
-        /**
-         * The OS version of the platform
-         *
-         * @type {string}
-         */
-        osVersion?: string;
     };
     /**
      * Telemetry event sent when an environment without contain a python binary is selected.
@@ -1594,27 +1571,6 @@ export interface IEventNamePropertyMapping {
          * Carries the selection of user when they are asked to take the extension survey
          */
         selection: 'Yes' | 'Maybe later' | 'Do not show again' | undefined;
-    };
-    /**
-     * Telemetry sent back when join mailing list prompt is shown.
-     */
-    /* __GDPR__
-       "join_mailing_list_prompt_displayed" : { }
-     */
-    [EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED]: never | undefined;
-    /**
-     * Telemetry sent back when user selects an option from join mailing list prompt.
-     */
-    /* __GDPR__
-       "join_mailing_list_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
-       }
-     */
-    [EventName.JOIN_MAILING_LIST_PROMPT]: {
-        /**
-         * Carries the selection of user when they are asked to join the mailing list.
-         */
-        selection: 'Yes' | 'No' | undefined;
     };
     /**
      * Telemetry event sent when starting REPL

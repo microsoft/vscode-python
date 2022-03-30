@@ -91,7 +91,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     const mainWorkspaceUri = workspaceService.workspaceFolders ? workspaceService.workspaceFolders[0].uri : undefined;
-    const [condaVersion, hasPython3] = await Promise.all([
+    const [condaVersion, hasPythonThree] = await Promise.all([
         condaLocator
             .getCondaVersion()
             .then((ver) => (ver ? ver.raw : ''))
@@ -123,7 +123,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         pythonVersion,
         interpreterType,
         workspaceFolderCount,
-        hasPython3,
+        hasPythonThree,
         usingUserDefinedInterpreter,
         usingGlobalInterpreter,
     };
