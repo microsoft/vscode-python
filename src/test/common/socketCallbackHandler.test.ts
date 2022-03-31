@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { default as getPort } from 'get-port';
+import * as getPort from 'get-port';
 import * as net from 'net';
 import { SocketCallbackHandler } from '../../client/common/net/socket/socketCallbackHandler';
 import { SocketServer } from '../../client/common/net/socket/socketServer';
@@ -189,7 +189,7 @@ suite('SocketCallbackHandler', () => {
         expect(port).to.be.greaterThan(0);
     });
     test('Succesfully starts with specific port', async () => {
-        const availablePort = await getPort({ host: 'localhost' });
+        const availablePort = await getPort.default({ host: 'localhost' });
         const port = await socketServer.Start({ port: availablePort, host: 'localhost' });
         expect(port).to.be.equal(availablePort);
     });
@@ -311,7 +311,7 @@ suite('SocketCallbackHandler', () => {
     });
     test('Succesful Handshake with specific port', async () => {
         const availablePort = await new Promise<number>((resolve, reject) =>
-            getPort({ host: 'localhost' }).then(resolve, reject),
+            getPort.default({ host: 'localhost' }).then(resolve, reject),
         );
         const port = await socketServer.Start({ port: availablePort, host: 'localhost' });
 
