@@ -88,7 +88,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     }
     public get extensionChannel(): Channel {
         const version = parse(this.packageJson.version);
-        return !version || version.prerelease.length > 0 ? 'insiders' : 'stable';
+        return !version || version.prerelease.length > 0 || version.minor % 2 == 1 ? 'insiders' : 'stable';
     }
     public get uriScheme(): string {
         return vscode.env.uriScheme;
