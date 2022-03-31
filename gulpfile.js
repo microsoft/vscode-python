@@ -8,9 +8,10 @@
 
 'use strict';
 
+const { spawn } = require('child_process');
+
 const gulp = require('gulp');
 const ts = require('gulp-typescript');
-const spawn = require('cross-spawn');
 const path = require('path');
 const del = require('del');
 const fsExtra = require('fs-extra');
