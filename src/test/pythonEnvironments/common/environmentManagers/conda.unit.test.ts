@@ -105,7 +105,7 @@ suite('Conda and its environments are located correctly', () => {
 
         sinon.stub(platform, 'getUserHomeDir').callsFake(() => homeDir);
 
-        sinon.stub(fsapi, 'lstat').callsFake(async (filePath: string | Buffer) => {
+        sinon.stub(fsapi, 'lstat').callsFake(async (filePath: fs.PathLike) => {
             if (typeof filePath !== 'string') {
                 throw new Error(`expected filePath to be string, got ${typeof filePath}`);
             }
@@ -127,11 +127,11 @@ suite('Conda and its environments are located correctly', () => {
             return true;
         });
 
-        sinon.stub(fsapi, 'readdir').callsFake(async (filePath: string | Buffer) => {
+        sinon.stub(fsapi, 'readdir').callsFake(async (filePath: fs.PathLike) => {
             if (typeof filePath !== 'string') {
                 throw new Error(`expected filePath to be string, got ${typeof filePath}`);
             }
-            return Object.keys(getFile(filePath, 'throwIfMissing'));
+            return Object.keys(getFile(filePath, 'throwIfMissing')) as unknown as fs.Dirent[];
         });
 
         sinon
@@ -151,21 +151,19 @@ suite('Conda and its environments are located correctly', () => {
                     return names;
                 }
 
-                return names.map(
-                    (name): fs.Dirent => {
-                        const isFile = typeof dir[name] === 'string';
-                        return {
-                            name,
-                            isFile: () => isFile,
-                            isDirectory: () => !isFile,
-                            isBlockDevice: () => false,
-                            isCharacterDevice: () => false,
-                            isSymbolicLink: () => false,
-                            isFIFO: () => false,
-                            isSocket: () => false,
-                        };
-                    },
-                );
+                return names.map((name): fs.Dirent => {
+                    const isFile = typeof dir[name] === 'string';
+                    return {
+                        name,
+                        isFile: () => isFile,
+                        isDirectory: () => !isFile,
+                        isBlockDevice: () => false,
+                        isCharacterDevice: () => false,
+                        isSymbolicLink: () => false,
+                        isFIFO: () => false,
+                        isSocket: () => false,
+                    };
+                });
             });
 
         sinon
