@@ -1,5 +1,6 @@
 import { spawnSync } from 'child_process';
 import * as fs from 'fs-extra';
+import * as os from 'os';
 import * as path from 'path';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
 import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../client/common/constants';
@@ -37,7 +38,7 @@ async function installJupyterExtension(vscodeExecutablePath: string) {
         return;
     }
     console.info('Installing Jupyter Extension');
-    const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
+    const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, os.platform());
 
     // For now install Jupyter from the marketplace
     spawnSync(cliPath, ['--install-extension', JUPYTER_EXTENSION_ID], {
@@ -52,7 +53,7 @@ async function installPylanceExtension(vscodeExecutablePath: string) {
         return;
     }
     console.info('Installing Pylance Extension');
-    const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
+    const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, os.platform());
 
     // For now install pylance from the marketplace
     spawnSync(cliPath, ['--install-extension', PYLANCE_EXTENSION_ID], {
