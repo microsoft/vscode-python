@@ -9,7 +9,7 @@ interface IRawTempFS {
     //   This functionality has been requested for the
     //   VS Code FS API (vscode.workspace.fs.*).
     file(
-        config: tmp.Options,
+        config: tmp.TmpNameOptions,
 
         callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void,
     ): void;
