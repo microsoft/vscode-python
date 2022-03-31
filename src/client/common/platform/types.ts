@@ -7,6 +7,12 @@ import { SemVer } from 'semver';
 import * as vscode from 'vscode';
 import { Architecture, OSType } from '../utils/platform';
 
+// We could use FileType from utils/filesystem.ts, but it's simpler this way.
+export import FileType = vscode.FileType;
+export import FileStat = vscode.FileStat;
+export type ReadStream = fs.ReadStream;
+export type WriteStream = fs.WriteStream;
+
 //= ==========================
 // registry
 
@@ -86,12 +92,6 @@ export interface IFileSystemPathUtils {
 
 //= ==========================
 // filesystem operations
-
-// We could use FileType from utils/filesystem.ts, but it's simpler this way.
-export import FileType = vscode.FileType;
-export import FileStat = vscode.FileStat;
-export type ReadStream = fs.ReadStream;
-export type WriteStream = fs.WriteStream;
 
 // The low-level filesystem operations on which the extension depends.
 export interface IRawFileSystem {
