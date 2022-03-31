@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import getPort from 'get-port';
+import { default as getPort } from 'get-port';
 import * as net from 'net';
 import { SocketCallbackHandler } from '../../client/common/net/socket/socketCallbackHandler';
 import { SocketServer } from '../../client/common/net/socket/socketServer';
