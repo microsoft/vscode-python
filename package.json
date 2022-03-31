@@ -1893,7 +1893,7 @@
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
-        "copy-webpack-plugin": "^10.2.4",
+        "copy-webpack-plugin": "^9.1.0",
         "cross-spawn": "^6.0.5",
         "del": "^6.0.0",
         "download": "^8.0.0",
