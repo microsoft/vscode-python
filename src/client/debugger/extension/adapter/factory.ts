@@ -16,8 +16,7 @@ import { IApplicationShell } from '../../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { traceLog, traceVerbose } from '../../../logging';
-import { Conda } from '../../../pythonEnvironments/common/environmentManagers/conda';
-import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
@@ -143,40 +142,8 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         return this.getExecutableCommand(interpreters[0]);
     }
 
-    private async getCondaCommand(): Promise<Conda | undefined> {
-        const condaCommand = await Conda.getConda();
-        const isCondaRunSupported = await condaCommand?.isCondaRunSupported();
-        return isCondaRunSupported ? condaCommand : undefined;
-    }
-
     private async getExecutableCommand(interpreter: PythonEnvironment | undefined): Promise<string[]> {
         if (interpreter) {
-            if (interpreter.envType === EnvironmentType.Conda) {
-                const condaCommand = await this.getCondaCommand();
-                if (condaCommand) {
-                    if (interpreter.envName) {
-                        return [
-                            condaCommand.command,
-                            'run',
-                            '-n',
-                            interpreter.envName,
-                            '--no-capture-output',
-                            '--live-stream',
-                            'python',
-                        ];
-                    } else if (interpreter.envPath) {
-                        return [
-                            condaCommand.command,
-                            'run',
-                            '-p',
-                            interpreter.envPath,
-                            '--no-capture-output',
-                            '--live-stream',
-                            'python',
-                        ];
-                    }
-                }
-            }
             return interpreter.path.length > 0 ? [interpreter.path] : [];
         }
         return [];
