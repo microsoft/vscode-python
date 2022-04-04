@@ -616,8 +616,8 @@ suite('Resolver Utils', () => {
             });
             const expected = buildEnvInfo({
                 location: path.join(regTestRoot, 'conda3'),
-                // Environment should already be marked as Conda. No need to update it to Global.
-                kind: PythonEnvKind.Conda,
+                // Environment is not marked as Conda, update it to Global.
+                kind: PythonEnvKind.OtherGlobal,
                 executable: interpreterPath,
                 // Registry does not provide the minor version, so keep version provided by Conda resolver instead.
                 version: parseVersion('3.8.5'),
