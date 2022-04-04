@@ -28,7 +28,6 @@ export async function isPythonExecutable(filePath: string): Promise<boolean> {
         // On Windows it's fair to assume a path ending with `.exe` denotes a file.
         return true;
     }
-    // For other operating systems verify if it's a file.
     if (await isFile(filePath)) {
         return true;
     }
