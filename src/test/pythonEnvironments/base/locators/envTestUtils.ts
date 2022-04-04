@@ -52,7 +52,9 @@ export function assertEnvEqual(actual: PythonEnvInfo | undefined, expected: Pyth
         actual.version = normalizeVersion(actual.version);
         if (expected) {
             expected.version = normalizeVersion(expected.version);
+            delete expected.id;
         }
+        delete actual.id;
 
         assert.deepStrictEqual(actual, expected);
     }

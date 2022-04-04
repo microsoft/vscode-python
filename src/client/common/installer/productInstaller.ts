@@ -27,14 +27,17 @@ import { isResource, noop } from '../utils/misc';
 import { translateProductToModule } from './moduleInstaller';
 import { ProductNames } from './productNames';
 import {
+    IBaseInstaller,
     IInstallationChannelManager,
     IModuleInstaller,
+    InstallOptions,
     InterpreterUri,
     IProductPathService,
     IProductService,
     ModuleInstallFlags,
 } from './types';
 import { traceError, traceInfo } from '../../logging';
+import { isParentPath } from '../platform/fs-paths';
 
 export { Product } from '../types';
 
@@ -45,7 +48,7 @@ const UnsupportedChannelsForProduct = new Map<Product, Set<EnvironmentType>>([
     [Product.torchProfilerInstallName, new Set([EnvironmentType.Conda])],
 ]);
 
-abstract class BaseInstaller {
+abstract class BaseInstaller implements IBaseInstaller {
     private static readonly PromptPromises = new Map<string, Promise<InstallerResponse>>();
 
     protected readonly appShell: IApplicationShell;
@@ -94,6 +97,7 @@ abstract class BaseInstaller {
         resource?: InterpreterUri,
         cancel?: CancellationToken,
         flags?: ModuleInstallFlags,
+        options?: InstallOptions,
     ): Promise<InstallerResponse> {
         if (product === Product.unittest) {
             return InstallerResponse.Installed;
@@ -110,7 +114,7 @@ abstract class BaseInstaller {
         }
 
         await installer
-            .installModule(product, resource, cancel, flags)
+            .installModule(product, resource, cancel, flags, options)
             .catch((ex) => traceError(`Error in installing the product '${ProductNames.get(product)}', ${ex}`));
 
         return this.isInstalled(product, resource).then((isInstalled) => {
@@ -548,6 +552,74 @@ export class DataScienceInstaller extends BaseInstaller {
     }
 }
 
+export class PythonInstaller implements IBaseInstaller {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
+
+    public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean> {
+        if (product !== Product.python) {
+            throw new Error(`${product} cannot be installed via conda python installer`);
+        }
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const environment = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
+        if (!environment) {
+            return true;
+        }
+        if (
+            environment.envPath?.length &&
+            environment.envType === EnvironmentType.Conda &&
+            !isParentPath(environment?.path, environment.envPath)
+        ) {
+            return false;
+        }
+        return true;
+    }
+
+    public async install(
+        product: Product,
+        resource?: InterpreterUri,
+        _cancel?: CancellationToken,
+        _flags?: ModuleInstallFlags,
+    ): Promise<InstallerResponse> {
+        if (product !== Product.python) {
+            throw new Error(`${product} cannot be installed via python installer`);
+        }
+        // Active interpreter is a conda environment which does not contain python, hence install it.
+        const installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
+        const condaInstaller = installers.find((installer) => installer.type === ModuleInstallerType.Conda);
+        if (!condaInstaller || !(await condaInstaller.isSupported(resource))) {
+            traceError('Conda installer not available for installing python in the given environment');
+            return InstallerResponse.Ignore;
+        }
+        const moduleName = translateProductToModule(product);
+        await condaInstaller
+            .installModule(Product.python, resource, undefined, undefined, { installAsProcess: true })
+            .catch((ex) => traceError(`Error in installing the module '${moduleName}', ${ex}`));
+        return this.isInstalled(product, resource).then((isInstalled) =>
+            isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore,
+        );
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    public async promptToInstall(
+        _product: Product,
+        _resource?: InterpreterUri,
+        _cancel?: CancellationToken,
+        _flags?: ModuleInstallFlags,
+    ): Promise<InstallerResponse> {
+        // This package is installed directly without any prompt.
+        return InstallerResponse.Ignore;
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    public async isProductVersionCompatible(
+        _product: Product,
+        _semVerRequirement: string,
+        _resource?: InterpreterUri,
+    ): Promise<ProductInstallStatus> {
+        return ProductInstallStatus.Installed;
+    }
+}
+
 @injectable()
 export class ProductInstaller implements IInstaller {
     private readonly productService: IProductService;
@@ -591,8 +663,9 @@ export class ProductInstaller implements IInstaller {
         resource?: InterpreterUri,
         cancel?: CancellationToken,
         flags?: ModuleInstallFlags,
+        options?: InstallOptions,
     ): Promise<InstallerResponse> {
-        return this.createInstaller(product).install(product, resource, cancel, flags);
+        return this.createInstaller(product).install(product, resource, cancel, flags, options);
     }
 
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean> {
@@ -604,7 +677,7 @@ export class ProductInstaller implements IInstaller {
         return translateProductToModule(product);
     }
 
-    private createInstaller(product: Product): BaseInstaller {
+    private createInstaller(product: Product): IBaseInstaller {
         const productType = this.productService.getProductType(product);
         switch (productType) {
             case ProductType.Formatter:
@@ -615,6 +688,8 @@ export class ProductInstaller implements IInstaller {
                 return new TestFrameworkInstaller(this.serviceContainer);
             case ProductType.DataScience:
                 return new DataScienceInstaller(this.serviceContainer);
+            case ProductType.Python:
+                return new PythonInstaller(this.serviceContainer);
             default:
                 break;
         }

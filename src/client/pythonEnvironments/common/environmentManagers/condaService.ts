@@ -1,14 +1,11 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { SemVer } from 'semver';
-import { ConfigurationChangeEvent, Uri } from 'vscode';
-import { IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
-import { IDisposableRegistry } from '../../../common/types';
 import { cache } from '../../../common/utils/decorators';
 import { ICondaService } from '../../../interpreter/contracts';
 import { traceDecoratorVerbose } from '../../../logging';
-import { Conda, CondaInfo } from './conda';
+import { Conda, CondaEnvironmentInfo, CondaInfo } from './conda';
 
 /**
  * Injectable version of Conda utility.
@@ -17,25 +14,23 @@ import { Conda, CondaInfo } from './conda';
 export class CondaService implements ICondaService {
     private isAvailable: boolean | undefined;
 
-    private condaFile: Promise<string> | undefined;
-
     constructor(
         @inject(IPlatformService) private platform: IPlatformService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-    ) {
-        this.addCondaPathChangedHandler();
-    }
+    ) {}
 
     /**
      * Return the path to the "conda file".
      */
+    // eslint-disable-next-line class-methods-use-this
     public async getCondaFile(): Promise<string> {
-        if (!this.condaFile) {
-            this.condaFile = Conda.getConda().then((conda) => conda?.command ?? 'conda');
-        }
-        return this.condaFile;
+        return Conda.getConda().then((conda) => conda?.command ?? 'conda');
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    public async getInterpreterPathForEnvironment(condaEnv: CondaEnvironmentInfo): Promise<string | undefined> {
+        const conda = await Conda.getConda();
+        return conda?.getInterpreterPathForEnvironment({ name: condaEnv.name, prefix: condaEnv.path });
     }
 
     /**
@@ -104,7 +99,7 @@ export class CondaService implements ICondaService {
             return condaPath2;
         }
 
-        return undefined;
+        return this.getCondaFile();
     }
 
     /**
@@ -116,20 +111,5 @@ export class CondaService implements ICondaService {
     public async _getCondaInfo(): Promise<CondaInfo | undefined> {
         const conda = await Conda.getConda();
         return conda?.getInfo();
-    }
-
-    private addCondaPathChangedHandler() {
-        const disposable = this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this));
-        this.disposableRegistry.push(disposable);
-    }
-
-    private async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
-        const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
-            ? this.workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
-            : [undefined];
-        if (workspacesUris.findIndex((uri) => event.affectsConfiguration('python.condaPath', uri)) === -1) {
-            return;
-        }
-        this.condaFile = undefined;
     }
 }

@@ -20,6 +20,10 @@ suite('String Extensions', () => {
         const argTotest = 'one two three';
         expect(argTotest.toCommandArgument()).to.be.equal(`"${argTotest}"`);
     });
+    test('Should quote command arguments containing ampersand', () => {
+        const argTotest = 'one&twothree';
+        expect(argTotest.toCommandArgument()).to.be.equal(`"${argTotest}"`);
+    });
     test('Should return empty string for empty path', () => {
         const fileToTest = '';
         expect(fileToTest.fileToCommandArgument()).to.be.equal('');

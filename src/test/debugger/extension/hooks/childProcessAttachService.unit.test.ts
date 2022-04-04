@@ -39,13 +39,13 @@ suite('Debug - Attach to Child Process', () => {
             subProcessId: 2,
         };
         const session: any = {};
-        when(workspaceService.hasWorkspaceFolders).thenReturn(false);
+        when(workspaceService.workspaceFolders).thenReturn(undefined);
         when(debugService.startDebugging(anything(), anything(), anything())).thenResolve(true as any);
         when(shell.showErrorMessage(anything())).thenResolve();
 
         await attachService.attach(data, session);
 
-        verify(workspaceService.hasWorkspaceFolders).once();
+        verify(workspaceService.workspaceFolders).once();
         verify(debugService.startDebugging(anything(), anything(), anything())).once();
         verify(shell.showErrorMessage(anything())).never();
     });
@@ -59,13 +59,13 @@ suite('Debug - Attach to Child Process', () => {
         };
 
         const session: any = {};
-        when(workspaceService.hasWorkspaceFolders).thenReturn(false);
+        when(workspaceService.workspaceFolders).thenReturn(undefined);
         when(debugService.startDebugging(anything(), anything(), anything())).thenResolve(false as any);
         when(shell.showErrorMessage(anything())).thenResolve();
 
         await attachService.attach(data, session);
 
-        verify(workspaceService.hasWorkspaceFolders).once();
+        verify(workspaceService.workspaceFolders).once();
         verify(debugService.startDebugging(anything(), anything(), anything())).once();
         verify(shell.showErrorMessage(anything())).once();
     });
@@ -84,13 +84,12 @@ suite('Debug - Attach to Child Process', () => {
         };
 
         const session: any = {};
-        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         when(workspaceService.workspaceFolders).thenReturn([wkspace1, rightWorkspaceFolder, wkspace2]);
         when(debugService.startDebugging(rightWorkspaceFolder, anything(), anything())).thenResolve(true as any);
 
         await attachService.attach(data, session);
 
-        verify(workspaceService.hasWorkspaceFolders).once();
+        verify(workspaceService.workspaceFolders).atLeast(1);
         verify(debugService.startDebugging(rightWorkspaceFolder, anything(), anything())).once();
         verify(shell.showErrorMessage(anything())).never();
     });
@@ -109,13 +108,12 @@ suite('Debug - Attach to Child Process', () => {
         };
 
         const session: any = {};
-        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         when(workspaceService.workspaceFolders).thenReturn([wkspace1, wkspace2]);
         when(debugService.startDebugging(undefined, anything(), anything())).thenResolve(true as any);
 
         await attachService.attach(data, session);
 
-        verify(workspaceService.hasWorkspaceFolders).once();
+        verify(workspaceService.workspaceFolders).atLeast(1);
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
         verify(shell.showErrorMessage(anything())).never();
     });
@@ -133,12 +131,12 @@ suite('Debug - Attach to Child Process', () => {
         debugConfig.host = 'localhost';
         const session: any = {};
 
-        when(workspaceService.hasWorkspaceFolders).thenReturn(false);
+        when(workspaceService.workspaceFolders).thenReturn(undefined);
         when(debugService.startDebugging(undefined, anything(), anything())).thenResolve(true as any);
 
         await attachService.attach(data, session);
 
-        verify(workspaceService.hasWorkspaceFolders).once();
+        verify(workspaceService.workspaceFolders).once();
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
         const [, secondArg, thirdArg] = capture(debugService.startDebugging).last();
         expect(secondArg).to.deep.equal(debugConfig);
@@ -154,12 +152,12 @@ suite('Debug - Attach to Child Process', () => {
         const session: any = {};
         const debugConfig = JSON.parse(JSON.stringify(data));
 
-        when(workspaceService.hasWorkspaceFolders).thenReturn(false);
+        when(workspaceService.workspaceFolders).thenReturn(undefined);
         when(debugService.startDebugging(undefined, anything(), anything())).thenResolve(true as any);
 
         await attachService.attach(data, session);
 
-        verify(workspaceService.hasWorkspaceFolders).once();
+        verify(workspaceService.workspaceFolders).once();
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
         const [, secondArg, thirdArg] = capture(debugService.startDebugging).last();
         expect(secondArg).to.deep.equal(debugConfig);
@@ -182,12 +180,12 @@ suite('Debug - Attach to Child Process', () => {
         debugConfig.request = 'attach';
         const session: any = {};
 
-        when(workspaceService.hasWorkspaceFolders).thenReturn(false);
+        when(workspaceService.workspaceFolders).thenReturn(undefined);
         when(debugService.startDebugging(undefined, anything(), anything())).thenResolve(true as any);
 
         await attachService.attach(data, session);
 
-        verify(workspaceService.hasWorkspaceFolders).once();
+        verify(workspaceService.workspaceFolders).once();
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
         const [, secondArg, thirdArg] = capture(debugService.startDebugging).last();
         expect(secondArg).to.deep.equal(debugConfig);

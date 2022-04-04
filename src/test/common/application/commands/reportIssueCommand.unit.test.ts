@@ -55,7 +55,6 @@ suite('Report Issue Command', () => {
                 optInto: [],
                 optOutFrom: [],
             },
-            insidersChannel: 'off',
             initialize: true,
             venvPath: 'path',
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

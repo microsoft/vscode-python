@@ -6,7 +6,7 @@ import { Event, EventEmitter } from 'vscode';
 import { identifyEnvironment } from '../../../common/environmentIdentifier';
 import { IEnvironmentInfoService } from '../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
-import { setEnvDisplayString } from '../../info/env';
+import { getEnvPath, setEnvDisplayString } from '../../info/env';
 import { InterpreterInformation } from '../../info/interpreter';
 import {
     BasicEnvInfo,
@@ -19,6 +19,8 @@ import {
 import { PythonEnvsChangedEvent } from '../../watcher';
 import { resolveBasicEnv } from './resolverUtils';
 import { traceVerbose } from '../../../../logging';
+import { getEnvironmentDirFromPath, getInterpreterPathFromDir, isPythonExecutable } from '../../../common/commonUtils';
+import { getEmptyVersion } from '../../info/pythonVersion';
 
 /**
  * Calls environment info service which runs `interpreterInfo.py` script on environments received
@@ -34,9 +36,11 @@ export class PythonEnvsResolver implements IResolvingLocator {
         private readonly environmentInfoService: IEnvironmentInfoService,
     ) {}
 
-    public async resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
-        const kind = await identifyEnvironment(executablePath);
-        const environment = await resolveBasicEnv({ kind, executablePath });
+    public async resolveEnv(path: string): Promise<PythonEnvInfo | undefined> {
+        const [executablePath, envPath] = await getExecutablePathAndEnvPath(path);
+        path = executablePath.length ? executablePath : envPath;
+        const kind = await identifyEnvironment(path);
+        const environment = await resolveBasicEnv({ kind, executablePath, envPath });
         const info = await this.environmentInfoService.getEnvironmentInfo(environment);
         if (!info) {
             return undefined;
@@ -74,7 +78,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
                     );
                 } else if (seen[event.index] !== undefined) {
                     const old = seen[event.index];
-                    seen[event.index] = await resolveBasicEnv(event.update);
+                    seen[event.index] = await resolveBasicEnv(event.update, true);
                     didUpdate.fire({ old, index: event.index, update: seen[event.index] });
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
                 } else {
@@ -88,7 +92,8 @@ export class PythonEnvsResolver implements IResolvingLocator {
 
         let result = await iterator.next();
         while (!result.done) {
-            const currEnv = await resolveBasicEnv(result.value);
+            // Use cache from the current refresh where possible.
+            const currEnv = await resolveBasicEnv(result.value, true);
             seen.push(currEnv);
             yield currEnv;
             this.resolveInBackground(seen.indexOf(currEnv), state, didUpdate, seen).ignoreErrors();
@@ -142,11 +147,33 @@ function checkIfFinishedAndNotify(
 function getResolvedEnv(interpreterInfo: InterpreterInformation, environment: PythonEnvInfo) {
     // Deep copy into a new object
     const resolvedEnv = cloneDeep(environment);
-    resolvedEnv.version = interpreterInfo.version;
     resolvedEnv.executable.filename = interpreterInfo.executable.filename;
     resolvedEnv.executable.sysPrefix = interpreterInfo.executable.sysPrefix;
+    const isEnvLackingPython =
+        getEnvPath(resolvedEnv.executable.filename, resolvedEnv.location).pathType === 'envFolderPath';
+    if (isEnvLackingPython) {
+        // Install python later into these envs might change the version, which can be confusing for users.
+        // So avoid displaying any version until it is installed.
+        resolvedEnv.version = getEmptyVersion();
+    } else {
+        resolvedEnv.version = interpreterInfo.version;
+    }
     resolvedEnv.arch = interpreterInfo.arch;
     // Display name should be set after all the properties as we need other properties to build display name.
     setEnvDisplayString(resolvedEnv);
     return resolvedEnv;
+}
+
+async function getExecutablePathAndEnvPath(path: string) {
+    let executablePath: string;
+    let envPath: string;
+    const isPathAnExecutable = await isPythonExecutable(path);
+    if (isPathAnExecutable) {
+        executablePath = path;
+        envPath = getEnvironmentDirFromPath(executablePath);
+    } else {
+        envPath = path;
+        executablePath = (await getInterpreterPathFromDir(envPath)) ?? '';
+    }
+    return [executablePath, envPath];
 }

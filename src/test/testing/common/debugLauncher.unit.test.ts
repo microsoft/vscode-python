@@ -25,7 +25,9 @@ import { IDebugEnvironmentVariablesService } from '../../../client/debugger/exte
 import { LaunchConfigurationResolver } from '../../../client/debugger/extension/configuration/resolvers/launch';
 import { ILaunchJsonReader } from '../../../client/debugger/extension/configuration/types';
 import { DebugOptions } from '../../../client/debugger/types';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { DebugLauncher } from '../../../client/testing/common/debugLauncher';
 import { LaunchOptions } from '../../../client/testing/common/types';
 import { ITestingSettings } from '../../../client/testing/configuration/types';
@@ -45,8 +47,9 @@ suite('Unit Tests - Debug Launcher', () => {
     let settings: TypeMoq.IMock<IPythonSettings>;
     let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
     let launchJsonReader: ILaunchJsonReader;
-    let hasWorkspaceFolders: boolean;
+    let interpreterService: TypeMoq.IMock<IInterpreterService>;
     setup(async () => {
+        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         const configService = TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer
@@ -56,9 +59,7 @@ suite('Unit Tests - Debug Launcher', () => {
         debugService = TypeMoq.Mock.ofType<IDebugService>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IDebugService))).returns(() => debugService.object);
 
-        hasWorkspaceFolders = true;
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>(undefined, TypeMoq.MockBehavior.Strict);
-        workspaceService.setup((u) => u.hasWorkspaceFolders).returns(() => hasWorkspaceFolders);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
@@ -109,6 +110,7 @@ suite('Unit Tests - Debug Launcher', () => {
             platformService.object,
             configService,
             debugEnvHelper.object,
+            interpreterService.object,
         );
     }
     function setupDebugManager(
@@ -117,7 +119,9 @@ suite('Unit Tests - Debug Launcher', () => {
         testProvider: TestProvider,
     ) {
         platformService.setup((p) => p.isWindows).returns(() => /^win/.test(process.platform));
-        settings.setup((p) => p.pythonPath).returns(() => 'python');
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(({ path: 'python' } as unknown) as PythonEnvironment));
         settings.setup((p) => p.envFile).returns(() => __filename);
         const args = expected.args;
         const debugArgs = testProvider === 'unittest' ? args.filter((item: string) => item !== '--debug') : args;
@@ -301,7 +305,7 @@ suite('Unit Tests - Debug Launcher', () => {
             debugService.verifyAll();
         });
         test(`Must throw an exception if there are no workspaces ${testTitleSuffix}`, async () => {
-            hasWorkspaceFolders = false;
+            workspaceService.setup((u) => u.workspaceFolders).returns(() => undefined);
             debugService
                 .setup((d) => d.startDebugging(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(undefined as any))

@@ -201,7 +201,6 @@ suite('Activation Manager', () => {
                 (1 as unknown) as WorkspaceFolder,
                 (2 as unknown) as WorkspaceFolder,
             ]);
-            when(workspaceService.hasWorkspaceFolders).thenReturn(true);
             const eventDef = () => disposable2.object;
             documentManager
                 .setup((d) => d.onDidOpenTextDocument)
@@ -211,7 +210,6 @@ suite('Activation Manager', () => {
             await managerTest.initialize();
 
             verify(workspaceService.workspaceFolders).once();
-            verify(workspaceService.hasWorkspaceFolders).once();
             verify(workspaceService.onDidChangeWorkspaceFolders).once();
 
             documentManager.verifyAll();
@@ -232,7 +230,6 @@ suite('Activation Manager', () => {
                 (1 as unknown) as WorkspaceFolder,
                 (2 as unknown) as WorkspaceFolder,
             ]);
-            when(workspaceService.hasWorkspaceFolders).thenReturn(true);
             const eventDef = () => disposable2.object;
             documentManager
                 .setup((d) => d.onDidOpenTextDocument)
@@ -244,18 +241,15 @@ suite('Activation Manager', () => {
             await managerTest.initialize();
 
             verify(workspaceService.workspaceFolders).once();
-            verify(workspaceService.hasWorkspaceFolders).once();
             verify(workspaceService.onDidChangeWorkspaceFolders).once();
             documentManager.verifyAll();
             disposable.verify((d) => d.dispose(), typemoq.Times.never());
             disposable2.verify((d) => d.dispose(), typemoq.Times.never());
 
             when(workspaceService.workspaceFolders).thenReturn([]);
-            when(workspaceService.hasWorkspaceFolders).thenReturn(false);
 
             await managerTest.initialize();
 
-            verify(workspaceService.hasWorkspaceFolders).twice();
             disposable.verify((d) => d.dispose(), typemoq.Times.never());
             disposable2.verify((d) => d.dispose(), typemoq.Times.once());
 
@@ -292,7 +286,6 @@ suite('Activation Manager', () => {
             const folder2 = { name: 'two', uri: resource, index: 2 };
             when(workspaceService.getWorkspaceFolderIdentifier(anything(), anything())).thenReturn('one');
             when(workspaceService.workspaceFolders).thenReturn([folder1, folder2]);
-            when(workspaceService.hasWorkspaceFolders).thenReturn(true);
             when(workspaceService.getWorkspaceFolder(document.object.uri)).thenReturn(folder2);
 
             when(workspaceService.getWorkspaceFolder(resource)).thenReturn(folder2);
@@ -321,7 +314,6 @@ suite('Activation Manager', () => {
             documentManager.verifyAll();
             verify(workspaceService.onDidChangeWorkspaceFolders).once();
             verify(workspaceService.workspaceFolders).atLeast(1);
-            verify(workspaceService.hasWorkspaceFolders).once();
             verify(workspaceService.getWorkspaceFolder(anything())).atLeast(1);
             verify(activationService1.activate(resource)).once();
             verify(activationService2.activate(resource)).once();
@@ -366,12 +358,11 @@ suite('Activation Manager', () => {
                 languageId: PYTHON_LANGUAGE,
             };
             when(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).thenReturn('');
-            when(workspaceService.hasWorkspaceFolders).thenReturn(true);
 
             managerTest.onDocOpened((doc as unknown) as TextDocument);
 
             verify(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).once();
-            verify(workspaceService.getWorkspaceFolder(doc.uri)).never();
+            verify(workspaceService.getWorkspaceFolder(doc.uri)).once();
         });
 
         test('If workspace corresponding to the doc has already been activated, then do nothing', async () => {
@@ -421,7 +412,6 @@ suite('Activation Manager', () => {
             managerTest.activatedWorkspaces.add('one');
             managerTest.activatedWorkspaces.add('two');
 
-            when(workspaceService.hasWorkspaceFolders).thenReturn(true);
             // Add workspaceFoldersChangedHandler
             managerTest.addHandlers();
             expect(workspaceFoldersChangedHandler).not.to.be.equal(undefined, 'Handler not set');
@@ -433,17 +423,14 @@ suite('Activation Manager', () => {
             documentManager.verifyAll();
             verify(workspaceService.onDidChangeWorkspaceFolders).once();
             verify(workspaceService.workspaceFolders).atLeast(1);
-            verify(workspaceService.hasWorkspaceFolders).once();
 
             // Removed no. of folders to one
             when(workspaceService.workspaceFolders).thenReturn([folder1]);
-            when(workspaceService.hasWorkspaceFolders).thenReturn(true);
             disposable2.setup((d) => d.dispose()).verifiable(typemoq.Times.once());
 
             workspaceFoldersChangedHandler.call(managerTest);
 
             verify(workspaceService.workspaceFolders).atLeast(1);
-            verify(workspaceService.hasWorkspaceFolders).twice();
             disposable2.verifyAll();
 
             assert.deepEqual(Array.from(managerTest.activatedWorkspaces.keys()), ['one']);

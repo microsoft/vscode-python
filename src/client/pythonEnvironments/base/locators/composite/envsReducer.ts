@@ -64,7 +64,7 @@ async function* iterEnvsIterator(
     let result = await iterator.next();
     while (!result.done) {
         const currEnv = result.value;
-        const oldIndex = seen.findIndex((s) => areSameEnv(s.executablePath, currEnv.executablePath));
+        const oldIndex = seen.findIndex((s) => areSameEnv(s, currEnv));
         if (oldIndex !== -1) {
             resolveDifferencesInBackground(oldIndex, currEnv, state, didUpdate, seen).ignoreErrors();
         } else {

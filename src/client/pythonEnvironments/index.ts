@@ -13,7 +13,7 @@ import { PythonEnvsResolver } from './base/locators/composite/envsResolver';
 import { WindowsPathEnvVarLocator } from './base/locators/lowLevel/windowsKnownPathsLocator';
 import { WorkspaceVirtualEnvironmentLocator } from './base/locators/lowLevel/workspaceVirtualEnvLocator';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
-import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './base/locators/';
+import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './base/locators/wrappers';
 import { CustomVirtualEnvironmentLocator } from './base/locators/lowLevel/customVirtualEnvLocator';
 import { CondaEnvironmentLocator } from './base/locators/lowLevel/condaLocator';
 import { GlobalVirtualEnvironmentLocator } from './base/locators/lowLevel/globalVirtualEnvronmentLocator';

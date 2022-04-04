@@ -5,13 +5,13 @@ import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { getArchitectureDisplayName } from '../../../common/platform/registry';
-import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
-import { arePathsSame } from '../../common/externalDependencies';
+import { arePathsSame, isParentPath, normCasePath } from '../../common/externalDependencies';
 import { getKindDisplayName } from './envKind';
 import { areIdenticalVersion, areSimilarVersions, getVersionDisplayString, isVersionEmpty } from './pythonVersion';
 
 import {
+    EnvPathType,
     globallyInstalledEnvKinds,
     PythonEnvInfo,
     PythonEnvKind,
@@ -20,6 +20,7 @@ import {
     PythonVersion,
     virtualEnvKinds,
 } from '.';
+import { BasicEnvInfo } from '../locator';
 
 /**
  * Create a new info object with all values empty.
@@ -40,13 +41,13 @@ export function buildEnvInfo(init?: {
     sysPrefix?: string;
     searchLocation?: Uri;
 }): PythonEnvInfo {
-    const env = {
+    const env: PythonEnvInfo = {
         name: init?.name ?? '',
         location: '',
         kind: PythonEnvKind.Unknown,
         executable: {
             filename: '',
-            sysPrefix: '',
+            sysPrefix: init?.sysPrefix ?? '',
             ctime: init?.fileInfo?.ctime ?? -1,
             mtime: init?.fileInfo?.mtime ?? -1,
         },
@@ -70,6 +71,7 @@ export function buildEnvInfo(init?: {
     if (init !== undefined) {
         updateEnv(env, init);
     }
+    env.id = getEnvID(env.executable.filename, env.location);
     return env;
 }
 
@@ -166,23 +168,12 @@ function buildEnvDisplayString(env: PythonEnvInfo, getAllDetails = false): strin
 }
 
 /**
- * Determine the corresponding Python executable filename, if any.
- */
-export function getEnvExecutable(env: string | Partial<PythonEnvInfo>): string {
-    const executable = typeof env === 'string' ? env : env.executable?.filename || '';
-    if (executable === '') {
-        return '';
-    }
-    return normalizeFilename(executable);
-}
-
-/**
  * For the given data, build a normalized partial info object.
  *
  * If insufficient data is provided to generate a minimal object, such
  * that it is not identifiable, then `undefined` is returned.
  */
-export function getMinimalPartialInfo(env: string | Partial<PythonEnvInfo>): Partial<PythonEnvInfo> | undefined {
+function getMinimalPartialInfo(env: string | PythonEnvInfo | BasicEnvInfo): Partial<PythonEnvInfo> | undefined {
     if (typeof env === 'string') {
         if (env === '') {
             return undefined;
@@ -196,45 +187,39 @@ export function getMinimalPartialInfo(env: string | Partial<PythonEnvInfo>): Par
             },
         };
     }
-    if (env.executable === undefined) {
-        return undefined;
-    }
-    if (env.executable.filename === '') {
-        return undefined;
+    if ('executablePath' in env) {
+        return {
+            executable: {
+                filename: env.executablePath,
+                sysPrefix: '',
+                ctime: -1,
+                mtime: -1,
+            },
+            location: env.envPath,
+            kind: env.kind,
+            source: env.source,
+        };
     }
     return env;
 }
 
 /**
- * Create a function that decides if the given "query" matches some env info.
- *
- * The returned function is compatible with `Array.filter()`.
+ * Returns path to environment folder or path to interpreter that uniquely identifies an environment.
  */
-export function getEnvMatcher(query: string): (env: string) => boolean {
-    const executable = getEnvExecutable(query);
-    if (executable === '') {
-        // We could throw an exception error, but skipping it is fine.
-        return () => false;
+export function getEnvPath(interpreterPath: string, envFolderPath?: string): EnvPathType {
+    let envPath: EnvPathType = { path: interpreterPath, pathType: 'interpreterPath' };
+    if (envFolderPath && !isParentPath(interpreterPath, envFolderPath)) {
+        // Executable is not inside the environment folder, env folder is the ID.
+        envPath = { path: envFolderPath, pathType: 'envFolderPath' };
     }
-    function matchEnv(candidateExecutable: string): boolean {
-        return arePathsSame(executable, candidateExecutable);
-    }
-    return matchEnv;
+    return envPath;
 }
 
 /**
- * Decide if the two sets of executables for the given envs are the same.
+ * Gets unique identifier for an environment.
  */
-export function haveSameExecutables(envs1: PythonEnvInfo[], envs2: PythonEnvInfo[]): boolean {
-    if (envs1.length !== envs2.length) {
-        return false;
-    }
-    const executables1 = envs1.map(getEnvExecutable);
-    const executables2 = envs2.map(getEnvExecutable);
-    if (!executables2.every((e) => executables1.includes(e))) {
-        return false;
-    }
-    return true;
+export function getEnvID(interpreterPath: string, envFolderPath?: string): string {
+    return normCasePath(getEnvPath(interpreterPath, envFolderPath).path);
 }
 
 /**
@@ -250,8 +235,8 @@ export function haveSameExecutables(envs1: PythonEnvInfo[], envs2: PythonEnvInfo
  * where multiple versions of python executables are all put in the same directory.
  */
 export function areSameEnv(
-    left: string | Partial<PythonEnvInfo>,
-    right: string | Partial<PythonEnvInfo>,
+    left: string | PythonEnvInfo | BasicEnvInfo,
+    right: string | PythonEnvInfo | BasicEnvInfo,
     allowPartialMatch = true,
 ): boolean | undefined {
     const leftInfo = getMinimalPartialInfo(left);
@@ -262,19 +247,15 @@ export function areSameEnv(
     const leftFilename = leftInfo.executable!.filename;
     const rightFilename = rightInfo.executable!.filename;
 
-    // For now we assume that matching executable means they are the same.
-    if (arePathsSame(leftFilename, rightFilename)) {
+    if (getEnvID(leftFilename, leftInfo.location) === getEnvID(rightFilename, rightInfo.location)) {
         return true;
     }
 
-    if (arePathsSame(path.dirname(leftFilename), path.dirname(rightFilename))) {
-        const leftVersion = typeof left === 'string' ? undefined : left.version;
-        const rightVersion = typeof right === 'string' ? undefined : right.version;
+    if (allowPartialMatch && arePathsSame(path.dirname(leftFilename), path.dirname(rightFilename))) {
+        const leftVersion = typeof left === 'string' ? undefined : leftInfo.version;
+        const rightVersion = typeof right === 'string' ? undefined : rightInfo.version;
         if (leftVersion && rightVersion) {
-            if (
-                areIdenticalVersion(leftVersion, rightVersion) ||
-                (allowPartialMatch && areSimilarVersions(leftVersion, rightVersion))
-            ) {
+            if (areIdenticalVersion(leftVersion, rightVersion) || areSimilarVersions(leftVersion, rightVersion)) {
                 return true;
             }
         }

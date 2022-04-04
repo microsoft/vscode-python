@@ -16,7 +16,7 @@ import { sleep } from '../../common/utils/async';
 import { InMemoryCache } from '../../common/utils/cacheUtils';
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterService } from '../contracts';
@@ -30,6 +30,7 @@ import {
     traceVerbose,
     traceWarn,
 } from '../../logging';
+import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const CACHE_DURATION = 10 * 60 * 1000;
@@ -169,20 +170,41 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         if (!shellInfo) {
             return;
         }
-        let isPossiblyCondaEnv = false;
         try {
-            const activationCommands = await this.helper.getEnvironmentActivationShellCommands(
-                resource,
-                shellInfo.shellType,
-                interpreter,
-            );
-            traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
-            if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
-                return;
+            let command: string | undefined;
+            let [args, parse] = internalScripts.printEnvVariables();
+            args.forEach((arg, i) => {
+                args[i] = arg.toCommandArgument();
+            });
+            interpreter = interpreter ?? (await this.interpreterService.getActiveInterpreter(resource));
+            if (interpreter?.envType === EnvironmentType.Conda) {
+                const conda = await Conda.getConda();
+                const pythonArgv = await conda?.getRunPythonArgs({
+                    name: interpreter.envName,
+                    prefix: interpreter.envPath ?? '',
+                });
+                if (pythonArgv) {
+                    // Using environment prefix isn't needed as the marker script already takes care of it.
+                    command = [...pythonArgv, ...args].map((arg) => arg.toCommandArgument()).join(' ');
+                }
             }
-            isPossiblyCondaEnv = activationCommands.join(' ').toLowerCase().includes('conda');
-            // Run the activate command collect the environment from it.
-            const activationCommand = this.fixActivationCommands(activationCommands).join(' && ');
+            if (!command) {
+                const activationCommands = await this.helper.getEnvironmentActivationShellCommands(
+                    resource,
+                    shellInfo.shellType,
+                    interpreter,
+                );
+                traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
+                if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
+                    return;
+                }
+                // Run the activate command collect the environment from it.
+                const activationCommand = this.fixActivationCommands(activationCommands).join(' && ');
+                // In order to make sure we know where the environment output is,
+                // put in a dummy echo we can look for
+                command = `${activationCommand} && echo '${ENVIRONMENT_PREFIX}' && python ${args.join(' ')}`;
+            }
+
             const processService = await this.processServiceFactory.create(resource);
             const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
             const hasCustomEnvVars = Object.keys(customEnvVars).length;
@@ -194,14 +216,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             env[PYTHON_WARNINGS] = 'ignore';
 
             traceVerbose(`${hasCustomEnvVars ? 'Has' : 'No'} Custom Env Vars`);
-
-            // In order to make sure we know where the environment output is,
-            // put in a dummy echo we can look for
-            const [args, parse] = internalScripts.printEnvVariables();
-            args.forEach((arg, i) => {
-                args[i] = arg.toCommandArgument();
-            });
-            const command = `${activationCommand} && echo '${ENVIRONMENT_PREFIX}' && python ${args.join(' ')}`;
             traceVerbose(`Activating Environment to capture Environment variables, ${command}`);
 
             // Do some wrapping of the call. For two reasons:
@@ -219,7 +233,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     result = await processService.shellExec(command, {
                         env,
                         shell: shellInfo.shell,
-                        timeout: isPossiblyCondaEnv ? CONDA_ENVIRONMENT_TIMEOUT : ENVIRONMENT_TIMEOUT,
+                        timeout:
+                            interpreter?.envType === EnvironmentType.Conda
+                                ? CONDA_ENVIRONMENT_TIMEOUT
+                                : ENVIRONMENT_TIMEOUT,
                         maxBuffer: 1000 * 1000,
                         throwOnStdErr: false,
                     });
@@ -265,7 +282,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         } catch (e) {
             traceError('getActivatedEnvironmentVariables', e);
             sendTelemetryEvent(EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED, undefined, {
-                isPossiblyCondaEnv,
+                isPossiblyCondaEnv: interpreter?.envType === EnvironmentType.Conda,
                 terminal: shellInfo.shellType,
             });
 
@@ -283,6 +300,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     @traceDecoratorError('Failed to parse Environment variables')
     @traceDecoratorVerbose('parseEnvironmentOutput', TraceOptions.None)
     protected parseEnvironmentOutput(output: string, parse: (out: string) => NodeJS.ProcessEnv | undefined) {
+        if (output.indexOf(ENVIRONMENT_PREFIX) === -1) {
+            return parse(output);
+        }
         output = output.substring(output.indexOf(ENVIRONMENT_PREFIX) + ENVIRONMENT_PREFIX.length);
         const js = output.substring(output.indexOf('{')).trim();
         return parse(js);

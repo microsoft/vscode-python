@@ -64,12 +64,11 @@ suite('Pylance Language Server - Activator', () => {
 
     test('Manager must be started without any workspace', async () => {
         when(extensions.getExtension(PYLANCE_EXTENSION_ID)).thenReturn(instance(pylanceExtension));
-        when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(manager.start(undefined, undefined)).thenResolve();
 
         await activator.start(undefined);
         verify(manager.start(undefined, undefined)).once();
-        verify(workspaceService.hasWorkspaceFolders).once();
+        verify(workspaceService.workspaceFolders).once();
     });
 
     test('Manager must be disposed', async () => {
@@ -137,7 +136,6 @@ suite('Pylance Language Server - Activator', () => {
 
     test('Manager must be started with resource for first available workspace', async () => {
         const uri = Uri.file(__filename);
-        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         when(workspaceService.workspaceFolders).thenReturn([{ index: 0, name: '', uri }]);
         when(manager.start(uri, undefined)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(false);
@@ -145,7 +143,6 @@ suite('Pylance Language Server - Activator', () => {
         await activator.start(undefined);
 
         verify(manager.start(uri, undefined)).once();
-        verify(workspaceService.hasWorkspaceFolders).once();
-        verify(workspaceService.workspaceFolders).once();
+        verify(workspaceService.workspaceFolders).atLeast(1);
     });
 });

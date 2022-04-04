@@ -32,7 +32,8 @@ async function buildEnvironmentInfo(env: PythonEnvInfo): Promise<InterpreterInfo
 
 async function buildEnvironmentInfoUsingCondaRun(env: PythonEnvInfo): Promise<InterpreterInformation | undefined> {
     const conda = await Conda.getConda();
-    const condaEnv = await conda?.getCondaEnvironment(env.executable.filename);
+    const path = env.location.length ? env.location : env.executable.filename;
+    const condaEnv = await conda?.getCondaEnvironment(path);
     if (!condaEnv) {
         return undefined;
     }

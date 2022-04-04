@@ -277,6 +277,7 @@ suite('CondaEnvironment', () => {
 
     setup(() => {
         sinon.stub(Conda, 'getConda').resolves(new Conda(condaFile));
+        sinon.stub(Conda.prototype, 'getInterpreterPathForEnvironment').resolves(pythonPath);
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
     });
@@ -285,7 +286,7 @@ suite('CondaEnvironment', () => {
 
     test('getExecutionInfo with a named environment should return execution info using the environment name', async () => {
         const condaInfo = { name: 'foo', path: 'bar' };
-        const env = await createCondaEnv(condaInfo, pythonPath, processService.object, fileSystem.object);
+        const env = await createCondaEnv(condaInfo, processService.object, fileSystem.object);
 
         const result = env?.getExecutionInfo(args, pythonPath);
 
@@ -317,7 +318,7 @@ suite('CondaEnvironment', () => {
 
     test('getExecutionInfo with a non-named environment should return execution info using the environment path', async () => {
         const condaInfo = { name: '', path: 'bar' };
-        const env = await createCondaEnv(condaInfo, pythonPath, processService.object, fileSystem.object);
+        const env = await createCondaEnv(condaInfo, processService.object, fileSystem.object);
 
         const result = env?.getExecutionInfo(args, pythonPath);
 
@@ -373,7 +374,7 @@ suite('CondaEnvironment', () => {
             ],
             pythonExecutable: pythonPath,
         };
-        const env = await createCondaEnv(condaInfo, pythonPath, processService.object, fileSystem.object);
+        const env = await createCondaEnv(condaInfo, processService.object, fileSystem.object);
 
         const result = env?.getExecutionObservableInfo(args, pythonPath);
 
@@ -406,7 +407,7 @@ suite('CondaEnvironment', () => {
             ],
             pythonExecutable: pythonPath,
         };
-        const env = await createCondaEnv(condaInfo, pythonPath, processService.object, fileSystem.object);
+        const env = await createCondaEnv(condaInfo, processService.object, fileSystem.object);
 
         const result = env?.getExecutionObservableInfo(args, pythonPath);
 

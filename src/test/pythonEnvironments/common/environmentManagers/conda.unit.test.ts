@@ -105,7 +105,7 @@ suite('Conda and its environments are located correctly', () => {
 
         sinon.stub(platform, 'getUserHomeDir').callsFake(() => homeDir);
 
-        sinon.stub(fsapi, 'lstat').callsFake(async (filePath: string | Buffer) => {
+        sinon.stub(fsapi, 'lstat').callsFake(async (filePath: fs.PathLike) => {
             if (typeof filePath !== 'string') {
                 throw new Error(`expected filePath to be string, got ${typeof filePath}`);
             }
@@ -115,11 +115,23 @@ suite('Conda and its environments are located correctly', () => {
             } as fsapi.Stats;
         });
 
-        sinon.stub(fsapi, 'readdir').callsFake(async (filePath: string | Buffer) => {
+        sinon.stub(fsapi, 'pathExists').callsFake(async (filePath: string | Buffer) => {
             if (typeof filePath !== 'string') {
                 throw new Error(`expected filePath to be string, got ${typeof filePath}`);
             }
-            return Object.keys(getFile(filePath, 'throwIfMissing'));
+            try {
+                getFile(filePath, 'throwIfMissing');
+            } catch {
+                return false;
+            }
+            return true;
+        });
+
+        sinon.stub(fsapi, 'readdir').callsFake(async (filePath: fs.PathLike) => {
+            if (typeof filePath !== 'string') {
+                throw new Error(`expected filePath to be string, got ${typeof filePath}`);
+            }
+            return (Object.keys(getFile(filePath, 'throwIfMissing')) as unknown) as fs.Dirent[];
         });
 
         sinon
@@ -173,7 +185,8 @@ suite('Conda and its environments are located correctly', () => {
                 return contents;
             });
 
-        sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
+        sinon.stub(externalDependencies, 'shellExecute').callsFake(async (quoted: string) => {
+            const [command, ...args] = quoted.split(' ');
             for (const prefix of ['', ...execPath]) {
                 const contents = getFile(path.join(prefix, command));
                 if (args[0] === 'info' && args[1] === '--json') {
@@ -230,6 +243,22 @@ suite('Conda and its environments are located correctly', () => {
             };
 
             await expectConda('/bin/conda');
+        });
+
+        test('Use conda.bat when possible over conda.exe on windows', async () => {
+            osType = platform.OSType.Windows;
+
+            getPythonSetting.withArgs('condaPath').returns('bin/conda');
+            files = {
+                bin: {
+                    conda: JSON.stringify(condaInfo('4.8.0')),
+                },
+                condabin: {
+                    'conda.bat': JSON.stringify(condaInfo('4.8.0')),
+                },
+            };
+
+            await expectConda('/condabin/conda.bat');
         });
 
         suite('Must find conda in well-known locations', () => {
@@ -496,7 +525,6 @@ suite('Conda and its environments are located correctly', () => {
     suite('Conda env list is parsed correctly', () => {
         setup(() => {
             homeDir = '/home/user';
-
             files = {
                 home: {
                     user: {
@@ -599,14 +627,16 @@ suite('Conda and its environments are located correctly', () => {
             assertBasicEnvsEqual(
                 envs,
                 [
-                    path.join('/home/user/miniconda3', 'bin', 'python'),
-                    path.join('/home/user/miniconda3/envs/env1', 'bin', 'python'),
+                    '/home/user/miniconda3',
+                    '/home/user/miniconda3/envs/env1',
                     // no env2, because there's no bin/python* under it
-                    path.join('/home/user/miniconda3/envs/dir/env3', 'bin', 'python'),
-                    path.join('/home/user/.conda/envs/env4', 'bin', 'python'),
+                    '/home/user/miniconda3/envs/dir/env3',
+                    '/home/user/.conda/envs/env4',
                     // no env5, because there's no bin/python* under it
-                    path.join('/env6', 'bin', 'python'),
-                ].map((executablePath) => createBasicEnv(PythonEnvKind.Conda, executablePath)),
+                    '/env6',
+                ].map((envPath) =>
+                    createBasicEnv(PythonEnvKind.Conda, path.join(envPath, 'bin', 'python'), undefined, envPath),
+                ),
             );
         });
     });

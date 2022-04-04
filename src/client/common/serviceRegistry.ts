@@ -58,20 +58,6 @@ import { ConfigurationService } from './configuration/service';
 import { PipEnvExecutionPath } from './configuration/executionSettings/pipEnvExecution';
 import { EditorUtils } from './editor';
 import { ExperimentService } from './experiments/service';
-import {
-    ExtensionInsidersDailyChannelRule,
-    ExtensionInsidersOffChannelRule,
-    ExtensionInsidersWeeklyChannelRule,
-} from './insidersBuild/downloadChannelRules';
-import { ExtensionChannelService } from './insidersBuild/downloadChannelService';
-import { InsidersExtensionPrompt } from './insidersBuild/insidersExtensionPrompt';
-import { InsidersExtensionService } from './insidersBuild/insidersExtensionService';
-import {
-    ExtensionChannel,
-    IExtensionChannelRule,
-    IExtensionChannelService,
-    IInsiderExtensionPrompt,
-} from './insidersBuild/types';
 import { ProductInstaller } from './installer/productInstaller';
 import { InterpreterPathService } from './interpreterPathService';
 import { BrowserService } from './net/browser';
@@ -186,11 +172,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IShellDetector>(IShellDetector, SettingsShellDetector);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, UserEnvironmentShellDetector);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, VSCEnvironmentShellDetector);
-    serviceManager.addSingleton<IInsiderExtensionPrompt>(IInsiderExtensionPrompt, InsidersExtensionPrompt);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        InsidersExtensionService,
-    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         ReloadVSCodeCommandHandler,
@@ -202,22 +183,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         CreatePythonFileCommandHandler,
-    );
-    serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
-    serviceManager.addSingleton<IExtensionChannelRule>(
-        IExtensionChannelRule,
-        ExtensionInsidersOffChannelRule,
-        ExtensionChannel.off,
-    );
-    serviceManager.addSingleton<IExtensionChannelRule>(
-        IExtensionChannelRule,
-        ExtensionInsidersDailyChannelRule,
-        ExtensionChannel.daily,
-    );
-    serviceManager.addSingleton<IExtensionChannelRule>(
-        IExtensionChannelRule,
-        ExtensionInsidersWeeklyChannelRule,
-        ExtensionChannel.weekly,
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,

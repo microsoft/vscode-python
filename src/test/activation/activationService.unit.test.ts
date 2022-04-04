@@ -63,7 +63,6 @@ suite('Language Server Activation - ActivationService', () => {
                     const extensionsMock = TypeMoq.Mock.ofType<IExtensions>();
                     lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
 
-                    workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
                     workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
                     configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
                     interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
@@ -182,14 +181,14 @@ suite('Language Server Activation - ActivationService', () => {
                             e.affectsConfiguration(TypeMoq.It.isValue(`python.${settingName}`), TypeMoq.It.isAny()),
                         )
                         .returns(() => true)
-                        .verifiable(TypeMoq.Times.atLeastOnce());
+                        .verifiable(TypeMoq.Times.never());
                     appShell
                         .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isValue('Reload')))
                         .returns(() => Promise.resolve('Reload'))
-                        .verifiable(TypeMoq.Times.once());
+                        .verifiable(TypeMoq.Times.never());
                     cmdManager
                         .setup((c) => c.executeCommand(TypeMoq.It.isValue('workbench.action.reloadWindow')))
-                        .verifiable(TypeMoq.Times.once());
+                        .verifiable(TypeMoq.Times.never());
 
                     // Toggle the value in the setting and invoke the callback.
                     languageServerType =
@@ -287,7 +286,7 @@ suite('Language Server Activation - ActivationService', () => {
                             e.affectsConfiguration(TypeMoq.It.isValue('python.languageServer'), TypeMoq.It.isAny()),
                         )
                         .returns(() => false)
-                        .verifiable(TypeMoq.Times.atLeastOnce());
+                        .verifiable(TypeMoq.Times.never());
                     appShell
                         .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isValue('Reload')))
                         .returns(() => Promise.resolve(undefined))
@@ -515,7 +514,6 @@ suite('Language Server Activation - ActivationService', () => {
 
             traceLogStub = sinon.stub(logging, 'traceLog');
 
-            workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
             workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
             state.setup((s) => s.value).returns(() => undefined);
@@ -640,7 +638,6 @@ suite('Language Server Activation - ActivationService', () => {
             const e = new EventEmitter<void>();
             interpreterService.setup((i) => i.onDidChangeInterpreter).returns(() => e.event);
             const extensionsMock = TypeMoq.Mock.ofType<IExtensions>();
-            workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
             workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
             stateFactory
@@ -782,7 +779,6 @@ suite('Language Server Activation - ActivationService', () => {
             const e = new EventEmitter<void>();
             interpreterService.setup((i) => i.onDidChangeInterpreter).returns(() => e.event);
             const extensionsMock = TypeMoq.Mock.ofType<IExtensions>();
-            workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
             workspaceService.setup((w) => w.workspaceFolders).returns(() => []);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
             stateFactory

@@ -10,19 +10,19 @@ import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { CommandManager } from '../../../../../client/common/application/commandManager';
 import { ICommandManager } from '../../../../../client/common/application/types';
-import { ConfigurationService } from '../../../../../client/common/configuration/service';
 import { Commands } from '../../../../../client/common/constants';
-import { IConfigurationService, IDisposable } from '../../../../../client/common/types';
+import { IDisposable } from '../../../../../client/common/types';
 import { InterpreterPathCommand } from '../../../../../client/debugger/extension/configuration/launch.json/interpreterPathCommand';
+import { IInterpreterService } from '../../../../../client/interpreter/contracts';
 
 suite('Interpreter Path Command', () => {
     let cmdManager: ICommandManager;
-    let configService: IConfigurationService;
+    let interpreterService: IInterpreterService;
     let interpreterPathCommand: InterpreterPathCommand;
     setup(() => {
         cmdManager = mock(CommandManager);
-        configService = mock(ConfigurationService);
-        interpreterPathCommand = new InterpreterPathCommand(instance(cmdManager), instance(configService), []);
+        interpreterService = mock<IInterpreterService>();
+        interpreterPathCommand = new InterpreterPathCommand(instance(cmdManager), instance(interpreterService), []);
     });
 
     teardown(() => {
@@ -47,41 +47,43 @@ suite('Interpreter Path Command', () => {
 
     test('If `workspaceFolder` property exists in `args`, it is used to retrieve setting from config', async () => {
         const args = { workspaceFolder: 'folderPath' };
-        when(configService.getSettings(anything())).thenCall((arg) => {
+        when(interpreterService.getActiveInterpreter(anything())).thenCall((arg) => {
             assert.deepEqual(arg, Uri.parse('folderPath'));
 
-            return { pythonPath: 'settingValue' } as any;
+            return Promise.resolve({ path: 'settingValue' }) as any;
         });
-        const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
+        const setting = await interpreterPathCommand._getSelectedInterpreterPath(args);
         expect(setting).to.equal('settingValue');
     });
 
     test('If `args[1]` is defined, it is used to retrieve setting from config', async () => {
         const args = ['command', 'folderPath'];
-        when(configService.getSettings(anything())).thenCall((arg) => {
+        when(interpreterService.getActiveInterpreter(anything())).thenCall((arg) => {
             assert.deepEqual(arg, Uri.parse('folderPath'));
 
-            return { pythonPath: 'settingValue' } as any;
+            return Promise.resolve({ path: 'settingValue' }) as any;
         });
-        const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
+        const setting = await interpreterPathCommand._getSelectedInterpreterPath(args);
         expect(setting).to.equal('settingValue');
     });
 
     test('If neither of these exists, value of workspace folder is `undefined`', async () => {
         const args = ['command'];
 
-        when(configService.getSettings(undefined)).thenReturn({ pythonPath: 'settingValue' } as any);
-        const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
+        when(interpreterService.getActiveInterpreter(undefined)).thenReturn(
+            Promise.resolve({ path: 'settingValue' }) as any,
+        );
+        const setting = await interpreterPathCommand._getSelectedInterpreterPath(args);
         expect(setting).to.equal('settingValue');
     });
 
     test('If `args[1]` is not a valid uri', async () => {
         const args = ['command', '${input:some_input}'];
-        when(configService.getSettings(anything())).thenCall((arg) => {
+        when(interpreterService.getActiveInterpreter(anything())).thenCall((arg) => {
             assert.deepEqual(arg, undefined);
-            return { pythonPath: 'settingValue' } as any;
+            return Promise.resolve({ path: 'settingValue' }) as any;
         });
-        const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
+        const setting = await interpreterPathCommand._getSelectedInterpreterPath(args);
         expect(setting).to.equal('settingValue');
     });
 });

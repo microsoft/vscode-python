@@ -79,7 +79,6 @@ suite('Python Settings', async () => {
             'pipenvPath',
             'envFile',
             'poetryPath',
-            'insidersChannel',
             'defaultInterpreterPath',
         ]) {
             config
@@ -139,17 +138,11 @@ suite('Python Settings', async () => {
     }
 
     suite('String settings', async () => {
-        [
-            'venvPath',
-            'condaPath',
-            'pipenvPath',
-            'envFile',
-            'poetryPath',
-            'insidersChannel',
-            'defaultInterpreterPath',
-        ].forEach(async (settingName) => {
-            testIfValueIsUpdated(settingName, 'stringValue');
-        });
+        ['venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'defaultInterpreterPath'].forEach(
+            async (settingName) => {
+                testIfValueIsUpdated(settingName, 'stringValue');
+            },
+        );
     });
 
     suite('Boolean settings', async () => {

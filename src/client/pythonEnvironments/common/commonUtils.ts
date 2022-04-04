@@ -11,13 +11,32 @@ import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from './environmentManagers/conda';
 import { getPythonVersionFromPyvenvCfg } from './environmentManagers/simplevirtualenvs';
-import { normCasePath } from './externalDependencies';
+import { isFile, normCasePath } from './externalDependencies';
 import * as posix from './posixUtils';
 import * as windows from './windowsUtils';
 
 const matchPythonBinFilename =
     getOSType() === OSType.Windows ? windows.matchPythonBinFilename : posix.matchPythonBinFilename;
 type FileFilterFunc = (filename: string) => boolean;
+
+/**
+ * Returns `true` if path provided is likely a python executable.
+ */
+export async function isPythonExecutable(filePath: string): Promise<boolean> {
+    const isMatch = matchPythonBinFilename(filePath);
+    if (!isMatch) {
+        return false;
+    }
+    // On Windows it's fair to assume a path ending with `.exe` denotes a file.
+    if (getOSType() === OSType.Windows) {
+        return true;
+    }
+    // For other operating systems verify if it's a file.
+    if (await isFile(filePath)) {
+        return true;
+    }
+    return false;
+}
 
 /**
  * Searches recursively under the given `root` directory for python interpreters.
