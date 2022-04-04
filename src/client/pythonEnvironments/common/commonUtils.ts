@@ -15,23 +15,19 @@ import { isFile, normCasePath } from './externalDependencies';
 import * as posix from './posixUtils';
 import * as windows from './windowsUtils';
 
-const matchPythonBinFilename =
+const matchStandardPythonBinFilename =
     getOSType() === OSType.Windows ? windows.matchPythonBinFilename : posix.matchPythonBinFilename;
 type FileFilterFunc = (filename: string) => boolean;
 
 /**
- * Returns `true` if path provided is likely a python executable.
+ * Returns `true` if path provided is likely a python executable than a folder path.
  */
 export async function isPythonExecutable(filePath: string): Promise<boolean> {
-    const isMatch = matchPythonBinFilename(filePath);
-    if (!isMatch) {
-        return false;
-    }
-    // On Windows it's fair to assume a path ending with `.exe` denotes a file.
-    if (getOSType() === OSType.Windows) {
+    const isMatch = matchStandardPythonBinFilename(filePath);
+    if (isMatch && getOSType() === OSType.Windows) {
+        // On Windows it's fair to assume a path ending with `.exe` denotes a file.
         return true;
     }
-    // For other operating systems verify if it's a file.
     if (await isFile(filePath)) {
         return true;
     }
@@ -83,7 +79,7 @@ export async function* iterPythonExecutablesInDir(
 ): AsyncIterableIterator<DirEntry> {
     const readDirOpts = {
         ...opts,
-        filterFile: matchPythonBinFilename,
+        filterFile: matchStandardPythonBinFilename,
     };
     const entries = await readDirEntries(dirname, readDirOpts);
     for (const entry of entries) {
@@ -270,7 +266,7 @@ async function checkPythonExecutable(
         filterFile?: (f: string | DirEntry) => Promise<boolean>;
     },
 ): Promise<boolean> {
-    const matchFilename = opts.matchFilename || matchPythonBinFilename;
+    const matchFilename = opts.matchFilename || matchStandardPythonBinFilename;
     const filename = typeof executable === 'string' ? executable : executable.filename;
 
     if (!matchFilename(filename)) {
