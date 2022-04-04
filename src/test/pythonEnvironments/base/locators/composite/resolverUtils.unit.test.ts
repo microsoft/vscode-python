@@ -280,7 +280,7 @@ suite('Resolver Utils', () => {
             );
         });
 
-        test('resolveEnv: If no conda binary found, resolve as a simple environment', async () => {
+        test('resolveEnv: If no conda binary found, resolve as an unknown environment', async () => {
             sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
             sinon.stub(externalDependencies, 'shellExecute').callsFake(async (command: string) => {
                 throw new Error(`${command} is missing or is not executable`);
@@ -293,7 +293,7 @@ suite('Resolver Utils', () => {
                 actual,
                 createSimpleEnvInfo(
                     path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
-                    PythonEnvKind.Conda,
+                    PythonEnvKind.Unknown,
                     undefined,
                     'conda1',
                     path.join(TEST_LAYOUT_ROOT, 'conda1'),
@@ -616,8 +616,8 @@ suite('Resolver Utils', () => {
             });
             const expected = buildEnvInfo({
                 location: path.join(regTestRoot, 'conda3'),
-                // Environment should already be marked as Conda. No need to update it to Global.
-                kind: PythonEnvKind.Conda,
+                // Environment is not marked as Conda, update it to Global.
+                kind: PythonEnvKind.OtherGlobal,
                 executable: interpreterPath,
                 // Registry does not provide the minor version, so keep version provided by Conda resolver instead.
                 version: parseVersion('3.8.5'),

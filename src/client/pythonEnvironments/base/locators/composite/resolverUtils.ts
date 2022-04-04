@@ -173,6 +173,7 @@ async function resolveCondaEnv(env: BasicEnvInfo, useCache?: boolean): Promise<P
         } info' command`,
     );
     // Environment could still be valid, resolve as a simple env.
+    env.kind = PythonEnvKind.Unknown;
     return resolveSimpleEnv(env);
 }
 
