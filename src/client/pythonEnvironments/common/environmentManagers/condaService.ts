@@ -23,8 +23,11 @@ export class CondaService implements ICondaService {
      * Return the path to the "conda file".
      */
     // eslint-disable-next-line class-methods-use-this
-    public async getCondaFile(): Promise<string> {
-        return Conda.getConda().then((conda) => conda?.command ?? 'conda');
+    public async getCondaFile(forShellExecution?: boolean): Promise<string> {
+        return Conda.getConda().then((conda) => {
+            const command = forShellExecution ? conda?.shellCommand : conda?.command;
+            return command ?? 'conda';
+        });
     }
 
     // eslint-disable-next-line class-methods-use-this

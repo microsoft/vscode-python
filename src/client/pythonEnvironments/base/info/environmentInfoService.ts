@@ -37,7 +37,7 @@ async function buildEnvironmentInfoUsingCondaRun(env: PythonEnvInfo): Promise<In
     if (!condaEnv) {
         return undefined;
     }
-    const python = await conda?.getRunPythonArgs(condaEnv);
+    const python = await conda?.getRunPythonArgs(condaEnv, true);
     if (!python) {
         return undefined;
     }

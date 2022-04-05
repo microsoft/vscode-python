@@ -54,7 +54,7 @@ export const ICondaService = Symbol('ICondaService');
  * Interface carries the properties which are not available via the discovery component interface.
  */
 export interface ICondaService {
-    getCondaFile(): Promise<string>;
+    getCondaFile(forShellExecution?: boolean): Promise<string>;
     isCondaAvailable(): Promise<boolean>;
     getCondaVersion(): Promise<SemVer | undefined>;
     getInterpreterPathForEnvironment(condaEnv: CondaEnvironmentInfo): Promise<string | undefined>;
