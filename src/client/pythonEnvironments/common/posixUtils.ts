@@ -17,9 +17,9 @@ export function matchBasicPythonBinFilename(filename: string): boolean {
 }
 
 /**
- * Checks if a given path ends with python*.exe
+ * Checks if a given path matches pattern for standard non-windows python binary.
  * @param {string} interpreterPath : Path to python interpreter.
- * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
+ * @returns {boolean} : Returns true if the path matches pattern for non-windows python binary.
  */
 export function matchPythonBinFilename(filename: string): boolean {
     /**
