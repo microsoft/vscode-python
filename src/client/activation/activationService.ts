@@ -19,8 +19,8 @@ import { LanguageService } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../telemetry';
-import { EventName } from '../telemetry/constants';
+// import { sendTelemetryEvent } from '../telemetry';
+// import { EventName } from '../telemetry/constants';
 // import { LanguageServerChangeHandler } from './common/languageServerChangeHandler';
 import { RefCountedLanguageServer } from './refCountedLanguageServer';
 import {
@@ -61,7 +61,8 @@ function logStartup(serverType: LanguageServerType): void {
 
 @injectable()
 export class LanguageServerExtensionActivationService
-    implements IExtensionActivationService, ILanguageServerCache, Disposable {
+    implements IExtensionActivationService, ILanguageServerCache, Disposable
+{
     private cache = new Map<string, Promise<RefCountedLanguageServer>>();
 
     private activatedServer?: IActivatedServer;
@@ -174,13 +175,13 @@ export class LanguageServerExtensionActivationService
         }
         if (state.value !== languageServer) {
             await state.updateValue(languageServer);
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
-                switchTo: languageServer,
-            });
+            // sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
+            //     switchTo: languageServer,
+            // });
         } else {
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
-                lsStartup: languageServer,
-            });
+            // sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
+            //     lsStartup: languageServer,
+            // });
         }
     }
 

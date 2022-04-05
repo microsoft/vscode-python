@@ -4,7 +4,6 @@
 
 import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
 
-import { LanguageServerType } from '../activation/types';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
@@ -1380,44 +1379,6 @@ export interface IEventNamePropertyMapping {
          * @type {('Reload' | undefined)}
          */
         selection: 'Reload' | undefined;
-    };
-    /**
-     * Telemetry sent with details about the current selection of language server
-     */
-    /* __GDPR__
-       "python_language_server.current_selection" : {
-          "lsstartup" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
-          "switchto" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
-       }
-     */
-
-    [EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION]: {
-        /**
-         * The startup value of the language server setting
-         */
-        lsStartup?: LanguageServerType;
-        /**
-         * Used to track switch between language servers. Carries the final state after the switch.
-         */
-        switchTo?: LanguageServerType;
-    };
-    /**
-     * Telemetry event sent with details after selected Language server has finished activating. This event
-     * is sent with `duration` specifying the total duration of time that the given language server took
-     * to activate.
-     */
-    /* __GDPR__
-       "python_language_server.startup_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
-          "languageservertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
-       }
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_STARTUP_DURATION]: {
-        /**
-         * Type of Language server activated. Note it can be different from one that is chosen, if the
-         * chosen one fails to start.
-         */
-        languageServerType?: LanguageServerType;
     };
     /**
      * Telemetry event sent when the experiments service is initialized for the first time.
