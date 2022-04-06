@@ -297,17 +297,12 @@ suite('Python envs locator - Environments Resolver', () => {
             if (getOSType() !== OSType.Windows) {
                 this.skip();
             }
-            stubShellExec.restore();
             sinon.stub(externalDependencies, 'getPythonSetting').withArgs('condaPath').returns('conda');
-            sinon.stub(externalDependencies, 'shellExecute').callsFake(async (quoted: string) => {
-                const [command, ...args] = quoted.split(' ');
+            sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
                 if (command === 'conda' && args[0] === 'info' && args[1] === '--json') {
                     return { stdout: JSON.stringify(condaInfo(path.join(envsWithoutPython, 'condaLackingPython'))) };
                 }
-                return {
-                    stdout:
-                        '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "sysVersion": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
-                };
+                throw new Error(`${command} is missing or is not executable`);
             });
             const parentLocator = new SimpleLocator([]);
             const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
