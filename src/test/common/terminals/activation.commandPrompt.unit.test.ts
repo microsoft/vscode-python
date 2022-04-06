@@ -109,7 +109,10 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                     // Ensure the path is quoted if it contains any spaces.
                     // Ensure it contains the name of the environment as an argument to the script file.
 
-                    expect(commands).to.be.deep.equal([pathToScriptFile.fileToCommandArgument()], 'Invalid command');
+                    expect(commands).to.be.deep.equal(
+                        [pathToScriptFile.fileToCommandArgumentForPythonExt()],
+                        'Invalid command',
+                    );
                 });
 
                 test('Ensure batch files are not supported by powershell (on windows)', async () => {
@@ -209,7 +212,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                     const command = await bash.getActivationCommands(resource, TerminalShellType.powershell);
 
                     expect(command).to.be.deep.equal(
-                        [`& ${pathToScriptFile.fileToCommandArgument()}`.trim()],
+                        [`& ${pathToScriptFile.fileToCommandArgumentForPythonExt()}`.trim()],
                         'Invalid command',
                     );
                 });
@@ -225,7 +228,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                     const command = await bash.getActivationCommands(resource, TerminalShellType.powershellCore);
 
                     expect(command).to.be.deep.equal(
-                        [`& ${pathToScriptFile.fileToCommandArgument()}`.trim()],
+                        [`& ${pathToScriptFile.fileToCommandArgumentForPythonExt()}`.trim()],
                         'Invalid command',
                     );
                 });

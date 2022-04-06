@@ -28,7 +28,7 @@ class Venvs {
 
     public async create(name: string): Promise<{ executable: string; envDir: string }> {
         const envName = this.resolve(name);
-        const argv = [PYTHON_PATH.fileToCommandArgument(), '-m', 'virtualenv', envName];
+        const argv = [PYTHON_PATH.fileToCommandArgumentForPythonExt(), '-m', 'virtualenv', envName];
         try {
             await run(argv, { cwd: this.root });
         } catch (err) {

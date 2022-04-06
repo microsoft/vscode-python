@@ -217,7 +217,8 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 const argv = [command, ...args];
                 // Concat these together to make a set of quoted strings
                 const quoted = argv.reduce(
-                    (p, c) => (p ? `${p} ${c.toCommandArgument()}` : `${c.toCommandArgument()}`),
+                    (p, c) =>
+                        p ? `${p} ${c.toCommandArgumentForPythonExt()}` : `${c.toCommandArgumentForPythonExt()}`,
                     '',
                 );
                 await processService.shellExec(quoted);

@@ -114,7 +114,7 @@ suite('Terminal Environment Activation (bash)', () => {
                                     // Ensure it contains the name of the environment as an argument to the script file.
 
                                     expect(command).to.be.deep.equal(
-                                        [`source ${pathToScriptFile.fileToCommandArgument()}`.trim()],
+                                        [`source ${pathToScriptFile.fileToCommandArgumentForPythonExt()}`.trim()],
                                         'Invalid command',
                                     );
                                 } else {

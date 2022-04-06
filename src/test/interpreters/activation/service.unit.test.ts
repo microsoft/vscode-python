@@ -145,7 +145,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                             const expectedCommand = [
                                 ...cmd,
                                 `echo '${getEnvironmentPrefix}'`,
-                                `python ${printEnvPyFile.fileToCommandArgument()}`,
+                                `python ${printEnvPyFile.fileToCommandArgumentForPythonExt()}`,
                             ].join(' && ');
 
                             expect(shellCmd).to.equal(expectedCommand);

@@ -22,7 +22,10 @@ export async function getExecutablePath(
     const info = copyPythonExecInfo(python, args);
     const argv = [info.command, ...info.args];
     // Concat these together to make a set of quoted strings
-    const quoted = argv.reduce((p, c) => (p ? `${p} ${c.toCommandArgument()}` : `${c.toCommandArgument()}`), '');
+    const quoted = argv.reduce(
+        (p, c) => (p ? `${p} ${c.toCommandArgumentForPythonExt()}` : `${c.toCommandArgumentForPythonExt()}`),
+        '',
+    );
     const result = await shellExec(quoted, { timeout: timeout ?? 15000 });
     const executable = parse(result.stdout.trim());
     if (executable === '') {

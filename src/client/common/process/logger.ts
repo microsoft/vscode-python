@@ -22,7 +22,7 @@ export class ProcessLogger implements IProcessLogger {
             return;
         }
         let command = args
-            ? [fileOrCommand, ...args].map((e) => e.trimQuotes().toCommandArgument()).join(' ')
+            ? [fileOrCommand, ...args].map((e) => e.trimQuotes().toCommandArgumentForPythonExt()).join(' ')
             : fileOrCommand;
         const info = [`> ${this.getDisplayCommands(command)}`];
         if (options && options.cwd) {

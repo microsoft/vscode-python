@@ -127,7 +127,10 @@ suite('Activation of Environments in Terminal', () => {
     ): Promise<string> {
         const terminal = vscode.window.createTerminal();
         await sleep(consoleInitWaitMs);
-        terminal.sendText(`python ${pythonFile.toCommandArgument()} ${logFile.toCommandArgument()}`, true);
+        terminal.sendText(
+            `python ${pythonFile.toCommandArgumentForPythonExt()} ${logFile.toCommandArgumentForPythonExt()}`,
+            true,
+        );
         await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
 
         return fs.readFile(logFile, 'utf-8');

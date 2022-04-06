@@ -174,7 +174,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             let command: string | undefined;
             let [args, parse] = internalScripts.printEnvVariables();
             args.forEach((arg, i) => {
-                args[i] = arg.toCommandArgument();
+                args[i] = arg.toCommandArgumentForPythonExt();
             });
             interpreter = interpreter ?? (await this.interpreterService.getActiveInterpreter(resource));
             if (interpreter?.envType === EnvironmentType.Conda) {
@@ -185,7 +185,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 });
                 if (pythonArgv) {
                     // Using environment prefix isn't needed as the marker script already takes care of it.
-                    command = [...pythonArgv, ...args].map((arg) => arg.toCommandArgument()).join(' ');
+                    command = [...pythonArgv, ...args].map((arg) => arg.toCommandArgumentForPythonExt()).join(' ');
                 }
             }
             if (!command) {

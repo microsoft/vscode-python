@@ -359,10 +359,14 @@ suite('Module Installer', () => {
                                                     const expectedArgs = ['install'];
                                                     if (condaEnvInfo && condaEnvInfo.name) {
                                                         expectedArgs.push('--name');
-                                                        expectedArgs.push(condaEnvInfo.name.toCommandArgument());
+                                                        expectedArgs.push(
+                                                            condaEnvInfo.name.toCommandArgumentForPythonExt(),
+                                                        );
                                                     } else if (condaEnvInfo && condaEnvInfo.path) {
                                                         expectedArgs.push('--prefix');
-                                                        expectedArgs.push(condaEnvInfo.path.fileToCommandArgument());
+                                                        expectedArgs.push(
+                                                            condaEnvInfo.path.fileToCommandArgumentForPythonExt(),
+                                                        );
                                                     }
                                                     expectedArgs.push('"pylint<2.0.0"');
                                                     expectedArgs.push('-y');
@@ -402,10 +406,14 @@ suite('Module Installer', () => {
                                                     const expectedArgs = ['install'];
                                                     if (condaEnvInfo && condaEnvInfo.name) {
                                                         expectedArgs.push('--name');
-                                                        expectedArgs.push(condaEnvInfo.name.toCommandArgument());
+                                                        expectedArgs.push(
+                                                            condaEnvInfo.name.toCommandArgumentForPythonExt(),
+                                                        );
                                                     } else if (condaEnvInfo && condaEnvInfo.path) {
                                                         expectedArgs.push('--prefix');
-                                                        expectedArgs.push(condaEnvInfo.path.fileToCommandArgument());
+                                                        expectedArgs.push(
+                                                            condaEnvInfo.path.fileToCommandArgumentForPythonExt(),
+                                                        );
                                                     }
                                                     expectedArgs.push('pylint');
                                                     expectedArgs.push('-y');
@@ -661,10 +669,12 @@ suite('Module Installer', () => {
                                             }
                                             if (condaEnvInfo && condaEnvInfo.name) {
                                                 expectedArgs.push('--name');
-                                                expectedArgs.push(condaEnvInfo.name.toCommandArgument());
+                                                expectedArgs.push(condaEnvInfo.name.toCommandArgumentForPythonExt());
                                             } else if (condaEnvInfo && condaEnvInfo.path) {
                                                 expectedArgs.push('--prefix');
-                                                expectedArgs.push(condaEnvInfo.path.fileToCommandArgument());
+                                                expectedArgs.push(
+                                                    condaEnvInfo.path.fileToCommandArgumentForPythonExt(),
+                                                );
                                             }
                                             expectedArgs.push(moduleName);
                                             expectedArgs.push('-y');

@@ -120,7 +120,7 @@ suite('Terminal Service helpers', () => {
                     item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore
                         ? '& '
                         : '';
-                const expectedTerminalCommand = `${commandPrefix}${command.fileToCommandArgument()} 1 2`;
+                const expectedTerminalCommand = `${commandPrefix}${command.fileToCommandArgumentForPythonExt()} 1 2`;
 
                 const terminalCommand = helper.buildCommandForTerminal(item.value, command, args);
                 expect(terminalCommand).to.equal(expectedTerminalCommand, `Incorrect command for Shell ${item.name}`);
@@ -164,7 +164,7 @@ suite('Terminal Service helpers', () => {
                     item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore
                         ? '& '
                         : '';
-                const expectedTerminalCommand = `${commandPrefix}${command.fileToCommandArgument()}`;
+                const expectedTerminalCommand = `${commandPrefix}${command.fileToCommandArgumentForPythonExt()}`;
 
                 const terminalCommand = helper.buildCommandForTerminal(item.value, command, args);
                 expect(terminalCommand).to.equal(expectedTerminalCommand, `Incorrect command for Shell ${item.name}`);

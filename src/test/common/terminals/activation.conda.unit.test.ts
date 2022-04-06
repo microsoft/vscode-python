@@ -161,7 +161,9 @@ suite('Terminal Environment Activation conda', () => {
             );
         condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(condaPath));
         condaService.setup((c) => c.getCondaVersion()).returns(() => Promise.resolve(parse('4.3.1', true)!));
-        const expected = [`source ${path.join(path.dirname(condaPath), 'activate').fileToCommandArgument()} EnvA`];
+        const expected = [
+            `source ${path.join(path.dirname(condaPath), 'activate').fileToCommandArgumentForPythonExt()} EnvA`,
+        ];
 
         const provider = new CondaActivationCommandProvider(
             condaService.object,
@@ -190,7 +192,9 @@ suite('Terminal Environment Activation conda', () => {
             );
         condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(condaPath));
         condaService.setup((c) => c.getCondaVersion()).returns(() => Promise.resolve(parse('4.4.0', true)!));
-        const expected = [`source ${path.join(path.dirname(condaPath), 'activate').fileToCommandArgument()} EnvA`];
+        const expected = [
+            `source ${path.join(path.dirname(condaPath), 'activate').fileToCommandArgumentForPythonExt()} EnvA`,
+        ];
 
         const provider = new CondaActivationCommandProvider(
             condaService.object,
@@ -311,7 +315,7 @@ suite('Terminal Environment Activation conda', () => {
             case TerminalShellType.powershellCore:
             case TerminalShellType.fish: {
                 if (envName !== '') {
-                    expectedActivationCommand = [`conda activate ${envName.toCommandArgument()}`];
+                    expectedActivationCommand = [`conda activate ${envName.toCommandArgumentForPythonExt()}`];
                 } else {
                     expectedActivationCommand = [`conda activate ${expectEnvActivatePath}`];
                 }
@@ -320,8 +324,8 @@ suite('Terminal Environment Activation conda', () => {
             default: {
                 if (envName !== '') {
                     expectedActivationCommand = isWindows
-                        ? [`activate ${envName.toCommandArgument()}`]
-                        : [`source activate ${envName.toCommandArgument()}`];
+                        ? [`activate ${envName.toCommandArgumentForPythonExt()}`]
+                        : [`source activate ${envName.toCommandArgumentForPythonExt()}`];
                 } else {
                     expectedActivationCommand = isWindows
                         ? [`activate ${expectEnvActivatePath}`]

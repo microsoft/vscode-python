@@ -236,7 +236,9 @@ suite('Terminal - Code Execution', () => {
 
                 terminalService.verify(
                     async (t) =>
-                        t.sendText(TypeMoq.It.isValue(`cd ${path.dirname(file.fsPath).fileToCommandArgument()}`)),
+                        t.sendText(
+                            TypeMoq.It.isValue(`cd ${path.dirname(file.fsPath).fileToCommandArgumentForPythonExt()}`),
+                        ),
                     TypeMoq.Times.once(),
                 );
             }
@@ -259,7 +261,7 @@ suite('Terminal - Code Execution', () => {
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
-                const dir = path.dirname(file.fsPath).fileToCommandArgument();
+                const dir = path.dirname(file.fsPath).fileToCommandArgumentForPythonExt();
                 terminalService.verify(async (t) => t.sendText(TypeMoq.It.isValue(`cd ${dir}`)), TypeMoq.Times.once());
             }
 
@@ -339,7 +341,7 @@ suite('Terminal - Code Execution', () => {
 
                 await executor.executeFile(file);
                 const expectedPythonPath = isWindows ? pythonPath.replace(/\\/g, '/') : pythonPath;
-                const expectedArgs = terminalArgs.concat(file.fsPath.fileToCommandArgument());
+                const expectedArgs = terminalArgs.concat(file.fsPath.fileToCommandArgumentForPythonExt());
                 terminalService.verify(
                     async (t) =>
                         t.sendCommand(TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(expectedArgs)),
@@ -408,7 +410,7 @@ suite('Terminal - Code Execution', () => {
 
                 await executor.executeFile(file);
 
-                const expectedArgs = [...terminalArgs, file.fsPath.fileToCommandArgument()];
+                const expectedArgs = [...terminalArgs, file.fsPath.fileToCommandArgumentForPythonExt()];
 
                 terminalService.verify(
                     async (t) => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedArgs)),
