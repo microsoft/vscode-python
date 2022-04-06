@@ -234,6 +234,9 @@ suite('Module Installer', () => {
 
                             const condaService = TypeMoq.Mock.ofType<ICondaService>();
                             condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(condaExecutable));
+                            condaService
+                                .setup((c) => c.getCondaFile(true))
+                                .returns(() => Promise.resolve(condaExecutable));
 
                             const condaLocatorService = TypeMoq.Mock.ofType<IComponentAdapter>();
                             serviceContainer

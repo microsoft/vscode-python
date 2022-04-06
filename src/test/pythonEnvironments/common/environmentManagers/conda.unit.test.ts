@@ -185,8 +185,7 @@ suite('Conda and its environments are located correctly', () => {
                 return contents;
             });
 
-        sinon.stub(externalDependencies, 'shellExecute').callsFake(async (quoted: string) => {
-            const [command, ...args] = quoted.split(' ');
+        sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
             for (const prefix of ['', ...execPath]) {
                 const contents = getFile(path.join(prefix, command));
                 if (args[0] === 'info' && args[1] === '--json') {
