@@ -75,7 +75,10 @@ export async function getInterpreterInfo(
     const argv = [info.command, ...info.args];
 
     // Concat these together to make a set of quoted strings
-    const quoted = argv.reduce((p, c) => (p ? `${p} ${c.toCommandArgument()}` : `${c.toCommandArgument()}`), '');
+    const quoted = argv.reduce(
+        (p, c) => (p ? `${p} ${c.toCommandArgumentForPythonExt()}` : `${c.toCommandArgumentForPythonExt()}`),
+        '',
+    );
 
     // Try shell execing the command, followed by the arguments. This will make node kill the process if it
     // takes too long.

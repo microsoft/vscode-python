@@ -20,12 +20,12 @@ declare interface String {
      * Appropriately formats a string so it can be used as an argument for a command in a shell.
      * E.g. if an argument contains a space, then it will be enclosed within double quotes.
      */
-    toCommandArgument(): string;
+    toCommandArgumentForPythonExt(): string;
     /**
      * Appropriately formats a a file path so it can be used as an argument for a command in a shell.
      * E.g. if an argument contains a space, then it will be enclosed within double quotes.
      */
-    fileToCommandArgument(): string;
+    fileToCommandArgumentForPythonExt(): string;
     /**
      * String.format() implementation.
      * Tokens such as {0}, {1} will be replaced with corresponding positional arguments.
@@ -69,7 +69,7 @@ String.prototype.splitLines = function (
  * E.g. if an argument contains a space, then it will be enclosed within double quotes.
  * @param {String} value.
  */
-String.prototype.toCommandArgument = function (this: string): string {
+String.prototype.toCommandArgumentForPythonExt = function (this: string): string {
     if (!this) {
         return this;
     }
@@ -82,11 +82,11 @@ String.prototype.toCommandArgument = function (this: string): string {
  * Appropriately formats a a file path so it can be used as an argument for a command in a shell.
  * E.g. if an argument contains a space, then it will be enclosed within double quotes.
  */
-String.prototype.fileToCommandArgument = function (this: string): string {
+String.prototype.fileToCommandArgumentForPythonExt = function (this: string): string {
     if (!this) {
         return this;
     }
-    return this.toCommandArgument().replace(/\\/g, '/');
+    return this.toCommandArgumentForPythonExt().replace(/\\/g, '/');
 };
 
 /**

@@ -6,47 +6,47 @@ import { asyncFilter } from '../../client/common/utils/arrayUtils';
 suite('String Extensions', () => {
     test('Should return empty string for empty arg', () => {
         const argTotest = '';
-        expect(argTotest.toCommandArgument()).to.be.equal('');
+        expect(argTotest.toCommandArgumentForPythonExt()).to.be.equal('');
     });
     test('Should quote an empty space', () => {
         const argTotest = ' ';
-        expect(argTotest.toCommandArgument()).to.be.equal('" "');
+        expect(argTotest.toCommandArgumentForPythonExt()).to.be.equal('" "');
     });
     test('Should not quote command arguments without spaces', () => {
         const argTotest = 'one.two.three';
-        expect(argTotest.toCommandArgument()).to.be.equal(argTotest);
+        expect(argTotest.toCommandArgumentForPythonExt()).to.be.equal(argTotest);
     });
     test('Should quote command arguments with spaces', () => {
         const argTotest = 'one two three';
-        expect(argTotest.toCommandArgument()).to.be.equal(`"${argTotest}"`);
+        expect(argTotest.toCommandArgumentForPythonExt()).to.be.equal(`"${argTotest}"`);
     });
     test('Should quote command arguments containing ampersand', () => {
         const argTotest = 'one&twothree';
-        expect(argTotest.toCommandArgument()).to.be.equal(`"${argTotest}"`);
+        expect(argTotest.toCommandArgumentForPythonExt()).to.be.equal(`"${argTotest}"`);
     });
     test('Should return empty string for empty path', () => {
         const fileToTest = '';
-        expect(fileToTest.fileToCommandArgument()).to.be.equal('');
+        expect(fileToTest.fileToCommandArgumentForPythonExt()).to.be.equal('');
     });
     test('Should not quote file argument without spaces', () => {
         const fileToTest = 'users/test/one';
-        expect(fileToTest.fileToCommandArgument()).to.be.equal(fileToTest);
+        expect(fileToTest.fileToCommandArgumentForPythonExt()).to.be.equal(fileToTest);
     });
     test('Should quote file argument with spaces', () => {
         const fileToTest = 'one two three';
-        expect(fileToTest.fileToCommandArgument()).to.be.equal(`"${fileToTest}"`);
+        expect(fileToTest.fileToCommandArgumentForPythonExt()).to.be.equal(`"${fileToTest}"`);
     });
     test('Should replace all back slashes with forward slashes (irrespective of OS)', () => {
         const fileToTest = 'c:\\users\\user\\conda\\scripts\\python.exe';
-        expect(fileToTest.fileToCommandArgument()).to.be.equal(fileToTest.replace(/\\/g, '/'));
+        expect(fileToTest.fileToCommandArgumentForPythonExt()).to.be.equal(fileToTest.replace(/\\/g, '/'));
     });
     test('Should replace all back slashes with forward slashes (irrespective of OS) and quoted when file has spaces', () => {
         const fileToTest = 'c:\\users\\user namne\\conda path\\scripts\\python.exe';
-        expect(fileToTest.fileToCommandArgument()).to.be.equal(`"${fileToTest.replace(/\\/g, '/')}"`);
+        expect(fileToTest.fileToCommandArgumentForPythonExt()).to.be.equal(`"${fileToTest.replace(/\\/g, '/')}"`);
     });
     test('Should replace all back slashes with forward slashes (irrespective of OS) and quoted when file has spaces', () => {
         const fileToTest = 'c:\\users\\user namne\\conda path\\scripts\\python.exe';
-        expect(fileToTest.fileToCommandArgument()).to.be.equal(`"${fileToTest.replace(/\\/g, '/')}"`);
+        expect(fileToTest.fileToCommandArgumentForPythonExt()).to.be.equal(`"${fileToTest.replace(/\\/g, '/')}"`);
     });
     test('Should leave string unchanged', () => {
         expect('something {0}'.format()).to.be.equal('something {0}');

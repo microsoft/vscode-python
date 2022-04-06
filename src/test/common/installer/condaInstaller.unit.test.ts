@@ -128,7 +128,7 @@ suite('Common - Conda Installer', () => {
         const execInfo = await installer.getExecutionInfo('abc', uri);
 
         assert.deepEqual(execInfo, {
-            args: ['install', '--prefix', condaEnv.path.fileToCommandArgument(), 'abc', '-y'],
+            args: ['install', '--prefix', condaEnv.path.fileToCommandArgumentForPythonExt(), 'abc', '-y'],
             execPath: condaPath,
             useShell: true,
         });

@@ -154,7 +154,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         const workspaceFolder: WorkspaceFolder = { index: 0, name: 'blah', uri: workspaceUri };
         workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder);
         const expectedTerminalArgs = terminalArgs.concat(
-            `${path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument()}`,
+            `${path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgumentForPythonExt()}`,
             'shell',
         );
 
@@ -168,7 +168,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         const workspaceFolder: WorkspaceFolder = { index: 0, name: 'blah', uri: workspaceUri };
         workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder);
         const expectedTerminalArgs = terminalArgs.concat(
-            path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument(),
+            path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgumentForPythonExt(),
             'shell',
         );
 
@@ -183,7 +183,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
         workspace.setup((w) => w.workspaceFolders).returns(() => [workspaceFolder]);
         const expectedTerminalArgs = terminalArgs.concat(
-            `${path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument()}`,
+            `${path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgumentForPythonExt()}`,
             'shell',
         );
 
@@ -198,7 +198,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
         workspace.setup((w) => w.workspaceFolders).returns(() => [workspaceFolder]);
         const expectedTerminalArgs = terminalArgs.concat(
-            path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument(),
+            path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgumentForPythonExt(),
             'shell',
         );
 

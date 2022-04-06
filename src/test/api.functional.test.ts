@@ -84,7 +84,11 @@ suite('Extension API', () => {
             instance(serviceManager),
             instance(serviceContainer),
         ).debug.getRemoteLauncherCommand(debuggerHost, debuggerPort, waitForAttach);
-        const expectedArgs = [debuggerPath.fileToCommandArgument(), '--listen', `${debuggerHost}:${debuggerPort}`];
+        const expectedArgs = [
+            debuggerPath.fileToCommandArgumentForPythonExt(),
+            '--listen',
+            `${debuggerHost}:${debuggerPort}`,
+        ];
 
         expect(args).to.be.deep.equal(expectedArgs);
     });
@@ -98,7 +102,7 @@ suite('Extension API', () => {
             instance(serviceContainer),
         ).debug.getRemoteLauncherCommand(debuggerHost, debuggerPort, waitForAttach);
         const expectedArgs = [
-            debuggerPath.fileToCommandArgument(),
+            debuggerPath.fileToCommandArgumentForPythonExt(),
             '--listen',
             `${debuggerHost}:${debuggerPort}`,
             '--wait-for-client',
