@@ -53,7 +53,9 @@ function replaceMatchesWithCharacter(original: string, match: string, character:
     // Backslashes have special meaning in regexes, we need an extra backlash so
     // it's not considered special. Also match both forward and backward slash
     // versions of 'match' for Windows.
-    const pattern = match.replaceAll('\\', getOSType() === OSType.Windows ? '(\\\\|/)' : '\\\\');
+    const pattern = match
+        .replaceAll('\\', getOSType() === OSType.Windows ? '(\\\\|/)' : '\\\\')
+        .replace(/[-^$*+?.()|[\]{}]/g, '\\$&');
     let regex = new RegExp(pattern, 'ig');
     return original.replace(regex, character);
 }
