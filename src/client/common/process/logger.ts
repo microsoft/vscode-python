@@ -55,7 +55,7 @@ function replaceMatchesWithCharacter(original: string, match: string, character:
     // versions of 'match' for Windows.
     const pattern = match
         .replaceAll('\\', getOSType() === OSType.Windows ? '(\\\\|/)' : '\\\\')
-        .replace(/[-^$*+?.()|[\]{}]/g, '\\$&');
+        .replace(/[-^$*+?.[\]{}]/g, '\\$&');
     let regex = new RegExp(pattern, 'ig');
     return original.replace(regex, character);
 }
