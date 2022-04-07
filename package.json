@@ -1899,6 +1899,7 @@
         "cross-spawn": "^6.0.5",
         "del": "^3.0.0",
         "download": "^7.0.0",
+        "es5-ext": "0.10.53",
         "eslint": "^7.2.0",
         "eslint-config-airbnb": "^18.2.0",
         "eslint-config-prettier": "^8.3.0",
