@@ -5,7 +5,7 @@
 'use strict';
 
 import { relative } from 'path';
-import type * as vscode from 'vscode';
+import * as vscode from 'vscode';
 import * as vscMockHtmlContent from './htmlContent';
 import * as vscMockStrings from './strings';
 import * as vscUri from './uri';
@@ -2078,13 +2078,17 @@ export enum ConfigurationTarget {
 }
 
 export class RelativePattern implements IRelativePattern {
+    baseUri: vscode.Uri;
+
     base: string;
 
     pattern: string;
 
-    constructor(base: vscode.WorkspaceFolder | string, pattern: string) {
+    constructor(base: vscode.WorkspaceFolder | string | vscode.Uri, pattern: string) {
         if (typeof base !== 'string') {
-            if (!base || !vscUri.URI.isUri(base.uri)) {
+            if (!base) {
+                throw illegalArgument('base');
+            } else if (!vscUri.URI.isUri(base) && !vscUri.URI.isUri((base as vscode.WorkspaceFolder).uri)) {
                 throw illegalArgument('base');
             }
         }
@@ -2093,7 +2097,16 @@ export class RelativePattern implements IRelativePattern {
             throw illegalArgument('pattern');
         }
 
-        this.base = typeof base === 'string' ? base : base.uri.fsPath;
+        if (vscUri.URI.isUri(base)) {
+            this.baseUri = base;
+            this.base = (base as vscode.Uri).fsPath;
+        } else if (typeof base === 'string') {
+            this.base = base;
+            this.baseUri = vscode.Uri.file(base);
+        } else {
+            this.base = (base as vscode.WorkspaceFolder).uri.fsPath;
+            this.baseUri = (base as vscode.WorkspaceFolder).uri;
+        }
         this.pattern = pattern;
     }
 

@@ -37,7 +37,7 @@ export enum LanguageStatusSeverity {
 
 export enum QuickPickItemKind {
     Separator = -1,
-    Default = 1,
+    Default = 0,
 }
 
 export class Disposable {
