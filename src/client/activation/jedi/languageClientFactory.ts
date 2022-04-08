@@ -28,6 +28,14 @@ export class JediLanguageClientFactory implements ILanguageClientFactory {
             args: [lsScriptPath],
         };
 
-        return new LanguageClient(PYTHON_LANGUAGE, languageClientName, serverOptions, clientOptions);
+        // eslint-disable-next-line global-require
+        const vscodeLanguageClient = require('vscode-languageclient/node');
+
+        return new vscodeLanguageClient.LanguageClient(
+            PYTHON_LANGUAGE,
+            languageClientName,
+            serverOptions,
+            clientOptions,
+        );
     }
 }
