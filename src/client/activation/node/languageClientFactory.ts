@@ -50,14 +50,6 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
             },
         };
 
-        // eslint-disable-next-line global-require
-        const vscodeLanguageClient = require('vscode-languageclient/node');
-
-        return new vscodeLanguageClient.LanguageClient(
-            PYTHON_LANGUAGE,
-            languageClientName,
-            serverOptions,
-            clientOptions,
-        );
+        return new LanguageClient(PYTHON_LANGUAGE, languageClientName, serverOptions, clientOptions);
     }
 }
