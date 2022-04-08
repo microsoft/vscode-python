@@ -10,6 +10,7 @@ import { isCI, isTestExecution } from '../constants';
 import { Logging } from '../utils/localize';
 import { getOSType, getUserHomeDir, OSType } from '../utils/platform';
 import { IProcessLogger, SpawnOptions } from './types';
+import { escapeRegExp } from 'lodash';
 
 @injectable()
 export class ProcessLogger implements IProcessLogger {
@@ -50,12 +51,15 @@ export class ProcessLogger implements IProcessLogger {
  * Finds case insensitive matches in the original string and replaces it with character provided.
  */
 function replaceMatchesWithCharacter(original: string, match: string, character: string): string {
-    // Backslashes have special meaning in regexes, we need an extra backlash so
-    // it's not considered special. Also match both forward and backward slash
-    // versions of 'match' for Windows.
-    const pattern = match
-        .replaceAll('\\', getOSType() === OSType.Windows ? '(\\\\|/)' : '\\\\')
-        .replace(/[-^$*+?.[\]{}]/g, '\\$&');
+    // Backslashes, plus signs, brackets and other characters have special meaning in regexes,
+    // we need an extra backlash so it's not considered special. Also match both forward and
+    // backward slash versions of 'match' for Windows.
+    const seperator = getOSType() === OSType.Windows ? '(\\\\|/)' : '\\\\';
+    let pattern = '';
+    match.split('\\').forEach((s, i) => {
+        pattern += (i ? seperator : '') + escapeRegExp(s);
+    });
+
     let regex = new RegExp(pattern, 'ig');
     return original.replace(regex, character);
 }
