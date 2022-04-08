@@ -39,8 +39,7 @@ import { ILanguageServerExtensionManager, ILanguageServerWatcher } from './types
  * It also implements the ILanguageServerCache interface needed by our Jupyter support.
  */
 export class LanguageServerWatcher
-    implements IExtensionActivationService, ILanguageServerWatcher, ILanguageServerCache
-{
+    implements IExtensionActivationService, ILanguageServerWatcher, ILanguageServerCache {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: true, virtualWorkspace: true };
 
     languageServerExtensionManager: ILanguageServerExtensionManager | undefined;
