@@ -22,12 +22,18 @@ import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 
 export class NodeLanguageServerManager implements ILanguageServerManager {
     private resource!: Resource;
+
     private interpreter: PythonEnvironment | undefined;
+
     private middleware: LanguageClientMiddleware | undefined;
+
     private disposables: IDisposable[] = [];
-    private connected: boolean = false;
+
+    private connected = false;
+
     private lsVersion: string | undefined;
-    private started: boolean = false;
+
+    private started = false;
 
     constructor(
         private readonly serviceContainer: IServiceContainer,
@@ -49,14 +55,14 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         };
     }
 
-    public dispose() {
+    public dispose(): void {
         if (this.languageProxy) {
             this.languageProxy.dispose();
         }
         this.disposables.forEach((d) => d.dispose());
     }
 
-    public get languageProxy() {
+    public get languageProxy(): ILanguageServerProxy {
         return this.languageServerProxy;
     }
 
@@ -78,14 +84,14 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         this.started = true;
     }
 
-    public connect() {
+    public connect(): void {
         if (!this.connected) {
             this.connected = true;
             this.middleware?.connect();
         }
     }
 
-    public disconnect() {
+    public disconnect(): void {
         if (this.connected) {
             this.connected = false;
             this.middleware?.disconnect();
@@ -116,11 +122,8 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     @traceDecoratorVerbose('Starting language server')
     protected async startLanguageServer(): Promise<void> {
         const options = await this.analysisOptions.getAnalysisOptions();
-        options.middleware = this.middleware = new LanguageClientMiddleware(
-            this.serviceContainer,
-            LanguageServerType.Node,
-            this.lsVersion,
-        );
+        this.middleware = new LanguageClientMiddleware(this.serviceContainer, LanguageServerType.Node, this.lsVersion);
+        options.middleware = this.middleware;
 
         // Make sure the middleware is connected if we restart and we we're already connected.
         if (this.connected) {

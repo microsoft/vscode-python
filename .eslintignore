@@ -35,10 +35,7 @@ src/test/terminals/codeExecution/terminalCodeExec.unit.test.ts
 src/test/terminals/codeExecution/codeExecutionManager.unit.test.ts
 src/test/terminals/codeExecution/djangoShellCodeExect.unit.test.ts
 
-src/test/activation/activationService.unit.test.ts
 src/test/activation/activeResource.unit.test.ts
-src/test/activation/node/languageServerChangeHandler.unit.test.ts
-src/test/activation/node/activator.unit.test.ts
 src/test/activation/extensionSurvey.unit.test.ts
 
 src/test/utils/fs.ts
@@ -176,17 +173,9 @@ src/client/terminals/codeExecution/djangoContext.ts
 src/client/activation/commands.ts
 src/client/activation/progress.ts
 src/client/activation/extensionSurvey.ts
-src/client/activation/common/languageServerChangeHandler.ts
-src/client/activation/common/activatorBase.ts
 src/client/activation/common/analysisOptions.ts
 src/client/activation/refCountedLanguageServer.ts
 src/client/activation/languageClientMiddleware.ts
-src/client/activation/node/manager.ts
-src/client/activation/node/languageServerProxy.ts
-src/client/activation/node/languageClientFactory.ts
-src/client/activation/node/analysisOptions.ts
-src/client/activation/node/activator.ts
-src/client/activation/none/activator.ts
 
 src/client/formatters/serviceRegistry.ts
 src/client/formatters/helper.ts

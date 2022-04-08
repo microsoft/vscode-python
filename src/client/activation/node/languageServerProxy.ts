@@ -24,6 +24,7 @@ import { traceDecoratorError, traceDecoratorVerbose, traceError } from '../../lo
 import { IWorkspaceService } from '../../common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 namespace InExperiment {
     export const Method = 'python/inExperiment';
 
@@ -36,6 +37,7 @@ namespace InExperiment {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 namespace GetExperimentValue {
     export const Method = 'python/getExperimentValue';
 
@@ -50,10 +52,15 @@ namespace GetExperimentValue {
 
 export class NodeLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
+
     private startupCompleted: Deferred<void>;
+
     private cancellationStrategy: FileBasedCancellationStrategy | undefined;
+
     private readonly disposables: Disposable[] = [];
-    private disposed: boolean = false;
+
+    private disposed = false;
+
     private lsVersion: string | undefined;
 
     constructor(
@@ -74,7 +81,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
     }
 
     @traceDecoratorVerbose('Stopping language server')
-    public dispose() {
+    public dispose(): void {
         if (this.languageClient) {
             // Do not await on this.
             this.languageClient.stop().then(noop, (ex) => traceError('Stopping language client failed', ex));
@@ -139,14 +146,16 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
 
             if (this.disposed) {
                 // Check if it got disposed in the interim.
-                return;
             }
         } else {
             await this.startupCompleted.promise;
         }
     }
 
-    public loadExtension(_args?: {}) {}
+    // eslint-disable-next-line class-methods-use-this
+    public loadExtension(): void {
+        // No body.
+    }
 
     @captureTelemetry(
         EventName.LANGUAGE_SERVER_READY,
@@ -212,11 +221,9 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         );
 
         this.disposables.push(
-            this.languageClient!.onRequest('python/isTrustedWorkspace', async () => {
-                return {
-                    isTrusted: this.workspace.isTrusted,
-                };
-            }),
+            this.languageClient!.onRequest('python/isTrustedWorkspace', async () => ({
+                isTrusted: this.workspace.isTrusted,
+            })),
         );
     }
 }

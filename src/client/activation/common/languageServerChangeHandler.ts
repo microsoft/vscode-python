@@ -36,7 +36,6 @@ export async function promptForPylanceInstall(
 
         if (target) {
             await configService.updateSetting('languageServer', LanguageServerType.Jedi, undefined, target);
-            // commandManager.executeCommand('workbench.action.reloadWindow');
         }
     }
 }
@@ -45,7 +44,9 @@ export async function promptForPylanceInstall(
 export class LanguageServerChangeHandler implements Disposable {
     // For tests that need to track Pylance install completion.
     private readonly pylanceInstallCompletedDeferred = createDeferred<void>();
+
     private readonly disposables: Disposable[] = [];
+
     private pylanceInstalled = false;
 
     constructor(
@@ -92,36 +93,18 @@ export class LanguageServerChangeHandler implements Disposable {
             // At this point Pylance is not yet installed. Skip reload prompt
             // since we are going to show it when Pylance becomes available.
         }
-        // else {
-        //     response = await this.appShell.showInformationMessage(
-        //         LanguageService.reloadAfterLanguageServerChange(),
-        //         Common.reload(),
-        //     );
-        //     if (response === Common.reload()) {
-        //         this.commands.executeCommand('workbench.action.reloadWindow');
-        //     }
-        // }
+
         this.currentLsType = lsType;
     }
 
     private async extensionsChangeHandler(): Promise<void> {
         // Track Pylance extension installation state and prompt to reload when it becomes available.
         const oldInstallState = this.pylanceInstalled;
+
         this.pylanceInstalled = this.isPylanceInstalled();
         if (oldInstallState === this.pylanceInstalled) {
             this.pylanceInstallCompletedDeferred.resolve();
         }
-
-        // const response = await this.appShell.showWarningMessage(
-        //     Pylance.pylanceInstalledReloadPromptMessage(),
-        //     Common.bannerLabelYes(),
-        //     Common.bannerLabelNo(),
-        // );
-
-        // this.pylanceInstallCompletedDeferred.resolve();
-        // if (response === Common.bannerLabelYes()) {
-        //     this.commands.executeCommand('workbench.action.reloadWindow');
-        // }
     }
 
     private isPylanceInstalled(): boolean {
