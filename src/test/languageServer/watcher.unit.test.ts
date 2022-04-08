@@ -18,6 +18,7 @@ import { IEnvironmentVariablesProvider } from '../../client/common/variables/typ
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { NoneLSExtensionManager } from '../../client/languageServer/noneLSExtensionManager';
+import { PylanceLSExtensionManager } from '../../client/languageServer/pylanceLSExtensionManager';
 import { LanguageServerWatcher } from '../../client/languageServer/watcher';
 import * as Logging from '../../client/logging';
 
@@ -400,5 +401,148 @@ suite('Language server watcher', () => {
 
         // Check that startLanguageServer was called twice: When we called it above, and implicitly because of the event.
         assert.ok(startLanguageServerFake.calledTwice);
+    });
+
+    test('When starting a language server with a Python 2.7 interpreter and the python.languageServer setting is Jedi, do not instantiate a language server', async () => {
+        const startLanguageServerStub = sandbox.stub(NoneLSExtensionManager.prototype, 'startLanguageServer');
+        startLanguageServerStub.returns(Promise.resolve());
+
+        watcher = new LanguageServerWatcher(
+            {} as IServiceContainer,
+            {} as ILanguageServerOutputChannel,
+            {
+                getSettings: () => ({ languageServer: LanguageServerType.Jedi }),
+            } as IConfigurationService,
+            {} as IExperimentService,
+            {} as IInterpreterPathService,
+            ({
+                getActiveInterpreter: () => ({ version: { major: 2, minor: 7 } }),
+                onDidChangeInterpreter: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IInterpreterService,
+            {} as IEnvironmentVariablesProvider,
+            ({
+                onDidChangeConfiguration: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IWorkspaceService,
+            ({
+                registerCommand: () => {
+                    /* do nothing */
+                },
+            } as unknown) as ICommandManager,
+            {} as IFileSystem,
+            ({
+                getExtension: () => undefined,
+                onDidChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IExtensions,
+            {} as IApplicationShell,
+            [] as Disposable[],
+        );
+
+        await watcher.startLanguageServer(LanguageServerType.Jedi);
+
+        assert.ok(startLanguageServerStub.calledOnce);
+    });
+
+    test('When starting a language server with a Python 2.7 interpreter and the python.languageServer setting is default, use Pylance', async () => {
+        const startLanguageServerStub = sandbox.stub(PylanceLSExtensionManager.prototype, 'startLanguageServer');
+        startLanguageServerStub.returns(Promise.resolve());
+
+        sandbox.stub(PylanceLSExtensionManager.prototype, 'canStartLanguageServer').returns(true);
+
+        watcher = new LanguageServerWatcher(
+            {} as IServiceContainer,
+            {} as ILanguageServerOutputChannel,
+            {
+                getSettings: () => ({
+                    languageServer: LanguageServerType.Jedi,
+                    languageServerIsDefault: true,
+                }),
+            } as IConfigurationService,
+            {} as IExperimentService,
+            {} as IInterpreterPathService,
+            ({
+                getActiveInterpreter: () => ({ version: { major: 2, minor: 7 } }),
+                onDidChangeInterpreter: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IInterpreterService,
+            {} as IEnvironmentVariablesProvider,
+            ({
+                onDidChangeConfiguration: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IWorkspaceService,
+            ({
+                registerCommand: () => {
+                    /* do nothing */
+                },
+            } as unknown) as ICommandManager,
+            {} as IFileSystem,
+            ({
+                getExtension: () => undefined,
+                onDidChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IExtensions,
+            ({
+                showWarningMessage: () => Promise.resolve(undefined),
+            } as unknown) as IApplicationShell,
+            [] as Disposable[],
+        );
+
+        await watcher.startLanguageServer(LanguageServerType.Node);
+
+        assert.ok(startLanguageServerStub.calledOnce);
+    });
+
+    test('When starting a language server in an untrusted workspace with Jedi, do not instantiate a language server', async () => {
+        const startLanguageServerStub = sandbox.stub(NoneLSExtensionManager.prototype, 'startLanguageServer');
+        startLanguageServerStub.returns(Promise.resolve());
+
+        watcher = new LanguageServerWatcher(
+            {} as IServiceContainer,
+            {} as ILanguageServerOutputChannel,
+            {
+                getSettings: () => ({ languageServer: LanguageServerType.Jedi }),
+            } as IConfigurationService,
+            {} as IExperimentService,
+            {} as IInterpreterPathService,
+            ({
+                getActiveInterpreter: () => ({ version: { major: 2, minor: 7 } }),
+                onDidChangeInterpreter: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IInterpreterService,
+            {} as IEnvironmentVariablesProvider,
+            ({
+                isTrusted: false,
+                onDidChangeConfiguration: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IWorkspaceService,
+            ({
+                registerCommand: () => {
+                    /* do nothing */
+                },
+            } as unknown) as ICommandManager,
+            {} as IFileSystem,
+            ({
+                getExtension: () => undefined,
+                onDidChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IExtensions,
+            {} as IApplicationShell,
+            [] as Disposable[],
+        );
+
+        await watcher.startLanguageServer(LanguageServerType.Jedi);
+
+        assert.ok(startLanguageServerStub.calledOnce);
     });
 });

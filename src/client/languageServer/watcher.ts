@@ -109,8 +109,28 @@ export class LanguageServerWatcher
             this.stopLanguageServer();
         }
 
+        // If the interpreter is Python 2 and the LS setting is explicitly set to Jedi, turn it off.
+        // If set to Default, use Pylance.
+        let serverType = languageServerType;
+        if (interpreter && (interpreter.version?.major ?? 0) < 3) {
+            if (serverType === LanguageServerType.Jedi) {
+                serverType = LanguageServerType.None;
+            } else if (this.getCurrentLanguageServerTypeIsDefault()) {
+                serverType = LanguageServerType.Node;
+            }
+        }
+
+        if (
+            !this.workspaceService.isTrusted &&
+            serverType !== LanguageServerType.Node &&
+            serverType !== LanguageServerType.None
+        ) {
+            traceLog(LanguageService.untrustedWorkspaceMessage());
+            serverType = LanguageServerType.None;
+        }
+
         // Instantiate the language server extension manager.
-        this.languageServerExtensionManager = this.createLanguageServer(languageServerType);
+        this.languageServerExtensionManager = this.createLanguageServer(serverType);
 
         if (this.languageServerExtensionManager.canStartLanguageServer()) {
             // Start the language server.
@@ -191,6 +211,10 @@ export class LanguageServerWatcher
             this.stopLanguageServer();
             await this.startLanguageServer(languageServerType);
         }
+    }
+
+    private getCurrentLanguageServerTypeIsDefault(): boolean {
+        return this.configurationService.getSettings(this.resource).languageServerIsDefault;
     }
 
     // Watch for settings changes.

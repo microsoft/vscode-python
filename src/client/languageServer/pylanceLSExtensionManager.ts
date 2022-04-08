@@ -22,6 +22,7 @@ import { Pylance } from '../common/utils/localize';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
+import { traceLog } from '../logging';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { LanguageServerCapabilities } from './languageServerCapabilities';
 import { ILanguageServerExtensionManager } from './types';
@@ -101,6 +102,6 @@ export class PylanceLSExtensionManager extends LanguageServerCapabilities
             this.configurationService,
         );
 
-        throw new Error(Pylance.pylanceNotInstalledMessage());
+        traceLog(Pylance.pylanceNotInstalledMessage());
     }
 }

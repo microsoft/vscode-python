@@ -23,11 +23,11 @@ suite('Language Server - Jedi LS extension manager', () => {
             {} as IInterpreterPathService,
             {} as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
-            {
+            ({
                 registerCommand: () => {
                     /* do nothing */
                 },
-            } as unknown as ICommandManager,
+            } as unknown) as ICommandManager,
         );
     });
 

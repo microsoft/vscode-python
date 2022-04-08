@@ -15,7 +15,7 @@ suite('Language server - capabilities', () => {
     });
 
     test('The connection property should return an object if there is a language client', () => {
-        const serverProxy = {
+        const serverProxy = ({
             languageClient: {
                 sendNotification: () => {
                     /* nothing */
@@ -36,7 +36,7 @@ suite('Language server - capabilities', () => {
                     /* nothing */
                 },
             },
-        } as unknown as ILanguageServerProxy;
+        } as unknown) as ILanguageServerProxy;
 
         const capabilities = new LanguageServerCapabilities();
         capabilities.serverProxy = serverProxy;
@@ -48,7 +48,7 @@ suite('Language server - capabilities', () => {
     });
 
     test('The connection property should return undefined if there is no language client', () => {
-        const serverProxy = {} as unknown as ILanguageServerProxy;
+        const serverProxy = ({} as unknown) as ILanguageServerProxy;
 
         const capabilities = new LanguageServerCapabilities();
         capabilities.serverProxy = serverProxy;
@@ -59,13 +59,13 @@ suite('Language server - capabilities', () => {
     });
 
     test('capabilities() should return an object if there is an initialized language client', () => {
-        const serverProxy = {
+        const serverProxy = ({
             languageClient: {
                 initializeResult: {
                     capabilities: {},
                 },
             },
-        } as unknown as ILanguageServerProxy;
+        } as unknown) as ILanguageServerProxy;
 
         const capabilities = new LanguageServerCapabilities();
         capabilities.serverProxy = serverProxy;
@@ -77,7 +77,7 @@ suite('Language server - capabilities', () => {
     });
 
     test('capabilities() should return undefined if there is no language client', () => {
-        const serverProxy = {} as unknown as ILanguageServerProxy;
+        const serverProxy = ({} as unknown) as ILanguageServerProxy;
 
         const capabilities = new LanguageServerCapabilities();
         capabilities.serverProxy = serverProxy;
@@ -88,11 +88,11 @@ suite('Language server - capabilities', () => {
     });
 
     test('capabilities() should return undefined if the language client is not initialized', () => {
-        const serverProxy = {
+        const serverProxy = ({
             languageClient: {
                 initializeResult: undefined,
             },
-        } as unknown as ILanguageServerProxy;
+        } as unknown) as ILanguageServerProxy;
 
         const capabilities = new LanguageServerCapabilities();
         capabilities.serverProxy = serverProxy;
