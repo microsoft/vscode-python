@@ -86,7 +86,6 @@ export class LanguageServerChangeHandler implements Disposable {
         // may get one reload prompt now and then another when Pylance is finally installed.
         // Instead, check the installation and suppress prompt if Pylance is not there.
         // Extensions change event handler will then show its own prompt.
-        // let response: string | undefined;
         if (lsType === LanguageServerType.Node && !this.isPylanceInstalled()) {
             // If not installed, point user to Pylance at the store.
             await promptForPylanceInstall(this.appShell, this.commands, this.workspace, this.configService);
