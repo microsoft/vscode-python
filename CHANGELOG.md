@@ -1,6 +1,73 @@
 # Changelog
 
-## 2022.4.0-rc (28 March 2022)
+## 2022.4.1 (7 April 2022)
+
+### Fixes
+
+1. Ensure `conda info` command isn't run multiple times during startup when large number of conda interpreters are present.
+   ([#18200](https://github.com/Microsoft/vscode-python/issues/18200))
+1. If a conda environment is not returned via the `conda env list` command, consider it as unknown env type.
+   ([#18530](https://github.com/Microsoft/vscode-python/issues/18530))
+1. Wrap file paths containing an ampersand in double quotation marks for running commands in a shell.
+   ([#18722](https://github.com/Microsoft/vscode-python/issues/18722))
+1. Fixes regression with support for python binaries not following the standard names.
+   ([#18835](https://github.com/Microsoft/vscode-python/issues/18835))
+1. Fix launch of Python Debugger when using conda environments.
+   ([#18847](https://github.com/Microsoft/vscode-python/issues/18847))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [poetry](https://pypi.org/project/poetry/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2022.4.0 (30 March 2022)
 
 ### Enhancements
 
@@ -8,7 +75,7 @@
    ([#18144](https://github.com/Microsoft/vscode-python/issues/18144))
 1. Add support for detection and selection of conda environments lacking a python interpreter.
    ([#18357](https://github.com/Microsoft/vscode-python/issues/18357))
-1. Retains the state of the Tensorboard webview.
+1. Retains the state of the TensorBoard webview.
    ([#18591](https://github.com/Microsoft/vscode-python/issues/18591))
 1. Move interpreter info status bar item to the right.
    ([#18710](https://github.com/Microsoft/vscode-python/issues/18710))
