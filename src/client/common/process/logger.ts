@@ -52,10 +52,12 @@ export class ProcessLogger implements IProcessLogger {
  */
 function replaceMatchesWithCharacter(original: string, match: string, character: string): string {
     // Backslashes, plus signs, brackets and other characters have special meaning in regexes,
-    // we need an extra backlash so it's not considered special. Also match both forward and
-    // backward slash versions of 'match' for Windows.
-    const pattern = escapeRegExp(match);
-
-    let regex = new RegExp(getOSType() === OSType.Windows ? pattern.replaceAll('\\\\', '(\\\\|/)') : pattern, 'ig');
+    // we need to escape using an extra backlash so it's not considered special.
+    let pattern = escapeRegExp(match);
+    if (getOSType() === OSType.Windows) {
+        // Match both forward and backward slash versions of 'match' for Windows.
+        pattern = pattern.replaceAll('\\\\', '(\\\\|/)');
+    }
+    let regex = new RegExp(pattern, 'ig');
     return original.replace(regex, character);
 }
