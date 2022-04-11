@@ -502,7 +502,7 @@ jobs:
         run: npm run test:cover:report
 
       - name: Upload HTML report
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ runner.os }}-coverage-report-html
           path: ./coverage
