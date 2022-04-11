@@ -30,6 +30,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['workbench.action.debug.stop']: [];
     ['workbench.action.reloadWindow']: [];
     ['workbench.action.closeActiveEditor']: [];
+    ['workbench.action.terminal.focus']: [];
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
     [Commands.ViewOutput]: [];

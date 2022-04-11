@@ -10,6 +10,7 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionManager } from '../../../client/terminals/codeExecution/codeExecutionManager';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../../client/terminals/types';
+import { IConfigurationService } from '../../../client/common/types';
 
 suite('Terminal - Code Execution Manager', () => {
     let executionManager: ICodeExecutionManager;
@@ -18,6 +19,7 @@ suite('Terminal - Code Execution Manager', () => {
     let disposables: Disposable[] = [];
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
+    let configService: TypeMoq.IMock<IConfigurationService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     setup(() => {
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
@@ -33,11 +35,13 @@ suite('Terminal - Code Execution Manager', () => {
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        configService = TypeMoq.Mock.ofType<IConfigurationService>();
         executionManager = new CodeExecutionManager(
             commandManager.object,
             documentManager.object,
             disposables,
             fileSystem.object,
+            configService.object,
             serviceContainer.object,
         );
     });

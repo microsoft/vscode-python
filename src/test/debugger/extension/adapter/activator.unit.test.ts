@@ -6,8 +6,9 @@
 import * as assert from 'assert';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { IExtensionSingleActivationService } from '../../../../client/activation/types';
+import { CommandManager } from '../../../../client/common/application/commandManager';
 import { DebugService } from '../../../../client/common/application/debugService';
-import { IDebugService } from '../../../../client/common/application/types';
+import { ICommandManager, IDebugService } from '../../../../client/common/application/types';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings } from '../../../../client/common/types';
 import { DebugAdapterActivator } from '../../../../client/debugger/extension/adapter/activator';
@@ -27,6 +28,7 @@ import { noop } from '../../../core';
 suite('Debugging - Adapter Factory and logger Registration', () => {
     let activator: IExtensionSingleActivationService;
     let debugService: IDebugService;
+    let commandManager: ICommandManager;
     let descriptorFactory: IDebugAdapterDescriptorFactory;
     let loggingFactory: IDebugSessionLoggingFactory;
     let debuggerPromptFactory: IOutdatedDebuggerPromptFactory;
@@ -39,6 +41,8 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
 
         debugService = mock(DebugService);
         when(debugService.onDidStartDebugSession).thenReturn(() => noop as any);
+
+        commandManager = mock(CommandManager);
 
         configService = mock(ConfigurationService);
         when(configService.getSettings(undefined)).thenReturn(({
@@ -53,6 +57,7 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
         activator = new DebugAdapterActivator(
             instance(debugService),
             instance(configService),
+            instance(commandManager),
             instance(descriptorFactory),
             instance(loggingFactory),
             instance(debuggerPromptFactory),

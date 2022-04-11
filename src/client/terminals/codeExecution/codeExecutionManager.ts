@@ -11,7 +11,7 @@ import { Commands } from '../../common/constants';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IDisposableRegistry, Resource } from '../../common/types';
+import { IDisposableRegistry, IConfigurationService, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -26,6 +26,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) private disposableRegistry: Disposable[],
         @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IConfigurationService) private readonly configSettings: IConfigurationService,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
     ) {}
 
@@ -38,22 +39,32 @@ export class CodeExecutionManager implements ICodeExecutionManager {
             this.disposableRegistry.push(
                 this.commandManager.registerCommand(cmd as any, async (file: Resource) => {
                     const trigger = cmd === Commands.Exec_In_Terminal ? 'command' : 'icon';
-                    await this.executeFileInTerminal(file, trigger).catch((ex) =>
-                        traceError('Failed to execute file in terminal', ex),
-                    );
+                    await this.executeFileInTerminal(file, trigger)
+                        .then(() => {
+                            if (this.shouldTerminalFocusOnStart(file))
+                                this.commandManager.executeCommand('workbench.action.terminal.focus');
+                        })
+                        .catch((ex) => traceError('Failed to execute file in terminal', ex));
                 }),
             );
         });
         this.disposableRegistry.push(
-            this.commandManager.registerCommand(
-                Commands.Exec_Selection_In_Terminal,
-                this.executeSelectionInTerminal.bind(this),
-            ),
+            this.commandManager.registerCommand(Commands.Exec_Selection_In_Terminal as any, async (file: Resource) => {
+                await this.executeSelectionInTerminal().then(() => {
+                    if (this.shouldTerminalFocusOnStart(file))
+                        this.commandManager.executeCommand('workbench.action.terminal.focus');
+                });
+            }),
         );
         this.disposableRegistry.push(
             this.commandManager.registerCommand(
-                Commands.Exec_Selection_In_Django_Shell,
-                this.executeSelectionInDjangoShell.bind(this),
+                Commands.Exec_Selection_In_Django_Shell as any,
+                async (file: Resource) => {
+                    await this.executeSelectionInDjangoShell().then(() => {
+                        if (this.shouldTerminalFocusOnStart(file))
+                            this.commandManager.executeCommand('workbench.action.terminal.focus');
+                    });
+                },
             ),
         );
     }
@@ -114,5 +125,9 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         }
 
         await executionService.execute(normalizedCode, activeEditor!.document.uri);
+    }
+
+    private shouldTerminalFocusOnStart(uri: Uri | undefined): boolean {
+        return this.configSettings.getSettings(uri)?.terminal.focusAfterLaunch;
     }
 }
