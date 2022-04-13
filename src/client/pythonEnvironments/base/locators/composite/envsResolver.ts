@@ -18,7 +18,7 @@ import {
 } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
 import { resolveBasicEnv } from './resolverUtils';
-import { traceError, traceVerbose, traceWarn } from '../../../../logging';
+import { traceVerbose, traceWarn } from '../../../../logging';
 import { getEnvironmentDirFromPath, getInterpreterPathFromDir, isPythonExecutable } from '../../../common/commonUtils';
 import { getEmptyVersion } from '../../info/pythonVersion';
 
