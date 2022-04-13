@@ -104,7 +104,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                 cwd: options.cwd,
                 data: JSON.stringify({
                     status: 'error',
-                    errors: [ex.message],
+                    errors: [(ex as Error).message],
                 }),
             });
         }

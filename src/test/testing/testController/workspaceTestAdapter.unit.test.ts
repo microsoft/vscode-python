@@ -85,12 +85,12 @@ suite('Workspace test adapter', () => {
 
             const mockSendTelemetryEvent = (
                 eventName: EventName,
-                _: number | undefined,
-                properties: Record<string, unknown>,
+                _: number | Record<string, number> | undefined,
+                properties: unknown,
             ) => {
                 telemetryEvent.push({
                     eventName,
-                    properties,
+                    properties: properties as Record<string, unknown>,
                 });
             };
 
