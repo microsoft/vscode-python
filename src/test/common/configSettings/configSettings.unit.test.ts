@@ -94,12 +94,6 @@ suite('Python Settings', async () => {
         }
 
         // boolean settings
-        for (const name of ['downloadLanguageServer', 'autoUpdateLanguageServer']) {
-            config
-                .setup((c) => c.get<boolean>(name, true))
-
-                .returns(() => (sourceSettings as any)[name]);
-        }
         for (const name of ['disableInstallationCheck', 'globalModuleInstallation']) {
             config
                 .setup((c) => c.get<boolean>(name))
@@ -146,11 +140,9 @@ suite('Python Settings', async () => {
     });
 
     suite('Boolean settings', async () => {
-        ['downloadLanguageServer', 'autoUpdateLanguageServer', 'globalModuleInstallation'].forEach(
-            async (settingName) => {
-                testIfValueIsUpdated(settingName, true);
-            },
-        );
+        ['globalModuleInstallation'].forEach(async (settingName) => {
+            testIfValueIsUpdated(settingName, true);
+        });
     });
 
     test('condaPath updated', () => {

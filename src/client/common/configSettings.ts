@@ -84,8 +84,6 @@ export class PythonSettings implements IPythonSettings {
 
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
 
-    public downloadLanguageServer = true;
-
     public envFile = '';
 
     public venvPath = '';
@@ -117,8 +115,6 @@ export class PythonSettings implements IPythonSettings {
     public disableInstallationChecks = false;
 
     public globalModuleInstallation = false;
-
-    public autoUpdateLanguageServer = true;
 
     public experiments!: IExperiments;
 
@@ -249,13 +245,6 @@ export class PythonSettings implements IPythonSettings {
         this.pipenvPath = pipenvPath && pipenvPath.length > 0 ? getAbsolutePath(pipenvPath, workspaceRoot) : pipenvPath;
         const poetryPath = systemVariables.resolveAny(pythonSettings.get<string>('poetryPath'))!;
         this.poetryPath = poetryPath && poetryPath.length > 0 ? getAbsolutePath(poetryPath, workspaceRoot) : poetryPath;
-
-        this.downloadLanguageServer = systemVariables.resolveAny(
-            pythonSettings.get<boolean>('downloadLanguageServer', true),
-        )!;
-        this.autoUpdateLanguageServer = systemVariables.resolveAny(
-            pythonSettings.get<boolean>('autoUpdateLanguageServer', true),
-        )!;
 
         // Get as a string and verify; don't just accept.
         let userLS = pythonSettings.get<string>('languageServer');
