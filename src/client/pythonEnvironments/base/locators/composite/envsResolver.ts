@@ -18,7 +18,7 @@ import {
 } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
 import { resolveBasicEnv } from './resolverUtils';
-import { traceVerbose } from '../../../../logging';
+import { traceError, traceVerbose, traceWarn } from '../../../../logging';
 import { getEnvironmentDirFromPath, getInterpreterPathFromDir, isPythonExecutable } from '../../../common/commonUtils';
 import { getEmptyVersion } from '../../info/pythonVersion';
 
@@ -167,7 +167,14 @@ function getResolvedEnv(interpreterInfo: InterpreterInformation, environment: Py
 async function getExecutablePathAndEnvPath(path: string) {
     let executablePath: string;
     let envPath: string;
-    const isPathAnExecutable = await isPythonExecutable(path);
+    const isPathAnExecutable = await isPythonExecutable(path).catch((ex) => {
+        traceWarn('Failed to check if', path, 'is an executable', ex);
+        // This could happen if the path doesn't exist on a file system, but
+        // it still maybe the case that it's a valid file when run using a
+        // shell, as shells may resolve the file extensions before running it,
+        // so assume it to be an executable.
+        return true;
+    });
     if (isPathAnExecutable) {
         executablePath = path;
         envPath = getEnvironmentDirFromPath(executablePath);
