@@ -3,7 +3,7 @@
 
 import * as http from 'http';
 import * as net from 'net';
-import { v4 as uuidv4 } from 'uuid';
+import * as crypto from 'crypto';
 import { Disposable, Event, EventEmitter } from 'vscode';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
@@ -71,7 +71,7 @@ export class PythonTestServer implements ITestServer, Disposable {
     }
 
     async sendCommand(options: TestCommandOptions): Promise<void> {
-        const uuid = uuidv4();
+        const uuid = crypto.randomUUID();
         const spawnOptions: SpawnOptions = {
             token: options.token,
             cwd: options.cwd,

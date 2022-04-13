@@ -4,7 +4,7 @@
 import * as assert from 'assert';
 import * as http from 'http';
 import * as sinon from 'sinon';
-import * as uuid from 'uuid';
+import * as crypto from 'crypto';
 import { OutputChannel, Uri } from 'vscode';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
 import { createDeferred } from '../../../client/common/utils/async';
@@ -24,7 +24,7 @@ suite('Python Test Server', () => {
 
     setup(() => {
         sandbox = sinon.createSandbox();
-        v4Stub = sandbox.stub(uuid, 'v4');
+        v4Stub = sandbox.stub(crypto, 'randomUUID');
         traceLogStub = sandbox.stub(logging, 'traceLog');
 
         v4Stub.returns(fakeUuid);
