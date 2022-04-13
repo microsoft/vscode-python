@@ -8,7 +8,11 @@ import * as sinon from 'sinon';
 import { instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
+import {
+    IApplicationEnvironment,
+    IApplicationShell,
+    IWorkspaceService,
+} from '../../../client/common/application/types';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
@@ -28,6 +32,7 @@ suite('Conda Inherit Env Prompt', async () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let browserService: TypeMoq.IMock<IBrowserService>;
+    let applicationEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
     let persistentStateFactory: IPersistentStateFactory;
     let notificationPromptEnabled: TypeMoq.IMock<IPersistentState<any>>;
     let condaInheritEnvPrompt: CondaInheritEnvPrompt;
@@ -45,13 +50,17 @@ suite('Conda Inherit Env Prompt', async () => {
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
             persistentStateFactory = mock(PersistentStateFactory);
             platformService = TypeMoq.Mock.ofType<IPlatformService>();
+            applicationEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>();
+            applicationEnvironment.setup((a) => a.remoteName).returns(() => undefined);
             condaInheritEnvPrompt = new CondaInheritEnvPrompt(
                 interpreterService.object,
                 workspaceService.object,
                 browserService.object,
                 appShell.object,
                 instance(persistentStateFactory),
+
                 platformService.object,
+                applicationEnvironment.object,
             );
         });
         test('Returns false if prompt has already been shown in the current session', async () => {
@@ -61,7 +70,9 @@ suite('Conda Inherit Env Prompt', async () => {
                 browserService.object,
                 appShell.object,
                 instance(persistentStateFactory),
+
                 platformService.object,
+                applicationEnvironment.object,
                 true,
             );
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
@@ -76,6 +87,14 @@ suite('Conda Inherit Env Prompt', async () => {
             const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
             expect(result).to.equal(false, 'Prompt should not be shown');
             expect(condaInheritEnvPrompt.hasPromptBeenShownInCurrentSession).to.equal(true, 'Should be true');
+            verifyAll();
+        });
+        test('Returns false if running on remote', async () => {
+            applicationEnvironment.reset();
+            applicationEnvironment.setup((a) => a.remoteName).returns(() => 'ssh');
+            const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
+            expect(result).to.equal(false, 'Prompt should not be shown');
+            expect(condaInheritEnvPrompt.hasPromptBeenShownInCurrentSession).to.equal(false, 'Should be false');
             verifyAll();
         });
         test('Returns false if on Windows', async () => {
@@ -245,6 +264,8 @@ suite('Conda Inherit Env Prompt', async () => {
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
             persistentStateFactory = mock(PersistentStateFactory);
             platformService = TypeMoq.Mock.ofType<IPlatformService>();
+            applicationEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>();
+            applicationEnvironment.setup((a) => a.remoteName).returns(() => undefined);
         });
 
         teardown(() => {
@@ -261,7 +282,9 @@ suite('Conda Inherit Env Prompt', async () => {
                 browserService.object,
                 appShell.object,
                 instance(persistentStateFactory),
+
                 platformService.object,
+                applicationEnvironment.object,
             );
 
             const promise = condaInheritEnvPrompt.activate(resource);
@@ -285,7 +308,9 @@ suite('Conda Inherit Env Prompt', async () => {
                 browserService.object,
                 appShell.object,
                 instance(persistentStateFactory),
+
                 platformService.object,
+                applicationEnvironment.object,
             );
             await condaInheritEnvPrompt.activate(resource);
             assert.ok(initializeInBackground.calledOnce);
@@ -302,6 +327,8 @@ suite('Conda Inherit Env Prompt', async () => {
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
             persistentStateFactory = mock(PersistentStateFactory);
             platformService = TypeMoq.Mock.ofType<IPlatformService>();
+            applicationEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>();
+            applicationEnvironment.setup((a) => a.remoteName).returns(() => undefined);
         });
 
         teardown(() => {
@@ -319,7 +346,9 @@ suite('Conda Inherit Env Prompt', async () => {
                 browserService.object,
                 appShell.object,
                 instance(persistentStateFactory),
+
                 platformService.object,
+                applicationEnvironment.object,
             );
             await condaInheritEnvPrompt.initializeInBackground(resource);
             assert.ok(shouldShowPrompt.calledOnce);
@@ -337,7 +366,9 @@ suite('Conda Inherit Env Prompt', async () => {
                 browserService.object,
                 appShell.object,
                 instance(persistentStateFactory),
+
                 platformService.object,
+                applicationEnvironment.object,
             );
             await condaInheritEnvPrompt.initializeInBackground(resource);
             assert.ok(shouldShowPrompt.calledOnce);
@@ -355,6 +386,8 @@ suite('Conda Inherit Env Prompt', async () => {
             browserService = TypeMoq.Mock.ofType<IBrowserService>();
             notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<any>>();
             platformService = TypeMoq.Mock.ofType<IPlatformService>();
+            applicationEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>();
+            applicationEnvironment.setup((a) => a.remoteName).returns(() => undefined);
             when(persistentStateFactory.createGlobalPersistentState(condaInheritEnvPromptKey, true)).thenReturn(
                 notificationPromptEnabled.object,
             );
@@ -364,7 +397,9 @@ suite('Conda Inherit Env Prompt', async () => {
                 browserService.object,
                 appShell.object,
                 instance(persistentStateFactory),
+
                 platformService.object,
+                applicationEnvironment.object,
             );
         });
 

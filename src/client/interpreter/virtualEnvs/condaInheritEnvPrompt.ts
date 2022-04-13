@@ -4,7 +4,7 @@
 import { inject, injectable, optional } from 'inversify';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IExtensionActivationService } from '../../activation/types';
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { IPlatformService } from '../../common/platform/types';
 import { IBrowserService, IPersistentStateFactory } from '../../common/types';
 import { Common, Interpreters } from '../../common/utils/localize';
@@ -26,6 +26,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
+        @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @optional() public hasPromptBeenShownInCurrentSession: boolean = false,
     ) {}
 
@@ -74,6 +75,11 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
     @traceDecoratorError('Failed to check whether to display prompt for conda inherit env setting')
     public async shouldShowPrompt(resource: Uri): Promise<boolean> {
         if (this.hasPromptBeenShownInCurrentSession) {
+            return false;
+        }
+        if (this.appEnvironment.remoteName) {
+            // `terminal.integrated.inheritEnv` is only applicable user scope, so won't apply
+            // in remote scenarios: https://github.com/microsoft/vscode/issues/147421
             return false;
         }
         if (this.platformService.isWindows) {

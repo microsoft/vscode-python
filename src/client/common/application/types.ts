@@ -1072,6 +1072,16 @@ export interface IApplicationEnvironment {
      * from a desktop application or a web browser.
      */
     readonly uiKind: UIKind;
+    /**
+     * The name of a remote. Defined by extensions, popular samples are `wsl` for the Windows
+     * Subsystem for Linux or `ssh-remote` for remotes using a secure shell.
+     *
+     * *Note* that the value is `undefined` when there is no remote extension host but that the
+     * value is defined in all extension hosts (local and remote) in case a remote extension host
+     * exists. Use {@link Extension.extensionKind} to know if
+     * a specific extension runs remote or not.
+     */
+    readonly remoteName: string | undefined;
 }
 
 export const ILanguageService = Symbol('ILanguageService');

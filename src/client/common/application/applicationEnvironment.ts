@@ -64,6 +64,9 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     public get machineId(): string {
         return vscode.env.machineId;
     }
+    public get remoteName(): string | undefined {
+        return vscode.env.remoteName;
+    }
     public get extensionName(): string {
         return this.packageJson.displayName;
     }
