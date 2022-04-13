@@ -5,7 +5,6 @@
 
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
-import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
@@ -31,20 +30,6 @@ import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegi
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { PipEnvExecutionPath } from '../../client/common/configuration/executionSettings/pipEnvExecution';
 import { EditorUtils } from '../../client/common/editor';
-import {
-    ExtensionInsidersDailyChannelRule,
-    ExtensionInsidersOffChannelRule,
-    ExtensionInsidersWeeklyChannelRule,
-} from '../../client/common/insidersBuild/downloadChannelRules';
-import { ExtensionChannelService } from '../../client/common/insidersBuild/downloadChannelService';
-import { InsidersExtensionPrompt } from '../../client/common/insidersBuild/insidersExtensionPrompt';
-import { InsidersExtensionService } from '../../client/common/insidersBuild/insidersExtensionService';
-import {
-    ExtensionChannel,
-    IExtensionChannelRule,
-    IExtensionChannelService,
-    IInsiderExtensionPrompt,
-} from '../../client/common/insidersBuild/types';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import { InterpreterPathService } from '../../client/common/interpreterPathService';
 import { BrowserService } from '../../client/common/net/browser';
@@ -143,12 +128,6 @@ suite('Common - Service Registry', () => {
             [IShellDetector, SettingsShellDetector],
             [IShellDetector, UserEnvironmentShellDetector],
             [IShellDetector, VSCEnvironmentShellDetector],
-            [IInsiderExtensionPrompt, InsidersExtensionPrompt],
-            [IExtensionSingleActivationService, InsidersExtensionService],
-            [IExtensionChannelService, ExtensionChannelService],
-            [IExtensionChannelRule, ExtensionInsidersOffChannelRule, ExtensionChannel.off],
-            [IExtensionChannelRule, ExtensionInsidersDailyChannelRule, ExtensionChannel.daily],
-            [IExtensionChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionChannel.weekly],
         ].forEach((mapping) => {
             if (mapping.length === 2) {
                 serviceManager

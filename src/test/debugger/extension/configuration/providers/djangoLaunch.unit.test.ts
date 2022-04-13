@@ -137,6 +137,7 @@ suite('Debugging - Configuration Provider Django', () => {
             program: 'xyz.py',
             args: ['runserver'],
             django: true,
+            justMyCode: true,
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -157,6 +158,7 @@ suite('Debugging - Configuration Provider Django', () => {
             program: 'hello',
             args: ['runserver'],
             django: true,
+            justMyCode: true,
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -180,6 +182,7 @@ suite('Debugging - Configuration Provider Django', () => {
             program: defaultProgram,
             args: ['runserver'],
             django: true,
+            justMyCode: true,
         };
 
         expect(state.config).to.be.deep.equal(config);

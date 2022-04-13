@@ -151,7 +151,7 @@ class MockSocketClient {
             } catch (ex) {
                 this.SocketStream.Write(Buffer.from(ResponseCommands.Error));
 
-                const errorMessage = `Fatal error in handling data at socket client. Error: ${ex.message}`;
+                const errorMessage = `Fatal error in handling data at socket client. Error: ${(ex as Error).message}`;
                 const errorBuffer = Buffer.concat([
                     Buffer.concat([Buffer.from('A'), uint64be.encode(errorMessage.length)]),
                     Buffer.from(errorMessage),
@@ -271,7 +271,7 @@ suite('SocketCallbackHandler', () => {
                 expect(message).to.be.equal(PING_MESSAGE);
                 def.resolve();
             } catch (ex) {
-                def.reject(ex);
+                def.reject(ex as Error);
             }
         });
         callbackHandler.on('error', (actual: string, expected: string, message: string) => {

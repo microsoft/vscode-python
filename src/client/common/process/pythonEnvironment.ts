@@ -145,7 +145,6 @@ export function createPythonEnv(
 
 export async function createCondaEnv(
     condaInfo: CondaEnvironmentInfo,
-    pythonPath: string,
     // These are used to generate the deps.
     procs: IProcessService,
     fs: IFileSystem,
@@ -162,7 +161,14 @@ export async function createCondaEnv(
         (file, args, opts) => procs.exec(file, args, opts),
         (command, opts) => procs.shellExec(command, opts),
     );
-    return new PythonEnvironment(pythonPath, deps);
+    const interpreterPath = await conda?.getInterpreterPathForEnvironment({
+        name: condaInfo.name,
+        prefix: condaInfo.path,
+    });
+    if (!interpreterPath) {
+        return undefined;
+    }
+    return new PythonEnvironment(interpreterPath, deps);
 }
 
 export function createWindowsStoreEnv(

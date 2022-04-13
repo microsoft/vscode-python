@@ -63,8 +63,20 @@ export function createLocatedEnv(
     return env;
 }
 
-export function createBasicEnv(kind: PythonEnvKind, executablePath: string, source?: PythonEnvSource[]): BasicEnvInfo {
-    return source ? { executablePath, kind, source } : { executablePath, kind };
+export function createBasicEnv(
+    kind: PythonEnvKind,
+    executablePath: string,
+    source?: PythonEnvSource[],
+    envPath?: string,
+): BasicEnvInfo {
+    const basicEnv = { executablePath, kind, source, envPath };
+    if (!source) {
+        delete basicEnv.source;
+    }
+    if (!envPath) {
+        delete basicEnv.envPath;
+    }
+    return basicEnv;
 }
 
 export function createNamedEnv(

@@ -104,8 +104,9 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             return;
         }
         const key = this.getWorkspaceKey(doc.uri);
+        const hasWorkspaceFolders = (this.workspaceService.workspaceFolders?.length || 0) > 0;
         // If we have opened a doc that does not belong to workspace, then do nothing.
-        if (key === '' && this.workspaceService.hasWorkspaceFolders) {
+        if (key === '' && hasWorkspaceFolders) {
             return;
         }
         if (this.activatedWorkspaces.has(key)) {
@@ -148,7 +149,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     }
 
     protected hasMultipleWorkspaces(): boolean {
-        return this.workspaceService.hasWorkspaceFolders && this.workspaceService.workspaceFolders!.length > 1;
+        return (this.workspaceService.workspaceFolders?.length || 0) > 1;
     }
 
     protected getWorkspaceKey(resource: Resource): string {

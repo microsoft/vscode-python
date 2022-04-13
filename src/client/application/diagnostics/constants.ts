@@ -21,4 +21,5 @@ export enum DiagnosticCodes {
     PylanceDefaultDiagnostic = 'PylanceDefaultDiagnostic',
     JediPython27NotSupportedDiagnostic = 'JediPython27NotSupportedDiagnostic',
     SwitchToDefaultLanguageServerDiagnostic = 'SwitchToDefaultLanguageServerDiagnostic',
+    SwitchToPreReleaseExtensionDiagnostic = 'SwitchToPreReleaseExtensionDiagnostic',
 }

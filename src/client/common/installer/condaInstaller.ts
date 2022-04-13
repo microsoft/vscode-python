@@ -71,11 +71,15 @@ export class CondaInstaller extends ModuleInstaller {
         flags: ModuleInstallFlags = 0,
     ): Promise<ExecutionInfo> {
         const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
-        const condaFile = await condaService.getCondaFile();
+        // Installation using `conda.exe` sometimes fails with a HTTP error on Windows:
+        // https://github.com/conda/conda/issues/11399
+        // Execute in a shell which uses a `conda.bat` file instead, using which installation works.
+        const useShell = true;
+        const condaFile = await condaService.getCondaFile(useShell);
 
         const pythonPath = isResource(resource)
             ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
-            : resource.path;
+            : resource.id ?? '';
         const condaLocatorService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
         const info = await condaLocatorService.getCondaEnvironment(pythonPath);
         const args = [flags & ModuleInstallFlags.upgrade ? 'update' : 'install'];
@@ -100,11 +104,11 @@ export class CondaInstaller extends ModuleInstaller {
         if (info && info.name) {
             // If we have the name of the conda environment, then use that.
             args.push('--name');
-            args.push(info.name.toCommandArgument());
+            args.push(info.name.toCommandArgumentForPythonExt());
         } else if (info && info.path) {
             // Else provide the full path to the environment path.
             args.push('--prefix');
-            args.push(info.path.fileToCommandArgument());
+            args.push(info.path.fileToCommandArgumentForPythonExt());
         }
         if (flags & ModuleInstallFlags.updateDependencies) {
             args.push('--update-deps');
@@ -117,6 +121,7 @@ export class CondaInstaller extends ModuleInstaller {
         return {
             args,
             execPath: condaFile,
+            useShell,
         };
     }
 
@@ -127,7 +132,7 @@ export class CondaInstaller extends ModuleInstaller {
         const condaService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
         const pythonPath = isResource(resource)
             ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
-            : resource.path;
+            : resource.id ?? '';
         return condaService.isCondaEnvironment(pythonPath);
     }
 }

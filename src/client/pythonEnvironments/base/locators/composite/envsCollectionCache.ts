@@ -4,9 +4,9 @@
 import { Event } from 'vscode';
 import { traceInfo } from '../../../../logging';
 import { reportInterpretersChanged } from '../../../../proposedApi';
-import { pathExists } from '../../../common/externalDependencies';
+import { arePathsSame, pathExists } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
-import { areSameEnv } from '../../info/env';
+import { areSameEnv, getEnvPath } from '../../info/env';
 import {
     BasicPythonEnvCollectionChangedEvent,
     PythonEnvCollectionChangedEvent,
@@ -36,8 +36,10 @@ export interface IEnvsCollectionCache {
     addEnv(env: PythonEnvInfo, hasCompleteInfo?: boolean): void;
 
     /**
-     * Return cached environment information for a given interpreter path if it exists and
+     * Return cached environment information for a given path if it exists and
      * has complete info, otherwise return `undefined`.
+     *
+     * @param path - Python executable path or path to environment
      */
     getCompleteInfo(path: string): PythonEnvInfo | undefined;
 
@@ -91,7 +93,9 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         invalidIndexes.forEach((index) => {
             const env = this.envs.splice(index, 1)[0];
             this.fire({ old: env, new: undefined });
-            reportInterpretersChanged([{ path: env.executable.filename, type: 'remove' }]);
+            reportInterpretersChanged([
+                { path: getEnvPath(env.executable.filename, env.location).path, type: 'remove' },
+            ]);
         });
     }
 
@@ -101,13 +105,13 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
 
     public addEnv(env: PythonEnvCompleteInfo, hasCompleteInfo?: boolean): void {
         const found = this.envs.find((e) => areSameEnv(e, env));
+        if (hasCompleteInfo) {
+            env.hasCompleteInfo = true;
+        }
         if (!found) {
-            if (hasCompleteInfo) {
-                env.hasCompleteInfo = true;
-            }
             this.envs.push(env);
             this.fire({ new: env });
-            reportInterpretersChanged([{ path: env.executable.filename, type: 'add' }]);
+            reportInterpretersChanged([{ path: getEnvPath(env.executable.filename, env.location).path, type: 'add' }]);
         }
     }
 
@@ -120,12 +124,22 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
                 this.envs[index] = newValue;
             }
             this.fire({ old: oldValue, new: newValue });
-            reportInterpretersChanged([{ path: oldValue.executable.filename, type: newValue ? 'update' : 'remove' }]);
+            reportInterpretersChanged([
+                {
+                    path: getEnvPath(oldValue.executable.filename, oldValue.location).path,
+                    type: newValue ? 'update' : 'remove',
+                },
+            ]);
         }
     }
 
-    public getCompleteInfo(executablePath: string): PythonEnvInfo | undefined {
-        const env = this.envs.find((e) => areSameEnv(e, executablePath));
+    public getCompleteInfo(path: string): PythonEnvInfo | undefined {
+        // `path` can either be path to environment or executable path
+        let env = this.envs.find((e) => arePathsSame(e.location, path));
+        if (env?.hasCompleteInfo) {
+            return env;
+        }
+        env = this.envs.find((e) => areSameEnv(e, path));
         return env?.hasCompleteInfo ? env : undefined;
     }
 

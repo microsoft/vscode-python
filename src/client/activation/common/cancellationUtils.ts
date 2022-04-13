@@ -43,7 +43,7 @@ class FileCancellationSenderStrategy implements CancellationSenderStrategy {
         tryRun(() => fs.mkdirSync(folder, { recursive: true }));
     }
 
-    public sendCancellation(_: MessageConnection, id: CancellationId): void {
+    public async sendCancellation(_: MessageConnection, id: CancellationId) {
         const file = getCancellationFilePath(this.folderName, id);
         tryRun(() => fs.writeFileSync(file, '', { flag: 'w' }));
     }

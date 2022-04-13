@@ -10,6 +10,7 @@ import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../
 import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
+import { IInterpreterService } from '../../../../interpreter/contracts';
 import { DebuggerTypeName } from '../../../constants';
 import { DebugOptions, DebugPurpose, LaunchRequestArguments } from '../../../types';
 import { PythonPathSource } from '../../types';
@@ -27,8 +28,9 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         @inject(IPlatformService) platformService: IPlatformService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IDebugEnvironmentVariablesService) private readonly debugEnvHelper: IDebugEnvironmentVariablesService,
+        @inject(IInterpreterService) interpreterService: IInterpreterService,
     ) {
-        super(workspaceService, documentManager, platformService, configurationService);
+        super(workspaceService, documentManager, platformService, configurationService, interpreterService);
     }
 
     public async resolveDebugConfiguration(
@@ -52,7 +54,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         }
 
         const workspaceFolder = this.getWorkspaceFolder(folder);
-        this.resolveAndUpdatePaths(workspaceFolder, debugConfiguration);
+        await this.resolveAndUpdatePaths(workspaceFolder, debugConfiguration);
         return debugConfiguration;
     }
 

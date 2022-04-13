@@ -467,10 +467,6 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             const serviceContainerObject = createContainer();
             let diagnoseInvocationCount = 0;
             workspaceService
-                .setup((w) => w.hasWorkspaceFolders)
-                .returns(() => true)
-                .verifiable(typemoq.Times.once());
-            workspaceService
                 .setup((w) => w.workspaceFolders)
                 .returns(() => [{ uri: '' }] as any)
                 .verifiable(typemoq.Times.once());
@@ -516,10 +512,6 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             const workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
             const serviceContainerObject = createContainer();
             let diagnoseInvocationCount = 0;
-            workspaceService
-                .setup((w) => w.hasWorkspaceFolders)
-                .returns(() => true)
-                .verifiable(typemoq.Times.once());
             workspaceService
                 .setup((w) => w.workspaceFolders)
                 .returns(() => [{ uri: '' }] as any)

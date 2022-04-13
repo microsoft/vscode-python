@@ -40,7 +40,8 @@ export class InterpreterHelper implements IInterpreterHelper {
 
     public getActiveWorkspaceUri(resource: Resource): WorkspacePythonPath | undefined {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        if (!workspaceService.hasWorkspaceFolders) {
+        const hasWorkspaceFolders = (workspaceService.workspaceFolders?.length || 0) > 0;
+        if (!hasWorkspaceFolders) {
             return;
         }
         if (Array.isArray(workspaceService.workspaceFolders) && workspaceService.workspaceFolders.length === 1) {

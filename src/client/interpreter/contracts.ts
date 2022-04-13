@@ -17,7 +17,7 @@ export type PythonEnvironmentsChangedEvent = {
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
     readonly onRefreshStart: Event<void>;
-    triggerRefresh(query?: PythonLocatorQuery): Promise<void>;
+    triggerRefresh(query?: PythonLocatorQuery & { clearCache?: boolean }): Promise<void>;
     readonly refreshPromise: Promise<void> | undefined;
     readonly onChanged: Event<PythonEnvironmentsChangedEvent>;
     // VirtualEnvPrompt
@@ -54,16 +54,17 @@ export const ICondaService = Symbol('ICondaService');
  * Interface carries the properties which are not available via the discovery component interface.
  */
 export interface ICondaService {
-    getCondaFile(): Promise<string>;
+    getCondaFile(forShellExecution?: boolean): Promise<string>;
     isCondaAvailable(): Promise<boolean>;
     getCondaVersion(): Promise<SemVer | undefined>;
+    getInterpreterPathForEnvironment(condaEnv: CondaEnvironmentInfo): Promise<string | undefined>;
     getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined>;
 }
 
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
     readonly onRefreshStart: Event<void>;
-    triggerRefresh(query?: PythonLocatorQuery): Promise<void>;
+    triggerRefresh(query?: PythonLocatorQuery & { clearCache?: boolean }): Promise<void>;
     readonly refreshPromise: Promise<void> | undefined;
     readonly onDidChangeInterpreters: Event<PythonEnvironmentsChangedEvent>;
     onDidChangeInterpreterConfiguration: Event<Uri | undefined>;

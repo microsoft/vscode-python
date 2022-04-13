@@ -75,6 +75,7 @@ export type InterpreterInformation = {
 // Note that "cachedEntry" is specific to the caching machinery
 // and doesn't really belong here.
 export type PythonEnvironment = InterpreterInformation & {
+    id?: string;
     companyDisplayName?: string;
     displayName?: string;
     detailedDisplayName?: string;

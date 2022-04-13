@@ -11,6 +11,7 @@ import { PYTHON_LANGUAGE } from '../../../../common/constants';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
+import { IInterpreterService } from '../../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { DebuggerTelemetry } from '../../../../telemetry/types';
@@ -28,6 +29,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         protected readonly documentManager: IDocumentManager,
         protected readonly platformService: IPlatformService,
         protected readonly configurationService: IConfigurationService,
+        protected readonly interpreterService: IInterpreterService,
     ) {}
 
     // This is a legacy hook used solely for backwards-compatible manual substitution
@@ -81,12 +83,12 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         }
     }
 
-    protected resolveAndUpdatePaths(
+    protected async resolveAndUpdatePaths(
         workspaceFolder: Uri | undefined,
         debugConfiguration: LaunchRequestArguments,
-    ): void {
+    ): Promise<void> {
         this.resolveAndUpdateEnvFilePath(workspaceFolder, debugConfiguration);
-        this.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
+        await this.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
     }
 
     protected resolveAndUpdateEnvFilePath(
@@ -105,10 +107,10 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         }
     }
 
-    protected resolveAndUpdatePythonPath(
+    protected async resolveAndUpdatePythonPath(
         workspaceFolder: Uri | undefined,
         debugConfiguration: LaunchRequestArguments,
-    ): void {
+    ): Promise<void> {
         if (!debugConfiguration) {
             return;
         }
@@ -118,8 +120,9 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
             this.workspaceService,
         );
         if (debugConfiguration.pythonPath === '${command:python.interpreterPath}' || !debugConfiguration.pythonPath) {
-            const pythonPath = this.configurationService.getSettings(workspaceFolder).pythonPath;
-            debugConfiguration.pythonPath = pythonPath;
+            const interpreterPath =
+                (await this.interpreterService.getActiveInterpreter(workspaceFolder))?.path ?? 'python';
+            debugConfiguration.pythonPath = interpreterPath;
             this.pythonPathSource = PythonPathSource.settingsJson;
         } else {
             debugConfiguration.pythonPath = systemVariables.resolveAny(debugConfiguration.pythonPath);

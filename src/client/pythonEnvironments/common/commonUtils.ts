@@ -11,13 +11,28 @@ import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from './environmentManagers/conda';
 import { getPythonVersionFromPyvenvCfg } from './environmentManagers/simplevirtualenvs';
-import { normCasePath } from './externalDependencies';
+import { isFile, normCasePath } from './externalDependencies';
 import * as posix from './posixUtils';
 import * as windows from './windowsUtils';
 
-const matchPythonBinFilename =
+const matchStandardPythonBinFilename =
     getOSType() === OSType.Windows ? windows.matchPythonBinFilename : posix.matchPythonBinFilename;
 type FileFilterFunc = (filename: string) => boolean;
+
+/**
+ * Returns `true` if path provided is likely a python executable than a folder path.
+ */
+export async function isPythonExecutable(filePath: string): Promise<boolean> {
+    const isMatch = matchStandardPythonBinFilename(filePath);
+    if (isMatch && getOSType() === OSType.Windows) {
+        // On Windows it's fair to assume a path ending with `.exe` denotes a file.
+        return true;
+    }
+    if (await isFile(filePath)) {
+        return true;
+    }
+    return false;
+}
 
 /**
  * Searches recursively under the given `root` directory for python interpreters.
@@ -64,7 +79,7 @@ export async function* iterPythonExecutablesInDir(
 ): AsyncIterableIterator<DirEntry> {
     const readDirOpts = {
         ...opts,
-        filterFile: matchPythonBinFilename,
+        filterFile: matchStandardPythonBinFilename,
     };
     const entries = await readDirEntries(dirname, readDirOpts);
     for (const entry of entries) {
@@ -117,8 +132,9 @@ async function readDirEntries(
         try {
             basenames = await fs.promises.readdir(dirname);
         } catch (err) {
+            const exception = err as NodeJS.ErrnoException;
             // Treat a missing directory as empty.
-            if (err.code === 'ENOENT') {
+            if (exception.code === 'ENOENT') {
                 return [];
             }
             if (ignoreErrors) {
@@ -142,8 +158,9 @@ async function readDirEntries(
     try {
         raw = await fs.promises.readdir(dirname, { withFileTypes: true });
     } catch (err) {
+        const exception = err as NodeJS.ErrnoException;
         // Treat a missing directory as empty.
-        if (err.code === 'ENOENT') {
+        if (exception.code === 'ENOENT') {
             return [];
         }
         if (ignoreErrors) {
@@ -249,7 +266,7 @@ async function checkPythonExecutable(
         filterFile?: (f: string | DirEntry) => Promise<boolean>;
     },
 ): Promise<boolean> {
-    const matchFilename = opts.matchFilename || matchPythonBinFilename;
+    const matchFilename = opts.matchFilename || matchStandardPythonBinFilename;
     const filename = typeof executable === 'string' ? executable : executable.filename;
 
     if (!matchFilename(filename)) {

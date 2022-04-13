@@ -3,7 +3,6 @@
 import '../../../../common/extensions';
 import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../locator';
-import { getInterpreterPathFromDir } from '../../../common/commonUtils';
 import { Conda } from '../../../common/environmentManagers/conda';
 import { traceError, traceVerbose } from '../../../../logging';
 
@@ -18,12 +17,12 @@ export class CondaEnvironmentLocator extends Locator<BasicEnvInfo> {
         traceVerbose(`Searching for conda environments using ${conda.command}`);
 
         const envs = await conda.getEnvList();
-        for (const { prefix } of envs) {
-            const executablePath = await getInterpreterPathFromDir(prefix);
+        for (const env of envs) {
+            const executablePath = await conda.getInterpreterPathForEnvironment(env);
             if (executablePath !== undefined) {
                 traceVerbose(`Found conda environment: ${executablePath}`);
                 try {
-                    yield { kind: PythonEnvKind.Conda, executablePath };
+                    yield { kind: PythonEnvKind.Conda, executablePath, envPath: env.prefix };
                 } catch (ex) {
                     traceError(`Failed to process environment: ${executablePath}`, ex);
                 }

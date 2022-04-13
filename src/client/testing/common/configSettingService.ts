@@ -55,7 +55,8 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
     private async updateSetting(testDirectory: string | Uri, setting: string, value: unknown) {
         let pythonConfig: WorkspaceConfiguration;
         const resource = typeof testDirectory === 'string' ? Uri.file(testDirectory) : testDirectory;
-        if (!this.workspaceService.hasWorkspaceFolders) {
+        const hasWorkspaceFolders = (this.workspaceService.workspaceFolders?.length || 0) > 0;
+        if (!hasWorkspaceFolders) {
             pythonConfig = this.workspaceService.getConfiguration('python');
         } else if (this.workspaceService.workspaceFolders!.length === 1) {
             pythonConfig = this.workspaceService.getConfiguration(

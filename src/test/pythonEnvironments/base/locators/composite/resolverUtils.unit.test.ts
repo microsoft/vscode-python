@@ -48,7 +48,7 @@ suite('Resolver Utils', () => {
         teardown(() => {
             sinon.restore();
         });
-        function getExpectedPyenvInfo(): PythonEnvInfo | undefined {
+        function getExpectedPyenvInfo1(): PythonEnvInfo | undefined {
             const envInfo = buildEnvInfo({
                 kind: PythonEnvKind.Pyenv,
                 executable: path.join(testPyenvVersionsDir, '3.9.0', 'bin', 'python'),
@@ -65,9 +65,36 @@ suite('Resolver Utils', () => {
             return envInfo;
         }
 
+        function getExpectedPyenvInfo2(): PythonEnvInfo | undefined {
+            const envInfo = buildEnvInfo({
+                kind: PythonEnvKind.Pyenv,
+                executable: path.join(testPyenvVersionsDir, 'miniconda3-4.7.12', 'bin', 'python'),
+                version: {
+                    major: 3,
+                    minor: 7,
+                    micro: -1,
+                },
+                source: [],
+                org: 'miniconda3',
+            });
+            envInfo.location = path.join(testPyenvVersionsDir, 'miniconda3-4.7.12');
+            envInfo.name = 'base';
+            setEnvDisplayString(envInfo);
+            return envInfo;
+        }
+
         test('resolveEnv', async () => {
             const executablePath = path.join(testPyenvVersionsDir, '3.9.0', 'bin', 'python');
-            const expected = getExpectedPyenvInfo();
+            const expected = getExpectedPyenvInfo1();
+
+            const actual = await resolveBasicEnv({ executablePath, kind: PythonEnvKind.Pyenv });
+            assertEnvEqual(actual, expected);
+        });
+
+        test('resolveEnv (base conda env)', async () => {
+            sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Linux);
+            const executablePath = path.join(testPyenvVersionsDir, 'miniconda3-4.7.12', 'bin', 'python');
+            const expected = getExpectedPyenvInfo2();
 
             const actual = await resolveBasicEnv({ executablePath, kind: PythonEnvKind.Pyenv });
             assertEnvEqual(actual, expected);
@@ -251,7 +278,7 @@ suite('Resolver Utils', () => {
             );
         });
 
-        test('resolveEnv: If no conda binary found, resolve as a simple environment', async () => {
+        test('resolveEnv: If no conda binary found, resolve as an unknown environment', async () => {
             sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
             sinon.stub(externalDependencies, 'exec').callsFake(async (command: string) => {
                 throw new Error(`${command} is missing or is not executable`);
@@ -264,7 +291,7 @@ suite('Resolver Utils', () => {
                 actual,
                 createSimpleEnvInfo(
                     path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
-                    PythonEnvKind.Conda,
+                    PythonEnvKind.Unknown,
                     undefined,
                     'conda1',
                     path.join(TEST_LAYOUT_ROOT, 'conda1'),
@@ -587,8 +614,8 @@ suite('Resolver Utils', () => {
             });
             const expected = buildEnvInfo({
                 location: path.join(regTestRoot, 'conda3'),
-                // Environment should already be marked as Conda. No need to update it to Global.
-                kind: PythonEnvKind.Conda,
+                // Environment is not marked as Conda, update it to Global.
+                kind: PythonEnvKind.OtherGlobal,
                 executable: interpreterPath,
                 // Registry does not provide the minor version, so keep version provided by Conda resolver instead.
                 version: parseVersion('3.8.5'),

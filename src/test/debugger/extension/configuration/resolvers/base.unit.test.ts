@@ -19,6 +19,7 @@ import { IPlatformService } from '../../../../../client/common/platform/types';
 import { IConfigurationService } from '../../../../../client/common/types';
 import { BaseConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/base';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
+import { IInterpreterService } from '../../../../../client/interpreter/contracts';
 
 suite('Debugging - Config Resolver', () => {
     class BaseResolver extends BaseConfigurationResolver<AttachRequestArguments | LaunchRequestArguments> {
@@ -49,7 +50,7 @@ suite('Debugging - Config Resolver', () => {
         public resolveAndUpdatePythonPath(
             workspaceFolder: Uri | undefined,
             debugConfiguration: LaunchRequestArguments,
-        ): void {
+        ) {
             return super.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
         }
 
@@ -74,16 +75,19 @@ suite('Debugging - Config Resolver', () => {
     let platformService: IPlatformService;
     let documentManager: IDocumentManager;
     let configurationService: IConfigurationService;
+    let interpreterService: IInterpreterService;
     setup(() => {
         workspaceService = mock(WorkspaceService);
         documentManager = mock(DocumentManager);
         platformService = mock(PlatformService);
         configurationService = mock(ConfigurationService);
+        interpreterService = mock<IInterpreterService>();
         resolver = new BaseResolver(
             instance(workspaceService),
             instance(documentManager),
             instance(platformService),
             instance(configurationService),
+            instance(interpreterService),
         );
     });
 
@@ -198,28 +202,28 @@ suite('Debugging - Config Resolver', () => {
 
         expect(uri).to.be.deep.equal(undefined, 'not undefined');
     });
-    test('Do nothing if debug configuration is undefined', () => {
-        resolver.resolveAndUpdatePythonPath(undefined, undefined as any);
+    test('Do nothing if debug configuration is undefined', async () => {
+        await resolver.resolveAndUpdatePythonPath(undefined, undefined as any);
     });
-    test('pythonPath in debug config must point to pythonPath in settings if pythonPath in config is not set', () => {
+    test('pythonPath in debug config must point to pythonPath in settings if pythonPath in config is not set', async () => {
         const config = {};
         const pythonPath = path.join('1', '2', '3');
 
-        when(configurationService.getSettings(anything())).thenReturn({ pythonPath } as any);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({ path: pythonPath } as any);
 
-        resolver.resolveAndUpdatePythonPath(undefined, config as any);
+        await resolver.resolveAndUpdatePythonPath(undefined, config as any);
 
         expect(config).to.have.property('pythonPath', pythonPath);
     });
-    test('pythonPath in debug config must point to pythonPath in settings  if pythonPath in config is ${command:python.interpreterPath}', () => {
+    test('pythonPath in debug config must point to pythonPath in settings  if pythonPath in config is ${command:python.interpreterPath}', async () => {
         const config = {
             pythonPath: '${command:python.interpreterPath}',
         };
         const pythonPath = path.join('1', '2', '3');
 
-        when(configurationService.getSettings(anything())).thenReturn({ pythonPath } as any);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({ path: pythonPath } as any);
 
-        resolver.resolveAndUpdatePythonPath(undefined, config as any);
+        await resolver.resolveAndUpdatePythonPath(undefined, config as any);
 
         expect(config.pythonPath).to.equal(pythonPath);
     });

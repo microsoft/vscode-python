@@ -21,7 +21,7 @@ import { cache } from './utils/decorators';
 
 export class PersistentState<T> implements IPersistentState<T> {
     constructor(
-        private storage: Memento,
+        public readonly storage: Memento,
         private key: string,
         private defaultValue?: T,
         private expiryDurationMs?: number,

@@ -9,6 +9,7 @@ import {
     Event,
     FileSystemWatcher,
     GlobPattern,
+    TextDocument,
     Uri,
     workspace,
     WorkspaceConfiguration,
@@ -34,9 +35,6 @@ export class WorkspaceService implements IWorkspaceService {
     }
     public get onDidChangeWorkspaceFolders(): Event<WorkspaceFoldersChangeEvent> {
         return workspace.onDidChangeWorkspaceFolders;
-    }
-    public get hasWorkspaceFolders() {
-        return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0;
     }
     public get workspaceFile() {
         return workspace.workspaceFile;
@@ -95,6 +93,10 @@ export class WorkspaceService implements IWorkspaceService {
 
     public get onDidGrantWorkspaceTrust(): Event<void> {
         return workspace.onDidGrantWorkspaceTrust;
+    }
+
+    public openTextDocument(options?: { language?: string; content?: string }): Thenable<TextDocument> {
+        return workspace.openTextDocument(options);
     }
 
     private get searchExcludes() {

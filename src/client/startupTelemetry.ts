@@ -4,7 +4,7 @@
 import { IWorkspaceService } from './common/application/types';
 import { isTestExecution } from './common/constants';
 import { ITerminalHelper } from './common/terminal/types';
-import { IConfigurationService, IInterpreterPathService, Resource } from './common/types';
+import { IInterpreterPathService, Resource } from './common/types';
 import { IStopWatch } from './common/utils/stopWatch';
 import { IInterpreterAutoSelectionService } from './interpreter/autoSelection/types';
 import { ICondaService, IInterpreterService } from './interpreter/contracts';
@@ -82,7 +82,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     // be able to partially populate as much as possible instead
     // (through granular try-catch statements).
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
+    const workspaceFolderCount = workspaceService.workspaceFolders?.length || 0;
     const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
     const terminalShellType = terminalHelper.identifyTerminalShell();
     if (!workspaceService.isTrusted) {
@@ -90,12 +90,8 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     }
     const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-    const mainWorkspaceUri = workspaceService.hasWorkspaceFolders
-        ? workspaceService.workspaceFolders![0].uri
-        : undefined;
-    const settings = configurationService.getSettings(mainWorkspaceUri);
-    const [condaVersion, hasPython3] = await Promise.all([
+    const mainWorkspaceUri = workspaceService.workspaceFolders ? workspaceService.workspaceFolders[0].uri : undefined;
+    const [condaVersion, hasPythonThree] = await Promise.all([
         condaLocator
             .getCondaVersion()
             .then((ver) => (ver ? ver.raw : ''))
@@ -117,7 +113,9 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         traceError('Active interpreter type is detected as Unknown', JSON.stringify(interpreter));
     }
     const usingUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
-    const usingGlobalInterpreter = isUsingGlobalInterpreterInWorkspace(settings.pythonPath, serviceContainer);
+    const usingGlobalInterpreter = interpreter
+        ? isUsingGlobalInterpreterInWorkspace(interpreter.path, serviceContainer)
+        : false;
 
     return {
         condaVersion,
@@ -125,7 +123,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         pythonVersion,
         interpreterType,
         workspaceFolderCount,
-        hasPython3,
+        hasPythonThree,
         usingUserDefinedInterpreter,
         usingGlobalInterpreter,
     };

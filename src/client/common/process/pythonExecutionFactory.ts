@@ -131,7 +131,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         if (!condaEnvironment) {
             return undefined;
         }
-        const env = await createCondaEnv(condaEnvironment, pythonPath, processService, this.fileSystem);
+        const env = await createCondaEnv(condaEnvironment, processService, this.fileSystem);
         if (!env) {
             return undefined;
         }

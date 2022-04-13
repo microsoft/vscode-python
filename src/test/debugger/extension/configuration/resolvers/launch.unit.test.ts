@@ -18,7 +18,7 @@ import { IDebugEnvironmentVariablesService } from '../../../../../client/debugge
 import { LaunchConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/launch';
 import { PythonPathSource } from '../../../../../client/debugger/extension/types';
 import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
-import { IInterpreterHelper } from '../../../../../client/interpreter/contracts';
+import { IInterpreterHelper, IInterpreterService } from '../../../../../client/interpreter/contracts';
 import { getOSType } from '../../../../common';
 import { getInfoPerOS, setUpOSMocks } from './common';
 
@@ -37,6 +37,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         let documentManager: TypeMoq.IMock<IDocumentManager>;
         let diagnosticsService: TypeMoq.IMock<IInvalidPythonPathInDebuggerService>;
         let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
+        let interpreterService: TypeMoq.IMock<IInterpreterService>;
 
         function createMoqWorkspaceFolder(folderPath: string) {
             const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
@@ -66,6 +67,10 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 .returns(() => Promise.resolve(true));
 
             const settings = TypeMoq.Mock.ofType<IPythonSettings>();
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            interpreterService
+                .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve({ path: pythonPath } as any));
             settings.setup((s) => s.pythonPath).returns(() => pythonPath);
             if (workspaceFolder) {
                 settings.setup((s) => s.envFile).returns(() => path.join(workspaceFolder!.uri.fsPath, '.env2'));
@@ -83,6 +88,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 platformService.object,
                 configService.object,
                 debugEnvHelper.object,
+                interpreterService.object,
             );
         }
 

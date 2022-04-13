@@ -32,8 +32,6 @@ experiments
 • optInto: []
 • optOutFrom: []
 
-insidersChannel: "off"
-
 venvPath: "<placeholder>"
 
 ```

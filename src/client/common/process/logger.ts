@@ -10,6 +10,7 @@ import { isCI, isTestExecution } from '../constants';
 import { Logging } from '../utils/localize';
 import { getOSType, getUserHomeDir, OSType } from '../utils/platform';
 import { IProcessLogger, SpawnOptions } from './types';
+import { escapeRegExp } from 'lodash';
 
 @injectable()
 export class ProcessLogger implements IProcessLogger {
@@ -22,7 +23,7 @@ export class ProcessLogger implements IProcessLogger {
             return;
         }
         let command = args
-            ? [fileOrCommand, ...args].map((e) => e.trimQuotes().toCommandArgument()).join(' ')
+            ? [fileOrCommand, ...args].map((e) => e.trimQuotes().toCommandArgumentForPythonExt()).join(' ')
             : fileOrCommand;
         const info = [`> ${this.getDisplayCommands(command)}`];
         if (options && options.cwd) {
@@ -50,10 +51,13 @@ export class ProcessLogger implements IProcessLogger {
  * Finds case insensitive matches in the original string and replaces it with character provided.
  */
 function replaceMatchesWithCharacter(original: string, match: string, character: string): string {
-    // Backslashes have special meaning in regexes, we need an extra backlash so
-    // it's not considered special. Also match both forward and backward slash
-    // versions of 'match' for Windows.
-    const pattern = match.replaceAll('\\', getOSType() === OSType.Windows ? '(\\\\|/)' : '\\\\');
+    // Backslashes, plus signs, brackets and other characters have special meaning in regexes,
+    // we need to escape using an extra backlash so it's not considered special.
+    let pattern = escapeRegExp(match);
+    if (getOSType() === OSType.Windows) {
+        // Match both forward and backward slash versions of 'match' for Windows.
+        pattern = pattern.replaceAll('\\\\', '(\\\\|/)');
+    }
     let regex = new RegExp(pattern, 'ig');
     return original.replace(regex, character);
 }

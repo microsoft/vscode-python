@@ -45,6 +45,8 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import * as logging from '../../../client/logging';
 import { EnvironmentType, ModuleInstallerType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
+const pythonPath = path.join(__dirname, 'python');
+
 /* Complex test to ensure we cover all combinations:
 We could have written separate tests for each installer, but we'd be replicate code.
 Both approaches have their benefits.
@@ -92,7 +94,6 @@ suite('Module Installer', () => {
 
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-    const pythonPath = path.join(__dirname, 'python');
 
     suite('Method _elevatedInstall()', async () => {
         let traceLogStub: sinon.SinonStub;
@@ -233,6 +234,9 @@ suite('Module Installer', () => {
 
                             const condaService = TypeMoq.Mock.ofType<ICondaService>();
                             condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(condaExecutable));
+                            condaService
+                                .setup((c) => c.getCondaFile(true))
+                                .returns(() => Promise.resolve(condaExecutable));
 
                             const condaLocatorService = TypeMoq.Mock.ofType<IComponentAdapter>();
                             serviceContainer
@@ -292,7 +296,7 @@ suite('Module Installer', () => {
                         });
                         function setActiveInterpreter(activeInterpreter?: PythonEnvironment) {
                             interpreterService
-                                .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(resource)))
+                                .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
                                 .returns(() => Promise.resolve(activeInterpreter))
                                 .verifiable(TypeMoq.Times.atLeastOnce());
                         }
@@ -358,10 +362,14 @@ suite('Module Installer', () => {
                                                     const expectedArgs = ['install'];
                                                     if (condaEnvInfo && condaEnvInfo.name) {
                                                         expectedArgs.push('--name');
-                                                        expectedArgs.push(condaEnvInfo.name.toCommandArgument());
+                                                        expectedArgs.push(
+                                                            condaEnvInfo.name.toCommandArgumentForPythonExt(),
+                                                        );
                                                     } else if (condaEnvInfo && condaEnvInfo.path) {
                                                         expectedArgs.push('--prefix');
-                                                        expectedArgs.push(condaEnvInfo.path.fileToCommandArgument());
+                                                        expectedArgs.push(
+                                                            condaEnvInfo.path.fileToCommandArgumentForPythonExt(),
+                                                        );
                                                     }
                                                     expectedArgs.push('"pylint<2.0.0"');
                                                     expectedArgs.push('-y');
@@ -401,10 +409,14 @@ suite('Module Installer', () => {
                                                     const expectedArgs = ['install'];
                                                     if (condaEnvInfo && condaEnvInfo.name) {
                                                         expectedArgs.push('--name');
-                                                        expectedArgs.push(condaEnvInfo.name.toCommandArgument());
+                                                        expectedArgs.push(
+                                                            condaEnvInfo.name.toCommandArgumentForPythonExt(),
+                                                        );
                                                     } else if (condaEnvInfo && condaEnvInfo.path) {
                                                         expectedArgs.push('--prefix');
-                                                        expectedArgs.push(condaEnvInfo.path.fileToCommandArgument());
+                                                        expectedArgs.push(
+                                                            condaEnvInfo.path.fileToCommandArgumentForPythonExt(),
+                                                        );
                                                     }
                                                     expectedArgs.push('pylint');
                                                     expectedArgs.push('-y');
@@ -424,6 +436,7 @@ suite('Module Installer', () => {
                                             info.setup((t: any) => t.then).returns(() => undefined);
                                             info.setup((t) => t.envType).returns(() => EnvironmentType.Unknown);
                                             info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
+                                            info.setup((t) => t.path).returns(() => pythonPath);
                                             setActiveInterpreter(info.object);
                                             pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
                                             const elevatedInstall = sinon.stub(
@@ -449,6 +462,7 @@ suite('Module Installer', () => {
                                             info.setup((t: any) => t.then).returns(() => undefined);
                                             info.setup((t) => t.envType).returns(() => EnvironmentType.Unknown);
                                             info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
+                                            info.setup((t) => t.path).returns(() => pythonPath);
                                             setActiveInterpreter(info.object);
                                             pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
                                             fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
@@ -473,6 +487,7 @@ suite('Module Installer', () => {
                                             info.setup((t: any) => t.then).returns(() => undefined);
                                             info.setup((t) => t.envType).returns(() => EnvironmentType.Unknown);
                                             info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
+                                            info.setup((t) => t.path).returns(() => pythonPath);
                                             setActiveInterpreter(info.object);
                                             pythonSettings
                                                 .setup((p) => p.globalModuleInstallation)
@@ -499,6 +514,7 @@ suite('Module Installer', () => {
                                             info.setup((t: any) => t.then).returns(() => undefined);
                                             info.setup((t) => t.envType).returns(() => EnvironmentType.Unknown);
                                             info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
+                                            info.setup((t) => t.path).returns(() => pythonPath);
                                             setActiveInterpreter(info.object);
                                             pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
                                             const elevatedInstall = sinon.stub(
@@ -656,10 +672,12 @@ suite('Module Installer', () => {
                                             }
                                             if (condaEnvInfo && condaEnvInfo.name) {
                                                 expectedArgs.push('--name');
-                                                expectedArgs.push(condaEnvInfo.name.toCommandArgument());
+                                                expectedArgs.push(condaEnvInfo.name.toCommandArgumentForPythonExt());
                                             } else if (condaEnvInfo && condaEnvInfo.path) {
                                                 expectedArgs.push('--prefix');
-                                                expectedArgs.push(condaEnvInfo.path.fileToCommandArgument());
+                                                expectedArgs.push(
+                                                    condaEnvInfo.path.fileToCommandArgumentForPythonExt(),
+                                                );
                                             }
                                             expectedArgs.push(moduleName);
                                             expectedArgs.push('-y');
@@ -689,6 +707,7 @@ function generatePythonInterpreterVersions() {
         info.setup((t: any) => t.then).returns(() => undefined);
         info.setup((t) => t.envType).returns(() => EnvironmentType.VirtualEnv);
         info.setup((t) => t.version).returns(() => version);
+        info.setup((t) => t.path).returns(() => pythonPath);
         return info.object;
     });
 }

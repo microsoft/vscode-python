@@ -269,6 +269,7 @@ export namespace Experiments {
     export const optedOutOf = localize('Experiments.optedOutOf', "Experiment '{0}' is inactive");
 }
 export namespace Interpreters {
+    export const installingPython = localize('Interpreters.installingPython', 'Installing Python into Environment...');
     export const discovering = localize('Interpreters.DiscoveringInterpreters', 'Discovering Python Interpreters');
     export const refreshing = localize('Interpreters.RefreshingInterpreters', 'Refreshing Python Interpreters');
     export const condaInheritEnvMessage = localize(
@@ -319,39 +320,7 @@ export namespace InterpreterQuickPickList {
         'Refresh Interpreter list',
     );
 }
-export namespace ExtensionChannels {
-    export const yesWeekly = localize('ExtensionChannels.yesWeekly', 'Yes, weekly');
-    export const yesDaily = localize('ExtensionChannels.yesDaily', 'Yes, daily');
-    export const promptMessage = localize(
-        'ExtensionChannels.promptMessage',
-        'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?',
-    );
-    export const reloadToUseInsidersMessage = localize(
-        'ExtensionChannels.reloadToUseInsidersMessage',
-        'Please reload Visual Studio Code to use the insiders build of the Python extension.',
-    );
-    export const downloadCompletedOutputMessage = localize(
-        'ExtensionChannels.downloadCompletedOutputMessage',
-        'Insiders build download complete.',
-    );
-    export const startingDownloadOutputMessage = localize(
-        'ExtensionChannels.startingDownloadOutputMessage',
-        'Starting download for Insiders build.',
-    );
-    export const downloadingInsidersMessage = localize(
-        'ExtensionChannels.downloadingInsidersMessage',
-        'Downloading Insiders Extension... ',
-    );
-    export const installingInsidersMessage = localize(
-        'ExtensionChannels.installingInsidersMessage',
-        'Installing Insiders build of extension... ',
-    );
-    export const installingStableMessage = localize(
-        'ExtensionChannels.installingStableMessage',
-        'Installing Stable build of extension... ',
-    );
-    export const installationCompleteMessage = localize('ExtensionChannels.installationCompleteMessage', 'complete.');
-}
+
 export namespace OutputChannelNames {
     export const languageServer = localize('OutputChannelNames.languageServer', 'Python Language Server');
     export const python = localize('OutputChannelNames.python', 'Python');

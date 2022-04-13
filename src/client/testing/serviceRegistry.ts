@@ -16,7 +16,6 @@ import {
     ITestsHelper,
     IUnitTestSocketServer,
 } from './common/types';
-import { UpdateTestSettingService } from './common/updateTestSettings';
 import { UnitTestConfigurationService } from './configuration';
 import { TestConfigurationManagerFactory } from './configurationFactory';
 import { TestingService, UnitTestManagementService } from './main';
@@ -40,7 +39,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         ITestConfigurationManagerFactory,
         TestConfigurationManagerFactory,
     );
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, UpdateTestSettingService);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, UnitTestManagementService);
 
     registerTestControllerTypes(serviceManager);

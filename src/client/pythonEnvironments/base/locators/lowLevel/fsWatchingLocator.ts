@@ -21,7 +21,7 @@ export enum FSWatcherKind {
     Workspace, // Watchers observes directory in the user's currently open workspace.
 }
 
-type DirUnwatchableReason = 'too many files' | undefined;
+type DirUnwatchableReason = 'directory does not exist' | 'too many files' | undefined;
 
 /**
  * Determine if the directory is watchable.
@@ -31,11 +31,12 @@ function checkDirWatchable(dirname: string): DirUnwatchableReason {
     try {
         names = fs.readdirSync(dirname);
     } catch (err) {
-        traceError('Reading directory to watch failed', err);
-        if (err.code === 'ENOENT') {
-            // We treat a missing directory as watchable since it should
-            // be watchable if created later.
-            return undefined;
+        const exception = err as NodeJS.ErrnoException;
+        traceError('Reading directory to watch failed', exception);
+        if (exception.code === 'ENOENT') {
+            // Treat a missing directory as unwatchable since it can lead to CPU load issues:
+            // https://github.com/microsoft/vscode-python/issues/18459
+            return 'directory does not exist';
         }
         throw err; // re-throw
     }

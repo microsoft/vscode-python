@@ -29,8 +29,10 @@ export class StandardErrorHandler extends BaseErrorHandler {
     private async displayLinterError(linterId: LinterId) {
         const message = `There was an error in running the linter '${linterId}'`;
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        await appShell.showErrorMessage(message, 'View Errors');
         const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        outputChannel.show();
+        const action = await appShell.showErrorMessage(message, 'View Errors');
+        if (action === 'View Errors') {
+            outputChannel.show();
+        }
     }
 }

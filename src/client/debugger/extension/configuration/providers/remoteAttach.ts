@@ -35,6 +35,7 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
                     remoteRoot: '.',
                 },
             ],
+            justMyCode: true,
         };
 
         const connect = config.connect!;

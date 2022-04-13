@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable max-classes-per-file */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
@@ -2078,6 +2080,8 @@ export enum ConfigurationTarget {
 }
 
 export class RelativePattern implements IRelativePattern {
+    baseUri: vscode.Uri;
+
     base: string;
 
     pattern: string;
@@ -2093,6 +2097,7 @@ export class RelativePattern implements IRelativePattern {
             throw illegalArgument('pattern');
         }
 
+        this.baseUri = typeof base === 'string' ? vscUri.URI.parse(base) : base.uri;
         this.base = typeof base === 'string' ? base : base.uri.fsPath;
         this.pattern = pattern;
     }
@@ -2278,4 +2283,73 @@ export enum CommentThreadCollapsibleState {
 
 export class QuickInputButtons {
     static readonly Back: vscode.QuickInputButton = { iconPath: vscUri.URI.file('back') };
+}
+
+export enum SymbolTag {
+    Deprecated = 1,
+}
+
+export class TypeHierarchyItem {
+    name: string;
+
+    kind: SymbolKind;
+
+    tags?: ReadonlyArray<SymbolTag>;
+
+    detail?: string;
+
+    uri: vscode.Uri;
+
+    range: Range;
+
+    selectionRange: Range;
+
+    constructor(kind: SymbolKind, name: string, detail: string, uri: vscode.Uri, range: Range, selectionRange: Range) {
+        this.name = name;
+        this.kind = kind;
+        this.detail = detail;
+        this.uri = uri;
+        this.range = range;
+        this.selectionRange = selectionRange;
+    }
+}
+
+export declare type LSPObject = {
+    [key: string]: LSPAny;
+};
+
+export declare type LSPArray = LSPAny[];
+
+export declare type integer = number;
+export declare type uinteger = number;
+export declare type decimal = number;
+
+export declare type LSPAny = LSPObject | LSPArray | string | integer | uinteger | decimal | boolean | null;
+
+export class ProtocolTypeHierarchyItem extends TypeHierarchyItem {
+    data?;
+
+    constructor(
+        kind: SymbolKind,
+        name: string,
+        detail: string,
+        uri: vscode.Uri,
+        range: Range,
+        selectionRange: Range,
+        data?: LSPAny,
+    ) {
+        super(kind, name, detail, uri, range, selectionRange);
+        this.data = data;
+    }
+}
+
+export class CancellationError extends Error {}
+
+export class LSPCancellationError extends CancellationError {
+    data;
+
+    constructor(data: any) {
+        super();
+        this.data = data;
+    }
 }

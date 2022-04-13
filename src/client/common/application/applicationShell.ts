@@ -26,9 +26,12 @@ import {
     SaveDialogOptions,
     StatusBarAlignment,
     StatusBarItem,
+    TextDocument,
+    TextEditor,
     TreeView,
     TreeViewOptions,
     Uri,
+    ViewColumn,
     window,
     WindowState,
     WorkspaceFolder,
@@ -100,6 +103,14 @@ export class ApplicationShell implements IApplicationShell {
     public showInputBox(options?: InputBoxOptions, token?: CancellationToken): Thenable<string | undefined> {
         return window.showInputBox(options, token);
     }
+    public showTextDocument(
+        document: TextDocument,
+        column?: ViewColumn,
+        preserveFocus?: boolean,
+    ): Thenable<TextEditor> {
+        return window.showTextDocument(document, column, preserveFocus);
+    }
+
     public openUrl(url: string): void {
         env.openExternal(Uri.parse(url));
     }

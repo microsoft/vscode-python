@@ -4,9 +4,9 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
+import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { IFileSystem } from '../../platform/types';
-import { IConfigurationService } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
 
 type ExecutableFinderFunc = (python: string) => Promise<string | undefined>;
@@ -48,13 +48,17 @@ abstract class BaseActivationCommandProvider implements ITerminalActivationComma
     constructor(@inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer) {}
 
     public abstract isShellSupported(targetShell: TerminalShellType): boolean;
-    public getActivationCommands(
+    public async getActivationCommands(
         resource: Uri | undefined,
         targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
-        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource)
-            .pythonPath;
-        return this.getActivationCommandsForInterpreter(pythonPath, targetShell);
+        const interpreter = await this.serviceContainer
+            .get<IInterpreterService>(IInterpreterService)
+            .getActiveInterpreter(resource);
+        if (!interpreter) {
+            return undefined;
+        }
+        return this.getActivationCommandsForInterpreter(interpreter.path, targetShell);
     }
     public abstract getActivationCommandsForInterpreter(
         pythonPath: string,

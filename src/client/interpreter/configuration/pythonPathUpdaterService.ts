@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, window } from 'vscode';
 import { StopWatch } from '../../common/utils/stopWatch';
+import { SystemVariables } from '../../common/variables/systemVariables';
 import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -28,15 +29,15 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         let failed = false;
         try {
             await pythonPathUpdater.updatePythonPath(pythonPath ? path.normalize(pythonPath) : undefined);
-        } catch (reason) {
+        } catch (err) {
             failed = true;
-
+            const reason = err as Error;
             const message = reason && typeof reason.message === 'string' ? (reason.message as string) : '';
             window.showErrorMessage(`Failed to set interpreter path. Error: ${message}`);
             traceError(reason);
         }
         // do not wait for this to complete
-        this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath).catch((ex) =>
+        this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath, wkspace).catch((ex) =>
             traceError('Python Extension: sendTelemetry', ex),
         );
     }
@@ -46,13 +47,15 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         failed: boolean,
         trigger: 'ui' | 'shebang' | 'load',
         pythonPath: string | undefined,
+        wkspace?: Uri,
     ) {
         const telemetryProperties: PythonInterpreterTelemetry = {
             failed,
             trigger,
         };
         if (!failed && pythonPath) {
-            const interpreterInfo = await this.pyenvs.getInterpreterInformation(pythonPath);
+            const systemVariables = new SystemVariables(undefined, wkspace?.fsPath);
+            const interpreterInfo = await this.pyenvs.getInterpreterInformation(systemVariables.resolveAny(pythonPath));
             if (interpreterInfo) {
                 telemetryProperties.pythonVersion = interpreterInfo.version?.raw;
             }

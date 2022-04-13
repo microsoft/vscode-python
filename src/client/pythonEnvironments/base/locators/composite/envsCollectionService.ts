@@ -8,7 +8,9 @@ import { StopWatch } from '../../../../common/utils/stopWatch';
 import { traceError } from '../../../../logging';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
+import { normalizePath } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
+import { getEnvPath } from '../../info/env';
 import { IDiscoveryAPI, IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from '../../locator';
 import { getQueryFilter } from '../../locatorUtils';
 import { PythonEnvCollectionChangedEvent, PythonEnvsWatcher } from '../../watcher';
@@ -55,15 +57,19 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         });
     }
 
-    public async resolveEnv(executablePath: string): Promise<PythonEnvInfo | undefined> {
+    public async resolveEnv(path: string): Promise<PythonEnvInfo | undefined> {
+        path = normalizePath(path);
         // Note cache may have incomplete info when a refresh is happening.
         // This API is supposed to return complete info by definition, so
         // only use cache if it has complete info on an environment.
-        const cachedEnv = this.cache.getCompleteInfo(executablePath);
+        const cachedEnv = this.cache.getCompleteInfo(path);
         if (cachedEnv) {
             return cachedEnv;
         }
-        const resolved = await this.locator.resolveEnv(executablePath);
+        const resolved = await this.locator.resolveEnv(path).catch((ex) => {
+            traceError(`Failed to resolve ${path}`, ex);
+            return undefined;
+        });
         if (resolved) {
             this.cache.addEnv(resolved, true);
         }
@@ -107,6 +113,10 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 deferred.resolve();
                 sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
                     interpreters: this.cache.getAllEnvs().length,
+                    environmentsWithoutPython: this.cache
+                        .getAllEnvs()
+                        .filter((e) => getEnvPath(e.executable.filename, e.location).pathType === 'envFolderPath')
+                        .length,
                 });
             })
             .catch((ex) => deferred.reject(ex));

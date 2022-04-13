@@ -15,18 +15,22 @@ import { wrapCancellationTokens } from '../cancellation';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from '../process/internal/python';
+import { IProcessServiceFactory } from '../process/types';
 import { ITerminalServiceFactory, TerminalCreationOptions } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel, Product } from '../types';
 import { Products } from '../utils/localize';
 import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
-import { IModuleInstaller, InterpreterUri, ModuleInstallFlags } from './types';
+import { IModuleInstaller, InstallOptions, InterpreterUri, ModuleInstallFlags } from './types';
 
 @injectable()
 export abstract class ModuleInstaller implements IModuleInstaller {
     public abstract get priority(): number;
+
     public abstract get name(): string;
+
     public abstract get displayName(): string;
+
     public abstract get type(): ModuleInstallerType;
 
     constructor(protected serviceContainer: IServiceContainer) {}
@@ -36,24 +40,18 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         resource?: InterpreterUri,
         cancel?: CancellationToken,
         flags?: ModuleInstallFlags,
+        options?: InstallOptions,
     ): Promise<void> {
+        const shouldExecuteInTerminal = !options?.installAsProcess;
         const name =
-            typeof productOrModuleName == 'string'
+            typeof productOrModuleName === 'string'
                 ? productOrModuleName
                 : translateProductToModule(productOrModuleName);
         const productName = typeof productOrModuleName === 'string' ? name : ProductNames.get(productOrModuleName);
         sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName, productName });
         const uri = isResource(resource) ? resource : undefined;
-        const options: TerminalCreationOptions = {};
-        if (isResource(resource)) {
-            options.resource = uri;
-        } else {
-            options.interpreter = resource;
-        }
         const executionInfo = await this.getExecutionInfo(name, resource, flags);
-        const terminalService = this.serviceContainer
-            .get<ITerminalServiceFactory>(ITerminalServiceFactory)
-            .getTerminalService(options);
+
         const install = async (token?: CancellationToken) => {
             const executionInfoArgs = await this.processInstallArgs(executionInfo.args, resource);
             if (executionInfo.moduleName) {
@@ -64,25 +62,61 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 const interpreter = isResource(resource)
                     ? await interpreterService.getActiveInterpreter(resource)
                     : resource;
-                const pythonPath = isResource(resource) ? settings.pythonPath : resource.path;
+                const interpreterPath = interpreter?.path ?? settings.pythonPath;
+                const pythonPath = isResource(resource) ? interpreterPath : resource.path;
                 const args = internalPython.execModule(executionInfo.moduleName, executionInfoArgs);
                 if (!interpreter || interpreter.envType !== EnvironmentType.Unknown) {
-                    await terminalService.sendCommand(pythonPath, args, token);
+                    await this.executeCommand(
+                        shouldExecuteInTerminal,
+                        resource,
+                        pythonPath,
+                        args,
+                        token,
+                        executionInfo.useShell,
+                    );
                 } else if (settings.globalModuleInstallation) {
                     const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
                     if (await fs.isDirReadonly(path.dirname(pythonPath)).catch((_err) => true)) {
                         this.elevatedInstall(pythonPath, args);
                     } else {
-                        await terminalService.sendCommand(pythonPath, args, token);
+                        await this.executeCommand(
+                            shouldExecuteInTerminal,
+                            resource,
+                            pythonPath,
+                            args,
+                            token,
+                            executionInfo.useShell,
+                        );
                     }
                 } else if (name === translateProductToModule(Product.pip)) {
                     // Pip should always be installed into the specified environment.
-                    await terminalService.sendCommand(pythonPath, args, token);
+                    await this.executeCommand(
+                        shouldExecuteInTerminal,
+                        resource,
+                        pythonPath,
+                        args,
+                        token,
+                        executionInfo.useShell,
+                    );
                 } else {
-                    await terminalService.sendCommand(pythonPath, args.concat(['--user']), token);
+                    await this.executeCommand(
+                        shouldExecuteInTerminal,
+                        resource,
+                        pythonPath,
+                        args.concat(['--user']),
+                        token,
+                        executionInfo.useShell,
+                    );
                 }
             } else {
-                await terminalService.sendCommand(executionInfo.execPath!, executionInfoArgs, token);
+                await this.executeCommand(
+                    shouldExecuteInTerminal,
+                    resource,
+                    executionInfo.execPath!,
+                    executionInfoArgs,
+                    token,
+                    executionInfo.useShell,
+                );
             }
         };
 
@@ -103,6 +137,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             await install(cancel);
         }
     }
+
     public abstract isSupported(resource?: InterpreterUri): Promise<boolean>;
 
     protected elevatedInstall(execPath: string, args: string[]) {
@@ -131,11 +166,13 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             }
         });
     }
+
     protected abstract getExecutionInfo(
         moduleName: string,
         resource?: InterpreterUri,
         flags?: ModuleInstallFlags,
     ): Promise<ExecutionInfo>;
+
     private async processInstallArgs(args: string[], resource?: InterpreterUri): Promise<string[]> {
         const indexOfPylint = args.findIndex((arg) => arg.toUpperCase() === 'PYLINT');
         if (indexOfPylint === -1) {
@@ -151,6 +188,44 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             return newArgs;
         }
         return args;
+    }
+
+    private async executeCommand(
+        executeInTerminal: boolean,
+        resource: InterpreterUri | undefined,
+        command: string,
+        args: string[],
+        token: CancellationToken | undefined,
+        useShell: boolean | undefined,
+    ) {
+        const options: TerminalCreationOptions = {};
+        if (isResource(resource)) {
+            options.resource = resource;
+        } else {
+            options.interpreter = resource;
+        }
+        if (executeInTerminal) {
+            const terminalService = this.serviceContainer
+                .get<ITerminalServiceFactory>(ITerminalServiceFactory)
+                .getTerminalService(options);
+
+            terminalService.sendCommand(command, args, token);
+        } else {
+            const processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+            const processService = await processServiceFactory.create(options.resource);
+            if (useShell) {
+                const argv = [command, ...args];
+                // Concat these together to make a set of quoted strings
+                const quoted = argv.reduce(
+                    (p, c) =>
+                        p ? `${p} ${c.toCommandArgumentForPythonExt()}` : `${c.toCommandArgumentForPythonExt()}`,
+                    '',
+                );
+                await processService.shellExec(quoted);
+            } else {
+                await processService.exec(command, args);
+            }
+        }
     }
 }
 
@@ -204,6 +279,8 @@ export function translateProductToModule(product: Product): string {
             return 'pip';
         case Product.ensurepip:
             return 'ensurepip';
+        case Product.python:
+            return 'python';
         default: {
             throw new Error(`Product ${product} cannot be installed as a Python Module.`);
         }

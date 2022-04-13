@@ -14,13 +14,13 @@ import {
     Event,
     Extension,
     ExtensionContext,
+    Memento,
     OutputChannel,
     Uri,
     WorkspaceEdit,
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
-import type { ExtensionChannels } from './insidersBuild/types';
-import type { InterpreterUri, ModuleInstallFlags } from './installer/types';
+import type { InstallOptions, InterpreterUri, ModuleInstallFlags } from './installer/types';
 import { EnvironmentVariables } from './variables/types';
 import { ITestingSettings } from '../testing/configuration/types';
 
@@ -37,6 +37,11 @@ export const WORKSPACE_MEMENTO = Symbol('IWorkspaceMemento');
 
 export type Resource = Uri | undefined;
 export interface IPersistentState<T> {
+    /**
+     * Storage is exposed in this type to make sure folks always use persistent state
+     * factory to access any type of storage as all storages are tracked there.
+     */
+    readonly storage: Memento;
     readonly value: T;
     updateValue(value: T): Promise<void>;
 }
@@ -57,6 +62,7 @@ export type ExecutionInfo = {
     moduleName?: string;
     args: string[];
     product?: Product;
+    useShell?: boolean;
 };
 
 export enum InstallerResponse {
@@ -77,6 +83,7 @@ export enum ProductType {
     TestFramework = 'TestFramework',
     RefactoringLibrary = 'RefactoringLibrary',
     DataScience = 'DataScience',
+    Python = 'Python',
 }
 
 export enum Product {
@@ -105,6 +112,7 @@ export enum Product {
     torchProfilerImportName = 26,
     pip = 27,
     ensurepip = 28,
+    python = 29,
 }
 
 export const IInstaller = Symbol('IInstaller');
@@ -121,6 +129,7 @@ export interface IInstaller {
         resource?: InterpreterUri,
         cancel?: CancellationToken,
         flags?: ModuleInstallFlags,
+        options?: InstallOptions,
     ): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean>;
     isProductVersionCompatible(
@@ -171,7 +180,6 @@ export interface IPythonSettings {
     readonly condaPath: string;
     readonly pipenvPath: string;
     readonly poetryPath: string;
-    readonly insidersChannel: ExtensionChannels;
     readonly downloadLanguageServer: boolean;
     readonly devOptions: string[];
     readonly linting: ILintingSettings;
