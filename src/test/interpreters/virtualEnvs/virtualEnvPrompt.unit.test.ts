@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { anything, deepEqual, instance, mock, reset, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Disposable, Uri } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
@@ -13,7 +13,7 @@ import { IPersistentState, IPersistentStateFactory } from '../../../client/commo
 import { Common } from '../../../client/common/utils/localize';
 import { PythonPathUpdaterService } from '../../../client/interpreter/configuration/pythonPathUpdaterService';
 import { IPythonPathUpdaterServiceManager } from '../../../client/interpreter/configuration/types';
-import { IComponentAdapter, IInterpreterHelper } from '../../../client/interpreter/contracts';
+import { IComponentAdapter, IInterpreterHelper, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
 import { VirtualEnvironmentPrompt } from '../../../client/interpreter/virtualEnvs/virtualEnvPrompt';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
@@ -34,12 +34,18 @@ suite('Virtual Environment Prompt', () => {
     let disposable: Disposable;
     let appShell: IApplicationShell;
     let componentAdapter: IComponentAdapter;
+    let interpreterService: IInterpreterService;
     let environmentPrompt: VirtualEnvironmentPromptTest;
     setup(() => {
         persistentStateFactory = mock(PersistentStateFactory);
         helper = mock(InterpreterHelper);
         pythonPathUpdaterService = mock(PythonPathUpdaterService);
         componentAdapter = mock<IComponentAdapter>();
+        interpreterService = mock<IInterpreterService>();
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
+            id: 'selected',
+            path: 'path/to/selected',
+        } as unknown) as PythonEnvironment);
         disposable = mock(Disposable);
         appShell = mock(ApplicationShell);
         environmentPrompt = new VirtualEnvironmentPromptTest(
@@ -49,6 +55,7 @@ suite('Virtual Environment Prompt', () => {
             [instance(disposable)],
             instance(appShell),
             instance(componentAdapter),
+            instance(interpreterService),
         );
     });
 
@@ -77,7 +84,36 @@ suite('Virtual Environment Prompt', () => {
         verify(appShell.showInformationMessage(anything(), ...prompts)).once();
     });
 
-    test('When in experiment, user is notified if interpreter exists and only python path to global interpreter is specified in settings', async () => {
+    test('User is not notified if currently selected interpreter is the same as new interpreter', async () => {
+        const resource = Uri.file('a');
+        const interpreter1 = { path: 'path/to/interpreter1' };
+        const interpreter2 = { path: 'path/to/interpreter2' };
+        const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
+        const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+
+        // Return interpreters using the component adapter instead
+        when(componentAdapter.getWorkspaceVirtualEnvInterpreters(resource)).thenResolve([
+            interpreter1,
+            interpreter2,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ] as any);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when(helper.getBestInterpreter(deepEqual([interpreter1, interpreter2] as any))).thenReturn(interpreter2 as any);
+        reset(interpreterService);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(
+            (interpreter2 as unknown) as PythonEnvironment,
+        );
+        when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
+            notificationPromptEnabled.object,
+        );
+        notificationPromptEnabled.setup((n) => n.value).returns(() => true);
+        when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve();
+
+        await environmentPrompt.handleNewEnvironment(resource);
+
+        verify(appShell.showInformationMessage(anything(), ...prompts)).never();
+    });
+    test('User is notified if interpreter exists and only python path to global interpreter is specified in settings', async () => {
         const resource = Uri.file('a');
         const interpreter1 = { path: 'path/to/interpreter1' };
         const interpreter2 = { path: 'path/to/interpreter2' };
