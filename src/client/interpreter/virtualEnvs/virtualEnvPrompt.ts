@@ -8,7 +8,7 @@ import { IApplicationShell } from '../../common/application/types';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { Common, Interpreters } from '../../common/utils/localize';
-import { traceDecoratorError } from '../../logging';
+import { traceDecoratorError, traceVerbose } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -50,6 +50,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         }
         const currentInterpreter = await this.interpreterService.getActiveInterpreter(resource);
         if (currentInterpreter?.id === interpreter.id) {
+            traceVerbose('New environment has already been selected');
             return;
         }
         await this.notifyUser(interpreter, resource);
