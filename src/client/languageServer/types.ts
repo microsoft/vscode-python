@@ -13,7 +13,7 @@ export const ILanguageServerWatcher = Symbol('ILanguageServerWatcher');
 export interface ILanguageServerWatcher {
     readonly languageServerExtensionManager: ILanguageServerExtensionManager | undefined;
     readonly languageServerType: LanguageServerType;
-    startLanguageServer(languageServerType: LanguageServerType): Promise<void>;
+    startLanguageServer(languageServerType: LanguageServerType, resource?: Resource): Promise<void>;
 }
 
 export interface ILanguageServerCapabilities extends ILanguageServer {

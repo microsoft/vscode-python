@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent } from 'vscode';
+import { ConfigurationChangeEvent, Uri } from 'vscode';
 import { LanguageServerChangeHandler } from '../activation/common/languageServerChangeHandler';
 import {
     IExtensionActivationService,
@@ -19,11 +19,12 @@ import {
     IExperimentService,
     IExtensions,
     IInterpreterPathService,
+    InterpreterConfigurationScope,
     Resource,
 } from '../common/types';
 import { LanguageService } from '../common/utils/localize';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
-import { IInterpreterService } from '../interpreter/contracts';
+import { IInterpreterHelper, IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { traceLog } from '../logging';
 import { PythonEnvironment } from '../pythonEnvironments/info';
@@ -46,9 +47,10 @@ export class LanguageServerWatcher
 
     languageServerType: LanguageServerType;
 
-    private resource: Resource;
+    private workspaceInterpreters: Map<Resource, PythonEnvironment | undefined>;
 
-    private interpreter: PythonEnvironment | undefined;
+    // In a multiroot workspace scenario we will have one language server per folder.
+    private workspaceLanguageServers: Map<Resource, ILanguageServerExtensionManager | undefined>;
 
     private languageServerChangeHandler: LanguageServerChangeHandler;
 
@@ -57,6 +59,7 @@ export class LanguageServerWatcher
         @inject(ILanguageServerOutputChannel) private readonly lsOutputChannel: ILanguageServerOutputChannel,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
+        @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IEnvironmentVariablesProvider) private readonly environmentService: IEnvironmentVariablesProvider,
@@ -67,12 +70,14 @@ export class LanguageServerWatcher
         @inject(IApplicationShell) readonly applicationShell: IApplicationShell,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
     ) {
+        this.workspaceInterpreters = new Map();
+        this.workspaceLanguageServers = new Map();
         this.languageServerType = this.configurationService.getSettings().languageServer;
 
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
 
         if (this.workspaceService.isTrusted) {
-            disposables.push(this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this)));
+            disposables.push(this.interpreterPathService.onDidChange(this.onDidChangeInterpreter.bind(this)));
         }
 
         this.languageServerChangeHandler = new LanguageServerChangeHandler(
@@ -94,19 +99,20 @@ export class LanguageServerWatcher
 
     // IExtensionActivationService
 
-    public async activate(resource: Resource): Promise<void> {
-        this.resource = resource;
-        await this.startLanguageServer(this.languageServerType);
+    public async activate(resource?: Resource): Promise<void> {
+        await this.startLanguageServer(this.languageServerType, resource);
     }
 
-    // ILanguageServerWatcher;
+    // ILanguageServerWatcher
 
-    public async startLanguageServer(languageServerType: LanguageServerType): Promise<void> {
-        const interpreter = await this.interpreterService?.getActiveInterpreter(this.resource);
+    public async startLanguageServer(languageServerType: LanguageServerType, resource?: Resource): Promise<void> {
+        const lsResource = this.getWorkspaceKey(resource);
+        const currentInterpreter = this.workspaceInterpreters.get(lsResource);
+        const interpreter = await this.interpreterService?.getActiveInterpreter(resource);
 
         // Destroy the old language server if it's different.
-        if (interpreter !== this.interpreter) {
-            this.stopLanguageServer();
+        if (interpreter !== currentInterpreter) {
+            this.stopLanguageServer(lsResource);
         }
 
         // If the interpreter is Python 2 and the LS setting is explicitly set to Jedi, turn it off.
@@ -130,37 +136,45 @@ export class LanguageServerWatcher
         }
 
         // Instantiate the language server extension manager.
-        this.languageServerExtensionManager = this.createLanguageServer(serverType);
+        const languageServerExtensionManager = this.createLanguageServer(serverType);
 
-        if (this.languageServerExtensionManager.canStartLanguageServer()) {
+        if (languageServerExtensionManager.canStartLanguageServer()) {
             // Start the language server.
-            await this.languageServerExtensionManager.startLanguageServer(this.resource, interpreter);
+            await languageServerExtensionManager.startLanguageServer(lsResource, interpreter);
 
             logStartup(languageServerType);
             this.languageServerType = languageServerType;
-            this.interpreter = interpreter;
+            this.workspaceInterpreters.set(lsResource, interpreter);
         } else {
-            await this.languageServerExtensionManager.languageServerNotAvailable();
+            await languageServerExtensionManager.languageServerNotAvailable();
         }
+
+        this.workspaceLanguageServers.set(lsResource, languageServerExtensionManager);
     }
 
     // ILanguageServerCache
 
-    public async get(): Promise<ILanguageServer> {
-        if (!this.languageServerExtensionManager) {
-            this.startLanguageServer(this.languageServerType);
+    public async get(resource?: Resource): Promise<ILanguageServer> {
+        const lsResource = this.getWorkspaceKey(resource);
+        const languageServerExtensionManager = this.workspaceLanguageServers.get(lsResource);
+
+        if (!languageServerExtensionManager) {
+            this.startLanguageServer(this.languageServerType, resource);
         }
 
-        return Promise.resolve(this.languageServerExtensionManager!.get());
+        return Promise.resolve(languageServerExtensionManager!.get());
     }
 
     // Private methods
 
-    private stopLanguageServer(): void {
-        if (this.languageServerExtensionManager) {
-            this.languageServerExtensionManager.stopLanguageServer();
-            this.languageServerExtensionManager.dispose();
-            this.languageServerExtensionManager = undefined;
+    private stopLanguageServer(resource?: Resource): void {
+        const lsResource = this.getWorkspaceKey(resource);
+        const languageServerExtensionManager = this.workspaceLanguageServers.get(lsResource);
+
+        if (languageServerExtensionManager) {
+            languageServerExtensionManager.stopLanguageServer();
+            languageServerExtensionManager.dispose();
+            this.workspaceLanguageServers.delete(lsResource);
         }
     }
 
@@ -204,30 +218,33 @@ export class LanguageServerWatcher
         return this.languageServerExtensionManager;
     }
 
-    private async refreshLanguageServer(): Promise<void> {
-        const languageServerType = this.configurationService.getSettings().languageServer;
+    private async refreshLanguageServer(resource?: Resource): Promise<void> {
+        const lsResource = this.getWorkspaceKey(resource);
+        const languageServerType = this.configurationService.getSettings(lsResource).languageServer;
 
         if (languageServerType !== this.languageServerType) {
-            this.stopLanguageServer();
-            await this.startLanguageServer(languageServerType);
+            this.stopLanguageServer(lsResource);
+            await this.startLanguageServer(languageServerType, lsResource);
         }
     }
 
     private getCurrentLanguageServerTypeIsDefault(): boolean {
-        return this.configurationService.getSettings(this.resource).languageServerIsDefault;
+        return this.configurationService.getSettings().languageServerIsDefault;
     }
 
     // Watch for settings changes.
     private async onDidChangeConfiguration(event: ConfigurationChangeEvent): Promise<void> {
-        if (event.affectsConfiguration('python.languageServer')) {
-            await this.refreshLanguageServer();
+        const resource = this.interpreterHelper.getActiveWorkspaceUri(undefined)?.folderUri;
+
+        if (event.affectsConfiguration('python.languageServer', resource)) {
+            await this.refreshLanguageServer(resource);
         }
     }
 
     // Watch for interpreter changes.
-    private async onDidChangeInterpreter(): Promise<void> {
-        // Reactivate the resource. It should destroy the old one if it's different.
-        return this.activate(this.resource);
+    private async onDidChangeInterpreter(event: InterpreterConfigurationScope): Promise<void> {
+        // Reactivate the language server (if in a multiroot workspace scenario, pick the correct one).
+        return this.activate(event.uri);
     }
 
     // Watch for extension changes.
@@ -237,6 +254,19 @@ export class LanguageServerWatcher
         if (languageServerType !== this.languageServerType) {
             await this.refreshLanguageServer();
         }
+    }
+
+    // Get the workspace key for the given resource, in order to query this.workspaceInterpreters and this.workspaceLanguageServers.
+    private getWorkspaceKey(resource?: Resource): Resource {
+        let uri;
+
+        if (resource) {
+            uri = this.workspaceService.getWorkspaceFolder(resource)?.uri;
+        } else {
+            uri = this.interpreterHelper.getActiveWorkspaceUri(resource)?.folderUri;
+        }
+
+        return uri ?? Uri.parse('default');
     }
 }
 
