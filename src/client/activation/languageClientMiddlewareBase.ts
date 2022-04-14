@@ -104,7 +104,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
         return this.connectedPromise.promise;
     }
 
-    protected notebookAddon: (Middleware & Disposable) | undefined;
+    public notebookAddon: (Middleware & Disposable) | undefined;
 
     private connectedPromise = createDeferred<boolean>();
 

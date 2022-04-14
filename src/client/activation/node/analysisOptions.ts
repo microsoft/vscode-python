@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { LanguageClientOptions } from 'vscode-languageclient';
+import { inject, injectable } from 'inversify';
+import { WorkspaceFolder } from 'vscode';
+import { DocumentFilter } from 'vscode-languageserver-protocol';
 import { IWorkspaceService } from '../../common/application/types';
 
 import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
 import { ILanguageServerOutputChannel } from '../types';
+import { LspNotebooksExperiment } from './lspNotebooksExperiment';
 
 export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsBase {
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
@@ -18,6 +21,23 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         return ({
             experimentationSupport: true,
             trustedWorkspaceSupport: true,
-        } as unknown) as LanguageClientOptions;
+            lspNotebooksSupport: await LspNotebooksExperiment.isInNotebooksExperiment(),
+        };
+    }
+
+    protected async getDocumentFilters(_workspaceFolder?: WorkspaceFolder): Promise<DocumentFilter[]> {
+        let filters = await super.getDocumentFilters(_workspaceFolder);
+
+        if (await LspNotebooksExperiment.isInNotebooksExperiment()) {
+            return [
+                ...filters,
+                {
+                    notebookDocument: { notebookType: 'jupyter-notebook', pattern: '**/*.ipynb' },
+                    cellLanguage: 'python',
+                },
+            ];
+        }
+
+        return filters;
     }
 }

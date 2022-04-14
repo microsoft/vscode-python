@@ -9,7 +9,8 @@ import { dirname } from 'path';
 import { CancellationToken, Disposable, Event, Extension, Memento, Uri } from 'vscode';
 import * as lsp from 'vscode-languageserver-protocol';
 import type { SemVer } from 'semver';
-import { ILanguageServerCache, ILanguageServerConnection } from '../activation/types';
+import { Middleware } from 'vscode-languageclient';
+import { ILanguageServerCache, ILanguageServerConnection, ILanguageServerManager } from '../activation/types';
 import { IWorkspaceService } from '../common/application/types';
 import { JUPYTER_EXTENSION_ID } from '../common/constants';
 import { InterpreterUri, ModuleInstallFlags } from '../common/installer/types';
@@ -157,6 +158,8 @@ type PythonApiForJupyterExtension = {
         resource: Resource,
         interpreter?: PythonEnvironment,
     ): Promise<string[] | undefined>;
+
+    injectMiddlewareHook(middleware: Middleware): void;
 };
 
 type JupyterExtensionApi = {
@@ -194,6 +197,7 @@ export class JupyterExtensionIntegration {
         @inject(IComponentAdapter) private pyenvs: IComponentAdapter,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(ICondaService) private readonly condaService: ICondaService,
+        @inject(ILanguageServerManager) private readonly languageServerManager: ILanguageServerManager,
     ) {}
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
@@ -275,6 +279,8 @@ export class JupyterExtensionIntegration {
             getCondaVersion: () => this.condaService.getCondaVersion(),
             getEnvironmentActivationShellCommands: (resource: Resource, interpreter?: PythonEnvironment) =>
                 this.envActivation.getEnvironmentActivationShellCommands(resource, interpreter),
+            injectMiddlewareHook: (middleware: Middleware & Disposable) =>
+                this.languageServerManager.setNotebookMiddleware(middleware),
         });
         return undefined;
     }

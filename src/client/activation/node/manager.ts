@@ -2,6 +2,9 @@
 // Licensed under the MIT License.
 import '../../common/extensions';
 
+import { inject, injectable, named } from 'inversify';
+
+import { Disposable } from 'vscode';
 import { ICommandManager } from '../../common/application/types';
 import { IDisposable, IExtensions, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
@@ -19,6 +22,7 @@ import {
 } from '../types';
 import { traceDecoratorError, traceDecoratorVerbose } from '../../logging';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
+import { Middleware } from 'vscode-languageclient';
 
 export class NodeLanguageServerManager implements ILanguageServerManager {
     private resource!: Resource;
@@ -97,6 +101,14 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         if (this.connected) {
             this.connected = false;
             this.middleware?.disconnect();
+        }
+    }
+
+    // QUESTIONS:
+    // Better way to install the injected middleware rather than leveraging existing LanguageClientMiddleware.notebookAddon?
+    public setNotebookMiddleware(notebookAddon: Middleware & Disposable): void {
+        if (this.middleware) {
+            this.middleware.notebookAddon = notebookAddon;
         }
     }
 

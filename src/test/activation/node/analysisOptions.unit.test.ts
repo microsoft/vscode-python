@@ -17,7 +17,7 @@ suite('Pylance Language Server - Analysis Options', () => {
             return super.getWorkspaceFolder();
         }
 
-        public getDocumentFilters(workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
+        public async getDocumentFilters(workspaceFolder?: WorkspaceFolder): Promise<DocumentFilter[]> {
             return super.getDocumentFilters(workspaceFolder);
         }
 
@@ -51,10 +51,10 @@ suite('Pylance Language Server - Analysis Options', () => {
         expect(filter).to.be.equal(PYTHON);
     });
 
-    test('Document filter matches all python language schemes when in virtual workspace', () => {
+    test('Document filter matches all python language schemes when in virtual workspace', async () => {
         workspace.reset();
         workspace.setup((w) => w.isVirtualWorkspace).returns(() => true);
-        const filter = analysisOptions.getDocumentFilters();
+        const filter = await analysisOptions.getDocumentFilters();
         assert.deepEqual(filter, [{ language: PYTHON_LANGUAGE }]);
     });
 

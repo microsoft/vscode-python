@@ -14,7 +14,7 @@ import {
     RenameProvider,
     SignatureHelpProvider,
 } from 'vscode';
-import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
+import { LanguageClient, LanguageClientOptions, Middleware } from 'vscode-languageclient/node';
 import * as lsp from 'vscode-languageserver-protocol';
 import type { IDisposable, IOutputChannel, Resource } from '../common/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
@@ -125,6 +125,7 @@ export interface ILanguageServerManager extends IDisposable {
     start(resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void>;
     connect(): void;
     disconnect(): void;
+    setNotebookMiddleware(notebookAddon: Middleware): void;
 }
 
 export const ILanguageServerProxy = Symbol('ILanguageServerProxy');

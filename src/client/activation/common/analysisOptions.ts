@@ -36,7 +36,7 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
     @traceDecoratorError('Failed to get analysis options')
     public async getAnalysisOptions(): Promise<LanguageClientOptions> {
         const workspaceFolder = this.getWorkspaceFolder();
-        const documentSelector = this.getDocumentFilters(workspaceFolder);
+        const documentSelector = await this.getDocumentFilters(workspaceFolder);
 
         return {
             documentSelector,
@@ -54,7 +54,7 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
         return undefined;
     }
 
-    protected getDocumentFilters(_workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
+    protected async getDocumentFilters(_workspaceFolder?: WorkspaceFolder): Promise<DocumentFilter[]> {
         return this.workspace.isVirtualWorkspace ? [{ language: PYTHON_LANGUAGE }] : PYTHON;
     }
 
