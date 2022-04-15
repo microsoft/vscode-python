@@ -47,10 +47,10 @@ export class LanguageServerWatcher
 
     languageServerType: LanguageServerType;
 
-    private workspaceInterpreters: Map<Resource, PythonEnvironment | undefined>;
+    private workspaceInterpreters: Map<string, PythonEnvironment | undefined>;
 
     // In a multiroot workspace scenario we will have one language server per folder.
-    private workspaceLanguageServers: Map<Resource, ILanguageServerExtensionManager | undefined>;
+    private workspaceLanguageServers: Map<string, ILanguageServerExtensionManager | undefined>;
 
     private languageServerChangeHandler: LanguageServerChangeHandler;
 
@@ -107,11 +107,11 @@ export class LanguageServerWatcher
 
     public async startLanguageServer(languageServerType: LanguageServerType, resource?: Resource): Promise<void> {
         const lsResource = this.getWorkspaceKey(resource);
-        const currentInterpreter = this.workspaceInterpreters.get(lsResource);
+        const currentInterpreter = this.workspaceInterpreters.get(lsResource.fsPath);
         const interpreter = await this.interpreterService?.getActiveInterpreter(resource);
 
         // Destroy the old language server if it's different.
-        if (interpreter !== currentInterpreter) {
+        if (currentInterpreter && interpreter !== currentInterpreter) {
             this.stopLanguageServer(lsResource);
         }
 
@@ -144,19 +144,19 @@ export class LanguageServerWatcher
 
             logStartup(languageServerType);
             this.languageServerType = languageServerType;
-            this.workspaceInterpreters.set(lsResource, interpreter);
+            this.workspaceInterpreters.set(lsResource.fsPath, interpreter);
         } else {
             await languageServerExtensionManager.languageServerNotAvailable();
         }
 
-        this.workspaceLanguageServers.set(lsResource, languageServerExtensionManager);
+        this.workspaceLanguageServers.set(lsResource.fsPath, languageServerExtensionManager);
     }
 
     // ILanguageServerCache
 
     public async get(resource?: Resource): Promise<ILanguageServer> {
         const lsResource = this.getWorkspaceKey(resource);
-        const languageServerExtensionManager = this.workspaceLanguageServers.get(lsResource);
+        const languageServerExtensionManager = this.workspaceLanguageServers.get(lsResource.fsPath);
 
         if (!languageServerExtensionManager) {
             this.startLanguageServer(this.languageServerType, resource);
@@ -169,12 +169,12 @@ export class LanguageServerWatcher
 
     private stopLanguageServer(resource?: Resource): void {
         const lsResource = this.getWorkspaceKey(resource);
-        const languageServerExtensionManager = this.workspaceLanguageServers.get(lsResource);
+        const languageServerExtensionManager = this.workspaceLanguageServers.get(lsResource.fsPath);
 
         if (languageServerExtensionManager) {
             languageServerExtensionManager.stopLanguageServer();
             languageServerExtensionManager.dispose();
-            this.workspaceLanguageServers.delete(lsResource);
+            this.workspaceLanguageServers.delete(lsResource.fsPath);
         }
     }
 
@@ -257,7 +257,7 @@ export class LanguageServerWatcher
     }
 
     // Get the workspace key for the given resource, in order to query this.workspaceInterpreters and this.workspaceLanguageServers.
-    private getWorkspaceKey(resource?: Resource): Resource {
+    private getWorkspaceKey(resource?: Resource): Uri {
         let uri;
 
         if (resource) {
