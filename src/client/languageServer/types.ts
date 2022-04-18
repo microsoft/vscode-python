@@ -26,10 +26,11 @@ export interface ILanguageServerCapabilities extends ILanguageServer {
 }
 
 /**
- * Language server extension manager implementations act as a wrapper for anything related to their language server extension.
+ * `ILanguageServerExtensionManager` implementations act as wrappers for anything related to their specific language server extension.
  * They are responsible for starting and stopping the language server provided by their LS extension.
+ * They also extend the `ILanguageServer` interface via `ILanguageServerCapabilities` to continue supporting the Jupyter integration.
  *
- * They also extend the ILanguageServer interface via ILanguageServerCapabilities to keep providing support to the Jupyter integration.
+ * Note that the methods exposed in this interface shouldn't be used outside of the language server watcher (and tests).
  */
 export interface ILanguageServerExtensionManager extends ILanguageServerCapabilities {
     startLanguageServer(resource: Resource, interpreter?: PythonEnvironment): Promise<void>;
