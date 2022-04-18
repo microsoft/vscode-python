@@ -234,9 +234,10 @@ export class LanguageServerWatcher
 
     // Watch for settings changes.
     private async onDidChangeConfiguration(event: ConfigurationChangeEvent): Promise<void> {
-        const workspacesUris = this.workspaceService.workspaceFolders?.map((workspace) => workspace.uri) ?? [undefined];
+        const workspacesUris = this.workspaceService.workspaceFolders?.map((workspace) => workspace.uri) ?? [];
+
         workspacesUris.forEach(async (resource) => {
-            if (event.affectsConfiguration(`python.${languageServerSetting}`, resource)) {
+            if (event.affectsConfiguration(`python.languageServer`, resource)) {
                 await this.refreshLanguageServer(resource);
             }
         });

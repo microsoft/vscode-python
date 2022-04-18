@@ -376,6 +376,7 @@ suite('Language server watcher', () => {
             onDidChangeConfiguration: (listener: (event: ConfigurationChangeEvent) => Promise<void>) => {
                 onDidChangeConfigListener = listener;
             },
+            workspaceFolders: [{ uri: Uri.parse('workspace') }],
         } as unknown) as IWorkspaceService;
 
         const getSettingsStub = sandbox.stub();
