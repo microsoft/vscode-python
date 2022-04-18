@@ -482,13 +482,19 @@ export class Conda {
     public async getInterpreterPathForEnvironment(condaEnv: CondaEnvInfo): Promise<string | undefined> {
         const executablePath = await getInterpreterPath(condaEnv.prefix);
         if (executablePath) {
+            traceVerbose('Found executable for conda env', JSON.stringify(condaEnv));
             return executablePath;
         }
+        traceVerbose(
+            'Executable does not exist within conda env, running conda run to get it',
+            JSON.stringify(condaEnv),
+        );
         return this.getInterpreterPathUsingCondaRun(condaEnv);
     }
 
     @cache(-1, true)
     private async getInterpreterPathUsingCondaRun(condaEnv: CondaEnvInfo) {
+        traceVerbose('Preparing args for conda run', JSON.stringify(condaEnv));
         const runArgs = await this.getRunPythonArgs(condaEnv);
         if (runArgs) {
             try {
@@ -498,6 +504,7 @@ export class Conda {
                 traceError(`Failed to process environment: ${JSON.stringify(condaEnv)}`, ex);
             }
         }
+        traceError('No executable found for conda env', JSON.stringify(condaEnv));
         return undefined;
     }
 
