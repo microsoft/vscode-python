@@ -26,6 +26,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IEditorUtils,
+    IExtensions,
     IPersistentState,
     IPersistentStateFactory,
     IPythonSettings,
@@ -49,7 +50,9 @@ suite('Import Sort Provider', () => {
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let persistentStateFactory: TypeMoq.IMock<IPersistentStateFactory>;
+    let extensions: TypeMoq.IMock<IExtensions>;
     let sortProvider: SortImportsEditingProvider;
+
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
@@ -61,6 +64,8 @@ suite('Import Sort Provider', () => {
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         editorUtils = TypeMoq.Mock.ofType<IEditorUtils>();
         persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        extensions = TypeMoq.Mock.ofType<IExtensions>();
+        extensions.setup((e) => e.getExtension(TypeMoq.It.isAny())).returns(() => undefined);
         serviceContainer.setup((c) => c.get(IPersistentStateFactory)).returns(() => persistentStateFactory.object);
         serviceContainer.setup((c) => c.get(ICommandManager)).returns(() => commandManager.object);
         serviceContainer.setup((c) => c.get(IDocumentManager)).returns(() => documentManager.object);
@@ -70,6 +75,7 @@ suite('Import Sort Provider', () => {
         serviceContainer.setup((c) => c.get(IProcessServiceFactory)).returns(() => processServiceFactory.object);
         serviceContainer.setup((c) => c.get(IEditorUtils)).returns(() => editorUtils.object);
         serviceContainer.setup((c) => c.get(IDisposableRegistry)).returns(() => []);
+        serviceContainer.setup((c) => c.get(IExtensions)).returns(() => extensions.object);
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         sortProvider = new SortImportsEditingProvider(serviceContainer.object);
     });

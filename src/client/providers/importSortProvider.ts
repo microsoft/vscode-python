@@ -6,7 +6,13 @@ import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/
 import { Commands, PYTHON_LANGUAGE } from '../common/constants';
 import * as internalScripts from '../common/process/internal/scripts';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../common/process/types';
-import { IConfigurationService, IDisposableRegistry, IEditorUtils, IPersistentStateFactory } from '../common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IEditorUtils,
+    IExtensions,
+    IPersistentStateFactory,
+} from '../common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../common/utils/async';
 import { Common, Diagnostics } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -39,6 +45,8 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
 
     private readonly editorUtils: IEditorUtils;
 
+    private readonly extensions: IExtensions;
+
     public constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.shell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
@@ -47,6 +55,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.editorUtils = serviceContainer.get<IEditorUtils>(IEditorUtils);
         this.persistentStateFactory = serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        this.extensions = serviceContainer.get<IExtensions>(IExtensions);
     }
 
     @captureTelemetry(EventName.FORMAT_SORT_IMPORTS)
@@ -96,6 +105,12 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     }
 
     public async sortImports(uri?: Uri): Promise<void> {
+        const extension = this.extensions.getExtension('ms-python.isort');
+        if (extension && extension.isActive) {
+            // Don't run isort from python extension if isort extension is active.
+            return;
+        }
+
         if (!uri) {
             const activeEditor = this.documentManager.activeTextEditor;
             if (!activeEditor || activeEditor.document.languageId !== PYTHON_LANGUAGE) {
