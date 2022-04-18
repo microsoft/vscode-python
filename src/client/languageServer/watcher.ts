@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as path from 'path';
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 import { LanguageServerChangeHandler } from '../activation/common/languageServerChangeHandler';
@@ -279,15 +280,17 @@ export class LanguageServerWatcher
 
 function logStartup(languageServerType: LanguageServerType, resource: Uri): void {
     let outputLine;
+    const basename = path.basename(resource.fsPath);
+
     switch (languageServerType) {
         case LanguageServerType.Jedi:
-            outputLine = LanguageService.startingJedi().format(resource.fsPath);
+            outputLine = LanguageService.startingJedi().format(basename);
             break;
         case LanguageServerType.Node:
-            outputLine = LanguageService.startingPylance().format(resource.fsPath);
+            outputLine = LanguageService.startingPylance().format(basename);
             break;
         case LanguageServerType.None:
-            outputLine = LanguageService.startingNone().format(resource.fsPath);
+            outputLine = LanguageService.startingNone().format(basename);
             break;
         default:
             throw new Error(`Unknown language server type: ${languageServerType}`);
