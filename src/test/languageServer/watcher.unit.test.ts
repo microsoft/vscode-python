@@ -253,7 +253,7 @@ suite('Language server watcher', () => {
             } as IConfigurationService,
             {} as IExperimentService,
             ({
-                getActiveWorkspaceUri: () => undefined,
+                getActiveWorkspaceUri: () => ({ folderUri: Uri.parse('workspace') }),
             } as unknown) as IInterpreterHelper,
             ({
                 onDidChange: () => {
@@ -288,7 +288,7 @@ suite('Language server watcher', () => {
 
         await watcher.startLanguageServer(LanguageServerType.None);
 
-        assert.strictEqual(output, LanguageService.startingNone());
+        assert.strictEqual(output, LanguageService.startingNone().format('workspace'));
     });
 
     test(`When starting the language server, if the language server can be started, this.languageServerType should reflect the new language server type`, async () => {

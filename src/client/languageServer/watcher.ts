@@ -142,7 +142,7 @@ export class LanguageServerWatcher
             // Start the language server.
             await languageServerExtensionManager.startLanguageServer(lsResource, interpreter);
 
-            logStartup(languageServerType);
+            logStartup(languageServerType, lsResource);
             this.languageServerType = languageServerType;
             this.workspaceInterpreters.set(lsResource.fsPath, interpreter);
         } else {
@@ -271,17 +271,17 @@ export class LanguageServerWatcher
     }
 }
 
-function logStartup(languageServerType: LanguageServerType): void {
+function logStartup(languageServerType: LanguageServerType, resource: Uri): void {
     let outputLine;
     switch (languageServerType) {
         case LanguageServerType.Jedi:
-            outputLine = LanguageService.startingJedi();
+            outputLine = LanguageService.startingJedi().format(resource.fsPath);
             break;
         case LanguageServerType.Node:
-            outputLine = LanguageService.startingPylance();
+            outputLine = LanguageService.startingPylance().format(resource.fsPath);
             break;
         case LanguageServerType.None:
-            outputLine = LanguageService.startingNone();
+            outputLine = LanguageService.startingNone().format(resource.fsPath);
             break;
         default:
             throw new Error(`Unknown language server type: ${languageServerType}`);
