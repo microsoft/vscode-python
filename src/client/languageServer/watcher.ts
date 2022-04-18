@@ -105,7 +105,10 @@ export class LanguageServerWatcher
 
     // ILanguageServerWatcher
 
-    public async startLanguageServer(languageServerType: LanguageServerType, resource?: Resource): Promise<void> {
+    public async startLanguageServer(
+        languageServerType: LanguageServerType,
+        resource?: Resource,
+    ): Promise<ILanguageServerExtensionManager> {
         const lsResource = this.getWorkspaceKey(resource);
         const currentInterpreter = this.workspaceInterpreters.get(lsResource.fsPath);
         const interpreter = await this.interpreterService?.getActiveInterpreter(resource);
@@ -150,19 +153,21 @@ export class LanguageServerWatcher
         }
 
         this.workspaceLanguageServers.set(lsResource.fsPath, languageServerExtensionManager);
+
+        return languageServerExtensionManager;
     }
 
     // ILanguageServerCache
 
     public async get(resource?: Resource): Promise<ILanguageServer> {
         const lsResource = this.getWorkspaceKey(resource);
-        const languageServerExtensionManager = this.workspaceLanguageServers.get(lsResource.fsPath);
+        let languageServerExtensionManager = this.workspaceLanguageServers.get(lsResource.fsPath);
 
         if (!languageServerExtensionManager) {
-            this.startLanguageServer(this.languageServerType, resource);
+            languageServerExtensionManager = await this.startLanguageServer(this.languageServerType, resource);
         }
 
-        return Promise.resolve(languageServerExtensionManager!.get());
+        return Promise.resolve(languageServerExtensionManager.get());
     }
 
     // Private methods
