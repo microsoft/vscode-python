@@ -29,11 +29,13 @@ extends:
         displayName: Run translations-export
       - pwsh: |
           $Destination = "$(SetTranslationsPath.EnglishStrings)"
-          Move-Item "$(Pipeline.Workspace)/ms-python.python/*" $Destination
+          Move-Item "$(Pipeline.Workspace)/ms-python.python/*" $Destination -Force
         displayName: Move vscode-python-translations-export to translations path
 
     locPullSteps:
         - script: echo '$(SetTranslationsPath.TranslatedStrings)'
+        - script: npm ci
+          displayName: Install NPM dependencies
         - script: gulp translations-import --option "$(SetTranslationsPath.TranslatedStrings)"
         - pwsh: ls ./i18n/
 
