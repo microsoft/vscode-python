@@ -36,7 +36,7 @@ extends:
         - script: echo '$(SetTranslationsPath.TranslatedStrings)'
         - script: npm ci
           displayName: Install NPM dependencies
-        - script: gulp translations-import --option "$(SetTranslationsPath.TranslatedStrings)"
+        - script: gulp translations-import --location "$(SetTranslationsPath.TranslatedStrings)"
         - pwsh: ls ./i18n/
 
     buildSteps:
