@@ -13,10 +13,7 @@ export const ILanguageServerWatcher = Symbol('ILanguageServerWatcher');
 export interface ILanguageServerWatcher {
     readonly languageServerExtensionManager: ILanguageServerExtensionManager | undefined;
     readonly languageServerType: LanguageServerType;
-    startLanguageServer(
-        languageServerType: LanguageServerType,
-        resource?: Resource,
-    ): Promise<ILanguageServerExtensionManager>;
+    startLanguageServer(languageServerType: LanguageServerType, resource?: Resource): Promise<void>;
 }
 
 export interface ILanguageServerCapabilities extends ILanguageServer {
@@ -29,8 +26,6 @@ export interface ILanguageServerCapabilities extends ILanguageServer {
  * `ILanguageServerExtensionManager` implementations act as wrappers for anything related to their specific language server extension.
  * They are responsible for starting and stopping the language server provided by their LS extension.
  * They also extend the `ILanguageServer` interface via `ILanguageServerCapabilities` to continue supporting the Jupyter integration.
- *
- * Note that the methods exposed in this interface shouldn't be used outside of the language server watcher (and tests).
  */
 export interface ILanguageServerExtensionManager extends ILanguageServerCapabilities {
     startLanguageServer(resource: Resource, interpreter?: PythonEnvironment): Promise<void>;

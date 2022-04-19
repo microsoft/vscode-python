@@ -105,8 +105,11 @@ export class LanguageServerWatcher
     }
 
     // ILanguageServerWatcher
+    public async startLanguageServer(languageServerType: LanguageServerType, resource?: Resource): Promise<void> {
+        await this.startAndGetLanguageServer(languageServerType, resource);
+    }
 
-    public async startLanguageServer(
+    private async startAndGetLanguageServer(
         languageServerType: LanguageServerType,
         resource?: Resource,
     ): Promise<ILanguageServerExtensionManager> {
@@ -165,7 +168,7 @@ export class LanguageServerWatcher
         let languageServerExtensionManager = this.workspaceLanguageServers.get(lsResource.fsPath);
 
         if (!languageServerExtensionManager) {
-            languageServerExtensionManager = await this.startLanguageServer(this.languageServerType, resource);
+            languageServerExtensionManager = await this.startAndGetLanguageServer(this.languageServerType, resource);
         }
 
         return Promise.resolve(languageServerExtensionManager.get());
