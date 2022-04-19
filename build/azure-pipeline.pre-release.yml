@@ -34,7 +34,7 @@ extends:
 
     locPullSteps:
         - script: echo '$(SetTranslationsPath.TranslatedStrings)'
-        - script: 'gulp translations-import --option "${SetTranslationsPath.TranslatedStrings}"'
+        - script: gulp translations-import --option "$(SetTranslationsPath.TranslatedStrings)"
         - pwsh: ls ./i18n/
 
     buildSteps:
