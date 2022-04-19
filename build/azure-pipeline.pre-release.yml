@@ -29,7 +29,7 @@ extends:
         displayName: Run translations-export
       - pwsh: |
           $Destination = "$(SetTranslationsPath.EnglishStrings)"
-          Move-Item "$(Pipeline.Workspace)/ms-python.python" $Destination
+          Move-Item "$(Pipeline.Workspace)/ms-python.python/*" $Destination
         displayName: Move vscode-python-translations-export to translations path
 
     locPullSteps:
