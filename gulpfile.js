@@ -391,8 +391,8 @@ const defaultLanguages = [
 const generateAdditionalLocFiles = () =>
     gulp
         .src(['package.nls.json'])
-        .pipe(nls.createAdditionalLanguageFiles(defaultLanguages, 'i18n', 'out'))
-        .pipe(gulp.dest('out'));
+        .pipe(nls.createAdditionalLanguageFiles(defaultLanguages, 'i18n'))
+        .pipe(gulp.dest('.'));
 
 // Generates ./dist/nls.bundle.<language_id>.json from files in ./i18n/** *//<src_path>/<filename>.i18n.json
 // Localized strings are read from these files at runtime.
@@ -403,13 +403,13 @@ const generateSrcLocBundle = () =>
         .pipe(sourcemaps.init())
         .pipe(tsProject())
         .js.pipe(nls.createMetaDataFiles())
-        .pipe(nls.createAdditionalLanguageFiles(defaultLanguages, 'i18n', 'out'))
+        .pipe(nls.createAdditionalLanguageFiles(defaultLanguages, 'i18n'))
         .pipe(nls.bundleMetaDataFiles('ms-vscode.python', 'out'))
         .pipe(nls.bundleLanguageFiles())
         .pipe(filter(['**/nls.bundle.*.json', '**/nls.metadata.header.json', '**/nls.metadata.json']))
         .pipe(gulp.dest('out'));
 
-gulp.task('translations-generate', generateSrcLocBundle, generateAdditionalLocFiles);
+gulp.task('translations-generate', gulp.series(generateSrcLocBundle, generateAdditionalLocFiles));
 
 // ****************************
 // Command: translations-export
@@ -475,5 +475,3 @@ gulp.task('translations-import', (done) => {
         }),
     );
 });
-
-gulp.task('create-i18n', gulp.series(generateSrcLocBundle, exportTranslations));
