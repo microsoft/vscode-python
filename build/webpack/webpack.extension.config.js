@@ -69,7 +69,7 @@ const config = {
         'applicationinsights-native-metrics',
         '@opentelemetry/tracing',
     ],
-    plugins: [...common.getDefaultPlugins('extension'), new NLSBundlePlugin('ms-python.python')],
+    plugins: [...common.getDefaultPlugins('extension')],
     resolve: {
         extensions: ['.ts', '.js'],
         plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })],
