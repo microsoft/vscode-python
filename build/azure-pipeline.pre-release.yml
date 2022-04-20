@@ -38,6 +38,8 @@ extends:
           displayName: Install NPM dependencies
         - script: gulp translations-import --location "$(SetTranslationsPath.TranslatedStrings)"
         - pwsh: ls ./i18n/
+        - script: gulp translations-generate
+          displayName: Generate translations
 
     buildSteps:
       - task: NodeTool@0
@@ -83,6 +85,3 @@ extends:
 
       - script: gulp prePublishBundle
         displayName: Build
-        
-      - script: gulp translations-generate
-        displayName: Generate translations
