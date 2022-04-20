@@ -373,7 +373,7 @@ const defaultLanguages = [
     { id: 'ja', folderName: 'ja' },
     { id: 'ko', folderName: 'ko' },
     { id: 'pl', folderName: 'pl' },
-    { id: 'pt-BR', folderName: 'pt-BR' },
+    { id: 'pt-BR', folderName: 'pt-br' },
     { id: 'ru', folderName: 'ru' },
     { id: 'tr', folderName: 'tr' },
     { id: 'zh-Hans', folderName: 'zh-Hans' },
