@@ -5,6 +5,7 @@
 
 import * as nls from 'vscode-nls';
 
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /* eslint-disable @typescript-eslint/no-namespace, no-shadow */
