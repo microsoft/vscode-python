@@ -27,6 +27,12 @@ const config = {
     module: {
         rules: [
             {
+                loader: 'vscode-nls-dev/lib/webpack-loader',
+                options: {
+                    base: path.join(__dirname, '../../'),
+                },
+            },
+            {
                 test: /\.ts$/,
                 use: [
                     {
