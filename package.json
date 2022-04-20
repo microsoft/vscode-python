@@ -1794,7 +1794,7 @@
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "prePublish": "gulp clean && gulp prePublishNonBundle",
-        "compile": "tsc -watch -p ./",
+        "compile": "gulp translations-generate && tsc -watch -p ./",
         "compiled": "deemon npm run compile",
         "translations-export": "gulp clean && gulp prePublishNonBundle && gulp translations-export",
         "translations-import": "gulp clean && gulp prePublishNonBundle && gulp translations-import",
