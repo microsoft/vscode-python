@@ -8,6 +8,7 @@ const path = require('path');
 const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
 const constants = require('../constants');
 const common = require('./common');
+const { NLSBundlePlugin } = require('vscode-nls-dev/lib/webpack-bundler');
 
 const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.json');
 // Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via
@@ -68,7 +69,7 @@ const config = {
         'applicationinsights-native-metrics',
         '@opentelemetry/tracing',
     ],
-    plugins: [...common.getDefaultPlugins('extension')],
+    plugins: [...common.getDefaultPlugins('extension'), new NLSBundlePlugin('ms-python.python')],
     resolve: {
         extensions: ['.ts', '.js'],
         plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })],
