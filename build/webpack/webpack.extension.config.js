@@ -8,7 +8,6 @@ const path = require('path');
 const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
 const constants = require('../constants');
 const common = require('./common');
-const { NLSBundlePlugin } = require('vscode-nls-dev/lib/webpack-bundler');
 
 const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.json');
 // Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via
