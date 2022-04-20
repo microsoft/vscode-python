@@ -83,3 +83,6 @@ extends:
 
       - script: gulp prePublishBundle
         displayName: Build
+        
+      - script: gulp translations-generate
+        displayName: Generate translations
