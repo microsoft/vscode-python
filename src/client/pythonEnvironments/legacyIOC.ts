@@ -245,9 +245,13 @@ class ComponentAdapter implements IComponentAdapter {
         this.refreshing.fire();
 
         const query: PythonLocatorQuery = {};
+        let roots: vscode.Uri[] = [];
         let wsFolder: vscode.WorkspaceFolder | undefined;
         if (resource !== undefined) {
             wsFolder = vscode.workspace.getWorkspaceFolder(resource);
+            if (wsFolder) {
+                roots = [wsFolder.uri];
+            }
         }
         // Untitled files should still use the workspace as the query location
         if (
@@ -256,18 +260,12 @@ class ComponentAdapter implements IComponentAdapter {
             vscode.workspace.workspaceFolders.length > 0 &&
             (!resource || resource.scheme === 'untitled')
         ) {
-            [wsFolder] = vscode.workspace.workspaceFolders;
+            roots = vscode.workspace.workspaceFolders.map((w) => w.uri);
         }
 
-        if (wsFolder !== undefined) {
-            query.searchLocations = {
-                roots: [wsFolder.uri],
-            };
-        } else {
-            query.searchLocations = {
-                roots: [],
-            };
-        }
+        query.searchLocations = {
+            roots,
+        };
 
         let envs = this.api.getEnvs(query);
         if (source) {
