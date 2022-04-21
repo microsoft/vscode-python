@@ -31,19 +31,23 @@ export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
         if (
             jupyterDependencyManager &&
             jupyterDependencyManager.isJupyterExtensionInstalled &&
-            !lspNotebooksExperiment.isInNotebooksExperiment()
+            lspNotebooksExperiment.isInNotebooksExperiment() != true
         ) {
             this.notebookAddon = createHidingMiddleware();
         }
         disposables.push(
             extensions?.onDidChange(() => {
                 if (jupyterDependencyManager) {
-                    if (this.notebookAddon && !jupyterDependencyManager.isJupyterExtensionInstalled) {
+                    if (
+                        this.notebookAddon &&
+                        (!jupyterDependencyManager.isJupyterExtensionInstalled ||
+                            lspNotebooksExperiment.isInNotebooksExperiment() == true)
+                    ) {
                         this.notebookAddon = undefined;
                     } else if (
                         !this.notebookAddon &&
                         jupyterDependencyManager.isJupyterExtensionInstalled &&
-                        !lspNotebooksExperiment.isInNotebooksExperiment()
+                        lspNotebooksExperiment.isInNotebooksExperiment() != true
                     ) {
                         this.notebookAddon = createHidingMiddleware();
                     }

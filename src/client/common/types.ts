@@ -180,7 +180,6 @@ export interface IPythonSettings {
     readonly condaPath: string;
     readonly pipenvPath: string;
     readonly poetryPath: string;
-    readonly pylanceLspNotebooksEnabled: boolean;
     readonly devOptions: string[];
     readonly linting: ILintingSettings;
     readonly formatting: IFormattingSettings;
@@ -191,6 +190,8 @@ export interface IPythonSettings {
     readonly envFile: string;
     readonly disableInstallationChecks: boolean;
     readonly globalModuleInstallation: boolean;
+    readonly autoUpdateLanguageServer: boolean;
+    readonly pylanceLspNotebooksEnabled: boolean;
     readonly onDidChange: Event<void>;
     readonly experiments: IExperiments;
     readonly languageServer: LanguageServerType;

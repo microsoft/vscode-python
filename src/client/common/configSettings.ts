@@ -96,8 +96,6 @@ export class PythonSettings implements IPythonSettings {
 
     public poetryPath = '';
 
-    public pylanceLspNotebooksEnabled = false;
-
     public devOptions: string[] = [];
 
     public linting!: ILintingSettings;
@@ -117,6 +115,8 @@ export class PythonSettings implements IPythonSettings {
     public disableInstallationChecks = false;
 
     public globalModuleInstallation = false;
+
+    public pylanceLspNotebooksEnabled = false;
 
     public experiments!: IExperiments;
 
@@ -296,6 +296,7 @@ export class PythonSettings implements IPythonSettings {
 
         this.disableInstallationChecks = pythonSettings.get<boolean>('disableInstallationCheck') === true;
         this.globalModuleInstallation = pythonSettings.get<boolean>('globalModuleInstallation') === true;
+        this.pylanceLspNotebooksEnabled = pythonSettings.get<boolean>('pylanceLspNotebooksEnabled') === true;
 
         const sortImportSettings = systemVariables.resolveAny(pythonSettings.get<ISortImportSettings>('sortImports'))!;
         if (this.sortImports) {

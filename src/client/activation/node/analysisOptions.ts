@@ -25,14 +25,14 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         return ({
             experimentationSupport: true,
             trustedWorkspaceSupport: true,
-            lspNotebooksSupport: this.lspNotebooksExperiment.isInNotebooksExperiment(),
+            lspNotebooksSupport: this.lspNotebooksExperiment.isInNotebooksExperiment() == true,
         };
     }
 
     protected async getDocumentFilters(_workspaceFolder?: WorkspaceFolder): Promise<DocumentFilter[]> {
         let filters = await super.getDocumentFilters(_workspaceFolder);
 
-        if (this.lspNotebooksExperiment.isInNotebooksExperiment()) {
+        if (this.lspNotebooksExperiment.isInNotebooksExperiment() == true) {
             return [
                 ...filters,
                 {

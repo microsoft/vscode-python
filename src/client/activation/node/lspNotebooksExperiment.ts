@@ -16,7 +16,7 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
         this._isInNotebooksExperiment = this.configurationService.getSettings().pylanceLspNotebooksEnabled;
     }
 
-    public isInNotebooksExperiment(): boolean {
-        return !this._isInNotebooksExperiment;
+    public isInNotebooksExperiment(): boolean | undefined {
+        return this._isInNotebooksExperiment;
     }
 }
