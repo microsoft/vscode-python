@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Uri } from 'vscode';
+import { ConfigurationChangeEvent, Uri, WorkspaceFoldersChangeEvent } from 'vscode';
 import { LanguageServerChangeHandler } from '../activation/common/languageServerChangeHandler';
 import {
     IExtensionActivationService,
@@ -76,6 +76,10 @@ export class LanguageServerWatcher
         this.languageServerType = this.configurationService.getSettings().languageServer;
 
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
+
+        disposables.push(
+            this.workspaceService.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders.bind(this)),
+        );
 
         if (this.workspaceService.isTrusted) {
             disposables.push(this.interpreterPathService.onDidChange(this.onDidChangeInterpreter.bind(this)));
@@ -264,6 +268,15 @@ export class LanguageServerWatcher
 
         if (languageServerType !== this.languageServerType) {
             await this.refreshLanguageServer();
+        }
+    }
+
+    // Watch for workspace folder changes.
+    private async onDidChangeWorkspaceFolders(event: WorkspaceFoldersChangeEvent): Promise<void> {
+        if (event.removed.length) {
+            event.removed.forEach((workspace) => {
+                this.stopLanguageServer(workspace.uri);
+            });
         }
     }
 
