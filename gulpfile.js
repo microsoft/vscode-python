@@ -33,15 +33,15 @@ const filter = require('gulp-filter');
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
 gulp.task('compile', (done) => {
-    let failed = false;
-    tsProject
-        .src()
-        .pipe(tsProject())
-        .on('error', () => {
-            failed = true;
-        })
-        .js.pipe(gulp.dest('out'))
-        .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
+  let failed = false;
+  tsProject
+    .src()
+    .pipe(tsProject())
+    .on('error', () => {
+      failed = true;
+    })
+    .js.pipe(gulp.dest('out'))
+    .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
 });
 
 gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done));
@@ -55,172 +55,169 @@ gulp.task('clean:out', () => del(['out']));
 gulp.task('clean', gulp.parallel('output:clean', 'clean:vsix', 'clean:out'));
 
 gulp.task('checkNativeDependencies', (done) => {
-    if (hasNativeDependencies()) {
-        done(new Error('Native dependencies detected'));
-    }
-    done();
+  if (hasNativeDependencies()) {
+    done(new Error('Native dependencies detected'));
+  }
+  done();
 });
 
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
-    if (configNameForProductionBuilds) {
-        await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
-    } else {
-        await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'production'], webpackEnv);
-    }
+  if (configNameForProductionBuilds) {
+    await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
+  } else {
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'production'], webpackEnv);
+  }
 }
 gulp.task('webpack', async () => {
-    // Build node_modules.
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.browser.config.js', 'browser');
+  // Build node_modules.
+  await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
+  await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
+  await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.browser.config.js', 'browser');
 });
 
 gulp.task('addExtensionPackDependencies', async () => {
-    await buildLicense();
-    await addExtensionPackDependencies();
+  await buildLicense();
+  await addExtensionPackDependencies();
 });
 
 async function addExtensionPackDependencies() {
-    // Update the package.json to add extension pack dependencies at build time so that
-    // extension dependencies need not be installed during development
-    const packageJsonContents = await fsExtra.readFile('package.json', 'utf-8');
-    const packageJson = JSON.parse(packageJsonContents);
-    packageJson.extensionPack = ['ms-toolsai.jupyter', 'ms-python.vscode-pylance'].concat(
-        packageJson.extensionPack ? packageJson.extensionPack : [],
-    );
-    await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
+  // Update the package.json to add extension pack dependencies at build time so that
+  // extension dependencies need not be installed during development
+  const packageJsonContents = await fsExtra.readFile('package.json', 'utf-8');
+  const packageJson = JSON.parse(packageJsonContents);
+  packageJson.extensionPack = ['ms-toolsai.jupyter', 'ms-python.vscode-pylance'].concat(
+    packageJson.extensionPack ? packageJson.extensionPack : []
+  );
+  await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
 }
 
 async function buildLicense() {
-    const headerPath = path.join(__dirname, 'build', 'license-header.txt');
-    const licenseHeader = await fsExtra.readFile(headerPath, 'utf-8');
-    const license = await fsExtra.readFile('LICENSE', 'utf-8');
+  const headerPath = path.join(__dirname, 'build', 'license-header.txt');
+  const licenseHeader = await fsExtra.readFile(headerPath, 'utf-8');
+  const license = await fsExtra.readFile('LICENSE', 'utf-8');
 
-    await fsExtra.writeFile('LICENSE', `${licenseHeader}\n${license}`, 'utf-8');
+  await fsExtra.writeFile('LICENSE', `${licenseHeader}\n${license}`, 'utf-8');
 }
 
 gulp.task('updateBuildNumber', async () => {
-    await updateBuildNumber(argv);
+  await updateBuildNumber(argv);
 });
 
 async function updateBuildNumber(args) {
-    if (args && args.buildNumber) {
-        // Edit the version number from the package.json
-        const packageJsonContents = await fsExtra.readFile('package.json', 'utf-8');
-        const packageJson = JSON.parse(packageJsonContents);
+  if (args && args.buildNumber) {
+    // Edit the version number from the package.json
+    const packageJsonContents = await fsExtra.readFile('package.json', 'utf-8');
+    const packageJson = JSON.parse(packageJsonContents);
 
-        // Change version number
-        const versionParts = packageJson.version.split('.');
-        const buildNumberPortion =
-            versionParts.length > 2 ? versionParts[2].replace(/(\d+)/, args.buildNumber) : args.buildNumber;
-        const newVersion =
-            versionParts.length > 1
-                ? `${versionParts[0]}.${versionParts[1]}.${buildNumberPortion}`
-                : packageJson.version;
-        packageJson.version = newVersion;
+    // Change version number
+    const versionParts = packageJson.version.split('.');
+    const buildNumberPortion =
+      versionParts.length > 2 ? versionParts[2].replace(/(\d+)/, args.buildNumber) : args.buildNumber;
+    const newVersion =
+      versionParts.length > 1 ? `${versionParts[0]}.${versionParts[1]}.${buildNumberPortion}` : packageJson.version;
+    packageJson.version = newVersion;
 
-        // Write back to the package json
-        await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
+    // Write back to the package json
+    await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
 
-        // Update the changelog.md if we are told to (this should happen on the release branch)
-        if (args.updateChangelog) {
-            const changeLogContents = await fsExtra.readFile('CHANGELOG.md', 'utf-8');
-            const fixedContents = changeLogContents.replace(
-                /##\s*(\d+)\.(\d+)\.(\d+)\s*\(/,
-                `## $1.$2.${buildNumberPortion} (`,
-            );
+    // Update the changelog.md if we are told to (this should happen on the release branch)
+    if (args.updateChangelog) {
+      const changeLogContents = await fsExtra.readFile('CHANGELOG.md', 'utf-8');
+      const fixedContents = changeLogContents.replace(
+        /##\s*(\d+)\.(\d+)\.(\d+)\s*\(/,
+        `## $1.$2.${buildNumberPortion} (`
+      );
 
-            // Write back to changelog.md
-            await fsExtra.writeFile('CHANGELOG.md', fixedContents, 'utf-8');
-        }
-    } else {
-        throw Error('buildNumber argument required for updateBuildNumber task');
+      // Write back to changelog.md
+      await fsExtra.writeFile('CHANGELOG.md', fixedContents, 'utf-8');
     }
+  } else {
+    throw Error('buildNumber argument required for updateBuildNumber task');
+  }
 }
 
 async function buildWebPack(webpackConfigName, args, env) {
-    // Remember to perform a case insensitive search.
-    const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName).map((item) => item.toLowerCase());
-    const stdOut = await spawnAsync(
-        'npm',
-        ['run', 'webpack', '--', ...args, ...['--mode', 'production', '--devtool', 'source-map']],
-        env,
+  // Remember to perform a case insensitive search.
+  const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName).map((item) => item.toLowerCase());
+  const stdOut = await spawnAsync(
+    'npm',
+    ['run', 'webpack', '--', ...args, ...['--mode', 'production', '--devtool', 'source-map']],
+    env
+  );
+  const stdOutLines = stdOut
+    .split(os.EOL)
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+  // Remember to perform a case insensitive search.
+  const warnings = stdOutLines
+    .filter((item) => item.startsWith('WARNING in '))
+    .filter(
+      (item) =>
+        allowedWarnings.findIndex((allowedWarning) => item.toLowerCase().startsWith(allowedWarning.toLowerCase())) ===
+        -1
     );
-    const stdOutLines = stdOut
-        .split(os.EOL)
-        .map((item) => item.trim())
-        .filter((item) => item.length > 0);
-    // Remember to perform a case insensitive search.
-    const warnings = stdOutLines
-        .filter((item) => item.startsWith('WARNING in '))
-        .filter(
-            (item) =>
-                allowedWarnings.findIndex((allowedWarning) =>
-                    item.toLowerCase().startsWith(allowedWarning.toLowerCase()),
-                ) === -1,
-        );
-    const errors = stdOutLines.some((item) => item.startsWith('ERROR in'));
-    if (errors) {
-        throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
-    }
-    if (warnings.length > 0) {
-        throw new Error(
-            `Warnings in ${webpackConfigName}, Check gulpfile.js to see if the warning should be allowed., \n\n${stdOut}`,
-        );
-    }
+  const errors = stdOutLines.some((item) => item.startsWith('ERROR in'));
+  if (errors) {
+    throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
+  }
+  if (warnings.length > 0) {
+    throw new Error(
+      `Warnings in ${webpackConfigName}, Check gulpfile.js to see if the warning should be allowed., \n\n${stdOut}`
+    );
+  }
 }
 function getAllowedWarningsForWebPack(buildConfig) {
-    switch (buildConfig) {
-        case 'production':
-            return [
-                'WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).',
-                'WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.',
-                'WARNING in webpack performance recommendations:',
-                'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
-                'WARNING in ./node_modules/any-promise/register.js',
-                'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
-                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js',
-            ];
-        case 'extension':
-            return [
-                'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
-                'WARNING in ./node_modules/any-promise/register.js',
-                'remove-files-plugin@1.4.0:',
-                'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
-                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js',
-            ];
-        case 'debugAdapter':
-            return [
-                'WARNING in ./node_modules/vscode-uri/lib/index.js',
-                'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
-                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js',
-            ];
-        case 'browser':
-            return [
-                'WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).',
-                'WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.',
-                'WARNING in webpack performance recommendations:',
-            ];
-        default:
-            throw new Error('Unknown WebPack Configuration');
-    }
+  switch (buildConfig) {
+    case 'production':
+      return [
+        'WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).',
+        'WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.',
+        'WARNING in webpack performance recommendations:',
+        'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
+        'WARNING in ./node_modules/any-promise/register.js',
+        'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
+        'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js',
+      ];
+    case 'extension':
+      return [
+        'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
+        'WARNING in ./node_modules/any-promise/register.js',
+        'remove-files-plugin@1.4.0:',
+        'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
+        'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js',
+      ];
+    case 'debugAdapter':
+      return [
+        'WARNING in ./node_modules/vscode-uri/lib/index.js',
+        'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
+        'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js',
+      ];
+    case 'browser':
+      return [
+        'WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).',
+        'WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.',
+        'WARNING in webpack performance recommendations:',
+      ];
+    default:
+      throw new Error('Unknown WebPack Configuration');
+  }
 }
 gulp.task('renameSourceMaps', async () => {
-    // By default source maps will be disabled in the extension.
-    // Users will need to use the command `python.enableSourceMapSupport` to enable source maps.
-    const extensionSourceMap = path.join(__dirname, 'out', 'client', 'extension.js.map');
-    await fsExtra.rename(extensionSourceMap, `${extensionSourceMap}.disabled`);
+  // By default source maps will be disabled in the extension.
+  // Users will need to use the command `python.enableSourceMapSupport` to enable source maps.
+  const extensionSourceMap = path.join(__dirname, 'out', 'client', 'extension.js.map');
+  await fsExtra.rename(extensionSourceMap, `${extensionSourceMap}.disabled`);
 });
 
 gulp.task('verifyBundle', async () => {
-    const matches = await glob.sync(path.join(__dirname, '*.vsix'));
-    if (!matches || matches.length === 0) {
-        throw new Error('Bundle does not exist');
-    } else {
-        console.log(`Bundle ${matches[0]} exists.`);
-    }
+  const matches = await glob.sync(path.join(__dirname, '*.vsix'));
+  if (!matches || matches.length === 0) {
+    throw new Error('Bundle does not exist');
+  } else {
+    console.log(`Bundle ${matches[0]} exists.`);
+  }
 });
 
 gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
@@ -228,158 +225,162 @@ gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
 gulp.task('prePublishNonBundle', gulp.series('compile'));
 
 gulp.task('installPythonRequirements', async () => {
-    let args = [
-        '-m',
-        'pip',
-        '--disable-pip-version-check',
-        'install',
-        '--no-user',
-        '-t',
-        './pythonFiles/lib/python',
-        '--no-cache-dir',
-        '--implementation',
-        'py',
-        '--no-deps',
-        '--upgrade',
-        '-r',
-        './requirements.txt',
-    ];
-    await spawnAsync(process.env.CI_PYTHON_PATH || 'python', args, undefined, true)
-        .then(() => true)
-        .catch((ex) => {
-            console.error("Failed to install requirements using 'python'", ex);
-            return false;
-        });
+  let args = [
+    '-m',
+    'pip',
+    '--disable-pip-version-check',
+    'install',
+    '--no-user',
+    '-t',
+    './pythonFiles/lib/python',
+    '--no-cache-dir',
+    '--implementation',
+    'py',
+    '--no-deps',
+    '--upgrade',
+    '-r',
+    './requirements.txt',
+  ];
+  await spawnAsync(process.env.CI_PYTHON_PATH || 'python', args, undefined, true)
+    .then(() => true)
+    .catch((ex) => {
+      console.error("Failed to install requirements using 'python'", ex);
+      return false;
+    });
 
-    args = [
-        '-m',
-        'pip',
-        '--disable-pip-version-check',
-        'install',
-        '--no-user',
-        '-t',
-        './pythonFiles/lib/jedilsp',
-        '--no-cache-dir',
-        '--implementation',
-        'py',
-        '--no-deps',
-        '--upgrade',
-        '-r',
-        './pythonFiles/jedilsp_requirements/requirements.txt',
-    ];
-    await spawnAsync(process.env.CI_PYTHON_PATH || 'python', args, undefined, true)
-        .then(() => true)
-        .catch((ex) => {
-            console.error("Failed to install Jedi LSP requirements using 'python'", ex);
-            return false;
-        });
+  args = [
+    '-m',
+    'pip',
+    '--disable-pip-version-check',
+    'install',
+    '--no-user',
+    '-t',
+    './pythonFiles/lib/jedilsp',
+    '--no-cache-dir',
+    '--implementation',
+    'py',
+    '--no-deps',
+    '--upgrade',
+    '-r',
+    './pythonFiles/jedilsp_requirements/requirements.txt',
+  ];
+  await spawnAsync(process.env.CI_PYTHON_PATH || 'python', args, undefined, true)
+    .then(() => true)
+    .catch((ex) => {
+      console.error("Failed to install Jedi LSP requirements using 'python'", ex);
+      return false;
+    });
 });
 
 // See https://github.com/microsoft/vscode-python/issues/7136
 gulp.task('installDebugpy', async () => {
-    // Install dependencies needed for 'install_debugpy.py'
-    const depsArgs = [
-        '-m',
-        'pip',
-        '--disable-pip-version-check',
-        'install',
-        '--no-user',
-        '-t',
-        './pythonFiles/lib/temp',
-        '-r',
-        './build/debugger-install-requirements.txt',
-    ];
-    await spawnAsync(process.env.CI_PYTHON_PATH || 'python', depsArgs, undefined, true)
-        .then(() => true)
-        .catch((ex) => {
-            console.error("Failed to install dependencies need by 'install_debugpy.py' using 'python'", ex);
-            return false;
-        });
+  // Install dependencies needed for 'install_debugpy.py'
+  const depsArgs = [
+    '-m',
+    'pip',
+    '--disable-pip-version-check',
+    'install',
+    '--no-user',
+    '-t',
+    './pythonFiles/lib/temp',
+    '-r',
+    './build/debugger-install-requirements.txt',
+  ];
+  await spawnAsync(process.env.CI_PYTHON_PATH || 'python', depsArgs, undefined, true)
+    .then(() => true)
+    .catch((ex) => {
+      console.error("Failed to install dependencies need by 'install_debugpy.py' using 'python'", ex);
+      return false;
+    });
 
-    // Install new DEBUGPY with wheels for python 3.7
-    const wheelsArgs = ['./pythonFiles/install_debugpy.py'];
-    const wheelsEnv = { PYTHONPATH: './pythonFiles/lib/temp' };
-    await spawnAsync(process.env.CI_PYTHON_PATH || 'python', wheelsArgs, wheelsEnv, true)
-        .then(() => true)
-        .catch((ex) => {
-            console.error("Failed to install DEBUGPY wheels using 'python'", ex);
-            return false;
-        });
+  // Install new DEBUGPY with wheels for python 3.7
+  const wheelsArgs = ['./pythonFiles/install_debugpy.py'];
+  const wheelsEnv = { PYTHONPATH: './pythonFiles/lib/temp' };
+  await spawnAsync(process.env.CI_PYTHON_PATH || 'python', wheelsArgs, wheelsEnv, true)
+    .then(() => true)
+    .catch((ex) => {
+      console.error("Failed to install DEBUGPY wheels using 'python'", ex);
+      return false;
+    });
 
-    rmrf.sync('./pythonFiles/lib/temp');
+  rmrf.sync('./pythonFiles/lib/temp');
 });
 
 gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installDebugpy'));
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
-    env = env || {};
-    env = { ...process.env, ...env };
-    return new Promise((resolve, reject) => {
-        let stdOut = '';
-        console.info(`> ${command} ${args.join(' ')}`);
-        const proc = spawn(command, args, { cwd: __dirname, env });
-        proc.stdout.on('data', (data) => {
-            // Log output on CI (else travis times out when there's not output).
-            stdOut += data.toString();
-            if (isCI) {
-                console.log(data.toString());
-            }
-        });
-        proc.stderr.on('data', (data) => {
-            console.error(data.toString());
-            if (rejectOnStdErr) {
-                reject(data.toString());
-            }
-        });
-        proc.on('close', () => resolve(stdOut));
-        proc.on('error', (error) => reject(error));
+  env = env || {};
+  env = { ...process.env, ...env };
+  return new Promise((resolve, reject) => {
+    let stdOut = '';
+    console.info(`> ${command} ${args.join(' ')}`);
+    const proc = spawn(command, args, { cwd: __dirname, env });
+    proc.stdout.on('data', (data) => {
+      // Log output on CI (else travis times out when there's not output).
+      stdOut += data.toString();
+      if (isCI) {
+        console.log(data.toString());
+      }
     });
+    proc.stderr.on('data', (data) => {
+      console.error(data.toString());
+      if (rejectOnStdErr) {
+        reject(data.toString());
+      }
+    });
+    proc.on('close', () => resolve(stdOut));
+    proc.on('error', (error) => reject(error));
+  });
 }
 
 function hasNativeDependencies() {
-    let nativeDependencies = nativeDependencyChecker.check(path.join(__dirname, 'node_modules'));
-    if (!Array.isArray(nativeDependencies) || nativeDependencies.length === 0) {
-        return false;
-    }
-    const dependencies = JSON.parse(spawn.sync('npm', ['ls', '--json', '--prod']).stdout.toString());
-    const jsonProperties = Object.keys(flat.flatten(dependencies));
-    nativeDependencies = _.flatMap(nativeDependencies, (item) =>
-        path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep),
-    )
-        .filter((item) => item.length > 0)
-        .filter((item) => item !== 'fsevents')
-        .filter(
-            (item) =>
-                jsonProperties.findIndex((flattenedDependency) =>
-                    flattenedDependency.endsWith(`dependencies.${item}.version`),
-                ) >= 0,
-        );
-    if (nativeDependencies.length > 0) {
-        console.error('Native dependencies detected', nativeDependencies);
-        return true;
-    }
+  let nativeDependencies = nativeDependencyChecker.check(path.join(__dirname, 'node_modules'));
+  if (!Array.isArray(nativeDependencies) || nativeDependencies.length === 0) {
     return false;
+  }
+  const dependencies = JSON.parse(spawn.sync('npm', ['ls', '--json', '--prod']).stdout.toString());
+  const jsonProperties = Object.keys(flat.flatten(dependencies));
+  nativeDependencies = _.flatMap(nativeDependencies, (item) =>
+    path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep)
+  )
+    .filter((item) => item.length > 0)
+    .filter((item) => item !== 'fsevents')
+    .filter(
+      (item) =>
+        jsonProperties.findIndex((flattenedDependency) =>
+          flattenedDependency.endsWith(`dependencies.${item}.version`)
+        ) >= 0
+    );
+  if (nativeDependencies.length > 0) {
+    console.error('Native dependencies detected', nativeDependencies);
+    return true;
+  }
+  return false;
 }
 
 const translationProjectName = 'ms-python.python';
 const translationExtensionName = 'vscode-python';
 
 const defaultLanguages = [
-    { id: 'de', folderName: 'de' },
-    { id: 'fr', folderName: 'fr' },
-    { id: 'es', folderName: 'es' },
-    { id: 'cs', folderName: 'cs' },
-    { id: 'it', folderName: 'it' },
-    { id: 'ja', folderName: 'ja' },
-    { id: 'ko', folderName: 'ko' },
-    { id: 'pl', folderName: 'pl' },
-    { id: 'pt-BR', folderName: 'pt-br' },
-    { id: 'ru', folderName: 'ru' },
-    { id: 'tr', folderName: 'tr' },
-    { id: 'zh-Hans', folderName: 'zh-Hans' },
-    { id: 'zh-Hant', folderName: 'zh-Hant' },
-    { id: 'qps-ploc', folderName: 'qps-ploc' },
+  { id: 'de', folderName: 'de' },
+  { id: 'fr', folderName: 'fr' },
+  { id: 'es', folderName: 'es' },
+  { id: 'cs', folderName: 'cs' },
+  { id: 'it', folderName: 'it' },
+  { id: 'ja', folderName: 'ja' },
+  { id: 'ko', folderName: 'ko' },
+  { id: 'pl', folderName: 'pl' },
+  { id: 'pt-BR', folderName: 'pt-br' },
+  { id: 'ru', folderName: 'ru' },
+  { id: 'tr', folderName: 'tr' },
+  { id: 'zh-Hans', folderName: 'zh-Hans' },
+  { id: 'zh-Hant', folderName: 'zh-Hant' },
+  { id: 'qps-ploc', folderName: 'qps-ploc' },
 ];
+
+// You can find a more complex implementation of the translations in the CPP Extension repository.
+// See: https://github.com/microsoft/vscode-cpptools/blob/main/Extension/gulpfile.js#L76
+
 // ****************************
 // Command: translations-generate
 // The following is used to import an i18n directory structure and generate files used at runtime.
@@ -389,25 +390,22 @@ const defaultLanguages = [
 // Outputs to root path, as these nls files need to be along side package.json
 
 const generateAdditionalLocFiles = () =>
-    gulp
-        .src(['package.nls.json'])
-        .pipe(nls.createAdditionalLanguageFiles(defaultLanguages, 'i18n'))
-        .pipe(gulp.dest('.'));
+  gulp.src(['package.nls.json']).pipe(nls.createAdditionalLanguageFiles(defaultLanguages, 'i18n')).pipe(gulp.dest('.'));
 
-// Generates ./dist/nls.bundle.<language_id>.json from files in ./i18n/** *//<src_path>/<filename>.i18n.json
+// Generates ./out/nls.bundle.<language_id>.json from files in ./i18n/** *//<src_path>/<filename>.i18n.json
 // Localized strings are read from these files at runtime.
 const generateSrcLocBundle = () =>
-    // Transpile the TS to JS, and let vscode-nls-dev scan the files for calls to localize.
-    tsProject
-        .src()
-        .pipe(sourcemaps.init())
-        .pipe(tsProject())
-        .js.pipe(nls.createMetaDataFiles())
-        .pipe(nls.createAdditionalLanguageFiles(defaultLanguages, 'i18n'))
-        .pipe(nls.bundleMetaDataFiles('ms-vscode.python', 'out'))
-        .pipe(nls.bundleLanguageFiles())
-        .pipe(filter(['**/nls.bundle.*.json', '**/nls.metadata.header.json', '**/nls.metadata.json']))
-        .pipe(gulp.dest('out'));
+  // Transpile the TS to JS, and let vscode-nls-dev scan the files for calls to localize.
+  tsProject
+    .src()
+    .pipe(sourcemaps.init())
+    .pipe(tsProject())
+    .js.pipe(nls.createMetaDataFiles())
+    .pipe(nls.createAdditionalLanguageFiles(defaultLanguages, 'i18n'))
+    .pipe(nls.bundleMetaDataFiles('ms-vscode.python', 'out'))
+    .pipe(nls.bundleLanguageFiles())
+    .pipe(filter(['**/nls.bundle.*.json', '**/nls.metadata.header.json', '**/nls.metadata.json']))
+    .pipe(gulp.dest('out'));
 
 gulp.task('translations-generate', gulp.series(generateSrcLocBundle, generateAdditionalLocFiles));
 
@@ -417,32 +415,32 @@ gulp.task('translations-generate', gulp.series(generateSrcLocBundle, generateAdd
 // The result will be written to: ../vscode-extensions-localization-export/ms-vscode/
 // ****************************
 const exportTranslations = (done) => {
-    const jsStream = tsProject.src().pipe(sourcemaps.init()).pipe(tsProject()).js.pipe(nls.createMetaDataFiles());
+  const jsStream = tsProject.src().pipe(sourcemaps.init()).pipe(tsProject()).js.pipe(nls.createMetaDataFiles());
 
-    // Merge files from all source streams
-    jsStream
+  // Merge files from all source streams
+  jsStream
 
-        // Filter down to only the files we need
-        .pipe(filter(['**/*.nls.json', '**/*.nls.metadata.json']))
+    // Filter down to only the files we need
+    .pipe(filter(['**/*.nls.json', '**/*.nls.metadata.json']))
 
-        // Consoldate them into nls.metadata.json, which the xlf is built from.
-        .pipe(nls.bundleMetaDataFiles('ms-vscode.python', '.'))
+    // Consoldate them into nls.metadata.json, which the xlf is built from.
+    .pipe(nls.bundleMetaDataFiles('ms-vscode.python', '.'))
 
-        // filter down to just the resulting metadata files
-        .pipe(filter(['**/nls.metadata.header.json', '**/nls.metadata.json']))
+    // filter down to just the resulting metadata files
+    .pipe(filter(['**/nls.metadata.header.json', '**/nls.metadata.json']))
 
-        // Add package.nls.json, used to localized package.json
-        .pipe(gulp.src(['package.nls.json']))
+    // Add package.nls.json, used to localized package.json
+    .pipe(gulp.src(['package.nls.json']))
 
-        // package.nls.json and nls.metadata.json are used to generate the xlf file
-        // Does not re-queue any files to the stream.  Outputs only the XLF file
-        .pipe(nls.createXlfFiles(translationProjectName, translationExtensionName))
-        .pipe(gulp.dest('../'))
-        .pipe(
-            es.wait(() => {
-                done();
-            }),
-        );
+    // package.nls.json and nls.metadata.json are used to generate the xlf file
+    // Does not re-queue any files to the stream.  Outputs only the XLF file
+    .pipe(nls.createXlfFiles(translationProjectName, translationExtensionName))
+    .pipe(gulp.dest('../'))
+    .pipe(
+      es.wait(() => {
+        done();
+      })
+    );
 };
 
 gulp.task('translations-export', exportTranslations);
@@ -455,23 +453,23 @@ gulp.task('translations-export', exportTranslations);
 
 // Imports translations from raw localized MLCP strings to VS Code .i18n.json files
 gulp.task('translations-import', (done) => {
-    const options = minimist(process.argv.slice(2), {
-        string: 'location',
-        default: {
-            location: '../vscode-translations-import',
-        },
-    });
-    es.merge(
-        defaultLanguages.map((language) => {
-            const id = language.transifexId || language.id;
-            return gulp
-                .src(path.join(options.location, id, `${translationExtensionName}.xlf`))
-                .pipe(nls.prepareJsonFiles())
-                .pipe(gulp.dest(path.join('./i18n', language.folderName)));
-        }),
-    ).pipe(
-        es.wait(() => {
-            done();
-        }),
-    );
+  const options = minimist(process.argv.slice(2), {
+    string: 'location',
+    default: {
+      location: '../vscode-translations-import',
+    },
+  });
+  es.merge(
+    defaultLanguages.map((language) => {
+      const id = language.transifexId || language.id;
+      return gulp
+        .src(path.join(options.location, id, `${translationExtensionName}.xlf`))
+        .pipe(nls.prepareJsonFiles())
+        .pipe(gulp.dest(path.join('./i18n', language.folderName)));
+    })
+  ).pipe(
+    es.wait(() => {
+      done();
+    })
+  );
 });

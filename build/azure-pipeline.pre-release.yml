@@ -22,22 +22,17 @@ extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
     locPushSteps:
-      - script: echo '$(SetTranslationsPath.EnglishStrings)'
       - script: npm ci
         displayName: Install NPM dependencies
       - script: npm run translations-export
         displayName: Run translations-export
-      - pwsh: |
-          $Destination = "$(SetTranslationsPath.EnglishStrings)"
-          Move-Item "$(Pipeline.Workspace)/ms-python.python/*" $Destination -Force
+      - pwsh: Move-Item "$(Pipeline.Workspace)/ms-python.python/*" "$(SetTranslationsPath.EnglishStrings)" -Force
         displayName: Move vscode-python-translations-export to translations path
 
     locPullSteps:
-        - script: echo '$(SetTranslationsPath.TranslatedStrings)'
         - script: npm ci
           displayName: Install NPM dependencies
         - script: gulp translations-import --location "$(SetTranslationsPath.TranslatedStrings)"
-        - pwsh: ls ./i18n/
         - script: gulp translations-generate
           displayName: Generate translations
 
