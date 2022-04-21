@@ -7,12 +7,13 @@ import { inject, injectable, named } from 'inversify';
 import { Disposable } from 'vscode';
 import { ICommandManager } from '../../common/application/types';
 import { IDisposable, IExtensions, Resource } from '../../common/types';
+import { Uri } from 'vscode';
+import { IDisposable, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { Commands } from '../commands';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import {
     ILanguageServerAnalysisOptions,
@@ -104,11 +105,9 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         }
     }
 
-    // QUESTIONS:
-    // Better way to install the injected middleware rather than leveraging existing LanguageClientMiddleware.notebookAddon?
-    public setNotebookMiddleware(notebookAddon: Middleware & Disposable): void {
+    public registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void {
         if (this.middleware) {
-            this.middleware.notebookAddon = notebookAddon;
+            this.middleware.registerJupyterPythonPathFunction(func);
         }
     }
 

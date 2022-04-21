@@ -1,21 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-import { IExperimentService } from '../../common/types';
+import { IConfigurationService } from '../../common/types';
+import { IExtensionSingleActivationService } from '../types';
 
 @injectable()
-export class LspNotebooksExperiment {
-    private static _isInNotebooksExperiment?: boolean;
+export class LspNotebooksExperiment implements IExtensionSingleActivationService {
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: true, virtualWorkspace: true };
 
-    @inject(IExperimentService) private static experiments: IExperimentService;
+    private _isInNotebooksExperiment?: boolean;
 
-    public static async isInNotebooksExperiment(): Promise<boolean> {
-        if (LspNotebooksExperiment._isInNotebooksExperiment === undefined) {
-            LspNotebooksExperiment._isInNotebooksExperiment = await LspNotebooksExperiment.experiments.inExperiment(
-                'pylanceLspNotebooksEnabled',
-            );
-        }
+    constructor(@inject(IConfigurationService) private readonly configurationService: IConfigurationService) {}
 
-        return LspNotebooksExperiment._isInNotebooksExperiment;
+    public async activate(): Promise<void> {
+        this._isInNotebooksExperiment = this.configurationService.getSettings().pylanceLspNotebooksEnabled;
+    }
+
+    public isInNotebooksExperiment(): boolean {
+        return !this._isInNotebooksExperiment;
     }
 }

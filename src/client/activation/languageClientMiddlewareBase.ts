@@ -86,7 +86,12 @@ export class LanguageClientMiddlewareBase implements Middleware {
                     const settingDict: LSPObject & { pythonPath: string; _envPYTHONPATH: string } = settings[
                         i
                     ] as LSPObject & { pythonPath: string; _envPYTHONPATH: string };
-                    settingDict.pythonPath = configService.getSettings(uri).pythonPath;
+
+                    if (uri?.scheme === 'vscode-notebook-cell' && this.jupyterPythonPathFunction) {
+                        settingDict.pythonPath = (await this.jupyterPythonPathFunction(uri)) ?? ''; // TODO: How to handle undefined?
+                    } else {
+                        settingDict.pythonPath = configService.getSettings(uri).pythonPath;
+                    }
 
                     const env = await envService.getEnvironmentVariables(uri);
                     const envPYTHONPATH = env.PYTHONPATH;
@@ -100,11 +105,17 @@ export class LanguageClientMiddlewareBase implements Middleware {
         },
     };
 
+    private jupyterPythonPathFunction: ((uri: Uri) => Promise<string | undefined>) | undefined = undefined;
+
+    public registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>) {
+        this.jupyterPythonPathFunction = func;
+    }
+
     private get connected(): Promise<boolean> {
         return this.connectedPromise.promise;
     }
 
-    public notebookAddon: (Middleware & Disposable) | undefined;
+    protected notebookAddon: (Middleware & Disposable) | undefined;
 
     private connectedPromise = createDeferred<boolean>();
 

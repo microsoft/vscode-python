@@ -12,7 +12,11 @@ import { LspNotebooksExperiment } from './lspNotebooksExperiment';
 
 export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsBase {
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
-    constructor(lsOutputChannel: ILanguageServerOutputChannel, workspace: IWorkspaceService) {
+    constructor(lsOutputChannel: ILanguageServerOutputChannel, workspace: IWorkspaceService,
+        @inject(ILanguageServerOutputChannel) lsOutputChannel: ILanguageServerOutputChannel,
+        @inject(IWorkspaceService) workspace: IWorkspaceService,
+        @inject(LspNotebooksExperiment) private readonly lspNotebooksExperiment: LspNotebooksExperiment,
+    ) {
         super(lsOutputChannel, workspace);
     }
 
@@ -21,14 +25,14 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         return ({
             experimentationSupport: true,
             trustedWorkspaceSupport: true,
-            lspNotebooksSupport: await LspNotebooksExperiment.isInNotebooksExperiment(),
+            lspNotebooksSupport: this.lspNotebooksExperiment.isInNotebooksExperiment(),
         };
     }
 
     protected async getDocumentFilters(_workspaceFolder?: WorkspaceFolder): Promise<DocumentFilter[]> {
         let filters = await super.getDocumentFilters(_workspaceFolder);
 
-        if (await LspNotebooksExperiment.isInNotebooksExperiment()) {
+        if (this.lspNotebooksExperiment.isInNotebooksExperiment()) {
             return [
                 ...filters,
                 {

@@ -25,12 +25,13 @@ export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
         );
         const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry) || [];
         const extensions = serviceContainer.get<IExtensions>(IExtensions);
+        const lspNotebooksExperiment = serviceContainer.get<LspNotebooksExperiment>(LspNotebooksExperiment);
 
         // Enable notebook support if jupyter support is installed
         if (
             jupyterDependencyManager &&
             jupyterDependencyManager.isJupyterExtensionInstalled &&
-            !LspNotebooksExperiment.isInNotebooksExperiment
+            !lspNotebooksExperiment.isInNotebooksExperiment()
         ) {
             this.notebookAddon = createHidingMiddleware();
         }
@@ -42,7 +43,7 @@ export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
                     } else if (
                         !this.notebookAddon &&
                         jupyterDependencyManager.isJupyterExtensionInstalled &&
-                        !LspNotebooksExperiment.isInNotebooksExperiment
+                        !lspNotebooksExperiment.isInNotebooksExperiment()
                     ) {
                         this.notebookAddon = createHidingMiddleware();
                     }

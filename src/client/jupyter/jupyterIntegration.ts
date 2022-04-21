@@ -9,7 +9,6 @@ import { dirname } from 'path';
 import { CancellationToken, Disposable, Event, Extension, Memento, Uri } from 'vscode';
 import * as lsp from 'vscode-languageserver-protocol';
 import type { SemVer } from 'semver';
-import { Middleware } from 'vscode-languageclient';
 import { ILanguageServerCache, ILanguageServerConnection, ILanguageServerManager } from '../activation/types';
 import { IWorkspaceService } from '../common/application/types';
 import { JUPYTER_EXTENSION_ID } from '../common/constants';
@@ -159,7 +158,7 @@ type PythonApiForJupyterExtension = {
         interpreter?: PythonEnvironment,
     ): Promise<string[] | undefined>;
 
-    injectMiddlewareHook(middleware: Middleware): void;
+    registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
 };
 
 type JupyterExtensionApi = {
@@ -279,8 +278,8 @@ export class JupyterExtensionIntegration {
             getCondaVersion: () => this.condaService.getCondaVersion(),
             getEnvironmentActivationShellCommands: (resource: Resource, interpreter?: PythonEnvironment) =>
                 this.envActivation.getEnvironmentActivationShellCommands(resource, interpreter),
-            injectMiddlewareHook: (middleware: Middleware & Disposable) =>
-                this.languageServerManager.setNotebookMiddleware(middleware),
+            registerJupyterPythonPathFunction: (func: (uri: Uri) => Promise<string | undefined>) =>
+                this.languageServerManager.registerJupyterPythonPathFunction(func),
         });
         return undefined;
     }

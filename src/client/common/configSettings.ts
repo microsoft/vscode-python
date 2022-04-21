@@ -96,6 +96,8 @@ export class PythonSettings implements IPythonSettings {
 
     public poetryPath = '';
 
+    public pylanceLspNotebooksEnabled = false;
+
     public devOptions: string[] = [];
 
     public linting!: ILintingSettings;

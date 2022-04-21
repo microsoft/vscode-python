@@ -906,6 +906,15 @@
                     "scope": "machine-overridable",
                     "type": "string"
                 },
+                "python.pylanceLspNotebooksEnabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Determines if pylance's experimental LSP notebooks support is used or not.",
+                    "scope": "machine",
+                    "tags": [
+                        "experimental"
+                    ]
+                },
                 "python.sortImports.args": {
                     "default": [],
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
