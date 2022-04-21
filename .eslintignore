@@ -174,7 +174,6 @@ src/client/activation/commands.ts
 src/client/activation/progress.ts
 src/client/activation/extensionSurvey.ts
 src/client/activation/common/analysisOptions.ts
-src/client/activation/refCountedLanguageServer.ts
 src/client/activation/languageClientMiddleware.ts
 
 src/client/formatters/serviceRegistry.ts
