@@ -9,7 +9,7 @@ import { dirname } from 'path';
 import { CancellationToken, Disposable, Event, Extension, Memento, Uri } from 'vscode';
 import * as lsp from 'vscode-languageserver-protocol';
 import type { SemVer } from 'semver';
-import { ILanguageServerCache, ILanguageServerConnection, ILanguageServerManager } from '../activation/types';
+import { ILanguageServerCache, ILanguageServerConnection } from '../activation/types';
 import { IWorkspaceService } from '../common/application/types';
 import { JUPYTER_EXTENSION_ID } from '../common/constants';
 import { InterpreterUri, ModuleInstallFlags } from '../common/installer/types';
@@ -184,6 +184,8 @@ type JupyterExtensionApi = {
 export class JupyterExtensionIntegration {
     private jupyterExtension: Extension<JupyterExtensionApi> | undefined;
 
+    private jupyterPythonPathFunction: ((uri: Uri) => Promise<string | undefined>) | undefined;
+
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -196,7 +198,6 @@ export class JupyterExtensionIntegration {
         @inject(IComponentAdapter) private pyenvs: IComponentAdapter,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(ICondaService) private readonly condaService: ICondaService,
-        @inject(ILanguageServerManager) private readonly languageServerManager: ILanguageServerManager,
     ) {}
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
@@ -279,7 +280,7 @@ export class JupyterExtensionIntegration {
             getEnvironmentActivationShellCommands: (resource: Resource, interpreter?: PythonEnvironment) =>
                 this.envActivation.getEnvironmentActivationShellCommands(resource, interpreter),
             registerJupyterPythonPathFunction: (func: (uri: Uri) => Promise<string | undefined>) =>
-                this.languageServerManager.registerJupyterPythonPathFunction(func),
+                this.registerJupyterPythonPathFunction(func),
         });
         return undefined;
     }
@@ -324,5 +325,13 @@ export class JupyterExtensionIntegration {
             return this.jupyterExtension.exports;
         }
         return undefined;
+    }
+
+    private registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>) {
+        this.jupyterPythonPathFunction = func;
+    }
+
+    public getJupyterPythonPathFunction(): ((uri: Uri) => Promise<string | undefined>) | undefined {
+        return this.jupyterPythonPathFunction;
     }
 }

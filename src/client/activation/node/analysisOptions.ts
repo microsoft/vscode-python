@@ -34,10 +34,11 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
 
         if (this.lspNotebooksExperiment.isInNotebooksExperiment() == true) {
             return [
-                ...filters,
+                { language: 'python' },
                 {
                     notebookDocument: { notebookType: 'jupyter-notebook', pattern: '**/*.ipynb' },
                     cellLanguage: 'python',
+                    sync: true, // HACK to activate notebook matching in client.js match()
                 },
             ];
         }

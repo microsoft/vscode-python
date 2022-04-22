@@ -13,7 +13,6 @@ import {
     ReferenceProvider,
     RenameProvider,
     SignatureHelpProvider,
-    Uri,
 } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
 import * as lsp from 'vscode-languageserver-protocol';
@@ -126,7 +125,6 @@ export interface ILanguageServerManager extends IDisposable {
     start(resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void>;
     connect(): void;
     disconnect(): void;
-    registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
 }
 
 export const ILanguageServerProxy = Symbol('ILanguageServerProxy');

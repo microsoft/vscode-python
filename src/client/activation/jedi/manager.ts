@@ -7,7 +7,6 @@ import '../../common/extensions';
 
 import { inject, injectable, named } from 'inversify';
 
-import { Uri } from 'vscode';
 import { ICommandManager } from '../../common/application/types';
 import { IDisposable, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
@@ -112,9 +111,6 @@ export class JediLanguageServerManager implements ILanguageServerManager {
             this.middleware?.disconnect();
         }
     }
-
-    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-empty-function
-    public registerJupyterPythonPathFunction(_func: (uri: Uri) => Promise<string | undefined>): void {}
 
     @debounceSync(1000)
     protected restartLanguageServerDebounced(): void {

@@ -24,6 +24,7 @@ import {
 import { traceDecoratorError, traceDecoratorVerbose } from '../../logging';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { Middleware } from 'vscode-languageclient';
+import { JupyterExtensionIntegration } from '../../jupyter/jupyterIntegration';
 
 export class NodeLanguageServerManager implements ILanguageServerManager {
     private resource!: Resource;
@@ -37,7 +38,6 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     private connected = false;
 
     private lsVersion: string | undefined;
-    private jupyterPythonPathFunction: ((uri: Uri) => Promise<string | undefined>) | undefined;
 
     private started = false;
 
@@ -49,6 +49,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         private readonly languageServerProxy: ILanguageServerProxy,
         commandManager: ICommandManager,
         private readonly extensions: IExtensions,
+        @inject(JupyterExtensionIntegration) private readonly jupyterExtensionIntegration: JupyterExtensionIntegration,
     ) {
         if (NodeLanguageServerManager.commandDispose) {
             NodeLanguageServerManager.commandDispose.dispose();
@@ -106,17 +107,6 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         }
     }
 
-    public registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void {
-        this.jupyterPythonPathFunction = func;
-        this.applyJupyterPythonPathFunction();
-    }
-
-    private applyJupyterPythonPathFunction() {
-        if (this.jupyterPythonPathFunction && this.middleware) {
-            this.middleware.registerJupyterPythonPathFunction(this.jupyterPythonPathFunction);
-        }
-    }
-
     @debounceSync(1000)
     protected restartLanguageServerDebounced(): void {
         this.restartLanguageServer().ignoreErrors();
@@ -141,7 +131,11 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         const options = await this.analysisOptions.getAnalysisOptions();
         this.middleware = new LanguageClientMiddleware(this.serviceContainer, LanguageServerType.Node, this.lsVersion);
         options.middleware = this.middleware;
-        this.applyJupyterPythonPathFunction();
+
+        const jupyterPythonPathFunction = this.jupyterExtensionIntegration.getJupyterPythonPathFunction();
+        if (jupyterPythonPathFunction) {
+            this.middleware.registerJupyterPythonPathFunction(jupyterPythonPathFunction);
+        }
 
         // Make sure the middleware is connected if we restart and we we're already connected.
         if (this.connected) {

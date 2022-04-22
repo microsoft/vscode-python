@@ -21,7 +21,9 @@
     "enabledApiProposals": [
         "quickPickSortByLabel",
         "testObserver",
-        "notebookEditor"
+        "notebookEditor",
+        "tabs",
+        "notebookCellExecutionState"
     ],
     "author": {
         "name": "Microsoft Corporation"
