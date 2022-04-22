@@ -213,14 +213,11 @@ export namespace LanguageService {
         text: localize('LanguageService.statusItem.text', 'Partial Mode'),
         detail: localize('LanguageService.statusItem.detail', 'Limited IntelliSense provided by Pylance'),
     };
-    export const startingPylance = localize(
-        'LanguageService.startingPylance',
-        'Starting Pylance language server for {0}.',
-    );
+    export const startingPylance = localize('LanguageService.startingPylance', 'Starting Pylance language server.');
     export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi language server for {0}.');
     export const startingNone = localize(
         'LanguageService.startingNone',
-        'Editor support is inactive since language server is set to None for {0}.',
+        'Editor support is inactive since language server is set to None.',
     );
     export const untrustedWorkspaceMessage = localize(
         'LanguageService.untrustedWorkspaceMessage',
