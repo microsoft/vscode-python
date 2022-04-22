@@ -284,7 +284,9 @@ export class LanguageServerWatcher
 
     // Watch for workspace folder changes.
     private async onDidChangeWorkspaceFolders(event: WorkspaceFoldersChangeEvent): Promise<void> {
-        if (event.removed.length) {
+        // Since Jedi is the only language server type where we instantiate multiple language servers,
+        // Make sure to dispose of them only in that scenario.
+        if (event.removed.length && this.languageServerType === LanguageServerType.Jedi) {
             event.removed.forEach((workspace) => {
                 this.stopLanguageServer(workspace.uri);
             });
