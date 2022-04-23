@@ -17,6 +17,10 @@ import { EventName } from '../../../../telemetry/constants';
 import { DebuggerTypeName } from '../../../constants';
 import { LaunchRequestArguments } from '../../../types';
 import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationProvider } from '../../types';
+import * as nls from 'vscode-nls';
+
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const workspaceFolderToken = '${workspaceFolder}';
 
@@ -47,7 +51,11 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
             const selectedIniPath = await input.showInputBox({
                 title: DebugConfigStrings.pyramid.enterDevelopmentIniPath.title,
                 value: defaultIni,
-                prompt: DebugConfigStrings.pyramid.enterDevelopmentIniPath.prompt,
+                prompt: localize(
+                    'debug.pyramidEnterDevelopmentIniPathPrompt',
+                    'Enter the path to development.ini ({0} points to the root of the current workspace folder)',
+                    workspaceFolderToken,
+                ),
                 validate: (value) => this.validateIniPath(state ? state.folder : undefined, defaultIni, value),
             });
             if (selectedIniPath) {

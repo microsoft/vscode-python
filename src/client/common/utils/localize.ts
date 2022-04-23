@@ -487,10 +487,6 @@ export namespace DebugConfigStrings {
         };
         export const enterDevelopmentIniPath = {
             title: localize('debug.pyramidEnterDevelopmentIniPathTitle', 'Debug Pyramid'),
-            prompt: localize(
-                'debug.pyramidEnterDevelopmentIniPathPrompt',
-                "`Enter the path to development.ini ('${workspaceFolderToken}' points to the root of the current workspace folder)`",
-            ),
             invalid: localize('debug.pyramidEnterDevelopmentIniPathInvalidFilePathError', 'Enter a valid file path'),
         };
     }
