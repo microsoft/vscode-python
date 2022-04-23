@@ -5,14 +5,17 @@
 
 import { inject, injectable } from 'inversify';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
+import * as nls from 'vscode-nls';
 import { traceLog } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
 import { PVSC_EXTENSION_ID } from '../constants';
 import { IExperimentService, IPersistentStateFactory } from '../types';
-import { Experiments } from '../utils/localize';
 import { ExperimentationTelemetry } from './telemetry';
+
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const EXP_MEMENTO_KEY = 'VSCode.ABExp.FeatureData';
 const EXP_CONFIG_ID = 'vscode';
@@ -162,7 +165,7 @@ export class ExperimentService implements IExperimentService {
 
         if (this._optOutFrom.includes('All')) {
             // We prioritize opt out first
-            traceLog(Experiments.optedOutOf.format('All'));
+            traceLog(localize('Experiments.optedOutOf', "Experiment '{0}' is inactive", 'All'));
 
             // Since we are in the Opt Out all case, this means when checking for experiment we
             // short circuit and return. So, printing out additional experiment info might cause
@@ -171,7 +174,7 @@ export class ExperimentService implements IExperimentService {
         }
         if (this._optInto.includes('All')) {
             // Only if 'All' is not in optOut then check if it is in Opt In.
-            traceLog(Experiments.inGroup.format('All'));
+            traceLog(localize('Experiments.inGroup', "Experiment '{0}' is active", 'All'));
 
             // Similar to the opt out case. If user is opting into to all experiments we short
             // circuit the experiment checks. So, skip printing any additional details to the logs.
@@ -182,14 +185,14 @@ export class ExperimentService implements IExperimentService {
         this._optOutFrom
             .filter((exp) => exp !== 'All' && exp.toLowerCase().startsWith('python'))
             .forEach((exp) => {
-                traceLog(Experiments.optedOutOf.format(exp));
+                traceLog(localize('Experiments.manuallyOptedOutOf', "Experiment '{0}' is inactive", exp));
             });
 
         // Log experiments that users manually opt into, these are experiments which are added using the exp framework.
         this._optInto
             .filter((exp) => exp !== 'All' && exp.toLowerCase().startsWith('python'))
             .forEach((exp) => {
-                traceLog(Experiments.inGroup.format(exp));
+                traceLog(localize('Experiments.manuallyOptIntoExperiments', "Experiment '{0}' is active", exp));
             });
 
         if (!experimentsDisabled) {
@@ -202,7 +205,7 @@ export class ExperimentService implements IExperimentService {
                     !this._optOutFrom.includes(exp) &&
                     !this._optInto.includes(exp)
                 ) {
-                    traceLog(Experiments.inGroup.format(exp));
+                    traceLog(localize('Experiments.autoOptIntoExperiments', "Experiment '{0}' is active", exp));
                 }
             });
         }

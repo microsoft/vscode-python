@@ -5,7 +5,7 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import { Commands, PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
 import { IDisposableRegistry, IPathUtils, Resource } from '../../common/types';
-import { InterpreterQuickPickList, Interpreters } from '../../common/utils/localize';
+import { InterpreterQuickPickList } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { traceLog } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -15,6 +15,10 @@ import {
     IInterpreterService,
     IInterpreterStatusbarVisibilityFilter,
 } from '../contracts';
+import * as nls from 'vscode-nls';
+
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Based on https://github.com/microsoft/vscode-python/issues/18040#issuecomment-992567670.
@@ -114,7 +118,9 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
                 this.statusBar.tooltip = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath);
                 if (this.currentlySelectedInterpreterPath !== interpreter.path) {
                     traceLog(
-                        Interpreters.pythonInterpreterPath.format(
+                        localize(
+                            'Interpreters.sttausBarPythonInterpreterPath',
+                            'Python interpreter path: {0}',
                             this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath),
                         ),
                     );
@@ -135,7 +141,9 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
                 this.languageStatus.detail = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath);
                 if (this.currentlySelectedInterpreterPath !== interpreter.path) {
                     traceLog(
-                        Interpreters.pythonInterpreterPath.format(
+                        localize(
+                            'Interpreters.pythonInterpreterPath',
+                            'Python interpreter path: {0}',
                             this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath),
                         ),
                     );

@@ -228,7 +228,7 @@ suite('Set Interpreter Command', () => {
                 recommended,
             ];
             const expectedParameters: IQuickPickParameters<QuickPickItem> = {
-                placeholder: InterpreterQuickPickList.quickPickListPlaceholder.format(currentPythonPath),
+                placeholder: 'Selected Interpreter: {0}'.format(currentPythonPath),
                 items: suggestions,
                 activeItem: recommended,
                 matchOnDetail: true,
@@ -343,7 +343,7 @@ suite('Set Interpreter Command', () => {
                 interpreterItems[5],
             ];
             const expectedParameters: IQuickPickParameters<QuickPickItem> = {
-                placeholder: InterpreterQuickPickList.quickPickListPlaceholder.format(currentPythonPath),
+                placeholder: 'Selected Interpreter: {0}'.format(currentPythonPath),
                 items: suggestions,
                 activeItem: recommended,
                 matchOnDetail: true,
@@ -426,7 +426,7 @@ suite('Set Interpreter Command', () => {
 
             const suggestions = [expectedEnterInterpreterPathSuggestion, defaultPathSuggestion, separator, recommended];
             const expectedParameters: IQuickPickParameters<QuickPickItem> = {
-                placeholder: InterpreterQuickPickList.quickPickListPlaceholder.format(currentPythonPath),
+                placeholder: 'Selected Interpreter: {0}'.format(currentPythonPath),
                 items: suggestions,
                 activeItem: recommended,
                 matchOnDetail: true,

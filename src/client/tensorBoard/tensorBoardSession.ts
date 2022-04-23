@@ -23,6 +23,7 @@ import {
     window,
     workspace,
 } from 'vscode';
+import * as nls from 'vscode-nls';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';
 import { tensorboardLauncher } from '../common/process/internal/scripts';
@@ -46,6 +47,9 @@ import { TensorBoardPromptSelection, TensorBoardSessionStartResult } from './con
 import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
 import { ModuleInstallFlags } from '../common/installer/types';
 import { traceError, traceInfo } from '../logging';
+
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 enum Messages {
     JumpToSource = 'jump_to_source',
@@ -354,7 +358,7 @@ export class TensorBoardSession {
         const item = await this.applicationShell.showQuickPick(items, {
             canPickMany: false,
             ignoreFocusOut: false,
-            placeHolder: logDir ? TensorBoard.currentDirectory.format(logDir) : undefined,
+            placeHolder: logDir ? localize('TensorBoard.currentDirectory', 'Current: {0}', logDir) : undefined,
         });
         switch (item?.label) {
             case useCurrentWorkingDirectory:

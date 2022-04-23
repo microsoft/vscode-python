@@ -4,6 +4,7 @@
 import * as path from 'path';
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
+import * as nls from 'vscode-nls';
 import { LanguageServerChangeHandler } from '../activation/common/languageServerChangeHandler';
 import {
     IExtensionActivationService,
@@ -33,6 +34,9 @@ import { JediLSExtensionManager } from './jediLSExtensionManager';
 import { NoneLSExtensionManager } from './noneLSExtensionManager';
 import { PylanceLSExtensionManager } from './pylanceLSExtensionManager';
 import { ILanguageServerExtensionManager, ILanguageServerWatcher } from './types';
+
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 @injectable()
 /**
@@ -287,13 +291,21 @@ function logStartup(languageServerType: LanguageServerType, resource: Uri): void
 
     switch (languageServerType) {
         case LanguageServerType.Jedi:
-            outputLine = LanguageService.startingJedi.format(basename);
+            outputLine = localize('LanguageService.startingJedi', 'Starting Jedi language server for {0}.', basename);
             break;
         case LanguageServerType.Node:
-            outputLine = LanguageService.startingPylance.format(basename);
+            outputLine = localize(
+                'LanguageService.startingPylance',
+                'Starting Pylance language server for {0}.',
+                basename,
+            );
             break;
         case LanguageServerType.None:
-            outputLine = LanguageService.startingNone.format(basename);
+            outputLine = localize(
+                'LanguageService.startingNone',
+                'Editor support is inactive since language server is set to None for {0}.',
+                basename,
+            );
             break;
         default:
             throw new Error(`Unknown language server type: ${languageServerType}`);

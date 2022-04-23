@@ -18,7 +18,7 @@ import {
     IProductService,
 } from '../../../client/common/installer/types';
 import { InstallerResponse, IPersistentStateFactory, Product, ProductType } from '../../../client/common/types';
-import { Common, Products } from '../../../client/common/utils/localize';
+import { Common } from '../../../client/common/utils/localize';
 import { Architecture } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, ModuleInstallerType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
@@ -292,8 +292,8 @@ suite('Formatter installer', async () => {
     test('If black is not installed, offer autopep8 and yapf as options', async () => {
         const messageOptions = [
             Common.bannerLabelYes,
-            Products.useFormatter.format(ProductNames.get(Product.autopep8)!),
-            Products.useFormatter.format(ProductNames.get(Product.yapf)!),
+            'Use {0}'.format(ProductNames.get(Product.autopep8)!),
+            'Use {0}'.format(ProductNames.get(Product.yapf)!),
             Common.doNotShowAgain,
         ];
 
@@ -324,8 +324,8 @@ suite('Formatter installer', async () => {
     test('If autopep8 is not installed, offer black and yapf as options', async () => {
         const messageOptions = [
             Common.bannerLabelYes,
-            Products.useFormatter.format(ProductNames.get(Product.black)!),
-            Products.useFormatter.format(ProductNames.get(Product.yapf)!),
+            'Use {0}'.format(ProductNames.get(Product.black)!),
+            'Use {0}'.format(ProductNames.get(Product.yapf)!),
             Common.doNotShowAgain,
         ];
 
@@ -356,8 +356,8 @@ suite('Formatter installer', async () => {
     test('If yapf is not installed, offer autopep8 and black as options', async () => {
         const messageOptions = [
             Common.bannerLabelYes,
-            Products.useFormatter.format(ProductNames.get(Product.autopep8)!),
-            Products.useFormatter.format(ProductNames.get(Product.black)!),
+            'Use {0}'.format(ProductNames.get(Product.autopep8)!),
+            'Use {0}'.format(ProductNames.get(Product.black)!),
             Common.doNotShowAgain,
         ];
 
@@ -387,8 +387,8 @@ suite('Formatter installer', async () => {
 
     test('If the formatter is not executable as a module, display an error message', async () => {
         const messageOptions = [
-            Products.useFormatter.format(ProductNames.get(Product.autopep8)!),
-            Products.useFormatter.format(ProductNames.get(Product.yapf)!),
+            'Use {0}'.format(ProductNames.get(Product.autopep8)!),
+            'Use {0}'.format(ProductNames.get(Product.yapf)!),
             Common.doNotShowAgain,
         ];
 
@@ -421,8 +421,8 @@ suite('Formatter installer', async () => {
     test('If "Do not show again" has been selected earlier, do not display the prompt', async () => {
         const messageOptions = [
             Common.bannerLabelYes,
-            Products.useFormatter.format(ProductNames.get(Product.autopep8)!),
-            Products.useFormatter.format(ProductNames.get(Product.yapf)!),
+            'Use {0}'.format(ProductNames.get(Product.autopep8)!),
+            'Use {0}'.format(ProductNames.get(Product.yapf)!),
             Common.doNotShowAgain,
         ];
 
@@ -449,8 +449,8 @@ suite('Formatter installer', async () => {
         let value = false;
         const messageOptions = [
             Common.bannerLabelYes,
-            Products.useFormatter.format(ProductNames.get(Product.autopep8)!),
-            Products.useFormatter.format(ProductNames.get(Product.yapf)!),
+            'Use {0}'.format(ProductNames.get(Product.autopep8)!),
+            'Use {0}'.format(ProductNames.get(Product.yapf)!),
             Common.doNotShowAgain,
         ];
 

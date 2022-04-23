@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { QuickPick, QuickPickItem, QuickPickItemKind } from 'vscode';
+import * as nls from 'vscode-nls';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands, Octicons } from '../../../../common/constants';
 import { isParentPath } from '../../../../common/platform/fs-paths';
@@ -34,6 +35,8 @@ import {
 } from '../../types';
 import { BaseInterpreterSelectorCommand } from './base';
 
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 const untildify = require('untildify');
 
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
@@ -115,7 +118,11 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             state.workspace ? state.workspace.fsPath : undefined,
         );
         const selection = await input.showQuickPick<QuickPickType, IQuickPickParameters<QuickPickType>>({
-            placeholder: InterpreterQuickPickList.quickPickListPlaceholder.format(currentInterpreterPathDisplay),
+            placeholder: localize(
+                'InterpreterQuickPickList.quickPickListPlaceholder',
+                'Selected Interpreter: {0}',
+                currentInterpreterPathDisplay,
+            ),
             items: suggestions,
             sortByLabel: !preserveOrderWhenFiltering,
             keepScrollPosition: true,

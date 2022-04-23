@@ -21,10 +21,13 @@ import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IHttpClient } from '../../../client/common/types';
-import { Http } from '../../../client/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import * as logging from '../../../client/logging';
 import { noop } from '../../core';
+import * as nls from 'vscode-nls';
+
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const requestProgress = require('request-progress');
 const request = require('request');
@@ -212,7 +215,9 @@ suite('File Downloader', () => {
             expect(progressReportStub.args[4][0].message).to.equal(getProgressMessage(50, 100));
 
             function getProgressMessage(downloadedKb: number, percentage: number) {
-                return Http.downloadingFileProgress.format(
+                return localize(
+                    'downloading.file.progress',
+                    '{0}{1} of {2} KB ({3}%)',
                     'Downloading-something',
                     downloadedKb.toFixed(),
                     totalKb.toFixed(),
@@ -255,7 +260,7 @@ suite('File Downloader', () => {
                 extension: '.pdf',
             });
 
-            traceLogStub.calledWithExactly(Http.downloadingFile.format('file to download'));
+            traceLogStub.calledWithExactly(localize('downloading.file', 'Downloading {0}...', 'file to download'));
         });
         test('Display progress when downloading', async () => {
             const tmpFile = { filePath: 'my temp file', dispose: noop };

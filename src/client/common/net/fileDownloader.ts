@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import * as nls from 'vscode-nls';
 import * as requestTypes from 'request';
 import { Progress } from 'vscode';
 import { traceLog } from '../../logging';
@@ -11,8 +12,10 @@ import { IApplicationShell } from '../application/types';
 import { Octicons } from '../constants';
 import { IFileSystem, WriteStream } from '../platform/types';
 import { DownloadOptions, IFileDownloader, IHttpClient } from '../types';
-import { Http } from '../utils/localize';
 import { noop } from '../utils/misc';
+
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 @injectable()
 export class FileDownloader implements IFileDownloader {
@@ -22,7 +25,7 @@ export class FileDownloader implements IFileDownloader {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
     ) {}
     public async downloadFile(uri: string, options: DownloadOptions): Promise<string> {
-        traceLog(Http.downloadingFile.format(uri));
+        traceLog(localize('downloading.file', 'Downloading {0}...', uri));
         const tempFile = await this.fs.createTemporaryFile(options.extension);
 
         await this.downloadFileWithStatusBarProgress(uri, options.progressMessagePrefix, tempFile.filePath).then(
@@ -97,7 +100,9 @@ function formatProgressMessageWithState(progressMessagePrefix: string, state: Re
     const total = Math.round(state.size.total / 1024);
     const percentage = Math.round(100 * state.percent);
 
-    return Http.downloadingFileProgress.format(
+    return localize(
+        'downloading.file.progress',
+        '{0}{1} of {2} KB ({3}%)',
         progressMessagePrefix,
         received.toString(),
         total.toString(),

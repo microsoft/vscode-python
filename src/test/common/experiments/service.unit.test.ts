@@ -9,6 +9,7 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Disposable } from 'vscode-jsonrpc';
 import * as tasClient from 'vscode-tas-client';
+import * as nls from 'vscode-nls';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
@@ -16,7 +17,6 @@ import { Channel } from '../../../client/common/constants';
 import { ExperimentService } from '../../../client/common/experiments/service';
 import { PersistentState } from '../../../client/common/persistentState';
 import { IPersistentStateFactory } from '../../../client/common/types';
-import { Experiments } from '../../../client/common/utils/localize';
 import { registerLogger } from '../../../client/logging';
 import { OutputChannelLogger } from '../../../client/logging/outputChannelLogger';
 import * as Telemetry from '../../../client/telemetry';
@@ -24,6 +24,8 @@ import { EventName } from '../../../client/telemetry/constants';
 import { PVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { MockOutputChannel } from '../../mockClasses';
 import { MockMemento } from '../../mocks/mementos';
+
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 suite('Experimentation service', () => {
     const extensionVersion = '1.2.3';
@@ -158,7 +160,7 @@ suite('Experimentation service', () => {
                 instance(stateFactory),
             );
             await exp.activate();
-            const output = `${Experiments.inGroup.format('pythonExperiment')}\n`;
+            const output = `${localize('Experiments.inGroup', "Experiment '{0}' is active", 'pythonExperiment')}\n`;
 
             assert.strictEqual(outputChannel.output, output);
         });

@@ -19,7 +19,7 @@ import { IApplicationShell, IWorkspaceService } from '../../client/common/applic
 import { Commands, PYTHON_LANGUAGE } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IDisposableRegistry, IPathUtils, ReadWrite } from '../../client/common/types';
-import { InterpreterQuickPickList, Interpreters } from '../../client/common/utils/localize';
+import { InterpreterQuickPickList } from '../../client/common/utils/localize';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterDisplay,
@@ -43,6 +43,10 @@ const info: PythonEnvironment = {
     sysPrefix: '',
     sysVersion: '',
 };
+import * as nls from 'vscode-nls';
+
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 suite('Interpreters Display', () => {
     let applicationShell: TypeMoq.IMock<IApplicationShell>;
@@ -211,7 +215,13 @@ suite('Interpreters Display', () => {
                     .returns(() => Promise.resolve(activeInterpreter));
 
                 await interpreterDisplay.refresh(resource);
-                traceLogStub.calledOnceWithExactly(Interpreters.pythonInterpreterPath.format(activeInterpreter.path));
+                traceLogStub.calledOnceWithExactly(
+                    localize(
+                        'Interpreters.pythonInterpreterPath',
+                        'Python interpreter path: {0}',
+                        activeInterpreter.path,
+                    ),
+                );
             });
             test('If interpreter is not identified then tooltip should point to python Path', async () => {
                 const resource = Uri.file('x');

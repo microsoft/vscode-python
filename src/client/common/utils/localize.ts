@@ -100,7 +100,6 @@ export namespace CommonSurvey {
 }
 
 export namespace AttachProcess {
-    export const unsupportedOS = localize('AttachProcess.unsupportedOS', "Operating system '{0}' not supported.");
     export const attachTitle = localize('AttachProcess.attachTitle', 'Attach to process');
     export const selectProcessPlaceholder = localize(
         'AttachProcess.selectProcessPlaceholder',
@@ -144,16 +143,11 @@ export namespace TensorBoard {
         'TensorBoard.useCurrentWorkingDirectory',
         'Use current working directory',
     );
-    export const currentDirectory = localize('TensorBoard.currentDirectory', 'Current: {0}');
     export const logDirectoryPrompt = localize(
         'TensorBoard.logDirectoryPrompt',
         'Select a log directory to start TensorBoard with',
     );
     export const progressMessage = localize('TensorBoard.progressMessage', 'Starting TensorBoard session...');
-    export const failedToStartSessionError = localize(
-        'TensorBoard.failedToStartSessionError',
-        'We failed to start a TensorBoard session due to the following error: {0}',
-    );
     export const nativeTensorBoardPrompt = localize(
         'TensorBoard.nativeTensorBoardPrompt',
         'VS Code now has integrated TensorBoard support. Would you like to launch TensorBoard?  (Tip: Launch TensorBoard anytime by opening the command palette and searching for "Launch TensorBoard".)',
@@ -215,15 +209,6 @@ export namespace LanguageService {
         text: localize('LanguageService.statusItem.text', 'Partial Mode'),
         detail: localize('LanguageService.statusItem.detail', 'Limited IntelliSense provided by Pylance'),
     };
-    export const startingPylance = localize(
-        'LanguageService.startingPylance',
-        'Starting Pylance language server for {0}.',
-    );
-    export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi language server for {0}.');
-    export const startingNone = localize(
-        'LanguageService.startingNone',
-        'Editor support is inactive since language server is set to None for {0}.',
-    );
     export const untrustedWorkspaceMessage = localize(
         'LanguageService.untrustedWorkspaceMessage',
         'Only Pylance is supported in untrusted workspaces, setting language server to None.',
@@ -264,15 +249,6 @@ export namespace LanguageService {
         'Search paths have changed for this Python interpreter. Please reload the extension to ensure that the IntelliSense works correctly.',
     );
 }
-
-export namespace Http {
-    export const downloadingFile = localize('downloading.file', 'Downloading {0}...');
-    export const downloadingFileProgress = localize('downloading.file.progress', '{0}{1} of {2} KB ({3}%)');
-}
-export namespace Experiments {
-    export const inGroup = localize('Experiments.inGroup', "Experiment '{0}' is active");
-    export const optedOutOf = localize('Experiments.optedOutOf', "Experiment '{0}' is inactive");
-}
 export namespace Interpreters {
     export const installingPython = localize('Interpreters.installingPython', 'Installing Python into Environment...');
     export const discovering = localize('Interpreters.DiscoveringInterpreters', 'Discovering Python Interpreters');
@@ -291,16 +267,11 @@ export namespace Interpreters {
         'Interpreters.selectInterpreterTip',
         'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar',
     );
-    export const pythonInterpreterPath = localize('Interpreters.pythonInterpreterPath', 'Python interpreter path: {0}');
 }
 
 export namespace InterpreterQuickPickList {
     export const globalGroupName = localize('InterpreterQuickPickList.globalGroupName', 'Global');
     export const workspaceGroupName = localize('InterpreterQuickPickList.workspaceGroupName', 'Workspace');
-    export const quickPickListPlaceholder = localize(
-        'InterpreterQuickPickList.quickPickListPlaceholder',
-        'Selected Interpreter: {0}',
-    );
     export const enterPath = {
         label: localize('InterpreterQuickPickList.enterPath.label', 'Enter interpreter path...'),
         placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python interpreter.'),
@@ -337,10 +308,6 @@ export namespace Logging {
 }
 
 export namespace Linters {
-    export const replaceWithSelectedLinter = localize(
-        'Linter.replaceWithSelectedLinter',
-        "Multiple linters are enabled in settings. Replace with '{0}'?",
-    );
     export const selectLinter = localize('Linter.selectLinter', 'Select Linter');
 }
 
@@ -354,14 +321,6 @@ export namespace Installer {
         'There is no Pip installer available in the selected environment.',
     );
     export const searchForHelp = localize('Installer.searchForHelp', 'Search for help');
-    export const couldNotInstallLibrary = localize(
-        'Installer.couldNotInstallLibrary',
-        'Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.',
-    );
-    export const dataScienceInstallPrompt = localize(
-        'Installer.dataScienceInstallPrompt',
-        'Data Science library {0} is not installed. Install?',
-    );
 }
 
 export namespace ExtensionSurveyBanner {
@@ -372,19 +331,6 @@ export namespace ExtensionSurveyBanner {
     export const bannerLabelYes = localize('ExtensionSurveyBanner.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('ExtensionSurveyBanner.bannerLabelNo', 'No, thanks');
     export const maybeLater = localize('ExtensionSurveyBanner.maybeLater', 'Maybe later');
-}
-
-export namespace Products {
-    export const installingModule = localize('products.installingModule', 'Installing {0}');
-    export const formatterNotInstalled = localize(
-        'products.formatterNotInstalled',
-        'Formatter {0} is not installed. Install?',
-    );
-    export const useFormatter = localize('products.useFormatter', 'Use {0}');
-    export const invalidFormatterPath = localize(
-        'products.invalidFormatterPath',
-        'Path to the {0} formatter is invalid ({1})',
-    );
 }
 export namespace DebugConfigStrings {
     export const selectConfiguration = {

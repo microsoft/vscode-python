@@ -15,7 +15,7 @@ resources:
     - repository: templates
       type: github
       name: microsoft/vscode-engineering
-      ref: tyler/translations
+      ref: main
       endpoint: Monaco
 
 extends:

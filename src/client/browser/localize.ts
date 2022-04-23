@@ -8,6 +8,7 @@
 // IMPORTANT: Do not import any node fs related modules here, as they do not work in browser.
 import * as nls from 'vscode-nls';
 
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export namespace LanguageService {

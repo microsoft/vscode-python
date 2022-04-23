@@ -3,13 +3,13 @@
 
 import { inject, injectable } from 'inversify';
 import { ViewColumn } from 'vscode';
+import * as nls from 'vscode-nls';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { IProcessServiceFactory } from '../common/process/types';
 import { IDisposableRegistry, IInstaller, IPersistentState, IPersistentStateFactory } from '../common/types';
-import { TensorBoard } from '../common/utils/localize';
 import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
 import { IInterpreterService } from '../interpreter/contracts';
 import { traceError, traceInfo } from '../logging';
@@ -17,6 +17,9 @@ import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from './constants';
 import { TensorBoardSession } from './tensorBoardSession';
+
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const PREFERRED_VIEWGROUP = 'PythonTensorBoardWebviewPreferredViewGroup';
 
@@ -109,7 +112,11 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
         } catch (e) {
             traceError(`Encountered error while starting new TensorBoard session: ${e}`);
             await this.applicationShell.showErrorMessage(
-                TensorBoard.failedToStartSessionError.format((e as Error).message),
+                localize(
+                    'TensorBoard.failedToStartSessionError',
+                    'We failed to start a TensorBoard session due to the following error: {0}',
+                    (e as Error).message,
+                ),
             );
         }
         return undefined;

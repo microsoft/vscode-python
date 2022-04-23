@@ -4,6 +4,7 @@ import { inject, injectable } from 'inversify';
 import * as semver from 'semver';
 import { CancellationToken, Uri } from 'vscode';
 import '../extensions';
+import * as nls from 'vscode-nls';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { LinterId } from '../../linters/types';
@@ -22,7 +23,7 @@ import {
     Product,
     ProductType,
 } from '../types';
-import { Common, Installer, Linters, Products } from '../utils/localize';
+import { Common, Linters } from '../utils/localize';
 import { isResource, noop } from '../utils/misc';
 import { translateProductToModule } from './moduleInstaller';
 import { ProductNames } from './productNames';
@@ -40,6 +41,9 @@ import { traceError, traceInfo } from '../../logging';
 import { isParentPath } from '../platform/fs-paths';
 
 export { Product } from '../types';
+
+nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // Products which may not be available to install from certain package registries, keyed by product name
 // Installer implementations can check this to determine a suitable installation channel for a product
@@ -249,16 +253,25 @@ export class FormatterInstaller extends BaseInstaller {
         const formatterNames = formatters.map((formatter) => ProductNames.get(formatter)!);
         const productName = ProductNames.get(product)!;
         formatterNames.splice(formatterNames.indexOf(productName), 1);
-        const useOptions = formatterNames.map((name) => Products.useFormatter.format(name));
+        const useOptions = formatterNames.map((name) => localize('products.useFormatter', 'Use {0}', name));
         const yesChoice = Common.bannerLabelYes;
 
         const options = [...useOptions, Common.doNotShowAgain];
-        let message = Products.formatterNotInstalled.format(productName);
+        let message = localize(
+            'products.formatterNotInstalled',
+            'Formatter {0} is not installed. Install?',
+            productName,
+        );
         if (this.isExecutableAModule(product, resource)) {
             options.splice(0, 0, yesChoice);
         } else {
             const executable = this.getExecutableNameFromSettings(product, resource);
-            message = Products.invalidFormatterPath.format(productName, executable);
+            message = localize(
+                'products.invalidFormatterPath',
+                'Path to the {0} formatter is invalid ({1})',
+                productName,
+                executable,
+            );
         }
 
         const item = await this.appShell.showErrorMessage(message, ...options);
@@ -501,7 +514,15 @@ export class DataScienceInstaller extends BaseInstaller {
         const installerModule: IModuleInstaller | undefined = channels.find((v) => v.type === requiredInstaller);
 
         if (!installerModule) {
-            this.appShell.showErrorMessage(Installer.couldNotInstallLibrary.format(moduleName)).then(noop, noop);
+            this.appShell
+                .showErrorMessage(
+                    localize(
+                        'Installer.couldNotInstallLibrary',
+                        'Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.',
+                        moduleName,
+                    ),
+                )
+                .then(noop, noop);
             sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, {
                 installer: 'unavailable',
                 requiredInstaller,
@@ -541,7 +562,11 @@ export class DataScienceInstaller extends BaseInstaller {
     ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const item = await this.appShell.showErrorMessage(
-            Installer.dataScienceInstallPrompt.format(productName),
+            localize(
+                'Installer.dataScienceInstallPrompt',
+                'Data Science library {0} is not installed. Install?',
+                productName,
+            ),
             'Yes',
             'No',
         );
