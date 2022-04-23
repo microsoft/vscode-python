@@ -4,7 +4,6 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { ConfigurationChangeEvent, Disposable, Uri, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
-import * as nls from 'vscode-nls';
 import { JediLanguageServerManager } from '../../client/activation/jedi/manager';
 import { NodeLanguageServerManager } from '../../client/activation/node/manager';
 import { ILanguageServerOutputChannel, LanguageServerType } from '../../client/activation/types';
@@ -16,6 +15,7 @@ import {
     IExtensions,
     IInterpreterPathService,
 } from '../../client/common/types';
+import { LanguageService } from '../../client/common/utils/localize';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IInterpreterHelper, IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -24,8 +24,6 @@ import { NoneLSExtensionManager } from '../../client/languageServer/noneLSExtens
 import { PylanceLSExtensionManager } from '../../client/languageServer/pylanceLSExtensionManager';
 import { LanguageServerWatcher } from '../../client/languageServer/watcher';
 import * as Logging from '../../client/logging';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 suite('Language server watcher', () => {
     let watcher: LanguageServerWatcher;
@@ -308,14 +306,7 @@ suite('Language server watcher', () => {
 
         await watcher.startLanguageServer(LanguageServerType.None);
 
-        assert.strictEqual(
-            output,
-            localize(
-                'LanguageService.startingNone',
-                'Editor support is inactive since language server is set to None for {0}.',
-                'workspace',
-            ),
-        );
+        assert.strictEqual(output, LanguageService.startingNone);
     });
 
     test(`When starting the language server, if the language server can be started, this.languageServerType should reflect the new language server type`, async () => {
