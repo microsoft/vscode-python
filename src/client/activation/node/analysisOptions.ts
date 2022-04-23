@@ -38,7 +38,6 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
                 {
                     notebook: { notebookType: 'jupyter-notebook', pattern: '**/*.ipynb' },
                     language: 'python',
-                    // sync: true, // HACK to activate notebook matching in client.js match()
                 },
             ];
         }
