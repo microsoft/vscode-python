@@ -200,18 +200,10 @@ function sendTelemetryEventBrowser(
         };
         Object.assign(customProperties, errorProps);
 
-        // To avoid hardcoding the names and forgetting to update later.
+        // To avoid hard coding the names and forgetting to update later.
         const errorPropNames = Object.getOwnPropertyNames(errorProps);
         reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, errorPropNames);
     } else {
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
-    }
-
-    if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
-        console.error(
-            `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
-                customProperties,
-            )} `,
-        );
     }
 }

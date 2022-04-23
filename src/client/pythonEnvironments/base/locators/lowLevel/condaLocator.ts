@@ -18,14 +18,17 @@ export class CondaEnvironmentLocator extends Locator<BasicEnvInfo> {
 
         const envs = await conda.getEnvList();
         for (const env of envs) {
-            const executablePath = await conda.getInterpreterPathForEnvironment(env);
-            if (executablePath !== undefined) {
-                traceVerbose(`Found conda environment: ${executablePath}`);
-                try {
+            try {
+                traceVerbose(`Looking into conda env for executable: ${JSON.stringify(env)}`);
+                const executablePath = await conda.getInterpreterPathForEnvironment(env);
+                if (executablePath !== undefined) {
+                    traceVerbose(`Found conda executable: ${executablePath}`);
                     yield { kind: PythonEnvKind.Conda, executablePath, envPath: env.prefix };
-                } catch (ex) {
-                    traceError(`Failed to process environment: ${executablePath}`, ex);
+                } else {
+                    traceError(`Executable for conda env not found: ${JSON.stringify(env)}`);
                 }
+            } catch (ex) {
+                traceError(`Failed to process conda env: ${JSON.stringify(env)}`, ex);
             }
         }
     }

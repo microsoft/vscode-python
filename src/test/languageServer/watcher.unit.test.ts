@@ -3,8 +3,10 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { ConfigurationChangeEvent, Disposable, Uri } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Uri, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import * as nls from 'vscode-nls';
+import { JediLanguageServerManager } from '../../client/activation/jedi/manager';
+import { NodeLanguageServerManager } from '../../client/activation/node/manager';
 import { ILanguageServerOutputChannel, LanguageServerType } from '../../client/activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -17,6 +19,7 @@ import {
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IInterpreterHelper, IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
+import { JediLSExtensionManager } from '../../client/languageServer/jediLSExtensionManager';
 import { NoneLSExtensionManager } from '../../client/languageServer/noneLSExtensionManager';
 import { PylanceLSExtensionManager } from '../../client/languageServer/pylanceLSExtensionManager';
 import { LanguageServerWatcher } from '../../client/languageServer/watcher';
@@ -51,6 +54,9 @@ suite('Language server watcher', () => {
             ({
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
+                    /* do nothing */
+                },
+                onDidChangeWorkspaceFolders: () => {
                     /* do nothing */
                 },
             } as unknown) as IWorkspaceService,
@@ -99,6 +105,9 @@ suite('Language server watcher', () => {
                 onDidChangeConfiguration: () => {
                     /* do nothing */
                 },
+                onDidChangeWorkspaceFolders: () => {
+                    /* do nothing */
+                },
             } as unknown) as IWorkspaceService,
             {} as ICommandManager,
             {} as IFileSystem,
@@ -112,7 +121,7 @@ suite('Language server watcher', () => {
             disposables,
         );
 
-        assert.strictEqual(disposables.length, 4);
+        assert.strictEqual(disposables.length, 5);
     });
 
     test('The constructor should not add a listener to onDidChange to the list of disposables if it is not a trusted workspace', () => {
@@ -139,6 +148,9 @@ suite('Language server watcher', () => {
                 onDidChangeConfiguration: () => {
                     /* do nothing */
                 },
+                onDidChangeWorkspaceFolders: () => {
+                    /* do nothing */
+                },
             } as unknown) as IWorkspaceService,
             {} as ICommandManager,
             {} as IFileSystem,
@@ -152,7 +164,7 @@ suite('Language server watcher', () => {
             disposables,
         );
 
-        assert.strictEqual(disposables.length, 3);
+        assert.strictEqual(disposables.length, 4);
     });
 
     test(`When starting the language server, the language server extension manager should not be undefined`, async () => {
@@ -163,7 +175,7 @@ suite('Language server watcher', () => {
         assert.notStrictEqual(extensionManager, undefined);
     });
 
-    test(`When starting the language server, if the interpreter changed, the existing language server should be stopped if there is one`, async () => {
+    test(`If the interpreter changed, the existing language server should be stopped if there is one`, async () => {
         const getActiveInterpreterStub = sandbox.stub();
         getActiveInterpreterStub.onFirstCall().returns('python');
         getActiveInterpreterStub.onSecondCall().returns('other/python');
@@ -201,6 +213,9 @@ suite('Language server watcher', () => {
                 isTrusted: true,
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
+                    /* do nothing */
+                },
+                onDidChangeWorkspaceFolders: () => {
                     /* do nothing */
                 },
             } as unknown) as IWorkspaceService,
@@ -271,6 +286,9 @@ suite('Language server watcher', () => {
                 onDidChangeConfiguration: () => {
                     /* do nothing */
                 },
+                onDidChangeWorkspaceFolders: () => {
+                    /* do nothing */
+                },
             } as unknown) as IWorkspaceService,
             ({
                 registerCommand: () => {
@@ -329,6 +347,9 @@ suite('Language server watcher', () => {
             onDidChangeConfiguration: (listener: (event: ConfigurationChangeEvent) => Promise<void>) => {
                 onDidChangeConfigListener = listener;
             },
+            onDidChangeWorkspaceFolders: () => {
+                /* do nothing */
+            },
         } as unknown) as IWorkspaceService;
 
         watcher = new LanguageServerWatcher(
@@ -384,6 +405,9 @@ suite('Language server watcher', () => {
             getWorkspaceFolder: (uri: Uri) => ({ uri }),
             onDidChangeConfiguration: (listener: (event: ConfigurationChangeEvent) => Promise<void>) => {
                 onDidChangeConfigListener = listener;
+            },
+            onDidChangeWorkspaceFolders: () => {
+                /* do nothing */
             },
             workspaceFolders: [{ uri: Uri.parse('workspace') }],
         } as unknown) as IWorkspaceService;
@@ -469,6 +493,9 @@ suite('Language server watcher', () => {
                 onDidChangeConfiguration: () => {
                     /* do nothing */
                 },
+                onDidChangeWorkspaceFolders: () => {
+                    /* do nothing */
+                },
             } as unknown) as IWorkspaceService,
             ({
                 registerCommand: () => {
@@ -524,6 +551,9 @@ suite('Language server watcher', () => {
                 onDidChangeConfiguration: () => {
                     /* do nothing */
                 },
+                onDidChangeWorkspaceFolders: () => {
+                    /* do nothing */
+                },
             } as unknown) as IWorkspaceService,
             ({
                 registerCommand: () => {
@@ -577,6 +607,9 @@ suite('Language server watcher', () => {
                 onDidChangeConfiguration: () => {
                     /* do nothing */
                 },
+                onDidChangeWorkspaceFolders: () => {
+                    /* do nothing */
+                },
             } as unknown) as IWorkspaceService,
             ({
                 registerCommand: () => {
@@ -599,57 +632,173 @@ suite('Language server watcher', () => {
         assert.ok(startLanguageServerStub.calledOnce);
     });
 
-    test('When starting language servers with different resources, multiple language servers should be instantiated', async () => {
-        const getActiveInterpreterStub = sandbox.stub();
-        getActiveInterpreterStub.onFirstCall().returns({ path: 'folder1/python', version: { major: 2, minor: 7 } });
-        getActiveInterpreterStub.onSecondCall().returns({ path: 'folder2/python', version: { major: 2, minor: 7 } });
-        const startLanguageServerStub = sandbox.stub(NoneLSExtensionManager.prototype, 'startLanguageServer');
-        startLanguageServerStub.returns(Promise.resolve());
-        const stopLanguageServerStub = sandbox.stub(NoneLSExtensionManager.prototype, 'stopLanguageServer');
+    [
+        {
+            languageServer: LanguageServerType.Jedi,
+            multiLS: true,
+            extensionLSCls: JediLSExtensionManager,
+            lsManagerCls: JediLanguageServerManager,
+        },
+        {
+            languageServer: LanguageServerType.Node,
+            multiLS: false,
+            extensionLSCls: PylanceLSExtensionManager,
+            lsManagerCls: NodeLanguageServerManager,
+        },
+        {
+            languageServer: LanguageServerType.None,
+            multiLS: false,
+            extensionLSCls: NoneLSExtensionManager,
+            lsManagerCls: undefined,
+        },
+    ].forEach(({ languageServer, multiLS, extensionLSCls, lsManagerCls }) => {
+        test(`When starting language servers with different resources, ${
+            multiLS ? 'multiple' : 'a single'
+        } language server${multiLS ? 's' : ''} should be instantiated when using ${languageServer}`, async () => {
+            const getActiveInterpreterStub = sandbox.stub();
+            getActiveInterpreterStub.onFirstCall().returns({ path: 'folder1/python', version: { major: 3, minor: 9 } });
+            getActiveInterpreterStub
+                .onSecondCall()
+                .returns({ path: 'folder2/python', version: { major: 3, minor: 10 } });
+            const startLanguageServerStub = sandbox.stub(extensionLSCls.prototype, 'startLanguageServer');
+            startLanguageServerStub.returns(Promise.resolve());
+            const stopLanguageServerStub = sandbox.stub(extensionLSCls.prototype, 'stopLanguageServer');
+            sandbox.stub(extensionLSCls.prototype, 'canStartLanguageServer').returns(true);
 
-        watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
-            {
-                getSettings: () => ({ languageServer: LanguageServerType.Jedi }),
-            } as IConfigurationService,
-            {} as IExperimentService,
-            ({
-                getActiveWorkspaceUri: () => undefined,
-            } as unknown) as IInterpreterHelper,
-            {} as IInterpreterPathService,
-            ({
-                getActiveInterpreter: getActiveInterpreterStub,
-            } as unknown) as IInterpreterService,
-            {} as IEnvironmentVariablesProvider,
-            ({
-                isTrusted: false,
+            watcher = new LanguageServerWatcher(
+                {} as IServiceContainer,
+                {} as ILanguageServerOutputChannel,
+                {
+                    getSettings: () => ({ languageServer }),
+                } as IConfigurationService,
+                {} as IExperimentService,
+                ({
+                    getActiveWorkspaceUri: () => undefined,
+                } as unknown) as IInterpreterHelper,
+                ({
+                    onDidChange: () => {
+                        /* do nothing */
+                    },
+                } as unknown) as IInterpreterPathService,
+                ({
+                    getActiveInterpreter: getActiveInterpreterStub,
+                } as unknown) as IInterpreterService,
+                {} as IEnvironmentVariablesProvider,
+                ({
+                    isTrusted: true,
+                    getWorkspaceFolder: (uri: Uri) => ({ uri }),
+                    onDidChangeConfiguration: () => {
+                        /* do nothing */
+                    },
+                    onDidChangeWorkspaceFolders: () => {
+                        /* do nothing */
+                    },
+                } as unknown) as IWorkspaceService,
+                ({
+                    registerCommand: () => {
+                        /* do nothing */
+                    },
+                } as unknown) as ICommandManager,
+                {} as IFileSystem,
+                ({
+                    getExtension: () => undefined,
+                    onDidChange: () => {
+                        /* do nothing */
+                    },
+                } as unknown) as IExtensions,
+                ({
+                    showWarningMessage: () => Promise.resolve(undefined),
+                } as unknown) as IApplicationShell,
+                [] as Disposable[],
+            );
+
+            await watcher.startLanguageServer(languageServer, Uri.parse('folder1'));
+            await watcher.startLanguageServer(languageServer, Uri.parse('folder2'));
+
+            // If multiLS set to true, then we expect to have called startLanguageServer twice.
+            // If multiLS set to false, then we expect to have called startLanguageServer once.
+            assert.ok(startLanguageServerStub.calledTwice === multiLS);
+            assert.ok(startLanguageServerStub.calledOnce === !multiLS);
+            assert.ok(getActiveInterpreterStub.calledTwice);
+            assert.ok(stopLanguageServerStub.notCalled);
+        });
+
+        test(`${languageServer} language server(s) should ${
+            multiLS ? '' : 'not'
+        } be stopped if a workspace gets removed from the current project`, async () => {
+            sandbox.stub(extensionLSCls.prototype, 'startLanguageServer').returns(Promise.resolve());
+            if (lsManagerCls) {
+                sandbox.stub(lsManagerCls.prototype, 'dispose').returns();
+            }
+
+            const stopLanguageServerStub = sandbox.stub(extensionLSCls.prototype, 'stopLanguageServer');
+            stopLanguageServerStub.returns();
+
+            let onDidChangeWorkspaceFoldersListener: (event: WorkspaceFoldersChangeEvent) => Promise<void> = () =>
+                Promise.resolve();
+
+            const workspaceService = ({
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
                     /* do nothing */
                 },
-            } as unknown) as IWorkspaceService,
-            ({
-                registerCommand: () => {
-                    /* do nothing */
+                onDidChangeWorkspaceFolders: (listener: (event: WorkspaceFoldersChangeEvent) => Promise<void>) => {
+                    onDidChangeWorkspaceFoldersListener = listener;
                 },
-            } as unknown) as ICommandManager,
-            {} as IFileSystem,
-            ({
-                getExtension: () => undefined,
-                onDidChange: () => {
-                    /* do nothing */
-                },
-            } as unknown) as IExtensions,
-            {} as IApplicationShell,
-            [] as Disposable[],
-        );
+                workspaceFolders: [{ uri: Uri.parse('workspace1') }, { uri: Uri.parse('workspace2') }],
+                isTrusted: true,
+            } as unknown) as IWorkspaceService;
 
-        await watcher.startLanguageServer(LanguageServerType.None, Uri.parse('folder1'));
-        await watcher.startLanguageServer(LanguageServerType.None, Uri.parse('folder2'));
+            watcher = new LanguageServerWatcher(
+                {} as IServiceContainer,
+                {} as ILanguageServerOutputChannel,
+                {
+                    getSettings: () => ({ languageServer }),
+                } as IConfigurationService,
+                {} as IExperimentService,
+                ({
+                    getActiveWorkspaceUri: () => undefined,
+                } as unknown) as IInterpreterHelper,
+                ({
+                    onDidChange: () => {
+                        /* do nothing */
+                    },
+                } as unknown) as IInterpreterPathService,
+                ({
+                    getActiveInterpreter: () => ({ version: { major: 3, minor: 7 } }),
+                } as unknown) as IInterpreterService,
+                {} as IEnvironmentVariablesProvider,
+                workspaceService,
+                ({
+                    registerCommand: () => {
+                        /* do nothing */
+                    },
+                } as unknown) as ICommandManager,
+                {} as IFileSystem,
+                ({
+                    getExtension: () => undefined,
+                    onDidChange: () => {
+                        /* do nothing */
+                    },
+                } as unknown) as IExtensions,
+                ({
+                    showWarningMessage: () => Promise.resolve(undefined),
+                } as unknown) as IApplicationShell,
+                [] as Disposable[],
+            );
 
-        assert.ok(startLanguageServerStub.calledTwice);
-        assert.ok(getActiveInterpreterStub.calledTwice);
-        assert.ok(stopLanguageServerStub.notCalled);
+            await watcher.startLanguageServer(languageServer, Uri.parse('workspace1'));
+            await watcher.startLanguageServer(languageServer, Uri.parse('workspace2'));
+
+            await onDidChangeWorkspaceFoldersListener({
+                added: [],
+                removed: [{ uri: Uri.parse('workspace2') } as WorkspaceFolder],
+            });
+
+            // If multiLS set to true, then we expect to have stopped a language server.
+            // If multiLS set to false, then we expect to not have stopped a language server.
+            assert.ok(stopLanguageServerStub.calledOnce === multiLS);
+            assert.ok(stopLanguageServerStub.notCalled === !multiLS);
+        });
     });
 });

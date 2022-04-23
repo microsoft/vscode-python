@@ -20,7 +20,7 @@ import { getRegistryInterpreters } from '../windowsUtils';
 import { EnvironmentType, PythonEnvironment } from '../../info';
 import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
-import { traceError, traceVerbose } from '../../../logging';
+import { traceError, traceVerbose, traceWarn } from '../../../logging';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
 import { buildPythonExecInfo } from '../../exec';
 import { getExecutablePath } from '../../info/executable';
@@ -479,24 +479,33 @@ export class Conda {
         return envList.find((e) => isParentPath(executableOrEnvPath, e.prefix));
     }
 
+    /**
+     * Returns executable associated with the conda env, swallows exceptions.
+     */
     public async getInterpreterPathForEnvironment(condaEnv: CondaEnvInfo): Promise<string | undefined> {
-        const executablePath = await getInterpreterPath(condaEnv.prefix);
-        if (executablePath) {
-            return executablePath;
+        try {
+            const executablePath = await getInterpreterPath(condaEnv.prefix);
+            if (executablePath) {
+                traceVerbose('Found executable within conda env', JSON.stringify(condaEnv));
+                return executablePath;
+            }
+            traceVerbose(
+                'Executable does not exist within conda env, running conda run to get it',
+                JSON.stringify(condaEnv),
+            );
+            return this.getInterpreterPathUsingCondaRun(condaEnv);
+        } catch (ex) {
+            traceError(`Failed to get executable for conda env: ${JSON.stringify(condaEnv)}`, ex);
+            return undefined;
         }
-        return this.getInterpreterPathUsingCondaRun(condaEnv);
     }
 
     @cache(-1, true)
     private async getInterpreterPathUsingCondaRun(condaEnv: CondaEnvInfo) {
         const runArgs = await this.getRunPythonArgs(condaEnv);
         if (runArgs) {
-            try {
-                const python = buildPythonExecInfo(runArgs);
-                return getExecutablePath(python, shellExecute, CONDA_ACTIVATION_TIMEOUT);
-            } catch (ex) {
-                traceError(`Failed to process environment: ${JSON.stringify(condaEnv)}`, ex);
-            }
+            const python = buildPythonExecInfo(runArgs);
+            return getExecutablePath(python, shellExecute, CONDA_ACTIVATION_TIMEOUT);
         }
         return undefined;
     }
@@ -504,6 +513,7 @@ export class Conda {
     public async getRunPythonArgs(env: CondaEnvInfo, forShellExecution?: boolean): Promise<string[] | undefined> {
         const condaVersion = await this.getCondaVersion();
         if (condaVersion && lt(condaVersion, CONDA_RUN_VERSION)) {
+            traceWarn('`conda run` is not supported for conda version', condaVersion.raw);
             return undefined;
         }
         const args = [];

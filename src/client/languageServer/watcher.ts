@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Uri } from 'vscode';
+import { ConfigurationChangeEvent, Uri, WorkspaceFoldersChangeEvent } from 'vscode';
 import * as nls from 'vscode-nls';
 import { LanguageServerChangeHandler } from '../activation/common/languageServerChangeHandler';
 import {
@@ -54,7 +54,9 @@ export class LanguageServerWatcher
 
     private workspaceInterpreters: Map<string, PythonEnvironment | undefined>;
 
-    // In a multiroot workspace scenario we will have one language server per folder.
+    // In a multiroot workspace scenario we may have multiple language servers running:
+    // When using Jedi, there will be one language server per workspace folder.
+    // When using Pylance, there will only be one language server for the project.
     private workspaceLanguageServers: Map<string, ILanguageServerExtensionManager | undefined>;
 
     private languageServerChangeHandler: LanguageServerChangeHandler;
@@ -80,6 +82,10 @@ export class LanguageServerWatcher
         this.languageServerType = this.configurationService.getSettings().languageServer;
 
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
+
+        disposables.push(
+            this.workspaceService.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders.bind(this)),
+        );
 
         if (this.workspaceService.isTrusted) {
             disposables.push(this.interpreterPathService.onDidChange(this.onDidChangeInterpreter.bind(this)));
@@ -117,7 +123,7 @@ export class LanguageServerWatcher
         languageServerType: LanguageServerType,
         resource?: Resource,
     ): Promise<ILanguageServerExtensionManager> {
-        const lsResource = this.getWorkspaceKey(resource);
+        const lsResource = this.getWorkspaceUri(resource);
         const currentInterpreter = this.workspaceInterpreters.get(lsResource.fsPath);
         const interpreter = await this.interpreterService?.getActiveInterpreter(resource);
 
@@ -146,6 +152,15 @@ export class LanguageServerWatcher
             serverType = LanguageServerType.None;
         }
 
+        // If the language server type is Pylance or None,
+        // We only need to instantiate the language server once, even in multiroot workspace scenarios,
+        // so we only need one language server extension manager.
+        const key = this.getWorkspaceKey(resource, serverType);
+        const languageServer = this.workspaceLanguageServers.get(key);
+        if ((serverType === LanguageServerType.Node || serverType === LanguageServerType.None) && languageServer) {
+            return languageServer;
+        }
+
         // Instantiate the language server extension manager.
         const languageServerExtensionManager = this.createLanguageServer(serverType);
 
@@ -160,7 +175,7 @@ export class LanguageServerWatcher
             await languageServerExtensionManager.languageServerNotAvailable();
         }
 
-        this.workspaceLanguageServers.set(lsResource.fsPath, languageServerExtensionManager);
+        this.workspaceLanguageServers.set(key, languageServerExtensionManager);
 
         return languageServerExtensionManager;
     }
@@ -168,8 +183,8 @@ export class LanguageServerWatcher
     // ILanguageServerCache
 
     public async get(resource?: Resource): Promise<ILanguageServer> {
-        const lsResource = this.getWorkspaceKey(resource);
-        let languageServerExtensionManager = this.workspaceLanguageServers.get(lsResource.fsPath);
+        const key = this.getWorkspaceKey(resource, this.languageServerType);
+        let languageServerExtensionManager = this.workspaceLanguageServers.get(key);
 
         if (!languageServerExtensionManager) {
             languageServerExtensionManager = await this.startAndGetLanguageServer(this.languageServerType, resource);
@@ -181,13 +196,13 @@ export class LanguageServerWatcher
     // Private methods
 
     private stopLanguageServer(resource?: Resource): void {
-        const lsResource = this.getWorkspaceKey(resource);
-        const languageServerExtensionManager = this.workspaceLanguageServers.get(lsResource.fsPath);
+        const key = this.getWorkspaceKey(resource, this.languageServerType);
+        const languageServerExtensionManager = this.workspaceLanguageServers.get(key);
 
         if (languageServerExtensionManager) {
             languageServerExtensionManager.stopLanguageServer();
             languageServerExtensionManager.dispose();
-            this.workspaceLanguageServers.delete(lsResource.fsPath);
+            this.workspaceLanguageServers.delete(key);
         }
     }
 
@@ -232,11 +247,11 @@ export class LanguageServerWatcher
     }
 
     private async refreshLanguageServer(resource?: Resource): Promise<void> {
-        const lsResource = this.getWorkspaceKey(resource);
+        const lsResource = this.getWorkspaceUri(resource);
         const languageServerType = this.configurationService.getSettings(lsResource).languageServer;
 
         if (languageServerType !== this.languageServerType) {
-            this.stopLanguageServer(lsResource);
+            this.stopLanguageServer(resource);
             await this.startLanguageServer(languageServerType, lsResource);
         }
     }
@@ -271,8 +286,19 @@ export class LanguageServerWatcher
         }
     }
 
-    // Get the workspace key for the given resource, in order to query this.workspaceInterpreters and this.workspaceLanguageServers.
-    private getWorkspaceKey(resource?: Resource): Uri {
+    // Watch for workspace folder changes.
+    private async onDidChangeWorkspaceFolders(event: WorkspaceFoldersChangeEvent): Promise<void> {
+        // Since Jedi is the only language server type where we instantiate multiple language servers,
+        // Make sure to dispose of them only in that scenario.
+        if (event.removed.length && this.languageServerType === LanguageServerType.Jedi) {
+            event.removed.forEach((workspace) => {
+                this.stopLanguageServer(workspace.uri);
+            });
+        }
+    }
+
+    // Get the workspace Uri for the given resource, in order to query this.workspaceInterpreters and this.workspaceLanguageServers.
+    private getWorkspaceUri(resource?: Resource): Uri {
         let uri;
 
         if (resource) {
@@ -282,6 +308,19 @@ export class LanguageServerWatcher
         }
 
         return uri ?? Uri.parse('default');
+    }
+
+    // Get the key used to identify which language server extension manager is associated to which workspace.
+    // When using Pylance or having no LS enabled, we return a static key since there should only be one LS extension manager for these LS types.
+    private getWorkspaceKey(resource: Resource | undefined, languageServerType: LanguageServerType): string {
+        switch (languageServerType) {
+            case LanguageServerType.Node:
+                return 'Pylance';
+            case LanguageServerType.None:
+                return 'None';
+            default:
+                return this.getWorkspaceUri(resource).fsPath;
+        }
     }
 }
 
@@ -294,18 +333,10 @@ function logStartup(languageServerType: LanguageServerType, resource: Uri): void
             outputLine = localize('LanguageService.startingJedi', 'Starting Jedi language server for {0}.', basename);
             break;
         case LanguageServerType.Node:
-            outputLine = localize(
-                'LanguageService.startingPylance',
-                'Starting Pylance language server for {0}.',
-                basename,
-            );
+            outputLine = LanguageService.startingPylance;
             break;
         case LanguageServerType.None:
-            outputLine = localize(
-                'LanguageService.startingNone',
-                'Editor support is inactive since language server is set to None for {0}.',
-                basename,
-            );
+            outputLine = LanguageService.startingNone;
             break;
         default:
             throw new Error(`Unknown language server type: ${languageServerType}`);

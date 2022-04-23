@@ -23,10 +23,10 @@ jobs:
               issue_number: context.issue.number,
             })
             const labels = result.data.map((label) => label.name)
-            const hasNeeds = labels.some((label) => label.startsWith('needs'))
+            const hasNeedsOrTPI = labels.some((label) => (label.startsWith('needs') || label === 'testplan-item'))
 
-            if (!hasNeeds) {
-              console.log('This issue is not labeled with a "needs __" label, add the "classify" label.')
+            if (!hasNeedsOrTPI) {
+              console.log('This issue is not labeled with a "needs __" label or the "testplan-item" label, add the "classify" label.')
 
               github.rest.issues.addLabels({
                 owner: context.repo.owner,
@@ -35,5 +35,5 @@ jobs:
                 labels: ['classify']
               })
             } else {
-              console.log('This issue already has a "needs __" label, do not add the "classify" label.')
+              console.log('This issue already has a "needs __" label or the "testplan-item" label, do not add the "classify" label.')
             }
