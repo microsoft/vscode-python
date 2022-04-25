@@ -8,6 +8,7 @@ import * as nls from 'vscode-nls';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { IDisposable } from '../common/types';
+import { Common } from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -79,10 +80,10 @@ export class LinterCommands implements IDisposable {
                             "Multiple linters are enabled in settings. Replace with '{0}'?",
                             selection,
                         ),
-                        'Yes',
-                        'No',
+                        Common.bannerLabelYes,
+                        Common.bannerLabelNo,
                     );
-                    if (response !== 'Yes') {
+                    if (response !== Common.bannerLabelYes) {
                         return;
                     }
                 }

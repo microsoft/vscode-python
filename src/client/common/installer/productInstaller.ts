@@ -340,12 +340,17 @@ export class LinterInstaller extends BaseInstaller {
 
         const options = [selectLinter, doNotShowAgain];
 
-        let message = `Linter ${productName} is not installed.`;
+        let message = localize('Linter.notInstalled', 'Linter {0} is not installed.', productName);
         if (this.isExecutableAModule(product, resource)) {
             options.splice(0, 0, install);
         } else {
             const executable = this.getExecutableNameFromSettings(product, resource);
-            message = `Path to the ${productName} linter is invalid (${executable})`;
+            message = localize(
+                'Linter.invalidPath',
+                'Path to the {0} linter is invalid ({1})',
+                productName,
+                executable,
+            );
         }
         const response = await this.appShell.showErrorMessage(message, ...options);
         if (response === install) {
@@ -400,16 +405,25 @@ export class TestFrameworkInstaller extends BaseInstaller {
         const productName = ProductNames.get(product)!;
 
         const options: string[] = [];
-        let message = `Test framework ${productName} is not installed. Install?`;
+        let message = localize(
+            'TestFramework.notIstalled',
+            'Test framework {0} is not installed. Install?',
+            productName,
+        );
         if (this.isExecutableAModule(product, resource)) {
-            options.push(...['Yes', 'No']);
+            options.push(...[Common.bannerLabelYes, Common.bannerLabelNo]);
         } else {
             const executable = this.getExecutableNameFromSettings(product, resource);
-            message = `Path to the ${productName} test framework is invalid (${executable})`;
+            message = localize(
+                'TestFramework.invalidPath',
+                'Path to the {0} test framework is invalid ({1})',
+                productName,
+                executable,
+            );
         }
 
         const item = await this.appShell.showErrorMessage(message, ...options);
-        return item === 'Yes' ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
+        return item === Common.bannerLabelYes ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
     }
 }
 
@@ -567,10 +581,10 @@ export class DataScienceInstaller extends BaseInstaller {
                 'Data Science library {0} is not installed. Install?',
                 productName,
             ),
-            'Yes',
-            'No',
+            Common.bannerLabelYes,
+            Common.bannerLabelNo,
         );
-        if (item === 'Yes') {
+        if (item === Common.bannerLabelYes) {
             return this.install(product, resource, cancel);
         }
         return InstallerResponse.Ignore;
