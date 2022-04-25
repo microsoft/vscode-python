@@ -12,7 +12,6 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, Disposable, ProgressLocation, Uri, WorkspaceConfiguration } from 'vscode';
-import * as nls from 'vscode-nls';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
@@ -44,8 +43,6 @@ import { IComponentAdapter, ICondaService, IInterpreterService } from '../../../
 import { IServiceContainer } from '../../../client/ioc/types';
 import * as logging from '../../../client/logging';
 import { EnvironmentType, ModuleInstallerType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const pythonPath = path.join(__dirname, 'python');
 
@@ -542,11 +539,7 @@ suite('Module Installer', () => {
                                             const options = {
                                                 location: ProgressLocation.Notification,
                                                 cancellable: true,
-                                                title: localize(
-                                                    'products.installingModule',
-                                                    'Installing {0}',
-                                                    product.name,
-                                                ),
+                                                title: `Installing ${product.name}`,
                                             };
                                             appShell
                                                 .setup((a) => a.withProgress(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
