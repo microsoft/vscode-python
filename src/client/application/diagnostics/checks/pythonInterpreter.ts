@@ -5,6 +5,7 @@
 import { inject, injectable } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import '../../../common/extensions';
+import * as nls from 'vscode-nls';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
@@ -22,11 +23,18 @@ import {
     IDiagnosticMessageOnCloseHandler,
 } from '../types';
 
+// nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
 const messages = {
-    [DiagnosticCodes.NoPythonInterpretersDiagnostic]:
+    [DiagnosticCodes.NoPythonInterpretersDiagnostic]: localize(
+        'DiagnosticCodes.NoPythonInterpretersDiagnostic',
         'Python is not installed. Please download and install Python before using the extension.',
-    [DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic]:
+    ),
+    [DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic]: localize(
+        'DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic',
         'No Python interpreter is selected. You need to select a Python interpreter to enable features such as IntelliSense, linting, and debugging.',
+    ),
 };
 
 export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {

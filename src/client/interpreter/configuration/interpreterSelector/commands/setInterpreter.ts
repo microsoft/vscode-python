@@ -35,7 +35,7 @@ import {
 } from '../../types';
 import { BaseInterpreterSelectorCommand } from './base';
 
-nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+// nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 const untildify = require('untildify');
 

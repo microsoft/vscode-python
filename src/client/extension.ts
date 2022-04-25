@@ -28,6 +28,7 @@ initializeFileLogging(logDispose);
 //===============================================
 // loading starts here
 
+import '../setupNls';
 import { ProgressLocation, ProgressOptions, window } from 'vscode';
 import { buildApi } from './api';
 import { IApplicationShell, IWorkspaceService } from './common/application/types';
@@ -44,9 +45,6 @@ import { IInterpreterService } from './interpreter/contracts';
 import { IExtensionApi, IProposedExtensionAPI } from './apiTypes';
 import { buildProposedApi } from './proposedApi';
 import { WorkspaceService } from './common/application/workspace';
-import * as nls from 'vscode-nls';
-
-nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 

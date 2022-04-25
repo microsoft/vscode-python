@@ -5,6 +5,7 @@
 import { inject, injectable } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import '../../../common/extensions';
+import * as nls from 'vscode-nls';
 import { IPlatformService } from '../../../common/platform/types';
 import {
     IConfigurationService,
@@ -22,11 +23,18 @@ import { DiagnosticCodes } from '../constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../promptHandler';
 import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService } from '../types';
 
+// nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
 const messages = {
-    [DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic]:
+    [DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic]: localize(
+        'DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic',
         'You have selected the macOS system install of Python, which is not recommended for use with the Python extension. Some functionality will be limited, please select a different interpreter.',
-    [DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic]:
+    ),
+    [DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic]: localize(
+        'DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic',
         'The macOS system install of Python is not recommended, some functionality in the extension will be limited. Install another version of Python for the best experience.',
+    ),
 };
 
 export class InvalidMacPythonInterpreterDiagnostic extends BaseDiagnostic {

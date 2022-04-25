@@ -1,18 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import '../../setupNls';
 import * as vscode from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { LanguageClientOptions, State } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/browser';
-import * as nls from 'vscode-nls';
 import { LanguageClientMiddlewareBase } from '../activation/languageClientMiddlewareBase';
 import { LanguageServerType } from '../activation/types';
 import { AppinsightsKey, PVSC_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../common/constants';
 import { EventName } from '../telemetry/constants';
 import { createStatusItem } from './intellisenseStatus';
-
-nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 
 interface BrowserConfig {
     distUrl: string; // URL to Pylance's dist folder.
