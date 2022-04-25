@@ -292,8 +292,8 @@ suite('Formatter installer', async () => {
     test('If black is not installed, offer autopep8 and yapf as options', async () => {
         const messageOptions = [
             Common.bannerLabelYes,
-            'Use {0}'.format(ProductNames.get(Product.autopep8)!),
-            'Use {0}'.format(ProductNames.get(Product.yapf)!),
+            `Use ${ProductNames.get(Product.autopep8)!}`,
+            `Use ${ProductNames.get(Product.yapf)!}`,
             Common.doNotShowAgain,
         ];
 
@@ -324,6 +324,7 @@ suite('Formatter installer', async () => {
     test('If autopep8 is not installed, offer black and yapf as options', async () => {
         const messageOptions = [
             Common.bannerLabelYes,
+
             'Use {0}'.format(ProductNames.get(Product.black)!),
             'Use {0}'.format(ProductNames.get(Product.yapf)!),
             Common.doNotShowAgain,
@@ -356,8 +357,8 @@ suite('Formatter installer', async () => {
     test('If yapf is not installed, offer autopep8 and black as options', async () => {
         const messageOptions = [
             Common.bannerLabelYes,
-            'Use {0}'.format(ProductNames.get(Product.autopep8)!),
-            'Use {0}'.format(ProductNames.get(Product.black)!),
+            `Use ${ProductNames.get(Product.autopep8)!}`,
+            `Use ${ProductNames.get(Product.black)!}`,
             Common.doNotShowAgain,
         ];
 
@@ -387,8 +388,8 @@ suite('Formatter installer', async () => {
 
     test('If the formatter is not executable as a module, display an error message', async () => {
         const messageOptions = [
-            'Use {0}'.format(ProductNames.get(Product.autopep8)!),
-            'Use {0}'.format(ProductNames.get(Product.yapf)!),
+            `Use ${ProductNames.get(Product.autopep8)!}`,
+            `Use ${ProductNames.get(Product.yapf)!}`,
             Common.doNotShowAgain,
         ];
 
@@ -421,8 +422,8 @@ suite('Formatter installer', async () => {
     test('If "Do not show again" has been selected earlier, do not display the prompt', async () => {
         const messageOptions = [
             Common.bannerLabelYes,
-            'Use {0}'.format(ProductNames.get(Product.autopep8)!),
-            'Use {0}'.format(ProductNames.get(Product.yapf)!),
+            `Use ${ProductNames.get(Product.autopep8)!}`,
+            `Use ${ProductNames.get(Product.yapf)!}`,
             Common.doNotShowAgain,
         ];
 
@@ -449,8 +450,8 @@ suite('Formatter installer', async () => {
         let value = false;
         const messageOptions = [
             Common.bannerLabelYes,
-            'Use {0}'.format(ProductNames.get(Product.autopep8)!),
-            'Use {0}'.format(ProductNames.get(Product.yapf)!),
+            `Use ${ProductNames.get(Product.autopep8)!}`,
+            `Use ${ProductNames.get(Product.yapf)!}`,
             Common.doNotShowAgain,
         ];
 

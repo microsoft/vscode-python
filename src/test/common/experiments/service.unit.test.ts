@@ -9,7 +9,6 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Disposable } from 'vscode-jsonrpc';
 import * as tasClient from 'vscode-tas-client';
-import * as nls from 'vscode-nls';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
@@ -24,8 +23,6 @@ import { EventName } from '../../../client/telemetry/constants';
 import { PVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { MockOutputChannel } from '../../mockClasses';
 import { MockMemento } from '../../mocks/mementos';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 suite('Experimentation service', () => {
     const extensionVersion = '1.2.3';
@@ -160,7 +157,7 @@ suite('Experimentation service', () => {
                 instance(stateFactory),
             );
             await exp.activate();
-            const output = `${localize('Experiments.inGroup', "Experiment '{0}' is active", 'pythonExperiment')}\n`;
+            const output = "Experiment 'pythonExperiment' is active\n";
 
             assert.strictEqual(outputChannel.output, output);
         });
