@@ -33,6 +33,7 @@ extends:
         - script: npm ci
           displayName: Install NPM dependencies
         - script: gulp translations-import --location "$(SetTranslationsPath.TranslatedStrings)"
+          displayName: Run translations-import
         - script: gulp translations-generate
           displayName: Generate translations
 
