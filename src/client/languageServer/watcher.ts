@@ -35,7 +35,6 @@ import { NoneLSExtensionManager } from './noneLSExtensionManager';
 import { PylanceLSExtensionManager } from './pylanceLSExtensionManager';
 import { ILanguageServerExtensionManager, ILanguageServerWatcher } from './types';
 
-// nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 @injectable()

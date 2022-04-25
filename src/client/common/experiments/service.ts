@@ -14,7 +14,6 @@ import { PVSC_EXTENSION_ID } from '../constants';
 import { IExperimentService, IPersistentStateFactory } from '../types';
 import { ExperimentationTelemetry } from './telemetry';
 
-// nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const EXP_MEMENTO_KEY = 'VSCode.ABExp.FeatureData';

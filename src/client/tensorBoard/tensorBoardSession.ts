@@ -48,7 +48,6 @@ import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
 import { ModuleInstallFlags } from '../common/installer/types';
 import { traceError, traceInfo } from '../logging';
 
-// nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 enum Messages {

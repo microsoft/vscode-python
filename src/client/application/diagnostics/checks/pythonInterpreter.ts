@@ -23,7 +23,6 @@ import {
     IDiagnosticMessageOnCloseHandler,
 } from '../types';
 
-// nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const messages = {

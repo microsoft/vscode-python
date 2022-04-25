@@ -42,7 +42,6 @@ import { isParentPath } from '../platform/fs-paths';
 
 export { Product } from '../types';
 
-// nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // Products which may not be available to install from certain package registries, keyed by product name

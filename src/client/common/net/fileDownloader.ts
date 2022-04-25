@@ -14,7 +14,6 @@ import { IFileSystem, WriteStream } from '../platform/types';
 import { DownloadOptions, IFileDownloader, IHttpClient } from '../types';
 import { noop } from '../utils/misc';
 
-// nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 @injectable()
