@@ -35,6 +35,8 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
 
     private started = false;
 
+    private static commandDispose: IDisposable;
+
     constructor(
         private readonly serviceContainer: IServiceContainer,
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
@@ -42,11 +44,12 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         commandManager: ICommandManager,
         private readonly extensions: IExtensions,
     ) {
-        this.disposables.push(
-            commandManager.registerCommand(Commands.RestartLS, () => {
-                this.restartLanguageServer().ignoreErrors();
-            }),
-        );
+        if (NodeLanguageServerManager.commandDispose) {
+            NodeLanguageServerManager.commandDispose.dispose();
+        }
+        NodeLanguageServerManager.commandDispose = commandManager.registerCommand(Commands.RestartLS, () => {
+            this.restartLanguageServer().ignoreErrors();
+        });
     }
 
     private static versionTelemetryProps(instance: NodeLanguageServerManager) {
@@ -59,6 +62,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         if (this.languageProxy) {
             this.languageProxy.dispose();
         }
+        NodeLanguageServerManager.commandDispose.dispose();
         this.disposables.forEach((d) => d.dispose());
     }
 
