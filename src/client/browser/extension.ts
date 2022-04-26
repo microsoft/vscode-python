@@ -113,11 +113,6 @@ async function runPylance(
 
         await client.start();
 
-<<<<<<< HEAD
-=======
-        await languageClient.start();
-
->>>>>>> f8f322539 (Upgrade to latest LSP)
         context.subscriptions.push(createStatusItem());
     } catch (e) {
         console.log(e);

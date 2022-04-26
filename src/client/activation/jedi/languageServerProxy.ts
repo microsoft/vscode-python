@@ -56,6 +56,11 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         interpreter: PythonEnvironment | undefined,
         options: LanguageClientOptions,
     ): Promise<void> {
+        if (this.languageServerTask) {
+            await this.languageServerTask;
+            return;
+        }
+
         this.lsVersion =
             (options.middleware ? (<LanguageClientMiddleware>options.middleware).serverVersion : undefined) ?? '0.19.3';
 
@@ -91,6 +96,9 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
             const d = this.disposables.shift()!;
             d.dispose();
         }
+
+        this.languageServerTask = this.languageClient.start();
+        await this.languageServerTask;
     }
 
     // eslint-disable-next-line class-methods-use-this
