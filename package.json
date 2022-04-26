@@ -42,7 +42,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.65.0"
+        "vscode": "^1.67.0-insider"
     },
     "keywords": [
         "python",
@@ -1856,10 +1856,10 @@
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.4.5",
-        "vscode-jsonrpc": "8.0.0-next.7",
-        "vscode-languageclient": "8.0.0-next.13",
-        "vscode-languageserver": "8.0.0-next.9",
-        "vscode-languageserver-protocol": "3.17.0-next.15",
+        "vscode-jsonrpc": "8.0.0-next.8",
+        "vscode-languageclient": "8.0.0-next.16",
+        "vscode-languageserver": "8.0.0-next.11",
+        "vscode-languageserver-protocol": "3.17.0-next.17",
         "vscode-tas-client": "^0.1.22",
         "winreg": "^1.2.4",
         "xml2js": "^0.4.19"
@@ -1884,7 +1884,7 @@
         "@types/sinon": "^10.0.11",
         "@types/tmp": "^0.0.33",
         "@types/uuid": "^8.3.4",
-        "@types/vscode": "~1.65.0",
+        "@types/vscode": "~1.66.0",
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",
         "@typescript-eslint/eslint-plugin": "^3.7.0",
