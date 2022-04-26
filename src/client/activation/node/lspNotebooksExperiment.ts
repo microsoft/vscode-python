@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { extensions } from 'vscode';
 import * as semver from 'semver';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, IOutputChannel } from '../../common/types';
 import { IExtensionSingleActivationService } from '../types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../../common/constants';
+import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 
 @injectable()
 export class LspNotebooksExperiment implements IExtensionSingleActivationService {
@@ -19,7 +19,10 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
 
     private _pylanceVersion: string | undefined;
 
-    constructor(@inject(IConfigurationService) private readonly configurationService: IConfigurationService) {}
+    constructor(
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
+    ) {}
 
     public async activate(): Promise<void> {
         this._isInNotebooksExperiment = this.configurationService.getSettings().pylanceLspNotebooksEnabled;
@@ -29,6 +32,10 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
         if (this._supportsNotebooksExperiment()) {
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_LSP_NOTEBOOKS);
         }
+
+        this.output.appendLine(
+            `LspNotebooksExperiment: activate: isInNotebooksExperiment = ${this.isInNotebooksExperiment()}`,
+        );
     }
 
     public isInNotebooksExperiment(): boolean | undefined {
