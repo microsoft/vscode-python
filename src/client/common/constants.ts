@@ -9,16 +9,16 @@ export const InteractiveScheme = 'vscode-interactive';
 export const PYTHON = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
     { scheme: 'untitled', language: PYTHON_LANGUAGE },
-    // { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
-    // { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE },
+    { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
+    { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE },
     { scheme: InteractiveInputScheme, language: PYTHON_LANGUAGE },
 ];
 
-// export const PYTHON_NOTEBOOKS = [
-//     { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
-//     { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE },
-//     { scheme: InteractiveInputScheme, language: PYTHON_LANGUAGE },
-// ];
+export const PYTHON_NOTEBOOKS = [
+    { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
+    { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE },
+    { scheme: InteractiveInputScheme, language: PYTHON_LANGUAGE },
+];
 
 export const PVSC_EXTENSION_ID = 'ms-python.python';
 export const PYLANCE_EXTENSION_ID = 'ms-python.vscode-pylance';
