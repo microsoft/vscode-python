@@ -33,6 +33,7 @@ const nodeConfig = (_, { mode }) => ({
     // },
     resolve: {
         extensions: ['.ts', '.js'],
+        fallback: { path: require.resolve('path-browserify') },
     },
     plugins: [new NodePolyfillPlugin()],
     externals: {
