@@ -5,8 +5,6 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import '../../common/extensions';
 
-import { inject, injectable, named } from 'inversify';
-
 import { ICommandManager } from '../../common/application/types';
 import { IDisposable, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';

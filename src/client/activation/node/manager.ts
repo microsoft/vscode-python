@@ -4,11 +4,8 @@ import '../../common/extensions';
 
 import { inject, injectable, named } from 'inversify';
 
-import { Disposable } from 'vscode';
 import { ICommandManager } from '../../common/application/types';
 import { IDisposable, IExtensions, Resource } from '../../common/types';
-import { Uri } from 'vscode';
-import { IDisposable, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -23,7 +20,6 @@ import {
 } from '../types';
 import { traceDecoratorError, traceDecoratorVerbose } from '../../logging';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
-import { Middleware } from 'vscode-languageclient';
 import { JupyterExtensionIntegration } from '../../jupyter/jupyterIntegration';
 
 export class NodeLanguageServerManager implements ILanguageServerManager {
@@ -49,7 +45,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         private readonly languageServerProxy: ILanguageServerProxy,
         commandManager: ICommandManager,
         private readonly extensions: IExtensions,
-        @inject(JupyterExtensionIntegration) private readonly jupyterExtensionIntegration: JupyterExtensionIntegration,
+        private readonly jupyterExtensionIntegration: JupyterExtensionIntegration,
     ) {
         if (NodeLanguageServerManager.commandDispose) {
             NodeLanguageServerManager.commandDispose.dispose();

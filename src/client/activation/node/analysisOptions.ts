@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
+import { LanguageClientOptions } from 'vscode-languageclient';
 import { WorkspaceFolder } from 'vscode';
 import { DocumentFilter } from 'vscode-languageserver-protocol';
 import { IWorkspaceService } from '../../common/application/types';
@@ -13,9 +13,7 @@ import { LspNotebooksExperiment } from './lspNotebooksExperiment';
 export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsBase {
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(lsOutputChannel: ILanguageServerOutputChannel, workspace: IWorkspaceService,
-        @inject(ILanguageServerOutputChannel) lsOutputChannel: ILanguageServerOutputChannel,
-        @inject(IWorkspaceService) workspace: IWorkspaceService,
-        @inject(LspNotebooksExperiment) private readonly lspNotebooksExperiment: LspNotebooksExperiment,
+        private readonly lspNotebooksExperiment: LspNotebooksExperiment,
     ) {
         super(lsOutputChannel, workspace);
     }
@@ -26,7 +24,7 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
             experimentationSupport: true,
             trustedWorkspaceSupport: true,
             lspNotebooksSupport: this.lspNotebooksExperiment.isInNotebooksExperiment() == true,
-        };
+        } as unknown) as LanguageClientOptions;
     }
 
     protected async getDocumentFilters(_workspaceFolder?: WorkspaceFolder): Promise<DocumentFilter[]> {

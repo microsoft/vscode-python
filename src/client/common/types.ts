@@ -190,7 +190,6 @@ export interface IPythonSettings {
     readonly envFile: string;
     readonly disableInstallationChecks: boolean;
     readonly globalModuleInstallation: boolean;
-    readonly autoUpdateLanguageServer: boolean;
     readonly pylanceLspNotebooksEnabled: boolean;
     readonly onDidChange: Event<void>;
     readonly experiments: IExperiments;
