@@ -269,6 +269,7 @@ jobs:
       - name: Run single-workspace tests
         env:
           CI_PYTHON_VERSION: ${{ matrix.python }}
+          INSTALL_JUPYTER_EXTENSION: true
         uses: GabrielBB/xvfb-action@v1.6
         with:
           run: npm run testSingleWorkspace
@@ -469,6 +470,7 @@ jobs:
         env:
           CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
           CI_DISABLE_AUTO_SELECTION: 1
+          INSTALL_JUPYTER_EXTENSION: true
         uses: GabrielBB/xvfb-action@v1.6
         with:
           run: npm run testSingleWorkspace:cover

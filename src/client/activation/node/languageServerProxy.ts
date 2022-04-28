@@ -78,12 +78,9 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
 
     @traceDecoratorVerbose('Stopping language server')
     public dispose(): void {
-        if (this.languageClient && this.languageServerTask) {
+        if (this.languageClient) {
             // Do not await on this.
-            const client = this.languageClient;
-            this.languageServerTask.then(() =>
-                client.stop().then(noop, (ex) => traceError('Stopping language client failed', ex)),
-            );
+            this.languageClient.stop().then(noop, (ex) => traceError('Stopping language client failed', ex));
 
             this.languageClient = undefined;
             this.languageServerTask = undefined;

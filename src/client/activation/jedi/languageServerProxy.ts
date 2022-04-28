@@ -44,7 +44,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
 
     @traceDecoratorVerbose('Stopping language server')
     public dispose(): void {
-        if (this.languageClient && this.languageServerTask) {
+        if (this.languageClient) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const pid: number | undefined = ((this.languageClient as any)._serverProcess as ChildProcess)?.pid;
             const killServer = () => {
@@ -54,16 +54,13 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
             };
 
             // Do not await on this.
-            const client = this.languageClient;
-            this.languageServerTask.then(() => {
-                client.stop().then(
-                    () => killServer(),
-                    (ex) => {
-                        traceError('Stopping language client failed', ex);
-                        killServer();
-                    },
-                );
-            });
+            this.languageClient.stop().then(
+                () => killServer(),
+                (ex) => {
+                    traceError('Stopping language client failed', ex);
+                    killServer();
+                },
+            );
 
             this.languageClient = undefined;
             this.languageServerTask = undefined;

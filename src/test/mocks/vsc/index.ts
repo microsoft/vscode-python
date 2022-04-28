@@ -344,3 +344,19 @@ export enum UIKind {
     Desktop = 1,
     Web = 2,
 }
+
+export class InlayHint {
+    tooltip?: string | MarkdownString | undefined;
+
+    textEdits?: vscode.TextEdit[];
+
+    paddingLeft?: boolean;
+
+    paddingRight?: boolean;
+
+    constructor(
+        public position: vscode.Position,
+        public label: string | vscode.InlayHintLabelPart[],
+        public kind?: vscode.InlayHintKind,
+    ) {}
+}
