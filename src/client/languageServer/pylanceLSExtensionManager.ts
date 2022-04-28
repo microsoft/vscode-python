@@ -5,6 +5,7 @@ import { promptForPylanceInstall } from '../activation/common/languageServerChan
 import { NodeLanguageServerAnalysisOptions } from '../activation/node/analysisOptions';
 import { NodeLanguageClientFactory } from '../activation/node/languageClientFactory';
 import { NodeLanguageServerProxy } from '../activation/node/languageServerProxy';
+import { LspNotebooksExperiment } from '../activation/node/lspNotebooksExperiment';
 import { NodeLanguageServerManager } from '../activation/node/manager';
 import { ILanguageServerOutputChannel } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
@@ -22,6 +23,7 @@ import { Pylance } from '../common/utils/localize';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
+import { JupyterExtensionIntegration } from '../jupyter/jupyterIntegration';
 import { traceLog } from '../logging';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { LanguageServerCapabilities } from './languageServerCapabilities';
@@ -50,10 +52,16 @@ export class PylanceLSExtensionManager extends LanguageServerCapabilities
         fileSystem: IFileSystem,
         private readonly extensions: IExtensions,
         readonly applicationShell: IApplicationShell,
+        lspNotebooksExperiment: LspNotebooksExperiment,
+        jupyterExtensionIntegration: JupyterExtensionIntegration,
     ) {
         super();
 
-        this.analysisOptions = new NodeLanguageServerAnalysisOptions(outputChannel, workspaceService);
+        this.analysisOptions = new NodeLanguageServerAnalysisOptions(
+            outputChannel,
+            workspaceService,
+            lspNotebooksExperiment,
+        );
         this.clientFactory = new NodeLanguageClientFactory(fileSystem, extensions);
         this.serverProxy = new NodeLanguageServerProxy(
             this.clientFactory,
@@ -69,6 +77,7 @@ export class PylanceLSExtensionManager extends LanguageServerCapabilities
             this.serverProxy,
             commandManager,
             extensions,
+            jupyterExtensionIntegration,
         );
     }
 

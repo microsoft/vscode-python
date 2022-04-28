@@ -34,6 +34,8 @@ import { JediLSExtensionManager } from './jediLSExtensionManager';
 import { NoneLSExtensionManager } from './noneLSExtensionManager';
 import { PylanceLSExtensionManager } from './pylanceLSExtensionManager';
 import { ILanguageServerExtensionManager, ILanguageServerWatcher } from './types';
+import { LspNotebooksExperiment } from '../activation/node/lspNotebooksExperiment';
+import { JupyterExtensionIntegration } from '../jupyter/jupyterIntegration';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
@@ -74,6 +76,8 @@ export class LanguageServerWatcher
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) readonly applicationShell: IApplicationShell,
+        @inject(LspNotebooksExperiment) private readonly lspNotebooksExperiment: LspNotebooksExperiment,
+        @inject(JupyterExtensionIntegration) private readonly jupyterExtensionIntegration: JupyterExtensionIntegration,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
     ) {
         this.workspaceInterpreters = new Map();
@@ -239,6 +243,8 @@ export class LanguageServerWatcher
                     this.fileSystem,
                     this.extensions,
                     this.applicationShell,
+                    this.lspNotebooksExperiment,
+                    this.jupyterExtensionIntegration,
                 );
                 break;
             case LanguageServerType.None:

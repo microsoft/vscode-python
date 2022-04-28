@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
+import { LspNotebooksExperiment } from '../../client/activation/node/lspNotebooksExperiment';
 import { ILanguageServerOutputChannel } from '../../client/activation/types';
 import { IWorkspaceService, ICommandManager, IApplicationShell } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -14,6 +15,7 @@ import {
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
+import { JupyterExtensionIntegration } from '../../client/jupyter/jupyterIntegration';
 import { PylanceLSExtensionManager } from '../../client/languageServer/pylanceLSExtensionManager';
 
 suite('Language Server - Pylance LS extension manager', () => {
@@ -37,6 +39,8 @@ suite('Language Server - Pylance LS extension manager', () => {
             {} as IFileSystem,
             {} as IExtensions,
             {} as IApplicationShell,
+            {} as LspNotebooksExperiment,
+            {} as JupyterExtensionIntegration,
         );
     });
 
@@ -66,6 +70,8 @@ suite('Language Server - Pylance LS extension manager', () => {
                 getExtension: () => ({}),
             } as unknown) as IExtensions,
             {} as IApplicationShell,
+            {} as LspNotebooksExperiment,
+            {} as JupyterExtensionIntegration,
         );
 
         const result = manager.canStartLanguageServer();
@@ -93,6 +99,8 @@ suite('Language Server - Pylance LS extension manager', () => {
                 getExtension: () => undefined,
             } as unknown) as IExtensions,
             {} as IApplicationShell,
+            {} as LspNotebooksExperiment,
+            {} as JupyterExtensionIntegration,
         );
 
         const result = manager.canStartLanguageServer();
