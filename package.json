@@ -1916,6 +1916,7 @@
         "nock": "^10.0.6",
         "node-has-native-dependencies": "^1.0.2",
         "node-loader": "^1.0.2",
+        "node-polyfill-webpack-plugin": "^1.1.4",
         "nyc": "^15.0.0",
         "prettier": "^2.0.2",
         "rewiremock": "^3.13.0",
