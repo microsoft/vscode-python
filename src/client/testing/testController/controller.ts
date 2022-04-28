@@ -18,6 +18,7 @@ import {
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IWorkspaceService } from '../../common/application/types';
+import * as constants from '../../common/constants';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
@@ -112,6 +113,21 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             ),
         );
         this.testController.resolveHandler = this.resolveChildren.bind(this);
+        this.testController.refreshHandler = (token: CancellationToken) => {
+            this.disposables.push(
+                token.onCancellationRequested(() => {
+                    traceVerbose('Testing: Stop refreshing triggered');
+                    sendTelemetryEvent(EventName.UNITTEST_DISCOVERING_STOP);
+                    this.stopRefreshing();
+                }),
+            );
+
+            traceVerbose('Testing: Manually triggered test refresh');
+            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, {
+                trigger: constants.CommandSource.commandPalette,
+            });
+            return this.refreshTestData(undefined, { forceRefresh: true });
+        };
 
         this.pythonTestServer = new PythonTestServer(this.pythonExecFactory);
     }
