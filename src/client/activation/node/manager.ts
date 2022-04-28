@@ -44,7 +44,6 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         private readonly languageServerProxy: ILanguageServerProxy,
         commandManager: ICommandManager,
         private readonly extensions: IExtensions,
-        private readonly jupyterExtensionIntegration: JupyterExtensionIntegration,
     ) {
         if (NodeLanguageServerManager.commandDispose) {
             NodeLanguageServerManager.commandDispose.dispose();
@@ -127,7 +126,10 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         this.middleware = new LanguageClientMiddleware(this.serviceContainer, LanguageServerType.Node, this.lsVersion);
         options.middleware = this.middleware;
 
-        const jupyterPythonPathFunction = this.jupyterExtensionIntegration.getJupyterPythonPathFunction();
+        const jupyterExtensionIntegration = this.serviceContainer.get<JupyterExtensionIntegration>(
+            JupyterExtensionIntegration,
+        );
+        const jupyterPythonPathFunction = jupyterExtensionIntegration.getJupyterPythonPathFunction();
         if (jupyterPythonPathFunction) {
             this.middleware.registerJupyterPythonPathFunction(jupyterPythonPathFunction);
         }

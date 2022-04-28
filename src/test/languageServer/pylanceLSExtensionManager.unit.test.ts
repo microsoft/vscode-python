@@ -15,7 +15,6 @@ import {
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
-import { JupyterExtensionIntegration } from '../../client/jupyter/jupyterIntegration';
 import { PylanceLSExtensionManager } from '../../client/languageServer/pylanceLSExtensionManager';
 
 suite('Language Server - Pylance LS extension manager', () => {
@@ -40,7 +39,6 @@ suite('Language Server - Pylance LS extension manager', () => {
             {} as IExtensions,
             {} as IApplicationShell,
             {} as LspNotebooksExperiment,
-            {} as JupyterExtensionIntegration,
         );
     });
 
@@ -71,7 +69,6 @@ suite('Language Server - Pylance LS extension manager', () => {
             } as unknown) as IExtensions,
             {} as IApplicationShell,
             {} as LspNotebooksExperiment,
-            {} as JupyterExtensionIntegration,
         );
 
         const result = manager.canStartLanguageServer();
@@ -100,7 +97,6 @@ suite('Language Server - Pylance LS extension manager', () => {
             } as unknown) as IExtensions,
             {} as IApplicationShell,
             {} as LspNotebooksExperiment,
-            {} as JupyterExtensionIntegration,
         );
 
         const result = manager.canStartLanguageServer();
