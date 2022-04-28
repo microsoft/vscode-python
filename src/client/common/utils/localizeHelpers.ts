@@ -43,19 +43,9 @@ function parseLocale(): string {
     } catch {
         // Fall through
     }
-
-    try {
-        // Attempt to load from the vscode locale. If not there, use english
-        // 'process' should be in this `try` block for browser support.
-        // Don't merge this try block with the one above. They have to fall
-        // through in this order.
-        const vscodeConfigString = process.env.VSCODE_NLS_CONFIG;
-        return vscodeConfigString ? JSON.parse(vscodeConfigString).locale : 'en-us';
-    } catch {
-        // Fall through
-    }
-
-    return 'en-us';
+    // Attempt to load from the vscode locale. If not there, use english
+    const vscodeConfigString = process.env.VSCODE_NLS_CONFIG;
+    return vscodeConfigString ? JSON.parse(vscodeConfigString).locale : 'en-us';
 }
 
 export function getLocalizedString(key: string, defValue?: string): string {
