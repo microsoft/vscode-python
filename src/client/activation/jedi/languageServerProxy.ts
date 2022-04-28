@@ -23,6 +23,8 @@ import { traceDecoratorError, traceDecoratorVerbose, traceError } from '../../lo
 export class JediLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
 
+    private languageServerTask: Promise<void> | undefined;
+
     private readonly disposables: Disposable[] = [];
 
     private disposed = false;
@@ -42,7 +44,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
 
     @traceDecoratorVerbose('Stopping language server')
     public dispose(): void {
-        if (this.languageClient) {
+        if (this.languageClient && this.languageServerTask) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const pid: number | undefined = ((this.languageClient as any)._serverProcess as ChildProcess)?.pid;
             const killServer = () => {
@@ -50,15 +52,21 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
                     killPid(pid);
                 }
             };
+
             // Do not await on this.
-            this.languageClient.stop().then(
-                () => killServer(),
-                (ex) => {
-                    traceError('Stopping language client failed', ex);
-                    killServer();
-                },
-            );
+            const client = this.languageClient;
+            this.languageServerTask.then(() => {
+                client.stop().then(
+                    () => killServer(),
+                    (ex) => {
+                        traceError('Stopping language client failed', ex);
+                        killServer();
+                    },
+                );
+            });
+
             this.languageClient = undefined;
+            this.languageServerTask = undefined;
         }
 
         while (this.disposables.length > 0) {
@@ -82,7 +90,8 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         interpreter: PythonEnvironment | undefined,
         options: LanguageClientOptions,
     ): Promise<void> {
-        if (this.languageClient) {
+        if (this.languageServerTask) {
+            await this.languageServerTask;
             return;
         }
 
@@ -92,7 +101,8 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
         this.registerHandlers();
 
-        await this.languageClient.start();
+        this.languageServerTask = this.languageClient.start();
+        await this.languageServerTask;
     }
 
     // eslint-disable-next-line class-methods-use-this

@@ -85,15 +85,14 @@ async function runPylance(
             middleware,
         };
 
-        languageClient = new LanguageClient('python', 'Python Language Server', clientOptions, worker);
+        const client = new LanguageClient('python', 'Python Language Server', clientOptions, worker);
+        languageClient = client;
 
         context.subscriptions.push(
-            vscode.commands.registerCommand('python.viewLanguageServerOutput', () =>
-                languageClient!.outputChannel.show(),
-            ),
+            vscode.commands.registerCommand('python.viewLanguageServerOutput', () => client.outputChannel.show()),
         );
 
-        languageClient.onTelemetry(
+        client.onTelemetry(
             (telemetryEvent: {
                 EventName: EventName;
                 Properties: { method: string };
@@ -115,7 +114,7 @@ async function runPylance(
             },
         );
 
-        await languageClient.start();
+        await client.start();
 
         context.subscriptions.push(createStatusItem());
     } catch (e) {

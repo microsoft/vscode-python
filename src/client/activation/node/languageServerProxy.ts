@@ -51,6 +51,8 @@ namespace GetExperimentValue {
 export class NodeLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
 
+    private languageServerTask: Promise<void> | undefined;
+
     private cancellationStrategy: FileBasedCancellationStrategy | undefined;
 
     private readonly disposables: Disposable[] = [];
@@ -76,10 +78,15 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
 
     @traceDecoratorVerbose('Stopping language server')
     public dispose(): void {
-        if (this.languageClient) {
+        if (this.languageClient && this.languageServerTask) {
             // Do not await on this.
-            this.languageClient.stop().then(noop, (ex) => traceError('Stopping language client failed', ex));
+            const client = this.languageClient;
+            this.languageServerTask.then(() =>
+                client.stop().then(noop, (ex) => traceError('Stopping language client failed', ex)),
+            );
+
             this.languageClient = undefined;
+            this.languageServerTask = undefined;
         }
         if (this.cancellationStrategy) {
             this.cancellationStrategy.dispose();
@@ -105,7 +112,8 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         interpreter: PythonEnvironment | undefined,
         options: LanguageClientOptions,
     ): Promise<void> {
-        if (this.languageClient) {
+        if (this.languageServerTask) {
+            await this.languageServerTask;
             return;
         }
 
@@ -116,7 +124,6 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
 
         this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
-
         this.registerHandlers(resource);
 
         this.disposables.push(
@@ -125,7 +132,8 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
             }),
         );
 
-        await this.languageClient.start();
+        this.languageServerTask = this.languageClient.start();
+        await this.languageServerTask;
     }
 
     // eslint-disable-next-line class-methods-use-this
