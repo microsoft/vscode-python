@@ -99,8 +99,7 @@ export async function openFileAndWaitForLS(file: string): Promise<vscode.TextDoc
 }
 
 export async function verifyExtensionIsAvailable(extensionId: string): Promise<void> {
-    const extension =
-        vscode.extensions.all.find((e) => e.id === extensionId) ?? vscode.extensions.getExtension(extensionId);
+    const extension = vscode.extensions.all.find((e) => e.id === extensionId);
     assert.ok(
         extension,
         `Extension ${extensionId} not installed. ${JSON.stringify(vscode.extensions.all.map((e) => e.id))}`,
