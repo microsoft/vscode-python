@@ -60,6 +60,12 @@ suite('Insiders Test: Language Server', () => {
     teardown(closeActiveWindows);
 
     test('Definitions', async () => {
+        const pythonVersion = process.env.CI_PYTHON_VERSION ? parseFloat(process.env.CI_PYTHON_VERSION) : undefined;
+        if (pythonVersion && pythonVersion < 3) {
+            // Skip test for v2.7
+            return;
+        }
+
         const startPosition = new vscode.Position(13, 6);
         const textDocument = await openFileAndWaitForLS(fileDefinitions);
         let tested = false;
