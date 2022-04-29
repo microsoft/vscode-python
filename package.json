@@ -1593,6 +1593,13 @@
                     "when": "!virtualWorkspace && shellExecutionSupported"
                 },
                 {
+                    "category": "Test",
+                    "command": "testing.reRunFailTests",
+                    "icon": "$(run-errors)",
+                    "title": "%python.command.testing.rerunFailedTests.title%",
+                    "when": "!virtualWorkspace && shellExecutionSupported"
+                },
+                {
                     "category": "Python",
                     "command": "python.runLinting",
                     "title": "%python.command.python.runLinting.title%",
