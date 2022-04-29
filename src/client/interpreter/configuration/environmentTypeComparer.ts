@@ -75,7 +75,7 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
             return 0;
         }
 
-        return nameA > nameB ? 1 : -1;
+        return nameA > nameB ? -1 : 1;
     }
 
     public getRecommended(interpreters: PythonEnvironment[], resource: Resource): PythonEnvironment | undefined {

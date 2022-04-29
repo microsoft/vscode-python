@@ -4,6 +4,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import { Architecture } from '../../client/common/utils/platform';
 import {
     EnvironmentTypeComparer,
     EnvLocationHeuristic,
@@ -214,6 +215,20 @@ suite('Environment sorting', () => {
             envB: {
                 envType: EnvironmentType.Conda,
                 envName: 'conda-bar',
+                version: { major: 3, minor: 10, patch: 2 },
+            } as PythonEnvironment,
+            expected: 1,
+        },
+        {
+            title: 'If 2 global interpreters have the same Python version, they should be sorted by architecture',
+            envA: {
+                envType: EnvironmentType.Global,
+                architecture: Architecture.x86,
+                version: { major: 3, minor: 10, patch: 2 },
+            } as PythonEnvironment,
+            envB: {
+                envType: EnvironmentType.Global,
+                architecture: Architecture.x64,
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
             expected: 1,
