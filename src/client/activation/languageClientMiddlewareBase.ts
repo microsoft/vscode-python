@@ -87,12 +87,11 @@ export class LanguageClientMiddlewareBase implements Middleware {
                         i
                     ] as LSPObject & { pythonPath: string; _envPYTHONPATH: string };
 
-                    // TODO: Remove cell branch?
-                    if (uri?.scheme === 'vscode-notebook-cell' && this.jupyterPythonPathFunction) {
-                        settingDict.pythonPath = (await this.jupyterPythonPathFunction(uri)) ?? ''; // TODO: How to handle undefined?
-                    } else if (uri?.fsPath?.endsWith('.ipynb') && this.jupyterPythonPathFunction) {
-                        settingDict.pythonPath = (await this.jupyterPythonPathFunction(uri)) ?? ''; // TODO: How to handle undefined?
-                    } else {
+                    if (uri && this.jupyterPythonPathFunction) {
+                        settingDict.pythonPath = await this.jupyterPythonPathFunction(uri);
+                    }
+
+                    if (settingDict.pythonPath === undefined) {
                         settingDict.pythonPath = configService.getSettings(uri).pythonPath;
                     }
 
