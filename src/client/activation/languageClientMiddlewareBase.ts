@@ -14,9 +14,11 @@ import {
 import { HiddenFilePrefix } from '../common/constants';
 import { IConfigurationService } from '../common/types';
 import { createDeferred, isThenable } from '../common/utils/async';
+import { Interpreters } from '../common/utils/localize';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
+import { traceLog } from '../logging';
 import { EventName } from '../telemetry/constants';
 import { LanguageServerType } from './types';
 
@@ -89,6 +91,9 @@ export class LanguageClientMiddlewareBase implements Middleware {
 
                     if (uri && this.jupyterPythonPathFunction) {
                         settingDict.pythonPath = await this.jupyterPythonPathFunction(uri);
+                        if (settingDict.pythonPath) {
+                            traceLog(Interpreters.pythonInterpreterPathFromJupyter().format(settingDict.pythonPath));
+                        }
                     }
 
                     if (settingDict.pythonPath === undefined) {
