@@ -83,7 +83,6 @@ async function runPylance(
 
         const client = new LanguageClient('python', 'Python Language Server', clientOptions, worker);
         languageClient = client;
-        languageClient.registerProposedFeatures();
 
         context.subscriptions.push(
             vscode.commands.registerCommand('python.viewLanguageServerOutput', () => client.outputChannel.show()),
