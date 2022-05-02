@@ -19,6 +19,9 @@
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
     "enabledApiProposals": [
+        "quickPickSortByLabel",
+        "testObserver",
+        "notebookEditor"
     ],
     "author": {
         "name": "Microsoft Corporation"
@@ -906,7 +909,7 @@
                 "python.pylanceLspNotebooksEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Determines if pylance's experimental LSP notebooks support is used or not.",
+                    "description": "Determines if Pylance's experimental LSP notebooks support is used or not.",
                     "scope": "machine",
                     "tags": [
                         "experimental"

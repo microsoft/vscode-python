@@ -29,8 +29,8 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         } as unknown) as LanguageClientOptions;
     }
 
-    protected async getDocumentFilters(_workspaceFolder?: WorkspaceFolder): Promise<DocumentFilter[]> {
-        const filters = await super.getDocumentFilters(_workspaceFolder);
+    protected getDocumentFilters(_workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
+        const filters = super.getDocumentFilters(_workspaceFolder);
 
         if (this.lspNotebooksExperiment.isInNotebooksExperiment() === true) {
             return [

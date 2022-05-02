@@ -18,7 +18,7 @@ suite('Pylance Language Server - Analysis Options', () => {
             return super.getWorkspaceFolder();
         }
 
-        public async getDocumentFilters(workspaceFolder?: WorkspaceFolder): Promise<DocumentFilter[]> {
+        public getDocumentFilters(workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
             return super.getDocumentFilters(workspaceFolder);
         }
 
