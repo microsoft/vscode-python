@@ -2,30 +2,23 @@
 # but flake8 has a tighter pinning.
 flake8
 autopep8
-bandit ; python_version >= '3.5'
-black ; python_version > '2.7'
+bandit
+black
 yapf
-pylint ; python_version > '2.7'
+pylint
 pycodestyle
 pydocstyle
-prospector>=1.6.0 ; python_version > '2.7'
-pytest<7.0.0 ; python_version > '2.7'
+prospector
+pytest
 flask
-fastapi ; python_version > '2.7'
-uvicorn ; python_version > '2.7'
+fastapi
+uvicorn
 django
 isort
 
 # Integrated TensorBoard tests
-tensorboard ; python_version > '2.7'
-torch-tb-profiler ; python_version > '2.7'
-
-# Python 2.7 support.
-pytest==4.6.9 ; python_version == '2.7'
-py==1.10.0 ; python_version == '2.7'  # via pytest 4
-pathlib2>=2.2.0 ; python_version == '2.7'  # via pytest 4
-prospector==1.2.0 ; python_version == '2.7'
-wrapt==1.14.0 ; python_version == '2.7'
+tensorboard
+torch-tb-profiler
 
 # extension build tests
 freezegun

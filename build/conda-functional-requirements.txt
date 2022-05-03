@@ -4,19 +4,17 @@ versioneer
 flake8
 autopep8
 bandit
-black ; python_version>='3.6'
+black
 yapf
 pylint
 pycodestyle
 pydocstyle
 nose
-pytest==4.6.9 # Last version of pytest with Python 2.7 support
-fastapi ; python_version>='3.6'
-uvicorn ; python_version>='3.6'
+fastapi
+uvicorn
 flask
 django
 isort
-pathlib2>=2.2.0 ; python_version<'3.6' # Python 2.7 compatibility (pytest)
 pythreejs
 ipysheet
 ipyvolume
