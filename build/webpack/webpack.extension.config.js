@@ -29,7 +29,7 @@ const config = {
             {
                 loader: 'vscode-nls-dev/lib/webpack-loader',
                 options: {
-                    base: './dist',
+                    base: '.',
                 },
             },
             {

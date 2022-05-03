@@ -15,13 +15,14 @@ resources:
     - repository: templates
       type: github
       name: microsoft/vscode-engineering
-      ref: main
+      ref: tyler/allow-bundle-destination
       endpoint: Monaco
 
 extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
     locTsConfigs: $(Build.SourcesDirectory)/tsconfig.json
+    locBundleDestination: $(Build.SourcesDirectory)/out
     buildSteps:
       - task: NodeTool@0
         inputs:
