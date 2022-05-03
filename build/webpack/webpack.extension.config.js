@@ -29,8 +29,7 @@ const config = {
             {
                 loader: 'vscode-nls-dev/lib/webpack-loader',
                 options: {
-                    // Set to the location of extension.js
-                    base: path.join(__dirname, '../../out/client'),
+                    base: './dist',
                 },
             },
             {
