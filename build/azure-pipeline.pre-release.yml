@@ -22,7 +22,7 @@ extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
     locTsConfigs: $(Build.SourcesDirectory)/tsconfig.json
-    locBundleDestination: $(Build.SourcesDirectory)/out
+    locBundleDestination: $(Build.SourcesDirectory)/out/client
     buildSteps:
       - task: NodeTool@0
         inputs:
