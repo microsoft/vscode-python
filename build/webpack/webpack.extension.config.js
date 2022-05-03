@@ -29,7 +29,7 @@ const config = {
             {
                 loader: 'vscode-nls-dev/lib/webpack-loader',
                 options: {
-                    base: path.join(constants.ExtensionRootDir, 'src/client'),
+                    base: path.join(constants.ExtensionRootDir, 'src/'),
                 },
             },
             {
