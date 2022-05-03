@@ -154,6 +154,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
         let path = this.configService.getSettings(resource).pythonPath;
         if (pathUtils.basename(path) === path) {
             // Value can be `python`, `python3`, `python3.9` etc.
+            // Note the following triggers autoselection if no interpreter is explictly
+            // selected, i.e the value is `python`.
             // During shutdown we might not be able to get items out of the service container.
             const pythonExecutionFactory = this.serviceContainer.tryGet<IPythonExecutionFactory>(
                 IPythonExecutionFactory,
