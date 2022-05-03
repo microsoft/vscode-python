@@ -167,9 +167,7 @@ class PytestTests(unittest.TestCase):
         result[0]["tests"] = fix_test_order(result[0]["tests"])
 
         self.maxDiff = None
-        a = sorted_object(result)
-        b = sorted_object(expected)
-        self.assertEqual(a, b)
+        self.assertEqual(sorted_object(result), sorted_object(expected))
 
     def test_discover_complex_doctest(self):
         projroot, _ = resolve_testroot("complex")
