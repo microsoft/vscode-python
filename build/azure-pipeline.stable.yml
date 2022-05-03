@@ -25,21 +25,7 @@ extends:
   parameters:
     publishExtension: ${{ parameters.publishExtension }}
 
-    locPushSteps:
-      - script: npm ci
-        displayName: Install NPM dependencies
-      - script: npm run translations-export
-        displayName: Run translations-export
-      - pwsh: Move-Item "$(Pipeline.Workspace)/ms-python.python/*" "$(SetTranslationsPath.EnglishStrings)" -Force
-        displayName: Move vscode-python-translations-export to translations path
-
-    locPullSteps:
-        - script: npm ci
-          displayName: Install NPM dependencies
-        - script: gulp translations-import --location "$(SetTranslationsPath.TranslatedStrings)"
-          displayName: Run translations-import
-        - script: gulp translations-generate
-          displayName: Generate translations
+    locTsConfigs: $(Build.SourcesDirectory)/tsconfig.json
 
     buildSteps:
       - task: NodeTool@0
