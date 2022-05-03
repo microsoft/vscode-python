@@ -21,14 +21,9 @@ const flat = require('flat');
 const { argv } = require('yargs');
 const os = require('os');
 const rmrf = require('rimraf');
-const nls = require('vscode-nls-dev');
-const sourcemaps = require('gulp-sourcemaps');
 const typescript = require('typescript');
-const es = require('event-stream');
-const minimist = require('minimist');
 
 const tsProject = ts.createProject('./tsconfig.json', { typescript });
-const filter = require('gulp-filter');
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
@@ -360,122 +355,3 @@ function hasNativeDependencies() {
     }
     return false;
 }
-
-const translationProjectName = 'ms-python.python';
-const translationExtensionName = 'vscode-python';
-
-const defaultLanguages = [
-    { id: 'de', folderName: 'de' },
-    { id: 'fr', folderName: 'fr' },
-    { id: 'es', folderName: 'es' },
-    { id: 'cs', folderName: 'cs' },
-    { id: 'it', folderName: 'it' },
-    { id: 'ja', folderName: 'ja' },
-    { id: 'ko', folderName: 'ko' },
-    { id: 'pl', folderName: 'pl' },
-    { id: 'pt-BR', folderName: 'pt-br' },
-    { id: 'ru', folderName: 'ru' },
-    { id: 'tr', folderName: 'tr' },
-    { id: 'zh-Hans', folderName: 'zh-Hans' },
-    { id: 'zh-Hant', folderName: 'zh-Hant' },
-    { id: 'qps-ploc', folderName: 'qps-ploc' },
-];
-
-// You can find a more complex implementation of the translations in the CPP Extension repository.
-// See: https://github.com/microsoft/vscode-cpptools/blob/main/Extension/gulpfile.js#L76
-
-// ****************************
-// Command: translations-generate
-// The following is used to import an i18n directory structure and generate files used at runtime.
-// ****************************
-
-// Generate package.nls.*.json files from: ./i18n/*/package.i18n.json
-// Outputs to root path, as these nls files need to be along side package.json
-
-const generateAdditionalLocFiles = () =>
-    gulp
-        .src(['package.nls.json'])
-        .pipe(nls.createAdditionalLanguageFiles(defaultLanguages, 'i18n'))
-        .pipe(gulp.dest('.'));
-
-// Generates ./out/nls.bundle.<language_id>.json from files in ./i18n/** *//<src_path>/<filename>.i18n.json
-// Localized strings are read from these files at runtime.
-const generateSrcLocBundle = () =>
-    // Transpile the TS to JS, and let vscode-nls-dev scan the files for calls to localize.
-    tsProject
-        .src()
-        .pipe(sourcemaps.init())
-        .pipe(tsProject())
-        .js.pipe(nls.createMetaDataFiles())
-        .pipe(nls.createAdditionalLanguageFiles(defaultLanguages, 'i18n'))
-        .pipe(nls.bundleMetaDataFiles('ms-vscode.python', 'out'))
-        .pipe(nls.bundleLanguageFiles())
-        .pipe(filter(['**/nls.bundle.*.json', '**/nls.metadata.header.json', '**/nls.metadata.json']))
-        .pipe(gulp.dest('out'));
-
-gulp.task('translations-generate', gulp.series(generateSrcLocBundle, generateAdditionalLocFiles));
-
-// ****************************
-// Command: translations-export
-// The following is used to export and XLF file containing english strings for translations.
-// The result will be written to: ../vscode-extensions-localization-export/ms-vscode/
-// ****************************
-const exportTranslations = (done) => {
-    const jsStream = tsProject.src().pipe(sourcemaps.init()).pipe(tsProject()).js.pipe(nls.createMetaDataFiles());
-
-    // Merge files from all source streams
-    jsStream
-
-        // Filter down to only the files we need
-        .pipe(filter(['**/*.nls.json', '**/*.nls.metadata.json']))
-
-        // Consoldate them into nls.metadata.json, which the xlf is built from.
-        .pipe(nls.bundleMetaDataFiles('ms-vscode.python', '.'))
-
-        // filter down to just the resulting metadata files
-        .pipe(filter(['**/nls.metadata.header.json', '**/nls.metadata.json']))
-
-        // Add package.nls.json, used to localized package.json
-        .pipe(gulp.src(['package.nls.json']))
-
-        // package.nls.json and nls.metadata.json are used to generate the xlf file
-        // Does not re-queue any files to the stream.  Outputs only the XLF file
-        .pipe(nls.createXlfFiles(translationProjectName, translationExtensionName))
-        .pipe(gulp.dest('../'))
-        .pipe(
-            es.wait(() => {
-                done();
-            }),
-        );
-};
-
-gulp.task('translations-export', exportTranslations);
-
-// ****************************
-// Command: translations-import
-// The following is used to import an XLF file containing all language strings.
-// This results in a i18n directory, which should be checked in.
-// ****************************
-
-// Imports translations from raw localized MLCP strings to VS Code .i18n.json files
-gulp.task('translations-import', (done) => {
-    const options = minimist(process.argv.slice(2), {
-        string: 'location',
-        default: {
-            location: '../vscode-translations-import',
-        },
-    });
-    es.merge(
-        defaultLanguages.map((language) => {
-            const id = language.transifexId || language.id;
-            return gulp
-                .src(path.join(options.location, id, `${translationExtensionName}.xlf`))
-                .pipe(nls.prepareJsonFiles())
-                .pipe(gulp.dest(path.join('./i18n', language.folderName)));
-        }),
-    ).pipe(
-        es.wait(() => {
-            done();
-        }),
-    );
-});
