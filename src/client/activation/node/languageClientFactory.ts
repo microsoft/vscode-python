@@ -11,7 +11,7 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
 import { ILanguageClientFactory } from '../types';
 
-const languageClientName = 'Python Tools';
+const languageClientName = 'Pylance';
 
 export class NodeLanguageClientFactory implements ILanguageClientFactory {
     constructor(private readonly fs: IFileSystem, private readonly extensions: IExtensions) {}

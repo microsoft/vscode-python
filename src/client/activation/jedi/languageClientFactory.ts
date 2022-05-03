@@ -10,7 +10,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILanguageClientFactory } from '../types';
 
-const languageClientName = 'Python Tools';
+const languageClientName = 'Python Jedi';
 
 export class JediLanguageClientFactory implements ILanguageClientFactory {
     constructor(private interpreterService: IInterpreterService) {}
