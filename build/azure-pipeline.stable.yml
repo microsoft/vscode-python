@@ -26,6 +26,7 @@ extends:
     publishExtension: ${{ parameters.publishExtension }}
 
     locTsConfigs: $(Build.SourcesDirectory)/tsconfig.json
+    locBundleDestination: $(Build.SourcesDirectory)/out/client
 
     buildSteps:
       - task: NodeTool@0

@@ -15,7 +15,7 @@ resources:
     - repository: templates
       type: github
       name: microsoft/vscode-engineering
-      ref: tyler/allow-bundle-destination
+      ref: main
       endpoint: Monaco
 
 extends:
