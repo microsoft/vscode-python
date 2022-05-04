@@ -1734,10 +1734,8 @@
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "prePublish": "gulp clean && gulp prePublishNonBundle",
-        "compile": "gulp translations-generate && tsc -watch -p ./",
+        "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",
-        "translations-export": "gulp clean && gulp prePublishNonBundle && gulp translations-export",
-        "translations-import": "gulp clean && gulp prePublishNonBundle && gulp translations-import",
         "kill-compiled": "deemon --kill npm run compile",
         "checkDependencies": "gulp checkDependencies",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
