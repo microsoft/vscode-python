@@ -45,6 +45,7 @@ debug_coverage*/**
 images/**/*.gif
 images/**/*.png
 ipywidgets/**
+i18n/**
 news/**
 node_modules/**
 obj/**
