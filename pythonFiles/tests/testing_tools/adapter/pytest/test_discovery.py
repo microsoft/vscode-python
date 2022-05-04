@@ -1110,6 +1110,7 @@ class CollectorTests(unittest.TestCase):
             ],
         )
 
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows specific test.")
     def test_windows(self):
         stub = util.Stub()
         discovered = StubDiscoveredTests(stub)
