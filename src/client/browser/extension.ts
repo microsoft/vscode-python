@@ -4,7 +4,7 @@
 import '../../setupNls';
 import * as vscode from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
-import { LanguageClientOptions, State } from 'vscode-languageclient';
+import { LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/browser';
 import { LanguageClientMiddlewareBase } from '../activation/languageClientMiddlewareBase';
 import { LanguageServerType } from '../activation/types';
@@ -16,20 +16,29 @@ interface BrowserConfig {
     distUrl: string; // URL to Pylance's dist folder.
 }
 
+let languageClient: LanguageClient | undefined;
+
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     const pylanceExtension = vscode.extensions.getExtension(PYLANCE_EXTENSION_ID);
     if (pylanceExtension) {
-        runPylance(context, pylanceExtension);
+        await runPylance(context, pylanceExtension);
         return;
     }
 
-    const changeDisposable = vscode.extensions.onDidChange(() => {
+    const changeDisposable = vscode.extensions.onDidChange(async () => {
         const newPylanceExtension = vscode.extensions.getExtension(PYLANCE_EXTENSION_ID);
         if (newPylanceExtension) {
             changeDisposable.dispose();
-            runPylance(context, newPylanceExtension);
+            await runPylance(context, newPylanceExtension);
         }
     });
+}
+
+export function deactivate(): Promise<void> | undefined {
+    const client = languageClient;
+    languageClient = undefined;
+
+    return client?.stop();
 }
 
 async function runPylance(
@@ -74,48 +83,37 @@ async function runPylance(
             middleware,
         };
 
-        const languageClient = new LanguageClient('python', 'Python Language Server', clientOptions, worker);
+        const client = new LanguageClient('python', 'Python Language Server', clientOptions, worker);
+        languageClient = client;
 
-        languageClient.onDidChangeState((e): void => {
-            // The client's on* methods must be called after the client has started, but if called too
-            // late the server may have already sent a message (which leads to failures). Register
-            // these on the state change to running to ensure they are ready soon enough.
-            if (e.newState !== State.Running) {
-                return;
-            }
+        context.subscriptions.push(
+            vscode.commands.registerCommand('python.viewLanguageServerOutput', () => client.outputChannel.show()),
+        );
 
-            context.subscriptions.push(
-                vscode.commands.registerCommand('python.viewLanguageServerOutput', () =>
-                    languageClient.outputChannel.show(),
-                ),
-            );
+        client.onTelemetry(
+            (telemetryEvent: {
+                EventName: EventName;
+                Properties: { method: string };
+                Measurements: number | Record<string, number> | undefined;
+                Exception: Error | undefined;
+            }) => {
+                const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
+                const formattedProperties = {
+                    ...telemetryEvent.Properties,
+                    // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
+                    method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
+                };
+                sendTelemetryEventBrowser(
+                    eventName,
+                    telemetryEvent.Measurements,
+                    formattedProperties,
+                    telemetryEvent.Exception,
+                );
+            },
+        );
 
-            languageClient.onTelemetry(
-                (telemetryEvent: {
-                    EventName: EventName;
-                    Properties: { method: string };
-                    Measurements: number | Record<string, number> | undefined;
-                    Exception: Error | undefined;
-                }) => {
-                    const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
-                    const formattedProperties = {
-                        ...telemetryEvent.Properties,
-                        // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
-                        method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
-                    };
-                    sendTelemetryEventBrowser(
-                        eventName,
-                        telemetryEvent.Measurements,
-                        formattedProperties,
-                        telemetryEvent.Exception,
-                    );
-                },
-            );
-        });
+        await client.start();
 
-        const disposable = languageClient.start();
-
-        context.subscriptions.push(disposable);
         context.subscriptions.push(createStatusItem());
     } catch (e) {
         console.log(e);

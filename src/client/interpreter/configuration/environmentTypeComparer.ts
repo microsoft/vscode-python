@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { injectable, inject } from 'inversify';
-import { getArchitectureDisplayName } from '../../common/platform/registry';
 import { Resource } from '../../common/types';
+import { Architecture } from '../../common/utils/platform';
 import { isParentPath } from '../../pythonEnvironments/common/externalDependencies';
 import { EnvironmentType, PythonEnvironment, virtualEnvTypes } from '../../pythonEnvironments/info';
 import { PythonVersion } from '../../pythonEnvironments/info/pythonVersion';
@@ -111,7 +111,7 @@ function getSortName(info: PythonEnvironment, interpreterHelper: IInterpreterHel
         sortNameParts.push(info.version.raw);
     }
     if (info.architecture) {
-        sortNameParts.push(getArchitectureDisplayName(info.architecture));
+        sortNameParts.push(getArchitectureSortName(info.architecture));
     }
     if (info.companyDisplayName && info.companyDisplayName.length > 0) {
         sortNameParts.push(info.companyDisplayName.trim());
@@ -131,6 +131,18 @@ function getSortName(info: PythonEnvironment, interpreterHelper: IInterpreterHel
 
     const envSuffix = envSuffixParts.length === 0 ? '' : `(${envSuffixParts.join(': ')})`;
     return `${sortNameParts.join(' ')} ${envSuffix}`.trim();
+}
+
+function getArchitectureSortName(arch?: Architecture) {
+    // Strings are choosen keeping in mind that 64-bit gets preferred over 32-bit.
+    switch (arch) {
+        case Architecture.x64:
+            return 'x64';
+        case Architecture.x86:
+            return 'x86';
+        default:
+            return '';
+    }
 }
 
 function isBaseCondaEnvironment(environment: PythonEnvironment): boolean {

@@ -94,12 +94,9 @@ jobs:
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the Unix case.
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
-        python: ['2.7', '3.x']
+        python: ['3.x']
         test-suite: [ts-unit, python-unit, venv, single-workspace, debugger, functional]
-        exclude:
-          # For fast PR turn-around, skip 2.7 under Windows.
-          - os: windows-latest
-            python: '2.7'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -152,13 +149,7 @@ jobs:
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
         shell: bash
-        if: matrix.test-suite == 'debugger' && matrix.python != 2.7
-
-      - name: Install debugpy wheel (Python 2.7)
-        run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
-        shell: bash
-        if: matrix.test-suite == 'debugger' && matrix.python == 2.7
+        if: matrix.test-suite == 'debugger'
 
       - name: Install functional test requirements
         run: python -m pip install --upgrade -r ./build/functional-test-requirements.txt
@@ -169,7 +160,7 @@ jobs:
           TEST_FILES_SUFFIX: testvirtualenvs
           PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
         shell: pwsh
-        if: matrix.test-suite == 'venv' && matrix.python != 2.7
+        if: matrix.test-suite == 'venv'
         run: |
           python -m pip install pipenv
           python -m pipenv run python ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} pipenvPath

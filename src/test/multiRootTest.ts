@@ -9,7 +9,7 @@ process.env.VSC_PYTHON_CI_TEST = '1';
 
 initializeLogger();
 
-const channel = process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL || 'stable';
+const channel = process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL || 'insiders';
 
 function start() {
     console.log('*'.repeat(100));

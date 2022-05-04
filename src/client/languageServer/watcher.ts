@@ -162,6 +162,7 @@ export class LanguageServerWatcher
 
         // Instantiate the language server extension manager.
         const languageServerExtensionManager = this.createLanguageServer(serverType);
+        this.workspaceLanguageServers.set(key, languageServerExtensionManager);
 
         if (languageServerExtensionManager.canStartLanguageServer()) {
             // Start the language server.
@@ -173,8 +174,6 @@ export class LanguageServerWatcher
         } else {
             await languageServerExtensionManager.languageServerNotAvailable();
         }
-
-        this.workspaceLanguageServers.set(key, languageServerExtensionManager);
 
         return languageServerExtensionManager;
     }

@@ -7,11 +7,9 @@ import {
     Disposable,
     LanguageClient,
     LanguageClientOptions,
-    State,
 } from 'vscode-languageclient/node';
 
 import { IExperimentService, IExtensions, IInterpreterPathService, Resource } from '../../common/types';
-import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -53,7 +51,7 @@ namespace GetExperimentValue {
 export class NodeLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
 
-    private startupCompleted: Deferred<void>;
+    private languageServerTask: Promise<void> | undefined;
 
     private cancellationStrategy: FileBasedCancellationStrategy | undefined;
 
@@ -70,9 +68,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         private readonly environmentService: IEnvironmentVariablesProvider,
         private readonly workspace: IWorkspaceService,
         private readonly extensions: IExtensions,
-    ) {
-        this.startupCompleted = createDeferred<void>();
-    }
+    ) {}
 
     private static versionTelemetryProps(instance: NodeLanguageServerProxy) {
         return {
@@ -85,7 +81,9 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         if (this.languageClient) {
             // Do not await on this.
             this.languageClient.stop().then(noop, (ex) => traceError('Stopping language client failed', ex));
+
             this.languageClient = undefined;
+            this.languageServerTask = undefined;
         }
         if (this.cancellationStrategy) {
             this.cancellationStrategy.dispose();
@@ -94,10 +92,6 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         while (this.disposables.length > 0) {
             const d = this.disposables.shift()!;
             d.dispose();
-        }
-        if (this.startupCompleted.completed) {
-            this.startupCompleted.reject(new Error('Disposed language server'));
-            this.startupCompleted = createDeferred<void>();
         }
         this.disposed = true;
     }
@@ -115,41 +109,28 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         interpreter: PythonEnvironment | undefined,
         options: LanguageClientOptions,
     ): Promise<void> {
-        if (!this.languageClient) {
-            const extension = this.extensions.getExtension(PYLANCE_EXTENSION_ID);
-            this.lsVersion = extension?.packageJSON.version || '0';
-
-            this.cancellationStrategy = new FileBasedCancellationStrategy();
-            options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
-
-            this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
-
-            this.languageClient.onDidChangeState((e) => {
-                // The client's on* methods must be called after the client has started, but if called too
-                // late the server may have already sent a message (which leads to failures). Register
-                // these on the state change to running to ensure they are ready soon enough.
-                if (e.newState === State.Running) {
-                    this.registerHandlers(resource);
-                }
-            });
-
-            this.disposables.push(
-                this.workspace.onDidGrantWorkspaceTrust(() => {
-                    this.languageClient!.onReady().then(() => {
-                        this.languageClient!.sendNotification('python/workspaceTrusted', { isTrusted: true });
-                    });
-                }),
-            );
-
-            this.disposables.push(this.languageClient.start());
-            await this.serverReady();
-
-            if (this.disposed) {
-                // Check if it got disposed in the interim.
-            }
-        } else {
-            await this.startupCompleted.promise;
+        if (this.languageServerTask) {
+            await this.languageServerTask;
+            return;
         }
+
+        const extension = this.extensions.getExtension(PYLANCE_EXTENSION_ID);
+        this.lsVersion = extension?.packageJSON.version || '0';
+
+        this.cancellationStrategy = new FileBasedCancellationStrategy();
+        options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
+
+        this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
+        this.registerHandlers(resource);
+
+        this.disposables.push(
+            this.workspace.onDidGrantWorkspaceTrust(() => {
+                this.languageClient!.sendNotification('python/workspaceTrusted', { isTrusted: true });
+            }),
+        );
+
+        this.languageServerTask = this.languageClient.start();
+        await this.languageServerTask;
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -164,16 +145,6 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         undefined,
         NodeLanguageServerProxy.versionTelemetryProps,
     )
-    protected async serverReady(): Promise<void> {
-        while (this.languageClient && !this.languageClient.initializeResult) {
-            await sleep(100);
-        }
-        if (this.languageClient) {
-            await this.languageClient.onReady();
-        }
-        this.startupCompleted.resolve();
-    }
-
     private registerHandlers(_resource: Resource) {
         if (this.disposed) {
             // Check if it got disposed in the interim.

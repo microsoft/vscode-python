@@ -42,7 +42,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.65.0"
+        "vscode": "^1.67.0-insider"
     },
     "keywords": [
         "python",
@@ -326,27 +326,6 @@
                 "enablement": "python.hasActiveTensorBoardSession",
                 "icon": "$(refresh)",
                 "title": "%python.command.python.refreshTensorBoard.title%"
-            },
-            {
-                "category": "Test",
-                "command": "python.refreshTests",
-                "icon": "$(refresh)",
-                "title": "%python.command.python.refreshTests.title%"
-            },
-            {
-                "category": "Test",
-                "command": "python.refreshingTests",
-                "icon": {
-                    "dark": "resources/dark/discovering-tests.svg",
-                    "light": "resources/light/discovering-tests.svg"
-                },
-                "title": "%python.command.python.refreshingTests.title%"
-            },
-            {
-                "category": "Test",
-                "command": "python.stopRefreshingTests",
-                "icon": "$(beaker-stop)",
-                "title": "%python.command.python.stopRefreshingTests.title%"
             },
             {
                 "category": "Python",
@@ -1608,30 +1587,6 @@
                     "when": "!virtualWorkspace && shellExecutionSupported"
                 },
                 {
-                    "category": "Test",
-                    "command": "python.refreshTests",
-                    "icon": "$(refresh)",
-                    "title": "%python.command.python.refreshTests.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "category": "Test",
-                    "command": "python.refreshingTests",
-                    "icon": {
-                        "dark": "resources/dark/discovering-tests.svg",
-                        "light": "resources/light/discovering-tests.svg"
-                    },
-                    "title": "%python.command.python.refreshingTests.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "category": "Test",
-                    "command": "python.stopRefreshingTests",
-                    "icon": "$(beaker-stop)",
-                    "title": "%python.command.python.stopRefreshingTests.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
-                },
-                {
                     "category": "Python",
                     "command": "python.reportIssue",
                     "title": "%python.command.python.reportIssue.title%",
@@ -1748,21 +1703,6 @@
             ],
             "view/title": [
                 {
-                    "command": "python.refreshTests",
-                    "when": "view == workbench.view.testing && !refreshingTests && !virtualWorkspace && shellExecutionSupported",
-                    "group": "navigation@0"
-                },
-                {
-                    "command": "python.refreshingTests",
-                    "when": "view == workbench.view.testing && refreshingTests && !virtualWorkspace && shellExecutionSupported",
-                    "group": "navigation@0"
-                },
-                {
-                    "command": "python.stopRefreshingTests",
-                    "when": "view == workbench.view.testing && refreshingTests && !virtualWorkspace && shellExecutionSupported",
-                    "group": "navigation@0"
-                },
-                {
                     "command": "testing.reRunFailTests",
                     "when": "view == workbench.view.testing && hasFailedTests && !virtualWorkspace && shellExecutionSupported",
                     "group": "navigation@1"
@@ -1830,7 +1770,7 @@
         "webpack": "webpack"
     },
     "dependencies": {
-        "@vscode/jupyter-lsp-middleware": "^0.2.41",
+        "@vscode/jupyter-lsp-middleware": "^0.2.42",
         "arch": "^2.1.0",
         "diff-match-patch": "^1.0.0",
         "fs-extra": "^10.0.1",
@@ -1858,10 +1798,10 @@
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.4.5",
-        "vscode-jsonrpc": "8.0.0-next.7",
-        "vscode-languageclient": "8.0.0-next.13",
-        "vscode-languageserver": "8.0.0-next.9",
-        "vscode-languageserver-protocol": "3.17.0-next.15",
+        "vscode-jsonrpc": "8.0.0-next.8",
+        "vscode-languageclient": "8.0.0-next.18",
+        "vscode-languageserver": "8.0.0-next.14",
+        "vscode-languageserver-protocol": "3.17.0-next.20",
         "vscode-nls": "^5.0.1",
         "vscode-tas-client": "^0.1.22",
         "winreg": "^1.2.4",
@@ -1887,11 +1827,12 @@
         "@types/sinon": "^10.0.11",
         "@types/tmp": "^0.0.33",
         "@types/uuid": "^8.3.4",
-        "@types/vscode": "~1.65.0",
+        "@types/vscode": "~1.66.0",
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",
         "@typescript-eslint/eslint-plugin": "^3.7.0",
         "@typescript-eslint/parser": "^3.7.0",
+        "@vscode/telemetry-extractor": "^1.9.7",
         "@vscode/test-electron": "^2.1.3",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
@@ -1919,6 +1860,7 @@
         "nock": "^10.0.6",
         "node-has-native-dependencies": "^1.0.2",
         "node-loader": "^1.0.2",
+        "node-polyfill-webpack-plugin": "^1.1.4",
         "nyc": "^15.0.0",
         "prettier": "^2.0.2",
         "rewiremock": "^3.13.0",

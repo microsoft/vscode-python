@@ -7,7 +7,6 @@ import {
     Disposable,
     LanguageClient,
     LanguageClientOptions,
-    State,
 } from 'vscode-languageclient/node';
 
 import { ChildProcess } from 'child_process';
@@ -15,7 +14,6 @@ import { IInterpreterPathService, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
@@ -25,7 +23,7 @@ import { traceDecoratorError, traceDecoratorVerbose, traceError } from '../../lo
 export class JediLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
 
-    private cancellationStrategy: FileBasedCancellationStrategy | undefined;
+    private languageServerTask: Promise<void> | undefined;
 
     private readonly disposables: Disposable[] = [];
 
@@ -54,6 +52,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
                     killPid(pid);
                 }
             };
+
             // Do not await on this.
             this.languageClient.stop().then(
                 () => killServer(),
@@ -62,12 +61,9 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
                     killServer();
                 },
             );
-            this.languageClient = undefined;
-        }
 
-        if (this.cancellationStrategy) {
-            this.cancellationStrategy.dispose();
-            this.cancellationStrategy = undefined;
+            this.languageClient = undefined;
+            this.languageServerTask = undefined;
         }
 
         while (this.disposables.length > 0) {
@@ -91,31 +87,19 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         interpreter: PythonEnvironment | undefined,
         options: LanguageClientOptions,
     ): Promise<void> {
-        if (this.languageClient) {
-            return this.serverReady();
+        if (this.languageServerTask) {
+            await this.languageServerTask;
+            return;
         }
 
         this.lsVersion =
             (options.middleware ? (<LanguageClientMiddleware>options.middleware).serverVersion : undefined) ?? '0.19.3';
 
-        this.cancellationStrategy = new FileBasedCancellationStrategy();
-        options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
-
         this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
+        this.registerHandlers();
 
-        this.languageClient.onDidChangeState((e) => {
-            // The client's on* methods must be called after the client has started, but if called too
-            // late the server may have already sent a message (which leads to failures). Register
-            // these on the state change to running to ensure they are ready soon enough.
-            if (e.newState === State.Running) {
-                this.registerHandlers();
-            }
-        });
-
-        this.disposables.push(this.languageClient.start());
-        await this.serverReady();
-
-        return Promise.resolve();
+        this.languageServerTask = this.languageClient.start();
+        await this.languageServerTask;
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -130,12 +114,6 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         undefined,
         JediLanguageServerProxy.versionTelemetryProps,
     )
-    protected async serverReady(): Promise<void> {
-        if (this.languageClient) {
-            await this.languageClient.onReady();
-        }
-    }
-
     private registerHandlers() {
         if (this.disposed) {
             // Check if it got disposed in the interim.

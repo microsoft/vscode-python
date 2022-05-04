@@ -43,7 +43,7 @@ httpcore==0.12.2
     # via
     #   -r requirements.txt
     #   httpx
-httpx==0.16.1
+httpx==0.22.0
     # via
     #   -r requirements.txt
     #   gidgethub

@@ -527,7 +527,6 @@ export class Conda {
             'run',
             ...args,
             '--no-capture-output',
-            '--live-stream',
             'python',
             OUTPUT_MARKER_SCRIPT,
         ];

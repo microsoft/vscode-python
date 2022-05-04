@@ -6,6 +6,7 @@
 'use strict';
 
 const path = require('path');
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
 const packageRoot = path.resolve(__dirname, '..', '..');
 const outDir = path.resolve(packageRoot, 'dist');
@@ -34,6 +35,7 @@ const nodeConfig = (_, { mode }) => ({
         extensions: ['.ts', '.js'],
         fallback: { path: require.resolve('path-browserify') },
     },
+    plugins: [new NodePolyfillPlugin()],
     externals: {
         vscode: 'commonjs vscode',
 

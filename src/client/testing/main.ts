@@ -164,29 +164,6 @@ export class UnitTestManagementService implements IExtensionActivationService {
                     this.testController?.refreshTestData(resource, { forceRefresh: true });
                 },
             ),
-            commandManager.registerCommand(
-                constants.Commands.Test_Refresh,
-                async (
-                    _,
-                    cmdSource: constants.CommandSource = constants.CommandSource.commandPalette,
-                    resource?: Uri,
-                ) => {
-                    traceVerbose('Testing: Manually triggered test refresh');
-                    sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_TRIGGER, undefined, {
-                        trigger: cmdSource,
-                    });
-                    this.testController?.refreshTestData(resource, { forceRefresh: true });
-                },
-            ),
-            commandManager.registerCommand(constants.Commands.Test_Refreshing, () => {
-                // We don't do anything if this is clicked. This is just to show
-                // the spinning refresh icon.
-            }),
-            commandManager.registerCommand(constants.Commands.Test_Stop_Refreshing, () => {
-                traceVerbose('Testing: Stop refreshing clicked.');
-                sendTelemetryEvent(EventName.UNITTEST_DISCOVERING_STOP);
-                this.testController?.stopRefreshing();
-            }),
         );
     }
 
