@@ -187,7 +187,7 @@ export interface IDiscoveryAPI {
     /**
      * Triggers a new refresh for query if there isn't any already running.
      */
-    triggerRefresh(query?: PythonLocatorQuery & { clearCache?: boolean }): Promise<void>;
+    triggerRefresh(query?: PythonLocatorQuery & { clearCache?: boolean }, trigger?: 'auto' | 'ui'): Promise<void>;
     /**
      * Get current list of known environments.
      */

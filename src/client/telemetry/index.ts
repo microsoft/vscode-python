@@ -1263,24 +1263,30 @@ export interface IEventNamePropertyMapping {
         useCachedInterpreter?: boolean;
     };
     /**
-     * Sends information regarding discovered python environments (virtualenv, conda, pipenv etc.)
+     * Telemetry event sent when discovery of all python environments (virtualenv, conda, pipenv etc.) finishes.
      */
     /* __GDPR__
        "python_interpreter_discovery" : {
            "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" },
           "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "karrtikr"},
           "environmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: {
         /**
-         * The number of the interpreters returned by locator
+         * The number of the interpreters discovered
          */
         interpreters?: number;
         /**
          * The number of environments discovered not containing an interpreter
          */
         environmentsWithoutPython?: number;
+        /*
+         * auto           : Triggered automatically by the extension or via an API
+         * ui             : Triggered by clicking a button, particularly the refresh button on the interpreter quickpick
+         */
+        trigger: 'auto' | 'ui';
     };
     /**
      * Telemetry event sent when pipenv interpreter discovery is executed.

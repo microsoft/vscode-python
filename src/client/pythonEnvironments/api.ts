@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { StopWatch } from '../common/utils/stopWatch';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
+import { getEnvPath } from './base/info/env';
 import { IDiscoveryAPI, PythonLocatorQuery } from './base/locator';
 
 export type GetLocatorFunc = () => Promise<IDiscoveryAPI>;
@@ -42,8 +46,18 @@ class PythonEnvironments implements IDiscoveryAPI {
         return this.locator.resolveEnv(env);
     }
 
-    public async triggerRefresh(query?: PythonLocatorQuery) {
-        return this.locator.triggerRefresh(query);
+    public async triggerRefresh(query?: PythonLocatorQuery, trigger?: 'auto' | 'ui') {
+        const stopWatch = new StopWatch();
+        await this.locator.triggerRefresh(query);
+        if (!query) {
+            sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
+                interpreters: this.getEnvs().length,
+                environmentsWithoutPython: this.getEnvs().filter(
+                    (e) => getEnvPath(e.executable.filename, e.location).pathType === 'envFolderPath',
+                ).length,
+                trigger: trigger ?? 'auto',
+            });
+        }
     }
 }
 

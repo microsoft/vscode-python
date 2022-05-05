@@ -44,8 +44,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.pyenvs.onRefreshStart;
     }
 
-    public triggerRefresh(query?: PythonLocatorQuery & { clearCache?: boolean }): Promise<void> {
-        return this.pyenvs.triggerRefresh(query);
+    public triggerRefresh(
+        query?: PythonLocatorQuery & { clearCache?: boolean },
+        trigger?: 'auto' | 'ui',
+    ): Promise<void> {
+        return this.pyenvs.triggerRefresh(query, trigger);
     }
 
     public get refreshPromise(): Promise<void> | undefined {

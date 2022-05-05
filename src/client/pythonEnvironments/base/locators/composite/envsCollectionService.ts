@@ -4,13 +4,9 @@
 import { Event, EventEmitter } from 'vscode';
 import '../../../../common/extensions';
 import { createDeferred } from '../../../../common/utils/async';
-import { StopWatch } from '../../../../common/utils/stopWatch';
 import { traceError } from '../../../../logging';
-import { sendTelemetryEvent } from '../../../../telemetry';
-import { EventName } from '../../../../telemetry/constants';
 import { normalizePath } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
-import { getEnvPath } from '../../info/env';
 import { IDiscoveryAPI, IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from '../../locator';
 import { getQueryFilter } from '../../locatorUtils';
 import { PythonEnvCollectionChangedEvent, PythonEnvsWatcher } from '../../watcher';
@@ -95,7 +91,6 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     }
 
     private startRefresh(query: (PythonLocatorQuery & { clearCache?: boolean }) | undefined): Promise<void> {
-        const stopWatch = new StopWatch();
         const deferred = createDeferred<void>();
 
         if (query?.clearCache) {
@@ -111,13 +106,6 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 // Ensure we delete this before we resolve the promise to accurately track when a refresh finishes.
                 this.refreshPromises.delete(query);
                 deferred.resolve();
-                sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
-                    interpreters: this.cache.getAllEnvs().length,
-                    environmentsWithoutPython: this.cache
-                        .getAllEnvs()
-                        .filter((e) => getEnvPath(e.executable.filename, e.location).pathType === 'envFolderPath')
-                        .length,
-                });
             })
             .catch((ex) => deferred.reject(ex));
     }
