@@ -16,7 +16,7 @@ import {
     WorkspaceFolder,
 } from 'vscode';
 import { cloneDeep } from 'lodash';
-import { instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IPlatformService } from '../../../../client/common/platform/types';
@@ -472,9 +472,9 @@ suite('Set Interpreter Command', () => {
             const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
             expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
 
-            when(interpreterService.triggerRefresh()).thenResolve();
+            when(interpreterService.triggerRefresh(anything(), anything())).thenResolve();
             await refreshButtonCallback!({} as QuickPick<QuickPickItem>); // Invoke callback, meaning that the refresh button is clicked.
-            verify(interpreterService.triggerRefresh()).once();
+            verify(interpreterService.triggerRefresh(anything(), anything())).once();
         });
 
         test('Events to update quickpick updates the quickpick accordingly', async () => {

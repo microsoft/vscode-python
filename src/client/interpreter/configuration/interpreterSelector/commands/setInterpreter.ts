@@ -134,7 +134,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                     iconPath: getIcon(REFRESH_BUTTON_ICON),
                     tooltip: InterpreterQuickPickList.refreshInterpreterList,
                 },
-                callback: () => this.interpreterService.triggerRefresh().ignoreErrors(),
+                callback: () => this.interpreterService.triggerRefresh(undefined, 'ui').ignoreErrors(),
             },
             onChangeItem: {
                 event: this.interpreterService.onDidChangeInterpreters,
