@@ -1,3 +1,4 @@
+/* eslint-disable global-require */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -20,14 +21,14 @@ import {
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { MockWorkspaceConfiguration } from '../../../mocks/mockWorkspaceConfig';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
-import { Commands } from '../../../../client/common/constants';
+import { Commands, EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
 import { AllCommands } from '../../../../client/common/application/commands';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
 import { IConfigurationService } from '../../../../client/common/types';
 import { EventName } from '../../../../client/telemetry/constants';
 import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 
 suite('Report Issue Command', () => {
     let reportIssueCommandHandler: ReportIssueCommandHandler;
@@ -57,12 +58,13 @@ suite('Report Issue Command', () => {
         when(interpreterService.getActiveInterpreter()).thenResolve(interpreter);
         when(configurationService.getSettings()).thenReturn({
             experiments: {
-                enabled: true,
+                enabled: false,
                 optInto: [],
                 optOutFrom: [],
             },
             initialize: true,
             venvPath: 'path',
+            pipenvPath: 'pipenv',
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
 
@@ -82,7 +84,7 @@ suite('Report Issue Command', () => {
         sinon.restore();
     });
 
-    test('Test if issue body is filled including all the settings', async () => {
+    test('Test if issue body is filled correctly when including all the settings', async () => {
         await reportIssueCommandHandler.openReportIssue();
 
         const templatePath = path.join(
@@ -108,7 +110,17 @@ suite('Report Issue Command', () => {
         expect(actual).to.be.equal(expectedIssueBody);
     });
 
-    test('Test if issue body is filled, if every setting is explicitly set', async () => {
+    test('Test if issue body is filled when only including settings which are explicitly set', async () => {
+        // eslint-disable-next-line import/no-dynamic-require
+        when(appEnvironment.packageJson).thenReturn(require(path.join(EXTENSION_ROOT_DIR, 'package.json')));
+        reportIssueCommandHandler = new ReportIssueCommandHandler(
+            instance(cmdManager),
+            instance(workspaceService),
+            instance(interpreterService),
+            instance(configurationService),
+            instance(appEnvironment),
+        );
+        await reportIssueCommandHandler.activate();
         await reportIssueCommandHandler.openReportIssue();
 
         const templatePath = path.join(
@@ -118,7 +130,7 @@ suite('Report Issue Command', () => {
             'common',
             'application',
             'commands',
-            'issueTemplateVenv1.md',
+            'issueTemplateVenv2.md',
         );
         const expectedIssueBody = fs.readFileSync(templatePath, 'utf8');
 
@@ -127,7 +139,6 @@ suite('Report Issue Command', () => {
             { extensionId: string; issueBody: string }
         >(cmdManager.executeCommand).last();
 
-        verify(cmdManager.registerCommand(Commands.ReportIssue, anything(), anything())).once();
         verify(cmdManager.executeCommand('workbench.action.openIssueReporter', anything())).once();
         expect(args[0]).to.be.equal('workbench.action.openIssueReporter');
         const actual = args[1].issueBody;

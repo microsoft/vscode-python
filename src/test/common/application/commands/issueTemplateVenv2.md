@@ -29,12 +29,8 @@ XXX
 
 experiments
 • enabled: false
-• optInto: []
-• optOutFrom: []
 
 venvPath: "<placeholder>"
-
-pipenvPath: "<placeholder>"
 
 ```
 
