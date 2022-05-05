@@ -3,7 +3,7 @@
 
 import * as typemoq from 'typemoq';
 import { assert, expect } from 'chai';
-import { ConfigurationTarget, Uri } from 'vscode';
+import { ConfigurationTarget, Uri, Event } from 'vscode';
 import { EnvironmentDetails, IProposedExtensionAPI } from '../client/apiTypes';
 import { IInterpreterPathService } from '../client/common/types';
 import { IInterpreterService } from '../client/interpreter/contracts';
@@ -28,6 +28,9 @@ suite('Proposed Extension API', () => {
         discoverAPI = typemoq.Mock.ofType<IDiscoveryAPI>(undefined, typemoq.MockBehavior.Strict);
         interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>(undefined, typemoq.MockBehavior.Strict);
         interpreterService = typemoq.Mock.ofType<IInterpreterService>(undefined, typemoq.MockBehavior.Strict);
+        interpreterService
+            .setup((i) => i.onDidChangeInterpreterConfiguration)
+            .returns(() => typemoq.Mock.ofType<Event<Uri | undefined>>().object);
 
         serviceContainer.setup((s) => s.get(IInterpreterPathService)).returns(() => interpreterPathService.object);
         serviceContainer.setup((s) => s.get(IInterpreterService)).returns(() => interpreterService.object);
@@ -81,6 +84,7 @@ suite('Proposed Extension API', () => {
             metadata: {
                 sysPrefix: 'prefix/path',
                 bitness: Architecture.x64,
+                project: Uri.file('path/to/project'),
             },
             envFolderPath: undefined,
         };
@@ -100,6 +104,7 @@ suite('Proposed Extension API', () => {
                         kind: PythonEnvKind.System,
                         arch: Architecture.x64,
                         sysPrefix: 'prefix/path',
+                        searchLocation: Uri.file('path/to/project'),
                     }),
                 ),
             );
@@ -118,6 +123,7 @@ suite('Proposed Extension API', () => {
             metadata: {
                 sysPrefix: 'prefix/path',
                 bitness: Architecture.x64,
+                project: undefined,
             },
             envFolderPath: undefined,
         };
@@ -179,6 +185,7 @@ suite('Proposed Extension API', () => {
             metadata: {
                 sysPrefix: 'prefix/path',
                 bitness: Architecture.x64,
+                project: undefined,
             },
             envFolderPath: undefined,
         };

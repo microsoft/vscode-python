@@ -57,6 +57,10 @@ export function buildProposedApi(
 
     const proposed: IProposedExtensionAPI = {
         environment: {
+            async getExecutionDetails(resource?: Resource) {
+                const env = await interpreterService.getActiveInterpreter(resource);
+                return env ? { execCommand: [env.path] } : { execCommand: undefined };
+            },
             async getActiveEnvironmentPath(resource?: Resource) {
                 const env = await interpreterService.getActiveInterpreter(resource);
                 if (!env) {
@@ -86,6 +90,7 @@ export function buildProposedApi(
                     metadata: {
                         sysPrefix: env.executable.sysPrefix,
                         bitness: env.arch,
+                        project: env.searchLocation,
                     },
                 };
             },
@@ -104,6 +109,7 @@ export function buildProposedApi(
             getRefreshPromise(): Promise<void> | undefined {
                 return discoveryApi.refreshPromise;
             },
+            onDidChangeExecutionDetails: interpreterService.onDidChangeInterpreterConfiguration,
             onDidEnvironmentsChanged: onDidInterpretersChangedEvent.event,
             onDidActiveEnvironmentChanged: onDidActiveInterpreterChangedEvent.event,
         },
