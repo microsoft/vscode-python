@@ -26,6 +26,7 @@ XXX
 <p>
 
 ```
+Multiroot scenario, following user settings may not apply:
 
 experiments
 • enabled: false

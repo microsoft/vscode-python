@@ -9,6 +9,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { expect } from 'chai';
+import { WorkspaceFolder } from 'vscode-languageserver-protocol';
 import * as Telemetry from '../../../../client/telemetry';
 import { LanguageServerType } from '../../../../client/activation/types';
 import { CommandManager } from '../../../../client/common/application/commandManager';
@@ -113,6 +114,10 @@ suite('Report Issue Command', () => {
     test('Test if issue body is filled when only including settings which are explicitly set', async () => {
         // eslint-disable-next-line import/no-dynamic-require
         when(appEnvironment.packageJson).thenReturn(require(path.join(EXTENSION_ROOT_DIR, 'package.json')));
+        when(workspaceService.workspaceFolders).thenReturn([
+            instance(mock(WorkspaceFolder)),
+            instance(mock(WorkspaceFolder)),
+        ]); // Multiroot scenario
         reportIssueCommandHandler = new ReportIssueCommandHandler(
             instance(cmdManager),
             instance(workspaceService),
