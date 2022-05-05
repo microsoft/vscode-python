@@ -83,6 +83,12 @@ export class LanguageServerWatcher
             this.workspaceService.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders.bind(this)),
         );
 
+        this.interpreterService.onDidChangeInterpreterInformation(
+            this.onDidChangeInterpreterInformation,
+            this,
+            disposables,
+        );
+
         if (this.workspaceService.isTrusted) {
             disposables.push(this.interpreterPathService.onDidChange(this.onDidChangeInterpreter.bind(this)));
         }
@@ -270,6 +276,28 @@ export class LanguageServerWatcher
     private async onDidChangeInterpreter(event: InterpreterConfigurationScope): Promise<void> {
         // Reactivate the language server (if in a multiroot workspace scenario, pick the correct one).
         return this.activate(event.uri);
+    }
+
+    // Watch for interpreter information changes.
+    private async onDidChangeInterpreterInformation(info: PythonEnvironment): Promise<void> {
+        const iterator = this.workspaceInterpreters.entries();
+
+        let result = iterator.next();
+        let done = result.done || false;
+
+        while (!done) {
+            const [resourcePath, interpreter] = result.value as [string, PythonEnvironment | undefined];
+            const resource = Uri.parse(resourcePath);
+
+            // Restart the language server if the interpreter path changed (#18995).
+            if (info.envPath === interpreter?.envPath && info.path !== interpreter?.path) {
+                await this.activate(resource);
+                done = true;
+            }
+
+            result = iterator.next();
+            done = result.done || false;
+        }
     }
 
     // Watch for extension changes.
