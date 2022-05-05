@@ -922,6 +922,7 @@
                     "type": "string"
                 },
                 "python.tensorBoard.logDirectory": {
+                    "default": "",
                     "description": "Set this setting to your preferred TensorBoard log directory to skip log directory prompt when starting TensorBoard.",
                     "scope": "application",
                     "type": "string"

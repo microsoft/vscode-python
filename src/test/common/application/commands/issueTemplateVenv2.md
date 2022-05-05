@@ -26,15 +26,12 @@ XXX
 <p>
 
 ```
+Multiroot scenario, following user settings may not apply:
 
 experiments
 • enabled: false
-• optInto: []
-• optOutFrom: []
 
 venvPath: "<placeholder>"
-
-pipenvPath: "<placeholder>"
 
 ```
 
