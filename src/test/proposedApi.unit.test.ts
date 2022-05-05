@@ -30,9 +30,7 @@ suite('Proposed Extension API', () => {
         interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>(undefined, typemoq.MockBehavior.Strict);
         interpreterService = typemoq.Mock.ofType<IInterpreterService>(undefined, typemoq.MockBehavior.Strict);
         onDidExecutionEvent = typemoq.Mock.ofType<Event<Uri | undefined>>().object;
-        interpreterService
-            .setup((i) => i.onDidChangeInterpreterConfiguration)
-            .returns(() => typemoq.Mock.ofType<Event<Uri | undefined>>().object);
+        interpreterService.setup((i) => i.onDidChangeInterpreterConfiguration).returns(() => onDidExecutionEvent);
 
         serviceContainer.setup((s) => s.get(IInterpreterPathService)).returns(() => interpreterPathService.object);
         serviceContainer.setup((s) => s.get(IInterpreterService)).returns(() => interpreterService.object);
