@@ -20,6 +20,7 @@ suite('Proposed Extension API', () => {
     let discoverAPI: typemoq.IMock<IDiscoveryAPI>;
     let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
     let interpreterService: typemoq.IMock<IInterpreterService>;
+    let onDidExecutionEvent: Event<Uri | undefined>;
 
     let proposed: IProposedExtensionAPI;
 
@@ -28,6 +29,7 @@ suite('Proposed Extension API', () => {
         discoverAPI = typemoq.Mock.ofType<IDiscoveryAPI>(undefined, typemoq.MockBehavior.Strict);
         interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>(undefined, typemoq.MockBehavior.Strict);
         interpreterService = typemoq.Mock.ofType<IInterpreterService>(undefined, typemoq.MockBehavior.Strict);
+        onDidExecutionEvent = typemoq.Mock.ofType<Event<Uri | undefined>>().object;
         interpreterService
             .setup((i) => i.onDidChangeInterpreterConfiguration)
             .returns(() => typemoq.Mock.ofType<Event<Uri | undefined>>().object);
@@ -36,6 +38,29 @@ suite('Proposed Extension API', () => {
         serviceContainer.setup((s) => s.get(IInterpreterService)).returns(() => interpreterService.object);
 
         proposed = buildProposedApi(discoverAPI.object, serviceContainer.object);
+    });
+
+    test('Provide a callback which is called when execution details changes', async () => {
+        assert.deepEqual(onDidExecutionEvent, proposed.environment.onDidChangeExecutionDetails);
+    });
+
+    test('getExecutionDetails: No resource', async () => {
+        const pythonPath = 'this/is/a/test/path';
+        interpreterService
+            .setup((c) => c.getActiveInterpreter(undefined))
+            .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+        const actual = await proposed.environment.getExecutionDetails();
+        assert.deepEqual(actual, { execCommand: [pythonPath] });
+    });
+
+    test('getExecutionDetails: With resource', async () => {
+        const resource = Uri.file(__filename);
+        const pythonPath = 'this/is/a/test/path';
+        interpreterService
+            .setup((c) => c.getActiveInterpreter(resource))
+            .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+        const actual = await proposed.environment.getExecutionDetails(resource);
+        assert.deepEqual(actual, { execCommand: [pythonPath] });
     });
 
     test('getActiveInterpreterPath: No resource', async () => {
