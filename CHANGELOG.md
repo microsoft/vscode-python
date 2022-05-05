@@ -1,5 +1,98 @@
 # Changelog
 
+## 2022.6.0 (5 May 2022)
+
+### Enhancements
+
+1. Rewrite support for unittest test discovery.
+   ([#17242](https://github.com/Microsoft/vscode-python/issues/17242))
+1. Do not require a reload when swapping between language servers.
+   ([#18509](https://github.com/Microsoft/vscode-python/issues/18509))
+
+### Fixes
+
+1. Do not show inherit env prompt for conda envs when running "remotely".
+   ([#18510](https://github.com/Microsoft/vscode-python/issues/18510))
+1. Fixes invalid regular expression logging error occurs when file paths contain special characters.
+   (Thanks [sunyinqi0508](https://github.com/sunyinqi0508))
+   ([#18829](https://github.com/Microsoft/vscode-python/issues/18829))
+1. Do not prompt to select new virtual envrionment if it has already been selected.
+   ([#18915](https://github.com/Microsoft/vscode-python/issues/18915))
+1. Disable isort when using isort extension.
+   ([#18945](https://github.com/Microsoft/vscode-python/issues/18945))
+1. Remove `process` check from browser specific entry point for the extension.
+   ([#18974](https://github.com/Microsoft/vscode-python/issues/18974))
+1. Use built-in test refresh button.
+   ([#19012](https://github.com/Microsoft/vscode-python/issues/19012))
+1. Update vscode-telemetry-extractor to @vscode/telemetry-extractor@1.9.7.
+   (Thanks [Quan Zhuo](https://github.com/quanzhuo))
+   ([#19036](https://github.com/Microsoft/vscode-python/issues/19036))
+1. Ensure 64-bit interpreters are preferred over 32-bit when auto-selecting.
+   ([#19042](https://github.com/Microsoft/vscode-python/issues/19042))
+
+### Code Health
+
+1. Update Jedi minimum to python 3.7.
+   ([#18324](https://github.com/Microsoft/vscode-python/issues/18324))
+1. Stop using `--live-stream` when using `conda run` (see https://github.com/conda/conda/issues/11209 for details).
+   ([#18511](https://github.com/Microsoft/vscode-python/issues/18511))
+1. Remove prompt to recommend users in old insiders program to switch to pre-release.
+   ([#18809](https://github.com/Microsoft/vscode-python/issues/18809))
+1. Update requirements to remove python 2.7 version restrictions.
+   ([#19060](https://github.com/Microsoft/vscode-python/issues/19060))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [poetry](https://pypi.org/project/poetry/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2022.4.1 (7 April 2022)
 
 ### Fixes
