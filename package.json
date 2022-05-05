@@ -42,7 +42,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.67.0-insider"
+        "vscode": "^1.67.0"
     },
     "keywords": [
         "python",
