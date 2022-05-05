@@ -3,7 +3,7 @@
     "pythonPath": "placeholder",
     "onDidChange": false,
     "defaultInterpreterPath": "placeholder",
-    "defaultLS": true,
+    "defaultLS": false,
     "envFile": "placeholder",
     "venvPath": "placeholder",
     "venvFolders": "placeholder",
@@ -25,7 +25,7 @@
     "linting": {
         "enabled": true,
         "cwd": "placeholder",
-        "Flake8Args": "placeholder",
+        "flake8Args": "placeholder",
         "flake8CategorySeverity": false,
         "flake8Enabled": true,
         "flake8Path": "placeholder",
@@ -85,9 +85,6 @@
     "testing": {
         "cwd": "placeholder",
         "debugPort": true,
-        "nosetestArgs": "placeholder",
-        "nosetestsEnabled": true,
-        "nosetestPath": "placeholder",
         "promptToConfigure": true,
         "pytestArgs": "placeholder",
         "pytestEnabled": true,

@@ -7,8 +7,9 @@ import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { inject, injectable } from 'inversify';
+import { isEqual } from 'lodash';
 import { IExtensionSingleActivationService } from '../../../activation/types';
-import { ICommandManager, IWorkspaceService } from '../types';
+import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from '../types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { Commands } from '../../constants';
@@ -16,6 +17,8 @@ import { IConfigurationService, IPythonSettings } from '../../types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { EnvironmentType } from '../../../pythonEnvironments/info';
+import { PythonSettings } from '../../configSettings';
+import { SystemVariables } from '../../variables/systemVariables';
 
 /**
  * Allows the user to report an issue related to the Python extension using our template.
@@ -24,12 +27,18 @@ import { EnvironmentType } from '../../../pythonEnvironments/info';
 export class ReportIssueCommandHandler implements IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private readonly packageJSONSettings: any;
+
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IConfigurationService) protected readonly configurationService: IConfigurationService,
-    ) {}
+        @inject(IApplicationEnvironment) appEnvironment: IApplicationEnvironment,
+    ) {
+        this.packageJSONSettings = appEnvironment.packageJson?.contributes?.configuration?.properties;
+    }
 
     public async activate(): Promise<void> {
         this.commandManager.registerCommand(Commands.ReportIssue, this.openReportIssue, this);
@@ -48,20 +57,31 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
             const argSetting = argSettings[property];
             if (argSetting) {
                 if (typeof argSetting === 'object') {
-                    userSettings = userSettings.concat(os.EOL, property, os.EOL);
+                    let propertyHeaderAdded = false;
                     const argSettingsDict = (settings[property] as unknown) as Record<string, unknown>;
                     if (typeof argSettingsDict === 'object') {
                         Object.keys(argSetting).forEach((item) => {
                             const prop = argSetting[item];
                             if (prop) {
-                                const value = prop === true ? JSON.stringify(argSettingsDict[item]) : '"<placeholder>"';
-                                userSettings = userSettings.concat('• ', item, ': ', value, os.EOL);
+                                const defaultValue = this.getDefaultValue(`${property}.${item}`);
+                                if (defaultValue === undefined || !isEqual(defaultValue, argSettingsDict[item])) {
+                                    if (!propertyHeaderAdded) {
+                                        userSettings = userSettings.concat(os.EOL, property, os.EOL);
+                                        propertyHeaderAdded = true;
+                                    }
+                                    const value =
+                                        prop === true ? JSON.stringify(argSettingsDict[item]) : '"<placeholder>"';
+                                    userSettings = userSettings.concat('• ', item, ': ', value, os.EOL);
+                                }
                             }
                         });
                     }
                 } else {
-                    const value = argSetting === true ? JSON.stringify(settings[property]) : '"<placeholder>"';
-                    userSettings = userSettings.concat(os.EOL, property, ': ', value, os.EOL);
+                    const defaultValue = this.getDefaultValue(property);
+                    if (defaultValue === undefined || !isEqual(defaultValue, settings[property])) {
+                        const value = argSetting === true ? JSON.stringify(settings[property]) : '"<placeholder>"';
+                        userSettings = userSettings.concat(os.EOL, property, ': ', value, os.EOL);
+                    }
                 }
             }
         });
@@ -72,10 +92,30 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
             this.workspaceService.getConfiguration('python').get<string>('languageServer') || 'Not Found';
         const virtualEnvKind = interpreter?.envType || EnvironmentType.Unknown;
 
+        const hasMultipleFolders = (this.workspaceService.workspaceFolders?.length ?? 0) > 1;
+        const hasMultipleFoldersText =
+            hasMultipleFolders && userSettings !== ''
+                ? `Multiroot scenario, following user settings may not apply:${os.EOL}`
+                : '';
         await this.commandManager.executeCommand('workbench.action.openIssueReporter', {
             extensionId: 'ms-python.python',
-            issueBody: template.format(pythonVersion, virtualEnvKind, languageServer, userSettings),
+            issueBody: template.format(
+                pythonVersion,
+                virtualEnvKind,
+                languageServer,
+                hasMultipleFoldersText,
+                userSettings,
+            ),
         });
         sendTelemetryEvent(EventName.USE_REPORT_ISSUE_COMMAND, undefined, {});
+    }
+
+    private getDefaultValue(settingKey: string) {
+        if (!this.packageJSONSettings) {
+            return undefined;
+        }
+        const resource = PythonSettings.getSettingsUriAndTarget(undefined, this.workspaceService).uri;
+        const systemVariables = new SystemVariables(resource, undefined, this.workspaceService);
+        return systemVariables.resolveAny(this.packageJSONSettings[`python.${settingKey}`]?.default);
     }
 }

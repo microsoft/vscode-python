@@ -12,7 +12,11 @@ import * as Telemetry from '../../../../client/telemetry';
 import { LanguageServerType } from '../../../../client/activation/types';
 import { CommandManager } from '../../../../client/common/application/commandManager';
 import { ReportIssueCommandHandler } from '../../../../client/common/application/commands/reportIssueCommand';
-import { ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
+import {
+    IApplicationEnvironment,
+    ICommandManager,
+    IWorkspaceService,
+} from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { MockWorkspaceConfiguration } from '../../../mocks/mockWorkspaceConfig';
@@ -31,12 +35,14 @@ suite('Report Issue Command', () => {
     let workspaceService: IWorkspaceService;
     let interpreterService: IInterpreterService;
     let configurationService: IConfigurationService;
+    let appEnvironment: IApplicationEnvironment;
 
     setup(async () => {
         workspaceService = mock(WorkspaceService);
         cmdManager = mock(CommandManager);
         interpreterService = mock(InterpreterService);
         configurationService = mock(ConfigurationService);
+        appEnvironment = mock<IApplicationEnvironment>();
 
         when(cmdManager.executeCommand('workbench.action.openIssueReporter', anything())).thenResolve();
         when(workspaceService.getConfiguration('python')).thenReturn(
@@ -67,6 +73,7 @@ suite('Report Issue Command', () => {
             instance(workspaceService),
             instance(interpreterService),
             instance(configurationService),
+            instance(appEnvironment),
         );
         await reportIssueCommandHandler.activate();
     });
@@ -75,7 +82,33 @@ suite('Report Issue Command', () => {
         sinon.restore();
     });
 
-    test('Test if issue body is filled', async () => {
+    test('Test if issue body is filled including all the settings', async () => {
+        await reportIssueCommandHandler.openReportIssue();
+
+        const templatePath = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'common',
+            'application',
+            'commands',
+            'issueTemplateVenv1.md',
+        );
+        const expectedIssueBody = fs.readFileSync(templatePath, 'utf8');
+
+        const args: [string, { extensionId: string; issueBody: string }] = capture<
+            AllCommands,
+            { extensionId: string; issueBody: string }
+        >(cmdManager.executeCommand).last();
+
+        verify(cmdManager.registerCommand(Commands.ReportIssue, anything(), anything())).once();
+        verify(cmdManager.executeCommand('workbench.action.openIssueReporter', anything())).once();
+        expect(args[0]).to.be.equal('workbench.action.openIssueReporter');
+        const actual = args[1].issueBody;
+        expect(actual).to.be.equal(expectedIssueBody);
+    });
+
+    test('Test if issue body is filled, if every setting is explicitly set', async () => {
         await reportIssueCommandHandler.openReportIssue();
 
         const templatePath = path.join(
