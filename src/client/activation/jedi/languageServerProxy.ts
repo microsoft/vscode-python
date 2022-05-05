@@ -14,11 +14,11 @@ import { IInterpreterPathService, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 import { killPid } from '../../common/process/rawProcessApis';
 import { traceDecoratorError, traceDecoratorVerbose, traceError } from '../../logging';
+import { JediLanguageClientMiddleware } from './languageClientMiddleware';
 
 export class JediLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
@@ -62,7 +62,8 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         }
 
         this.lsVersion =
-            (options.middleware ? (<LanguageClientMiddleware>options.middleware).serverVersion : undefined) ?? '0.19.3';
+            (options.middleware ? (<JediLanguageClientMiddleware>options.middleware).serverVersion : undefined) ??
+            '0.19.3';
 
         this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
         this.registerHandlers();
