@@ -50,6 +50,8 @@ class PythonEnvironments implements IDiscoveryAPI {
         const stopWatch = new StopWatch();
         await this.locator.triggerRefresh(query);
         if (!query) {
+            // Intent is to capture time taken for all of discovery to complete, so make sure
+            // all interpreters are queried for.
             sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
                 interpreters: this.getEnvs().length,
                 environmentsWithoutPython: this.getEnvs().filter(
