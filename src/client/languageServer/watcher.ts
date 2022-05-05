@@ -293,10 +293,10 @@ export class LanguageServerWatcher
             if (info.envPath === interpreter?.envPath && info.path !== interpreter?.path) {
                 await this.activate(resource);
                 done = true;
+            } else {
+                result = iterator.next();
+                done = result.done || false;
             }
-
-            result = iterator.next();
-            done = result.done || false;
         }
     }
 
