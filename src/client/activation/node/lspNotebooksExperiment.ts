@@ -19,58 +19,55 @@ import { JupyterExtensionIntegration } from '../../jupyter/jupyterIntegration';
 export class LspNotebooksExperiment implements IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: true, virtualWorkspace: true };
 
-    private _pylanceExtensionChangeHandler: Disposable | undefined;
+    private pylanceExtensionChangeHandler: Disposable | undefined;
 
-    private _isJupyterInstalled = false;
+    private isJupyterInstalled = false;
 
-    private _isInNotebooksExperiment = false;
+    private isInExperiment = false;
 
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IJupyterExtensionDependencyManager) jupyterDependencyManager: IJupyterExtensionDependencyManager,
     ) {
-        if (!LspNotebooksExperiment._isPylanceInstalled()) {
-            this._pylanceExtensionChangeHandler = extensions.onDidChange(
-                this._pylanceExtensionsChangeHandler.bind(this),
-            );
+        if (!LspNotebooksExperiment.isPylanceInstalled()) {
+            this.pylanceExtensionChangeHandler = extensions.onDidChange(this.pylanceExtensionsChangeHandler.bind(this));
         }
 
-        this._isJupyterInstalled = jupyterDependencyManager.isJupyterExtensionInstalled;
+        this.isJupyterInstalled = jupyterDependencyManager.isJupyterExtensionInstalled;
     }
 
     public async activate(): Promise<void> {
-        this._updateExperimentSupport();
+        this.updateExperimentSupport();
     }
 
     public async onJupyterInstalled(): Promise<void> {
-        if (this._isJupyterInstalled) {
+        if (this.isJupyterInstalled) {
             return;
         }
 
-        if (LspNotebooksExperiment._jupyterSupportsNotebooksExperiment()) {
-            await this._waitForJupyterToRegisterPythonPathFunction();
-            this._updateExperimentSupport();
+        if (LspNotebooksExperiment.jupyterSupportsNotebooksExperiment()) {
+            await this.waitForJupyterToRegisterPythonPathFunction();
+            this.updateExperimentSupport();
         }
 
-        this._isJupyterInstalled = true;
+        this.isJupyterInstalled = true;
     }
 
     public isInNotebooksExperiment(): boolean {
-        return this._isInNotebooksExperiment;
+        return this.isInExperiment;
     }
 
-    private _updateExperimentSupport(): void {
-        const wasInExperiment = this._isInNotebooksExperiment;
-
+    private updateExperimentSupport(): void {
+        const wasInExperiment = this.isInExperiment;
         const isInTreatmentGroup = this.configurationService.getSettings().pylanceLspNotebooksEnabled;
 
         if (
             isInTreatmentGroup &&
-            LspNotebooksExperiment._jupyterSupportsNotebooksExperiment() &&
-            LspNotebooksExperiment._pylanceSupportsNotebooksExperiment()
+            LspNotebooksExperiment.jupyterSupportsNotebooksExperiment() &&
+            LspNotebooksExperiment.pylanceSupportsNotebooksExperiment()
         ) {
-            this._isInNotebooksExperiment = true;
+            this.isInExperiment = true;
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_LSP_NOTEBOOKS);
         }
 
@@ -78,28 +75,28 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
         // or Jupyter is installed after Python is activated. A true to false transition would require
         // either Pylance or Jupyter to be uninstalled or downgraded after Python activated, and that
         // would require VS Code to be reloaded before the new extension version could be used.
-        if (wasInExperiment === false && this._isInNotebooksExperiment === true) {
+        if (wasInExperiment === false && this.isInExperiment === true) {
             const watcher = this.serviceContainer.get<ILanguageServerWatcher>(ILanguageServerWatcher);
             if (watcher) {
                 watcher.restartLanguageServers();
             }
         }
 
-        traceLog(`LspNotebooksExperiment: activate: isInNotebooksExperiment = ${this._isInNotebooksExperiment}`);
+        traceLog(`LspNotebooksExperiment: activate: isInNotebooksExperiment = ${this.isInExperiment}`);
     }
 
-    private static _jupyterSupportsNotebooksExperiment(): boolean {
+    private static jupyterSupportsNotebooksExperiment(): boolean {
         const jupyterVersion = extensions.getExtension(JUPYTER_EXTENSION_ID)?.packageJSON.version;
-        return jupyterVersion !== undefined && semver.satisfies(jupyterVersion, '>=2022.4.100');
+        return jupyterVersion && semver.satisfies(jupyterVersion, '>=2022.4.100');
     }
 
-    private static _pylanceSupportsNotebooksExperiment(): boolean {
+    private static pylanceSupportsNotebooksExperiment(): boolean {
         const pylanceVersion = extensions.getExtension(PYLANCE_EXTENSION_ID)?.packageJSON.version;
-        return pylanceVersion !== undefined && semver.satisfies(pylanceVersion, '>=2022.5.1-pre.1 || 9999.0.0-dev');
+        return pylanceVersion && semver.satisfies(pylanceVersion, '>=2022.5.1-pre.1 || 9999.0.0-dev');
     }
 
-    private async _waitForJupyterToRegisterPythonPathFunction(): Promise<void> {
-        if (!this._isInNotebooksExperiment) {
+    private async waitForJupyterToRegisterPythonPathFunction(): Promise<void> {
+        if (!this.isInExperiment) {
             return;
         }
 
@@ -125,16 +122,16 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
         }
     }
 
-    private static _isPylanceInstalled(): boolean {
+    private static isPylanceInstalled(): boolean {
         return !!extensions.getExtension(PYLANCE_EXTENSION_ID);
     }
 
-    private async _pylanceExtensionsChangeHandler(): Promise<void> {
-        if (LspNotebooksExperiment._isPylanceInstalled() && this._pylanceExtensionChangeHandler) {
-            this._pylanceExtensionChangeHandler.dispose();
-            this._pylanceExtensionChangeHandler = undefined;
+    private async pylanceExtensionsChangeHandler(): Promise<void> {
+        if (LspNotebooksExperiment.isPylanceInstalled() && this.pylanceExtensionChangeHandler) {
+            this.pylanceExtensionChangeHandler.dispose();
+            this.pylanceExtensionChangeHandler = undefined;
 
-            this._updateExperimentSupport();
+            this.updateExperimentSupport();
         }
     }
 }

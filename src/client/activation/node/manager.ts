@@ -10,11 +10,11 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { Commands } from '../commands';
+import { NodeLanguageClientMiddleware } from './languageClientMiddleware';
 import { ILanguageServerAnalysisOptions, ILanguageServerManager, ILanguageServerProxy } from '../types';
 import { traceDecoratorError, traceDecoratorVerbose } from '../../logging';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { JupyterExtensionIntegration } from '../../jupyter/jupyterIntegration';
-import { NodeLanguageClientMiddleware } from './languageClientMiddleware';
 
 export class NodeLanguageServerManager implements ILanguageServerManager {
     private resource!: Resource;

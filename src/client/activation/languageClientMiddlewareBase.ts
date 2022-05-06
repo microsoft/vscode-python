@@ -89,7 +89,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
 
                     settingDict.pythonPath = await this.getPythonPathOverride(uri);
 
-                    if (settingDict.pythonPath === undefined) {
+                    if (!settingDict.pythonPath) {
                         settingDict.pythonPath = configService.getSettings(uri).pythonPath;
                     }
 

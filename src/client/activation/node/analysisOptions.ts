@@ -25,14 +25,14 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         return ({
             experimentationSupport: true,
             trustedWorkspaceSupport: true,
-            lspNotebooksSupport: this.lspNotebooksExperiment.isInNotebooksExperiment() === true,
+            lspNotebooksSupport: this.lspNotebooksExperiment.isInNotebooksExperiment(),
         } as unknown) as LanguageClientOptions;
     }
 
     protected getDocumentFilters(_workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
         const filters = super.getDocumentFilters(_workspaceFolder);
 
-        if (this.lspNotebooksExperiment.isInNotebooksExperiment() === true) {
+        if (this.lspNotebooksExperiment.isInNotebooksExperiment()) {
             return [
                 { language: 'python' },
                 {

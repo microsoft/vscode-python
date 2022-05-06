@@ -14,11 +14,11 @@ import { IInterpreterPathService, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { JediLanguageClientMiddleware } from './languageClientMiddleware';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 import { killPid } from '../../common/process/rawProcessApis';
 import { traceDecoratorError, traceDecoratorVerbose, traceError } from '../../logging';
-import { JediLanguageClientMiddleware } from './languageClientMiddleware';
 
 export class JediLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;

@@ -16,14 +16,14 @@ import { LanguageServerType } from '../types';
 import { LspNotebooksExperiment } from './lspNotebooksExperiment';
 
 export class NodeLanguageClientMiddleware extends LanguageClientMiddlewareBase {
-    private readonly _lspNotebooksExperiment: LspNotebooksExperiment;
+    private readonly lspNotebooksExperiment: LspNotebooksExperiment;
 
-    private _jupyterPythonPathFunction: ((uri: Uri) => Promise<string | undefined>) | undefined = undefined;
+    private jupyterPythonPathFunction: ((uri: Uri) => Promise<string | undefined>) | undefined = undefined;
 
     public constructor(serviceContainer: IServiceContainer, serverVersion?: string) {
         super(serviceContainer, LanguageServerType.Node, sendTelemetryEvent, serverVersion);
 
-        this._lspNotebooksExperiment = serviceContainer.get<LspNotebooksExperiment>(LspNotebooksExperiment);
+        this.lspNotebooksExperiment = serviceContainer.get<LspNotebooksExperiment>(LspNotebooksExperiment);
 
         const jupyterDependencyManager = serviceContainer.get<IJupyterExtensionDependencyManager>(
             IJupyterExtensionDependencyManager,
@@ -36,30 +36,23 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddlewareBase {
             this.notebookAddon = createHidingMiddleware();
         }
 
-        // TODO: THIS IS CALLED BEFORE EXPERIMENT STATE IS RECALCULATED. DOES IT MATTER?
-        // SAME THING COULD HAPPEN WHEN INSTALLING PYLANCE, WHICH MIGHT BE WORSE?
-        // Scenario:
-        //  Python and Pylance are installed
-        //  Jupyter gets installed
-        //  Code below installs middleware incorrectly
-
         disposables.push(
             extensions?.onDidChange(async () => {
                 if (jupyterDependencyManager) {
                     if (jupyterDependencyManager.isJupyterExtensionInstalled) {
-                        await this._lspNotebooksExperiment.onJupyterInstalled();
+                        await this.lspNotebooksExperiment.onJupyterInstalled();
                     }
 
                     if (
                         this.notebookAddon &&
                         (!jupyterDependencyManager.isJupyterExtensionInstalled ||
-                            this._lspNotebooksExperiment.isInNotebooksExperiment())
+                            this.lspNotebooksExperiment.isInNotebooksExperiment())
                     ) {
                         this.notebookAddon = undefined;
                     } else if (
                         !this.notebookAddon &&
                         jupyterDependencyManager.isJupyterExtensionInstalled &&
-                        !this._lspNotebooksExperiment.isInNotebooksExperiment()
+                        !this.lspNotebooksExperiment.isInNotebooksExperiment()
                     ) {
                         this.notebookAddon = createHidingMiddleware();
                     }
@@ -69,19 +62,15 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddlewareBase {
     }
 
     public registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void {
-        this._jupyterPythonPathFunction = func;
+        this.jupyterPythonPathFunction = func;
     }
 
     protected async getPythonPathOverride(uri: Uri | undefined): Promise<string | undefined> {
-        if (
-            uri === undefined ||
-            this._jupyterPythonPathFunction === undefined ||
-            !this._lspNotebooksExperiment.isInNotebooksExperiment()
-        ) {
+        if (!uri || !this.jupyterPythonPathFunction || !this.lspNotebooksExperiment.isInNotebooksExperiment()) {
             return undefined;
         }
 
-        const result = await this._jupyterPythonPathFunction(uri);
+        const result = await this.jupyterPythonPathFunction(uri);
 
         if (result) {
             traceLog(

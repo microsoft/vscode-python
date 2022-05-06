@@ -55,10 +55,10 @@ suite('Pylance Language Server - Analysis Options', () => {
         expect(filter).to.be.equal(PYTHON);
     });
 
-    test('Document filter matches all python language schemes when in virtual workspace', async () => {
+    test('Document filter matches all python language schemes when in virtual workspace', () => {
         workspace.reset();
         workspace.setup((w) => w.isVirtualWorkspace).returns(() => true);
-        const filter = await analysisOptions.getDocumentFilters();
+        const filter = analysisOptions.getDocumentFilters();
         assert.deepEqual(filter, [{ language: PYTHON_LANGUAGE }]);
     });
 

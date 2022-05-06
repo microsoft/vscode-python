@@ -14,9 +14,9 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { Commands } from '../commands';
+import { JediLanguageClientMiddleware } from './languageClientMiddleware';
 import { ILanguageServerAnalysisOptions, ILanguageServerManager, ILanguageServerProxy } from '../types';
 import { traceDecoratorError, traceDecoratorVerbose, traceVerbose } from '../../logging';
-import { JediLanguageClientMiddleware } from './languageClientMiddleware';
 
 export class JediLanguageServerManager implements ILanguageServerManager {
     private resource!: Resource;
