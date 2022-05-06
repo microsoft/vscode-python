@@ -14,7 +14,6 @@ import { NodeLanguageClientMiddleware } from './languageClientMiddleware';
 import { ILanguageServerAnalysisOptions, ILanguageServerManager, ILanguageServerProxy } from '../types';
 import { traceDecoratorError, traceDecoratorVerbose } from '../../logging';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
-import { JupyterExtensionIntegration } from '../../jupyter/jupyterIntegration';
 
 export class NodeLanguageServerManager implements ILanguageServerManager {
     private resource!: Resource;
@@ -120,14 +119,6 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         const options = await this.analysisOptions.getAnalysisOptions();
         this.middleware = new NodeLanguageClientMiddleware(this.serviceContainer, this.lsVersion);
         options.middleware = this.middleware;
-
-        const jupyterExtensionIntegration = this.serviceContainer.get<JupyterExtensionIntegration>(
-            JupyterExtensionIntegration,
-        );
-        const jupyterPythonPathFunction = jupyterExtensionIntegration.getJupyterPythonPathFunction();
-        if (jupyterPythonPathFunction) {
-            this.middleware.registerJupyterPythonPathFunction(jupyterPythonPathFunction);
-        }
 
         // Make sure the middleware is connected if we restart and we we're already connected.
         if (this.connected) {

@@ -7,6 +7,7 @@ import { localize } from 'vscode-nls';
 import { IJupyterExtensionDependencyManager } from '../../common/application/types';
 import { IDisposableRegistry, IExtensions } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { JupyterExtensionIntegration } from '../../jupyter/jupyterIntegration';
 import { traceLog } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 
@@ -17,8 +18,6 @@ import { LspNotebooksExperiment } from './lspNotebooksExperiment';
 
 export class NodeLanguageClientMiddleware extends LanguageClientMiddlewareBase {
     private readonly lspNotebooksExperiment: LspNotebooksExperiment;
-
-    private jupyterPythonPathFunction: ((uri: Uri) => Promise<string | undefined>) | undefined = undefined;
 
     public constructor(serviceContainer: IServiceContainer, serverVersion?: string) {
         super(serviceContainer, LanguageServerType.Node, sendTelemetryEvent, serverVersion);
@@ -61,16 +60,20 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddlewareBase {
         );
     }
 
-    public registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void {
-        this.jupyterPythonPathFunction = func;
-    }
-
     protected async getPythonPathOverride(uri: Uri | undefined): Promise<string | undefined> {
-        if (!uri || !this.jupyterPythonPathFunction || !this.lspNotebooksExperiment.isInNotebooksExperiment()) {
+        if (!uri || !this.lspNotebooksExperiment.isInNotebooksExperiment()) {
             return undefined;
         }
 
-        const result = await this.jupyterPythonPathFunction(uri);
+        const jupyterExtensionIntegration = this.serviceContainer?.get<JupyterExtensionIntegration>(
+            JupyterExtensionIntegration,
+        );
+        const jupyterPythonPathFunction = jupyterExtensionIntegration?.getJupyterPythonPathFunction();
+        if (!jupyterPythonPathFunction) {
+            return undefined;
+        }
+
+        const result = await jupyterPythonPathFunction(uri);
 
         if (result) {
             traceLog(

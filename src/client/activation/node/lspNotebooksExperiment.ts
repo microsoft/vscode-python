@@ -96,10 +96,6 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
     }
 
     private async waitForJupyterToRegisterPythonPathFunction(): Promise<void> {
-        if (!this.isInExperiment) {
-            return;
-        }
-
         const jupyterExtensionIntegration = this.serviceContainer.get<JupyterExtensionIntegration>(
             JupyterExtensionIntegration,
         );
