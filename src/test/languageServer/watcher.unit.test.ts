@@ -24,6 +24,7 @@ import { NoneLSExtensionManager } from '../../client/languageServer/noneLSExtens
 import { PylanceLSExtensionManager } from '../../client/languageServer/pylanceLSExtensionManager';
 import { LanguageServerWatcher } from '../../client/languageServer/watcher';
 import * as Logging from '../../client/logging';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 suite('Language server watcher', () => {
     let watcher: LanguageServerWatcher;
@@ -47,6 +48,9 @@ suite('Language server watcher', () => {
             } as unknown) as IInterpreterPathService,
             ({
                 getActiveInterpreter: () => 'python',
+                onDidChangeInterpreterInformation: () => {
+                    /* do nothing */
+                },
             } as unknown) as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
             ({
@@ -95,7 +99,11 @@ suite('Language server watcher', () => {
                     /* do nothing */
                 },
             } as unknown) as IInterpreterPathService,
-            {} as IInterpreterService,
+            ({
+                onDidChangeInterpreterInformation: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
             ({
                 isTrusted: true,
@@ -138,7 +146,11 @@ suite('Language server watcher', () => {
                     /* do nothing */
                 },
             } as unknown) as IInterpreterPathService,
-            {} as IInterpreterService,
+            ({
+                onDidChangeInterpreterInformation: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
             ({
                 isTrusted: false,
@@ -180,6 +192,9 @@ suite('Language server watcher', () => {
 
         const interpreterService = ({
             getActiveInterpreter: getActiveInterpreterStub,
+            onDidChangeInterpreterInformation: () => {
+                /* do nothing */
+            },
         } as unknown) as IInterpreterService;
 
         watcher = new LanguageServerWatcher(
@@ -277,6 +292,9 @@ suite('Language server watcher', () => {
             } as unknown) as IInterpreterPathService,
             ({
                 getActiveInterpreter: () => 'python',
+                onDidChangeInterpreterInformation: () => {
+                    /* do nothing */
+                },
             } as unknown) as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
             ({
@@ -360,6 +378,9 @@ suite('Language server watcher', () => {
             } as unknown) as IInterpreterPathService,
             ({
                 getActiveInterpreter: () => 'python',
+                onDidChangeInterpreterInformation: () => {
+                    /* do nothing */
+                },
             } as unknown) as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
             workspaceService,
@@ -426,6 +447,9 @@ suite('Language server watcher', () => {
             } as unknown) as IInterpreterPathService,
             ({
                 getActiveInterpreter: () => 'python',
+                onDidChangeInterpreterInformation: () => {
+                    /* do nothing */
+                },
             } as unknown) as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
             workspaceService,
@@ -477,6 +501,9 @@ suite('Language server watcher', () => {
             } as unknown) as IInterpreterPathService,
             ({
                 getActiveInterpreter: () => ({ version: { major: 2, minor: 7 } }),
+                onDidChangeInterpreterInformation: () => {
+                    /* do nothing */
+                },
             } as unknown) as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
             ({
@@ -535,6 +562,9 @@ suite('Language server watcher', () => {
             } as unknown) as IInterpreterPathService,
             ({
                 getActiveInterpreter: () => ({ version: { major: 2, minor: 7 } }),
+                onDidChangeInterpreterInformation: () => {
+                    /* do nothing */
+                },
             } as unknown) as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
             ({
@@ -590,6 +620,9 @@ suite('Language server watcher', () => {
             } as unknown) as IInterpreterPathService,
             ({
                 getActiveInterpreter: () => ({ version: { major: 2, minor: 7 } }),
+                onDidChangeInterpreterInformation: () => {
+                    /* do nothing */
+                },
             } as unknown) as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
             ({
@@ -673,6 +706,9 @@ suite('Language server watcher', () => {
                 } as unknown) as IInterpreterPathService,
                 ({
                     getActiveInterpreter: getActiveInterpreterStub,
+                    onDidChangeInterpreterInformation: () => {
+                        /* do nothing */
+                    },
                 } as unknown) as IInterpreterService,
                 {} as IEnvironmentVariablesProvider,
                 ({
@@ -757,6 +793,9 @@ suite('Language server watcher', () => {
                 } as unknown) as IInterpreterPathService,
                 ({
                     getActiveInterpreter: () => ({ version: { major: 3, minor: 7 } }),
+                    onDidChangeInterpreterInformation: () => {
+                        /* do nothing */
+                    },
                 } as unknown) as IInterpreterService,
                 {} as IEnvironmentVariablesProvider,
                 workspaceService,
@@ -791,5 +830,166 @@ suite('Language server watcher', () => {
             assert.ok(stopLanguageServerStub.calledOnce === multiLS);
             assert.ok(stopLanguageServerStub.notCalled === !multiLS);
         });
+    });
+
+    test('The language server should be restarted if the interpreter info changed', async () => {
+        const info = ({
+            envPath: 'foo',
+            path: 'path/to/foo/bin/python',
+        } as unknown) as PythonEnvironment;
+
+        let onDidChangeInfoListener: (event: PythonEnvironment) => Promise<void> = () => Promise.resolve();
+
+        const interpreterService = ({
+            onDidChangeInterpreterInformation: (
+                listener: (event: PythonEnvironment) => Promise<void>,
+                thisArg: unknown,
+            ): void => {
+                onDidChangeInfoListener = listener.bind(thisArg);
+            },
+            getActiveInterpreter: () => ({
+                envPath: 'foo',
+                path: 'path/to/foo',
+            }),
+        } as unknown) as IInterpreterService;
+
+        watcher = new LanguageServerWatcher(
+            ({
+                get: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IServiceContainer,
+            {} as ILanguageServerOutputChannel,
+            {
+                getSettings: () => ({ languageServer: LanguageServerType.None }),
+            } as IConfigurationService,
+            {} as IExperimentService,
+            ({
+                getActiveWorkspaceUri: () => undefined,
+            } as unknown) as IInterpreterHelper,
+            ({
+                onDidChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IInterpreterPathService,
+            interpreterService,
+            ({
+                onDidEnvironmentVariablesChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IEnvironmentVariablesProvider,
+            ({
+                isTrusted: true,
+                getWorkspaceFolder: (uri: Uri) => ({ uri }),
+                onDidChangeConfiguration: () => {
+                    /* do nothing */
+                },
+                onDidChangeWorkspaceFolders: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IWorkspaceService,
+            ({
+                registerCommand: () => {
+                    /* do nothing */
+                },
+            } as unknown) as ICommandManager,
+            {} as IFileSystem,
+            ({
+                getExtension: () => undefined,
+                onDidChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IExtensions,
+            {} as IApplicationShell,
+            [] as Disposable[],
+        );
+
+        const startLanguageServerSpy = sandbox.spy(watcher, 'startLanguageServer');
+
+        await watcher.startLanguageServer(LanguageServerType.None);
+
+        await onDidChangeInfoListener(info);
+
+        // Check that startLanguageServer was called twice: Once above, and once after the interpreter info changed.
+        assert.ok(startLanguageServerSpy.calledTwice);
+    });
+
+    test('The language server should not be restarted if the interpreter info did not change', async () => {
+        const info = ({
+            envPath: 'foo',
+            path: 'path/to/foo',
+        } as unknown) as PythonEnvironment;
+
+        let onDidChangeInfoListener: (event: PythonEnvironment) => Promise<void> = () => Promise.resolve();
+
+        const interpreterService = ({
+            onDidChangeInterpreterInformation: (
+                listener: (event: PythonEnvironment) => Promise<void>,
+                thisArg: unknown,
+            ): void => {
+                onDidChangeInfoListener = listener.bind(thisArg);
+            },
+            getActiveInterpreter: () => info,
+        } as unknown) as IInterpreterService;
+
+        watcher = new LanguageServerWatcher(
+            ({
+                get: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IServiceContainer,
+            {} as ILanguageServerOutputChannel,
+            {
+                getSettings: () => ({ languageServer: LanguageServerType.None }),
+            } as IConfigurationService,
+            {} as IExperimentService,
+            ({
+                getActiveWorkspaceUri: () => undefined,
+            } as unknown) as IInterpreterHelper,
+            ({
+                onDidChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IInterpreterPathService,
+            interpreterService,
+            ({
+                onDidEnvironmentVariablesChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IEnvironmentVariablesProvider,
+            ({
+                isTrusted: true,
+                getWorkspaceFolder: (uri: Uri) => ({ uri }),
+                onDidChangeConfiguration: () => {
+                    /* do nothing */
+                },
+                onDidChangeWorkspaceFolders: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IWorkspaceService,
+            ({
+                registerCommand: () => {
+                    /* do nothing */
+                },
+            } as unknown) as ICommandManager,
+            {} as IFileSystem,
+            ({
+                getExtension: () => undefined,
+                onDidChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IExtensions,
+            {} as IApplicationShell,
+            [] as Disposable[],
+        );
+
+        const startLanguageServerSpy = sandbox.spy(watcher, 'startLanguageServer');
+
+        await watcher.startLanguageServer(LanguageServerType.None);
+
+        await onDidChangeInfoListener(info);
+
+        // Check that startLanguageServer was called once: Only when startLanguageServer() was called above.
+        assert.ok(startLanguageServerSpy.calledOnce);
     });
 });
