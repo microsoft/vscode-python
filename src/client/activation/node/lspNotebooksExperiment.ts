@@ -82,7 +82,9 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
             }
         }
 
-        traceLog(`LspNotebooksExperiment: activate: isInNotebooksExperiment = ${this.isInExperiment}`);
+        if (this.isInExperiment) {
+            traceLog('Pylance LSP Notebooks experiment is enabled.');
+        }
     }
 
     private static jupyterSupportsNotebooksExperiment(): boolean {
@@ -107,17 +109,16 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
         for (let tryCount = 0; tryCount < 20; tryCount += 1) {
             const jupyterPythonPathFunction = jupyterExtensionIntegration.getJupyterPythonPathFunction();
             if (jupyterPythonPathFunction) {
-                traceVerbose(`Jupyter has called registration method...`);
+                traceVerbose(`Jupyter called registerJupyterPythonPathFunction`);
                 success = true;
                 break;
             }
 
-            traceVerbose(`Waiting for Jupyter to call registration method...`);
             await sleep(500);
         }
 
         if (!success) {
-            traceVerbose(`Timed out waiting for Jupyter to call registration method...`);
+            traceVerbose(`Timed out waiting for Jupyter to call registerJupyterPythonPathFunction`);
         }
     }
 
