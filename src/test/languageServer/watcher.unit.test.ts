@@ -992,4 +992,168 @@ suite('Language server watcher', () => {
         // Check that startLanguageServer was called once: Only when startLanguageServer() was called above.
         assert.ok(startLanguageServerSpy.calledOnce);
     });
+
+    test('The language server should not be restarted if the interpreter info changed but the env path is an empty string', async () => {
+        const info = ({
+            envPath: '',
+            path: 'path/to/foo',
+        } as unknown) as PythonEnvironment;
+
+        let onDidChangeInfoListener: (event: PythonEnvironment) => Promise<void> = () => Promise.resolve();
+
+        const interpreterService = ({
+            onDidChangeInterpreterInformation: (
+                listener: (event: PythonEnvironment) => Promise<void>,
+                thisArg: unknown,
+            ): void => {
+                onDidChangeInfoListener = listener.bind(thisArg);
+            },
+            getActiveInterpreter: () => ({
+                envPath: 'foo',
+                path: 'path/to/foo',
+            }),
+        } as unknown) as IInterpreterService;
+
+        watcher = new LanguageServerWatcher(
+            ({
+                get: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IServiceContainer,
+            {} as ILanguageServerOutputChannel,
+            {
+                getSettings: () => ({ languageServer: LanguageServerType.None }),
+            } as IConfigurationService,
+            {} as IExperimentService,
+            ({
+                getActiveWorkspaceUri: () => undefined,
+            } as unknown) as IInterpreterHelper,
+            ({
+                onDidChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IInterpreterPathService,
+            interpreterService,
+            ({
+                onDidEnvironmentVariablesChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IEnvironmentVariablesProvider,
+            ({
+                isTrusted: true,
+                getWorkspaceFolder: (uri: Uri) => ({ uri }),
+                onDidChangeConfiguration: () => {
+                    /* do nothing */
+                },
+                onDidChangeWorkspaceFolders: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IWorkspaceService,
+            ({
+                registerCommand: () => {
+                    /* do nothing */
+                },
+            } as unknown) as ICommandManager,
+            {} as IFileSystem,
+            ({
+                getExtension: () => undefined,
+                onDidChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IExtensions,
+            {} as IApplicationShell,
+            [] as Disposable[],
+        );
+
+        const startLanguageServerSpy = sandbox.spy(watcher, 'startLanguageServer');
+
+        await watcher.startLanguageServer(LanguageServerType.None);
+
+        await onDidChangeInfoListener(info);
+
+        // Check that startLanguageServer was called once: Only when startLanguageServer() was called above.
+        assert.ok(startLanguageServerSpy.calledOnce);
+    });
+
+    test('The language server should not be restarted if the interpreter info changed but the env path is undefined', async () => {
+        const info = ({
+            envPath: undefined,
+            path: 'path/to/foo',
+        } as unknown) as PythonEnvironment;
+
+        let onDidChangeInfoListener: (event: PythonEnvironment) => Promise<void> = () => Promise.resolve();
+
+        const interpreterService = ({
+            onDidChangeInterpreterInformation: (
+                listener: (event: PythonEnvironment) => Promise<void>,
+                thisArg: unknown,
+            ): void => {
+                onDidChangeInfoListener = listener.bind(thisArg);
+            },
+            getActiveInterpreter: () => ({
+                envPath: 'foo',
+                path: 'path/to/foo',
+            }),
+        } as unknown) as IInterpreterService;
+
+        watcher = new LanguageServerWatcher(
+            ({
+                get: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IServiceContainer,
+            {} as ILanguageServerOutputChannel,
+            {
+                getSettings: () => ({ languageServer: LanguageServerType.None }),
+            } as IConfigurationService,
+            {} as IExperimentService,
+            ({
+                getActiveWorkspaceUri: () => undefined,
+            } as unknown) as IInterpreterHelper,
+            ({
+                onDidChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IInterpreterPathService,
+            interpreterService,
+            ({
+                onDidEnvironmentVariablesChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IEnvironmentVariablesProvider,
+            ({
+                isTrusted: true,
+                getWorkspaceFolder: (uri: Uri) => ({ uri }),
+                onDidChangeConfiguration: () => {
+                    /* do nothing */
+                },
+                onDidChangeWorkspaceFolders: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IWorkspaceService,
+            ({
+                registerCommand: () => {
+                    /* do nothing */
+                },
+            } as unknown) as ICommandManager,
+            {} as IFileSystem,
+            ({
+                getExtension: () => undefined,
+                onDidChange: () => {
+                    /* do nothing */
+                },
+            } as unknown) as IExtensions,
+            {} as IApplicationShell,
+            [] as Disposable[],
+        );
+
+        const startLanguageServerSpy = sandbox.spy(watcher, 'startLanguageServer');
+
+        await watcher.startLanguageServer(LanguageServerType.None);
+
+        await onDidChangeInfoListener(info);
+
+        // Check that startLanguageServer was called once: Only when startLanguageServer() was called above.
+        assert.ok(startLanguageServerSpy.calledOnce);
+    });
 });
