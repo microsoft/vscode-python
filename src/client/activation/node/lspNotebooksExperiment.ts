@@ -23,7 +23,7 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
 
     private isJupyterInstalled = false;
 
-    private isInExperiment = false;
+    private isInExperiment: boolean | undefined;
 
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
@@ -55,19 +55,30 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
     }
 
     public isInNotebooksExperiment(): boolean {
-        return this.isInExperiment;
+        return this.isInExperiment ?? false;
     }
 
     private updateExperimentSupport(): void {
         const wasInExperiment = this.isInExperiment;
         const isInTreatmentGroup = this.configurationService.getSettings().pylanceLspNotebooksEnabled;
 
-        if (
-            isInTreatmentGroup &&
-            LspNotebooksExperiment.jupyterSupportsNotebooksExperiment() &&
-            LspNotebooksExperiment.pylanceSupportsNotebooksExperiment()
-        ) {
+        this.isInExperiment = false;
+        if (!isInTreatmentGroup) {
+            traceLog(`LSP Notebooks experiment is disabled -- not in treatment group`);
+        } else if (!LspNotebooksExperiment.isJupyterInstalled()) {
+            traceLog(`LSP Notebooks experiment is disabled -- Jupyter disabled or not installed`);
+        } else if (!LspNotebooksExperiment.jupyterSupportsNotebooksExperiment()) {
+            traceLog(`LSP Notebooks experiment is disabled -- Jupyter does not support experiment`);
+        } else if (!LspNotebooksExperiment.isPylanceInstalled()) {
+            traceLog(`LSP Notebooks experiment is disabled -- Pylance disabled or not installed`);
+        } else if (!LspNotebooksExperiment.pylanceSupportsNotebooksExperiment()) {
+            traceLog(`LSP Notebooks experiment is disabled -- Pylance does not support experiment`);
+        } else {
             this.isInExperiment = true;
+            traceLog(`LSP Notebooks experiment is enabled`);
+        }
+
+        if (this.isInExperiment) {
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_LSP_NOTEBOOKS);
         }
 
@@ -80,10 +91,6 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
             if (watcher) {
                 watcher.restartLanguageServers();
             }
-        }
-
-        if (this.isInExperiment) {
-            traceLog('Pylance LSP Notebooks experiment is enabled.');
         }
     }
 
@@ -124,6 +131,10 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
 
     private static isPylanceInstalled(): boolean {
         return !!extensions.getExtension(PYLANCE_EXTENSION_ID);
+    }
+
+    private static isJupyterInstalled(): boolean {
+        return !!extensions.getExtension(JUPYTER_EXTENSION_ID);
     }
 
     private async pylanceExtensionsChangeHandler(): Promise<void> {
