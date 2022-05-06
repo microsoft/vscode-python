@@ -21,15 +21,14 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
 
     private _pylanceExtensionChangeHandler: Disposable | undefined;
 
-    private _jupyterExtensionChangeHandler: Disposable | undefined;
+    private _isJupyterInstalled = false;
 
     private _isInNotebooksExperiment = false;
 
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(IJupyterExtensionDependencyManager)
-        private readonly jupyterDependencyManager: IJupyterExtensionDependencyManager,
+        @inject(IJupyterExtensionDependencyManager) jupyterDependencyManager: IJupyterExtensionDependencyManager,
     ) {
         if (!LspNotebooksExperiment._isPylanceInstalled()) {
             this._pylanceExtensionChangeHandler = extensions.onDidChange(
@@ -37,19 +36,24 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
             );
         }
 
-        if (!this.jupyterDependencyManager.isJupyterExtensionInstalled) {
-            this._jupyterExtensionChangeHandler = extensions.onDidChange(
-                this._jupyterExtensionsChangeHandler.bind(this),
-            );
-        }
+        this._isJupyterInstalled = jupyterDependencyManager.isJupyterExtensionInstalled;
     }
 
     public async activate(): Promise<void> {
         this._updateExperimentSupport();
     }
 
-    private async reset() {
-        await this.activate();
+    public async onJupyterInstalled(): Promise<void> {
+        if (this._isJupyterInstalled) {
+            return;
+        }
+
+        if (LspNotebooksExperiment._jupyterSupportsNotebooksExperiment()) {
+            await this._waitForJupyterToRegisterPythonPathFunction();
+            this._updateExperimentSupport();
+        }
+
+        this._isJupyterInstalled = true;
     }
 
     public isInNotebooksExperiment(): boolean {
@@ -57,7 +61,7 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
     }
 
     private _updateExperimentSupport(): void {
-        const wasInExperiment = this.isInNotebooksExperiment();
+        const wasInExperiment = this._isInNotebooksExperiment;
 
         const isInTreatmentGroup = this.configurationService.getSettings().pylanceLspNotebooksEnabled;
 
@@ -81,7 +85,7 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
             }
         }
 
-        traceLog(`LspNotebooksExperiment: activate: isInNotebooksExperiment = ${this.isInNotebooksExperiment()}`);
+        traceLog(`LspNotebooksExperiment: activate: isInNotebooksExperiment = ${this._isInNotebooksExperiment}`);
     }
 
     private static _jupyterSupportsNotebooksExperiment(): boolean {
@@ -95,7 +99,7 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
     }
 
     private async _waitForJupyterToRegisterPythonPathFunction(): Promise<void> {
-        if (!this.isInNotebooksExperiment()) {
+        if (!this._isInNotebooksExperiment) {
             return;
         }
 
@@ -130,19 +134,7 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
             this._pylanceExtensionChangeHandler.dispose();
             this._pylanceExtensionChangeHandler = undefined;
 
-            await this.reset();
-        }
-    }
-
-    private async _jupyterExtensionsChangeHandler(): Promise<void> {
-        if (this.jupyterDependencyManager.isJupyterExtensionInstalled && this._jupyterExtensionChangeHandler) {
-            this._jupyterExtensionChangeHandler.dispose();
-            this._jupyterExtensionChangeHandler = undefined;
-
-            if (LspNotebooksExperiment._jupyterSupportsNotebooksExperiment()) {
-                await this._waitForJupyterToRegisterPythonPathFunction();
-                await this.reset();
-            }
+            this._updateExperimentSupport();
         }
     }
 }
