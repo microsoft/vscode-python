@@ -138,6 +138,7 @@ export interface ILanguageServerProxy extends IDisposable {
         interpreter: PythonEnvironment | undefined,
         options: LanguageClientOptions,
     ): Promise<void>;
+    stop(): Promise<void>;
     /**
      * Sends a request to LS so as to load other extensions.
      * This is used as a plugin loader mechanism.

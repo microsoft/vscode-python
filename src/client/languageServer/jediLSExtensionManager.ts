@@ -72,9 +72,9 @@ export class JediLSExtensionManager extends LanguageServerCapabilities
         this.serverManager.connect();
     }
 
-    stopLanguageServer(): void {
+    async stopLanguageServer(): Promise<void> {
         this.serverManager.disconnect();
-        this.serverProxy.dispose();
+        await this.serverProxy.stop();
     }
 
     // eslint-disable-next-line class-methods-use-this

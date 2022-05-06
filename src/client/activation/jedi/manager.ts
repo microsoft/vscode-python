@@ -59,9 +59,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
     }
 
     public dispose(): void {
-        if (this.languageProxy) {
-            this.languageProxy.dispose();
-        }
+        this.stopLanguageServer().ignoreErrors();
         JediLanguageServerManager.commandDispose.dispose();
         this.disposables.forEach((d) => d.dispose());
     }
@@ -120,9 +118,7 @@ export class JediLanguageServerManager implements ILanguageServerManager {
     @traceDecoratorError('Failed to restart language server')
     @traceDecoratorVerbose('Restarting language server')
     protected async restartLanguageServer(): Promise<void> {
-        if (this.languageProxy) {
-            this.languageProxy.dispose();
-        }
+        await this.stopLanguageServer();
         await this.startLanguageServer();
     }
 
@@ -146,5 +142,12 @@ export class JediLanguageServerManager implements ILanguageServerManager {
 
         // Then use this middleware to start a new language client.
         await this.languageServerProxy.start(this.resource, this.interpreter, options);
+    }
+
+    @traceDecoratorVerbose('Stopping language server')
+    protected async stopLanguageServer(): Promise<void> {
+        if (this.languageServerProxy) {
+            await this.languageServerProxy.stop();
+        }
     }
 }
