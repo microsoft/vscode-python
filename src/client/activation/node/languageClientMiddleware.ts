@@ -31,7 +31,11 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddlewareBase {
         const extensions = serviceContainer.get<IExtensions>(IExtensions);
 
         // Enable notebook support if jupyter support is installed
-        if (jupyterDependencyManager && jupyterDependencyManager.isJupyterExtensionInstalled) {
+        if (
+            jupyterDependencyManager &&
+            jupyterDependencyManager.isJupyterExtensionInstalled &&
+            !this.lspNotebooksExperiment.isInNotebooksExperiment()
+        ) {
             this.notebookAddon = createHidingMiddleware();
         }
 
