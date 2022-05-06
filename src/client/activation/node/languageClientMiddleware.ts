@@ -42,6 +42,12 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddlewareBase {
         this._disposables.push(config.getSettings()?.onDidChange(() => this._updateHidingMiddleware()));
     }
 
+    // TODO: THIS IS CALLED BEFORE EXPERIMENT STATE IS RECALCULATED. DOES IT MATTER?
+    // SAME THING COULD HAPPEN WHEN INSTALLING PYLANCE, WHICH MIGHT BE WORSE?
+    // Scenario:
+    //  Python and Pylance are installed
+    //  Jupyter gets installed
+    //  Code below installs middleware incorrectly
     private _updateHidingMiddleware() {
         // Enable notebook support if jupyter support is installed
         if (this._jupyterDependencyManager) {
