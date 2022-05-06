@@ -914,6 +914,7 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
+            {} as LspNotebooksExperiment,
             [] as Disposable[],
         );
 
@@ -993,6 +994,7 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
+            {} as LspNotebooksExperiment,
             [] as Disposable[],
         );
 
@@ -1075,6 +1077,7 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
+            {} as LspNotebooksExperiment,
             [] as Disposable[],
         );
 
@@ -1157,6 +1160,7 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
+            {} as LspNotebooksExperiment,
             [] as Disposable[],
         );
 
