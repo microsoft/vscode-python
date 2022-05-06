@@ -92,7 +92,10 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
 
     private static pylanceSupportsNotebooksExperiment(): boolean {
         const pylanceVersion = extensions.getExtension(PYLANCE_EXTENSION_ID)?.packageJSON.version;
-        return pylanceVersion && semver.satisfies(pylanceVersion, '>=2022.5.1-pre.1 || 9999.0.0-dev');
+        return (
+            pylanceVersion &&
+            (semver.gte(pylanceVersion, '2022.5.1-pre.1') || semver.prerelease(pylanceVersion)?.includes('dev'))
+        );
     }
 
     private async waitForJupyterToRegisterPythonPathFunction(): Promise<void> {
