@@ -283,6 +283,11 @@ export class LanguageServerWatcher
 
     // Watch for interpreter information changes.
     private async onDidChangeInterpreterInformation(info: PythonEnvironment): Promise<void> {
+        if (!info.envPath || info.envPath === '') {
+            return;
+        }
+
+        // Find the interpreter and workspace that got updated (if any).
         const iterator = this.workspaceInterpreters.entries();
 
         let result = iterator.next();
