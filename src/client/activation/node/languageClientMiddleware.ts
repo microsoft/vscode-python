@@ -3,7 +3,6 @@
 
 import { createHidingMiddleware } from '@vscode/jupyter-lsp-middleware';
 import { Uri } from 'vscode';
-import { localize } from 'vscode-nls';
 import { IJupyterExtensionDependencyManager } from '../../common/application/types';
 import { IDisposableRegistry, IExtensions } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -80,13 +79,7 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddlewareBase {
         const result = await jupyterPythonPathFunction(uri);
 
         if (result) {
-            traceLog(
-                localize(
-                    'Interpreters.pythonInterpreterPathFromJupyter',
-                    'Jupyter provided interpreter path override: {0}',
-                    result,
-                ),
-            );
+            traceLog(`Jupyter provided interpreter path override: ${result}`);
         }
 
         return result;
