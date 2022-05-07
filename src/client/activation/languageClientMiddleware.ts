@@ -16,6 +16,13 @@ export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
         super(serviceContainer, serverType, sendTelemetryEvent, serverVersion);
     }
 
+    /**
+     * Creates the HidingMiddleware if needed and sets up code to do so if needed after
+     * Jupyter is installed.
+     *
+     * This method should be called from the constructor of derived classes. It is separated
+     * from the constructor to allow derived classes to initialize before it is called.
+     */
     protected setupHidingMiddleware(serviceContainer: IServiceContainer) {
         const jupyterDependencyManager = serviceContainer.get<IJupyterExtensionDependencyManager>(
             IJupyterExtensionDependencyManager,
