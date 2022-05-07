@@ -7,7 +7,7 @@ import { IConfigurationService } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../../common/constants';
-import { IExtensionSingleActivationService } from '../types';
+import { IExtensionSingleActivationService, LanguageServerType } from '../types';
 import { traceLog, traceVerbose } from '../../logging';
 import { IJupyterExtensionDependencyManager } from '../../common/application/types';
 import { ILanguageServerWatcher } from '../../languageServer/types';
@@ -61,9 +61,12 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
     private updateExperimentSupport(): void {
         const wasInExperiment = this.isInExperiment;
         const isInTreatmentGroup = this.configurationService.getSettings().pylanceLspNotebooksEnabled;
+        const languageServerType = this.configurationService.getSettings().languageServer;
 
         this.isInExperiment = false;
-        if (!isInTreatmentGroup) {
+        if (languageServerType !== LanguageServerType.Node) {
+            traceLog(`LSP Notebooks experiment is disabled -- not using Pylance`);
+        } else if (!isInTreatmentGroup) {
             traceLog(`LSP Notebooks experiment is disabled -- not in treatment group`);
         } else if (!LspNotebooksExperiment.isJupyterInstalled()) {
             traceLog(`LSP Notebooks experiment is disabled -- Jupyter disabled or not installed`);
