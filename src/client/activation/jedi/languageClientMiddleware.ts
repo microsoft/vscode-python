@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 import { IServiceContainer } from '../../ioc/types';
-import { sendTelemetryEvent } from '../../telemetry';
-
-import { LanguageClientMiddlewareBase } from '../languageClientMiddlewareBase';
+import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import { LanguageServerType } from '../types';
 
-export class JediLanguageClientMiddleware extends LanguageClientMiddlewareBase {
+export class JediLanguageClientMiddleware extends LanguageClientMiddleware {
     public constructor(serviceContainer: IServiceContainer, serverVersion?: string) {
-        super(serviceContainer, LanguageServerType.Jedi, sendTelemetryEvent, serverVersion);
+        super(serviceContainer, LanguageServerType.Jedi, serverVersion);
+        this.setupHidingMiddleware(serviceContainer);
     }
 }
