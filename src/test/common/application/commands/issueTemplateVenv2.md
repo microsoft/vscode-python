@@ -21,6 +21,20 @@ XXX
 
 <details>
 
+<summary>Output for <code>Python</code> in the <code>Output</code> panel (<code>View</code>→<code>Output</code>, change the drop-down the upper-right of the <code>Output</code> panel to <code>Python</code>)
+</summary>
+
+<p>
+
+```
+XXX
+```
+
+</p>
+</details>
+
+<details>
+
 <summary>User Settings</summary>
 
 <p>
