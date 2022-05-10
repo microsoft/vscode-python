@@ -759,7 +759,7 @@ suite('Language server watcher', () => {
             }
 
             const stopLanguageServerStub = sandbox.stub(extensionLSCls.prototype, 'stopLanguageServer');
-            stopLanguageServerStub.returns();
+            stopLanguageServerStub.returns(Promise.resolve());
 
             let onDidChangeWorkspaceFoldersListener: (event: WorkspaceFoldersChangeEvent) => Promise<void> = () =>
                 Promise.resolve();

@@ -84,9 +84,9 @@ export class PylanceLSExtensionManager extends LanguageServerCapabilities
         this.serverManager.connect();
     }
 
-    stopLanguageServer(): void {
+    async stopLanguageServer(): Promise<void> {
         this.serverManager.disconnect();
-        this.serverProxy.dispose();
+        await this.serverProxy.stop();
     }
 
     canStartLanguageServer(): boolean {

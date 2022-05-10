@@ -10,7 +10,6 @@ import {
 } from 'vscode-languageclient/node';
 
 import { IExperimentService, IExtensions, IInterpreterPathService, Resource } from '../../common/types';
-import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
@@ -51,13 +50,9 @@ namespace GetExperimentValue {
 export class NodeLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
 
-    private languageServerTask: Promise<void> | undefined;
-
     private cancellationStrategy: FileBasedCancellationStrategy | undefined;
 
     private readonly disposables: Disposable[] = [];
-
-    private disposed = false;
 
     private lsVersion: string | undefined;
 
@@ -76,24 +71,9 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         };
     }
 
-    @traceDecoratorVerbose('Stopping language server')
+    @traceDecoratorVerbose('Disposing language server')
     public dispose(): void {
-        if (this.languageClient) {
-            // Do not await on this.
-            this.languageClient.stop().then(noop, (ex) => traceError('Stopping language client failed', ex));
-
-            this.languageClient = undefined;
-            this.languageServerTask = undefined;
-        }
-        if (this.cancellationStrategy) {
-            this.cancellationStrategy.dispose();
-            this.cancellationStrategy = undefined;
-        }
-        while (this.disposables.length > 0) {
-            const d = this.disposables.shift()!;
-            d.dispose();
-        }
-        this.disposed = true;
+        this.stop().ignoreErrors();
     }
 
     @traceDecoratorError('Failed to start language server')
@@ -109,11 +89,6 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         interpreter: PythonEnvironment | undefined,
         options: LanguageClientOptions,
     ): Promise<void> {
-        if (this.languageServerTask) {
-            await this.languageServerTask;
-            return;
-        }
-
         const extension = this.extensions.getExtension(PYLANCE_EXTENSION_ID);
         this.lsVersion = extension?.packageJSON.version || '0';
 
@@ -129,8 +104,27 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
             }),
         );
 
-        this.languageServerTask = this.languageClient.start();
-        await this.languageServerTask;
+        await this.languageClient.start();
+    }
+
+    @traceDecoratorVerbose('Disposing language server')
+    public async stop(): Promise<void> {
+        if (this.languageClient) {
+            try {
+                await this.languageClient.stop();
+            } catch (ex) {
+                traceError('Stopping language client failed', ex);
+            }
+            this.languageClient = undefined;
+        }
+        if (this.cancellationStrategy) {
+            this.cancellationStrategy.dispose();
+            this.cancellationStrategy = undefined;
+        }
+        while (this.disposables.length > 0) {
+            const d = this.disposables.shift()!;
+            d.dispose();
+        }
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -146,11 +140,6 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         NodeLanguageServerProxy.versionTelemetryProps,
     )
     private registerHandlers(_resource: Resource) {
-        if (this.disposed) {
-            // Check if it got disposed in the interim.
-            return;
-        }
-
         const progressReporting = new ProgressReporting(this.languageClient!);
         this.disposables.push(progressReporting);
 

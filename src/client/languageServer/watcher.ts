@@ -134,7 +134,7 @@ export class LanguageServerWatcher
 
         // Destroy the old language server if it's different.
         if (currentInterpreter && interpreter !== currentInterpreter) {
-            this.stopLanguageServer(lsResource);
+            await this.stopLanguageServer(lsResource);
         }
 
         // If the interpreter is Python 2 and the LS setting is explicitly set to Jedi, turn it off.
@@ -199,12 +199,12 @@ export class LanguageServerWatcher
 
     // Private methods
 
-    private stopLanguageServer(resource?: Resource): void {
+    private async stopLanguageServer(resource?: Resource): Promise<void> {
         const key = this.getWorkspaceKey(resource, this.languageServerType);
         const languageServerExtensionManager = this.workspaceLanguageServers.get(key);
 
         if (languageServerExtensionManager) {
-            languageServerExtensionManager.stopLanguageServer();
+            await languageServerExtensionManager.stopLanguageServer();
             languageServerExtensionManager.dispose();
             this.workspaceLanguageServers.delete(key);
         }
@@ -255,7 +255,7 @@ export class LanguageServerWatcher
         const languageServerType = this.configurationService.getSettings(lsResource).languageServer;
 
         if (languageServerType !== this.languageServerType) {
-            this.stopLanguageServer(resource);
+            await this.stopLanguageServer(resource);
             await this.startLanguageServer(languageServerType, lsResource);
         }
     }
@@ -322,9 +322,9 @@ export class LanguageServerWatcher
         // Since Jedi is the only language server type where we instantiate multiple language servers,
         // Make sure to dispose of them only in that scenario.
         if (event.removed.length && this.languageServerType === LanguageServerType.Jedi) {
-            event.removed.forEach((workspace) => {
-                this.stopLanguageServer(workspace.uri);
-            });
+            for (const workspace of event.removed) {
+                await this.stopLanguageServer(workspace.uri);
+            }
         }
     }
 

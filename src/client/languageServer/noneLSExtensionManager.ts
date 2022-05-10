@@ -46,8 +46,8 @@ export class NoneLSExtensionManager implements ILanguageServer, ILanguageServerE
         return Promise.resolve();
     }
 
-    stopLanguageServer(): void {
-        // Nothing to do here.
+    stopLanguageServer(): Promise<void> {
+        return Promise.resolve();
     }
 
     canStartLanguageServer(): boolean {
