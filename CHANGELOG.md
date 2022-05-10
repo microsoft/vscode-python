@@ -6,6 +6,8 @@
 
 1. Update to latest LS client (v8.0.0) and server (v8.0.0).
    ([#19114](https://github.com/Microsoft/vscode-python/issues/19114))
+1. Improve information collected by the `Python: Report Issue` command.
+   ([#19067](https://github.com/Microsoft/vscode-python/issues/19067))
 
 ### Thanks
 
