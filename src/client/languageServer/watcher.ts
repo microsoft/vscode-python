@@ -187,12 +187,10 @@ export class LanguageServerWatcher
     }
 
     public async restartLanguageServers(): Promise<void> {
-        const workspacesUris = this.workspaceService.workspaceFolders?.map((workspace) => workspace.uri) ?? [];
-
-        workspacesUris.forEach(async (resource) => {
-            const lsResource = this.getWorkspaceUri(resource);
+        this.workspaceLanguageServers.forEach(async (_, resourceString) => {
+            const resource = Uri.parse(resourceString);
             this.stopLanguageServer(resource);
-            await this.startLanguageServer(this.languageServerType, lsResource);
+            await this.startLanguageServer(this.languageServerType, resource);
         });
     }
 
