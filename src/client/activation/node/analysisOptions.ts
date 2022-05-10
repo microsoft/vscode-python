@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { WorkspaceFolder } from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient';
-import { DocumentFilter } from 'vscode-languageserver-protocol';
 import { IWorkspaceService } from '../../common/application/types';
 
 import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
@@ -27,21 +25,5 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
             trustedWorkspaceSupport: true,
             lspNotebooksSupport: this.lspNotebooksExperiment.isInNotebooksExperiment(),
         } as unknown) as LanguageClientOptions;
-    }
-
-    protected getDocumentFilters(_workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
-        const filters = super.getDocumentFilters(_workspaceFolder);
-
-        if (this.lspNotebooksExperiment.isInNotebooksExperiment()) {
-            return [
-                { language: 'python' },
-                {
-                    notebook: { notebookType: 'jupyter-notebook', pattern: '**/*.ipynb' },
-                    language: 'python',
-                },
-            ];
-        }
-
-        return filters;
     }
 }
