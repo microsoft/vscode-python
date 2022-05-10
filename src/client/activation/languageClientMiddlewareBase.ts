@@ -87,11 +87,8 @@ export class LanguageClientMiddlewareBase implements Middleware {
                         i
                     ] as LSPObject & { pythonPath: string; _envPYTHONPATH: string };
 
-                    settingDict.pythonPath = await this.getPythonPathOverride(uri);
-
-                    if (!settingDict.pythonPath) {
-                        settingDict.pythonPath = configService.getSettings(uri).pythonPath;
-                    }
+                    settingDict.pythonPath =
+                        (await this.getPythonPathOverride(uri)) ?? configService.getSettings(uri).pythonPath;
 
                     const env = await envService.getEnvironmentVariables(uri);
                     const envPYTHONPATH = env.PYTHONPATH;
