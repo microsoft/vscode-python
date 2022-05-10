@@ -83,7 +83,9 @@ export class LanguageClientMiddlewareBase implements Middleware {
                     // value as though it were in the user's settings.json file.
                     // As this is for backwards compatibility, `ConfigService.pythonPath`
                     // can be considered as active interpreter path.
-                    const settingDict: LSPObject = settings[i] as LSPObject;
+                    const settingDict: LSPObject & { pythonPath: string; _envPYTHONPATH: string } = settings[
+                        i
+                    ] as LSPObject & { pythonPath: string; _envPYTHONPATH: string };
                     settingDict.pythonPath = configService.getSettings(uri).pythonPath;
 
                     const env = await envService.getEnvironmentVariables(uri);
