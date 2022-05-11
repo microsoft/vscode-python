@@ -203,7 +203,7 @@ export interface IDiscoveryAPI {
      * Resolves once environment list has finished refreshing, i.e all environments are
      * discovered. Carries `undefined` if there is no refresh currently going on.
      */
-    readonly refreshPromise: Promise<void> | undefined;
+    getRefreshPromise(options?: GetRefreshEnvironmentsOptions): Promise<void> | undefined;
     /**
      * Triggers a new refresh for query if there isn't any already running.
      */

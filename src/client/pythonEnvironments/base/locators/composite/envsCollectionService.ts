@@ -35,7 +35,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return this.progress.event;
     }
 
-    public get refreshPromise(): Promise<void> | undefined {
+    public getRefreshPromise(): Promise<void> | undefined {
         return this.refreshPromises.size > 0
             ? Promise.all(Array.from(this.refreshPromises.values())).then()
             : undefined;

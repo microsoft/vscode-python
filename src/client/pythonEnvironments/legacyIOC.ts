@@ -107,8 +107,8 @@ class ComponentAdapter implements IComponentAdapter {
         return this.api.triggerRefresh(query, trigger);
     }
 
-    public get refreshPromise() {
-        return this.api.refreshPromise;
+    public getRefreshPromise() {
+        return this.api.getRefreshPromise();
     }
 
     public get onProgress() {
@@ -235,7 +235,7 @@ class ComponentAdapter implements IComponentAdapter {
         }
         // We should already have initiated discovery. Wait for an env to be added
         // to the collection until the refresh has finished.
-        await Promise.race([onAddedToCollection.promise, this.api.refreshPromise]);
+        await Promise.race([onAddedToCollection.promise, this.api.getRefreshPromise()]);
         const envs = await asyncFilter(this.api.getEnvs(), (e) => filter(convertEnvInfo(e)));
         return envs.length > 0;
     }
@@ -297,7 +297,7 @@ class ComponentAdapter implements IComponentAdapter {
         if (options?.ignoreCache) {
             await this.api.triggerRefresh(query);
         }
-        await this.api.refreshPromise;
+        await this.api.getRefreshPromise();
         const envs = this.api.getEnvs(query);
         return envs.map(convertEnvInfo);
     }

@@ -149,9 +149,9 @@ suite('Python envs locator - Environments Collection', async () => {
         let envs = collectionService.getEnvs();
 
         assertEnvsEqual(envs, []);
-        expect(collectionService.refreshPromise).to.not.equal(undefined);
+        expect(collectionService.getRefreshPromise()).to.not.equal(undefined);
 
-        await collectionService.refreshPromise;
+        await collectionService.getRefreshPromise();
         envs = collectionService.getEnvs();
 
         assertEnvsEqual(
@@ -377,14 +377,14 @@ suite('Python envs locator - Environments Collection', async () => {
         });
         collectionService = new EnvsCollectionService(cache, parentLocator);
 
-        expect(collectionService.refreshPromise).to.equal(
+        expect(collectionService.getRefreshPromise()).to.equal(
             undefined,
             'Should be undefined if no refresh is currently going on',
         );
 
         const promise = collectionService.triggerRefresh();
 
-        const onGoingRefreshPromise = collectionService.refreshPromise;
+        const onGoingRefreshPromise = collectionService.getRefreshPromise();
         expect(onGoingRefreshPromise).to.not.equal(undefined, 'Refresh triggered should be tracked');
         const onGoingRefreshPromiseDeferred = createDeferredFromPromise(onGoingRefreshPromise!);
         await sleep(1);
@@ -393,7 +393,7 @@ suite('Python envs locator - Environments Collection', async () => {
         deferred.resolve();
         await promise;
 
-        expect(collectionService.refreshPromise).to.equal(
+        expect(collectionService.getRefreshPromise()).to.equal(
             undefined,
             'Should be undefined if no refresh is currently going on',
         );
@@ -557,7 +557,7 @@ suite('Python envs locator - Environments Collection', async () => {
         refreshDeferred.resolve();
         await sleep(1);
 
-        await collectionService.refreshPromise; // Wait for refresh to finish
+        await collectionService.getRefreshPromise(); // Wait for refresh to finish
 
         /**
          * We expect 2 refreshes to be triggered in total, explanation:

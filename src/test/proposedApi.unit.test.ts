@@ -389,7 +389,7 @@ suite('Proposed Extension API', () => {
 
     test('getRefreshPromise: common scenario', () => {
         const expected = Promise.resolve();
-        discoverAPI.setup((d) => d.refreshPromise).returns(() => expected);
+        discoverAPI.setup((d) => d.getRefreshPromise()).returns(() => expected);
         const actual = proposed.environment.getRefreshPromise();
 
         // We are comparing instances here, they should be the same instance.

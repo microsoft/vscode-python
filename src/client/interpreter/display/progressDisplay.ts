@@ -35,8 +35,9 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
             (event) => {
                 if (event.stage === ProgressReportStage.discoveryStarted) {
                     this.showProgress();
-                    if (this.pyenvs.refreshPromise) {
-                        this.pyenvs.refreshPromise.then(() => this.hideProgress());
+                    const refreshPromise = this.pyenvs.getRefreshPromise();
+                    if (refreshPromise) {
+                        refreshPromise.then(() => this.hideProgress());
                     }
                 }
             },

@@ -16,7 +16,7 @@ import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
 import { PythonEnvInfo } from './pythonEnvironments/base/info';
 import { getEnvPath } from './pythonEnvironments/base/info/env';
-import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
+import { GetRefreshEnvironmentsOptions, IDiscoveryAPI } from './pythonEnvironments/base/locator';
 
 const onDidInterpretersChangedEvent = new EventEmitter<EnvironmentsChangedParams[]>();
 export function reportInterpretersChanged(e: EnvironmentsChangedParams[]): void {
@@ -106,8 +106,8 @@ export function buildProposedApi(
                 const paths = discoveryApi.getEnvs().map((e) => getEnvPath(e.executable.filename, e.location));
                 return Promise.resolve(paths);
             },
-            getRefreshPromise(): Promise<void> | undefined {
-                return discoveryApi.refreshPromise;
+            getRefreshPromise(options?: GetRefreshEnvironmentsOptions): Promise<void> | undefined {
+                return discoveryApi.getRefreshPromise(options);
             },
             onDidChangeExecutionDetails: interpreterService.onDidChangeInterpreterConfiguration,
             onDidEnvironmentsChanged: onDidInterpretersChangedEvent.event,

@@ -6,7 +6,12 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { getEnvPath } from './base/info/env';
-import { IDiscoveryAPI, ProgressNotificationEvent, PythonLocatorQuery } from './base/locator';
+import {
+    GetRefreshEnvironmentsOptions,
+    IDiscoveryAPI,
+    ProgressNotificationEvent,
+    PythonLocatorQuery,
+} from './base/locator';
 
 export type GetLocatorFunc = () => Promise<IDiscoveryAPI>;
 
@@ -31,8 +36,8 @@ class PythonEnvironments implements IDiscoveryAPI {
         return this.locator.onProgress;
     }
 
-    public get refreshPromise() {
-        return this.locator.refreshPromise;
+    public getRefreshPromise(options?: GetRefreshEnvironmentsOptions) {
+        return this.locator.getRefreshPromise(options);
     }
 
     public get onChanged() {

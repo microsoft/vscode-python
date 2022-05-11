@@ -18,7 +18,7 @@ export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
     readonly onProgress: Event<ProgressNotificationEvent>;
     triggerRefresh(query?: PythonLocatorQuery & { clearCache?: boolean }, trigger?: 'auto' | 'ui'): Promise<void>;
-    readonly refreshPromise: Promise<void> | undefined;
+    getRefreshPromise(): Promise<void> | undefined;
     readonly onChanged: Event<PythonEnvironmentsChangedEvent>;
     // VirtualEnvPrompt
     onDidCreate(resource: Resource, callback: () => void): Disposable;
