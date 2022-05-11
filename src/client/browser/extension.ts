@@ -45,20 +45,18 @@ async function runPylance(
     context: vscode.ExtensionContext,
     pylanceExtension: vscode.Extension<unknown>,
 ): Promise<void> {
-    const { extensionPath, packageJSON } = pylanceExtension;
-    const distUrl = `${extensionPath}/dist`;
+    const { extensionUri, packageJSON } = pylanceExtension;
+    const distUrl = vscode.Uri.joinPath(extensionUri, 'dist');
 
     try {
-        const worker = new Worker(`${distUrl}/browser.server.bundle.js`);
+        const worker = new Worker(vscode.Uri.joinPath(distUrl, 'browser.server.bundle.js').toString());
 
         // Pass the configuration as the first message to the worker so it can
         // have info like the URL of the dist folder early enough.
         //
         // This is the same method used by the TS worker:
         // https://github.com/microsoft/vscode/blob/90aa979bb75a795fd8c33d38aee263ea655270d0/extensions/typescript-language-features/src/tsServer/serverProcess.browser.ts#L55
-        const config: BrowserConfig = {
-            distUrl,
-        };
+        const config: BrowserConfig = { distUrl: distUrl.toString() };
         worker.postMessage(config);
 
         const middleware = new LanguageClientMiddlewareBase(
