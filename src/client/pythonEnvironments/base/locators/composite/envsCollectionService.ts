@@ -9,7 +9,6 @@ import { normalizePath } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
 import {
     IDiscoveryAPI,
-    IPythonEnvsIterator,
     IResolvingLocator,
     isProgressEvent,
     ProgressNotificationEvent,
@@ -100,14 +99,12 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     private startRefresh(query: (PythonLocatorQuery & { clearCache?: boolean }) | undefined): Promise<void> {
         const deferred = createDeferred<void>();
-
         if (query?.clearCache) {
             this.cache.clearCache();
         }
         // Ensure we set this before we trigger the promise to accurately track when a refresh has started.
         this.refreshPromises.set(query, deferred.promise);
-        const iterator = this.locator.iterEnvs(query);
-        const promise = this.addEnvsToCacheFromIterator(iterator);
+        const promise = this.addEnvsToCacheForQuery(query);
         return promise
             .then(async () => {
                 // Ensure we delete this before we resolve the promise to accurately track when a refresh finishes.
@@ -117,7 +114,8 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             .catch((ex) => deferred.reject(ex));
     }
 
-    private async addEnvsToCacheFromIterator(iterator: IPythonEnvsIterator) {
+    private async addEnvsToCacheForQuery(query: PythonLocatorQuery | undefined) {
+        const iterator = this.locator.iterEnvs(query);
         const seen: PythonEnvInfo[] = [];
         const state = {
             done: false,
@@ -128,12 +126,12 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         if (iterator.onUpdated !== undefined) {
             const listener = iterator.onUpdated(async (event) => {
                 if (isProgressEvent(event)) {
-                    if (event.stage !== ProgressReportStage.discoveryFinished) {
+                    if (event.stage === ProgressReportStage.discoveryFinished) {
+                        state.done = true;
+                        listener.dispose();
+                    } else if (event.stage === ProgressReportStage.allPathsDiscovered && !query) {
                         this.progress.fire(event);
-                        return;
                     }
-                    state.done = true;
-                    listener.dispose();
                 } else {
                     state.pending += 1;
                     this.cache.updateEnv(seen[event.index], event.update);

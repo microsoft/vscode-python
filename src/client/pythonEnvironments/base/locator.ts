@@ -186,6 +186,10 @@ interface IResolver {
 
 export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ILocator<I> {}
 
+export interface GetRefreshEnvironmentsOptions {
+    stage?: ProgressReportStage;
+}
+
 export interface IDiscoveryAPI {
     /**
      * Fires with details of the current discovery progress, i.e when it starts, finishes or any other relevant stage.
