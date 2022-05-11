@@ -40,10 +40,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.pyenvs.hasInterpreters(filter);
     }
 
-    public get onRefreshStart(): Event<void> {
-        return this.pyenvs.onRefreshStart;
-    }
-
     public triggerRefresh(
         query?: PythonLocatorQuery & { clearCache?: boolean },
         trigger?: 'auto' | 'ui',
