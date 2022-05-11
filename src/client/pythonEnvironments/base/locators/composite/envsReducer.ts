@@ -51,12 +51,12 @@ async function* iterEnvsIterator(
         const listener = iterator.onUpdated((event) => {
             state.pending += 1;
             if (isProgressEvent(event)) {
-                if (event.stage !== ProgressReportStage.discoveryFinished) {
+                if (event.stage === ProgressReportStage.discoveryFinished) {
+                    state.done = true;
+                    listener.dispose();
+                } else {
                     didUpdate.fire(event);
-                    return;
                 }
-                state.done = true;
-                listener.dispose();
             } else if (event.update === undefined) {
                 throw new Error(
                     'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in reducer',

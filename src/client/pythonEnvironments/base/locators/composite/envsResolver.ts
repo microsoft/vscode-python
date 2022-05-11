@@ -73,13 +73,13 @@ export class PythonEnvsResolver implements IResolvingLocator {
             const listener = iterator.onUpdated(async (event) => {
                 state.pending += 1;
                 if (isProgressEvent(event)) {
-                    if (event.stage !== ProgressReportStage.discoveryFinished) {
+                    if (event.stage === ProgressReportStage.discoveryFinished) {
+                        didUpdate.fire({ stage: ProgressReportStage.allPathsDiscovered });
+                        state.done = true;
+                        listener.dispose();
+                    } else {
                         didUpdate.fire(event);
-                        return;
                     }
-                    didUpdate.fire({ stage: ProgressReportStage.allPathsDiscovered });
-                    state.done = true;
-                    listener.dispose();
                 } else if (event.update === undefined) {
                     throw new Error(
                         'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in resolver',
