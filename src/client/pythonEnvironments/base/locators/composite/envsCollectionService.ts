@@ -30,13 +30,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     /** Keeps track of scheduled refreshes other than the ongoing one for various queries. */
     private scheduledRefreshes = new Map<PythonLocatorQuery | undefined, Promise<void>>();
 
-    private readonly refreshStarted = new EventEmitter<void>();
-
     private readonly progress = new EventEmitter<ProgressNotificationEvent>();
-
-    public get onRefreshStart(): Event<void> {
-        return this.refreshStarted.event;
-    }
 
     public get onProgress(): Event<ProgressNotificationEvent> {
         return this.progress.event;
@@ -112,7 +106,6 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         }
         // Ensure we set this before we trigger the promise to accurately track when a refresh has started.
         this.refreshPromises.set(query, deferred.promise);
-        this.refreshStarted.fire();
         const iterator = this.locator.iterEnvs(query);
         const promise = this.addEnvsToCacheFromIterator(iterator);
         return promise

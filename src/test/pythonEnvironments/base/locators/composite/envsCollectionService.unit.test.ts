@@ -435,44 +435,6 @@ suite('Python envs locator - Environments Collection', async () => {
         sinon.assert.callCount(reportInterpretersChangedStub, eventData.length);
     });
 
-    test('onRefreshStart() is fired if refresh is triggered', async () => {
-        let isFired = false;
-        collectionService.onRefreshStart(() => {
-            isFired = true;
-        });
-        collectionService.triggerRefresh().ignoreErrors();
-        await sleep(1);
-        expect(isFired).to.equal(true);
-
-        const eventData = [
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
-                type: 'add',
-            },
-            {
-                path: path.join(
-                    TEST_LAYOUT_ROOT,
-                    'pyenv2',
-                    '.pyenv',
-                    'pyenv-win',
-                    'versions',
-                    '3.6.9',
-                    'bin',
-                    'python.exe',
-                ),
-                type: 'add',
-            },
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'virtualhome', '.venvs', 'win1', 'python.exe'),
-                type: 'add',
-            },
-        ];
-        eventData.forEach((d) => {
-            sinon.assert.calledWithExactly(reportInterpretersChangedStub, [d]);
-        });
-        sinon.assert.callCount(reportInterpretersChangedStub, eventData.length);
-    });
-
     test('resolveEnv() uses cache if complete info is available', async () => {
         const resolvedViaLocator = buildEnvInfo({ executable: 'Resolved via locator' });
         const cachedEnvs = getCachedEnvs();
