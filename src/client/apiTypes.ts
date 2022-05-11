@@ -5,6 +5,7 @@ import { Event, Uri } from 'vscode';
 import { Resource } from './common/types';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './jupyter/types';
 import { EnvPathType, PythonEnvKind } from './pythonEnvironments/base/info';
+import { ProgressNotificationEvent } from './pythonEnvironments/base/locator';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -203,6 +204,10 @@ export interface IProposedExtensionAPI {
          *                    is triggered.
          */
         refreshEnvironment(options?: RefreshEnvironmentsOptions): Promise<EnvPathType[] | undefined>;
+        /**
+         * Fires with details of the current discovery progress, i.e when it starts, finishes or any other relevant stage.
+         */
+        readonly onRefreshProgress: Event<ProgressNotificationEvent>;
         /**
          * Returns a promise for the ongoing refresh. Returns `undefined` if there are no active
          * refreshes going on.

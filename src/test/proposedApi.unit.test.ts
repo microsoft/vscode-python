@@ -9,7 +9,7 @@ import { IInterpreterPathService } from '../client/common/types';
 import { IInterpreterService } from '../client/interpreter/contracts';
 import { IServiceContainer } from '../client/ioc/types';
 import { buildProposedApi } from '../client/proposedApi';
-import { IDiscoveryAPI } from '../client/pythonEnvironments/base/locator';
+import { IDiscoveryAPI, ProgressNotificationEvent } from '../client/pythonEnvironments/base/locator';
 import { PythonEnvironment } from '../client/pythonEnvironments/info';
 import { PythonEnvKind, PythonEnvSource } from '../client/pythonEnvironments/base/info';
 import { Architecture } from '../client/common/utils/platform';
@@ -21,6 +21,7 @@ suite('Proposed Extension API', () => {
     let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
     let interpreterService: typemoq.IMock<IInterpreterService>;
     let onDidExecutionEvent: Event<Uri | undefined>;
+    let onRefreshProgress: Event<ProgressNotificationEvent>;
 
     let proposed: IProposedExtensionAPI;
 
@@ -30,12 +31,19 @@ suite('Proposed Extension API', () => {
         interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>(undefined, typemoq.MockBehavior.Strict);
         interpreterService = typemoq.Mock.ofType<IInterpreterService>(undefined, typemoq.MockBehavior.Strict);
         onDidExecutionEvent = typemoq.Mock.ofType<Event<Uri | undefined>>().object;
+        onRefreshProgress = typemoq.Mock.ofType<Event<ProgressNotificationEvent>>().object;
         interpreterService.setup((i) => i.onDidChangeInterpreterConfiguration).returns(() => onDidExecutionEvent);
 
         serviceContainer.setup((s) => s.get(IInterpreterPathService)).returns(() => interpreterPathService.object);
         serviceContainer.setup((s) => s.get(IInterpreterService)).returns(() => interpreterService.object);
 
+        discoverAPI.setup((d) => d.onProgress).returns(() => onRefreshProgress);
+
         proposed = buildProposedApi(discoverAPI.object, serviceContainer.object);
+    });
+
+    test('Provide a callback for tracking refresh progress', async () => {
+        assert.deepEqual(proposed.environment.onRefreshProgress, onRefreshProgress);
     });
 
     test('Provide a callback which is called when execution details changes', async () => {

@@ -112,6 +112,7 @@ export function buildProposedApi(
             onDidChangeExecutionDetails: interpreterService.onDidChangeInterpreterConfiguration,
             onDidEnvironmentsChanged: onDidInterpretersChangedEvent.event,
             onDidActiveEnvironmentChanged: onDidActiveInterpreterChangedEvent.event,
+            onRefreshProgress: discoveryApi.onProgress,
         },
     };
     return proposed;
