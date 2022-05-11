@@ -188,9 +188,13 @@ export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ILocato
 
 export interface IDiscoveryAPI {
     /**
-     * Fires with details of the current discovery progress, i.e when it starts, finishes or any other relevant stage.
+     * Fires when the known list of environments starts refreshing, i.e when discovery starts or restarts.
      */
     readonly onProgress: Event<ProgressNotificationEvent>;
+    /**
+     * Fires when the known list of environments starts refreshing, i.e when discovery starts or restarts.
+     */
+    readonly onRefreshStart: Event<void>;
     /**
      * Fires with details if the known list changes.
      */

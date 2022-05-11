@@ -12,7 +12,6 @@ import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Interpreters } from '../../common/utils/localize';
 import { traceDecoratorVerbose } from '../../logging';
-import { ProgressReportStage } from '../../pythonEnvironments/base/locator';
 import { IComponentAdapter } from '../contracts';
 
 // The parts of IComponentAdapter used here.
@@ -31,13 +30,11 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
     ) {}
 
     public async activate(): Promise<void> {
-        this.pyenvs.onProgress(
-            (event) => {
-                if (event.stage === ProgressReportStage.discoveryStarted) {
-                    this.showProgress();
-                    if (this.pyenvs.refreshPromise) {
-                        this.pyenvs.refreshPromise.then(() => this.hideProgress());
-                    }
+        this.pyenvs.onRefreshStart(
+            () => {
+                this.showProgress();
+                if (this.pyenvs.refreshPromise) {
+                    this.pyenvs.refreshPromise.then(() => this.hideProgress());
                 }
             },
             this,

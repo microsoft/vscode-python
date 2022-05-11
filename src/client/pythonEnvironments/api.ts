@@ -31,6 +31,10 @@ class PythonEnvironments implements IDiscoveryAPI {
         return this.locator.onProgress;
     }
 
+    public get onRefreshStart() {
+        return this.locator.onRefreshStart;
+    }
+
     public get refreshPromise() {
         return this.locator.refreshPromise;
     }
