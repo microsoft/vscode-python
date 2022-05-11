@@ -11,7 +11,11 @@ import { createDeferred, createDeferredFromPromise, sleep } from '../../../../..
 import * as proposedApi from '../../../../../client/proposedApi';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
 import { buildEnvInfo } from '../../../../../client/pythonEnvironments/base/info/env';
-import { PythonEnvUpdatedEvent } from '../../../../../client/pythonEnvironments/base/locator';
+import {
+    ProgressNotificationEvent,
+    ProgressReportStage,
+    PythonEnvUpdatedEvent,
+} from '../../../../../client/pythonEnvironments/base/locator';
 import {
     createCollectionCache,
     PythonEnvCompleteInfo,
@@ -170,7 +174,7 @@ suite('Python envs locator - Environments Collection', async () => {
     });
 
     test('triggerRefresh() refreshes the collection and storage with any new environments', async () => {
-        const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | null>();
+        const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
         const locatedEnvs = getLocatorEnvs();
         const parentLocator = new SimpleLocator(locatedEnvs, {
             onUpdated: onUpdated.event,
@@ -182,7 +186,7 @@ suite('Python envs locator - Environments Collection', async () => {
                 });
                 onUpdated.fire({ index: locatedEnvs.length - 1, update: undefined });
                 // It turns out the last env is invalid, ensure it does not appear in the final result.
-                onUpdated.fire(null);
+                onUpdated.fire({ stage: ProgressReportStage.discoveryFinished });
             },
         });
         const cache = await createCollectionCache({
@@ -263,7 +267,7 @@ suite('Python envs locator - Environments Collection', async () => {
     });
 
     test('Ensure correct events are fired when collection changes on refresh', async () => {
-        const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | null>();
+        const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
         const locatedEnvs = getLocatorEnvs();
         const cachedEnvs = getCachedEnvs();
         const parentLocator = new SimpleLocator(locatedEnvs, {
@@ -276,7 +280,7 @@ suite('Python envs locator - Environments Collection', async () => {
                 });
                 onUpdated.fire({ index: locatedEnvs.length - 1, update: undefined });
                 // It turns out the last env is invalid, ensure it does not appear in the final result.
-                onUpdated.fire(null);
+                onUpdated.fire({ stage: ProgressReportStage.discoveryFinished });
             },
         });
         const cache = await createCollectionCache({

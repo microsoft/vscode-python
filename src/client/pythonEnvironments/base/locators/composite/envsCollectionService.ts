@@ -7,7 +7,15 @@ import { createDeferred } from '../../../../common/utils/async';
 import { traceError } from '../../../../logging';
 import { normalizePath } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
-import { IDiscoveryAPI, IPythonEnvsIterator, IResolvingLocator, PythonLocatorQuery } from '../../locator';
+import {
+    IDiscoveryAPI,
+    IPythonEnvsIterator,
+    IResolvingLocator,
+    isProgressEvent,
+    ProgressNotificationEvent,
+    ProgressReportStage,
+    PythonLocatorQuery,
+} from '../../locator';
 import { getQueryFilter } from '../../locatorUtils';
 import { PythonEnvCollectionChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { IEnvsCollectionCache } from './envsCollectionCache';
@@ -24,8 +32,14 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     private readonly refreshStarted = new EventEmitter<void>();
 
+    private readonly progress = new EventEmitter<ProgressNotificationEvent>();
+
     public get onRefreshStart(): Event<void> {
         return this.refreshStarted.event;
+    }
+
+    public get onProgress(): Event<ProgressNotificationEvent> {
+        return this.progress.event;
     }
 
     public get refreshPromise(): Promise<void> | undefined {
@@ -120,7 +134,11 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
         if (iterator.onUpdated !== undefined) {
             const listener = iterator.onUpdated(async (event) => {
-                if (event === null) {
+                if (isProgressEvent(event)) {
+                    if (event.stage !== ProgressReportStage.discoveryFinished) {
+                        this.progress.fire(event);
+                        return;
+                    }
                     state.done = true;
                     listener.dispose();
                 } else {
@@ -132,10 +150,12 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                     state.pending -= 1;
                 }
                 if (state.done && state.pending === 0) {
+                    this.progress.fire({ stage: ProgressReportStage.discoveryFinished });
                     updatesDone.resolve();
                 }
             });
         } else {
+            this.progress.fire({ stage: ProgressReportStage.discoveryStarted });
             updatesDone.resolve();
         }
 

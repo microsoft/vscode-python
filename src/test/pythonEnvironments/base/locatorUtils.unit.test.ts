@@ -9,6 +9,8 @@ import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments
 import { copyEnvInfo } from '../../../client/pythonEnvironments/base/info/env';
 import {
     IPythonEnvsIterator,
+    ProgressNotificationEvent,
+    ProgressReportStage,
     PythonEnvUpdatedEvent,
     PythonLocatorQuery,
 } from '../../../client/pythonEnvironments/base/locator';
@@ -366,11 +368,11 @@ suite('Python envs locator utils - getEnvs', () => {
     });
 
     test('empty, with unused update emitter', async () => {
-        const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
+        const emitter = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
         // eslint-disable-next-line require-yield
         const iterator = (async function* () {
             // Yield nothing.
-            emitter.fire(null);
+            emitter.fire({ stage: ProgressReportStage.discoveryFinished });
         })() as IPythonEnvsIterator;
         iterator.onUpdated = emitter.event;
 
@@ -390,10 +392,10 @@ suite('Python envs locator utils - getEnvs', () => {
     });
 
     test('yield one, no update', async () => {
-        const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
+        const emitter = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
         const iterator = (async function* () {
             yield env1;
-            emitter.fire(null);
+            emitter.fire({ stage: ProgressReportStage.discoveryFinished });
         })() as IPythonEnvsIterator;
         iterator.onUpdated = emitter.event;
 
@@ -405,11 +407,11 @@ suite('Python envs locator utils - getEnvs', () => {
     test('yield one, with update', async () => {
         const expected = [envSL2];
         const old = copyEnvInfo(envSL2, { kind: PythonEnvKind.Venv });
-        const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
+        const emitter = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
         const iterator = (async function* () {
             yield old;
             emitter.fire({ index: 0, old, update: envSL2 });
-            emitter.fire(null);
+            emitter.fire({ stage: ProgressReportStage.discoveryFinished });
         })() as IPythonEnvsIterator;
         iterator.onUpdated = emitter.event;
 
@@ -431,10 +433,10 @@ suite('Python envs locator utils - getEnvs', () => {
 
     test('yield many, none updated', async () => {
         const expected = rootedLocatedEnvs;
-        const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
+        const emitter = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
         const iterator = (async function* () {
             yield* expected;
-            emitter.fire(null);
+            emitter.fire({ stage: ProgressReportStage.discoveryFinished });
         })() as IPythonEnvsIterator;
         iterator.onUpdated = emitter.event;
 
@@ -445,7 +447,7 @@ suite('Python envs locator utils - getEnvs', () => {
 
     test('yield many, some updated', async () => {
         const expected = rootedLocatedEnvs;
-        const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
+        const emitter = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
         const iterator = (async function* () {
             const original = [...expected];
             const updated = [1, 2, 4];
@@ -459,7 +461,7 @@ suite('Python envs locator utils - getEnvs', () => {
             updated.forEach((index) => {
                 emitter.fire({ index, old: original[index], update: expected[index] });
             });
-            emitter.fire(null);
+            emitter.fire({ stage: ProgressReportStage.discoveryFinished });
         })() as IPythonEnvsIterator;
         iterator.onUpdated = emitter.event;
 
@@ -470,7 +472,7 @@ suite('Python envs locator utils - getEnvs', () => {
 
     test('yield many, all updated', async () => {
         const expected = rootedLocatedEnvs;
-        const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
+        const emitter = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
         const iterator = (async function* () {
             const kind = PythonEnvKind.Unknown;
             const original = expected.map((env) => copyEnvInfo(env, { kind }));
@@ -484,7 +486,7 @@ suite('Python envs locator utils - getEnvs', () => {
                     emitter.fire({ index, old, update: expected[index] });
                 }
             });
-            emitter.fire(null);
+            emitter.fire({ stage: ProgressReportStage.discoveryFinished });
         })() as IPythonEnvsIterator;
         iterator.onUpdated = emitter.event;
 

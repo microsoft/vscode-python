@@ -13,6 +13,9 @@ import {
     ILocator,
     IPythonEnvsIterator,
     IResolvingLocator,
+    isProgressEvent,
+    ProgressNotificationEvent,
+    ProgressReportStage,
     PythonEnvUpdatedEvent,
     PythonLocatorQuery,
 } from '../../locator';
@@ -49,7 +52,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
+        const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
         const incomingIterator = this.parentLocator.iterEnvs(query);
         const iterator = this.iterEnvsIterator(incomingIterator, didUpdate);
         iterator.onUpdated = didUpdate.event;
@@ -58,7 +61,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
 
     private async *iterEnvsIterator(
         iterator: IPythonEnvsIterator<BasicEnvInfo>,
-        didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
+        didUpdate: EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>,
     ): IPythonEnvsIterator {
         const state = {
             done: false,
@@ -69,7 +72,12 @@ export class PythonEnvsResolver implements IResolvingLocator {
         if (iterator.onUpdated !== undefined) {
             const listener = iterator.onUpdated(async (event) => {
                 state.pending += 1;
-                if (event === null) {
+                if (isProgressEvent(event)) {
+                    if (event.stage !== ProgressReportStage.discoveryFinished) {
+                        didUpdate.fire(event);
+                        return;
+                    }
+                    didUpdate.fire({ stage: ProgressReportStage.allPathsDiscovered });
                     state.done = true;
                     listener.dispose();
                 } else if (event.update === undefined) {
@@ -88,6 +96,8 @@ export class PythonEnvsResolver implements IResolvingLocator {
                 state.pending -= 1;
                 checkIfFinishedAndNotify(state, didUpdate);
             });
+        } else {
+            didUpdate.fire({ stage: ProgressReportStage.discoveryStarted });
         }
 
         let result = await iterator.next();
@@ -108,7 +118,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
     private async resolveInBackground(
         envIndex: number,
         state: { done: boolean; pending: number },
-        didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
+        didUpdate: EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>,
         seen: PythonEnvInfo[],
     ) {
         state.pending += 1;
@@ -136,10 +146,10 @@ export class PythonEnvsResolver implements IResolvingLocator {
  */
 function checkIfFinishedAndNotify(
     state: { done: boolean; pending: number },
-    didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
+    didUpdate: EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>,
 ) {
     if (state.done && state.pending === 0) {
-        didUpdate.fire(null);
+        didUpdate.fire({ stage: ProgressReportStage.discoveryFinished });
         didUpdate.dispose();
     }
 }

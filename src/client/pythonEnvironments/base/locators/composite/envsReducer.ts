@@ -6,7 +6,16 @@ import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../logging';
 import { PythonEnvKind } from '../../info';
 import { areSameEnv } from '../../info/env';
-import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
+import {
+    BasicEnvInfo,
+    ILocator,
+    IPythonEnvsIterator,
+    isProgressEvent,
+    ProgressNotificationEvent,
+    ProgressReportStage,
+    PythonEnvUpdatedEvent,
+    PythonLocatorQuery,
+} from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
 
 /**
@@ -20,7 +29,7 @@ export class PythonEnvsReducer implements ILocator<BasicEnvInfo> {
     constructor(private readonly parentLocator: ILocator<BasicEnvInfo>) {}
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
-        const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | null>();
+        const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>();
         const incomingIterator = this.parentLocator.iterEnvs(query);
         const iterator = iterEnvsIterator(incomingIterator, didUpdate);
         iterator.onUpdated = didUpdate.event;
@@ -30,7 +39,7 @@ export class PythonEnvsReducer implements ILocator<BasicEnvInfo> {
 
 async function* iterEnvsIterator(
     iterator: IPythonEnvsIterator<BasicEnvInfo>,
-    didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | null>,
+    didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>,
 ): IPythonEnvsIterator<BasicEnvInfo> {
     const state = {
         done: false,
@@ -41,7 +50,11 @@ async function* iterEnvsIterator(
     if (iterator.onUpdated !== undefined) {
         const listener = iterator.onUpdated((event) => {
             state.pending += 1;
-            if (event === null) {
+            if (isProgressEvent(event)) {
+                if (event.stage !== ProgressReportStage.discoveryFinished) {
+                    didUpdate.fire(event);
+                    return;
+                }
                 state.done = true;
                 listener.dispose();
             } else if (event.update === undefined) {
@@ -59,6 +72,8 @@ async function* iterEnvsIterator(
             state.pending -= 1;
             checkIfFinishedAndNotify(state, didUpdate);
         });
+    } else {
+        didUpdate.fire({ stage: ProgressReportStage.discoveryStarted });
     }
 
     let result = await iterator.next();
@@ -84,7 +99,7 @@ async function resolveDifferencesInBackground(
     oldIndex: number,
     newEnv: BasicEnvInfo,
     state: { done: boolean; pending: number },
-    didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | null>,
+    didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>,
     seen: BasicEnvInfo[],
 ) {
     state.pending += 1;
@@ -107,10 +122,10 @@ async function resolveDifferencesInBackground(
  */
 function checkIfFinishedAndNotify(
     state: { done: boolean; pending: number },
-    didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | null>,
+    didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>,
 ) {
     if (state.done && state.pending === 0) {
-        didUpdate.fire(null);
+        didUpdate.fire({ stage: ProgressReportStage.discoveryFinished });
         didUpdate.dispose();
     }
 }

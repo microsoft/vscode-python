@@ -4,7 +4,15 @@
 import { chain } from '../../common/utils/async';
 import { Disposables } from '../../common/utils/resourceLifecycle';
 import { PythonEnvInfo } from './info';
-import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from './locator';
+import {
+    ILocator,
+    IPythonEnvsIterator,
+    isProgressEvent,
+    ProgressNotificationEvent,
+    ProgressReportStage,
+    PythonEnvUpdatedEvent,
+    PythonLocatorQuery,
+} from './locator';
 import { PythonEnvsWatchers } from './watchers';
 
 /**
@@ -19,17 +27,20 @@ export function combineIterators<I>(iterators: IPythonEnvsIterator<I>[]): IPytho
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    result.onUpdated = (handleEvent: (e: PythonEnvUpdatedEvent<I> | null) => any) => {
+    result.onUpdated = (handleEvent: (e: PythonEnvUpdatedEvent<I> | ProgressNotificationEvent) => any) => {
         const disposables = new Disposables();
         let numActive = events.length;
         events.forEach((event) => {
-            const disposable = event!((e: PythonEnvUpdatedEvent<I> | null) => {
+            const disposable = event!((e: PythonEnvUpdatedEvent<I> | ProgressNotificationEvent) => {
                 // NOSONAR
-                if (e === null) {
+                if (isProgressEvent(e)) {
+                    if (e.stage !== ProgressReportStage.discoveryFinished) {
+                        return;
+                    }
                     numActive -= 1;
                     if (numActive === 0) {
                         // All the sub-events are done so we're done.
-                        handleEvent(null);
+                        handleEvent({ stage: ProgressReportStage.discoveryFinished });
                     }
                 } else {
                     handleEvent(e);

@@ -64,7 +64,23 @@ export interface IPythonEnvsIterator<I = PythonEnvInfo> extends IAsyncIterableIt
      * If this property is not provided then it means the iterator does
      * not support updates.
      */
-    onUpdated?: Event<PythonEnvUpdatedEvent<I> | null>;
+    onUpdated?: Event<PythonEnvUpdatedEvent<I> | ProgressNotificationEvent>;
+}
+
+export enum ProgressReportStage {
+    discoveryStarted = 'discoveryStarted',
+    allPathsDiscovered = 'allPathsDiscovered',
+    discoveryFinished = 'discoveryFinished',
+}
+
+export type ProgressNotificationEvent = {
+    stage: ProgressReportStage;
+};
+
+export function isProgressEvent<I = PythonEnvInfo>(
+    event: PythonEnvUpdatedEvent<I> | ProgressNotificationEvent,
+): event is ProgressNotificationEvent {
+    return 'stage' in event;
 }
 
 /**
@@ -171,6 +187,10 @@ interface IResolver {
 export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ILocator<I> {}
 
 export interface IDiscoveryAPI {
+    /**
+     * Fires when the known list of environments starts refreshing, i.e when discovery starts or restarts.
+     */
+    readonly onProgress: Event<ProgressNotificationEvent>;
     /**
      * Fires when the known list of environments starts refreshing, i.e when discovery starts or restarts.
      */

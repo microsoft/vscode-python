@@ -9,7 +9,12 @@ import { PythonEnvsReducer } from '../../../../../client/pythonEnvironments/base
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import { assertBasicEnvsEqual } from '../envTestUtils';
 import { createBasicEnv, getEnvs, getEnvsWithUpdates, SimpleLocator } from '../../common';
-import { PythonEnvUpdatedEvent, BasicEnvInfo } from '../../../../../client/pythonEnvironments/base/locator';
+import {
+    PythonEnvUpdatedEvent,
+    BasicEnvInfo,
+    ProgressNotificationEvent,
+    ProgressReportStage,
+} from '../../../../../client/pythonEnvironments/base/locator';
 
 suite('Python envs locator - Environments Reducer', () => {
     suite('iterEnvs()', () => {
@@ -63,7 +68,7 @@ suite('Python envs locator - Environments Reducer', () => {
             const env = createBasicEnv(PythonEnvKind.Poetry, path.join('path', 'to', 'exec1'));
             const updatedEnv = createBasicEnv(PythonEnvKind.Venv, path.join('path', 'to', 'exec1'));
             const envsReturnedByParentLocator = [env];
-            const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | null>();
+            const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>();
             const parentLocator = new SimpleLocator<BasicEnvInfo>(envsReturnedByParentLocator, {
                 onUpdated: didUpdate.event,
             });
@@ -74,7 +79,7 @@ suite('Python envs locator - Environments Reducer', () => {
 
             const iteratorUpdateCallback = () => {
                 didUpdate.fire({ index: 0, old: env, update: updatedEnv });
-                didUpdate.fire(null); // It is essential for the incoming iterator to fire "null" event signifying it's done
+                didUpdate.fire({ stage: ProgressReportStage.discoveryFinished }); // It is essential for the incoming iterator to fire "null" event signifying it's done
             };
             const envs = await getEnvsWithUpdates(iterator, iteratorUpdateCallback);
 

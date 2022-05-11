@@ -17,7 +17,12 @@ import {
     UNKNOWN_PYTHON_VERSION,
 } from '../../../../../client/pythonEnvironments/base/info';
 import { getEmptyVersion, parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
-import { BasicEnvInfo, PythonEnvUpdatedEvent } from '../../../../../client/pythonEnvironments/base/locator';
+import {
+    BasicEnvInfo,
+    ProgressNotificationEvent,
+    ProgressReportStage,
+    PythonEnvUpdatedEvent,
+} from '../../../../../client/pythonEnvironments/base/locator';
 import { PythonEnvsResolver } from '../../../../../client/pythonEnvironments/base/locators/composite/envsResolver';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
@@ -201,7 +206,7 @@ suite('Python envs locator - Environments Resolver', () => {
                 path.join(testVirtualHomeDir, '.venvs', 'win1'),
             );
             const envsReturnedByParentLocator = [env];
-            const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | null>();
+            const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>();
             const parentLocator = new SimpleLocator<BasicEnvInfo>(envsReturnedByParentLocator, {
                 onUpdated: didUpdate.event,
             });
@@ -211,7 +216,7 @@ suite('Python envs locator - Environments Resolver', () => {
             const iterator = resolver.iterEnvs();
             const iteratorUpdateCallback = () => {
                 didUpdate.fire({ index: 0, old: env, update: updatedEnv });
-                didUpdate.fire(null); // It is essential for the incoming iterator to fire "null" event signifying it's done
+                didUpdate.fire({ stage: ProgressReportStage.discoveryFinished }); // It is essential for the incoming iterator to fire event signifying it's done
             };
             const envs = await getEnvsWithUpdates(iterator, iteratorUpdateCallback);
 

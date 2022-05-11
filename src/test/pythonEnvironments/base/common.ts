@@ -19,7 +19,10 @@ import { getEmptyVersion, parseVersion } from '../../../client/pythonEnvironment
 import {
     BasicEnvInfo,
     IPythonEnvsIterator,
+    isProgressEvent,
     Locator,
+    ProgressNotificationEvent,
+    ProgressReportStage,
     PythonEnvUpdatedEvent,
     PythonLocatorQuery,
 } from '../../../client/pythonEnvironments/base/locator';
@@ -100,7 +103,7 @@ export class SimpleLocator<I = PythonEnvInfo> extends Locator<I> {
             resolve?: null | ((env: PythonEnvInfo) => Promise<PythonEnvInfo | undefined>);
             before?: Promise<void>;
             after?(): Promise<void>;
-            onUpdated?: Event<PythonEnvUpdatedEvent<I> | null>;
+            onUpdated?: Event<PythonEnvUpdatedEvent<I> | ProgressNotificationEvent>;
             beforeEach?(e: I): Promise<void>;
             afterEach?(e: I): Promise<void>;
             onQuery?(query: PythonLocatorQuery | undefined, envs: I[]): Promise<I[]>;
@@ -188,8 +191,11 @@ export async function getEnvsWithUpdates<I = PythonEnvInfo>(
     if (iterator.onUpdated === undefined) {
         updatesDone.resolve();
     } else {
-        const listener = iterator.onUpdated((event: PythonEnvUpdatedEvent<I> | null) => {
-            if (event === null) {
+        const listener = iterator.onUpdated((event) => {
+            if (isProgressEvent(event)) {
+                if (event.stage !== ProgressReportStage.discoveryFinished) {
+                    return;
+                }
                 updatesDone.resolve();
                 listener.dispose();
             } else {
