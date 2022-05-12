@@ -113,7 +113,7 @@ def discover_tests(
     cwd = os.path.abspath(start_dir)
     payload: PayloadDict = {"cwd": cwd, "status": "success", "uuid": uuid}
     tests = None
-    errors = []
+    errors: List[str] = []
 
     try:
         loader = unittest.TestLoader()
