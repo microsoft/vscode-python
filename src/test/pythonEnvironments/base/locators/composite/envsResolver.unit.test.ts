@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import * as sinon from 'sinon';
@@ -19,6 +19,7 @@ import {
 import { getEmptyVersion, parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
 import {
     BasicEnvInfo,
+    isProgressEvent,
     ProgressNotificationEvent,
     ProgressReportStage,
     PythonEnvUpdatedEvent,
@@ -35,6 +36,7 @@ import { assertEnvEqual, assertEnvsEqual } from '../envTestUtils';
 import { createBasicEnv, getEnvs, getEnvsWithUpdates, SimpleLocator } from '../../common';
 import { getOSType, OSType } from '../../../../common';
 import { CondaInfo } from '../../../../../client/pythonEnvironments/common/environmentManagers/conda';
+import { createDeferred } from '../../../../../client/common/utils/async';
 
 suite('Python envs locator - Environments Resolver', () => {
     let envInfoService: IEnvironmentInfoService;
@@ -215,6 +217,7 @@ suite('Python envs locator - Environments Resolver', () => {
             // Act
             const iterator = resolver.iterEnvs();
             const iteratorUpdateCallback = () => {
+                didUpdate.fire({ stage: ProgressReportStage.discoveryStarted });
                 didUpdate.fire({ index: 0, old: env, update: updatedEnv });
                 didUpdate.fire({ stage: ProgressReportStage.discoveryFinished }); // It is essential for the incoming iterator to fire event signifying it's done
             };
@@ -224,6 +227,72 @@ suite('Python envs locator - Environments Resolver', () => {
             assertEnvsEqual(envs, [
                 createExpectedEnvInfo(resolvedUpdatedEnvReturnedByBasicResolver, "Python 3.8.3 ('win1': poetry)"),
             ]);
+            didUpdate.dispose();
+        });
+
+        test('Ensure progress updates are emitted correctly', async () => {
+            // Arrange
+            const shellExecDeferred = createDeferred<void>();
+            stubShellExec.reset();
+            stubShellExec.returns(
+                shellExecDeferred.promise.then(
+                    () =>
+                        new Promise<ExecutionResult<string>>((resolve) => {
+                            resolve({
+                                stdout:
+                                    '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "sysVersion": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
+                            });
+                        }),
+                ),
+            );
+            const env = createBasicEnv(
+                PythonEnvKind.Venv,
+                path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
+            );
+            const updatedEnv = createBasicEnv(
+                PythonEnvKind.Poetry,
+                path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
+            );
+            const envsReturnedByParentLocator = [env];
+            const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>();
+            const parentLocator = new SimpleLocator<BasicEnvInfo>(envsReturnedByParentLocator, {
+                onUpdated: didUpdate.event,
+            });
+            const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
+
+            const iterator = resolver.iterEnvs();
+            let stage: ProgressReportStage | undefined;
+            let waitForProgressEvent = createDeferred<void>();
+            iterator.onUpdated!(async (event) => {
+                if (isProgressEvent(event)) {
+                    stage = event.stage;
+                    waitForProgressEvent.resolve();
+                }
+            });
+            // Act
+            let result = await iterator.next();
+            while (!result.done) {
+                result = await iterator.next();
+            }
+            didUpdate.fire({ stage: ProgressReportStage.discoveryStarted });
+            await waitForProgressEvent.promise;
+            // Assert
+            expect(stage).to.equal(ProgressReportStage.discoveryStarted);
+
+            // Act
+            waitForProgressEvent = createDeferred<void>();
+            didUpdate.fire({ index: 0, old: env, update: updatedEnv });
+            didUpdate.fire({ stage: ProgressReportStage.discoveryFinished });
+            await waitForProgressEvent.promise;
+            // Assert
+            expect(stage).to.equal(ProgressReportStage.allPathsDiscovered);
+
+            // Act
+            waitForProgressEvent = createDeferred<void>();
+            shellExecDeferred.resolve();
+            await waitForProgressEvent.promise;
+            // Assert
+            expect(stage).to.equal(ProgressReportStage.discoveryFinished);
             didUpdate.dispose();
         });
     });
