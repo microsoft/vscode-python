@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 import * as path from 'path';
 import { EventEmitter } from 'vscode';
 import { PythonEnvKind, PythonEnvSource } from '../../../../../client/pythonEnvironments/base/info';
@@ -14,7 +14,9 @@ import {
     BasicEnvInfo,
     ProgressNotificationEvent,
     ProgressReportStage,
+    isProgressEvent,
 } from '../../../../../client/pythonEnvironments/base/locator';
+import { createDeferred } from '../../../../../client/common/utils/async';
 
 suite('Python envs locator - Environments Reducer', () => {
     suite('iterEnvs()', () => {
@@ -86,6 +88,43 @@ suite('Python envs locator - Environments Reducer', () => {
             // Assert
             assertBasicEnvsEqual(envs, [updatedEnv]);
             didUpdate.dispose();
+        });
+
+        test('Ensure progress updates are emitted correctly', async () => {
+            // Arrange
+            const env1 = createBasicEnv(PythonEnvKind.Venv, path.join('path', 'to', 'exec1'));
+            const env2 = createBasicEnv(PythonEnvKind.System, path.join('path', 'to', 'exec2'), [
+                PythonEnvSource.PathEnvVar,
+            ]);
+            const envsReturnedByParentLocator = [env1, env2];
+            const parentLocator = new SimpleLocator<BasicEnvInfo>(envsReturnedByParentLocator);
+            const reducer = new PythonEnvsReducer(parentLocator);
+
+            // Act
+            const iterator = reducer.iterEnvs();
+            let stage: ProgressReportStage | undefined;
+            let waitForProgressEvent = createDeferred<void>();
+            iterator.onUpdated!(async (event) => {
+                if (isProgressEvent(event)) {
+                    stage = event.stage;
+                    waitForProgressEvent.resolve();
+                }
+            });
+            // Act
+            let result = await iterator.next();
+            await waitForProgressEvent.promise;
+            // Assert
+            expect(stage).to.equal(ProgressReportStage.discoveryStarted);
+
+            // Act
+            waitForProgressEvent = createDeferred<void>();
+            while (!result.done) {
+                // Once all envs are iterated, discovery should be finished.
+                result = await iterator.next();
+            }
+            await waitForProgressEvent.promise;
+            // Assert
+            expect(stage).to.equal(ProgressReportStage.discoveryFinished);
         });
     });
 
