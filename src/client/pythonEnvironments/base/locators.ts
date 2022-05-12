@@ -34,13 +34,14 @@ export function combineIterators<I>(iterators: IPythonEnvsIterator<I>[]): IPytho
             const disposable = event!((e: PythonEnvUpdatedEvent<I> | ProgressNotificationEvent) => {
                 // NOSONAR
                 if (isProgressEvent(e)) {
-                    if (e.stage !== ProgressReportStage.discoveryFinished) {
-                        return;
-                    }
-                    numActive -= 1;
-                    if (numActive === 0) {
-                        // All the sub-events are done so we're done.
-                        handleEvent({ stage: ProgressReportStage.discoveryFinished });
+                    if (e.stage === ProgressReportStage.discoveryFinished) {
+                        numActive -= 1;
+                        if (numActive === 0) {
+                            // All the sub-events are done so we're done.
+                            handleEvent({ stage: ProgressReportStage.discoveryFinished });
+                        }
+                    } else {
+                        handleEvent({ stage: e.stage });
                     }
                 } else {
                     handleEvent(e);

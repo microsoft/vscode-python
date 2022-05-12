@@ -203,11 +203,10 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     private createProgressStates(query: PythonLocatorQuery | undefined) {
         this.refreshDeferreds.set(query, createDeferred<void>());
         Object.values(ProgressReportStage).forEach((stage) => {
-            const deferred = createDeferred<void>();
-            this.refreshStageDeferreds.set(stage, deferred);
+            this.refreshStageDeferreds.set(stage, createDeferred<void>());
         });
         if (ProgressReportStage.allPathsDiscovered && query) {
-            // This stage is only applicable when no scope is provided.
+            // Only mark as all paths discovered when querying for all envs.
             this.refreshStageDeferreds.delete(ProgressReportStage.allPathsDiscovered);
         }
     }
