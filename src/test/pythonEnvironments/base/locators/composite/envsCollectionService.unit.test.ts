@@ -438,6 +438,18 @@ suite('Python envs locator - Environments Collection', async () => {
             undefined,
             'Should be undefined if no refresh is currently going on',
         );
+
+        // Test stage when query is provided.
+        collectionService.onProgress((e) => {
+            if (e.stage === ProgressReportStage.allPathsDiscovered) {
+                assert(false, 'All paths discovered event should not be fired if a query is provided');
+            }
+        });
+        collectionService
+            .triggerRefresh({ searchLocations: { roots: [], doNotIncludeNonRooted: true } })
+            .ignoreErrors();
+        refreshPromise = collectionService.getRefreshPromise({ stage: ProgressReportStage.allPathsDiscovered });
+        expect(refreshPromise).to.equal(undefined, 'All paths discovered stage not applicable if a query is provided');
     });
 
     test('refreshPromise() correctly indicates the status of the refresh', async () => {
