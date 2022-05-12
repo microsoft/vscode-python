@@ -12,6 +12,7 @@ import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { Interpreters } from '../../../client/common/utils/localize';
 import { IComponentAdapter } from '../../../client/interpreter/contracts';
 import { InterpreterLocatorProgressStatubarHandler } from '../../../client/interpreter/display/progressDisplay';
+import { ProgressNotificationEvent, ProgressReportStage } from '../../../client/pythonEnvironments/base/locator';
 import { noop } from '../../core';
 
 type ProgressTask<R> = (
@@ -20,18 +21,18 @@ type ProgressTask<R> = (
 ) => Thenable<R>;
 
 suite('Interpreters - Display Progress', () => {
-    let refreshingCallback: (e: void) => unknown | undefined;
+    let refreshingCallback: (e: ProgressNotificationEvent) => unknown | undefined;
     let refreshDeferred: Deferred<void>;
     let componentAdapter: IComponentAdapter;
     setup(() => {
         refreshDeferred = createDeferred<void>();
         componentAdapter = {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            onRefreshStart(listener: (e: void) => any): Disposable {
+            onProgress(listener: (e: ProgressNotificationEvent) => any): Disposable {
                 refreshingCallback = listener;
                 return { dispose: noop };
             },
-            refreshPromise: refreshDeferred.promise,
+            getRefreshPromise: () => refreshDeferred.promise,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
     });
@@ -44,7 +45,7 @@ suite('Interpreters - Display Progress', () => {
         when(shell.withProgress(anything(), anything())).thenResolve();
 
         await statusBar.activate();
-        refreshingCallback(undefined);
+        refreshingCallback({ stage: ProgressReportStage.discoveryStarted });
 
         const options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
         expect(options.title).to.be.equal(`[${Interpreters.discovering}](command:${Commands.Set_Interpreter})`);
@@ -56,12 +57,12 @@ suite('Interpreters - Display Progress', () => {
         when(shell.withProgress(anything(), anything())).thenResolve();
 
         await statusBar.activate();
-        refreshingCallback(undefined);
+        refreshingCallback({ stage: ProgressReportStage.discoveryStarted });
 
         let options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
         expect(options.title).to.be.equal(`[${Interpreters.discovering}](command:${Commands.Set_Interpreter})`);
 
-        refreshingCallback(undefined);
+        refreshingCallback({ stage: ProgressReportStage.discoveryStarted });
 
         options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
         expect(options.title).to.be.equal(`[${Interpreters.refreshing}](command:${Commands.Set_Interpreter})`);
@@ -73,7 +74,7 @@ suite('Interpreters - Display Progress', () => {
         when(shell.withProgress(anything(), anything())).thenResolve();
 
         await statusBar.activate();
-        refreshingCallback(undefined);
+        refreshingCallback({ stage: ProgressReportStage.discoveryStarted });
 
         const options = capture(shell.withProgress as never).last()[0] as ProgressOptions;
         const callback = capture(shell.withProgress as never).last()[1] as ProgressTask<void>;

@@ -9,7 +9,11 @@ import { IInterpreterPathService } from '../client/common/types';
 import { IInterpreterService } from '../client/interpreter/contracts';
 import { IServiceContainer } from '../client/ioc/types';
 import { buildProposedApi } from '../client/proposedApi';
-import { IDiscoveryAPI, ProgressNotificationEvent } from '../client/pythonEnvironments/base/locator';
+import {
+    IDiscoveryAPI,
+    ProgressNotificationEvent,
+    ProgressReportStage,
+} from '../client/pythonEnvironments/base/locator';
 import { PythonEnvironment } from '../client/pythonEnvironments/info';
 import { PythonEnvKind, PythonEnvSource } from '../client/pythonEnvironments/base/info';
 import { Architecture } from '../client/common/utils/platform';
@@ -389,8 +393,10 @@ suite('Proposed Extension API', () => {
 
     test('getRefreshPromise: common scenario', () => {
         const expected = Promise.resolve();
-        discoverAPI.setup((d) => d.getRefreshPromise()).returns(() => expected);
-        const actual = proposed.environment.getRefreshPromise();
+        discoverAPI
+            .setup((d) => d.getRefreshPromise(typemoq.It.isValue({ stage: ProgressReportStage.allPathsDiscovered })))
+            .returns(() => expected);
+        const actual = proposed.environment.getRefreshPromise({ stage: ProgressReportStage.allPathsDiscovered });
 
         // We are comparing instances here, they should be the same instance.
         // So '==' is ok here.
