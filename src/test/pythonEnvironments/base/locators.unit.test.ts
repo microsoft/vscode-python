@@ -82,9 +82,9 @@ suite('Python envs locators - Locators', () => {
             const env5 = createNamedEnv('hello world', '3.8', PythonEnvKind.System);
             const expected = [env1, env2, env3, env4, env5];
             const sub1 = new SimpleLocator([env1]);
-            const sub2 = new SimpleLocator([], { before: sub1.done });
-            const sub3 = new SimpleLocator([env2, env3, env4], { before: sub2.done });
-            const sub4 = new SimpleLocator([env5], { before: sub3.done });
+            const sub2 = new SimpleLocator([], { before: () => sub1.done });
+            const sub3 = new SimpleLocator([env2, env3, env4], { before: () => sub2.done });
+            const sub4 = new SimpleLocator([env5], { before: () => sub3.done });
             const locators = new Locators([sub1, sub2, sub3, sub4]);
 
             const iterator = locators.iterEnvs();
@@ -123,10 +123,10 @@ suite('Python envs locators - Locators', () => {
             const env7 = createNamedEnv('eggs', '3.9.1a0', PythonEnvKind.Custom);
             const expected = [env5, env1, env2, env3, env4, env6, env7];
             const sub4 = new SimpleLocator([env5]);
-            const sub2 = new SimpleLocator([env1], { before: sub4.done });
+            const sub2 = new SimpleLocator([env1], { before: () => sub4.done });
             const sub1 = new SimpleLocator([]);
-            const sub3 = new SimpleLocator([env2, env3, env4], { before: sub2.done });
-            const sub5 = new SimpleLocator([env6, env7], { before: sub3.done });
+            const sub3 = new SimpleLocator([env2, env3, env4], { before: () => sub2.done });
+            const sub5 = new SimpleLocator([env6, env7], { before: () => sub3.done });
             const locators = new Locators([sub1, sub2, sub3, sub4, sub5]);
 
             const iterator = locators.iterEnvs();

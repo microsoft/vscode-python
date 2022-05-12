@@ -368,39 +368,87 @@ suite('Python envs locator - Environments Collection', async () => {
         sinon.assert.callCount(reportInterpretersChangedStub, eventData.length);
     });
 
+    test('Ensure progress stage updates are emitted correctly and refresh promises correct track promise for each stage', async () => {
+        // Arrange
+        const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
+        const locatedEnvs = getLocatorEnvs();
+        const cachedEnvs = getCachedEnvs();
+        const waitUntilEventVerified = createDeferred<void>();
+        const waitForAllPathsDiscoveredEvent = createDeferred<void>();
+        const parentLocator = new SimpleLocator(locatedEnvs, {
+            before: async () => {
+                onUpdated.fire({ stage: ProgressReportStage.discoveryStarted });
+            },
+            onUpdated: onUpdated.event,
+            after: async () => {
+                onUpdated.fire({ stage: ProgressReportStage.allPathsDiscovered });
+                waitForAllPathsDiscoveredEvent.resolve();
+                await waitUntilEventVerified.promise;
+                locatedEnvs.forEach((env, index) => {
+                    const update = cloneDeep(env);
+                    update.name = updatedName;
+                    onUpdated.fire({ index, update });
+                });
+                onUpdated.fire({ index: locatedEnvs.length - 1, update: undefined });
+                // It turns out the last env is invalid, ensure it does not appear in the final result.
+                onUpdated.fire({ stage: ProgressReportStage.discoveryFinished });
+            },
+        });
+        const cache = await createCollectionCache({
+            load: async () => cachedEnvs,
+            store: async (e) => {
+                storage = e;
+            },
+        });
+        collectionService = new EnvsCollectionService(cache, parentLocator);
+        let stage: ProgressReportStage | undefined;
+        collectionService.onProgress((e) => {
+            stage = e.stage;
+        });
+
+        // Act
+        const discoveryPromise = collectionService.triggerRefresh();
+
+        // Verify stages and refresh promises
+        expect(stage).to.equal(ProgressReportStage.discoveryStarted, 'Discovery should already be started');
+        let refreshPromise = collectionService.getRefreshPromise({
+            stage: ProgressReportStage.discoveryStarted,
+        });
+        expect(refreshPromise).to.equal(undefined);
+        refreshPromise = collectionService.getRefreshPromise({ stage: ProgressReportStage.allPathsDiscovered });
+        expect(refreshPromise).to.not.equal(undefined);
+        const allPathsDiscoveredPromise = createDeferredFromPromise(refreshPromise!);
+        refreshPromise = collectionService.getRefreshPromise({ stage: ProgressReportStage.discoveryFinished });
+        expect(refreshPromise).to.not.equal(undefined);
+        const discoveryFinishedPromise = createDeferredFromPromise(refreshPromise!);
+
+        expect(allPathsDiscoveredPromise.resolved).to.equal(false);
+        await waitForAllPathsDiscoveredEvent.promise; // Wait for all paths to be discovered.
+        expect(stage).to.equal(ProgressReportStage.allPathsDiscovered);
+        expect(allPathsDiscoveredPromise.resolved).to.equal(true);
+        waitUntilEventVerified.resolve();
+
+        await discoveryPromise;
+        expect(stage).to.equal(ProgressReportStage.discoveryFinished);
+        expect(discoveryFinishedPromise.resolved).to.equal(
+            true,
+            'Any previous refresh promises should be resolved when refresh is over',
+        );
+        expect(collectionService.getRefreshPromise()).to.equal(
+            undefined,
+            'Should be undefined if no refresh is currently going on',
+        );
+    });
+
     test('refreshPromise() correctly indicates the status of the refresh', async () => {
-        const deferred = createDeferred();
-        const parentLocator = new SimpleLocator(getLocatorEnvs(), { after: () => deferred.promise });
+        const parentLocator = new SimpleLocator(getLocatorEnvs());
         const cache = await createCollectionCache({
             load: async () => getCachedEnvs(),
             store: async () => noop(),
         });
         collectionService = new EnvsCollectionService(cache, parentLocator);
 
-        expect(collectionService.getRefreshPromise()).to.equal(
-            undefined,
-            'Should be undefined if no refresh is currently going on',
-        );
-
-        const promise = collectionService.triggerRefresh();
-
-        const onGoingRefreshPromise = collectionService.getRefreshPromise();
-        expect(onGoingRefreshPromise).to.not.equal(undefined, 'Refresh triggered should be tracked');
-        const onGoingRefreshPromiseDeferred = createDeferredFromPromise(onGoingRefreshPromise!);
-        await sleep(1);
-        expect(onGoingRefreshPromiseDeferred.resolved).to.equal(false);
-
-        deferred.resolve();
-        await promise;
-
-        expect(collectionService.getRefreshPromise()).to.equal(
-            undefined,
-            'Should be undefined if no refresh is currently going on',
-        );
-        expect(onGoingRefreshPromiseDeferred.resolved).to.equal(
-            true,
-            'Any previous refresh promises should be resolved when refresh is over',
-        );
+        await collectionService.triggerRefresh();
 
         const eventData = [
             {

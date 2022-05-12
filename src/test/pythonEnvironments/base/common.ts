@@ -101,7 +101,7 @@ export class SimpleLocator<I = PythonEnvInfo> extends Locator<I> {
         private envs: I[],
         public callbacks: {
             resolve?: null | ((env: PythonEnvInfo) => Promise<PythonEnvInfo | undefined>);
-            before?: Promise<void>;
+            before?(): Promise<void>;
             after?(): Promise<void>;
             onUpdated?: Event<PythonEnvUpdatedEvent<I> | ProgressNotificationEvent>;
             beforeEach?(e: I): Promise<void>;
@@ -129,7 +129,7 @@ export class SimpleLocator<I = PythonEnvInfo> extends Locator<I> {
                 envs = await callbacks.onQuery(query, envs);
             }
             if (callbacks.before !== undefined) {
-                await callbacks.before;
+                await callbacks.before();
             }
             if (callbacks.beforeEach !== undefined) {
                 // The results will likely come in a different order.
