@@ -153,7 +153,6 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                     state.pending -= 1;
                 }
                 if (state.done && state.pending === 0) {
-                    this.progress.fire({ stage: ProgressReportStage.discoveryFinished });
                     updatesDone.resolve();
                 }
             });
@@ -227,10 +226,6 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             this.refreshStageDeferreds.get(stage)?.resolve();
             this.refreshStageDeferreds.delete(stage);
         });
-        this.checkIfFinishedAndNotify();
-    }
-
-    private checkIfFinishedAndNotify() {
         const isRefreshComplete = Array.from(this.refreshDeferreds.values()).every((d) => d.completed);
         if (isRefreshComplete) {
             this.progress.fire({ stage: ProgressReportStage.discoveryFinished });
