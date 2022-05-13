@@ -56,9 +56,6 @@ export async function initialize(ext: ExtensionState): Promise<IDiscoveryAPI> {
  * Make use of the component (e.g. register with VS Code).
  */
 export async function activate(api: IDiscoveryAPI, ext: ExtensionState): Promise<ActivationResult> {
-    return {
-        fullyReady: Promise.resolve(),
-    };
     /**
      * Force an initial background refresh of the environments.
      *
