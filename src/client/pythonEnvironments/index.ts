@@ -12,10 +12,7 @@ import { PythonEnvsReducer } from './base/locators/composite/envsReducer';
 import { PythonEnvsResolver } from './base/locators/composite/envsResolver';
 import { WindowsPathEnvVarLocator } from './base/locators/lowLevel/windowsKnownPathsLocator';
 import { WorkspaceVirtualEnvironmentLocator } from './base/locators/lowLevel/workspaceVirtualEnvLocator';
-import {
-    initializeExternalDependencies as initializeLegacyExternalDependencies,
-    normCasePath,
-} from './common/externalDependencies';
+import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
 import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './base/locators/wrappers';
 import { CustomVirtualEnvironmentLocator } from './base/locators/lowLevel/customVirtualEnvLocator';
 import { CondaEnvironmentLocator } from './base/locators/lowLevel/condaLocator';
@@ -55,44 +52,20 @@ export async function initialize(ext: ExtensionState): Promise<IDiscoveryAPI> {
 /**
  * Make use of the component (e.g. register with VS Code).
  */
-export async function activate(api: IDiscoveryAPI, ext: ExtensionState): Promise<ActivationResult> {
+export async function activate(api: IDiscoveryAPI, _ext: ExtensionState): Promise<ActivationResult> {
     /**
      * Force an initial background refresh of the environments.
      *
-     * Note API is ready to be queried only after a refresh has been triggered, and extension activation is
-     * blocked on API being ready. So if discovery was never triggered for a scope, we need to block
-     * extension activation on the "refresh trigger".
+     * Note API is ready to be queried only after a refresh has been triggered, and extension activation is blocked on API. So,
+     * * If discovery was never triggered, we need to block extension activation on the refresh trigger.
+     * * If discovery was already triggered, it maybe the case that this is a new workspace for which it hasn't been triggered yet.
+     * So always trigger discovery as part of extension activation for now.
+     *
+     * TODO: https://github.com/microsoft/vscode-python/issues/17498
+     * Once `onInterpretersChanged` event is exposed via API, we can probably expect extensions to rely on that and
+     * discovery can be triggered after activation, especially in the second case.
      */
-    const folders = vscode.workspace.workspaceFolders;
-    const wasTriggered = getGlobalStorage<boolean>(ext.context, 'PYTHON_WAS_DISCOVERY_TRIGGERED', false);
-    if (!wasTriggered.get()) {
-        api.triggerRefresh().ignoreErrors();
-        wasTriggered.set(true).then(() => {
-            folders?.forEach(async (folder) => {
-                const wasTriggeredForFolder = getGlobalStorage<boolean>(
-                    ext.context,
-                    `PYTHON_WAS_DISCOVERY_TRIGGERED_${normCasePath(folder.uri.fsPath)}`,
-                    false,
-                );
-                await wasTriggeredForFolder.set(true);
-            });
-        });
-    } else {
-        // Figure out which workspace folders need to be activated.
-        folders?.forEach(async (folder) => {
-            const wasTriggeredForFolder = getGlobalStorage<boolean>(
-                ext.context,
-                `PYTHON_WAS_DISCOVERY_TRIGGERED_${normCasePath(folder.uri.fsPath)}`,
-                false,
-            );
-            if (!wasTriggeredForFolder.get()) {
-                api.triggerRefresh({
-                    searchLocations: { roots: [folder.uri], doNotIncludeNonRooted: true },
-                }).ignoreErrors();
-                await wasTriggeredForFolder.set(true);
-            }
-        });
-    }
+    api.triggerRefresh().ignoreErrors();
 
     return {
         fullyReady: Promise.resolve(),
