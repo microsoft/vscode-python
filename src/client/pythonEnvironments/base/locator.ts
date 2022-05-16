@@ -187,6 +187,9 @@ interface IResolver {
 export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ILocator<I> {}
 
 export interface GetRefreshEnvironmentsOptions {
+    /**
+     * Get refresh promise which resolves once the following stage has been reached.
+     */
     stage?: ProgressReportStage;
 }
 

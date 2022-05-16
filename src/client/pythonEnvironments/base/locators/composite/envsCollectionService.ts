@@ -31,7 +31,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     private scheduledRefreshesPerQuery = new Map<PythonLocatorQuery | undefined, Promise<void>>();
 
     /** Keeps track of promises which resolves when a stage has been reached */
-    private refreshesPerStage = new Map<ProgressReportStage, Deferred<void>>();
+    private progressPromises = new Map<ProgressReportStage, Deferred<void>>();
 
     private readonly progress = new EventEmitter<ProgressNotificationEvent>();
 
@@ -41,7 +41,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     public getRefreshPromise(options?: GetRefreshEnvironmentsOptions): Promise<void> | undefined {
         const stage = options?.stage ?? ProgressReportStage.discoveryFinished;
-        return this.refreshesPerStage.get(stage)?.promise;
+        return this.progressPromises.get(stage)?.promise;
     }
 
     constructor(private readonly cache: IEnvsCollectionCache, private readonly locator: IResolvingLocator) {
@@ -62,8 +62,9 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             this.fire(e);
         });
         this.onProgress((event) => {
-            this.refreshesPerStage.get(event.stage)?.resolve();
-            this.refreshesPerStage.delete(event.stage);
+            // Resolve progress promise indicating the stage has been reached.
+            this.progressPromises.get(event.stage)?.resolve();
+            this.progressPromises.delete(event.stage);
         });
     }
 
@@ -203,11 +204,11 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     private createProgressStates(query: PythonLocatorQuery | undefined) {
         this.refreshesPerQuery.set(query, createDeferred<void>());
         Object.values(ProgressReportStage).forEach((stage) => {
-            this.refreshesPerStage.set(stage, createDeferred<void>());
+            this.progressPromises.set(stage, createDeferred<void>());
         });
         if (ProgressReportStage.allPathsDiscovered && query) {
             // Only mark as all paths discovered when querying for all envs.
-            this.refreshesPerStage.delete(ProgressReportStage.allPathsDiscovered);
+            this.progressPromises.delete(ProgressReportStage.allPathsDiscovered);
         }
     }
 
@@ -215,18 +216,15 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         this.refreshesPerQuery.get(query)?.reject(ex);
         this.refreshesPerQuery.delete(query);
         Object.values(ProgressReportStage).forEach((stage) => {
-            this.refreshesPerStage.get(stage)?.reject(ex);
-            this.refreshesPerStage.delete(stage);
+            this.progressPromises.get(stage)?.reject(ex);
+            this.progressPromises.delete(stage);
         });
     }
 
     private resolveProgressStates(query: PythonLocatorQuery | undefined) {
         this.refreshesPerQuery.get(query)?.resolve();
         this.refreshesPerQuery.delete(query);
-        Object.values(ProgressReportStage).forEach((stage) => {
-            this.refreshesPerStage.get(stage)?.resolve();
-            this.refreshesPerStage.delete(stage);
-        });
+        // Refreshes per stage are resolved using progress events instead.
         const isRefreshComplete = Array.from(this.refreshesPerQuery.values()).every((d) => d.completed);
         if (isRefreshComplete) {
             this.progress.fire({ stage: ProgressReportStage.discoveryFinished });
