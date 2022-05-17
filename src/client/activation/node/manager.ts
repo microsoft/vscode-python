@@ -10,13 +10,8 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { Commands } from '../commands';
-import { LanguageClientMiddleware } from '../languageClientMiddleware';
-import {
-    ILanguageServerAnalysisOptions,
-    ILanguageServerManager,
-    ILanguageServerProxy,
-    LanguageServerType,
-} from '../types';
+import { NodeLanguageClientMiddleware } from './languageClientMiddleware';
+import { ILanguageServerAnalysisOptions, ILanguageServerManager, ILanguageServerProxy } from '../types';
 import { traceDecoratorError, traceDecoratorVerbose } from '../../logging';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 
@@ -25,7 +20,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
 
     private interpreter: PythonEnvironment | undefined;
 
-    private middleware: LanguageClientMiddleware | undefined;
+    private middleware: NodeLanguageClientMiddleware | undefined;
 
     private disposables: IDisposable[] = [];
 
@@ -122,7 +117,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     @traceDecoratorVerbose('Starting language server')
     protected async startLanguageServer(): Promise<void> {
         const options = await this.analysisOptions.getAnalysisOptions();
-        this.middleware = new LanguageClientMiddleware(this.serviceContainer, LanguageServerType.Node, this.lsVersion);
+        this.middleware = new NodeLanguageClientMiddleware(this.serviceContainer, this.lsVersion);
         options.middleware = this.middleware;
 
         // Make sure the middleware is connected if we restart and we we're already connected.

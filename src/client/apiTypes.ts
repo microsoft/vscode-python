@@ -205,7 +205,9 @@ export interface IProposedExtensionAPI {
          */
         refreshEnvironment(options?: RefreshEnvironmentsOptions): Promise<EnvPathType[] | undefined>;
         /**
-         * Fires with details of the current discovery progress, i.e when it starts, finishes or any other relevant stage.
+         * Tracks discovery progress for current list of known environments, i.e when it starts, finishes or any other relevant
+         * stage. Note the progress for a particular query is currently not tracked or reported, this only indicates progress of
+         * the entire collection.
          */
         readonly onRefreshProgress: Event<ProgressNotificationEvent>;
         /**

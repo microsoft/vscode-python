@@ -2,97 +2,81 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "# Query constants",
-    "editable": true
+    "value": "# Query constants"
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$pvsc=repo:microsoft/vscode-python\n$not_DS=-label:\"data science\"\n$open=is:open",
-    "editable": true
+    "value": "$pvsc=repo:microsoft/vscode-python\r\n$not_DS=-label:\"area-data science\"\r\n$open=is:open"
   },
   {
     "kind": 1,
     "language": "markdown",
-    "value": "# Priority issues 🚨",
-    "editable": true
+    "value": "# Priority issues 🚨"
   },
   {
     "kind": 1,
     "language": "markdown",
-    "value": "## P0",
-    "editable": true
+    "value": "## P0"
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$pvsc $not_DS $open label:\"P0\"",
-    "editable": true
+    "value": "$pvsc $not_DS $open label:\"P0\""
   },
   {
     "kind": 1,
     "language": "markdown",
-    "value": "## P1",
-    "editable": true
+    "value": "## P1"
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$pvsc $not_DS $open label:\"P1\"",
-    "editable": true
+    "value": "$pvsc $not_DS $open label:\"P1\""
   },
   {
     "kind": 1,
     "language": "markdown",
-    "value": "# Regressions 🔙",
-    "editable": true
+    "value": "# Regressions 🔙"
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$pvsc $not_DS $open label:\"reason-regression\"",
-    "editable": true
+    "value": "$pvsc $not_DS $open label:\"reason-regression\""
   },
   {
     "kind": 1,
     "language": "markdown",
-    "value": "# Partner asks",
-    "editable": true
+    "value": "# Partner asks"
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$pvsc $not_DS $open label:\"partner ask\"",
-    "editable": true
+    "value": "$pvsc $not_DS $open label:\"partner ask\""
   },
   {
     "kind": 1,
     "language": "markdown",
-    "value": "# Upvotes 👍",
-    "editable": true
+    "value": "# Upvotes 👍"
   },
   {
     "kind": 1,
     "language": "markdown",
-    "value": "## Enhancements 💪",
-    "editable": true
+    "value": "## Enhancements 💪"
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$pvsc $not_DS $open sort:reactions-+1-desc label:\"type-enhancement\" ",
-    "editable": true
+    "value": "$pvsc $not_DS $open sort:reactions-+1-desc label:\"feature-request\" "
   },
   {
     "kind": 1,
     "language": "markdown",
-    "value": "## Bugs 🐜",
-    "editable": true
+    "value": "## Bugs 🐜"
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$pvsc $not_DS $open sort:reactions-+1-desc label:\"type-bug\"",
-    "editable": true
+    "value": "$pvsc $not_DS $open sort:reactions-+1-desc label:\"bug\""
   }
 ]

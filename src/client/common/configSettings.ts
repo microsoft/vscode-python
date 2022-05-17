@@ -116,6 +116,8 @@ export class PythonSettings implements IPythonSettings {
 
     public globalModuleInstallation = false;
 
+    public pylanceLspNotebooksEnabled = false;
+
     public experiments!: IExperiments;
 
     public languageServer: LanguageServerType = LanguageServerType.Node;
@@ -294,6 +296,7 @@ export class PythonSettings implements IPythonSettings {
 
         this.disableInstallationChecks = pythonSettings.get<boolean>('disableInstallationCheck') === true;
         this.globalModuleInstallation = pythonSettings.get<boolean>('globalModuleInstallation') === true;
+        this.pylanceLspNotebooksEnabled = pythonSettings.get<boolean>('pylanceLspNotebooksEnabled') === true;
 
         const sortImportSettings = systemVariables.resolveAny(pythonSettings.get<ISortImportSettings>('sortImports'))!;
         if (this.sortImports) {

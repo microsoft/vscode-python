@@ -86,7 +86,9 @@ export class LanguageClientMiddlewareBase implements Middleware {
                     const settingDict: LSPObject & { pythonPath: string; _envPYTHONPATH: string } = settings[
                         i
                     ] as LSPObject & { pythonPath: string; _envPYTHONPATH: string };
-                    settingDict.pythonPath = configService.getSettings(uri).pythonPath;
+
+                    settingDict.pythonPath =
+                        (await this.getPythonPathOverride(uri)) ?? configService.getSettings(uri).pythonPath;
 
                     const env = await envService.getEnvironmentVariables(uri);
                     const envPYTHONPATH = env.PYTHONPATH;
@@ -99,6 +101,11 @@ export class LanguageClientMiddlewareBase implements Middleware {
             return settings;
         },
     };
+
+    // eslint-disable-next-line class-methods-use-this
+    protected async getPythonPathOverride(_uri: Uri | undefined): Promise<string | undefined> {
+        return undefined;
+    }
 
     private get connected(): Promise<boolean> {
         return this.connectedPromise.promise;

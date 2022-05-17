@@ -906,6 +906,15 @@
                     "scope": "machine-overridable",
                     "type": "string"
                 },
+                "python.pylanceLspNotebooksEnabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Determines if Pylance's experimental LSP notebooks support is used or not.",
+                    "scope": "machine",
+                    "tags": [
+                        "experimental"
+                    ]
+                },
                 "python.sortImports.args": {
                     "default": [],
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
@@ -1775,7 +1784,7 @@
         "webpack": "webpack"
     },
     "dependencies": {
-        "@vscode/jupyter-lsp-middleware": "^0.2.42",
+        "@vscode/jupyter-lsp-middleware": "^0.2.45",
         "arch": "^2.1.0",
         "diff-match-patch": "^1.0.0",
         "fs-extra": "^10.0.1",
@@ -1803,10 +1812,10 @@
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.4.5",
-        "vscode-jsonrpc": "8.0.0",
-        "vscode-languageclient": "8.0.0",
-        "vscode-languageserver": "8.0.0",
-        "vscode-languageserver-protocol": "3.17.0",
+        "vscode-jsonrpc": "8.0.1",
+        "vscode-languageclient": "8.0.1",
+        "vscode-languageserver": "8.0.1",
+        "vscode-languageserver-protocol": "3.17.1",
         "vscode-nls": "^5.0.1",
         "vscode-tas-client": "^0.1.22",
         "winreg": "^1.2.4",

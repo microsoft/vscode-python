@@ -14,7 +14,7 @@ import { IInterpreterPathService, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { LanguageClientMiddleware } from '../languageClientMiddleware';
+import { JediLanguageClientMiddleware } from './languageClientMiddleware';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 import { killPid } from '../../common/process/rawProcessApis';
@@ -57,7 +57,8 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         options: LanguageClientOptions,
     ): Promise<void> {
         this.lsVersion =
-            (options.middleware ? (<LanguageClientMiddleware>options.middleware).serverVersion : undefined) ?? '0.19.3';
+            (options.middleware ? (<JediLanguageClientMiddleware>options.middleware).serverVersion : undefined) ??
+            '0.19.3';
 
         this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
         this.registerHandlers();

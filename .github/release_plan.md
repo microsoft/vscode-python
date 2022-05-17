@@ -1,6 +1,6 @@
 All dates should align with VS Code's [iteration](https://github.com/microsoft/vscode/labels/iteration-plan) and [endgame](https://github.com/microsoft/vscode/labels/endgame-plan) plans.
 
-# Feature freeze ([Monday @ 17:00 America/Vancouver](XXX), XXX XX)
+# Feature freeze (Monday @ 17:00 America/Vancouver, XXX XX)
 
 -   [ ] Announce the feature freeze on both Teams and e-mail, leave enough time for teams to surface any last minute issues that need to get in before freeze. Make sure debugger and Language Server teams are looped in as well.
 

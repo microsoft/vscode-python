@@ -157,6 +157,8 @@ type PythonApiForJupyterExtension = {
         resource: Resource,
         interpreter?: PythonEnvironment,
     ): Promise<string[] | undefined>;
+
+    registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
 };
 
 type JupyterExtensionApi = {
@@ -181,6 +183,8 @@ type JupyterExtensionApi = {
 @injectable()
 export class JupyterExtensionIntegration {
     private jupyterExtension: Extension<JupyterExtensionApi> | undefined;
+
+    private jupyterPythonPathFunction: ((uri: Uri) => Promise<string | undefined>) | undefined;
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
@@ -275,6 +279,8 @@ export class JupyterExtensionIntegration {
             getCondaVersion: () => this.condaService.getCondaVersion(),
             getEnvironmentActivationShellCommands: (resource: Resource, interpreter?: PythonEnvironment) =>
                 this.envActivation.getEnvironmentActivationShellCommands(resource, interpreter),
+            registerJupyterPythonPathFunction: (func: (uri: Uri) => Promise<string | undefined>) =>
+                this.registerJupyterPythonPathFunction(func),
         });
         return undefined;
     }
@@ -319,5 +325,13 @@ export class JupyterExtensionIntegration {
             return this.jupyterExtension.exports;
         }
         return undefined;
+    }
+
+    private registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>) {
+        this.jupyterPythonPathFunction = func;
+    }
+
+    public getJupyterPythonPathFunction(): ((uri: Uri) => Promise<string | undefined>) | undefined {
+        return this.jupyterPythonPathFunction;
     }
 }

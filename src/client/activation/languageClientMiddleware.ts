@@ -14,11 +14,16 @@ import { createHidingMiddleware } from '@vscode/jupyter-lsp-middleware';
 export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
     public constructor(serviceContainer: IServiceContainer, serverType: LanguageServerType, serverVersion?: string) {
         super(serviceContainer, serverType, sendTelemetryEvent, serverVersion);
+    }
 
-        if (serverType === LanguageServerType.None) {
-            return;
-        }
-
+    /**
+     * Creates the HidingMiddleware if needed and sets up code to do so if needed after
+     * Jupyter is installed.
+     *
+     * This method should be called from the constructor of derived classes. It is separated
+     * from the constructor to allow derived classes to initialize before it is called.
+     */
+    protected setupHidingMiddleware(serviceContainer: IServiceContainer) {
         const jupyterDependencyManager = serviceContainer.get<IJupyterExtensionDependencyManager>(
             IJupyterExtensionDependencyManager,
         );
@@ -26,19 +31,28 @@ export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
         const extensions = serviceContainer.get<IExtensions>(IExtensions);
 
         // Enable notebook support if jupyter support is installed
-        if (jupyterDependencyManager && jupyterDependencyManager.isJupyterExtensionInstalled) {
+        if (this.shouldCreateHidingMiddleware(jupyterDependencyManager)) {
             this.notebookAddon = createHidingMiddleware();
         }
+
         disposables.push(
-            extensions?.onDidChange(() => {
-                if (jupyterDependencyManager) {
-                    if (this.notebookAddon && !jupyterDependencyManager.isJupyterExtensionInstalled) {
-                        this.notebookAddon = undefined;
-                    } else if (!this.notebookAddon && jupyterDependencyManager.isJupyterExtensionInstalled) {
-                        this.notebookAddon = createHidingMiddleware();
-                    }
-                }
+            extensions?.onDidChange(async () => {
+                await this.onExtensionChange(jupyterDependencyManager);
             }),
         );
+    }
+
+    protected shouldCreateHidingMiddleware(jupyterDependencyManager: IJupyterExtensionDependencyManager): boolean {
+        return jupyterDependencyManager && jupyterDependencyManager.isJupyterExtensionInstalled;
+    }
+
+    protected async onExtensionChange(jupyterDependencyManager: IJupyterExtensionDependencyManager): Promise<void> {
+        if (jupyterDependencyManager) {
+            if (this.notebookAddon && !this.shouldCreateHidingMiddleware(jupyterDependencyManager)) {
+                this.notebookAddon = undefined;
+            } else if (!this.notebookAddon && this.shouldCreateHidingMiddleware(jupyterDependencyManager)) {
+                this.notebookAddon = createHidingMiddleware();
+            }
+        }
     }
 }

@@ -6,10 +6,15 @@ import { IWorkspaceService } from '../../common/application/types';
 
 import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
 import { ILanguageServerOutputChannel } from '../types';
+import { LspNotebooksExperiment } from './lspNotebooksExperiment';
 
 export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsBase {
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
-    constructor(lsOutputChannel: ILanguageServerOutputChannel, workspace: IWorkspaceService) {
+    constructor(
+        lsOutputChannel: ILanguageServerOutputChannel,
+        workspace: IWorkspaceService,
+        private readonly lspNotebooksExperiment: LspNotebooksExperiment,
+    ) {
         super(lsOutputChannel, workspace);
     }
 
@@ -18,6 +23,7 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         return ({
             experimentationSupport: true,
             trustedWorkspaceSupport: true,
+            lspNotebooksSupport: this.lspNotebooksExperiment.isInNotebooksExperiment(),
         } as unknown) as LanguageClientOptions;
     }
 }

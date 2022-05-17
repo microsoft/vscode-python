@@ -34,6 +34,7 @@ import { JediLSExtensionManager } from './jediLSExtensionManager';
 import { NoneLSExtensionManager } from './noneLSExtensionManager';
 import { PylanceLSExtensionManager } from './pylanceLSExtensionManager';
 import { ILanguageServerExtensionManager, ILanguageServerWatcher } from './types';
+import { LspNotebooksExperiment } from '../activation/node/lspNotebooksExperiment';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
@@ -74,6 +75,7 @@ export class LanguageServerWatcher
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) readonly applicationShell: IApplicationShell,
+        @inject(LspNotebooksExperiment) private readonly lspNotebooksExperiment: LspNotebooksExperiment,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
     ) {
         this.workspaceInterpreters = new Map();
@@ -184,6 +186,14 @@ export class LanguageServerWatcher
         return languageServerExtensionManager;
     }
 
+    public async restartLanguageServers(): Promise<void> {
+        this.workspaceLanguageServers.forEach(async (_, resourceString) => {
+            const resource = Uri.parse(resourceString);
+            this.stopLanguageServer(resource);
+            await this.startLanguageServer(this.languageServerType, resource);
+        });
+    }
+
     // ILanguageServerCache
 
     public async get(resource?: Resource): Promise<ILanguageServer> {
@@ -239,6 +249,7 @@ export class LanguageServerWatcher
                     this.fileSystem,
                     this.extensions,
                     this.applicationShell,
+                    this.lspNotebooksExperiment,
                 );
                 break;
             case LanguageServerType.None:
