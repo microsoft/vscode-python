@@ -101,7 +101,7 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
         const jupyterVersion = extensions.getExtension(JUPYTER_EXTENSION_ID)?.packageJSON.version;
         return (
             jupyterVersion &&
-            (semver.gt(jupyterVersion, '2022.5.1001382326') || semver.eq(jupyterVersion, '2022.4.100'))
+            (semver.gt(jupyterVersion, '2022.5.1001391015') || semver.eq(jupyterVersion, '2022.4.100'))
         );
     }
 
