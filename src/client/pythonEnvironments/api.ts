@@ -2,10 +2,6 @@
 // Licensed under the MIT License.
 
 import { Event } from 'vscode';
-import { StopWatch } from '../common/utils/stopWatch';
-import { sendTelemetryEvent } from '../telemetry';
-import { EventName } from '../telemetry/constants';
-import { getEnvPath } from './base/info/env';
 import {
     GetRefreshEnvironmentsOptions,
     IDiscoveryAPI,
@@ -53,20 +49,8 @@ class PythonEnvironments implements IDiscoveryAPI {
         return this.locator.resolveEnv(env);
     }
 
-    public async triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions, trigger?: 'auto' | 'ui') {
-        const stopWatch = new StopWatch();
-        await this.locator.triggerRefresh(query, options);
-        if (!query) {
-            // Intent is to capture time taken for all of discovery to complete, so make sure
-            // all interpreters are queried for.
-            sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
-                interpreters: this.getEnvs().length,
-                environmentsWithoutPython: this.getEnvs().filter(
-                    (e) => getEnvPath(e.executable.filename, e.location).pathType === 'envFolderPath',
-                ).length,
-                trigger: trigger ?? 'auto',
-            });
-        }
+    public async triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions) {
+        return this.locator.triggerRefresh(query, options);
     }
 }
 

@@ -40,12 +40,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.pyenvs.hasInterpreters(filter);
     }
 
-    public triggerRefresh(
-        query?: PythonLocatorQuery,
-        options?: TriggerRefreshOptions,
-        trigger?: 'auto' | 'ui',
-    ): Promise<void> {
-        return this.pyenvs.triggerRefresh(query, options, trigger);
+    public triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions): Promise<void> {
+        return this.pyenvs.triggerRefresh(query, options);
     }
 
     public get refreshPromise(): Promise<void> | undefined {
@@ -144,7 +140,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         // For backwards compatibility with old Jupyter APIs, ensure a
         // fresh refresh is always triggered when using the API. As it is
         // no longer auto-triggered by the extension.
-        this.triggerRefresh(undefined, { onlyTriggerOnceForSession: true }).ignoreErrors();
+        this.triggerRefresh(undefined, { ifNotTriggerredAlready: true }).ignoreErrors();
         await this.refreshPromise;
         return this.getInterpreters(resource);
     }

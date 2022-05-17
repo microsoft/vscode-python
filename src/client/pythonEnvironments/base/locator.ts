@@ -199,9 +199,9 @@ export type TriggerRefreshOptions = {
      */
     clearCache?: boolean;
     /**
-     * Only trigger a refresh if it hasn't already been triggered for the session.
+     * Only trigger a refresh if it hasn't already been triggered for this session.
      */
-    onlyTriggerOnceForSession?: boolean;
+    ifNotTriggerredAlready?: boolean;
 };
 
 export interface IDiscoveryAPI {
@@ -221,7 +221,7 @@ export interface IDiscoveryAPI {
     /**
      * Triggers a new refresh for query if there isn't any already running.
      */
-    triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions, trigger?: 'auto' | 'ui'): Promise<void>;
+    triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions): Promise<void>;
     /**
      * Get current list of known environments.
      */

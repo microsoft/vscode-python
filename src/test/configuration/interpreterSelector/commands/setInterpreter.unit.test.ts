@@ -473,9 +473,9 @@ suite('Set Interpreter Command', () => {
             const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
             expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
 
-            when(interpreterService.triggerRefresh(anything(), anything(), 'ui')).thenResolve();
+            when(interpreterService.triggerRefresh()).thenResolve();
             await refreshButtonCallback!({} as QuickPick<QuickPickItem>); // Invoke callback, meaning that the refresh button is clicked.
-            verify(interpreterService.triggerRefresh(anything(), anything(), 'ui')).once();
+            verify(interpreterService.triggerRefresh()).once();
         });
 
         test('Events to update quickpick updates the quickpick accordingly', async () => {

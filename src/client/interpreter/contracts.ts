@@ -21,7 +21,7 @@ export type PythonEnvironmentsChangedEvent = {
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
     readonly onProgress: Event<ProgressNotificationEvent>;
-    triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions, trigger?: 'auto' | 'ui'): Promise<void>;
+    triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions): Promise<void>;
     getRefreshPromise(): Promise<void> | undefined;
     readonly onChanged: Event<PythonEnvironmentsChangedEvent>;
     // VirtualEnvPrompt
@@ -67,7 +67,7 @@ export interface ICondaService {
 
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
-    triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions, trigger?: 'auto' | 'ui'): Promise<void>;
+    triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions): Promise<void>;
     readonly refreshPromise: Promise<void> | undefined;
     readonly onDidChangeInterpreters: Event<PythonEnvironmentsChangedEvent>;
     onDidChangeInterpreterConfiguration: Event<Uri | undefined>;

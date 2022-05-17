@@ -1270,7 +1270,6 @@ export interface IEventNamePropertyMapping {
            "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" },
           "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "karrtikr"},
           "environmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: {
@@ -1282,11 +1281,6 @@ export interface IEventNamePropertyMapping {
          * The number of environments discovered not containing an interpreter
          */
         environmentsWithoutPython?: number;
-        /*
-         * auto           : Triggered automatically by the extension or via an API
-         * ui             : Triggered by clicking a button, particularly the refresh button on the interpreter quickpick
-         */
-        trigger: 'auto' | 'ui';
     };
     /**
      * Telemetry event sent when pipenv interpreter discovery is executed.

@@ -114,7 +114,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         // Discovery is no longer guranteed to be auto-triggered on extension load, so trigger it when
         // user interacts with the interpreter picker but only once per session. Users can rely on the
         // refresh button if they want to trigger it more than once.
-        this.interpreterService.triggerRefresh(undefined, { onlyTriggerOnceForSession: true }).ignoreErrors();
+        this.interpreterService.triggerRefresh(undefined, { ifNotTriggerredAlready: true }).ignoreErrors();
         state.path = undefined;
         const currentInterpreterPathDisplay = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
@@ -138,7 +138,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                     iconPath: getIcon(REFRESH_BUTTON_ICON),
                     tooltip: InterpreterQuickPickList.refreshInterpreterList,
                 },
-                callback: () => this.interpreterService.triggerRefresh(undefined, undefined, 'ui').ignoreErrors(),
+                callback: () => this.interpreterService.triggerRefresh().ignoreErrors(),
             },
             onChangeItem: {
                 event: this.interpreterService.onDidChangeInterpreters,

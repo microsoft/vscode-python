@@ -136,43 +136,6 @@ suite('Python envs locator - Environments Collection', async () => {
         );
     });
 
-    test('getEnvs() triggers a refresh in background if cache is empty and no refresh is going on', async () => {
-        const parentLocator = new SimpleLocator(getLocatorEnvs());
-        const cache = await createCollectionCache({
-            load: async () => [],
-            store: async (envs) => {
-                storage = envs;
-            },
-        });
-        collectionService = new EnvsCollectionService(cache, parentLocator);
-
-        let envs = collectionService.getEnvs();
-
-        assertEnvsEqual(envs, []);
-        expect(collectionService.getRefreshPromise()).to.not.equal(undefined);
-
-        await collectionService.getRefreshPromise();
-        envs = collectionService.getEnvs();
-
-        assertEnvsEqual(
-            envs,
-            getLocatorEnvs().map((e: PythonEnvCompleteInfo) => {
-                e.hasCompleteInfo = true;
-                return e;
-            }),
-        );
-
-        envs.forEach((e) => {
-            sinon.assert.calledWithExactly(reportInterpretersChangedStub, [
-                {
-                    path: e.executable.filename,
-                    type: 'add',
-                },
-            ]);
-        });
-        sinon.assert.callCount(reportInterpretersChangedStub, envs.length);
-    });
-
     test('triggerRefresh() refreshes the collection and storage with any new environments', async () => {
         const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
         const locatedEnvs = getLocatorEnvs();

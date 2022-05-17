@@ -103,12 +103,8 @@ class ComponentAdapter implements IComponentAdapter {
         });
     }
 
-    public triggerRefresh(
-        query?: PythonLocatorQuery,
-        options?: TriggerRefreshOptions,
-        trigger?: 'auto' | 'ui',
-    ): Promise<void> {
-        return this.api.triggerRefresh(query, options, trigger);
+    public triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions): Promise<void> {
+        return this.api.triggerRefresh(query, options);
     }
 
     public getRefreshPromise() {
