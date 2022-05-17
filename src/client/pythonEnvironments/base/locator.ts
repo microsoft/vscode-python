@@ -188,14 +188,16 @@ export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ILocato
 
 export interface GetRefreshEnvironmentsOptions {
     /**
-     * Get refresh promise which resolves once the following stage has been reached.
+     * Get refresh promise which resolves once the following stage has been reached for the list of known environments.
      */
     stage?: ProgressReportStage;
 }
 
 export interface IDiscoveryAPI {
     /**
-     * Fires with details of the current discovery progress, i.e when it starts, finishes or any other relevant stage.
+     * Tracks discovery progress for current list of known environments, i.e when it starts, finishes or any other relevant
+     * stage. Note the progress for a particular query is currently not tracked or reported, this only indicates progress of
+     * the entire collection.
      */
     readonly onProgress: Event<ProgressNotificationEvent>;
     /**
