@@ -333,7 +333,7 @@ suite('Proposed Extension API', () => {
 
     test('refreshInterpreters: common scenario', async () => {
         discoverAPI
-            .setup((d) => d.triggerRefresh(undefined))
+            .setup((d) => d.triggerRefresh(undefined, undefined))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
         discoverAPI
