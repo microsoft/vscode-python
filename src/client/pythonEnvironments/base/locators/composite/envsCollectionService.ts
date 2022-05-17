@@ -15,6 +15,7 @@ import {
     ProgressNotificationEvent,
     ProgressReportStage,
     PythonLocatorQuery,
+    TriggerRefreshQueryOptions,
 } from '../../locator';
 import { getQueryFilter } from '../../locatorUtils';
 import { PythonEnvCollectionChangedEvent, PythonEnvsWatcher } from '../../watcher';
@@ -32,6 +33,9 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     /** Keeps track of promises which resolves when a stage has been reached */
     private progressPromises = new Map<ProgressReportStage, Deferred<void>>();
+
+    /** Keeps track of ongoing refreshes for various queries. */
+    private hasRefreshBeingTriggeredForQuery = new Map<PythonLocatorQuery | undefined, boolean>();
 
     private readonly progress = new EventEmitter<ProgressNotificationEvent>();
 
@@ -97,7 +101,13 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return query ? cachedEnvs.filter(getQueryFilter(query)) : cachedEnvs;
     }
 
-    public triggerRefresh(query?: PythonLocatorQuery & { clearCache?: boolean }): Promise<void> {
+    public triggerRefresh(query?: TriggerRefreshQueryOptions): Promise<void> {
+        if (query?.onlyTriggerOnceForSession) {
+            if (this.hasRefreshBeingTriggeredForQuery.get(query)) {
+                return Promise.resolve();
+            }
+        }
+
         let refreshPromise = this.getRefreshPromiseForQuery(query);
         if (!refreshPromise) {
             refreshPromise = this.startRefresh(query);
@@ -105,7 +115,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return refreshPromise;
     }
 
-    private startRefresh(query: (PythonLocatorQuery & { clearCache?: boolean }) | undefined): Promise<void> {
+    private startRefresh(query: TriggerRefreshQueryOptions | undefined): Promise<void> {
         if (query?.clearCache) {
             this.cache.clearCache();
         }
@@ -203,6 +213,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     private createProgressStates(query: PythonLocatorQuery | undefined) {
         this.refreshesPerQuery.set(query, createDeferred<void>());
+        this.hasRefreshBeingTriggeredForQuery.set(query, true);
         Object.values(ProgressReportStage).forEach((stage) => {
             this.progressPromises.set(stage, createDeferred<void>());
         });
