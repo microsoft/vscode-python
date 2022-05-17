@@ -193,6 +193,17 @@ export interface GetRefreshEnvironmentsOptions {
     stage?: ProgressReportStage;
 }
 
+export type TriggerRefreshQueryOptions = PythonLocatorQuery & {
+    /**
+     * Trigger a fresh refresh.
+     */
+    clearCache?: boolean;
+    /**
+     * Only trigger a refresh if it hasn't already been triggered for the session.
+     */
+    onlyTriggerOnceForSession?: boolean;
+};
+
 export interface IDiscoveryAPI {
     /**
      * Fires with details of the current discovery progress, i.e when it starts, finishes or any other relevant stage.
@@ -210,7 +221,7 @@ export interface IDiscoveryAPI {
     /**
      * Triggers a new refresh for query if there isn't any already running.
      */
-    triggerRefresh(query?: PythonLocatorQuery & { clearCache?: boolean }, trigger?: 'auto' | 'ui'): Promise<void>;
+    triggerRefresh(query?: TriggerRefreshQueryOptions, trigger?: 'auto' | 'ui'): Promise<void>;
     /**
      * Get current list of known environments.
      */

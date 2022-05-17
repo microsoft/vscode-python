@@ -80,7 +80,7 @@ suite('Set Interpreter Command', () => {
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         interpreterService = mock<IInterpreterService>();
         when(interpreterService.refreshPromise).thenReturn(undefined);
-        when(interpreterService.triggerRefresh()).thenResolve();
+        when(interpreterService.triggerRefresh(anything())).thenResolve();
         workspace.setup((w) => w.rootPath).returns(() => 'rootPath');
 
         configurationService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);

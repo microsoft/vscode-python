@@ -20,7 +20,6 @@ import {
     IInterpreterStatusbarVisibilityFilter,
     PythonEnvironmentsChangedEvent,
 } from './contracts';
-import { PythonLocatorQuery } from '../pythonEnvironments/base/locator';
 import { traceError, traceLog } from '../logging';
 import { Commands, PYTHON_LANGUAGE } from '../common/constants';
 import { reportActiveInterpreterChanged } from '../proposedApi';
@@ -29,6 +28,7 @@ import { Interpreters } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { cache } from '../common/utils/decorators';
+import { TriggerRefreshQueryOptions } from '../pythonEnvironments/base/locator';
 
 type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
 
@@ -40,10 +40,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.pyenvs.hasInterpreters(filter);
     }
 
-    public triggerRefresh(
-        query?: PythonLocatorQuery & { clearCache?: boolean },
-        trigger?: 'auto' | 'ui',
-    ): Promise<void> {
+    public triggerRefresh(query?: TriggerRefreshQueryOptions, trigger?: 'auto' | 'ui'): Promise<void> {
         return this.pyenvs.triggerRefresh(query, trigger);
     }
 
@@ -140,13 +137,10 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public async getAllInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
-        if (!this.isDiscoveryTriggered) {
-            // For backwards compatibility with old Jupyter APIs, ensure a
-            // fresh refresh is always triggered when using the API. As it is
-            // no longer auto-triggered by the extension.
-            this.triggerRefresh().ignoreErrors();
-            this.isDiscoveryTriggered = true;
-        }
+        // For backwards compatibility with old Jupyter APIs, ensure a
+        // fresh refresh is always triggered when using the API. As it is
+        // no longer auto-triggered by the extension.
+        this.triggerRefresh({ onlyTriggerOnceForSession: true }).ignoreErrors();
         await this.refreshPromise;
         return this.getInterpreters(resource);
     }

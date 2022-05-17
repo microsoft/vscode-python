@@ -74,8 +74,6 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         alwaysShow: true,
     };
 
-    private isDiscoveryTriggered = false;
-
     constructor(
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IPathUtils) pathUtils: IPathUtils,
@@ -377,13 +375,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         if (!targetConfig) {
             return;
         }
-        if (!this.isDiscoveryTriggered) {
-            // Discovery is no longer guranteed to be auto-triggered on extension load, so trigger it when
-            // user interacts with the interpreter picker but only once per session. Users can rely on the
-            // refresh button if they want to trigger it more than once.
-            this.interpreterService.triggerRefresh().ignoreErrors();
-            this.isDiscoveryTriggered = true;
-        }
+        // Discovery is no longer guranteed to be auto-triggered on extension load, so trigger it when
+        // user interacts with the interpreter picker but only once per session. Users can rely on the
+        // refresh button if they want to trigger it more than once.
+        this.interpreterService.triggerRefresh({ onlyTriggerOnceForSession: true }).ignoreErrors();
         const { configTarget } = targetConfig[0];
         const wkspace = targetConfig[0].folderUri;
         const interpreterState: InterpreterStateArgs = { path: undefined, workspace: wkspace };
