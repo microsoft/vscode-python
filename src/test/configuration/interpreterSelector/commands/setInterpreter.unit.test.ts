@@ -80,6 +80,7 @@ suite('Set Interpreter Command', () => {
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         interpreterService = mock<IInterpreterService>();
         when(interpreterService.refreshPromise).thenReturn(undefined);
+        when(interpreterService.triggerRefresh()).thenResolve();
         workspace.setup((w) => w.rootPath).returns(() => 'rootPath');
 
         configurationService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
@@ -472,9 +473,9 @@ suite('Set Interpreter Command', () => {
             const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
             expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
 
-            when(interpreterService.triggerRefresh(anything(), anything())).thenResolve();
+            when(interpreterService.triggerRefresh(anything(), 'ui')).thenResolve();
             await refreshButtonCallback!({} as QuickPick<QuickPickItem>); // Invoke callback, meaning that the refresh button is clicked.
-            verify(interpreterService.triggerRefresh(anything(), anything())).once();
+            verify(interpreterService.triggerRefresh(anything(), 'ui')).once();
         });
 
         test('Events to update quickpick updates the quickpick accordingly', async () => {
