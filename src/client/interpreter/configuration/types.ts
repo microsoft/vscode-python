@@ -29,6 +29,9 @@ export interface IInterpreterSelector extends Disposable {
         suggestions: IInterpreterQuickPickItem[],
         resource: Resource,
     ): IInterpreterQuickPickItem | undefined;
+    /**
+     * @deprecated Only exists for old Jupyter integration.
+     */
     getAllSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]>;
     getSuggestions(resource: Resource, useFullDisplayName?: boolean): IInterpreterQuickPickItem[];
     suggestionToQuickPickItem(

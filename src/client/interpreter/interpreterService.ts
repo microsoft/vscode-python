@@ -140,6 +140,13 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public async getAllInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
+        if (!this.isDiscoveryTriggered) {
+            // For backwards compatibility with old Jupyter APIs, ensure a
+            // fresh refresh is always triggered when using the API. As it is
+            // no longer auto-triggered by the extension.
+            this.triggerRefresh().ignoreErrors();
+            this.isDiscoveryTriggered = true;
+        }
         await this.refreshPromise;
         return this.getInterpreters(resource);
     }

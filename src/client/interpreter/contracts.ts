@@ -71,6 +71,9 @@ export interface IInterpreterService {
     onDidChangeInterpreterInformation: Event<PythonEnvironment>;
     hasInterpreters(filter?: (e: PythonEnvironment) => Promise<boolean>): Promise<boolean>;
     getInterpreters(resource?: Uri): PythonEnvironment[];
+    /**
+     * @deprecated Only exists for old Jupyter integration.
+     */
     getAllInterpreters(resource?: Uri): Promise<PythonEnvironment[]>;
     getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
     getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<undefined | PythonEnvironment>;
