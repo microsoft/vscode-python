@@ -15,7 +15,7 @@ import {
     ProgressNotificationEvent,
     ProgressReportStage,
     PythonLocatorQuery,
-    TriggerRefreshQueryOptions,
+    TriggerRefreshOptions,
 } from '../../locator';
 import { getQueryFilter } from '../../locatorUtils';
 import { PythonEnvCollectionChangedEvent, PythonEnvsWatcher } from '../../watcher';
@@ -101,22 +101,21 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return query ? cachedEnvs.filter(getQueryFilter(query)) : cachedEnvs;
     }
 
-    public triggerRefresh(query?: TriggerRefreshQueryOptions): Promise<void> {
-        if (query?.onlyTriggerOnceForSession) {
+    public triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions): Promise<void> {
+        if (options?.onlyTriggerOnceForSession) {
             if (this.hasRefreshBeingTriggeredForQuery.get(query)) {
                 return Promise.resolve();
             }
         }
-
         let refreshPromise = this.getRefreshPromiseForQuery(query);
         if (!refreshPromise) {
-            refreshPromise = this.startRefresh(query);
+            refreshPromise = this.startRefresh(query, options);
         }
         return refreshPromise;
     }
 
-    private startRefresh(query: TriggerRefreshQueryOptions | undefined): Promise<void> {
-        if (query?.clearCache) {
+    private startRefresh(query: PythonLocatorQuery | undefined, options?: TriggerRefreshOptions): Promise<void> {
+        if (options?.clearCache) {
             this.cache.clearCache();
         }
         this.createProgressStates(query);

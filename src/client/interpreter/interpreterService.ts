@@ -28,7 +28,7 @@ import { Interpreters } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { cache } from '../common/utils/decorators';
-import { TriggerRefreshQueryOptions } from '../pythonEnvironments/base/locator';
+import { PythonLocatorQuery, TriggerRefreshOptions } from '../pythonEnvironments/base/locator';
 
 type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
 
@@ -40,8 +40,12 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.pyenvs.hasInterpreters(filter);
     }
 
-    public triggerRefresh(query?: TriggerRefreshQueryOptions, trigger?: 'auto' | 'ui'): Promise<void> {
-        return this.pyenvs.triggerRefresh(query, trigger);
+    public triggerRefresh(
+        query?: PythonLocatorQuery,
+        options?: TriggerRefreshOptions,
+        trigger?: 'auto' | 'ui',
+    ): Promise<void> {
+        return this.pyenvs.triggerRefresh(query, options, trigger);
     }
 
     public get refreshPromise(): Promise<void> | undefined {
@@ -140,7 +144,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         // For backwards compatibility with old Jupyter APIs, ensure a
         // fresh refresh is always triggered when using the API. As it is
         // no longer auto-triggered by the extension.
-        this.triggerRefresh({ onlyTriggerOnceForSession: true }).ignoreErrors();
+        this.triggerRefresh(undefined, { onlyTriggerOnceForSession: true }).ignoreErrors();
         await this.refreshPromise;
         return this.getInterpreters(resource);
     }
@@ -212,7 +216,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             traceLog('Conda envs without Python are known to not work well; fixing conda environment...');
             const promise = installer.install(Product.python, await this.getInterpreterDetails(pythonPath));
             shell.withProgress(progressOptions, () => promise);
-            promise.then(() => this.triggerRefresh({ clearCache: true }).ignoreErrors());
+            promise.then(() => this.triggerRefresh(undefined, { clearCache: true }).ignoreErrors());
         }
     }
 }

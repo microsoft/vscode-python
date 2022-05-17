@@ -193,7 +193,7 @@ export interface GetRefreshEnvironmentsOptions {
     stage?: ProgressReportStage;
 }
 
-export type TriggerRefreshQueryOptions = PythonLocatorQuery & {
+export type TriggerRefreshOptions = {
     /**
      * Trigger a fresh refresh.
      */
@@ -221,7 +221,7 @@ export interface IDiscoveryAPI {
     /**
      * Triggers a new refresh for query if there isn't any already running.
      */
-    triggerRefresh(query?: TriggerRefreshQueryOptions, trigger?: 'auto' | 'ui'): Promise<void>;
+    triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions, trigger?: 'auto' | 'ui'): Promise<void>;
     /**
      * Get current list of known environments.
      */

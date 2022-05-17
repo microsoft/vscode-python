@@ -9,7 +9,7 @@ import { Resource } from '../common/types';
 import { IComponentAdapter, ICondaService, PythonEnvironmentsChangedEvent } from '../interpreter/contracts';
 import { IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from './base/info';
-import { IDiscoveryAPI, PythonLocatorQuery } from './base/locator';
+import { IDiscoveryAPI, PythonLocatorQuery, TriggerRefreshOptions } from './base/locator';
 import { isMacDefaultPythonPath } from './base/locators/lowLevel/macDefaultLocator';
 import { isParentPath } from './common/externalDependencies';
 import { EnvironmentType, PythonEnvironment } from './info';
@@ -103,8 +103,12 @@ class ComponentAdapter implements IComponentAdapter {
         });
     }
 
-    public triggerRefresh(query?: PythonLocatorQuery, trigger?: 'auto' | 'ui'): Promise<void> {
-        return this.api.triggerRefresh(query, trigger);
+    public triggerRefresh(
+        query?: PythonLocatorQuery,
+        options?: TriggerRefreshOptions,
+        trigger?: 'auto' | 'ui',
+    ): Promise<void> {
+        return this.api.triggerRefresh(query, options, trigger);
     }
 
     public getRefreshPromise() {

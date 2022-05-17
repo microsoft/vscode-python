@@ -111,6 +111,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         // times so that the visible items do not change.
         const preserveOrderWhenFiltering = !!this.interpreterService.refreshPromise;
         const suggestions = this.getItems(state.workspace);
+        // Discovery is no longer guranteed to be auto-triggered on extension load, so trigger it when
+        // user interacts with the interpreter picker but only once per session. Users can rely on the
+        // refresh button if they want to trigger it more than once.
+        this.interpreterService.triggerRefresh(undefined, { onlyTriggerOnceForSession: true }).ignoreErrors();
         state.path = undefined;
         const currentInterpreterPathDisplay = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
@@ -134,7 +138,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                     iconPath: getIcon(REFRESH_BUTTON_ICON),
                     tooltip: InterpreterQuickPickList.refreshInterpreterList,
                 },
-                callback: () => this.interpreterService.triggerRefresh(undefined, 'ui').ignoreErrors(),
+                callback: () => this.interpreterService.triggerRefresh(undefined, undefined, 'ui').ignoreErrors(),
             },
             onChangeItem: {
                 event: this.interpreterService.onDidChangeInterpreters,
@@ -375,10 +379,6 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         if (!targetConfig) {
             return;
         }
-        // Discovery is no longer guranteed to be auto-triggered on extension load, so trigger it when
-        // user interacts with the interpreter picker but only once per session. Users can rely on the
-        // refresh button if they want to trigger it more than once.
-        this.interpreterService.triggerRefresh({ onlyTriggerOnceForSession: true }).ignoreErrors();
         const { configTarget } = targetConfig[0];
         const wkspace = targetConfig[0].folderUri;
         const interpreterState: InterpreterStateArgs = { path: undefined, workspace: wkspace };

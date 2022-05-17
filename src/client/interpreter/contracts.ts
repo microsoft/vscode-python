@@ -3,7 +3,11 @@ import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument,
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { Resource } from '../common/types';
 import { PythonEnvSource } from '../pythonEnvironments/base/info';
-import { ProgressNotificationEvent, TriggerRefreshQueryOptions } from '../pythonEnvironments/base/locator';
+import {
+    ProgressNotificationEvent,
+    PythonLocatorQuery,
+    TriggerRefreshOptions,
+} from '../pythonEnvironments/base/locator';
 import { CondaEnvironmentInfo } from '../pythonEnvironments/common/environmentManagers/conda';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 
@@ -17,7 +21,7 @@ export type PythonEnvironmentsChangedEvent = {
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
     readonly onProgress: Event<ProgressNotificationEvent>;
-    triggerRefresh(query?: TriggerRefreshQueryOptions, trigger?: 'auto' | 'ui'): Promise<void>;
+    triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions, trigger?: 'auto' | 'ui'): Promise<void>;
     getRefreshPromise(): Promise<void> | undefined;
     readonly onChanged: Event<PythonEnvironmentsChangedEvent>;
     // VirtualEnvPrompt
@@ -63,7 +67,7 @@ export interface ICondaService {
 
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
-    triggerRefresh(query?: TriggerRefreshQueryOptions, trigger?: 'auto' | 'ui'): Promise<void>;
+    triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions, trigger?: 'auto' | 'ui'): Promise<void>;
     readonly refreshPromise: Promise<void> | undefined;
     readonly onDidChangeInterpreters: Event<PythonEnvironmentsChangedEvent>;
     onDidChangeInterpreterConfiguration: Event<Uri | undefined>;

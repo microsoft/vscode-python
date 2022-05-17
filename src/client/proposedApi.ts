@@ -102,7 +102,7 @@ export function buildProposedApi(
                 return interpreterPathService.update(resource, ConfigurationTarget.WorkspaceFolder, path);
             },
             async refreshEnvironment(options?: RefreshEnvironmentsOptions) {
-                await discoveryApi.triggerRefresh(options ? { clearCache: options.clearCache } : undefined);
+                await discoveryApi.triggerRefresh(undefined, options ? { clearCache: options.clearCache } : undefined);
                 const paths = discoveryApi.getEnvs().map((e) => getEnvPath(e.executable.filename, e.location));
                 return Promise.resolve(paths);
             },

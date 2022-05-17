@@ -11,6 +11,7 @@ import {
     IDiscoveryAPI,
     ProgressNotificationEvent,
     PythonLocatorQuery,
+    TriggerRefreshOptions,
 } from './base/locator';
 
 export type GetLocatorFunc = () => Promise<IDiscoveryAPI>;
@@ -52,9 +53,9 @@ class PythonEnvironments implements IDiscoveryAPI {
         return this.locator.resolveEnv(env);
     }
 
-    public async triggerRefresh(query?: PythonLocatorQuery, trigger?: 'auto' | 'ui') {
+    public async triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions, trigger?: 'auto' | 'ui') {
         const stopWatch = new StopWatch();
-        await this.locator.triggerRefresh(query);
+        await this.locator.triggerRefresh(query, options);
         if (!query) {
             // Intent is to capture time taken for all of discovery to complete, so make sure
             // all interpreters are queried for.
