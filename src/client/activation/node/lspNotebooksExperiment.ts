@@ -99,14 +99,17 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
 
     private static jupyterSupportsNotebooksExperiment(): boolean {
         const jupyterVersion = extensions.getExtension(JUPYTER_EXTENSION_ID)?.packageJSON.version;
-        return jupyterVersion && (semver.gte(jupyterVersion, '2022.5.0') || semver.eq(jupyterVersion, '2022.4.100'));
+        return (
+            jupyterVersion &&
+            (semver.gt(jupyterVersion, '2022.5.1001382326') || semver.eq(jupyterVersion, '2022.4.100'))
+        );
     }
 
     private static pylanceSupportsNotebooksExperiment(): boolean {
         const pylanceVersion = extensions.getExtension(PYLANCE_EXTENSION_ID)?.packageJSON.version;
         return (
             pylanceVersion &&
-            (semver.gte(pylanceVersion, '2022.5.1-pre.1') || semver.prerelease(pylanceVersion)?.includes('dev'))
+            (semver.gte(pylanceVersion, '2022.5.3-pre.1') || semver.prerelease(pylanceVersion)?.includes('dev'))
         );
     }
 
