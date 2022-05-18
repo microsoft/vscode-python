@@ -64,21 +64,20 @@ export async function activate(api: IDiscoveryAPI, ext: ExtensionState): Promise
      * extension activation on the "refresh trigger".
      */
     const folders = vscode.workspace.workspaceFolders;
-    const wasTriggered = getGlobalStorage<boolean>(ext.context, 'PYTHON_WAS_DISCOVERY_TRIGGERED', false);
-    if (!wasTriggered.get()) {
+    // Trigger discovery if environment cache is empty.
+    const wasTriggered = getGlobalStorage<PythonEnvInfo[]>(ext.context, 'PYTHON_ENV_INFO_CACHE', []).get().length > 0;
+    if (!wasTriggered) {
         api.triggerRefresh().ignoreErrors();
-        wasTriggered.set(true).then(() => {
-            folders?.forEach(async (folder) => {
-                const wasTriggeredForFolder = getGlobalStorage<boolean>(
-                    ext.context,
-                    `PYTHON_WAS_DISCOVERY_TRIGGERED_${normCasePath(folder.uri.fsPath)}`,
-                    false,
-                );
-                await wasTriggeredForFolder.set(true);
-            });
+        folders?.forEach(async (folder) => {
+            const wasTriggeredForFolder = getGlobalStorage<boolean>(
+                ext.context,
+                `PYTHON_WAS_DISCOVERY_TRIGGERED_${normCasePath(folder.uri.fsPath)}`,
+                false,
+            );
+            await wasTriggeredForFolder.set(true);
         });
     } else {
-        // Figure out which workspace folders need to be activated.
+        // Figure out which workspace folders need to be activated if any.
         folders?.forEach(async (folder) => {
             const wasTriggeredForFolder = getGlobalStorage<boolean>(
                 ext.context,
