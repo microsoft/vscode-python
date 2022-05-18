@@ -15,7 +15,6 @@ import { isParentPath } from './common/externalDependencies';
 import { EnvironmentType, PythonEnvironment } from './info';
 import { toSemverLikeVersion } from './base/info/pythonVersion';
 import { PythonVersion } from './info/pythonVersion';
-import { EnvironmentInfoServiceQueuePriority, getEnvironmentInfoService } from './base/info/environmentInfoService';
 import { createDeferred } from '../common/utils/async';
 import { PythonEnvCollectionChangedEvent } from './base/watcher';
 import { asyncFilter } from '../common/utils/arrayUtils';
@@ -169,14 +168,6 @@ class ComponentAdapter implements IComponentAdapter {
         const env = await this.api.resolveEnv(pythonPath);
         if (!env) {
             return undefined;
-        }
-        if (env?.executable.sysPrefix) {
-            const execInfoService = getEnvironmentInfoService();
-            const info = await execInfoService.getEnvironmentInfo(env, EnvironmentInfoServiceQueuePriority.High);
-            if (info) {
-                env.executable.sysPrefix = info.executable.sysPrefix;
-                env.version = info.version;
-            }
         }
         return convertEnvInfo(env);
     }
