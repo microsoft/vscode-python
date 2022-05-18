@@ -17,7 +17,7 @@ import {
     getInterpreterPathFromDir,
     getPythonVersionFromPath,
 } from '../../../common/commonUtils';
-import { arePathsSame, getWorkspaceFolders, isParentPath } from '../../../common/externalDependencies';
+import { arePathsSame, getFileInfo, getWorkspaceFolders, isParentPath } from '../../../common/externalDependencies';
 import { AnacondaCompanyName, Conda, isCondaEnvironment } from '../../../common/environmentManagers/conda';
 import { getPyenvVersionsDir, parsePyenvVersion } from '../../../common/environmentManagers/pyenv';
 import { Architecture, getOSType, OSType } from '../../../../common/utils/platform';
@@ -59,6 +59,9 @@ export async function resolveBasicEnv(env: BasicEnvInfo, useCache = false): Prom
     }
     setEnvDisplayString(resolvedEnv);
     resolvedEnv.id = getEnvID(resolvedEnv.executable.filename, resolvedEnv.location);
+    const { ctime, mtime } = await getFileInfo(resolvedEnv.executable.filename);
+    resolvedEnv.executable.ctime = ctime;
+    resolvedEnv.executable.mtime = mtime;
     return resolvedEnv;
 }
 

@@ -81,7 +81,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         // Note cache may have incomplete info when a refresh is happening.
         // This API is supposed to return complete info by definition, so
         // only use cache if it has complete info on an environment.
-        const cachedEnv = this.cache.getCompleteInfo(path);
+        const cachedEnv = await this.cache.getLatestInfo(path);
         if (cachedEnv) {
             return cachedEnv;
         }
