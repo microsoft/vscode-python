@@ -150,7 +150,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
     public async clearAndReloadFromStorage(): Promise<void> {
         this.envs = await this.persistentStorage.load();
         this.envs.forEach((e) => {
-            e.hasLatestInfo = false;
+            delete e.hasLatestInfo;
         });
     }
 
