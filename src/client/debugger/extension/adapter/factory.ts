@@ -132,7 +132,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         }
 
         await this.interpreterService.hasInterpreters(); // Wait until we know whether we have an interpreter
-        const interpreters = await this.interpreterService.getInterpreters(resourceUri);
+        const interpreters = this.interpreterService.getInterpreters(resourceUri);
         if (interpreters.length === 0) {
             this.notifySelectInterpreter().ignoreErrors();
             return [];

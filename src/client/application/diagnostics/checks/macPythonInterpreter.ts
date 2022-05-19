@@ -14,9 +14,8 @@ import {
     InterpreterConfigurationScope,
     Resource,
 } from '../../../common/types';
-import { IInterpreterHelper, IInterpreterService } from '../../../interpreter/contracts';
+import { IInterpreterHelper } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { EnvironmentType } from '../../../pythonEnvironments/info';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
 import { DiagnosticCodes } from '../constants';
@@ -26,23 +25,14 @@ import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerSer
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const messages = {
-    [DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic]: localize(
-        'DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic',
-        'You have selected the macOS system install of Python, which is not recommended for use with the Python extension. Some functionality will be limited, please select a different interpreter.',
-    ),
-    [DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic]: localize(
-        'DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic',
-        'The macOS system install of Python is not recommended, some functionality in the extension will be limited. Install another version of Python for the best experience.',
+    [DiagnosticCodes.MacInterpreterSelected]: localize(
+        'DiagnosticCodes.MacInterpreterSelected',
+        'The selected macOS system install of Python is not recommended, some functionality in the extension will be limited. [Install another version of Python](https://www.python.org/downloads) or select a different interpreter for the best experience. [Learn more](https://aka.ms/AA7jfor).',
     ),
 };
 
 export class InvalidMacPythonInterpreterDiagnostic extends BaseDiagnostic {
-    constructor(
-        code:
-            | DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic
-            | DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
-        resource: Resource,
-    ) {
+    constructor(code: DiagnosticCodes.MacInterpreterSelected, resource: Resource) {
         super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource);
     }
 }
@@ -57,20 +47,11 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
 
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper,
     ) {
-        super(
-            [
-                DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
-                DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
-            ],
-            serviceContainer,
-            disposableRegistry,
-            true,
-        );
+        super([DiagnosticCodes.MacInterpreterSelected], serviceContainer, disposableRegistry, true);
         this.addPythonPathChangedHandler();
     }
 
@@ -90,44 +71,10 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         if (settings.disableInstallationChecks === true) {
             return [];
         }
-
-        const hasInterpreters = await this.interpreterService.hasInterpreters();
-        if (!hasInterpreters) {
-            return [];
-        }
-
-        const currentInterpreter = await this.interpreterService.getActiveInterpreter(resource);
-        if (!currentInterpreter) {
-            return [];
-        }
-
         if (!(await this.helper.isMacDefaultPythonPath(settings.pythonPath))) {
             return [];
         }
-        if (!currentInterpreter || currentInterpreter.envType !== EnvironmentType.Unknown) {
-            return [];
-        }
-
-        if (
-            await this.interpreterService.hasInterpreters((e) =>
-                this.helper.isMacDefaultPythonPath(e.path).then((x) => !x),
-            )
-        ) {
-            // If non-mac default interpreters exist.
-            return [
-                new InvalidMacPythonInterpreterDiagnostic(
-                    DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
-                    resource,
-                ),
-            ];
-        }
-
-        return [
-            new InvalidMacPythonInterpreterDiagnostic(
-                DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
-                resource,
-            ),
-        ];
+        return [new InvalidMacPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelected, resource)];
     }
 
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
@@ -177,38 +124,13 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
     private getCommandPrompts(diagnostic: IDiagnostic): { prompt: string; command?: IDiagnosticCommand }[] {
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
         switch (diagnostic.code) {
-            case DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic: {
+            case DiagnosticCodes.MacInterpreterSelected: {
                 return [
                     {
                         prompt: 'Select Python Interpreter',
                         command: commandFactory.createCommand(diagnostic, {
                             type: 'executeVSCCommand',
                             options: 'python.setInterpreter',
-                        }),
-                    },
-                    {
-                        prompt: 'Do not show again',
-                        command: commandFactory.createCommand(diagnostic, {
-                            type: 'ignore',
-                            options: DiagnosticScope.Global,
-                        }),
-                    },
-                ];
-            }
-            case DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic: {
-                return [
-                    {
-                        prompt: 'Learn more',
-                        command: commandFactory.createCommand(diagnostic, {
-                            type: 'launch',
-                            options: 'https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites',
-                        }),
-                    },
-                    {
-                        prompt: 'Download',
-                        command: commandFactory.createCommand(diagnostic, {
-                            type: 'launch',
-                            options: 'https://www.python.org/downloads',
                         }),
                     },
                     {

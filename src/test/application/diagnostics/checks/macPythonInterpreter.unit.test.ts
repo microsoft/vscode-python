@@ -36,16 +36,14 @@ import {
 } from '../../../../client/common/types';
 import { sleep } from '../../../../client/common/utils/async';
 import { noop } from '../../../../client/common/utils/misc';
-import { IInterpreterHelper, IInterpreterService } from '../../../../client/interpreter/contracts';
+import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 
 suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
     let diagnosticService: IDiagnosticsService;
     let messageHandler: typemoq.IMock<IDiagnosticHandlerService<MessageCommandPrompt>>;
     let commandFactory: typemoq.IMock<IDiagnosticsCommandFactory>;
     let settings: typemoq.IMock<IPythonSettings>;
-    let interpreterService: typemoq.IMock<IInterpreterService>;
     let platformService: typemoq.IMock<IPlatformService>;
     let helper: typemoq.IMock<IInterpreterHelper>;
     let filterService: typemoq.IMock<IDiagnosticFilterService>;
@@ -74,10 +72,6 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
         serviceContainer
             .setup((s) => s.get(typemoq.It.isValue(IConfigurationService)))
             .returns(() => configService.object);
-        interpreterService = typemoq.Mock.ofType<IInterpreterService>();
-        serviceContainer
-            .setup((s) => s.get(typemoq.It.isValue(IInterpreterService)))
-            .returns(() => interpreterService.object);
         platformService = typemoq.Mock.ofType<IPlatformService>();
         serviceContainer
             .setup((s) => s.get(typemoq.It.isValue(IPlatformService)))
@@ -111,15 +105,12 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 protected addPythonPathChangedHandler() {
                     noop();
                 }
-            })(createContainer(), interpreterService.object, [], platformService.object, helper.object);
+            })(createContainer(), [], platformService.object, helper.object);
             (diagnosticService as any)._clear();
         });
 
         test('Can handle InvalidPythonPathInterpreter diagnostics', async () => {
-            for (const code of [
-                DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
-                DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
-            ]) {
+            for (const code of [DiagnosticCodes.MacInterpreterSelected]) {
                 const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
                 diagnostic
                     .setup((d) => d.code)
@@ -164,54 +155,10 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             settings.verifyAll();
             platformService.verifyAll();
         });
-        test('Should return empty diagnostics if there are interpreters, one is selected, and platform is not mac', async () => {
+        test('Should return empty diagnostics if platform is mac and selected interpreter is not default mac interpreter', async () => {
             settings
                 .setup((s) => s.disableInstallationChecks)
                 .returns(() => false)
-                .verifiable(typemoq.Times.once());
-            interpreterService
-                .setup((i) => i.hasInterpreters())
-                .returns(() => Promise.resolve(true))
-                .verifiable(typemoq.Times.once());
-            interpreterService
-                .setup((i) => i.getInterpreters(typemoq.It.isAny()))
-                .returns(() => ({} as any))
-                .verifiable(typemoq.Times.never());
-            interpreterService
-                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
-                .returns(() => {
-                    return Promise.resolve({ envType: EnvironmentType.Unknown } as any);
-                })
-                .verifiable(typemoq.Times.once());
-            platformService
-                .setup((i) => i.isMac)
-                .returns(() => false)
-                .verifiable(typemoq.Times.once());
-
-            const diagnostics = await diagnosticService.diagnose(undefined);
-            expect(diagnostics).to.be.deep.equal([]);
-            settings.verifyAll();
-            interpreterService.verifyAll();
-            platformService.verifyAll();
-        });
-        test('Should return empty diagnostics if there are interpreters, platform is mac and selected interpreter is not default mac interpreter', async () => {
-            settings
-                .setup((s) => s.disableInstallationChecks)
-                .returns(() => false)
-                .verifiable(typemoq.Times.once());
-            interpreterService
-                .setup((i) => i.hasInterpreters())
-                .returns(() => Promise.resolve(true))
-                .verifiable(typemoq.Times.once());
-            interpreterService
-                .setup((i) => i.getInterpreters(typemoq.It.isAny()))
-                .returns(() => ({} as any))
-                .verifiable(typemoq.Times.never());
-            interpreterService
-                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
-                .returns(() => {
-                    return Promise.resolve({ envType: EnvironmentType.Unknown } as any);
-                })
                 .verifiable(typemoq.Times.once());
             platformService
                 .setup((i) => i.isMac)
@@ -225,29 +172,15 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             const diagnostics = await diagnosticService.diagnose(undefined);
             expect(diagnostics).to.be.deep.equal([]);
             settings.verifyAll();
-            interpreterService.verifyAll();
             platformService.verifyAll();
             helper.verifyAll();
         });
-        test('Should return diagnostic if there are no other interpreters, platform is mac and selected interpreter is default mac interpreter', async () => {
+        test('Should return diagnostic if platform is mac and selected interpreter is default mac interpreter', async () => {
             settings
                 .setup((s) => s.disableInstallationChecks)
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
-            interpreterService
-                .setup((i) => i.hasInterpreters())
-                .returns(() => Promise.resolve(true))
-                .verifiable(typemoq.Times.once());
-            interpreterService
-                .setup((i) => i.hasInterpreters(typemoq.It.isAny()))
-                .returns(() => Promise.resolve(false))
-                .verifiable(typemoq.Times.once());
-            interpreterService
-                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
-                .returns(() => {
-                    return Promise.resolve({ envType: EnvironmentType.Unknown } as any);
-                })
-                .verifiable(typemoq.Times.once());
+
             platformService
                 .setup((i) => i.isMac)
                 .returns(() => true)
@@ -259,62 +192,13 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
 
             const diagnostics = await diagnosticService.diagnose(undefined);
             expect(diagnostics).to.be.deep.equal(
-                [
-                    new InvalidMacPythonInterpreterDiagnostic(
-                        DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
-                        undefined,
-                    ),
-                ],
-                'not the same',
-            );
-        });
-        test('Should return diagnostic if there are other interpreters, platform is mac and selected interpreter is default mac interpreter', async () => {
-            const nonMacStandardInterpreter = 'Non Mac Std Interpreter';
-            settings
-                .setup((s) => s.disableInstallationChecks)
-                .returns(() => false)
-                .verifiable(typemoq.Times.once());
-            interpreterService
-                .setup((i) => i.hasInterpreters())
-                .returns(() => Promise.resolve(true))
-                .verifiable(typemoq.Times.once());
-            interpreterService
-                .setup((i) => i.hasInterpreters(typemoq.It.isAny()))
-                .returns(() => Promise.resolve(true))
-                .verifiable(typemoq.Times.once());
-            platformService
-                .setup((i) => i.isMac)
-                .returns(() => true)
-                .verifiable(typemoq.Times.once());
-            helper
-                .setup((i) => i.isMacDefaultPythonPath(typemoq.It.isValue(pythonPath)))
-                .returns(() => Promise.resolve(true))
-                .verifiable(typemoq.Times.atLeastOnce());
-            helper
-                .setup((i) => i.isMacDefaultPythonPath(typemoq.It.isValue(nonMacStandardInterpreter)))
-                .returns(() => Promise.resolve(false))
-                .verifiable(typemoq.Times.atLeastOnce());
-            interpreterService
-                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
-                .returns(() => {
-                    return Promise.resolve({ envType: EnvironmentType.Unknown } as any);
-                })
-                .verifiable(typemoq.Times.once());
-
-            const diagnostics = await diagnosticService.diagnose(undefined);
-            expect(diagnostics).to.be.deep.equal(
-                [
-                    new InvalidMacPythonInterpreterDiagnostic(
-                        DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
-                        undefined,
-                    ),
-                ],
+                [new InvalidMacPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelected, undefined)],
                 'not the same',
             );
         });
         test('Handling no interpreters diagnostic should return select interpreter cmd', async () => {
             const diagnostic = new InvalidMacPythonInterpreterDiagnostic(
-                DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
+                DiagnosticCodes.MacInterpreterSelected,
                 undefined,
             );
             const cmd = ({} as any) as IDiagnosticCommand;
@@ -359,80 +243,14 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 { prompt: 'Do not show again', command: cmdIgnore },
             ]);
         });
-        test('Handling no interpreters diagnostisc should return 3 commands', async () => {
-            const diagnostic = new InvalidMacPythonInterpreterDiagnostic(
-                DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
-                undefined,
-            );
-            const cmdDownload = ({} as any) as IDiagnosticCommand;
-            const cmdLearn = ({} as any) as IDiagnosticCommand;
-            const cmdIgnore = ({} as any) as IDiagnosticCommand;
-            let messagePrompt: MessageCommandPrompt | undefined;
-            messageHandler
-                .setup((i) => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
-                .callback((_d, p: MessageCommandPrompt) => (messagePrompt = p))
-                .returns(() => Promise.resolve())
-                .verifiable(typemoq.Times.once());
-            commandFactory
-                .setup((f) =>
-                    f.createCommand(
-                        typemoq.It.isAny(),
-                        typemoq.It.isObjectWith<CommandOption<'launch', string>>({
-                            type: 'launch',
-                            options: 'https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites',
-                        }),
-                    ),
-                )
-                .returns(() => cmdLearn)
-                .verifiable(typemoq.Times.once());
-            commandFactory
-                .setup((f) =>
-                    f.createCommand(
-                        typemoq.It.isAny(),
-                        typemoq.It.isObjectWith<CommandOption<'launch', string>>({
-                            type: 'launch',
-                            options: 'https://www.python.org/downloads',
-                        }),
-                    ),
-                )
-                .returns(() => cmdDownload)
-                .verifiable(typemoq.Times.once());
-            commandFactory
-                .setup((f) =>
-                    f.createCommand(
-                        typemoq.It.isAny(),
-                        typemoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({
-                            type: 'ignore',
-                            options: DiagnosticScope.Global,
-                        }),
-                    ),
-                )
-                .returns(() => cmdIgnore)
-                .verifiable(typemoq.Times.once());
-
-            await diagnosticService.handle([diagnostic]);
-
-            messageHandler.verifyAll();
-            commandFactory.verifyAll();
-            expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
-            expect(messagePrompt!.commandPrompts).to.be.deep.equal([
-                { prompt: 'Learn more', command: cmdLearn },
-                { prompt: 'Download', command: cmdDownload },
-                { prompt: 'Do not show again', command: cmdIgnore },
-            ]);
-        });
         test('Should not display a message if No Interpreters diagnostic has been ignored', async () => {
             const diagnostic = new InvalidMacPythonInterpreterDiagnostic(
-                DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
+                DiagnosticCodes.MacInterpreterSelected,
                 undefined,
             );
 
             filterService
-                .setup((f) =>
-                    f.shouldIgnoreDiagnostic(
-                        typemoq.It.isValue(DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic),
-                    ),
-                )
+                .setup((f) => f.shouldIgnoreDiagnostic(typemoq.It.isValue(DiagnosticCodes.MacInterpreterSelected)))
                 .returns(() => Promise.resolve(true))
                 .verifiable(typemoq.Times.once());
             commandFactory
@@ -457,7 +275,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 protected addPythonPathChangedHandler() {
                     invoked = true;
                 }
-            })(createContainer(), interpreterService.object, [], platformService.object, helper.object);
+            })(createContainer(), [], platformService.object, helper.object);
 
             expect(invoked).to.be.equal(true, 'Not invoked');
         });
@@ -475,13 +293,8 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 .returns(() => workspaceService.object);
 
             const diagnosticSvc = new (class extends InvalidMacPythonInterpreterService {
-                constructor(
-                    arg1: IServiceContainer,
-                    arg2: IInterpreterService,
-                    arg3: IPlatformService,
-                    arg4: IInterpreterHelper,
-                ) {
-                    super(arg1, arg2, [], arg3, arg4);
+                constructor(arg1: IServiceContainer, arg3: IPlatformService, arg4: IInterpreterHelper) {
+                    super(arg1, [], arg3, arg4);
                     this.changeThrottleTimeout = 1;
                 }
                 public onDidChangeConfigurationEx = (e: InterpreterConfigurationScope) =>
@@ -492,7 +305,6 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 }
             })(
                 serviceContainerObject,
-                typemoq.Mock.ofType<IInterpreterService>().object,
                 typemoq.Mock.ofType<IPlatformService>().object,
                 typemoq.Mock.ofType<IInterpreterHelper>().object,
             );
@@ -521,13 +333,8 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 .returns(() => workspaceService.object);
 
             const diagnosticSvc = new (class extends InvalidMacPythonInterpreterService {
-                constructor(
-                    arg1: IServiceContainer,
-                    arg2: IInterpreterService,
-                    arg3: IPlatformService,
-                    arg4: IInterpreterHelper,
-                ) {
-                    super(arg1, arg2, [], arg3, arg4);
+                constructor(arg1: IServiceContainer, arg3: IPlatformService, arg4: IInterpreterHelper) {
+                    super(arg1, [], arg3, arg4);
                     this.changeThrottleTimeout = 100;
                 }
                 public onDidChangeConfigurationEx = (e: InterpreterConfigurationScope) =>
@@ -538,7 +345,6 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 }
             })(
                 serviceContainerObject,
-                typemoq.Mock.ofType<IInterpreterService>().object,
                 typemoq.Mock.ofType<IPlatformService>().object,
                 typemoq.Mock.ofType<IInterpreterHelper>().object,
             );
@@ -571,7 +377,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 protected async onDidChangeConfiguration(_i: InterpreterConfigurationScope) {
                     invoked = true;
                 }
-            })(serviceContainerObject, undefined as any, [], undefined as any, undefined as any);
+            })(serviceContainerObject, [], undefined as any, undefined as any);
 
             expect(interpreterPathServiceHandler!).to.not.equal(undefined, 'Handler not set');
             await interpreterPathServiceHandler!({} as any);

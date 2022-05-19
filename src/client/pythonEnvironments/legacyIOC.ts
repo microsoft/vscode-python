@@ -220,12 +220,13 @@ class ComponentAdapter implements IComponentAdapter {
                 }
             }
         });
-        const initialEnvs = this.api.getEnvs();
+        const initialEnvs = await asyncFilter(this.api.getEnvs(), (e) => filter(convertEnvInfo(e)));
         if (initialEnvs.length > 0) {
             return true;
         }
-        // We should already have initiated discovery. Wait for an env to be added
-        // to the collection until the refresh has finished.
+        // Wait for an env to be added to the collection until the refresh has finished. Note although it's not
+        // guaranteed we have initiated discovery in this session, we do trigger refresh in the very first session,
+        // when Python is not installed, etc. Assuming list is more or less upto date.
         await Promise.race([onAddedToCollection.promise, this.api.getRefreshPromise()]);
         const envs = await asyncFilter(this.api.getEnvs(), (e) => filter(convertEnvInfo(e)));
         return envs.length > 0;

@@ -88,16 +88,9 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     if (!workspaceService.isTrusted) {
         return { workspaceFolderCount, terminal: terminalShellType };
     }
-    const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     const mainWorkspaceUri = workspaceService.workspaceFolders ? workspaceService.workspaceFolders[0].uri : undefined;
-    const [condaVersion, hasPythonThree] = await Promise.all([
-        condaLocator
-            .getCondaVersion()
-            .then((ver) => (ver ? ver.raw : ''))
-            .catch<string>(() => ''),
-        interpreterService.hasInterpreters(async (item) => item.version?.major === 3),
-    ]);
+    const hasPythonThree = await interpreterService.hasInterpreters(async (item) => item.version?.major === 3);
     // If an unknown type environment can be found from windows registry or path env var,
     // consider them as global type instead of unknown. Such types can only be known after
     // windows registry is queried. So wait for the refresh of windows registry locator to
@@ -111,6 +104,14 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     const interpreterType = interpreter ? interpreter.envType : undefined;
     if (interpreterType === EnvironmentType.Unknown) {
         traceError('Active interpreter type is detected as Unknown', JSON.stringify(interpreter));
+    }
+    let condaVersion = undefined;
+    if (interpreterType === EnvironmentType.Conda) {
+        const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
+        condaVersion = await condaLocator
+            .getCondaVersion()
+            .then((ver) => (ver ? ver.raw : ''))
+            .catch<string>(() => '');
     }
     const usingUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
     const usingGlobalInterpreter = interpreter

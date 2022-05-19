@@ -73,6 +73,10 @@ export interface IInterpreterService {
     onDidChangeInterpreterConfiguration: Event<Uri | undefined>;
     onDidChangeInterpreter: Event<void>;
     onDidChangeInterpreterInformation: Event<PythonEnvironment>;
+    /**
+     * Note this API does not trigger the refresh but only works with the current refresh if any. Information
+     * returned by this is more or less upto date but is not guaranteed to be.
+     */
     hasInterpreters(filter?: (e: PythonEnvironment) => Promise<boolean>): Promise<boolean>;
     getInterpreters(resource?: Uri): PythonEnvironment[];
     /**
