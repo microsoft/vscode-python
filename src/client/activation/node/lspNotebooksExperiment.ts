@@ -100,8 +100,7 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
     private static jupyterSupportsNotebooksExperiment(): boolean {
         const jupyterVersion = extensions.getExtension(JUPYTER_EXTENSION_ID)?.packageJSON.version;
         return (
-            jupyterVersion &&
-            (semver.gt(jupyterVersion, '2022.5.1001391015') || semver.eq(jupyterVersion, '2022.4.100'))
+            jupyterVersion && (semver.gt(jupyterVersion, '2022.5.1001411044') || semver.patch(jupyterVersion) === 100)
         );
     }
 
