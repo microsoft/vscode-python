@@ -8,7 +8,7 @@ import {
     PythonLocatorQuery,
     TriggerRefreshOptions,
 } from '../pythonEnvironments/base/locator';
-import { CondaEnvironmentInfo } from '../pythonEnvironments/common/environmentManagers/conda';
+import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/common/environmentManagers/conda';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 
 export type PythonEnvironmentsChangedEvent = {
@@ -59,10 +59,15 @@ export const ICondaService = Symbol('ICondaService');
  */
 export interface ICondaService {
     getCondaFile(forShellExecution?: boolean): Promise<string>;
+    getCondaInfo(): Promise<CondaInfo | undefined>;
     isCondaAvailable(): Promise<boolean>;
     getCondaVersion(): Promise<SemVer | undefined>;
     getInterpreterPathForEnvironment(condaEnv: CondaEnvironmentInfo): Promise<string | undefined>;
     getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined>;
+    getActivationScriptFromInterpreter(
+        interpreterPath?: string,
+        envName?: string,
+    ): Promise<{ path: string | undefined; type: 'local' | 'global' } | undefined>;
 }
 
 export const IInterpreterService = Symbol('IInterpreterService');

@@ -210,7 +210,17 @@ suite('Terminal Environment Activation conda', () => {
     const interpreterPath = path.join('path', 'to', 'interpreter');
     const environmentName = 'Env';
     const environmentNameHasSpaces = 'Env with spaces';
-    const testsForActivationUsingInterpreterPath = [
+    const testsForActivationUsingInterpreterPath: {
+        testName: string;
+        envName: string;
+        condaScope?: 'global' | 'local';
+        condaInfo?: {
+            // eslint-disable-next-line camelcase
+            conda_shlvl?: number;
+        };
+        expectedResult: string[];
+        isWindows: boolean;
+    }[] = [
         {
             testName:
                 'Activation provides correct activation commands (windows) after 4.4.0 given interpreter path is provided, with no spaces in env name',
@@ -222,7 +232,7 @@ suite('Terminal Environment Activation conda', () => {
             testName:
                 'Activation provides correct activation commands (non-windows) after 4.4.0 given interpreter path is provided, with no spaces in env name',
             envName: environmentName,
-            expectedResult: ['source path/to/activate', 'conda activate Env'],
+            expectedResult: ['source path/to/activate Env'],
             isWindows: false,
         },
         {
@@ -236,7 +246,7 @@ suite('Terminal Environment Activation conda', () => {
             testName:
                 'Activation provides correct activation commands (non-windows) after 4.4.0 given interpreter path is provided, with spaces in env name',
             envName: environmentNameHasSpaces,
-            expectedResult: ['source path/to/activate', 'conda activate "Env with spaces"'],
+            expectedResult: ['source path/to/activate "Env with spaces"'],
             isWindows: false,
         },
         {
@@ -250,7 +260,37 @@ suite('Terminal Environment Activation conda', () => {
             testName:
                 'Activation provides correct activation commands (non-windows) after 4.4.0 given interpreter path is provided, and no env name',
             envName: '',
-            expectedResult: ['source path/to/activate', `conda activate .`],
+            expectedResult: ['source path/to/activate .'],
+            isWindows: false,
+        },
+        {
+            testName:
+                'Activation provides correct activation commands (non-windows) after 4.4.0 given interpreter path is provided, global conda, conda not sourced and with no spaces in env name',
+            envName: environmentName,
+            expectedResult: ['source path/to/activate Env'],
+            condaScope: 'global',
+            isWindows: false,
+        },
+        {
+            testName:
+                'Activation provides correct activation commands (non-windows) after 4.4.0 given interpreter path is provided, global conda, conda sourced and with no spaces in env name',
+            envName: environmentName,
+            expectedResult: ['conda activate Env'],
+            condaInfo: {
+                conda_shlvl: 1,
+            },
+            condaScope: 'global',
+            isWindows: false,
+        },
+        {
+            testName:
+                'Activation provides correct activation commands (non-windows) after 4.4.0 given interpreter path is provided, local conda, conda sourced and with no spaces in env name',
+            envName: environmentName,
+            expectedResult: ['source path/to/activate Env'],
+            condaInfo: {
+                conda_shlvl: 1,
+            },
+            condaScope: 'local',
             isWindows: false,
         },
     ];
@@ -272,6 +312,18 @@ suite('Terminal Environment Activation conda', () => {
             condaService
                 .setup((c) => c.getCondaFileFromInterpreter(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(interpreterPath));
+            condaService
+                .setup((c) => c.getActivationScriptFromInterpreter(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() =>
+                    Promise.resolve({
+                        path: path.join(path.dirname(interpreterPath), 'activate').fileToCommandArgumentForPythonExt(),
+                        type: testParams.condaScope ?? 'local',
+                    }),
+                );
+
+            condaService.setup((c) => c.getCondaInfo()).returns(() => Promise.resolve(testParams.condaInfo));
+
+            // getActivationScriptFromInterpreter
 
             const provider = new CondaActivationCommandProvider(
                 condaService.object,
@@ -279,6 +331,7 @@ suite('Terminal Environment Activation conda', () => {
                 configService.object,
                 componentAdapter.object,
             );
+
             const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
 
             expect(activationCommands).to.deep.equal(testParams.expectedResult, 'Incorrect Activation command');

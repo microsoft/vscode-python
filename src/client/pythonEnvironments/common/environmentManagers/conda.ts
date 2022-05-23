@@ -43,6 +43,7 @@ export type CondaInfo = {
     default_prefix?: string; // eslint-disable-line camelcase
     root_prefix?: string; // eslint-disable-line camelcase
     conda_version?: string; // eslint-disable-line camelcase
+    conda_shlvl?: number; // eslint-disable-line camelcase
 };
 
 type CondaEnvInfo = {

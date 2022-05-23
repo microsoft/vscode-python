@@ -81,13 +81,35 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
             if (versionInfo.minor >= CondaRequiredMinor) {
                 // New version.
                 const interpreterPath = await this.condaService.getInterpreterPathForEnvironment(envInfo);
-                const condaPath = await this.condaService.getCondaFileFromInterpreter(interpreterPath, envInfo.name);
-                if (condaPath) {
-                    const activatePath = path
-                        .join(path.dirname(condaPath), 'activate')
-                        .fileToCommandArgumentForPythonExt();
-                    const firstActivate = this.platform.isWindows ? activatePath : `source ${activatePath}`;
-                    return [firstActivate, `conda activate ${condaEnv.toCommandArgumentForPythonExt()}`];
+                const activatePath = await this.condaService.getActivationScriptFromInterpreter(
+                    interpreterPath,
+                    envInfo.name,
+                );
+                // eslint-disable-next-line camelcase
+                if (activatePath?.path) {
+                    if (this.platform.isWindows) {
+                        return [activatePath.path, `conda activate ${condaEnv.toCommandArgumentForPythonExt()}`];
+                    }
+
+                    const condaInfo = await this.condaService.getCondaInfo();
+
+                    if (
+                        activatePath.type !== 'global' ||
+                        // eslint-disable-next-line camelcase
+                        condaInfo?.conda_shlvl === undefined ||
+                        condaInfo.conda_shlvl === -1
+                    ) {
+                        // activatePath is not the global activate path, or we don't have a shlvl, or it's -1（conda never sourced）.
+                        // and we need to source the activate path.
+                        if (activatePath.path === 'activate') {
+                            return [
+                                `source ${activatePath.path}`,
+                                `conda activate ${condaEnv.toCommandArgumentForPythonExt()}`,
+                            ];
+                        }
+                        return [`source ${activatePath.path} ${condaEnv.toCommandArgumentForPythonExt()}`];
+                    }
+                    return [`conda activate ${condaEnv.toCommandArgumentForPythonExt()}`];
                 }
             }
         }

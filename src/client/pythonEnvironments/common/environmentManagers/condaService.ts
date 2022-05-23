@@ -19,6 +19,39 @@ export class CondaService implements ICondaService {
         @inject(IFileSystem) private fileSystem: IFileSystem,
     ) {}
 
+    public async getActivationScriptFromInterpreter(
+        interpreterPath?: string,
+        envName?: string,
+    ): Promise<{ path: string | undefined; type: 'local' | 'global' } | undefined> {
+        const condaPath = await this.getCondaFileFromInterpreter(interpreterPath, envName);
+
+        const activatePath = (condaPath
+            ? path.join(path.dirname(condaPath), 'activate')
+            : 'activate'
+        ).fileToCommandArgumentForPythonExt(); // maybe global activate?
+
+        // try to find the activate script in the global conda root prefix.
+        if (this.platform.isLinux || this.platform.isMac) {
+            const condaInfo = await this.getCondaInfo();
+            // eslint-disable-next-line camelcase
+            if (condaInfo?.root_prefix) {
+                const globalActivatePath = path
+                    // eslint-disable-next-line camelcase
+                    .join(condaInfo.root_prefix, this.platform.virtualEnvBinName, 'activate')
+                    .fileToCommandArgumentForPythonExt();
+
+                if (activatePath === globalActivatePath || !(await this.fileSystem.fileExists(activatePath))) {
+                    return {
+                        path: globalActivatePath,
+                        type: 'global',
+                    };
+                }
+            }
+        }
+
+        return { path: activatePath, type: 'local' }; // return the default activate script wether it exists or not.
+    }
+
     /**
      * Return the path to the "conda file".
      */
@@ -111,7 +144,7 @@ export class CondaService implements ICondaService {
      */
     @cache(60_000)
     // eslint-disable-next-line class-methods-use-this
-    public async _getCondaInfo(): Promise<CondaInfo | undefined> {
+    public async getCondaInfo(): Promise<CondaInfo | undefined> {
         const conda = await Conda.getConda();
         return conda?.getInfo();
     }
