@@ -7,6 +7,7 @@ import * as Path from 'path';
 import { Range, Uri } from 'vscode';
 
 import { IDocumentManager, IWorkspaceService } from '../application/types';
+import { WorkspaceService } from '../application/workspace';
 import * as Types from '../utils/sysTypes';
 import { IStringDictionary, ISystemVariables } from './types';
 
@@ -124,6 +125,11 @@ export class SystemVariables extends AbstractSystemVariables {
                 string,
                 string | undefined
             >)[`env.${key}`] = process.env[key];
+        });
+        workspace = workspace ?? new WorkspaceService();
+        workspace.workspaceFolders?.forEach((folder) => {
+            const basename = Path.basename(folder.uri.fsPath);
+            ((this as any) as Record<string, string | undefined>)[`workspaceFolder:${basename}`] = folder.uri.fsPath;
         });
     }
 
