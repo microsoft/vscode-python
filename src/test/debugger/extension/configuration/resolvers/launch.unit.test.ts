@@ -27,7 +27,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         return;
     }
 
-    suite(`Debugging - Config Resolver Launch, OS = ${osName}`, () => {
+    suite(`xDebugging - Config Resolver Launch, OS = ${osName}`, () => {
         let debugProvider: DebugConfigurationProvider;
         let platformService: TypeMoq.IMock<IPlatformService>;
         let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;

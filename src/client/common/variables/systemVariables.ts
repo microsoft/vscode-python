@@ -127,8 +127,8 @@ export class SystemVariables extends AbstractSystemVariables {
             >)[`env.${key}`] = process.env[key];
         });
         workspace = workspace ?? new WorkspaceService();
-        if (Array.isArray(workspace.workspaceFolders)) {
-            workspace.workspaceFolders.forEach((folder) => {
+        if (workspace.workspaceFolders && 'forEach' in workspace.workspaceFolders) {
+            workspace.workspaceFolders.forEach(async (folder) => {
                 const basename = Path.basename(folder.uri.fsPath);
                 ((this as any) as Record<string, string | undefined>)[`workspaceFolder:${basename}`] =
                     folder.uri.fsPath;
