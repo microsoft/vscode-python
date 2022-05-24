@@ -20,7 +20,7 @@ import { getRegistryInterpreters } from '../windowsUtils';
 import { EnvironmentType, PythonEnvironment } from '../../info';
 import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
-import { traceError, traceVerbose, traceWarn } from '../../../logging';
+import { traceError, traceVerbose } from '../../../logging';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
 import { buildPythonExecInfo } from '../../exec';
 import { getExecutablePath } from '../../info/executable';
@@ -513,7 +513,7 @@ export class Conda {
     public async getRunPythonArgs(env: CondaEnvInfo, forShellExecution?: boolean): Promise<string[] | undefined> {
         const condaVersion = await this.getCondaVersion();
         if (condaVersion && lt(condaVersion, CONDA_RUN_VERSION)) {
-            traceWarn('`conda run` is not supported for conda version', condaVersion.raw);
+            traceError('`conda run` is not supported for conda version', condaVersion.raw);
             return undefined;
         }
         const args = [];
