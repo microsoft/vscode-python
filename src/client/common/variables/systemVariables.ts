@@ -127,10 +127,13 @@ export class SystemVariables extends AbstractSystemVariables {
             >)[`env.${key}`] = process.env[key];
         });
         workspace = workspace ?? new WorkspaceService();
-        workspace.workspaceFolders?.forEach((folder) => {
-            const basename = Path.basename(folder.uri.fsPath);
-            ((this as any) as Record<string, string | undefined>)[`workspaceFolder:${basename}`] = folder.uri.fsPath;
-        });
+        if (Array.isArray(workspace.workspaceFolders)) {
+            workspace.workspaceFolders.forEach((folder) => {
+                const basename = Path.basename(folder.uri.fsPath);
+                ((this as any) as Record<string, string | undefined>)[`workspaceFolder:${basename}`] =
+                    folder.uri.fsPath;
+            });
+        }
     }
 
     public get cwd(): string {
