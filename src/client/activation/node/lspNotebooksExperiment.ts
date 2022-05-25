@@ -66,8 +66,6 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
         this.isInExperiment = false;
         if (languageServerType !== LanguageServerType.Node) {
             traceLog(`LSP Notebooks experiment is disabled -- not using Pylance`);
-        } else if (!isInTreatmentGroup) {
-            traceLog(`LSP Notebooks experiment is disabled -- not in treatment group`);
         } else if (!LspNotebooksExperiment.isJupyterInstalled()) {
             traceLog(`LSP Notebooks experiment is disabled -- Jupyter disabled or not installed`);
         } else if (!LspNotebooksExperiment.jupyterSupportsNotebooksExperiment()) {
@@ -76,12 +74,14 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
             traceLog(`LSP Notebooks experiment is disabled -- Pylance disabled or not installed`);
         } else if (!LspNotebooksExperiment.pylanceSupportsNotebooksExperiment()) {
             traceLog(`LSP Notebooks experiment is disabled -- Pylance does not support experiment`);
+        } else if (!isInTreatmentGroup) {
+            traceLog(`LSP Notebooks experiment is disabled -- not in treatment group`);
+            // to avoid scorecard SRMs, we're also triggering the telemetry for users who meet
+            // the criteria to experience LSP notebooks, but may be in the control group.
+            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_LSP_NOTEBOOKS);
         } else {
             this.isInExperiment = true;
             traceLog(`LSP Notebooks experiment is enabled`);
-        }
-
-        if (this.isInExperiment) {
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_LSP_NOTEBOOKS);
         }
 
