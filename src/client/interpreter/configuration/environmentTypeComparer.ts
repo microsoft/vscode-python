@@ -119,14 +119,14 @@ function getSortName(info: PythonEnvironment, interpreterHelper: IInterpreterHel
         sortNameParts.push('Python');
     }
 
+    if (info.envName && info.envName.length > 0) {
+        envSuffixParts.push(info.envName);
+    }
     if (info.envType) {
         const name = interpreterHelper.getInterpreterTypeDisplayName(info.envType);
         if (name) {
             envSuffixParts.push(name);
         }
-    }
-    if (info.envName && info.envName.length > 0) {
-        envSuffixParts.push(info.envName);
     }
 
     const envSuffix = envSuffixParts.length === 0 ? '' : `(${envSuffixParts.join(': ')})`;
