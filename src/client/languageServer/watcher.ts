@@ -189,7 +189,7 @@ export class LanguageServerWatcher
     public async restartLanguageServers(): Promise<void> {
         this.workspaceLanguageServers.forEach(async (_, resourceString) => {
             const resource = Uri.parse(resourceString);
-            this.stopLanguageServer(resource);
+            await this.stopLanguageServer(resource);
             await this.startLanguageServer(this.languageServerType, resource);
         });
     }
