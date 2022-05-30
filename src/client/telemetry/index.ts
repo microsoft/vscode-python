@@ -2003,4 +2003,11 @@ export interface IEventNamePropertyMapping {
        "tensorboard_jump_to_source_file_not_found" : { "owner": "greazer" }
      */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND]: never | undefined;
+    /* __GDPR__
+			"query-expfeature" : {
+				"owner": "luabud",
+				"comment": "Logs queries to the experiment service by feature for metric calculations",
+				"ABExp.queriedFeature": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The experimental feature being queried" }
+			}
+	*/
 }
