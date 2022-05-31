@@ -60,17 +60,27 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
             (options.middleware ? (<JediLanguageClientMiddleware>options.middleware).serverVersion : undefined) ??
             '0.19.3';
 
-        this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
-        this.registerHandlers();
+        const client = await this.factory.createLanguageClient(resource, interpreter, options);
+        this.registerHandlers(client);
 
-        await this.languageClient.start();
+        await client.start();
+
+        this.languageClient = client;
     }
 
     @traceDecoratorVerbose('Stopping language server')
     public async stop(): Promise<void> {
+        while (this.disposables.length > 0) {
+            const d = this.disposables.shift()!;
+            d.dispose();
+        }
+
         if (this.languageClient) {
+            const client = this.languageClient;
+            this.languageClient = undefined;
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const pid: number | undefined = ((this.languageClient as any)._serverProcess as ChildProcess)?.pid;
+            const pid: number | undefined = ((client as any)._serverProcess as ChildProcess)?.pid;
             const killServer = () => {
                 if (pid) {
                     killPid(pid);
@@ -78,19 +88,12 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
             };
 
             try {
-                await this.languageClient.stop();
+                await client.stop();
                 killServer();
             } catch (ex) {
                 traceError('Stopping language client failed', ex);
                 killServer();
             }
-
-            this.languageClient = undefined;
-        }
-
-        while (this.disposables.length > 0) {
-            const d = this.disposables.shift()!;
-            d.dispose();
         }
     }
 
@@ -106,8 +109,8 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         undefined,
         JediLanguageServerProxy.versionTelemetryProps,
     )
-    private registerHandlers() {
-        const progressReporting = new ProgressReporting(this.languageClient!);
+    private registerHandlers(client: LanguageClient) {
+        const progressReporting = new ProgressReporting(client);
         this.disposables.push(progressReporting);
 
         this.disposables.push(
@@ -116,7 +119,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
                 // the workspace configurations (to then pick up pythonPath set in the middleware).
                 // This is needed as interpreter changes via the interpreter path service happen
                 // outside of VS Code's settings (which would mean VS Code sends the config updates itself).
-                this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, {
+                client.sendNotification(DidChangeConfigurationNotification.type, {
                     settings: null,
                 });
             }),

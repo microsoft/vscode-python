@@ -95,35 +95,41 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         this.cancellationStrategy = new FileBasedCancellationStrategy();
         options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
 
-        this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
-        this.registerHandlers(resource);
+        const client = await this.factory.createLanguageClient(resource, interpreter, options);
+        this.registerHandlers(client, resource);
 
         this.disposables.push(
             this.workspace.onDidGrantWorkspaceTrust(() => {
-                this.languageClient!.sendNotification('python/workspaceTrusted', { isTrusted: true });
+                client.sendNotification('python/workspaceTrusted', { isTrusted: true });
             }),
         );
 
-        await this.languageClient.start();
+        await client.start();
+
+        this.languageClient = client;
     }
 
     @traceDecoratorVerbose('Disposing language server')
     public async stop(): Promise<void> {
-        if (this.languageClient) {
-            try {
-                await this.languageClient.stop();
-            } catch (ex) {
-                traceError('Stopping language client failed', ex);
-            }
-            this.languageClient = undefined;
-        }
-        if (this.cancellationStrategy) {
-            this.cancellationStrategy.dispose();
-            this.cancellationStrategy = undefined;
-        }
         while (this.disposables.length > 0) {
             const d = this.disposables.shift()!;
             d.dispose();
+        }
+
+        if (this.languageClient) {
+            const client = this.languageClient;
+            this.languageClient = undefined;
+
+            try {
+                await client.stop();
+            } catch (ex) {
+                traceError('Stopping language client failed', ex);
+            }
+        }
+
+        if (this.cancellationStrategy) {
+            this.cancellationStrategy.dispose();
+            this.cancellationStrategy = undefined;
         }
     }
 
@@ -139,8 +145,8 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         undefined,
         NodeLanguageServerProxy.versionTelemetryProps,
     )
-    private registerHandlers(_resource: Resource) {
-        const progressReporting = new ProgressReporting(this.languageClient!);
+    private registerHandlers(client: LanguageClient, _resource: Resource) {
+        const progressReporting = new ProgressReporting(client);
         this.disposables.push(progressReporting);
 
         this.disposables.push(
@@ -149,20 +155,20 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
                 // the workspace configurations (to then pick up pythonPath set in the middleware).
                 // This is needed as interpreter changes via the interpreter path service happen
                 // outside of VS Code's settings (which would mean VS Code sends the config updates itself).
-                this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, {
+                client.sendNotification(DidChangeConfigurationNotification.type, {
                     settings: null,
                 });
             }),
         );
         this.disposables.push(
             this.environmentService.onDidEnvironmentVariablesChange(() => {
-                this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, {
+                client.sendNotification(DidChangeConfigurationNotification.type, {
                     settings: null,
                 });
             }),
         );
 
-        this.languageClient!.onRequest(
+        client.onRequest(
             InExperiment.Method,
             async (params: InExperiment.IRequest): Promise<InExperiment.IResponse> => {
                 const inExperiment = await this.experimentService.inExperiment(params.experimentName);
@@ -170,7 +176,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
             },
         );
 
-        this.languageClient!.onRequest(
+        client.onRequest(
             GetExperimentValue.Method,
             async <T extends boolean | number | string>(
                 params: GetExperimentValue.IRequest,
@@ -181,7 +187,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         );
 
         this.disposables.push(
-            this.languageClient!.onRequest('python/isTrustedWorkspace', async () => ({
+            client.onRequest('python/isTrustedWorkspace', async () => ({
                 isTrusted: this.workspace.isTrusted,
             })),
         );
