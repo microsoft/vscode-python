@@ -4,24 +4,29 @@
 #
 #    pip-compile dev-requirements.in
 #
+anyio==3.5.0
+    # via
+    #   -r requirements.txt
+    #   httpcore
 appdirs==1.4.4
     # via black
 async-generator==1.10
     # via
     #   -r requirements.txt
     #   trio
-attrs==20.3.0
+attrs==21.4.0
     # via
     #   -r requirements.txt
     #   outcome
     #   trio
 black==20.8b1
     # via -r dev-requirements.in
-certifi==2020.11.8
+certifi==2021.10.8
     # via
     #   -r requirements.txt
+    #   httpcore
     #   httpx
-cffi==1.14.4
+cffi==1.15.0
     # via
     #   -r requirements.txt
     #   cryptography
@@ -29,36 +34,37 @@ click==7.1.2
     # via
     #   black
     #   pip-tools
-cryptography==3.3.2
+cryptography==36.0.1
     # via
     #   -r requirements.txt
     #   pyjwt
-gidgethub[httpx]==4.2.0
+gidgethub[httpx]==5.1.0
     # via -r requirements.txt
-h11==0.11.0
+h11==0.12.0
     # via
     #   -r requirements.txt
     #   httpcore
-httpcore==0.12.2
+httpcore==0.15.0
     # via
     #   -r requirements.txt
     #   httpx
-httpx==0.22.0
+httpx==0.23.0
     # via
     #   -r requirements.txt
     #   gidgethub
-idna==2.10
+idna==3.3
     # via
     #   -r requirements.txt
+    #   anyio
     #   rfc3986
     #   trio
+mypy==0.790
+    # via trio-typing
 mypy-extensions==0.4.3
     # via
     #   black
     #   mypy
     #   trio-typing
-mypy==0.790
-    # via trio-typing
 outcome==1.1.0
     # via
     #   -r requirements.txt
@@ -67,45 +73,43 @@ pathspec==0.8.1
     # via black
 pip-tools==5.4.0
     # via -r dev-requirements.in
-pycparser==2.20
+pycparser==2.21
     # via
     #   -r requirements.txt
     #   cffi
-pyjwt[crypto]==1.7.1
+pyjwt[crypto]==2.3.0
     # via
     #   -r requirements.txt
     #   gidgethub
-pyyaml==5.4
+pyyaml==6.0
     # via -r requirements.txt
 regex==2020.11.13
     # via black
-rfc3986[idna2008]==1.4.0
+rfc3986[idna2008]==1.5.0
     # via
     #   -r requirements.txt
     #   httpx
 six==1.15.0
-    # via
-    #   -r requirements.txt
-    #   cryptography
-    #   pip-tools
+    # via pip-tools
 sniffio==1.2.0
     # via
     #   -r requirements.txt
+    #   anyio
     #   httpcore
     #   httpx
     #   trio
-sortedcontainers==2.3.0
+sortedcontainers==2.4.0
     # via
     #   -r requirements.txt
     #   trio
 toml==0.10.2
     # via black
-trio-typing==0.5.0
-    # via -r dev-requirements.in
-trio==0.17.0
+trio==0.19.0
     # via
     #   -r requirements.txt
     #   trio-typing
+trio-typing==0.5.0
+    # via -r dev-requirements.in
 typed-ast==1.4.1
     # via
     #   black
@@ -115,11 +119,11 @@ typing-extensions==3.7.4.3
     #   black
     #   mypy
     #   trio-typing
-uritemplate==3.0.1
+uritemplate==4.1.1
     # via
     #   -r requirements.txt
     #   gidgethub
-wheel==0.35.1
+wheel==0.37.1
     # via -r requirements.txt
 
 # The following packages are considered to be unsafe in a requirements file:
