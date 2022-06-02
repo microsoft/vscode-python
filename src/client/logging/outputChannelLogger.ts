@@ -7,7 +7,10 @@ import { Arguments, ILogging } from './types';
 import { getTimeForLogging } from './util';
 
 function formatMessage(level?: string, ...data: Arguments): string {
-    return level ? `[${level.toUpperCase()} ${getTimeForLogging()}]: ${util.format(...data)}` : util.format(...data);
+    const time = new Date().toLocaleTimeString();
+    return level
+        ? `${time} [${level.toUpperCase()} ${getTimeForLogging()}]: ${util.format(...data)}`
+        : util.format(...data);
 }
 
 export class OutputChannelLogger implements ILogging {
