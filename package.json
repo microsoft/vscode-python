@@ -405,12 +405,6 @@
                     "scope": "application",
                     "type": "boolean"
                 },
-                "python.disableInstallationCheck": {
-                    "default": false,
-                    "description": "Whether to check if Python is installed (also warn when using the macOS-installed Python).",
-                    "scope": "resource",
-                    "type": "boolean"
-                },
                 "python.envFile": {
                     "default": "${workspaceFolder}/.env",
                     "description": "Absolute path to a file containing environment variable definitions.",

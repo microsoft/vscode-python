@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import '../../../common/extensions';
 import * as nls from 'vscode-nls';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
+import { IDisposableRegistry, Resource } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -67,12 +67,6 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
     }
 
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
-        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const settings = configurationService.getSettings(resource);
-        if (settings.disableInstallationChecks === true) {
-            return [];
-        }
-
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const hasInterpreters = await interpreterService.hasInterpreters();
 

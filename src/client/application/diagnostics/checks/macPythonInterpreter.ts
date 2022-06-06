@@ -68,9 +68,6 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const settings = configurationService.getSettings(resource);
-        if (settings.disableInstallationChecks === true) {
-            return [];
-        }
         if (!(await this.helper.isMacDefaultPythonPath(settings.pythonPath))) {
             return [];
         }
