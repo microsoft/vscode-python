@@ -78,7 +78,8 @@ suite('Python envs locator - Environments Collection', async () => {
             path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project1', '.venv', 'Scripts', 'python.exe'),
             Uri.file(TEST_LAYOUT_ROOT),
         );
-        return [envCached1, envCached2];
+        const envCached3 = createEnv('python');
+        return [envCached1, envCached2, envCached3];
     }
 
     function getCachedEnvs() {
@@ -89,6 +90,7 @@ suite('Python envs locator - Environments Collection', async () => {
     function getExpectedEnvs(doNotIncludeCached?: boolean) {
         const fakeLocalAppDataPath = path.join(TEST_LAYOUT_ROOT, 'storeApps');
         const envCached1 = createEnv(path.join(fakeLocalAppDataPath, 'Microsoft', 'WindowsApps', 'python.exe'));
+        const envCached2 = createEnv('python');
         const env1 = createEnv(path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'), undefined, updatedName);
         const env2 = createEnv(
             path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project1', '.venv', 'Scripts', 'python.exe'),
@@ -106,7 +108,7 @@ suite('Python envs locator - Environments Collection', async () => {
                 return e;
             });
         }
-        return [envCached1, env1, env2, env3].map((e: PythonEnvLatestInfo) => {
+        return [envCached1, envCached2, env1, env2, env3].map((e: PythonEnvLatestInfo) => {
             e.hasLatestInfo = true;
             return e;
         });
