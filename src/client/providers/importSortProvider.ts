@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
 import { CancellationToken, CancellationTokenSource, TextDocument, Uri, WorkspaceEdit } from 'vscode';
-import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { Commands, PYTHON_LANGUAGE } from '../common/constants';
 import * as internalScripts from '../common/process/internal/scripts';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../common/process/types';
@@ -47,6 +47,8 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
 
     private readonly extensions: IExtensions;
 
+    private readonly workspace: IWorkspaceService;
+
     public constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.shell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
@@ -56,6 +58,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         this.editorUtils = serviceContainer.get<IEditorUtils>(IEditorUtils);
         this.persistentStateFactory = serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         this.extensions = serviceContainer.get<IExtensions>(IExtensions);
+        this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
 
     @captureTelemetry(EventName.FORMAT_SORT_IMPORTS)
@@ -187,12 +190,13 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         // saving the file (as well as a potential temporary file), but does
         // mean that we need another way to tell `isort` where to look for
         // configuration. We do that by setting the working directory to the
-        // directory which contains the file.
+        // root of the current workspace if any, other use directory which
+        // contains the file.
         const filename = '-';
 
         const spawnOptions = {
             token,
-            cwd: path.dirname(uri.fsPath),
+            cwd: this.workspace.getWorkspaceFolder(uri)?.uri.fsPath ?? path.dirname(uri.fsPath),
         };
 
         if (isort) {

@@ -12,8 +12,13 @@ import { Subscriber } from 'rxjs/Subscriber';
 import * as sinon from 'sinon';
 import { Writable } from 'stream';
 import * as TypeMoq from 'typemoq';
-import { Range, TextDocument, TextEditor, TextLine, Uri, WorkspaceEdit } from 'vscode';
-import { IApplicationShell, ICommandManager, IDocumentManager } from '../../client/common/application/types';
+import { Range, TextDocument, TextEditor, TextLine, Uri, WorkspaceEdit, WorkspaceFolder } from 'vscode';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IWorkspaceService,
+} from '../../client/common/application/types';
 import { Commands, EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { ProcessService } from '../../client/common/process/proc';
 import {
@@ -51,11 +56,14 @@ suite('Import Sort Provider', () => {
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let persistentStateFactory: TypeMoq.IMock<IPersistentStateFactory>;
     let extensions: TypeMoq.IMock<IExtensions>;
+    let workspace: TypeMoq.IMock<IWorkspaceService>;
     let sortProvider: SortImportsEditingProvider;
+    const workspaceUri = Uri.file('path/to/workspace');
 
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
+        workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         shell = TypeMoq.Mock.ofType<IApplicationShell>();
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -66,6 +74,9 @@ suite('Import Sort Provider', () => {
         persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
         extensions = TypeMoq.Mock.ofType<IExtensions>();
         extensions.setup((e) => e.getExtension(TypeMoq.It.isAny())).returns(() => undefined);
+        workspace
+            .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny()))
+            .returns(() => (({ uri: workspaceUri } as unknown) as WorkspaceFolder));
         serviceContainer.setup((c) => c.get(IPersistentStateFactory)).returns(() => persistentStateFactory.object);
         serviceContainer.setup((c) => c.get(ICommandManager)).returns(() => commandManager.object);
         serviceContainer.setup((c) => c.get(IDocumentManager)).returns(() => documentManager.object);
@@ -74,6 +85,7 @@ suite('Import Sort Provider', () => {
         serviceContainer.setup((c) => c.get(IPythonExecutionFactory)).returns(() => pythonExecFactory.object);
         serviceContainer.setup((c) => c.get(IProcessServiceFactory)).returns(() => processServiceFactory.object);
         serviceContainer.setup((c) => c.get(IEditorUtils)).returns(() => editorUtils.object);
+        serviceContainer.setup((c) => c.get(IWorkspaceService)).returns(() => workspace.object);
         serviceContainer.setup((c) => c.get(IDisposableRegistry)).returns(() => []);
         serviceContainer.setup((c) => c.get(IExtensions)).returns(() => extensions.object);
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
@@ -363,7 +375,7 @@ suite('Import Sort Provider', () => {
                 p.execObservable(
                     TypeMoq.It.isValue('CUSTOM_ISORT'),
                     TypeMoq.It.isValue(expectedArgs),
-                    TypeMoq.It.isValue({ token: undefined, cwd: path.sep }),
+                    TypeMoq.It.isValue({ token: undefined, cwd: workspaceUri.fsPath }),
                 ),
             )
             .returns(() => executionResult)
@@ -453,7 +465,7 @@ suite('Import Sort Provider', () => {
             .setup((p) =>
                 p.execObservable(
                     TypeMoq.It.isValue(expectedArgs),
-                    TypeMoq.It.isValue({ token: undefined, cwd: path.sep }),
+                    TypeMoq.It.isValue({ token: undefined, cwd: workspaceUri.fsPath }),
                 ),
             )
             .returns(() => executionResult)
