@@ -71,6 +71,7 @@ export namespace Octicons {
     export const Search_Stop = '$(search-stop)';
     export const Star = '$(star-full)';
     export const Gear = '$(gear)';
+    export const Warning = '$(warning)';
 }
 
 export const DEFAULT_INTERPRETER_SETTING = 'python';
