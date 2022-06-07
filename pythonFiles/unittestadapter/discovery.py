@@ -26,7 +26,7 @@ from typing_extensions import NotRequired
 DEFAULT_PORT = "45454"
 
 
-def parse_cli_args(args: List[str]) -> Tuple[int, Union[str, None]]:
+def parse_discovery_cli_args(args: List[str]) -> Tuple[int, Union[str, None]]:
     """Parse command-line arguments that should be processed by the script.
 
     So far this includes the port number that it needs to connect to, and the uuid passed by the TS side.
@@ -43,8 +43,8 @@ def parse_cli_args(args: List[str]) -> Tuple[int, Union[str, None]]:
     return int(parsed_args.port), parsed_args.uuid
 
 
-def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
-    """Parse command-line arguments that should be forwarded to unittest.
+def parse_unittest_discovery_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
+    """Parse command-line arguments that should be forwarded to unittest to perform discovery.
 
     Valid unittest arguments are: -v, -s, -p, -t and their long-form counterparts,
     however we only care about the last three.
@@ -138,10 +138,10 @@ if __name__ == "__main__":
     argv = sys.argv[1:]
     index = argv.index("--udiscovery")
 
-    start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
+    start_dir, pattern, top_level_dir = parse_unittest_discovery_args(argv[index + 1 :])
 
     # Perform test discovery.
-    port, uuid = parse_cli_args(argv[:index])
+    port, uuid = parse_discovery_cli_args(argv[:index])
     payload = discover_tests(start_dir, pattern, top_level_dir, uuid)
 
     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.

@@ -3,13 +3,14 @@
 
 import os
 import pathlib
+from typing import List
 
 import pytest
 from unittestadapter.discovery import (
     DEFAULT_PORT,
     discover_tests,
-    parse_cli_args,
-    parse_unittest_args,
+    parse_discovery_cli_args,
+    parse_unittest_discovery_args,
 )
 from unittestadapter.utils import TestNodeTypeEnum
 
@@ -28,13 +29,13 @@ from .helpers import TEST_DATA_PATH, is_same_tree
         ),
     ],
 )
-def test_parse_cli_args(args, expected) -> None:
+def test_parse_cli_args(args: List[str], expected: List[str]) -> None:
     """The parse_cli_args function should parse and return the port and uuid passed as command-line options.
 
     If there were no --port or --uuid command-line option, it should return default values).
     If there are multiple options, the last one wins.
     """
-    actual = parse_cli_args(args)
+    actual = parse_discovery_cli_args(args)
 
     assert expected == actual
 
@@ -63,11 +64,11 @@ def test_parse_cli_args(args, expected) -> None:
         ),
     ],
 )
-def test_parse_unittest_args(args, expected) -> None:
+def test_parse_unittest_args(args: List[str], expected: List[str]) -> None:
     """The parse_unittest_args function should return values for the start_dir, pattern, and top_level_dir arguments
     when passed as command-line options, and ignore unrecognized arguments.
     """
-    actual = parse_unittest_args(args)
+    actual = parse_unittest_discovery_args(args)
 
     assert actual == expected
 
