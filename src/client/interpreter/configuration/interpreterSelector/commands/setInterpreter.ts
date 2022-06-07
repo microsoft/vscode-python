@@ -334,7 +334,9 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                     item.interpreter.path === 'python' &&
                     item.interpreter.envType === EnvironmentType.Conda
                 ) {
-                    items[i].label = `${Octicons.Warning} ${items[i].label}`;
+                    if (!items[i].label.includes(Octicons.Warning)) {
+                        items[i].label = `${Octicons.Warning} ${items[i].label}`;
+                    }
                 }
             });
         }
