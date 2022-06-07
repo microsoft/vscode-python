@@ -37,7 +37,7 @@ export class JediLSExtensionManager extends LanguageServerCapabilities
         _experimentService: IExperimentService,
         workspaceService: IWorkspaceService,
         configurationService: IConfigurationService,
-        interpreterPathService: IInterpreterPathService,
+        _interpreterPathService: IInterpreterPathService,
         interpreterService: IInterpreterService,
         environmentService: IEnvironmentVariablesProvider,
         commandManager: ICommandManager,
@@ -51,7 +51,7 @@ export class JediLSExtensionManager extends LanguageServerCapabilities
             workspaceService,
         );
         this.clientFactory = new JediLanguageClientFactory(interpreterService);
-        this.serverProxy = new JediLanguageServerProxy(this.clientFactory, interpreterPathService);
+        this.serverProxy = new JediLanguageServerProxy(this.clientFactory);
         this.serverManager = new JediLanguageServerManager(
             serviceContainer,
             this.analysisOptions,

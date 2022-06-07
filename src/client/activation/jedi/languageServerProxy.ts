@@ -2,15 +2,10 @@
 // Licensed under the MIT License.
 
 import '../../common/extensions';
-import {
-    DidChangeConfigurationNotification,
-    Disposable,
-    LanguageClient,
-    LanguageClientOptions,
-} from 'vscode-languageclient/node';
+import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
 
 import { ChildProcess } from 'child_process';
-import { IInterpreterPathService, Resource } from '../../common/types';
+import { Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -27,10 +22,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
 
     private lsVersion: string | undefined;
 
-    constructor(
-        private readonly factory: ILanguageClientFactory,
-        private readonly interpreterPathService: IInterpreterPathService,
-    ) {}
+    constructor(private readonly factory: ILanguageClientFactory) {}
 
     private static versionTelemetryProps(instance: JediLanguageServerProxy) {
         return {
@@ -112,17 +104,5 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
     private registerHandlers(client: LanguageClient) {
         const progressReporting = new ProgressReporting(client);
         this.disposables.push(progressReporting);
-
-        this.disposables.push(
-            this.interpreterPathService.onDidChange(() => {
-                // Manually send didChangeConfiguration in order to get the server to re-query
-                // the workspace configurations (to then pick up pythonPath set in the middleware).
-                // This is needed as interpreter changes via the interpreter path service happen
-                // outside of VS Code's settings (which would mean VS Code sends the config updates itself).
-                client.sendNotification(DidChangeConfigurationNotification.type, {
-                    settings: null,
-                });
-            }),
-        );
     }
 }
