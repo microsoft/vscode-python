@@ -7,7 +7,7 @@ import { CancellationToken, ProgressLocation, ProgressOptions } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { traceError, traceLog } from '../../logging';
-import { EnvironmentType, ModuleInstallerType } from '../../pythonEnvironments/info';
+import { EnvironmentType, ModuleInstallerType, virtualEnvTypes } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell } from '../application/types';
@@ -92,6 +92,15 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                     }
                 } else if (name === translateProductToModule(Product.pip)) {
                     // Pip should always be installed into the specified environment.
+                    await this.executeCommand(
+                        shouldExecuteInTerminal,
+                        resource,
+                        pythonPath,
+                        args,
+                        token,
+                        executionInfo.useShell,
+                    );
+                } else if (virtualEnvTypes.includes(interpreter.envType)) {
                     await this.executeCommand(
                         shouldExecuteInTerminal,
                         resource,
