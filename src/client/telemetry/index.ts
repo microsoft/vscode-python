@@ -1283,15 +1283,6 @@ export interface IEventNamePropertyMapping {
         environmentsWithoutPython?: number;
     };
     /**
-     * Telemetry event sent when pipenv interpreter discovery is executed.
-     */
-    /* __GDPR__
-       "pipenv_interpreter_discovery" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
-       }
-     */
-    [EventName.PIPENV_INTERPRETER_DISCOVERY]: never | undefined;
-    /**
      * Telemetry event sent with details when user clicks the prompt with the following message
      * `Prompt message` :- 'We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the "terminal.integrated.inheritEnv" setting to be changed to false. Would you like to update this setting?'
      */
@@ -1344,41 +1335,6 @@ export interface IEventNamePropertyMapping {
          * @type {('Download' | 'Ignore' | undefined)}
          */
         selection: 'Download' | 'Ignore' | undefined;
-    };
-    /**
-     * Telemetry event sent with details when user clicks a button in the following prompt
-     * `Prompt message` :- 'We now have a new mechanism to get pre-release (insiders) version of the extension. See [here](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#prerelease-extensions) to lean more.'
-     */
-    /* __GDPR__
-       "insiders_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.INSIDERS_PROMPT]: {
-        /**
-         * `Yes, weekly` When user selects to use "weekly" as extension channel in insiders prompt
-         * `Yes, daily` When user selects to use "daily" as extension channel in insiders prompt
-         * `No, thanks` When user decides to keep using the same extension channel as before
-         */
-        selection: 'preRelease' | 'stable' | 'closed' | undefined;
-    };
-    /**
-     * Telemetry event sent with details when user clicks a button in the 'Reload to install insiders prompt'.
-     * `Prompt message` :- 'Please reload Visual Studio Code to use the insiders build of the extension'
-     */
-    /* __GDPR__
-       "insiders_reload_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.INSIDERS_RELOAD_PROMPT]: {
-        /**
-         * `Reload` When 'Reload' option is clicked
-         * `undefined` When prompt is closed
-         *
-         * @type {('Reload' | undefined)}
-         */
-        selection: 'Reload' | undefined;
     };
     /**
      * Telemetry event sent when the experiments service is initialized for the first time.
