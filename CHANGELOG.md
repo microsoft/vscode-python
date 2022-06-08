@@ -1,6 +1,6 @@
 # Changelog
 
-## 2022.8.0-rc (8 June 2022)
+## 2022.8.0 (9 June 2022)
 
 ### Enhancements
 
