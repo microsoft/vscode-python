@@ -12,10 +12,8 @@ export function getKindDisplayName(kind: PythonEnvKind): string {
     for (const [candidate, value] of [
         // Note that Unknown is excluded here.
         [PythonEnvKind.System, 'system'],
-        [PythonEnvKind.MacDefault, 'mac default'],
         [PythonEnvKind.WindowsStore, 'windows store'],
         [PythonEnvKind.Pyenv, 'pyenv'],
-        [PythonEnvKind.CondaBase, 'conda'],
         [PythonEnvKind.Poetry, 'poetry'],
         [PythonEnvKind.Custom, 'custom'],
         // For now we treat OtherGlobal like Unknown.
@@ -58,7 +56,6 @@ export function getKindDisplayName(kind: PythonEnvKind): string {
 export function getPrioritizedEnvKinds(): PythonEnvKind[] {
     return [
         PythonEnvKind.Pyenv,
-        PythonEnvKind.CondaBase,
         PythonEnvKind.Conda,
         PythonEnvKind.WindowsStore,
         PythonEnvKind.Pipenv,
@@ -68,7 +65,6 @@ export function getPrioritizedEnvKinds(): PythonEnvKind[] {
         PythonEnvKind.VirtualEnv,
         PythonEnvKind.OtherVirtual,
         PythonEnvKind.OtherGlobal,
-        PythonEnvKind.MacDefault,
         PythonEnvKind.System,
         PythonEnvKind.Custom,
         PythonEnvKind.Unknown,
