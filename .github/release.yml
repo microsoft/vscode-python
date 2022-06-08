@@ -1,0 +1,19 @@
+changelog:
+  exclude:
+    labels:
+      - 'skip news'
+    authors:
+      - 'dependabot'
+
+  categories:
+    - title: Bug Fixes
+      labels:
+        - 'bug'
+
+    - title: Enhancements
+      labels:
+        - 'feature-request'
+
+    - title: Code Health
+      labels:
+        - 'debt'
