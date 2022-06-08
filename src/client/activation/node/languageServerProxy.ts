@@ -12,7 +12,7 @@ import {
 import { IExperimentService, IExtensions, IInterpreterPathService, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
 import { ProgressReporting } from '../progress';
@@ -167,6 +167,16 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
                 });
             }),
         );
+
+        client.onTelemetry((telemetryEvent) => {
+            const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
+            const formattedProperties = {
+                ...telemetryEvent.Properties,
+                // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
+                method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
+            };
+            sendTelemetryEvent(eventName, telemetryEvent.Measurements, formattedProperties, telemetryEvent.Exception);
+        });
 
         client.onRequest(
             InExperiment.Method,
