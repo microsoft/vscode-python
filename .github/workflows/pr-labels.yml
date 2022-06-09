@@ -1,0 +1,19 @@
+name: 'PR labels'
+on:
+  pull_request:
+    types:
+      - 'opened'
+      - 'reopened'
+      - 'labeled'
+      - 'unlabeled'
+
+jobs:
+  classify:
+    name: 'Classify PR'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'PR impact specified'
+        uses: zwaldowski/match-label-action@v1
+        with:
+          allowed: 'bug, debt, feature-request, skip news'
+
