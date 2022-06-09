@@ -6,6 +6,7 @@ on:
       - 'reopened'
       - 'labeled'
       - 'unlabeled'
+      - 'synchronize'
 
 jobs:
   classify:
@@ -13,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'PR impact specified'
-        uses: zwaldowski/match-label-action@v3
+        uses: mheap/github-action-required-labels@v1
         with:
-          allowed: bug, debt, feature-request, skip news
+          mode: exactly
+          count: 1
+          labels: 'bug, debt, feature-request, skip news'
