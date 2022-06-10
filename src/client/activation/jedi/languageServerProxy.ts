@@ -81,6 +81,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
 
             try {
                 await client.stop();
+                await client.dispose();
                 killServer();
             } catch (ex) {
                 traceError('Stopping language client failed', ex);
