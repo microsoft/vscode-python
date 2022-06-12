@@ -239,6 +239,12 @@
             },
             {
                 "language": "python"
+            },
+            {
+                "language": "django-html"
+            },
+            {
+                "language": "django-txt"
             }
         ],
         "commands": [
