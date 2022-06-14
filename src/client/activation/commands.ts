@@ -4,4 +4,5 @@
 
 export namespace Commands {
     export const RestartLS = 'python.analysis.restartLanguageServer';
+    export const RecommendSettingPylanceLS = 'pylance.recommendSettingCommand';
 }

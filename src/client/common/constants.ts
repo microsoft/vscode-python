@@ -57,6 +57,7 @@ export namespace Commands {
     export const LaunchTensorBoard = 'python.launchTensorBoard';
     export const RefreshTensorBoard = 'python.refreshTensorBoard';
     export const ReportIssue = 'python.reportIssue';
+    export const Set_TypeChecking = 'python.setTypeChecking';
 }
 
 // Look at https://microsoft.github.io/vscode-codicons/dist/codicon.html for other Octicon icon ids

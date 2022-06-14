@@ -208,6 +208,13 @@ export namespace LanguageService {
         text: localize('LanguageService.statusItem.text', 'Partial Mode'),
         detail: localize('LanguageService.statusItem.detail', 'Limited IntelliSense provided by Pylance'),
     };
+
+    export const pylanceTypeCheckingModeOffStatusItem = {
+        name: localize('LanguageService.pylanceTypeCheckingModeStatusItem.name', 'Python Type Checking Mode'),
+        text: localize('LanguageService.pylanceTypeCheckingModeStatusItem.text', 'TypeChecking'),
+        detail: localize('LanguageService.pylanceTypeCheckingModeStatusItem.detail', 'Recommended: Basic'),
+    };
+
     export const startingPylance = localize('LanguageService.startingPylance', 'Starting Pylance language server.');
     export const startingNone = localize(
         'LanguageService.startingNone',

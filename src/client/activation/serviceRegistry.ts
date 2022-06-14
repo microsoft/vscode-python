@@ -14,12 +14,17 @@ import {
 } from './types';
 import { LoadLanguageServerExtension } from './common/loadLanguageServerExtension';
 import { PartialModeStatusItem } from './partialModeStatus';
+import { PylanceTypeCheckingModeStatusItem } from './pylanceTypeCheckingModeStatus';
 import { ILanguageServerWatcher } from '../languageServer/types';
 import { LanguageServerWatcher } from '../languageServer/watcher';
 import { LspNotebooksExperiment } from './node/lspNotebooksExperiment';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, PartialModeStatusItem);
+    serviceManager.addSingleton<IExtensionActivationService>(
+        IExtensionActivationService,
+        PylanceTypeCheckingModeStatusItem,
+    );
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
     serviceManager.addSingleton<ILanguageServerOutputChannel>(
         ILanguageServerOutputChannel,
