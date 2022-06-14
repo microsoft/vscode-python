@@ -34,11 +34,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     });
 }
 
-export function deactivate(): Promise<void> | undefined {
+export async function deactivate(): Promise<void> {
     const client = languageClient;
     languageClient = undefined;
 
-    return client?.stop();
+    await client?.stop();
+    await client?.dispose();
 }
 
 async function runPylance(
