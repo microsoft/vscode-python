@@ -15,13 +15,6 @@ jobs:
     name: 'Check for changed files'
     runs-on: ubuntu-latest
     steps:
-      - name: 'News entry'
-        uses: brettcannon/check-for-changed-files@v1.1.0
-        with:
-          file-pattern: 'news/*/*.md'
-          skip-label: 'skip news'
-          failure-message: 'News entry file missing; see news/README.md for instructions (the ${skip-label} label can be used to pass this check)'
-
       - name: 'package-lock.json matches package.json'
         uses: brettcannon/check-for-changed-files@v1.1.0
         with:

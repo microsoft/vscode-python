@@ -118,21 +118,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             expect(canHandle).to.be.equal(false, 'Invalid value');
             diagnostic.verifyAll();
         });
-        test('Should return empty diagnostics if installer check is disabled', async () => {
-            settings
-                .setup((s) => s.disableInstallationChecks)
-                .returns(() => true)
-                .verifiable(typemoq.Times.once());
-
-            const diagnostics = await diagnosticService.diagnose(undefined);
-            expect(diagnostics).to.be.deep.equal([]);
-            settings.verifyAll();
-        });
         test('Should return diagnostics if there are no interpreters after double-checking', async () => {
-            settings
-                .setup((s) => s.disableInstallationChecks)
-                .returns(() => false)
-                .verifiable(typemoq.Times.once());
             interpreterService
                 .setup((i) => i.hasInterpreters())
                 .returns(() => Promise.resolve(false))
@@ -149,10 +135,6 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             );
         });
         test('Should return invalid diagnostics if there are interpreters but no current interpreter', async () => {
-            settings
-                .setup((s) => s.disableInstallationChecks)
-                .returns(() => false)
-                .verifiable(typemoq.Times.once());
             interpreterService
                 .setup((i) => i.hasInterpreters())
                 .returns(() => Promise.resolve(true))
@@ -178,10 +160,6 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             interpreterService.verifyAll();
         });
         test('Should return empty diagnostics if there are interpreters and a current interpreter', async () => {
-            settings
-                .setup((s) => s.disableInstallationChecks)
-                .returns(() => false)
-                .verifiable(typemoq.Times.once());
             interpreterService
                 .setup((i) => i.hasInterpreters())
                 .returns(() => Promise.resolve(true))

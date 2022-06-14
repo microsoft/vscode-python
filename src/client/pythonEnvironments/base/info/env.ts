@@ -251,12 +251,18 @@ export function areSameEnv(
         return true;
     }
 
-    if (allowPartialMatch && arePathsSame(path.dirname(leftFilename), path.dirname(rightFilename))) {
-        const leftVersion = typeof left === 'string' ? undefined : leftInfo.version;
-        const rightVersion = typeof right === 'string' ? undefined : rightInfo.version;
-        if (leftVersion && rightVersion) {
-            if (areIdenticalVersion(leftVersion, rightVersion) || areSimilarVersions(leftVersion, rightVersion)) {
-                return true;
+    if (allowPartialMatch) {
+        const isSameDirectory =
+            leftFilename !== 'python' &&
+            rightFilename !== 'python' &&
+            arePathsSame(path.dirname(leftFilename), path.dirname(rightFilename));
+        if (isSameDirectory) {
+            const leftVersion = typeof left === 'string' ? undefined : leftInfo.version;
+            const rightVersion = typeof right === 'string' ? undefined : rightInfo.version;
+            if (leftVersion && rightVersion) {
+                if (areIdenticalVersion(leftVersion, rightVersion) || areSimilarVersions(leftVersion, rightVersion)) {
+                    return true;
+                }
             }
         }
     }

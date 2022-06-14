@@ -622,21 +622,22 @@ suite('Conda and its environments are located correctly', () => {
         test('Must iterate conda environments correctly', async () => {
             const locator = new CondaEnvironmentLocator();
             const envs = await getEnvs(locator.iterEnvs());
-
-            assertBasicEnvsEqual(
-                envs,
-                [
-                    '/home/user/miniconda3',
-                    '/home/user/miniconda3/envs/env1',
-                    // no env2, because there's no bin/python* under it
-                    '/home/user/miniconda3/envs/dir/env3',
-                    '/home/user/.conda/envs/env4',
-                    // no env5, because there's no bin/python* under it
-                    '/env6',
-                ].map((envPath) =>
-                    createBasicEnv(PythonEnvKind.Conda, path.join(envPath, 'bin', 'python'), undefined, envPath),
-                ),
+            const expected = [
+                '/home/user/miniconda3',
+                '/home/user/miniconda3/envs/env1',
+                '/home/user/miniconda3/envs/dir/env3',
+                '/home/user/.conda/envs/env4',
+                '/env6',
+            ].map((envPath) =>
+                createBasicEnv(PythonEnvKind.Conda, path.join(envPath, 'bin', 'python'), undefined, envPath),
             );
+            expected.push(
+                ...[
+                    '/home/user/miniconda3/envs/env2', // Show env2 despite there's no bin/python* under it
+                    '/home/user/.conda/envs/env5', // Show env5 despite there's no bin/python* under it
+                ].map((envPath) => createBasicEnv(PythonEnvKind.Conda, 'python', undefined, envPath)),
+            );
+            assertBasicEnvsEqual(envs, expected);
         });
     });
 });

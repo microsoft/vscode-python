@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2022.7.0-dev",
+    "version": "2022.9.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -239,6 +239,12 @@
             },
             {
                 "language": "python"
+            },
+            {
+                "language": "django-html"
+            },
+            {
+                "language": "django-txt"
             }
         ],
         "commands": [
@@ -383,49 +389,43 @@
             "properties": {
                 "python.autoComplete.extraPaths": {
                     "default": [],
-                    "description": "List of paths to libraries and the like that need to be imported by auto complete engine. E.g. when using Google App SDK, the paths are not in system path, hence need to be added into this list.",
+                    "description": "%python.autoComplete.extraPaths.description%",
                     "scope": "resource",
                     "type": "array"
                 },
                 "python.condaPath": {
                     "default": "",
-                    "description": "Path to the conda executable to use for activation (version 4.4+).",
+                    "description": "%python.condaPath.description%",
                     "scope": "machine",
                     "type": "string"
                 },
                 "python.defaultInterpreterPath": {
                     "default": "python",
-                    "description": "Path to default Python to use when extension loads up for the first time, no longer used once an interpreter is selected for the workspace. See https://aka.ms/AAfekmf to understand when this is used.",
+                    "description": "%python.defaultInterpreterPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.diagnostics.sourceMapsEnabled": {
                     "default": false,
-                    "description": "Enable source map support for meaningful stack traces in error logs.",
+                    "description": "%python.diagnostics.sourceMapsEnabled.description%",
                     "scope": "application",
-                    "type": "boolean"
-                },
-                "python.disableInstallationCheck": {
-                    "default": false,
-                    "description": "Whether to check if Python is installed (also warn when using the macOS-installed Python).",
-                    "scope": "resource",
                     "type": "boolean"
                 },
                 "python.envFile": {
                     "default": "${workspaceFolder}/.env",
-                    "description": "Absolute path to a file containing environment variable definitions.",
+                    "description": "%python.envFile.description%",
                     "scope": "resource",
                     "type": "string"
                 },
                 "python.experiments.enabled": {
                     "default": true,
-                    "description": "Enables A/B tests experiments in the Python extension. If enabled, you may get included in proposed enhancements and/or features.",
+                    "description": "%python.experiments.enabled.description%",
                     "scope": "machine",
                     "type": "boolean"
                 },
                 "python.experiments.optInto": {
                     "default": [],
-                    "description": "List of experiment to opt into. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-python/wiki/Experiments for more details.",
+                    "description": "%python.experiments.optInto.description%",
                     "items": {
                         "enum": [
                             "All",
@@ -437,7 +437,7 @@
                 },
                 "python.experiments.optOutFrom": {
                     "default": [],
-                    "description": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-python/wiki/Experiments for more details.",
+                    "description": "%python.experiments.optOutFrom.description%",
                     "items": {
                         "enum": [
                             "All",
@@ -449,7 +449,7 @@
                 },
                 "python.formatting.autopep8Args": {
                     "default": [],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "description": "%python.formatting.autopep8Args.description%",
                     "items": {
                         "type": "string"
                     },
@@ -458,13 +458,13 @@
                 },
                 "python.formatting.autopep8Path": {
                     "default": "autopep8",
-                    "description": "Path to autopep8, you can use a custom version of autopep8 by modifying this setting to include the full path.",
+                    "description": "%python.formatting.autopep8Path.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.formatting.blackArgs": {
                     "default": [],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "description": "%python.formatting.blackArgs.description%",
                     "items": {
                         "type": "string"
                     },
@@ -473,13 +473,13 @@
                 },
                 "python.formatting.blackPath": {
                     "default": "black",
-                    "description": "Path to Black, you can use a custom version of Black by modifying this setting to include the full path.",
+                    "description": "%python.formatting.blackPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.formatting.provider": {
                     "default": "autopep8",
-                    "description": "Provider for formatting. Possible options include 'autopep8', 'black', and 'yapf'.",
+                    "description": "%python.formatting.provider.description%",
                     "enum": [
                         "autopep8",
                         "black",
@@ -491,7 +491,7 @@
                 },
                 "python.formatting.yapfArgs": {
                     "default": [],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "description": "%python.formatting.yapfArgs.description%",
                     "items": {
                         "type": "string"
                     },
@@ -500,19 +500,19 @@
                 },
                 "python.formatting.yapfPath": {
                     "default": "yapf",
-                    "description": "Path to yapf, you can use a custom version of yapf by modifying this setting to include the full path.",
+                    "description": "%python.formatting.yapfPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.globalModuleInstallation": {
                     "default": false,
-                    "description": "Whether to install Python modules globally when not using an environment.",
+                    "description": "%python.globalModuleInstallation.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.languageServer": {
                     "default": "Default",
-                    "description": "Defines type of the language server.",
+                    "description": "%python.languageServer.description%",
                     "enum": [
                         "Default",
                         "Jedi",
@@ -520,17 +520,17 @@
                         "None"
                     ],
                     "enumDescriptions": [
-                        "Automatically select a language server: Pylance if installed and available, otherwise fallback to Jedi.",
-                        "Use Jedi behind the Language Server Protocol (LSP) as a language server.",
-                        "Use Pylance as a language server.",
-                        "Disable language server capabilities."
+                        "%python.languageServer.defaultDescription%",
+                        "%python.languageServer.jediDescription%",
+                        "%python.languageServer.pylanceDescription%",
+                        "%python.languageServer.noneDescription%"
                     ],
                     "scope": "window",
                     "type": "string"
                 },
                 "python.linting.banditArgs": {
                     "default": [],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "description": "%python.linting.banditArgs.description%",
                     "items": {
                         "type": "string"
                     },
@@ -539,31 +539,31 @@
                 },
                 "python.linting.banditEnabled": {
                     "default": false,
-                    "description": "Whether to lint Python files using bandit.",
+                    "description": "%python.linting.banditEnabled.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.linting.banditPath": {
                     "default": "bandit",
-                    "description": "Path to bandit, you can use a custom version of bandit by modifying this setting to include the full path.",
+                    "description": "%python.linting.banditPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.linting.cwd": {
                     "default": null,
-                    "description": "Optional working directory for linters.",
+                    "description": "%python.linting.cwd.description%",
                     "scope": "resource",
                     "type": "string"
                 },
                 "python.linting.enabled": {
                     "default": true,
-                    "description": "Whether to lint Python files.",
+                    "description": "%python.linting.enabled.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.linting.flake8Args": {
                     "default": [],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "description": "%python.linting.flake8Args.description%",
                     "items": {
                         "type": "string"
                     },
@@ -572,7 +572,7 @@
                 },
                 "python.linting.flake8CategorySeverity.E": {
                     "default": "Error",
-                    "description": "Severity of Flake8 message type 'E'.",
+                    "description": "%python.linting.flake8CategorySeverity.E.description%",
                     "enum": [
                         "Error",
                         "Hint",
@@ -584,7 +584,7 @@
                 },
                 "python.linting.flake8CategorySeverity.F": {
                     "default": "Error",
-                    "description": "Severity of Flake8 message type 'F'.",
+                    "description": "%python.linting.flake8CategorySeverity.F.description%",
                     "enum": [
                         "Error",
                         "Hint",
@@ -596,7 +596,7 @@
                 },
                 "python.linting.flake8CategorySeverity.W": {
                     "default": "Warning",
-                    "description": "Severity of Flake8 message type 'W'.",
+                    "description": "%python.linting.flake8CategorySeverity.W.description%",
                     "enum": [
                         "Error",
                         "Hint",
@@ -608,13 +608,13 @@
                 },
                 "python.linting.flake8Enabled": {
                     "default": false,
-                    "description": "Whether to lint Python files using flake8",
+                    "description": "%python.linting.flake8Enabled.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.linting.flake8Path": {
                     "default": "flake8",
-                    "description": "Path to flake8, you can use a custom version of flake8 by modifying this setting to include the full path.",
+                    "description": "%ython.linting.flake8Path.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
@@ -623,7 +623,7 @@
                         "**/site-packages/**/*.py",
                         ".vscode/*.py"
                     ],
-                    "description": "Patterns used to exclude files or folders from being linted.",
+                    "description": "%python.linting.ignorePatterns.description%",
                     "items": {
                         "type": "string"
                     },
@@ -632,13 +632,13 @@
                 },
                 "python.linting.lintOnSave": {
                     "default": true,
-                    "description": "Whether to lint Python files when saved.",
+                    "description": "%python.linting.lintOnSave.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.linting.maxNumberOfProblems": {
                     "default": 100,
-                    "description": "Controls the maximum number of problems produced by the server.",
+                    "description": "%python.linting.maxNumberOfProblems.description%",
                     "scope": "resource",
                     "type": "number"
                 },
@@ -649,7 +649,7 @@
                         "--show-column-numbers",
                         "--no-pretty"
                     ],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "description": "%python.linting.mypyArgs.description%",
                     "items": {
                         "type": "string"
                     },
@@ -658,7 +658,7 @@
                 },
                 "python.linting.mypyCategorySeverity.error": {
                     "default": "Error",
-                    "description": "Severity of Mypy message type 'Error'.",
+                    "description": "%python.linting.mypyCategorySeverity.error.description%",
                     "enum": [
                         "Error",
                         "Hint",
@@ -670,7 +670,7 @@
                 },
                 "python.linting.mypyCategorySeverity.note": {
                     "default": "Information",
-                    "description": "Severity of Mypy message type 'Note'.",
+                    "description": "%python.linting.mypyCategorySeverity.note.description%.",
                     "enum": [
                         "Error",
                         "Hint",
@@ -682,19 +682,19 @@
                 },
                 "python.linting.mypyEnabled": {
                     "default": false,
-                    "description": "Whether to lint Python files using mypy.",
+                    "description": "%python.linting.mypyEnabled.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.linting.mypyPath": {
                     "default": "mypy",
-                    "description": "Path to mypy, you can use a custom version of mypy by modifying this setting to include the full path.",
+                    "description": "%python.linting.mypyPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.linting.prospectorArgs": {
                     "default": [],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "description": "%python.linting.prospectorArgs.description%",
                     "items": {
                         "type": "string"
                     },
@@ -703,19 +703,19 @@
                 },
                 "python.linting.prospectorEnabled": {
                     "default": false,
-                    "description": "Whether to lint Python files using prospector.",
+                    "description": "%python.linting.prospectorEnabled.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.linting.prospectorPath": {
                     "default": "prospector",
-                    "description": "Path to Prospector, you can use a custom version of prospector by modifying this setting to include the full path.",
+                    "description": "%python.linting.prospectorPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.linting.pycodestyleArgs": {
                     "default": [],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "description": "%python.linting.pycodestyleArgs.description%",
                     "items": {
                         "type": "string"
                     },
@@ -724,7 +724,7 @@
                 },
                 "python.linting.pycodestyleCategorySeverity.E": {
                     "default": "Error",
-                    "description": "Severity of pycodestyle message type 'E'.",
+                    "description": "%python.linting.pycodestyleCategorySeverity.E.description%",
                     "enum": [
                         "Error",
                         "Hint",
@@ -736,7 +736,7 @@
                 },
                 "python.linting.pycodestyleCategorySeverity.W": {
                     "default": "Warning",
-                    "description": "Severity of pycodestyle message type 'W'.",
+                    "description": "%python.linting.pycodestyleCategorySeverity.W.description%",
                     "enum": [
                         "Error",
                         "Hint",
@@ -748,19 +748,19 @@
                 },
                 "python.linting.pycodestyleEnabled": {
                     "default": false,
-                    "description": "Whether to lint Python files using pycodestyle",
+                    "description": "%python.linting.pycodestyleEnabled.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.linting.pycodestylePath": {
                     "default": "pycodestyle",
-                    "description": "Path to pycodestyle, you can use a custom version of pycodestyle by modifying this setting to include the full path.",
+                    "description": "%python.linting.pycodestylePath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.linting.pydocstyleArgs": {
                     "default": [],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "description": "%python.linting.pydocstyleArgs.description%",
                     "items": {
                         "type": "string"
                     },
@@ -769,19 +769,19 @@
                 },
                 "python.linting.pydocstyleEnabled": {
                     "default": false,
-                    "description": "Whether to lint Python files using pydocstyle",
+                    "description": "%python.linting.pydocstyleEnabled.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.linting.pydocstylePath": {
                     "default": "pydocstyle",
-                    "description": "Path to pydocstyle, you can use a custom version of pydocstyle by modifying this setting to include the full path.",
+                    "description": "%python.linting.pydocstylePath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.linting.pylamaArgs": {
                     "default": [],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "description": "%python.linting.pylamaArgs.description%",
                     "items": {
                         "type": "string"
                     },
@@ -790,19 +790,19 @@
                 },
                 "python.linting.pylamaEnabled": {
                     "default": false,
-                    "description": "Whether to lint Python files using pylama.",
+                    "description": "%python.linting.pylamaEnabled.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.linting.pylamaPath": {
                     "default": "pylama",
-                    "description": "Path to pylama, you can use a custom version of pylama by modifying this setting to include the full path.",
+                    "description": "%python.linting.pylamaPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.linting.pylintArgs": {
                     "default": [],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "description": "%python.linting.pylintArgs.description%",
                     "items": {
                         "type": "string"
                     },
@@ -811,7 +811,7 @@
                 },
                 "python.linting.pylintCategorySeverity.convention": {
                     "default": "Information",
-                    "description": "Severity of Pylint message type 'Convention/C'.",
+                    "description": "%python.linting.pylintCategorySeverity.convention.description%",
                     "enum": [
                         "Error",
                         "Hint",
@@ -823,7 +823,7 @@
                 },
                 "python.linting.pylintCategorySeverity.error": {
                     "default": "Error",
-                    "description": "Severity of Pylint message type 'Error/E'.",
+                    "description": "%python.linting.pylintCategorySeverity.error.description%",
                     "enum": [
                         "Error",
                         "Hint",
@@ -835,7 +835,7 @@
                 },
                 "python.linting.pylintCategorySeverity.fatal": {
                     "default": "Error",
-                    "description": "Severity of Pylint message type 'Fatal/F'.",
+                    "description": "%python.linting.pylintCategorySeverity.fatal.description%",
                     "enum": [
                         "Error",
                         "Hint",
@@ -847,7 +847,7 @@
                 },
                 "python.linting.pylintCategorySeverity.refactor": {
                     "default": "Hint",
-                    "description": "Severity of Pylint message type 'Refactor/R'.",
+                    "description": "%python.linting.pylintCategorySeverity.refactor.description%",
                     "enum": [
                         "Error",
                         "Hint",
@@ -859,7 +859,7 @@
                 },
                 "python.linting.pylintCategorySeverity.warning": {
                     "default": "Warning",
-                    "description": "Severity of Pylint message type 'Warning/W'.",
+                    "description": "%python.linting.pylintCategorySeverity.warning.description%",
                     "enum": [
                         "Error",
                         "Hint",
@@ -871,19 +871,19 @@
                 },
                 "python.linting.pylintEnabled": {
                     "default": false,
-                    "description": "Whether to lint Python files using pylint.",
+                    "description": "%python.linting.pylintEnabled.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.linting.pylintPath": {
                     "default": "pylint",
-                    "description": "Path to Pylint, you can use a custom version of pylint by modifying this setting to include the full path.",
+                    "description": "%python.linting.pylintPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.logging.level": {
                     "default": "error",
-                    "description": "The logging level the extension logs at, defaults to 'error'",
+                    "description": "%python.logging.level.description%",
                     "enum": [
                         "debug",
                         "error",
@@ -896,20 +896,20 @@
                 },
                 "python.pipenvPath": {
                     "default": "pipenv",
-                    "description": "Path to the pipenv executable to use for activation.",
+                    "description": "%python.pipenvPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.poetryPath": {
                     "default": "poetry",
-                    "description": "Path to the poetry executable.",
+                    "description": "%python.poetryPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.pylanceLspNotebooksEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Determines if Pylance's experimental LSP notebooks support is used or not.",
+                    "description": "%python.pylanceLspNotebooksEnabled.description%",
                     "scope": "machine",
                     "tags": [
                         "experimental"
@@ -917,7 +917,7 @@
                 },
                 "python.sortImports.args": {
                     "default": [],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "description": "%python.sortImports.args.description%",
                     "items": {
                         "type": "string"
                     },
@@ -926,73 +926,73 @@
                 },
                 "python.sortImports.path": {
                     "default": "",
-                    "description": "Path to isort script, default using inner version",
+                    "description": "%python.sortImports.path.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
                 "python.tensorBoard.logDirectory": {
                     "default": "",
-                    "description": "Set this setting to your preferred TensorBoard log directory to skip log directory prompt when starting TensorBoard.",
+                    "description": "%python.tensorBoard.logDirectory.description%",
                     "scope": "application",
                     "type": "string"
                 },
                 "python.terminal.activateEnvInCurrentTerminal": {
                     "default": false,
-                    "description": "Activate Python Environment in the current Terminal on load of the Extension.",
+                    "description": "%python.terminal.activateEnvInCurrentTerminal.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.terminal.activateEnvironment": {
                     "default": true,
-                    "description": "Activate Python Environment in Terminal created using the Extension.",
+                    "description": "%python.terminal.activateEnvironment.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.terminal.executeInFileDir": {
                     "default": false,
-                    "description": "When executing a file in the terminal, whether to use execute in the file's directory, instead of the current open folder.",
+                    "description": "%python.terminal.executeInFileDir.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.terminal.focusAfterLaunch": {
                     "default": false,
-                    "description": "When launching a python process, whether to focus on the terminal.",
+                    "description": "%python.terminal.focusAfterLaunch.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.terminal.launchArgs": {
                     "default": [],
-                    "description": "Python launch arguments to use when executing a file in the terminal.",
+                    "description": "%python.terminal.launchArgs.description%",
                     "scope": "resource",
                     "type": "array"
                 },
                 "python.testing.autoTestDiscoverOnSaveEnabled": {
                     "default": true,
-                    "description": "Enable auto run test discovery when saving a test file.",
+                    "description": "%python.testing.autoTestDiscoverOnSaveEnabled.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.testing.cwd": {
                     "default": null,
-                    "description": "Optional working directory for tests.",
+                    "description": "%python.testing.cwd.description%",
                     "scope": "resource",
                     "type": "string"
                 },
                 "python.testing.debugPort": {
                     "default": 3000,
-                    "description": "Port number used for debugging of tests.",
+                    "description": "%python.testing.debugPort.description%",
                     "scope": "resource",
                     "type": "number"
                 },
                 "python.testing.promptToConfigure": {
                     "default": true,
-                    "description": "Prompt to configure a test framework if potential tests directories are discovered.",
+                    "description": "%python.testing.promptToConfigure.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.testing.pytestArgs": {
                     "default": [],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "description": "%python.testing.pytestArgs.description%",
                     "items": {
                         "type": "string"
                     },
@@ -1001,13 +1001,13 @@
                 },
                 "python.testing.pytestEnabled": {
                     "default": false,
-                    "description": "Enable testing using pytest.",
+                    "description": "%python.testing.pytestEnabled.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.testing.pytestPath": {
                     "default": "pytest",
-                    "description": "Path to pytest (pytest), you can use a custom version of pytest by modifying this setting to include the full path.",
+                    "description": "%python.testing.pytestPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
@@ -1019,7 +1019,7 @@
                         "-p",
                         "*test*.py"
                     ],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "description": "%python.testing.unittestArgs.description%",
                     "items": {
                         "type": "string"
                     },
@@ -1028,13 +1028,13 @@
                 },
                 "python.testing.unittestEnabled": {
                     "default": false,
-                    "description": "Enable testing using unittest.",
+                    "description": "%python.testing.unittestEnabled.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
                 "python.venvFolders": {
                     "default": [],
-                    "description": "Folders in your home directory to look into for virtual environments (supports pyenv, direnv and virtualenvwrapper by default).",
+                    "description": "%python.venvFolders.description%",
                     "items": {
                         "type": "string"
                     },
@@ -1043,7 +1043,7 @@
                 },
                 "python.venvPath": {
                     "default": "",
-                    "description": "Path to folder with a list of Virtual Environments (e.g. ~/.pyenv, ~/Envs, ~/.virtualenvs).",
+                    "description": "%python.venvPath.description%",
                     "scope": "machine",
                     "type": "string"
                 }
@@ -1784,7 +1784,7 @@
         "webpack": "webpack"
     },
     "dependencies": {
-        "@vscode/jupyter-lsp-middleware": "^0.2.45",
+        "@vscode/jupyter-lsp-middleware": "^0.2.46",
         "arch": "^2.1.0",
         "diff-match-patch": "^1.0.0",
         "fs-extra": "^10.0.1",
@@ -1812,10 +1812,10 @@
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.4.5",
-        "vscode-jsonrpc": "8.0.1",
-        "vscode-languageclient": "8.0.1",
-        "vscode-languageserver": "8.0.1",
-        "vscode-languageserver-protocol": "3.17.1",
+        "vscode-jsonrpc": "8.0.2-next.1",
+        "vscode-languageclient": "8.0.2-next.5",
+        "vscode-languageserver": "8.0.2-next.5",
+        "vscode-languageserver-protocol": "3.17.2-next.6",
         "vscode-nls": "^5.0.1",
         "vscode-tas-client": "^0.1.22",
         "winreg": "^1.2.4",

@@ -21,6 +21,7 @@ import { IDiagnosticsCommandFactory } from '../commands/types';
 import { DiagnosticCodes } from '../constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../promptHandler';
 import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService } from '../types';
+import { Common } from '../../../common/utils/localize';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
@@ -68,9 +69,6 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const settings = configurationService.getSettings(resource);
-        if (settings.disableInstallationChecks === true) {
-            return [];
-        }
         if (!(await this.helper.isMacDefaultPythonPath(settings.pythonPath))) {
             return [];
         }
@@ -127,14 +125,14 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
             case DiagnosticCodes.MacInterpreterSelected: {
                 return [
                     {
-                        prompt: 'Select Python Interpreter',
+                        prompt: Common.selectPythonInterpreter,
                         command: commandFactory.createCommand(diagnostic, {
                             type: 'executeVSCCommand',
                             options: 'python.setInterpreter',
                         }),
                     },
                     {
-                        prompt: 'Do not show again',
+                        prompt: Common.doNotShowAgain,
                         command: commandFactory.createCommand(diagnostic, {
                             type: 'ignore',
                             options: DiagnosticScope.Global,

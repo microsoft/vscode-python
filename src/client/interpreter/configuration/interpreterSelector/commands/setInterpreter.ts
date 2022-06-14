@@ -328,6 +328,17 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             if (index !== -1) {
                 items[index] = recommended;
             }
+            items.forEach((item, i) => {
+                if (
+                    isInterpreterQuickPickItem(item) &&
+                    item.interpreter.path === 'python' &&
+                    item.interpreter.envType === EnvironmentType.Conda
+                ) {
+                    if (!items[i].label.includes(Octicons.Warning)) {
+                        items[i].label = `${Octicons.Warning} ${items[i].label}`;
+                    }
+                }
+            });
         }
     }
 

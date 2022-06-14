@@ -86,7 +86,9 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
          * we avoid the cost of running lstat. So simply remove envs which no longer
          * exist.
          */
-        const areEnvsValid = await Promise.all(this.envs.map((e) => pathExists(e.executable.filename)));
+        const areEnvsValid = await Promise.all(
+            this.envs.map((e) => (e.executable.filename === 'python' ? true : pathExists(e.executable.filename))),
+        );
         const invalidIndexes = areEnvsValid
             .map((isValid, index) => (isValid ? -1 : index))
             .filter((i) => i !== -1)

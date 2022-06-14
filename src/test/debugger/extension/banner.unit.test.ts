@@ -32,7 +32,7 @@ suite('Debugging - Banner', () => {
     let banner: DebuggerBanner;
     const message = 'Can you please take 2 minutes to tell us how the debugger is working for you?';
     const yes = 'Yes, take survey now';
-    const no = 'No thanks';
+    const no = 'No, thanks';
     const later = 'Remind me later';
 
     setup(() => {

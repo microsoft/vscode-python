@@ -144,22 +144,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             expect(diagnostics).to.be.deep.equal([]);
             platformService.verifyAll();
         });
-        test('Should return empty diagnostics if installer check is disabled', async () => {
-            settings
-                .setup((s) => s.disableInstallationChecks)
-                .returns(() => true)
-                .verifiable(typemoq.Times.once());
-
-            const diagnostics = await diagnosticService.diagnose(undefined);
-            expect(diagnostics).to.be.deep.equal([]);
-            settings.verifyAll();
-            platformService.verifyAll();
-        });
         test('Should return empty diagnostics if platform is mac and selected interpreter is not default mac interpreter', async () => {
-            settings
-                .setup((s) => s.disableInstallationChecks)
-                .returns(() => false)
-                .verifiable(typemoq.Times.once());
             platformService
                 .setup((i) => i.isMac)
                 .returns(() => true)
@@ -176,11 +161,6 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             helper.verifyAll();
         });
         test('Should return diagnostic if platform is mac and selected interpreter is default mac interpreter', async () => {
-            settings
-                .setup((s) => s.disableInstallationChecks)
-                .returns(() => false)
-                .verifiable(typemoq.Times.once());
-
             platformService
                 .setup((i) => i.isMac)
                 .returns(() => true)

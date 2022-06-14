@@ -47,7 +47,7 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
             prompt: DebugConfigStrings.attach.enterRemoteHost.prompt,
             validate: (value) =>
                 Promise.resolve(
-                    value && value.trim.length > 0 ? undefined : DebugConfigStrings.attach.enterRemoteHost.invalid,
+                    value && value.trim().length > 0 ? undefined : DebugConfigStrings.attach.enterRemoteHost.invalid,
                 ),
         });
         if (!connect.host) {

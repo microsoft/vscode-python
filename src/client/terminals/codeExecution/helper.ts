@@ -5,6 +5,7 @@ import '../../common/extensions';
 import { inject, injectable } from 'inversify';
 import { Position, Range, TextEditor, Uri } from 'vscode';
 
+import * as nls from 'vscode-nls';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import * as internalScripts from '../../common/process/internal/scripts';
@@ -14,6 +15,8 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
 import { traceError } from '../../logging';
+
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 @injectable()
 export class CodeExecutionHelper implements ICodeExecutionHelper {
@@ -83,15 +86,19 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
     public async getFileToExecute(): Promise<Uri | undefined> {
         const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor) {
-            this.applicationShell.showErrorMessage('No open file to run in terminal');
+            this.applicationShell.showErrorMessage(localize('documentError.Empty', 'No open file to run in terminal'));
             return undefined;
         }
         if (activeEditor.document.isUntitled) {
-            this.applicationShell.showErrorMessage('The active file needs to be saved before it can be run');
+            this.applicationShell.showErrorMessage(
+                localize('documentError.NoSaved', 'The active file needs to be saved before it can be run'),
+            );
             return undefined;
         }
         if (activeEditor.document.languageId !== PYTHON_LANGUAGE) {
-            this.applicationShell.showErrorMessage('The active file is not a Python source file');
+            this.applicationShell.showErrorMessage(
+                localize('documentError.NotPythonFile', 'The active file is not a Python source file)'),
+            );
             return undefined;
         }
         if (activeEditor.document.isDirty) {

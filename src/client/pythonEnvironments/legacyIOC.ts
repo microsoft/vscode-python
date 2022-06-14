@@ -27,11 +27,9 @@ const convertedKinds = new Map(
     Object.entries({
         [PythonEnvKind.OtherGlobal]: EnvironmentType.Global,
         [PythonEnvKind.System]: EnvironmentType.System,
-        [PythonEnvKind.MacDefault]: EnvironmentType.System,
         [PythonEnvKind.WindowsStore]: EnvironmentType.WindowsStore,
         [PythonEnvKind.Pyenv]: EnvironmentType.Pyenv,
         [PythonEnvKind.Conda]: EnvironmentType.Conda,
-        [PythonEnvKind.CondaBase]: EnvironmentType.Conda,
         [PythonEnvKind.VirtualEnv]: EnvironmentType.VirtualEnv,
         [PythonEnvKind.Pipenv]: EnvironmentType.Pipenv,
         [PythonEnvKind.Poetry]: EnvironmentType.Poetry,

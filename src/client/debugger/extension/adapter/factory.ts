@@ -21,6 +21,9 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { IDebugAdapterDescriptorFactory } from '../types';
+import * as nls from 'vscode-nls';
+
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 @injectable()
 export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFactory {
@@ -159,7 +162,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
      */
     private async notifySelectInterpreter() {
         await this.appShell.showErrorMessage(
-            'Please install Python or select a Python Interpreter to use the debugger.',
+            localize('interpreterError', 'Please install Python or select a Python Interpreter to use the debugger.'),
         );
     }
 }

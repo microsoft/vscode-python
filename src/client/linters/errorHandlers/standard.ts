@@ -1,4 +1,5 @@
 import { Uri } from 'vscode';
+import * as nls from 'vscode-nls';
 import { IApplicationShell } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { ExecutionInfo, IOutputChannel } from '../../common/types';
@@ -6,6 +7,7 @@ import { traceError, traceLog } from '../../logging';
 import { ILinterManager, LinterId } from '../types';
 import { BaseErrorHandler } from './baseErrorHandler';
 
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export class StandardErrorHandler extends BaseErrorHandler {
     public async handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean> {
         if (
@@ -27,7 +29,7 @@ export class StandardErrorHandler extends BaseErrorHandler {
     }
 
     private async displayLinterError(linterId: LinterId) {
-        const message = `There was an error in running the linter '${linterId}'`;
+        const message = localize('linterError', "There was an error in running the linter '{0}'", linterId);
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         const action = await appShell.showErrorMessage(message, 'View Errors');

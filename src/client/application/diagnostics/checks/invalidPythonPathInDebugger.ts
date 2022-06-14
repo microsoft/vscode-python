@@ -8,7 +8,7 @@ import { DiagnosticSeverity, Uri, workspace as workspc, WorkspaceFolder } from '
 import { IDocumentManager, IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
-import { Diagnostics } from '../../../common/utils/localize';
+import { Common, Diagnostics } from '../../../common/utils/localize';
 import { SystemVariables } from '../../../common/variables/systemVariables';
 import { PythonPathSource } from '../../../debugger/extension/types';
 import { IInterpreterHelper } from '../../../interpreter/contracts';
@@ -132,7 +132,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
             case DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic: {
                 return [
                     {
-                        prompt: 'Select Python Interpreter',
+                        prompt: Common.selectPythonInterpreter,
                         command: this.commandFactory.createCommand(diagnostic, {
                             type: 'executeVSCCommand',
                             options: 'python.setInterpreter',
@@ -143,7 +143,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
             case DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic: {
                 return [
                     {
-                        prompt: 'Open launch.json',
+                        prompt: Common.openLaunch,
                         command: {
                             diagnostic,
                             invoke: async (): Promise<void> => {

@@ -5,8 +5,10 @@
 import { inject, injectable } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import '../../../common/extensions';
+import * as nls from 'vscode-nls';
 import { useCommandPromptAsDefaultShell } from '../../../common/terminal/commandPrompt';
 import { IConfigurationService, ICurrentProcess, IDisposableRegistry, Resource } from '../../../common/types';
+import { Common } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { traceError } from '../../../logging';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -17,8 +19,12 @@ import { DiagnosticCodes } from '../constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../promptHandler';
 import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../types';
 
-const PowershellActivationNotSupportedWithBatchFilesMessage =
-    'Activation of the selected Python environment is not supported in PowerShell. Consider changing your shell to Command Prompt.';
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
+const PowershellActivationNotSupportedWithBatchFilesMessage = localize(
+    'powershelActivationMsg',
+    'Activation of the selected Python environment is not supported in PowerShell. Consider changing your shell to Command Prompt.',
+);
 
 export class PowershellActivationNotAvailableDiagnostic extends BaseDiagnostic {
     constructor(resource: Resource) {
@@ -75,7 +81,7 @@ export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsS
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const options = [
             {
-                prompt: 'Use Command Prompt',
+                prompt: Common.useCommandPrompt,
 
                 command: {
                     diagnostic,
@@ -90,14 +96,14 @@ export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsS
                 },
             },
             {
-                prompt: 'Ignore',
+                prompt: Common.ignore,
             },
             {
-                prompt: 'Always Ignore',
+                prompt: Common.alwaysIgnore,
                 command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global }),
             },
             {
-                prompt: 'More Info',
+                prompt: Common.moreInfo,
                 command: commandFactory.createCommand(diagnostic, {
                     type: 'launch',
                     options: 'https://aka.ms/CondaPwsh',

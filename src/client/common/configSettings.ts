@@ -112,8 +112,6 @@ export class PythonSettings implements IPythonSettings {
 
     public sortImports!: ISortImportSettings;
 
-    public disableInstallationChecks = false;
-
     public globalModuleInstallation = false;
 
     public pylanceLspNotebooksEnabled = false;
@@ -294,7 +292,6 @@ export class PythonSettings implements IPythonSettings {
             this.linting = lintingSettings;
         }
 
-        this.disableInstallationChecks = pythonSettings.get<boolean>('disableInstallationCheck') === true;
         this.globalModuleInstallation = pythonSettings.get<boolean>('globalModuleInstallation') === true;
         this.pylanceLspNotebooksEnabled = pythonSettings.get<boolean>('pylanceLspNotebooksEnabled') === true;
 
