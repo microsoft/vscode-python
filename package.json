@@ -614,7 +614,7 @@
                 },
                 "python.linting.flake8Path": {
                     "default": "flake8",
-                    "description": "%ython.linting.flake8Path.description%",
+                    "description": "%python.linting.flake8Path.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
