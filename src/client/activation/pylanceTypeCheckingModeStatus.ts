@@ -71,12 +71,13 @@ export class PylanceTypeCheckingModeStatusItem implements IExtensionSingleActiva
     }
 
     public dispose(): void {
+        this.statusItem = undefined;
         this.disposables.forEach((d) => d.dispose());
     }
 
     public async updateStatusItem(uriString?: string): Promise<void> {
-        const languageServerType = this.configService.getSettings().languageServer;
-        if (languageServerType !== LanguageServerType.Node) {
+        const isPylance = this.configService.getSettings().languageServer === LanguageServerType.Node;
+        if (!isPylance) {
             return;
         }
 
@@ -122,7 +123,7 @@ function updateTypeCheckingStatusDetails(
     recommendedMode: string | undefined,
 ) {
     if (typeCheckingMode === 'off' && recommendedMode === 'basic') {
-        statusItem.severity = vscode.LanguageStatusSeverity.Information;
+        statusItem.severity = vscode.LanguageStatusSeverity.Warning;
         statusItem.command = {
             title: LanguageService.pylanceTypeCheckingModeOffStatusItem.titleOn,
             command: Commands.Set_TypeChecking,
