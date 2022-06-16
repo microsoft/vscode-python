@@ -11,6 +11,9 @@ import { captureTelemetry } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { AttachRequestArguments } from '../../types';
 import { IChildProcessAttachService } from './types';
+import * as nls from 'vscode-nls';
+
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * This class is responsible for attaching the debugger to any
@@ -34,7 +37,11 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
         const folder = this.getRelatedWorkspaceFolder(debugConfig);
         const launched = await this.debugService.startDebugging(folder, debugConfig, parentSession);
         if (!launched) {
-            this.appShell.showErrorMessage(`Failed to launch debugger for child process ${processId}`).then(noop, noop);
+            this.appShell
+                .showErrorMessage(
+                    localize('debuggerError', 'Failed to launch debugger for child process {0}', processId),
+                )
+                .then(noop, noop);
         }
     }
 

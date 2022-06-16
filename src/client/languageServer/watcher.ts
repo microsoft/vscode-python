@@ -165,6 +165,7 @@ export class LanguageServerWatcher
         const key = this.getWorkspaceKey(resource, serverType);
         const languageServer = this.workspaceLanguageServers.get(key);
         if ((serverType === LanguageServerType.Node || serverType === LanguageServerType.None) && languageServer) {
+            logStartup(serverType, lsResource);
             return languageServer;
         }
 

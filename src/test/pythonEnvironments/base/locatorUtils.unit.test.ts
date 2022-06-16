@@ -79,7 +79,7 @@ suite('Python envs locator utils - getQueryFilter', () => {
 
     suite('kinds', () => {
         test('match none', () => {
-            const query: PythonLocatorQuery = { kinds: [PythonEnvKind.MacDefault] };
+            const query: PythonLocatorQuery = { kinds: [PythonEnvKind.Poetry] };
 
             const filter = getQueryFilter(query);
             const filtered = envs.filter(filter);

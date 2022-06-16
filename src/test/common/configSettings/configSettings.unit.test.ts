@@ -94,7 +94,7 @@ suite('Python Settings', async () => {
         }
 
         // boolean settings
-        for (const name of ['disableInstallationCheck', 'globalModuleInstallation']) {
+        for (const name of ['globalModuleInstallation']) {
             config
                 .setup((c) => c.get<boolean>(name))
 

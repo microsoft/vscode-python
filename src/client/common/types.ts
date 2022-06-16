@@ -188,7 +188,6 @@ export interface IPythonSettings {
     readonly terminal: ITerminalSettings;
     readonly sortImports: ISortImportSettings;
     readonly envFile: string;
-    readonly disableInstallationChecks: boolean;
     readonly globalModuleInstallation: boolean;
     readonly pylanceLspNotebooksEnabled: boolean;
     readonly onDidChange: Event<void>;

@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
 import { CancellationToken, CancellationTokenSource, TextDocument, Uri, WorkspaceEdit } from 'vscode';
+import * as nls from 'vscode-nls';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
 import { Commands, PYTHON_LANGUAGE } from '../common/constants';
 import * as internalScripts from '../common/process/internal/scripts';
@@ -21,6 +22,8 @@ import { traceError } from '../logging';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { ISortImportsEditingProvider } from './types';
+
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const doNotDisplayPromptStateKey = 'ISORT5_UPGRADE_WARNING_KEY';
 
@@ -114,7 +117,9 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         if (!uri) {
             const activeEditor = this.documentManager.activeTextEditor;
             if (!activeEditor || activeEditor.document.languageId !== PYTHON_LANGUAGE) {
-                this.shell.showErrorMessage('Please open a Python file to sort the imports.').then(noop, noop);
+                this.shell
+                    .showErrorMessage(localize('sortImportError', 'Please open a Python file to sort the imports.'))
+                    .then(noop, noop);
                 return;
             }
             uri = activeEditor.document.uri;

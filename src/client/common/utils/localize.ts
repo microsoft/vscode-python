@@ -90,6 +90,12 @@ export namespace Common {
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
     export const recommended = localize('Common.recommended', 'Recommended');
     export const clearAll = localize('Common.clearAll', 'Clear all');
+    export const alwaysIgnore = localize('Common.alwaysIgnore', 'Always Ignore');
+    export const ignore = localize('Common.ignore', 'Ignore');
+    export const selectPythonInterpreter = localize('Common.selectPythonInterpreter', 'Select Python Interpreter');
+    export const openLaunch = localize('Common.openLaunch', 'Open launch.json');
+    export const useCommandPrompt = localize('Common.useCommandPrompt', 'Use Command Prompt');
+    export const download = localize('Common.download', 'Download');
 }
 
 export namespace CommonSurvey {

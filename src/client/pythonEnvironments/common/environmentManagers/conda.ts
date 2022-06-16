@@ -8,7 +8,6 @@ import {
     isParentPath,
     pathExists,
     readFile,
-    shellExecute,
     onDidChangePythonSetting,
     exec,
 } from '../externalDependencies';
@@ -22,8 +21,6 @@ import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
 import { traceError, traceVerbose } from '../../../logging';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
-import { buildPythonExecInfo } from '../../exec';
-import { getExecutablePath } from '../../info/executable';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 export const CONDAPATH_SETTING_KEY = 'condaPath';
@@ -483,6 +480,7 @@ export class Conda {
     /**
      * Returns executable associated with the conda env, swallows exceptions.
      */
+    // eslint-disable-next-line class-methods-use-this
     public async getInterpreterPathForEnvironment(condaEnv: CondaEnvInfo): Promise<string | undefined> {
         try {
             const executablePath = await getInterpreterPath(condaEnv.prefix);
@@ -491,24 +489,14 @@ export class Conda {
                 return executablePath;
             }
             traceVerbose(
-                'Executable does not exist within conda env, running conda run to get it',
+                'Executable does not exist within conda env, assume the executable to be `python`',
                 JSON.stringify(condaEnv),
             );
-            return this.getInterpreterPathUsingCondaRun(condaEnv);
+            return 'python';
         } catch (ex) {
             traceError(`Failed to get executable for conda env: ${JSON.stringify(condaEnv)}`, ex);
             return undefined;
         }
-    }
-
-    @cache(-1, true)
-    private async getInterpreterPathUsingCondaRun(condaEnv: CondaEnvInfo) {
-        const runArgs = await this.getRunPythonArgs(condaEnv);
-        if (runArgs) {
-            const python = buildPythonExecInfo(runArgs);
-            return getExecutablePath(python, shellExecute, CONDA_ACTIVATION_TIMEOUT);
-        }
-        return undefined;
     }
 
     public async getRunPythonArgs(env: CondaEnvInfo, forShellExecution?: boolean): Promise<string[] | undefined> {

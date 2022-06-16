@@ -46,7 +46,6 @@ images/**/*.gif
 images/**/*.png
 ipywidgets/**
 i18n/**
-news/**
 node_modules/**
 obj/**
 out/**/*.stats.json

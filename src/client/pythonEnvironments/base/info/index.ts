@@ -12,11 +12,9 @@ export enum PythonEnvKind {
     Unknown = 'unknown',
     // "global"
     System = 'global-system',
-    MacDefault = 'global-mac-default',
     WindowsStore = 'global-windows-store',
     Pyenv = 'global-pyenv',
-    CondaBase = 'global-conda-base',
-    Poetry = 'global-poetry',
+    Poetry = 'poetry',
     Custom = 'global-custom',
     OtherGlobal = 'global-other',
     // "virtual"

@@ -1,5 +1,94 @@
 # Changelog
 
+## 2022.8.0-rc (8 June 2022)
+
+### Enhancements
+
+1. Make cursor focus switch automatically to the terminal after launching a python process with configuration option. (Thanks [djplt](https://github.com/djplt))
+   ([#14851](https://github.com/Microsoft/vscode-python/issues/14851))
+1. Enable localization using vscode-nls.
+   ([#18286](https://github.com/Microsoft/vscode-python/issues/18286))
+1. Add support for referencing multiroot-workspace folders in settings using `${workspaceFolder:<folder_name>}`.
+   ([#18650](https://github.com/Microsoft/vscode-python/issues/18650))
+1. Ensure conda envs lacking an interpreter which do not use a valid python binary are also discovered and is selectable, so that `conda env list` matches with what the extension reports.
+   ([#18934](https://github.com/Microsoft/vscode-python/issues/18934))
+1. Improve information collected by the `Python: Report Issue` command.
+   ([#19067](https://github.com/Microsoft/vscode-python/issues/19067))
+1. Only trigger auto environment discovery if a user attempts to choose a different interpreter, or when a particular scope (a workspace folder or globally) is opened for the first time.
+   ([#19102](https://github.com/Microsoft/vscode-python/issues/19102))
+1. Added a proposed API to report progress of environment discovery in two phases.
+   ([#19103](https://github.com/Microsoft/vscode-python/issues/19103))
+1. Update to latest LS client (v8.0.0) and server (v8.0.0).
+   ([#19114](https://github.com/Microsoft/vscode-python/issues/19114))
+1. Update to latest LS client (v8.0.1) and server (v8.0.1) that contain the race condition fix around `LangClient.stop`.
+   ([#19139](https://github.com/Microsoft/vscode-python/issues/19139))
+
+### Fixes
+
+1. Do not use `--user` flag when installing in a virtual environment.
+   ([#14327](https://github.com/Microsoft/vscode-python/issues/14327))
+1. Fix error `No such file or directory` on conda activate, and simplify the environment activation code.
+   ([#18989](https://github.com/Microsoft/vscode-python/issues/18989))
+1. Add proposed async execution API under environments.
+   ([#19079](https://github.com/Microsoft/vscode-python/issues/19079))
+
+### Code Health
+
+1. Capture whether environment discovery was triggered using Quickpick UI.
+   ([#19077](https://github.com/Microsoft/vscode-python/issues/19077))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [poetry](https://pypi.org/project/poetry/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2022.6.0 (5 May 2022)
 
 ### Enhancements

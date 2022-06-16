@@ -22,8 +22,17 @@ from testing_tools.adapter.pytest import _pytest_item as pytest_item
 
 from .... import util
 
-# In Python 3.8 __len__ is called twice, which impacts some of the test assertions we do below.
-PYTHON_38_OR_LATER = sys.version_info[0] >= 3 and sys.version_info[1] >= 8
+
+def unique(collection, key):
+    result = []
+    keys = []
+    for item in collection:
+        k = key(item)
+        if k in keys:
+            continue
+        result.append(item)
+        keys.append(k)
+    return result
 
 
 class StubPyTest(util.StubProxy):
@@ -341,17 +350,16 @@ class DiscoverTests(unittest.TestCase):
             ("discovered.__getitem__", (0,), None),
         ]
 
-        # In Python 3.8 __len__ is called twice.
-        if PYTHON_38_OR_LATER:
-            calls.insert(3, ("discovered.__len__", None, None))
-
         parents, tests = _discovery.discover(
             [], _pytest_main=stubpytest.main, _plugin=plugin
         )
 
+        actual_calls = unique(stub.calls, lambda k: k[0])
+        expected_calls = unique(calls, lambda k: k[0])
+
         self.assertEqual(parents, [])
         self.assertEqual(tests, expected)
-        self.assertEqual(stub.calls, calls)
+        self.assertEqual(actual_calls, expected_calls)
 
     def test_failure(self):
         stub = util.Stub()
@@ -384,17 +392,16 @@ class DiscoverTests(unittest.TestCase):
             ("discovered.__getitem__", (0,), None),
         ]
 
-        # In Python 3.8 __len__ is called twice.
-        if PYTHON_38_OR_LATER:
-            calls.insert(3, ("discovered.__len__", None, None))
-
         parents, tests = _discovery.discover(
             [], _pytest_main=pytest.main, _plugin=plugin
         )
 
+        actual_calls = unique(stub.calls, lambda k: k[0])
+        expected_calls = unique(calls, lambda k: k[0])
+
         self.assertEqual(parents, [])
         self.assertEqual(tests, expected)
-        self.assertEqual(stub.calls, calls)
+        self.assertEqual(actual_calls, expected_calls)
 
     def test_stdio_hidden_file(self):
         stub = util.Stub()
@@ -408,10 +415,6 @@ class DiscoverTests(unittest.TestCase):
             ("discovered.__getitem__", (0,), None),
         ]
         pytest_stdout = "spamspamspamspamspamspamspammityspam"
-
-        # In Python 3.8 __len__ is called twice.
-        if PYTHON_38_OR_LATER:
-            calls.insert(3, ("discovered.__len__", None, None))
 
         # to simulate stdio behavior in methods like os.dup,
         # use actual files (rather than StringIO)
@@ -430,8 +433,11 @@ class DiscoverTests(unittest.TestCase):
             mock.seek(0)
             captured = mock.read()
 
+        actual_calls = unique(stub.calls, lambda k: k[0])
+        expected_calls = unique(calls, lambda k: k[0])
+
         self.assertEqual(captured, "")
-        self.assertEqual(stub.calls, calls)
+        self.assertEqual(actual_calls, expected_calls)
 
     def test_stdio_hidden_fd(self):
         # simulate cases where stdout comes from the lower layer than sys.stdout
@@ -467,10 +473,6 @@ class DiscoverTests(unittest.TestCase):
         ]
         pytest_stdout = "spamspamspamspamspamspamspammityspam"
 
-        # In Python 3.8 __len__ is called twice.
-        if PYTHON_38_OR_LATER:
-            calls.insert(3, ("discovered.__len__", None, None))
-
         buf = StringIO()
 
         sys.stdout = buf
@@ -485,8 +487,11 @@ class DiscoverTests(unittest.TestCase):
             sys.stdout = sys.__stdout__
         captured = buf.getvalue()
 
+        actual_calls = unique(stub.calls, lambda k: k[0])
+        expected_calls = unique(calls, lambda k: k[0])
+
         self.assertEqual(captured, pytest_stdout)
-        self.assertEqual(stub.calls, calls)
+        self.assertEqual(actual_calls, expected_calls)
 
     def test_stdio_not_hidden_fd(self):
         # simulate cases where stdout comes from the lower layer than sys.stdout

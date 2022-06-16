@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { env } from 'vscode';
+import { CodeLens, commands, env, window } from 'vscode';
 import { IExperimentService } from '../../client/common/types';
 import { IServiceManager } from '../../client/ioc/types';
 import { TensorBoardNbextensionCodeLensProvider } from '../../client/tensorBoard/nbextensionCodeLensProvider';
@@ -17,6 +17,7 @@ import {
     initializeTest,
 } from '../initialize';
 import { openFile, waitForCondition } from '../common';
+import { openNotebook } from '../smoke/common';
 
 suite('TensorBoard code lens provider', () => {
     suiteSetup(async function () {
@@ -63,23 +64,23 @@ suite('TensorBoard code lens provider', () => {
             );
             assert.ok(spy.notCalled, 'Called provideCodeLens for Python file loading tensorboard nbextension');
         });
-        // test('Provide code lens for Python notebook loading and launching tensorboard nbextension', async () => {
-        //     const filePath = path.join(
-        //         EXTENSION_ROOT_DIR_FOR_TESTS,
-        //         'src',
-        //         'test',
-        //         'pythonFiles',
-        //         'tensorBoard',
-        //         'tensorboard_nbextension.ipynb',
-        //     );
-        //     const notebook = await openNotebook(filePath);
-        //     assert(window.activeTextEditor, 'No active editor');
-        //     const codeLenses = await commands.executeCommand<CodeLens[]>(
-        //         'vscode.executeCodeLensProvider',
-        //         notebook.cellAt(0).document.uri,
-        //     );
-        //     assert.ok(codeLenses?.length && codeLenses.length > 0, 'Code lens provider did not provide codelenses');
-        // });
+        test('Provide code lens for Python notebook loading and launching tensorboard nbextension', async () => {
+            const filePath = path.join(
+                EXTENSION_ROOT_DIR_FOR_TESTS,
+                'src',
+                'test',
+                'pythonFiles',
+                'tensorBoard',
+                'tensorboard_nbextension.ipynb',
+            );
+            const notebook = await openNotebook(filePath);
+            assert(window.activeTextEditor, 'No active editor');
+            const codeLenses = await commands.executeCommand<CodeLens[]>(
+                'vscode.executeCodeLensProvider',
+                notebook.cellAt(0).document.uri,
+            );
+            assert.ok(codeLenses?.length && codeLenses.length > 0, 'Code lens provider did not provide codelenses');
+        });
     });
     suite('Imports', () => {
         let codeLensProvider: TensorBoardImportCodeLensProvider;
@@ -120,23 +121,23 @@ suite('TensorBoard code lens provider', () => {
             assert.ok(spy.returnValues.length > 0, 'No return values recorded for provideCodeLens');
             assert.ok(spy.returnValues[0].length === 1, 'provideCodeLenses did not return codelenses');
         });
-        // test('Provide code lens for Python notebook importing tensorboard', async () => {
-        //     const filePath = path.join(
-        //         EXTENSION_ROOT_DIR_FOR_TESTS,
-        //         'src',
-        //         'test',
-        //         'pythonFiles',
-        //         'tensorBoard',
-        //         'tensorboard_import.ipynb',
-        //     );
-        //     const notebook = await openNotebook(filePath);
-        //     assert(window.activeTextEditor, 'No active editor');
-        //     const codeLenses = await commands.executeCommand<CodeLens[]>(
-        //         'vscode.executeCodeLensProvider',
-        //         notebook.cellAt(0).document.uri,
-        //     );
-        //     assert.ok(codeLenses?.length && codeLenses.length > 0, 'Code lens provider did not provide codelenses');
-        // });
+        test('Provide code lens for Python notebook importing tensorboard', async () => {
+            const filePath = path.join(
+                EXTENSION_ROOT_DIR_FOR_TESTS,
+                'src',
+                'test',
+                'pythonFiles',
+                'tensorBoard',
+                'tensorboard_import.ipynb',
+            );
+            const notebook = await openNotebook(filePath);
+            assert(window.activeTextEditor, 'No active editor');
+            const codeLenses = await commands.executeCommand<CodeLens[]>(
+                'vscode.executeCodeLensProvider',
+                notebook.cellAt(0).document.uri,
+            );
+            assert.ok(codeLenses?.length && codeLenses.length > 0, 'Code lens provider did not provide codelenses');
+        });
         test('Does not provide code lens if no matching import', async () => {
             await openFile(
                 path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'pythonFiles', 'tensorBoard', 'noMatch.py'),
