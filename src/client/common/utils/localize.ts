@@ -211,8 +211,9 @@ export namespace LanguageService {
 
     export const pylanceTypeCheckingModeOffStatusItem = {
         name: localize('LanguageService.pylanceTypeCheckingModeStatusItem.name', 'Python Type Checking Mode'),
-        text: localize('LanguageService.pylanceTypeCheckingModeStatusItem.text', 'TypeChecking'),
-        detail: localize('LanguageService.pylanceTypeCheckingModeStatusItem.detail', 'Recommended: Basic'),
+        text: localize('LanguageService.pylanceTypeCheckingModeStatusItem.text', 'Type Checking'),
+        titleOn: localize('LanguageService.pylanceTypeCheckingModeStatusItem.title', 'Switch to on'),
+        titleOff: localize('LanguageService.pylanceTypeCheckingModeStatusItem.title', 'Switch to off'),
     };
 
     export const startingPylance = localize('LanguageService.startingPylance', 'Starting Pylance language server.');

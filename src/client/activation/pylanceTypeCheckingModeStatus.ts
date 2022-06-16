@@ -122,18 +122,16 @@ function updateTypeCheckingStatusDetails(
     recommendedMode: string | undefined,
 ) {
     if (typeCheckingMode === 'off' && recommendedMode === 'basic') {
-        statusItem.severity = vscode.LanguageStatusSeverity.Warning;
-        statusItem.detail = LanguageService.pylanceTypeCheckingModeOffStatusItem.detail;
+        statusItem.severity = vscode.LanguageStatusSeverity.Information;
         statusItem.command = {
-            title: 'Switch to basic',
+            title: LanguageService.pylanceTypeCheckingModeOffStatusItem.titleOn,
             command: Commands.Set_TypeChecking,
-            arguments: [recommendedMode],
+            arguments: ['basic'],
         };
     } else if (typeCheckingMode !== 'off') {
         statusItem.severity = vscode.LanguageStatusSeverity.Information;
-        statusItem.detail = '';
         statusItem.command = {
-            title: 'Switch to off',
+            title: LanguageService.pylanceTypeCheckingModeOffStatusItem.titleOff,
             command: Commands.Set_TypeChecking,
             arguments: ['off'],
         };
