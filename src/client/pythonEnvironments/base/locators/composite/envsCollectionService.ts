@@ -216,7 +216,6 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     private createProgressStates(query: PythonLocatorQuery | undefined) {
         this.refreshesPerQuery.set(query, createDeferred<void>());
-        this.wasRefreshTriggeredForQuery.set(query, true);
         Object.values(ProgressReportStage).forEach((stage) => {
             this.progressPromises.set(stage, createDeferred<void>());
         });
@@ -255,5 +254,6 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                     .filter((e) => getEnvPath(e.executable.filename, e.location).pathType === 'envFolderPath').length,
             });
         }
+        this.wasRefreshTriggeredForQuery.set(query, true);
     }
 }
