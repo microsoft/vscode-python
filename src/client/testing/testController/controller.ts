@@ -212,20 +212,21 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 // TODO: Use new test discovery mechanism
                 // traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
 
-                const workspace = this.workspaceService.getWorkspaceFolder(uri);
-                console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
-                const testAdapter =
-                    this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                testAdapter.discoverTests(
-                    this.testController,
-                    this.refreshCancellation.token,
-                    this.testAdapters.size > 1,
-                    this.workspaceService.workspaceFile?.fsPath,
-                );
+                // const workspace = this.workspaceService.getWorkspaceFolder(uri);
+                // console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
+                // const testAdapter =
+                //     this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                // testAdapter.discoverTests(
+                //     this.testController,
+                //     this.refreshCancellation.token,
+                //     this.testAdapters.size > 1,
+                //     this.workspaceService.workspaceFile?.fsPath,
+                // );
 
-                // Ensure we send test telemetry if it gets disabled again
-                this.sendTestDisabledTelemetry = true;
+                // // Ensure we send test telemetry if it gets disabled again
+                // this.sendTestDisabledTelemetry = true;
 
+                // comment below 229 to run the new way and uncomment above 212 ~ 227
                 await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else {
                 if (this.sendTestDisabledTelemetry) {

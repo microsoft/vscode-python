@@ -6,9 +6,12 @@ from __future__ import absolute_import
 import argparse
 import sys
 
-from . import pytest, report
-from .errors import UnsupportedToolError, UnsupportedCommandError
+import debugpy
 
+from . import pytest, report
+from .errors import UnsupportedCommandError, UnsupportedToolError
+
+#####debugpy.connect(('localhost', 5678))
 
 TOOLS = {
     "pytest": {

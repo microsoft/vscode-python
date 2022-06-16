@@ -4,10 +4,18 @@
 import argparse
 import json
 import os
+
+#
+import pathlib
 import sys
 import traceback
 import unittest
 from typing import List, Literal, Optional, Tuple, TypedDict, Union
+
+import debugpy
+
+#####debugpy.connect(('localhost', 5678))
+##### debugpy.breakpoint()
 
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -76,7 +84,6 @@ class PayloadDict(TypedDict):
     tests: NotRequired[TestNode]
     errors: NotRequired[List[str]]
 
-
 def discover_tests(
     start_dir: str, pattern: str, top_level_dir: Optional[str], uuid: Optional[str]
 ) -> PayloadDict:
@@ -119,7 +126,9 @@ def discover_tests(
         loader = unittest.TestLoader()
         suite = loader.discover(start_dir, pattern, top_level_dir)
 
-        tests, errors = build_test_tree(suite, cwd)
+        tests, errors = build_test_tree(suite, cwd) # test tree built succesfully here.
+
+
     except Exception:
         errors.append(traceback.format_exc())
 

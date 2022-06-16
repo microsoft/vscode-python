@@ -235,9 +235,7 @@
             "name": "Node: Current File",
             "program": "${file}",
             "request": "launch",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
+            "skipFiles": ["<node_internals>/**"],
             "type": "pwa-node"
         },
         {
@@ -248,6 +246,19 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Listen",
+            "type": "python",
+            "request": "attach",
+            "listen": { "host": "localhost", "port": 5678 },
+            "justMyCode": true
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Debug Test Discovery",
+            "configurations": ["Listen", "Extension"]
         }
     ]
 }
