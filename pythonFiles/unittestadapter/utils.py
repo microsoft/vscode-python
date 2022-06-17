@@ -71,10 +71,7 @@ def get_source_line(obj) -> str:
 
 def build_test_node(path: str, name: str, type_: TestNodeTypeEnum) -> TestNode:
     """Build a test node with no children. A test node can be a folder, a file or a class."""
-    # first create appropriate special relative id
-    # id_gen = path.split('\\')
-    # id_gen = id_gen[-1] + '__' + name
-    ##### figure out if we are folder, file, or class
+    ## figure out if we are folder, file, or class
     id_gen = path
     if (type_ == TestNodeTypeEnum.folder or type_ == TestNodeTypeEnum.file):
         id_gen = path
@@ -183,7 +180,7 @@ def build_test_tree(
             # Find/build class node.
             current_node = get_child_node(
                 class_name, file_path, TestNodeTypeEnum.class_, current_node
-            ) #### concatenate class name
+            )
 
             # Get test line number.
             test_method = getattr(test_case, test_case._testMethodName)
@@ -196,9 +193,8 @@ def build_test_tree(
                 "path": file_path,
                 "lineno": lineno,
                 "type_": TestNodeTypeEnum.test,
-                # "UniqueID": class_name+'__'+function_name,
                 "uniqueID": file_path + "\\" + class_name + "\\" + function_name,
-            } ##### concatenate class name and function test name
+            } # concatenate class name and function test name
             current_node["children"].append(test_node)
 
     if not root["children"]:

@@ -4,8 +4,6 @@
 import argparse
 import json
 import os
-
-#
 import pathlib
 import sys
 import traceback
@@ -14,8 +12,8 @@ from typing import List, Literal, Optional, Tuple, TypedDict, Union
 
 import debugpy
 
-#####debugpy.connect(('localhost', 5678))
-##### debugpy.breakpoint()
+## debugpy.connect(('localhost', 5678))
+## debugpy.breakpoint()
 
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
