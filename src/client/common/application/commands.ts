@@ -97,6 +97,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Tests_Configure]: [undefined, undefined | CommandSource, undefined | Uri];
     [Commands.LaunchTensorBoard]: [TensorBoardEntrypoint, TensorBoardEntrypointTrigger];
     ['workbench.view.testing.focus']: [];
-    [LSCommands.RecommendSettingPylanceLS]: [string | undefined, string];
+    [LSCommands.RecommendSettingLS]: [string | undefined, string];
     [Commands.Set_TypeChecking]: [string];
 }

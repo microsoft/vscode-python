@@ -7,13 +7,13 @@ import * as vscode from 'vscode';
 import { ConfigurationTarget } from 'vscode';
 
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { Commands } from '../common/constants';
+import { Commands, PYTHON_LANGUAGE } from '../common/constants';
 import { Commands as LSCommands } from './commands';
 import { IConfigurationService, IDisposableRegistry } from '../common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../common/utils/delayTrigger';
 import { LanguageService } from '../common/utils/localize';
 
-import { IExtensionSingleActivationService, LanguageServerType } from './types';
+import { IExtensionSingleActivationService, ILanguageServerCache, LanguageServerType } from './types';
 
 const TypeCheckingSettingName = 'python.analysis.typeCheckingMode';
 
@@ -34,9 +34,10 @@ export class PylanceTypeCheckingModeStatusItem implements IExtensionSingleActiva
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
+        @inject(ILanguageServerCache) private readonly languageServerCache: ILanguageServerCache,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
     ) {
-        commandManager.registerCommand(Commands.Set_TypeChecking, this.handlerUpdateTypeCheckingMode.bind(this));
+        this.commandManager.registerCommand(Commands.Set_TypeChecking, this.handlerUpdateTypeCheckingMode.bind(this));
 
         const configChangeTrigger = new DelayedTrigger(this.updateStatusItem.bind(this), 500, 'Configuration Change');
         this.configChangeTrigger = configChangeTrigger;
@@ -44,28 +45,37 @@ export class PylanceTypeCheckingModeStatusItem implements IExtensionSingleActiva
     }
 
     public async activate(): Promise<void> {
-        const typeCheckingMode = this.workspace.getConfiguration('python.analysis').get<string>('typeCheckingMode');
-        if (typeCheckingMode) {
-            this.statusItem = createStatusItem(typeCheckingMode);
-            if (this.statusItem) {
-                this.disposables.push(this.statusItem);
+        const languageServer = await this.languageServerCache.get(undefined);
+        const experimentalSettings = languageServer.capabilities?.experimental;
+
+        if (experimentalSettings?.recommendSettings) {
+            const typeCheckingMode = this.workspace.getConfiguration('python.analysis').get<string>('typeCheckingMode');
+            if (typeCheckingMode) {
+                this.statusItem = createStatusItem(typeCheckingMode);
+                if (this.statusItem) {
+                    this.disposables.push(this.statusItem);
+                }
             }
+
+            this.registerHandlers();
         }
 
-        this.registerHandlers();
+        this.configChangeTrigger.trigger(vscode.window.activeTextEditor?.document);
     }
 
     private registerHandlers() {
         this.disposables.push(
             this.workspace.onDidChangeConfiguration((e) => {
                 if (e.affectsConfiguration(TypeCheckingSettingName)) {
-                    this.configChangeTrigger.trigger(e);
+                    this.configChangeTrigger.trigger(vscode.window.activeTextEditor?.document);
                 }
             }),
         );
         this.disposables.push(
-            this.documentManager.onDidOpenTextDocument((e) => {
-                this.updateStatusItem(e.uri.toString());
+            this.documentManager.onDidChangeActiveTextEditor((e) => {
+                if (e?.document.languageId === PYTHON_LANGUAGE) {
+                    this.configChangeTrigger.trigger(e.document);
+                }
             }),
         );
     }
@@ -75,22 +85,30 @@ export class PylanceTypeCheckingModeStatusItem implements IExtensionSingleActiva
         this.disposables.forEach((d) => d.dispose());
     }
 
-    public async updateStatusItem(uriString?: string): Promise<void> {
+    public async updateStatusItem(document?: vscode.TextDocument): Promise<void> {
         const isPylance = this.configService.getSettings().languageServer === LanguageServerType.Node;
         if (!isPylance) {
             return;
         }
 
-        await this.commandManager
-            .executeCommand(LSCommands.RecommendSettingPylanceLS, uriString, TypeCheckingSettingName)
+        const languageServer = await this.languageServerCache.get(undefined);
+
+        languageServer.connection
+            ?.sendRequest<string[] | undefined>(LSCommands.RecommendSettingLS, {
+                textDocument: { uri: document?.uri.toString() },
+                settings: [TypeCheckingSettingName],
+            })
             .then((recommendedMode) => {
                 if (!this.statusItem) {
                     return;
                 }
 
-                const typeMode = this.workspace.getConfiguration('python.analysis').get<string>('typeCheckingMode');
+                const typeMode =
+                    this.workspace.getConfiguration('python.analysis').get<string>('typeCheckingMode') ?? '';
 
-                updateTypeCheckingStatusDetails(this.statusItem, typeMode ?? '', recommendedMode as string);
+                const recommendedTypeMode = recommendedMode ? (recommendedMode[0] as string) : '';
+
+                updateTypeCheckingStatusDetails(this.statusItem, typeMode, recommendedTypeMode);
             });
     }
 
@@ -113,15 +131,18 @@ function createStatusItem(typeCheckingMode: string, recommendedMode?: string) {
         language: 'python',
     });
 
-    updateTypeCheckingStatusDetails(statusItem, typeCheckingMode, recommendedMode);
+    updateTypeCheckingStatusDetails(statusItem, typeCheckingMode, recommendedMode ?? '');
     return statusItem;
 }
 
 function updateTypeCheckingStatusDetails(
     statusItem: vscode.LanguageStatusItem,
     typeCheckingMode: string,
-    recommendedMode: string | undefined,
+    recommendedMode: string,
 ) {
+    statusItem.name = LanguageService.statusItem.name;
+    statusItem.text = `${LanguageService.pylanceTypeCheckingModeOffStatusItem.text}: ${typeCheckingMode}`;
+
     if (typeCheckingMode === 'off' && recommendedMode === 'basic') {
         statusItem.severity = vscode.LanguageStatusSeverity.Warning;
         statusItem.command = {
@@ -136,8 +157,7 @@ function updateTypeCheckingStatusDetails(
             command: Commands.Set_TypeChecking,
             arguments: ['off'],
         };
+    } else {
+        statusItem.severity = vscode.LanguageStatusSeverity.Information;
     }
-
-    statusItem.name = LanguageService.statusItem.name;
-    statusItem.text = `${LanguageService.pylanceTypeCheckingModeOffStatusItem.text}: ${typeCheckingMode}`;
 }
