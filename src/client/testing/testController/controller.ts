@@ -211,7 +211,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             } else if (settings.testing.unittestEnabled) {
                 // TODO: Use new test discovery mechanism
                 // traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
-
                 // const workspace = this.workspaceService.getWorkspaceFolder(uri);
                 // console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
                 // const testAdapter =
@@ -222,10 +221,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 //     this.testAdapters.size > 1,
                 //     this.workspaceService.workspaceFile?.fsPath,
                 // );
-
                 // // Ensure we send test telemetry if it gets disabled again
                 // this.sendTestDisabledTelemetry = true;
-
                 // comment below 229 to run the new way and uncomment above 212 ~ 227
                 await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else {

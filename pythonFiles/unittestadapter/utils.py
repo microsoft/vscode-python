@@ -23,10 +23,9 @@ class TestData(TypedDict):
     name: str
     path: str
     type_: TestNodeTypeEnum
-    uniqueID: str ##### added
+    id_: str
 
 class TestItem(TestData):
-    id_: str
     lineno: str
 
 
@@ -84,7 +83,7 @@ def build_test_node(path: str, name: str, type_: TestNodeTypeEnum) -> TestNode:
         "name": name,
         "type_": type_,
         "children": [],
-        "uniqueID": id_gen
+        "id_": id_gen
     }
 
 
@@ -188,12 +187,11 @@ def build_test_tree(
 
             # Add test node.
             test_node: TestItem = {
-                "id_": test_id,
                 "name": function_name,
                 "path": file_path,
                 "lineno": lineno,
                 "type_": TestNodeTypeEnum.test,
-                "uniqueID": file_path + "\\" + class_name + "\\" + function_name,
+                "id_": file_path + "\\" + class_name + "\\" + function_name,
             } # concatenate class name and function test name
             current_node["children"].append(test_node)
 
