@@ -6,12 +6,9 @@ import pathlib
 from typing import List
 
 import pytest
-from unittestadapter.discovery import (
-    DEFAULT_PORT,
-    discover_tests,
-    parse_discovery_cli_args,
-    parse_unittest_discovery_args,
-)
+from unittestadapter.discovery import (DEFAULT_PORT, discover_tests,
+                                       parse_discovery_cli_args,
+                                       parse_unittest_discovery_args)
 from unittestadapter.utils import TestNodeTypeEnum
 
 from .helpers import TEST_DATA_PATH, is_same_tree
@@ -97,24 +94,27 @@ def test_simple_discovery() -> None:
                         "type_": TestNodeTypeEnum.class_,
                         "children": [
                             {
-                                "id_": "discovery_simple.DiscoverySimple.test_one",
                                 "name": "test_one",
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "14",
+                                "id_": file_path+"\\"+"DiscoverySimple"+"\\"+"test_one",
                             },
                             {
-                                "id_": "discovery_simple.DiscoverySimple.test_two",
                                 "name": "test_two",
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "17",
+                                "id_": file_path+"\\"+"DiscoverySimple"+"\\"+"test_two",
                             },
                         ],
+                        "id_": file_path+"\\"+"DiscoverySimple",
                     }
                 ],
+                "id_": file_path,
             }
         ],
+        "id_": start_dir,
     }
 
     uuid = "some-uuid"
