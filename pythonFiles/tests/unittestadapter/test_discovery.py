@@ -169,24 +169,27 @@ def test_error_discovery() -> None:
                         "type_": TestNodeTypeEnum.class_,
                         "children": [
                             {
-                                "id_": "file_two.DiscoveryErrorTwo.test_one",
                                 "name": "test_one",
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "14",
+                                "id_": file_path + "\\" + "DiscoveryErrorTwo" + "\\" + "test_one",
                             },
                             {
-                                "id_": "file_two.DiscoveryErrorTwo.test_two",
                                 "name": "test_two",
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "17",
+                                "id_": file_path + "\\" + "DiscoveryErrorTwo" + "\\" + "test_two",
                             },
                         ],
+                        "id_": file_path + "\\" + "DiscoveryErrorTwo",
                     }
                 ],
+                "id_": file_path,
             }
         ],
+        "id_": start_dir,
     }
 
     uuid = "some-uuid"

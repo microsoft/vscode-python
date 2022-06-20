@@ -6,13 +6,8 @@ import pathlib
 import unittest
 
 import pytest
-from unittestadapter.utils import (
-    TestNode,
-    TestNodeTypeEnum,
-    build_test_tree,
-    get_child_node,
-    get_test_case,
-)
+from unittestadapter.utils import (TestNode, TestNodeTypeEnum, build_test_tree,
+                                   get_child_node, get_test_case)
 
 from .helpers import TEST_DATA_PATH, is_same_tree
 
@@ -180,24 +175,27 @@ def test_build_simple_tree() -> None:
                         "type_": TestNodeTypeEnum.class_,
                         "children": [
                             {
-                                "id_": "utils_simple_tree.TreeOne.test_one",
                                 "name": "test_one",
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "13",
+                                "id_": file_path + "\\" + "TreeOne" + "\\" + "test_one",
                             },
                             {
-                                "id_": "utils_simple_tree.TreeOne.test_two",
                                 "name": "test_two",
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "16",
+                                "id_": file_path + "\\" + "TreeOne" + "\\" + "test_two",
                             },
                         ],
+                        "id_": file_path + "\\" + "TreeOne",
                     }
                 ],
+                "id_": file_path,
             }
         ],
+        "id_": start_dir,
     }
 
     loader = unittest.TestLoader()
@@ -235,24 +233,27 @@ def test_build_decorated_tree() -> None:
                         "type_": TestNodeTypeEnum.class_,
                         "children": [
                             {
-                                "id_": "utils_decorated_tree.TreeOne.test_one",
                                 "name": "test_one",
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "24",
+                                "id_": file_path + "\\" + "TreeOne" + "\\" + "test_one",
                             },
                             {
-                                "id_": "utils_decorated_tree.TreeOne.test_two",
                                 "name": "test_two",
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "28",
+                                "id_": file_path + "\\" + "TreeOne" + "\\" + "test_two",
                             },
                         ],
+                        "id_": file_path + "\\" + "TreeOne",
                     }
                 ],
+                "id_": file_path,
             }
         ],
+        "id_": start_dir,
     }
 
     loader = unittest.TestLoader()
