@@ -71,22 +71,27 @@ def test_get_existing_child_node() -> None:
                         "path": "nested/one",
                         "type_": TestNodeTypeEnum.folder,
                         "children": [],
+                        "id_": "foo" + "\\" + "child/one" + "\\" + "nested/one",
                     },
                     {
                         "name": "nestedTwo",
                         "path": "nested/two",
                         "type_": TestNodeTypeEnum.folder,
                         "children": [],
+                        "id_": "foo" + "\\" + "child/one" + "\\" + "nested/two",
                     },
                 ],
+                "id_": "foo" + "\\" + "child/one",
             },
             {
                 "name": "childTwo",
                 "path": "child/two",
                 "type_": TestNodeTypeEnum.folder,
                 "children": [],
+                "id_": "foo" + "\\" + "child/two"
             },
         ],
+        "id_": "foo",
     }
 
     get_child_node("childTwo", "child/two", TestNodeTypeEnum.folder, tree)
@@ -114,14 +119,17 @@ def test_no_existing_child_node() -> None:
                         "path": "nested/one",
                         "type_": TestNodeTypeEnum.folder,
                         "children": [],
+                        "id_": "foo" + "\\" + "child/one" + "\\" + "nested/one",
                     },
                     {
                         "name": "nestedTwo",
                         "path": "nested/two",
                         "type_": TestNodeTypeEnum.folder,
                         "children": [],
+                        "id_": "foo" + "\\" + "child/one" + "\\" + "nested/two",
                     },
                 ],
+                "id_": "foo" + "\\" + "child/one",
             },
             {
                 "name": "childTwo",
@@ -130,6 +138,7 @@ def test_no_existing_child_node() -> None:
                 "children": [],
             },
         ],
+        "id_": "foo",
     }
 
     # Make a separate copy of tree["children"].
