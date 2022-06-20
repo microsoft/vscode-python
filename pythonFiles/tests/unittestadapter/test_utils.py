@@ -136,6 +136,7 @@ def test_no_existing_child_node() -> None:
                 "path": "child/two",
                 "type_": TestNodeTypeEnum.folder,
                 "children": [],
+                "id_": "foo" + "\\" + "child/two",
             },
         ],
         "id_": "foo",
