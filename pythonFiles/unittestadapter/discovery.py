@@ -15,6 +15,7 @@ PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PYTHON_FILES)
 
 from testing_tools import socket_manager
+
 # If I use from utils then there will be an import error in test_discovery.py.
 from unittestadapter.utils import TestNode, build_test_tree
 
@@ -76,6 +77,7 @@ class PayloadDict(TypedDict):
     tests: NotRequired[TestNode]
     errors: NotRequired[List[str]]
 
+
 def discover_tests(
     start_dir: str, pattern: str, top_level_dir: Optional[str], uuid: Optional[str]
 ) -> PayloadDict:
@@ -118,8 +120,7 @@ def discover_tests(
         loader = unittest.TestLoader()
         suite = loader.discover(start_dir, pattern, top_level_dir)
 
-        tests, errors = build_test_tree(suite, cwd) # test tree built succesfully here.
-
+        tests, errors = build_test_tree(suite, cwd)  # test tree built succesfully here.
 
     except Exception:
         errors.append(traceback.format_exc())

@@ -25,6 +25,7 @@ class TestData(TypedDict):
     type_: TestNodeTypeEnum
     id_: str
 
+
 class TestItem(TestData):
     lineno: str
 
@@ -72,19 +73,13 @@ def build_test_node(path: str, name: str, type_: TestNodeTypeEnum) -> TestNode:
     """Build a test node with no children. A test node can be a folder, a file or a class."""
     ## figure out if we are folder, file, or class
     id_gen = path
-    if (type_ == TestNodeTypeEnum.folder or type_ == TestNodeTypeEnum.file):
+    if type_ == TestNodeTypeEnum.folder or type_ == TestNodeTypeEnum.file:
         id_gen = path
     else:
         # means we have to build test node for class
-        id_gen = path + '\\' + name
+        id_gen = path + "\\" + name
 
-    return {
-        "path": path,
-        "name": name,
-        "type_": type_,
-        "children": [],
-        "id_": id_gen
-    }
+    return {"path": path, "name": name, "type_": type_, "children": [], "id_": id_gen}
 
 
 def get_child_node(
@@ -135,13 +130,16 @@ def build_test_tree(
                                 "name": <test name>,
                                 "type_": "test",
                                 "lineno": <line number>
-                                "id": <test case id>,
+                                "id_": <test case id following format in line 196>,
                             }
-                        ]
+                        ],
+                        "id_": <class path path following format after path>
                     }
-                ]
+                ],
+                "id_": <file path>
             }
-        ]
+        ],
+        "id_": <test_directory path>
     }
     """
     errors = []
@@ -192,7 +190,7 @@ def build_test_tree(
                 "lineno": lineno,
                 "type_": TestNodeTypeEnum.test,
                 "id_": file_path + "\\" + class_name + "\\" + function_name,
-            } # concatenate class name and function test name
+            }  # concatenate class name and function test name
             current_node["children"].append(test_node)
 
     if not root["children"]:

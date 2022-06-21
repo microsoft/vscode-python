@@ -6,8 +6,13 @@ import pathlib
 import unittest
 
 import pytest
-from unittestadapter.utils import (TestNode, TestNodeTypeEnum, build_test_tree,
-                                   get_child_node, get_test_case)
+from unittestadapter.utils import (
+    TestNode,
+    TestNodeTypeEnum,
+    build_test_tree,
+    get_child_node,
+    get_test_case,
+)
 
 from .helpers import TEST_DATA_PATH, is_same_tree
 
@@ -71,24 +76,24 @@ def test_get_existing_child_node() -> None:
                         "path": "nested/one",
                         "type_": TestNodeTypeEnum.folder,
                         "children": [],
-                        "id_": "foo" + "\\" + "child/one" + "\\" + "nested/one",
+                        "id_": "nested/one",
                     },
                     {
                         "name": "nestedTwo",
                         "path": "nested/two",
                         "type_": TestNodeTypeEnum.folder,
                         "children": [],
-                        "id_": "foo" + "\\" + "child/one" + "\\" + "nested/two",
+                        "id_": "nested/two",
                     },
                 ],
-                "id_": "foo" + "\\" + "child/one",
+                "id_": "child/one",
             },
             {
                 "name": "childTwo",
                 "path": "child/two",
                 "type_": TestNodeTypeEnum.folder,
                 "children": [],
-                "id_": "foo" + "\\" + "child/two"
+                "id_": "child/two",
             },
         ],
         "id_": "foo",
@@ -119,24 +124,24 @@ def test_no_existing_child_node() -> None:
                         "path": "nested/one",
                         "type_": TestNodeTypeEnum.folder,
                         "children": [],
-                        "id_": "foo" + "\\" + "child/one" + "\\" + "nested/one",
+                        "id_": "nested/one",
                     },
                     {
                         "name": "nestedTwo",
                         "path": "nested/two",
                         "type_": TestNodeTypeEnum.folder,
                         "children": [],
-                        "id_": "foo" + "\\" + "child/one" + "\\" + "nested/two",
+                        "id_": +"nested/two",
                     },
                 ],
-                "id_": "foo" + "\\" + "child/one",
+                "id_": "child/one",
             },
             {
                 "name": "childTwo",
                 "path": "child/two",
                 "type_": TestNodeTypeEnum.folder,
                 "children": [],
-                "id_": "foo" + "\\" + "child/two",
+                "id_": "child/two",
             },
         ],
         "id_": "foo",
