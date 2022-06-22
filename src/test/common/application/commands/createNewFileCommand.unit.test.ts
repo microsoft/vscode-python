@@ -25,6 +25,7 @@ suite('Create New Python File Commmand', () => {
             instance(cmdManager),
             instance(workspaceService),
             instance(appShell),
+            [],
         );
         when(workspaceService.openTextDocument(deepEqual({ language: 'python' }))).thenReturn(
             Promise.resolve(({} as unknown) as TextDocument),

@@ -85,20 +85,15 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
     return api;
 }
 
-export function deactivate(): Thenable<void> {
+export async function deactivate(): Promise<void> {
     // Make sure to shutdown anybody who needs it.
     if (activatedServiceContainer) {
         const registry = activatedServiceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
         const disposables = activatedServiceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        const promises = Promise.all(disposables.map((d) => d.dispose()));
-        return promises.then(() => {
-            if (registry) {
-                return registry.dispose();
-            }
-        });
+        await Promise.all(disposables.map((d) => Promise.resolve(d.dispose())));
+        await registry.dispose();
+        while (disposables.pop());
     }
-
-    return Promise.resolve();
 }
 
 /////////////////////////////

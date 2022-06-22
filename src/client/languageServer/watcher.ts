@@ -222,9 +222,10 @@ export class LanguageServerWatcher
     }
 
     private createLanguageServer(languageServerType: LanguageServerType): ILanguageServerExtensionManager {
+        let lsManager: ILanguageServerExtensionManager;
         switch (languageServerType) {
             case LanguageServerType.Jedi:
-                this.languageServerExtensionManager = new JediLSExtensionManager(
+                lsManager = new JediLSExtensionManager(
                     this.serviceContainer,
                     this.lsOutputChannel,
                     this.experimentService,
@@ -237,7 +238,7 @@ export class LanguageServerWatcher
                 );
                 break;
             case LanguageServerType.Node:
-                this.languageServerExtensionManager = new PylanceLSExtensionManager(
+                lsManager = new PylanceLSExtensionManager(
                     this.serviceContainer,
                     this.lsOutputChannel,
                     this.experimentService,
@@ -255,11 +256,12 @@ export class LanguageServerWatcher
                 break;
             case LanguageServerType.None:
             default:
-                this.languageServerExtensionManager = new NoneLSExtensionManager();
+                lsManager = new NoneLSExtensionManager();
                 break;
         }
 
-        return this.languageServerExtensionManager;
+        this.disposables.push(lsManager);
+        return lsManager;
     }
 
     private async refreshLanguageServer(resource?: Resource): Promise<void> {
