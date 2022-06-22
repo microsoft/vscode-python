@@ -20,7 +20,7 @@ suite('Language Server Output Channel', () => {
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         output = TypeMoq.Mock.ofType<IOutputChannel>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
-        languageServerOutputChannel = new LanguageServerOutputChannel(appShell.object, commandManager.object);
+        languageServerOutputChannel = new LanguageServerOutputChannel(appShell.object, commandManager.object, []);
     });
 
     test('Create output channel if one does not exist before and return it', async () => {
