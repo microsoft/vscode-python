@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
-import { IAsyncDisposableRegistry, IDisposableRegistry, Resource } from '../../common/types';
+import { IDisposableRegistry, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IInterpreterAutoSelectionProxyService } from './types';
 
@@ -15,7 +15,7 @@ export class InterpreterAutoSelectionProxyService implements IInterpreterAutoSel
 
     private instance?: IInterpreterAutoSelectionProxyService;
 
-    constructor(@inject(IDisposableRegistry) private readonly disposables: IAsyncDisposableRegistry) {}
+    constructor(@inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry) {}
 
     public registerInstance(instance: IInterpreterAutoSelectionProxyService): void {
         this.instance = instance;

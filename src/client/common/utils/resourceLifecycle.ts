@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { traceWarn } from '../../logging';
-
 /**
  * An object that can be disposed, like vscode.Disposable.
  */
@@ -22,11 +20,11 @@ interface IDisposables extends IDisposable {
  */
 async function disposeAll(disposables: IDisposable[]): Promise<void> {
     await Promise.all(
-        disposables.map(async (d, index) => {
+        disposables.map(async (d) => {
             try {
                 await d.dispose();
             } catch (err) {
-                traceWarn(`dispose() #${index} failed (${err})`);
+                // do nothing
             }
         }),
     );

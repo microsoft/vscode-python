@@ -448,6 +448,7 @@ export interface IHashFormat {
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');
 export interface IAsyncDisposableRegistry extends IAsyncDisposable {
     push(disposable: IDisposable | IAsyncDisposable): void;
+    length(): number;
 }
 
 /**
