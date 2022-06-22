@@ -92,6 +92,7 @@ export async function deactivate(): Promise<void> {
         const disposables = activatedServiceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         await Promise.all(disposables.map((d) => Promise.resolve(d.dispose())));
         await registry.dispose();
+        // Remove everything that is already disposed.
         while (disposables.pop());
     }
 }
