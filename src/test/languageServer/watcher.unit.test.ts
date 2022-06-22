@@ -23,6 +23,7 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { JediLSExtensionManager } from '../../client/languageServer/jediLSExtensionManager';
 import { NoneLSExtensionManager } from '../../client/languageServer/noneLSExtensionManager';
 import { PylanceLSExtensionManager } from '../../client/languageServer/pylanceLSExtensionManager';
+import { ILanguageServerExtensionManager } from '../../client/languageServer/types';
 import { LanguageServerWatcher } from '../../client/languageServer/watcher';
 import * as Logging from '../../client/logging';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
@@ -184,9 +185,11 @@ suite('Language server watcher', () => {
     test(`When starting the language server, the language server extension manager should not be undefined`, async () => {
         // First start
         await watcher.startLanguageServer(LanguageServerType.None);
-        const extensionManager = watcher.languageServerExtensionManager!;
+        // get should return the None LS (the noop LS).
+        // This LS is returned by the None LS manager in get().
+        const languageServer = await watcher.get();
 
-        assert.notStrictEqual(extensionManager, undefined);
+        assert.notStrictEqual(languageServer, undefined);
     });
 
     test(`If the interpreter changed, the existing language server should be stopped if there is one`, async () => {
@@ -256,7 +259,8 @@ suite('Language server watcher', () => {
         // First start, get the reference to the extension manager.
         await watcher.startLanguageServer(LanguageServerType.None);
 
-        const extensionManager = watcher.languageServerExtensionManager!;
+        // For None case the object implements both ILanguageServer and ILanguageServerManager.
+        const extensionManager = (await watcher.get()) as ILanguageServerExtensionManager;
         const stopLanguageServerSpy = sandbox.spy(extensionManager, 'stopLanguageServer');
 
         // Second start, check if the first server manager was stopped and disposed of.
