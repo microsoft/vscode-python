@@ -32,7 +32,7 @@ import '../setupNls';
 import { ProgressLocation, ProgressOptions, window } from 'vscode';
 import { buildApi } from './api';
 import { IApplicationShell, IWorkspaceService } from './common/application/types';
-import { IAsyncDisposableRegistry, IDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
+import { IDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
 import { activateComponents } from './extensionActivation';
@@ -45,6 +45,7 @@ import { IInterpreterService } from './interpreter/contracts';
 import { IExtensionApi, IProposedExtensionAPI } from './apiTypes';
 import { buildProposedApi } from './proposedApi';
 import { WorkspaceService } from './common/application/workspace';
+import { disposeAll } from './common/utils/resourceLifecycle';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -88,10 +89,8 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
 export async function deactivate(): Promise<void> {
     // Make sure to shutdown anybody who needs it.
     if (activatedServiceContainer) {
-        const registry = activatedServiceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
         const disposables = activatedServiceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        await Promise.all(disposables.map((d) => Promise.resolve(d.dispose())));
-        await registry.dispose();
+        await disposeAll(disposables);
         // Remove everything that is already disposed.
         while (disposables.pop());
     }

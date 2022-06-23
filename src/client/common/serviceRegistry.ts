@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService } from '../activation/types';
 import {
-    IAsyncDisposableRegistry,
     IBrowserService,
     IConfigurationService,
     ICurrentProcess,
@@ -53,7 +52,6 @@ import {
     IWorkspaceService,
 } from './application/types';
 import { WorkspaceService } from './application/workspace';
-import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { ConfigurationService } from './configuration/service';
 import { PipEnvExecutionPath } from './configuration/executionSettings/pipEnvExecution';
 import { EditorUtils } from './editor';
@@ -164,7 +162,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
     );
     serviceManager.addSingleton<IToolExecutionPath>(IToolExecutionPath, PipEnvExecutionPath, ToolExecutionPath.pipenv);
 
-    serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
     serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
     serviceManager.addBinding(IImportTracker, IExtensionSingleActivationService);

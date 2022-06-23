@@ -9,11 +9,10 @@ import { LspNotebooksExperiment } from '../../client/activation/node/lspNotebook
 import { NodeLanguageServerManager } from '../../client/activation/node/manager';
 import { ILanguageServerOutputChannel, LanguageServerType } from '../../client/activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
-import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { IFileSystem } from '../../client/common/platform/types';
 import {
-    IAsyncDisposableRegistry,
     IConfigurationService,
+    IDisposable,
     IExperimentService,
     IExtensions,
     IInterpreterPathService,
@@ -32,11 +31,11 @@ import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 suite('Language server watcher', () => {
     let watcher: LanguageServerWatcher;
-    let disposables: IAsyncDisposableRegistry;
+    let disposables: IDisposable[];
     const sandbox = sinon.createSandbox();
 
     setup(() => {
-        disposables = new AsyncDisposableRegistry();
+        disposables = [];
         watcher = new LanguageServerWatcher(
             {} as IServiceContainer,
             {} as ILanguageServerOutputChannel,
@@ -133,7 +132,7 @@ suite('Language server watcher', () => {
             disposables,
         );
 
-        assert.strictEqual(disposables.length(), 11);
+        assert.strictEqual(disposables.length, 11);
     });
 
     test('The constructor should not add a listener to onDidChange to the list of disposables if it is not a trusted workspace', () => {
@@ -179,7 +178,7 @@ suite('Language server watcher', () => {
             disposables,
         );
 
-        assert.strictEqual(disposables.length(), 10);
+        assert.strictEqual(disposables.length, 10);
     });
 
     test(`When starting the language server, the language server extension manager should not be undefined`, async () => {

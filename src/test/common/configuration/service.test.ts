@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 import { expect } from 'chai';
 import { workspace } from 'vscode';
-import { IAsyncDisposableRegistry, IConfigurationService } from '../../../client/common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
+import { disposeAll } from '../../../client/common/utils/resourceLifecycle';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { getExtensionSettings } from '../../extensionSettings';
 import { initialize } from '../../initialize';
@@ -21,7 +22,7 @@ suite('Configuration Service', () => {
     });
 
     test('Ensure async registry works', async () => {
-        const asyncRegistry = serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
+        const asyncRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         let disposed = false;
         const disposable = {
             dispose(): Promise<void> {
@@ -30,7 +31,7 @@ suite('Configuration Service', () => {
             },
         };
         asyncRegistry.push(disposable);
-        await asyncRegistry.dispose();
+        await disposeAll(asyncRegistry);
         expect(disposed).to.be.equal(true, "Didn't dispose during async registry cleanup");
     });
 });

@@ -3,7 +3,8 @@
 
 import { RelativePattern, workspace } from 'vscode';
 import { traceVerbose } from '../../logging';
-import { Disposables, IDisposable } from '../utils/resourceLifecycle';
+import { IDisposable } from '../types';
+import { Disposables } from '../utils/resourceLifecycle';
 
 /**
  * Enumeration of file change types.

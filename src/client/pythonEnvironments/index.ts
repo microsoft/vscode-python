@@ -4,7 +4,6 @@
 import * as vscode from 'vscode';
 import { getGlobalStorage } from '../common/persistentState';
 import { getOSType, OSType } from '../common/utils/platform';
-import { IDisposable } from '../common/utils/resourceLifecycle';
 import { ActivationResult, ExtensionState } from '../components';
 import { PythonEnvInfo } from './base/info';
 import { BasicEnvInfo, IDiscoveryAPI, ILocator } from './base/locator';
@@ -33,6 +32,7 @@ import {
     IEnvsCollectionCache,
 } from './base/locators/composite/envsCollectionCache';
 import { EnvsCollectionService } from './base/locators/composite/envsCollectionService';
+import { IDisposable } from '../common/types';
 
 /**
  * Set up the Python environments component (during extension activation).'

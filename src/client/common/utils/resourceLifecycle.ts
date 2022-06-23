@@ -1,16 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-/**
- * An object that can be disposed, like vscode.Disposable.
- */
-export interface IDisposable {
-    dispose(): void | Promise<void>;
-}
+import { IDisposable } from '../types';
 
-/**
- * A registry of disposables.
- */
 interface IDisposables extends IDisposable {
     push(...disposable: IDisposable[]): void;
 }
@@ -18,14 +10,15 @@ interface IDisposables extends IDisposable {
 /**
  * Safely dispose each of the disposables.
  */
-async function disposeAll(disposables: IDisposable[]): Promise<void> {
+export async function disposeAll(disposables: IDisposable[]): Promise<void> {
     await Promise.all(
         disposables.map(async (d) => {
             try {
-                await d.dispose();
+                return Promise.resolve(d.dispose());
             } catch (err) {
                 // do nothing
             }
+            return Promise.resolve();
         }),
     );
 }

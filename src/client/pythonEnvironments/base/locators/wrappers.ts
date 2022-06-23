@@ -3,9 +3,10 @@
 
 // eslint-disable-next-line max-classes-per-file
 import { Uri } from 'vscode';
+import { IDisposable } from '../../../common/types';
 import { iterEmpty } from '../../../common/utils/async';
 import { getURIFilter } from '../../../common/utils/misc';
-import { Disposables, IDisposable } from '../../../common/utils/resourceLifecycle';
+import { Disposables } from '../../../common/utils/resourceLifecycle';
 import { PythonEnvInfo } from '../info';
 import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../locator';
 import { combineIterators, Locators } from '../locators';

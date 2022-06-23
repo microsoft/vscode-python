@@ -24,13 +24,18 @@ import type { InstallOptions, InterpreterUri, ModuleInstallFlags } from './insta
 import { EnvironmentVariables } from './variables/types';
 import { ITestingSettings } from '../testing/configuration/types';
 
+export interface IDisposable {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    dispose(): void | undefined | Promise<void>;
+}
+
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel {}
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
 export interface IDocumentSymbolProvider extends DocumentSymbolProvider {}
 export const IsWindows = Symbol('IS_WINDOWS');
 export const IDisposableRegistry = Symbol('IDisposableRegistry');
-export type IDisposableRegistry = Disposable[];
+export type IDisposableRegistry = IDisposable[];
 export const IMemento = Symbol('IGlobalMemento');
 export const GLOBAL_MEMENTO = Symbol('IGlobalMemento');
 export const WORKSPACE_MEMENTO = Symbol('IWorkspaceMemento');
@@ -430,25 +435,12 @@ export interface IEditorUtils {
     getWorkspaceEditsFromPatch(originalContents: string, patch: string, uri: Uri): WorkspaceEdit;
 }
 
-export interface IDisposable {
-    dispose(): void | undefined;
-}
-export interface IAsyncDisposable {
-    dispose(): Promise<void>;
-}
-
 /**
  * Stores hash formats
  */
 export interface IHashFormat {
     number: number; // If hash format is a number
     string: string; // If hash format is a string
-}
-
-export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');
-export interface IAsyncDisposableRegistry extends IAsyncDisposable {
-    push(disposable: IDisposable | IAsyncDisposable): void;
-    length(): number;
 }
 
 /**

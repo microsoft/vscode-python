@@ -16,8 +16,8 @@ import {
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
 import {
-    IAsyncDisposableRegistry,
     IConfigurationService,
+    IDisposableRegistry,
     IExperimentService,
     IExtensions,
     IInterpreterPathService,
@@ -76,7 +76,7 @@ export class LanguageServerWatcher
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) readonly applicationShell: IApplicationShell,
         @inject(LspNotebooksExperiment) private readonly lspNotebooksExperiment: LspNotebooksExperiment,
-        @inject(IAsyncDisposableRegistry) readonly disposables: IAsyncDisposableRegistry,
+        @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
     ) {
         this.workspaceInterpreters = new Map();
         this.workspaceLanguageServers = new Map();

@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IDisposable } from '../../../../common/types';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
-import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
+import { Disposables } from '../../../../common/utils/resourceLifecycle';
 import { PythonEnvInfo } from '../../info';
 import { IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator';
 

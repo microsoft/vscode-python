@@ -4,8 +4,9 @@
 /* eslint-disable max-classes-per-file */
 
 import { Event } from 'vscode';
+import { IDisposable } from '../../../../common/types';
 import { getSearchPathEntries } from '../../../../common/utils/exec';
-import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
+import { Disposables } from '../../../../common/utils/resourceLifecycle';
 import { iterPythonExecutablesInDir, looksLikeBasicGlobalPython } from '../../../common/commonUtils';
 import { isPyenvShimDir } from '../../../common/environmentManagers/pyenv';
 import { isWindowsStoreDir } from '../../../common/environmentManagers/windowsStoreEnv';

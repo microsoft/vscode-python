@@ -23,7 +23,6 @@ import {
     IWorkspaceService,
 } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
-import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { EditorUtils } from '../../client/common/editor';
 import { ExperimentService } from '../../client/common/experiments/service';
@@ -73,7 +72,6 @@ import {
     TerminalActivationProviders,
 } from '../../client/common/terminal/types';
 import {
-    IAsyncDisposableRegistry,
     IBrowserService,
     IConfigurationService,
     ICurrentProcess,
@@ -217,7 +215,6 @@ suite('Installer', () => {
             PipEnvActivationCommandProvider,
             TerminalActivationProviders.pipenv,
         );
-        ioc.serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
         ioc.serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
         ioc.serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
         ioc.serviceManager.addBinding(IImportTracker, IExtensionSingleActivationService);

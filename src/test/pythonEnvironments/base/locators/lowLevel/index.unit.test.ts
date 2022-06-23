@@ -5,8 +5,8 @@
 
 import { expect } from 'chai';
 import { Event, EventEmitter, Uri } from 'vscode';
+import { IDisposable } from '../../../../../client/common/types';
 import { createDeferred } from '../../../../../client/common/utils/async';
-import { IDisposable } from '../../../../../client/common/utils/resourceLifecycle';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
 import { WatchRootsArgs, WorkspaceLocators } from '../../../../../client/pythonEnvironments/base/locators/wrappers';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';

@@ -26,7 +26,6 @@ import {
     IWorkspaceService,
 } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
-import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { PipEnvExecutionPath } from '../../client/common/configuration/executionSettings/pipEnvExecution';
 import { EditorUtils } from '../../client/common/editor';
@@ -61,7 +60,6 @@ import {
     TerminalActivationProviders,
 } from '../../client/common/terminal/types';
 import {
-    IAsyncDisposableRegistry,
     IBrowserService,
     IConfigurationService,
     ICurrentProcess,
@@ -121,7 +119,6 @@ suite('Common - Service Registry', () => {
             [IToolExecutionPath, PipEnvExecutionPath, ToolExecutionPath.pipenv],
             [ITerminalActivationCommandProvider, CondaActivationCommandProvider, TerminalActivationProviders.conda],
             [ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv],
-            [IAsyncDisposableRegistry, AsyncDisposableRegistry],
             [IMultiStepInputFactory, MultiStepInputFactory],
             [IImportTracker, ImportTracker],
             [IShellDetector, TerminalNameShellDetector],
