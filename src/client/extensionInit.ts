@@ -54,8 +54,8 @@ export function initializeGlobals(
     serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, context);
 
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python);
-    context.subscriptions.push(standardOutputChannel);
-    context.subscriptions.push(registerLogger(new OutputChannelLogger(standardOutputChannel)));
+    disposables.push(standardOutputChannel);
+    disposables.push(registerLogger(new OutputChannelLogger(standardOutputChannel)));
 
     const workspaceService = new WorkspaceService();
     const unitTestOutChannel =
@@ -63,7 +63,7 @@ export function initializeGlobals(
             ? // Do not create any test related output UI when using virtual workspaces.
               instance(mock<IOutputChannel>())
             : window.createOutputChannel(OutputChannelNames.pythonTest);
-    context.subscriptions.push(unitTestOutChannel);
+    disposables.push(unitTestOutChannel);
 
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);

@@ -159,7 +159,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
             serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
-            context.subscriptions.push(new LinterCommands(serviceManager));
+            disposables.push(new LinterCommands(serviceManager));
 
             if (
                 pythonSettings &&
@@ -167,19 +167,17 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
                 pythonSettings.formatting.provider !== 'internalConsole'
             ) {
                 const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
-                context.subscriptions.push(languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
-                context.subscriptions.push(
-                    languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider),
-                );
+                disposables.push(languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
+                disposables.push(languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
             }
 
-            context.subscriptions.push(new ReplProvider(serviceContainer));
+            disposables.push(new ReplProvider(serviceContainer));
 
             const terminalProvider = new TerminalProvider(serviceContainer);
             terminalProvider.initialize(window.activeTerminal).ignoreErrors();
-            context.subscriptions.push(terminalProvider);
+            disposables.push(terminalProvider);
 
-            context.subscriptions.push(
+            disposables.push(
                 languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), {
                     providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports],
                 }),
@@ -188,9 +186,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
             serviceContainer
                 .getAll<DebugConfigurationProvider>(IDebugConfigurationService)
                 .forEach((debugConfigProvider) => {
-                    context.subscriptions.push(
-                        debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfigProvider),
-                    );
+                    disposables.push(debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfigProvider));
                 });
 
             serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
@@ -200,7 +196,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     // "activate" everything else
 
     const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
-    context.subscriptions.push(manager);
+    disposables.push(manager);
 
     const activationPromise = manager.activate();
 
