@@ -102,6 +102,7 @@ suite('Sorting', () => {
     });
 
     test('Without Config (via Command)', async () => {
+        sorter.registerCommands();
         const textDocument = await workspace.openTextDocument(fileToFormatWithoutConfig);
         const originalContent = textDocument.getText();
         await window.showTextDocument(textDocument);
@@ -125,6 +126,7 @@ suite('Sorting', () => {
     });
 
     test('With Config (via Command)', async () => {
+        sorter.registerCommands();
         const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
         const originalContent = textDocument.getText();
         await window.showTextDocument(textDocument);
@@ -150,6 +152,7 @@ suite('Sorting', () => {
         assert.notStrictEqual(edits.length, 0, 'No edits');
     });
     test('With Changes and Config in Args (via Command)', async () => {
+        sorter.registerCommands();
         await updateSetting(
             'sortImports.args',
             ['--sp', path.join(sortingPath, 'withconfig')],
