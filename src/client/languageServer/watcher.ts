@@ -59,6 +59,8 @@ export class LanguageServerWatcher
     // When using Pylance, there will only be one language server for the project.
     private workspaceLanguageServers: Map<string, ILanguageServerExtensionManager | undefined>;
 
+    private registered = false;
+
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILanguageServerOutputChannel) private readonly lsOutputChannel: ILanguageServerOutputChannel,
@@ -84,43 +86,51 @@ export class LanguageServerWatcher
     // IExtensionActivationService
 
     public async activate(resource?: Resource): Promise<void> {
-        this.disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
-
-        this.disposables.push(
-            this.workspaceService.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders.bind(this)),
-        );
-
-        this.disposables.push(
-            this.interpreterService.onDidChangeInterpreterInformation(this.onDidChangeInterpreterInformation, this),
-        );
-
-        if (this.workspaceService.isTrusted) {
-            this.disposables.push(this.interpreterPathService.onDidChange(this.onDidChangeInterpreter.bind(this)));
-        }
-
-        this.disposables.push(
-            this.extensions.onDidChange(async () => {
-                await this.extensionsChangeHandler();
-            }),
-        );
-
-        this.disposables.push(
-            new LanguageServerChangeHandler(
-                this.languageServerType,
-                this.extensions,
-                this.applicationShell,
-                this.commandManager,
-                this.workspaceService,
-                this.configurationService,
-            ),
-        );
-
+        this.register();
         await this.startLanguageServer(this.languageServerType, resource);
     }
 
     // ILanguageServerWatcher
     public async startLanguageServer(languageServerType: LanguageServerType, resource?: Resource): Promise<void> {
         await this.startAndGetLanguageServer(languageServerType, resource);
+    }
+
+    private register(): void {
+        if (!this.registered) {
+            this.registered = true;
+            this.disposables.push(
+                this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)),
+            );
+
+            this.disposables.push(
+                this.workspaceService.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders.bind(this)),
+            );
+
+            this.disposables.push(
+                this.interpreterService.onDidChangeInterpreterInformation(this.onDidChangeInterpreterInformation, this),
+            );
+
+            if (this.workspaceService.isTrusted) {
+                this.disposables.push(this.interpreterPathService.onDidChange(this.onDidChangeInterpreter.bind(this)));
+            }
+
+            this.disposables.push(
+                this.extensions.onDidChange(async () => {
+                    await this.extensionsChangeHandler();
+                }),
+            );
+
+            this.disposables.push(
+                new LanguageServerChangeHandler(
+                    this.languageServerType,
+                    this.extensions,
+                    this.applicationShell,
+                    this.commandManager,
+                    this.workspaceService,
+                    this.configurationService,
+                ),
+            );
+        }
     }
 
     private async startAndGetLanguageServer(
