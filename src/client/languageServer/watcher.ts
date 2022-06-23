@@ -59,8 +59,6 @@ export class LanguageServerWatcher
     // When using Pylance, there will only be one language server for the project.
     private workspaceLanguageServers: Map<string, ILanguageServerExtensionManager | undefined>;
 
-    private languageServerChangeHandler: LanguageServerChangeHandler;
-
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILanguageServerOutputChannel) private readonly lsOutputChannel: ILanguageServerOutputChannel,
@@ -81,16 +79,6 @@ export class LanguageServerWatcher
         this.workspaceInterpreters = new Map();
         this.workspaceLanguageServers = new Map();
         this.languageServerType = this.configurationService.getSettings().languageServer;
-
-        this.languageServerChangeHandler = new LanguageServerChangeHandler(
-            this.languageServerType,
-            this.extensions,
-            this.applicationShell,
-            this.commandManager,
-            this.workspaceService,
-            this.configurationService,
-        );
-        this.disposables.push(this.languageServerChangeHandler);
     }
 
     // IExtensionActivationService
@@ -114,6 +102,17 @@ export class LanguageServerWatcher
             this.extensions.onDidChange(async () => {
                 await this.extensionsChangeHandler();
             }),
+        );
+
+        this.disposables.push(
+            new LanguageServerChangeHandler(
+                this.languageServerType,
+                this.extensions,
+                this.applicationShell,
+                this.commandManager,
+                this.workspaceService,
+                this.configurationService,
+            ),
         );
 
         await this.startLanguageServer(this.languageServerType, resource);
