@@ -133,7 +133,7 @@ suite('Language server watcher', () => {
             disposables,
         );
 
-        assert.strictEqual(disposables.length(), 5);
+        assert.strictEqual(disposables.length(), 11);
     });
 
     test('The constructor should not add a listener to onDidChange to the list of disposables if it is not a trusted workspace', () => {
@@ -179,7 +179,7 @@ suite('Language server watcher', () => {
             disposables,
         );
 
-        assert.strictEqual(disposables.length(), 4);
+        assert.strictEqual(disposables.length(), 10);
     });
 
     test(`When starting the language server, the language server extension manager should not be undefined`, async () => {
