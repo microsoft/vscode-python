@@ -82,20 +82,6 @@ export class LanguageServerWatcher
         this.workspaceLanguageServers = new Map();
         this.languageServerType = this.configurationService.getSettings().languageServer;
 
-        disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
-
-        disposables.push(
-            this.workspaceService.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders.bind(this)),
-        );
-
-        disposables.push(
-            this.interpreterService.onDidChangeInterpreterInformation(this.onDidChangeInterpreterInformation, this),
-        );
-
-        if (this.workspaceService.isTrusted) {
-            disposables.push(this.interpreterPathService.onDidChange(this.onDidChangeInterpreter.bind(this)));
-        }
-
         this.languageServerChangeHandler = new LanguageServerChangeHandler(
             this.languageServerType,
             this.extensions,
@@ -104,18 +90,32 @@ export class LanguageServerWatcher
             this.workspaceService,
             this.configurationService,
         );
-        disposables.push(this.languageServerChangeHandler);
-
-        disposables.push(
-            extensions.onDidChange(async () => {
-                await this.extensionsChangeHandler();
-            }),
-        );
+        this.disposables.push(this.languageServerChangeHandler);
     }
 
     // IExtensionActivationService
 
     public async activate(resource?: Resource): Promise<void> {
+        this.disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
+
+        this.disposables.push(
+            this.workspaceService.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders.bind(this)),
+        );
+
+        this.disposables.push(
+            this.interpreterService.onDidChangeInterpreterInformation(this.onDidChangeInterpreterInformation, this),
+        );
+
+        if (this.workspaceService.isTrusted) {
+            this.disposables.push(this.interpreterPathService.onDidChange(this.onDidChangeInterpreter.bind(this)));
+        }
+
+        this.disposables.push(
+            this.extensions.onDidChange(async () => {
+                await this.extensionsChangeHandler();
+            }),
+        );
+
         await this.startLanguageServer(this.languageServerType, resource);
     }
 

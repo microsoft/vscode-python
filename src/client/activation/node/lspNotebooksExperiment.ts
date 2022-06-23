@@ -30,14 +30,14 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IJupyterExtensionDependencyManager) jupyterDependencyManager: IJupyterExtensionDependencyManager,
     ) {
-        if (!LspNotebooksExperiment.isPylanceInstalled()) {
-            this.pylanceExtensionChangeHandler = extensions.onDidChange(this.pylanceExtensionsChangeHandler.bind(this));
-        }
-
         this.isJupyterInstalled = jupyterDependencyManager.isJupyterExtensionInstalled;
     }
 
     public async activate(): Promise<void> {
+        if (!LspNotebooksExperiment.isPylanceInstalled()) {
+            this.pylanceExtensionChangeHandler = extensions.onDidChange(this.pylanceExtensionsChangeHandler.bind(this));
+        }
+
         this.updateExperimentSupport();
     }
 
