@@ -95,7 +95,7 @@ export class LanguageServerWatcher
         await this.startAndGetLanguageServer(languageServerType, resource);
     }
 
-    private register(): void {
+    public register(): void {
         if (!this.registered) {
             this.registered = true;
             this.disposables.push(

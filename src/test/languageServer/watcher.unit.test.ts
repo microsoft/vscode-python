@@ -83,6 +83,8 @@ suite('Language server watcher', () => {
             {} as LspNotebooksExperiment,
             disposables,
         );
+
+        watcher.register();
     });
 
     teardown(() => {
@@ -131,7 +133,7 @@ suite('Language server watcher', () => {
             {} as LspNotebooksExperiment,
             disposables,
         );
-
+        watcher.register();
         assert.strictEqual(disposables.length, 11);
     });
 
@@ -177,7 +179,7 @@ suite('Language server watcher', () => {
             {} as LspNotebooksExperiment,
             disposables,
         );
-
+        watcher.register();
         assert.strictEqual(disposables.length, 10);
     });
 
@@ -254,6 +256,7 @@ suite('Language server watcher', () => {
             {} as LspNotebooksExperiment,
             disposables,
         );
+        watcher.register();
 
         // First start, get the reference to the extension manager.
         await watcher.startLanguageServer(LanguageServerType.None);
@@ -330,6 +333,7 @@ suite('Language server watcher', () => {
             {} as LspNotebooksExperiment,
             disposables,
         );
+        watcher.register();
 
         await watcher.startLanguageServer(LanguageServerType.None);
 
@@ -409,7 +413,7 @@ suite('Language server watcher', () => {
             {} as LspNotebooksExperiment,
             disposables,
         );
-
+        watcher.register();
         const startLanguageServerSpy = sandbox.spy(watcher, 'startLanguageServer');
 
         await watcher.startLanguageServer(LanguageServerType.None);
@@ -479,6 +483,7 @@ suite('Language server watcher', () => {
             {} as LspNotebooksExperiment,
             disposables,
         );
+        watcher.register();
 
         // Use a fake here so we don't actually start up language servers.
         const startLanguageServerFake = sandbox.fake.resolves(undefined);
@@ -542,7 +547,7 @@ suite('Language server watcher', () => {
             {} as LspNotebooksExperiment,
             disposables,
         );
-
+        watcher.register();
         await watcher.startLanguageServer(LanguageServerType.Jedi);
 
         assert.ok(startLanguageServerStub.calledOnce);
@@ -606,6 +611,7 @@ suite('Language server watcher', () => {
             {} as LspNotebooksExperiment,
             disposables,
         );
+        watcher.register();
 
         await watcher.startLanguageServer(LanguageServerType.Node);
 
@@ -664,6 +670,7 @@ suite('Language server watcher', () => {
             {} as LspNotebooksExperiment,
             disposables,
         );
+        watcher.register();
 
         await watcher.startLanguageServer(LanguageServerType.Jedi);
 
@@ -753,6 +760,7 @@ suite('Language server watcher', () => {
                 {} as LspNotebooksExperiment,
                 disposables,
             );
+            watcher.register();
 
             await watcher.startLanguageServer(languageServer, Uri.parse('folder1'));
             await watcher.startLanguageServer(languageServer, Uri.parse('folder2'));
@@ -832,6 +840,7 @@ suite('Language server watcher', () => {
                 {} as LspNotebooksExperiment,
                 disposables,
             );
+            watcher.register();
 
             await watcher.startLanguageServer(languageServer, Uri.parse('workspace1'));
             await watcher.startLanguageServer(languageServer, Uri.parse('workspace2'));
@@ -920,6 +929,7 @@ suite('Language server watcher', () => {
             {} as LspNotebooksExperiment,
             disposables,
         );
+        watcher.register();
 
         const startLanguageServerSpy = sandbox.spy(watcher, 'startLanguageServer');
 
@@ -1000,6 +1010,7 @@ suite('Language server watcher', () => {
             {} as LspNotebooksExperiment,
             disposables,
         );
+        watcher.register();
 
         const startLanguageServerSpy = sandbox.spy(watcher, 'startLanguageServer');
 
@@ -1083,6 +1094,7 @@ suite('Language server watcher', () => {
             {} as LspNotebooksExperiment,
             disposables,
         );
+        watcher.register();
 
         const startLanguageServerSpy = sandbox.spy(watcher, 'startLanguageServer');
 
@@ -1166,6 +1178,7 @@ suite('Language server watcher', () => {
             {} as LspNotebooksExperiment,
             disposables,
         );
+        watcher.register();
 
         const startLanguageServerSpy = sandbox.spy(watcher, 'startLanguageServer');
 
