@@ -29,6 +29,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { cache } from '../common/utils/decorators';
 import { PythonLocatorQuery, TriggerRefreshOptions } from '../pythonEnvironments/base/locator';
+import { sleep } from '../common/utils/async';
 
 type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
 
@@ -182,9 +183,13 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public async _onConfigChanged(resource?: Uri): Promise<void> {
-        this.didChangeInterpreterConfigurationEmitter.fire(resource);
-        // Check if we actually changed our python path
+        // Check if we actually changed our python path.
+        // Config service also updates itself on interpreter config change,
+        // so yielding control here to make sure it goes first and updates
+        // itself before we can query it.
+        await sleep(1);
         const pySettings = this.configService.getSettings(resource);
+        this.didChangeInterpreterConfigurationEmitter.fire(resource);
         if (this._pythonPathSetting === '' || this._pythonPathSetting !== pySettings.pythonPath) {
             this._pythonPathSetting = pySettings.pythonPath;
             this.didChangeInterpreterEmitter.fire();

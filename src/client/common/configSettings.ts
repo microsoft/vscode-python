@@ -507,6 +507,11 @@ export class PythonSettings implements IPythonSettings {
         }
     }
 
+    public register(): void {
+        PythonSettings.pythonSettings = new Map();
+        this.initialize();
+    }
+
     public initialize(): void {
         const onDidChange = () => {
             const currentConfig = this.workspace.getConfiguration('python', this.workspaceRoot);

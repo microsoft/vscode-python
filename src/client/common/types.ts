@@ -201,7 +201,7 @@ export interface IPythonSettings {
     readonly languageServerIsDefault: boolean;
     readonly defaultInterpreterPath: string;
     readonly tensorBoard: ITensorBoardSettings | undefined;
-    initialize(): void;
+    register(): void;
 }
 
 export interface ITensorBoardSettings {
