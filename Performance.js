@@ -1,20 +1,8 @@
-const Performance = require('../src/Performance');
+const ChainedMap = require('./ChainedMap');
 
-test('is Chainable', () => {
-  const parent = { parent: true };
-  const performance = new Performance(parent);
-
-  expect(performance.end()).toBe(parent);
-});
-
-test('shorthand methods', () => {
-  const performance = new Performance();
-  const obj = {};
-
-  performance.shorthands.forEach((method) => {
-    obj[method] = 'alpha';
-    expect(performance[method]('alpha')).toBe(performance);
-  });
-
-  expect(performance.entries()).toStrictEqual(obj);
-});
+module.exports = class extends ChainedMap {
+  constructor(parent) {
+    super(parent);
+    this.extend(['assetFilter', 'hints', 'maxAssetSize', 'maxEntrypointSize']);
+  }
+};

@@ -1,157 +1,91 @@
-/* eslint-disable max-classes-per-file */
-const EnvironmentPlugin = require('webpack/lib/EnvironmentPlugin');
-const Plugin = require('../src/Plugin');
+const ChainedMap = require('./ChainedMap');
+const Orderable = require('./Orderable');
 
-class StringifyPlugin {
-  constructor(...args) {
-    this.values = args;
-  }
+module.exports = Orderable(
+  class extends ChainedMap {
+    constructor(parent, name, type = 'plugin') {
+      super(parent);
+      this.name = name;
+      this.type = type;
+      this.extend(['init']);
 
-  apply() {
-    return JSON.stringify(this.values);
-  }
-}
+      this.init((Plugin, args = []) => {
+        if (typeof Plugin === 'function') {
+          return new Plugin(...args);
+        }
+        return Plugin;
+      });
+    }
 
-test('is Chainable', () => {
-  const parent = { parent: true };
-  const plugin = new Plugin(parent);
+    use(plugin, args = []) {
+      return this.set('plugin', plugin).set('args', args);
+    }
 
-  expect(plugin.end()).toBe(parent);
-});
+    tap(f) {
+      if (!this.has('plugin')) {
+        throw new Error(
+          `Cannot call .tap() on a plugin that has not yet been defined. Call ${this.type}('${this.name}').use(<Plugin>) first.`,
+        );
+      }
+      this.set('args', f(this.get('args') || []));
+      return this;
+    }
 
-test('use', () => {
-  const plugin = new Plugin();
-  const instance = plugin.use(StringifyPlugin, ['alpha', 'beta']);
+    set(key, value) {
+      if (key === 'args' && !Array.isArray(value)) {
+        throw new Error('args must be an array of arguments');
+      }
+      return super.set(key, value);
+    }
 
-  expect(instance).toBe(plugin);
-  expect(plugin.get('plugin')).toBe(StringifyPlugin);
-  expect(plugin.get('args')).toStrictEqual(['alpha', 'beta']);
-});
+    merge(obj, omit = []) {
+      if ('plugin' in obj) {
+        this.set('plugin', obj.plugin);
+      }
 
-test('tap', () => {
-  const plugin = new Plugin();
+      if ('args' in obj) {
+        this.set('args', obj.args);
+      }
 
-  plugin.use(StringifyPlugin, ['alpha', 'beta']);
+      return super.merge(obj, [...omit, 'args', 'plugin']);
+    }
 
-  const instance = plugin.tap(() => ['gamma', 'delta']);
+    toConfig() {
+      const init = this.get('init');
+      let plugin = this.get('plugin');
+      const args = this.get('args');
+      let pluginPath = null;
 
-  expect(instance).toBe(plugin);
-  expect(plugin.get('args')).toStrictEqual(['gamma', 'delta']);
-});
+      if (plugin === undefined) {
+        throw new Error(
+          `Invalid ${this.type} configuration: ${this.type}('${this.name}').use(<Plugin>) was not called to specify the plugin`,
+        );
+      }
 
-test('init', () => {
-  const plugin = new Plugin();
+      // Support using the path to a plugin rather than the plugin itself,
+      // allowing expensive require()s to be skipped in cases where the plugin
+      // or webpack configuration won't end up being used.
+      if (typeof plugin === 'string') {
+        pluginPath = plugin;
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        plugin = require(pluginPath);
+      }
 
-  plugin.use(StringifyPlugin);
+      const constructorName = plugin.__expression
+        ? `(${plugin.__expression})`
+        : plugin.name;
 
-  const instance = plugin.init((Plugin, args) => {
-    expect(args).toStrictEqual([]);
-    return new Plugin('gamma', 'delta');
-  });
-  const initialized = plugin.get('init')(
-    plugin.get('plugin'),
-    plugin.get('args'),
-  );
+      const config = init(plugin, args);
 
-  expect(instance).toBe(plugin);
-  expect(initialized instanceof StringifyPlugin).toBe(true);
-  expect(initialized.values).toStrictEqual(['gamma', 'delta']);
-});
+      Object.defineProperties(config, {
+        __pluginName: { value: this.name },
+        __pluginType: { value: this.type },
+        __pluginArgs: { value: args },
+        __pluginConstructorName: { value: constructorName },
+        __pluginPath: { value: pluginPath },
+      });
 
-test('args is validated as being an array', () => {
-  const plugin = new Plugin();
-
-  expect(() => plugin.use(StringifyPlugin, { foo: true })).toThrow(
-    'args must be an array of arguments',
-  );
-
-  plugin.use(StringifyPlugin);
-
-  expect(() => plugin.tap(() => ({ foo: true }))).toThrow(
-    'args must be an array of arguments',
-  );
-  expect(() => plugin.merge({ args: 5000 })).toThrow(
-    'args must be an array of arguments',
-  );
-  expect(() => plugin.set('args', null)).toThrow(
-    'args must be an array of arguments',
-  );
-});
-
-test('toConfig', () => {
-  const plugin = new Plugin(null, 'gamma');
-
-  plugin.use(StringifyPlugin, ['delta']);
-
-  const initialized = plugin.toConfig();
-
-  expect(initialized instanceof StringifyPlugin).toBe(true);
-  expect(initialized.values).toStrictEqual(['delta']);
-  expect(initialized.__pluginName).toBe('gamma');
-  expect(initialized.__pluginType).toBe('plugin');
-  expect(initialized.__pluginArgs).toStrictEqual(['delta']);
-  expect(initialized.__pluginConstructorName).toBe('StringifyPlugin');
-});
-
-test('toConfig with custom type', () => {
-  const plugin = new Plugin(null, 'gamma', 'optimization.minimizer');
-  plugin.use(StringifyPlugin);
-
-  expect(plugin.toConfig().__pluginType).toBe('optimization.minimizer');
-});
-
-test('toConfig with custom expression', () => {
-  const plugin = new Plugin(null, 'gamma');
-
-  class TestPlugin {}
-  TestPlugin.__expression = `require('my-plugin')`;
-
-  plugin.use(TestPlugin);
-
-  const initialized = plugin.toConfig();
-
-  expect(initialized.__pluginConstructorName).toBe(`(require('my-plugin'))`);
-});
-
-test('toConfig with object literal plugin', () => {
-  const plugin = new Plugin(null, 'gamma');
-
-  const TestPlugin = {
-    apply() {},
-  };
-
-  plugin.use(TestPlugin);
-
-  const initialized = plugin.toConfig();
-
-  expect(initialized).toBe(TestPlugin);
-});
-
-test('toConfig with plugin as path', () => {
-  const plugin = new Plugin(null, 'gamma');
-  const envPluginPath = require.resolve('webpack/lib/EnvironmentPlugin');
-
-  plugin.use(envPluginPath);
-
-  const initialized = plugin.toConfig();
-
-  expect(initialized instanceof EnvironmentPlugin).toBe(true);
-  expect(initialized.__pluginConstructorName).toBe('EnvironmentPlugin');
-  expect(initialized.__pluginPath).toBe(envPluginPath);
-});
-
-test('toConfig without having called use()', () => {
-  const plugin = new Plugin(null, 'gamma', 'optimization.minimizer');
-
-  expect(() => plugin.toConfig()).toThrow(
-    "Invalid optimization.minimizer configuration: optimization.minimizer('gamma').use(<Plugin>) was not called to specify the plugin",
-  );
-});
-
-test('tap() without having called use()', () => {
-  const plugin = new Plugin(null, 'gamma', 'optimization.minimizer');
-
-  expect(() => plugin.tap(() => [])).toThrow(
-    "Cannot call .tap() on a plugin that has not yet been defined. Call optimization.minimizer('gamma').use(<Plugin>) first.",
-  );
-});
+      return config;
+    }
+  },
+);

@@ -1,53 +1,42 @@
-const Rule = require('../src/Rule');
-const Use = require('../src/Use');
+const merge = require('deepmerge');
+const ChainedMap = require('./ChainedMap');
+const Orderable = require('./Orderable');
 
-test('is Chainable', () => {
-  const parent = { parent: true };
-  const use = new Use(parent);
+module.exports = Orderable(
+  class extends ChainedMap {
+    constructor(parent, name) {
+      super(parent);
+      this.name = name;
+      this.extend(['loader', 'options']);
+    }
 
-  expect(use.end()).toBe(parent);
-});
+    tap(f) {
+      this.options(f(this.get('options')));
+      return this;
+    }
 
-test('shorthand methods', () => {
-  const use = new Use();
-  const obj = {};
+    merge(obj, omit = []) {
+      if (!omit.includes('loader') && 'loader' in obj) {
+        this.loader(obj.loader);
+      }
 
-  use.shorthands.forEach((method) => {
-    obj[method] = 'alpha';
-    expect(use[method]('alpha')).toBe(use);
-  });
+      if (!omit.includes('options') && 'options' in obj) {
+        this.options(merge(this.store.get('options') || {}, obj.options));
+      }
 
-  expect(use.entries()).toStrictEqual(obj);
-});
+      return super.merge(obj, [...omit, 'loader', 'options']);
+    }
 
-test('tap', () => {
-  const use = new Use();
+    toConfig() {
+      const config = this.clean(this.entries() || {});
 
-  use.loader('babel-loader').options({ presets: ['alpha'] });
+      Object.defineProperties(config, {
+        __useName: { value: this.name },
+        __ruleNames: { value: this.parent && this.parent.names },
+        __ruleTypes: { value: this.parent && this.parent.ruleTypes },
+      });
 
-  use.tap((options) => {
-    expect(options).toStrictEqual({ presets: ['alpha'] });
-    return { presets: ['beta'] };
-  });
-
-  expect(use.store.get('options')).toStrictEqual({ presets: ['beta'] });
-});
-
-test('toConfig', () => {
-  const rule = new Rule(null, 'alpha');
-  const use = rule
-    .use('beta')
-    .loader('babel-loader')
-    .options({ presets: ['alpha'] });
-
-  const config = use.toConfig();
-
-  expect(config).toStrictEqual({
-    loader: 'babel-loader',
-    options: { presets: ['alpha'] },
-  });
-
-  expect(config.__ruleNames).toStrictEqual(['alpha']);
-  expect(config.__ruleTypes).toStrictEqual(['rule']);
-  expect(config.__useName).toBe('beta');
-});
+      return config;
+    }
+  },
+);

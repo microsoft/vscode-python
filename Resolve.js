@@ -1,156 +1,74 @@
-const Resolve = require('../src/Resolve');
+const ChainedMap = require('./ChainedMap');
+const ChainedSet = require('./ChainedSet');
+const Plugin = require('./Plugin');
 
-class StringifyPlugin {
-  constructor(...args) {
-    this.values = args;
+module.exports = class extends ChainedMap {
+  constructor(parent) {
+    super(parent);
+    this.alias = new ChainedMap(this);
+    this.aliasFields = new ChainedSet(this);
+    this.descriptionFiles = new ChainedSet(this);
+    this.extensions = new ChainedSet(this);
+    this.mainFields = new ChainedSet(this);
+    this.mainFiles = new ChainedSet(this);
+    this.modules = new ChainedSet(this);
+    this.plugins = new ChainedMap(this);
+    this.extend([
+      'cachePredicate',
+      'cacheWithContext',
+      'concord',
+      'enforceExtension',
+      'enforceModuleExtension',
+      'symlinks',
+      'unsafeCache',
+    ]);
   }
 
-  apply() {
-    return JSON.stringify(this.values);
+  plugin(name) {
+    return this.plugins.getOrCompute(
+      name,
+      () => new Plugin(this, name, 'resolve.plugin'),
+    );
   }
-}
 
-test('is Chainable', () => {
-  const parent = { parent: true };
-  const resolve = new Resolve(parent);
+  toConfig() {
+    return this.clean(
+      Object.assign(this.entries() || {}, {
+        alias: this.alias.entries(),
+        aliasFields: this.aliasFields.values(),
+        descriptionFiles: this.descriptionFiles.values(),
+        extensions: this.extensions.values(),
+        mainFields: this.mainFields.values(),
+        mainFiles: this.mainFiles.values(),
+        modules: this.modules.values(),
+        plugins: this.plugins.values().map((plugin) => plugin.toConfig()),
+      }),
+    );
+  }
 
-  expect(resolve.end()).toBe(parent);
-});
+  merge(obj, omit = []) {
+    const omissions = [
+      'alias',
+      'aliasFields',
+      'descriptionFiles',
+      'extensions',
+      'mainFields',
+      'mainFiles',
+      'modules',
+    ];
 
-test('shorthand methods', () => {
-  const resolve = new Resolve();
-  const obj = {};
+    if (!omit.includes('plugin') && 'plugin' in obj) {
+      Object.keys(obj.plugin).forEach((name) =>
+        this.plugin(name).merge(obj.plugin[name]),
+      );
+    }
 
-  resolve.shorthands.forEach((method) => {
-    obj[method] = 'alpha';
-    expect(resolve[method]('alpha')).toBe(resolve);
-  });
+    omissions.forEach((key) => {
+      if (!omit.includes(key) && key in obj) {
+        this[key].merge(obj[key]);
+      }
+    });
 
-  expect(resolve.entries()).toStrictEqual(obj);
-});
-
-test('sets methods', () => {
-  const resolve = new Resolve();
-  const instance = resolve.modules.add('src').end().extensions.add('.js').end();
-
-  expect(instance).toBe(resolve);
-});
-
-test('toConfig empty', () => {
-  const resolve = new Resolve();
-
-  expect(resolve.toConfig()).toStrictEqual({});
-});
-
-test('toConfig with values', () => {
-  const resolve = new Resolve();
-
-  resolve
-    .plugin('stringify')
-    .use(StringifyPlugin)
-    .end()
-    .modules.add('src')
-    .end()
-    .extensions.add('.js')
-    .end()
-    .alias.set('React', 'src/react');
-
-  expect(resolve.toConfig()).toStrictEqual({
-    plugins: [new StringifyPlugin()],
-    modules: ['src'],
-    extensions: ['.js'],
-    alias: { React: 'src/react' },
-  });
-});
-
-test('merge empty', () => {
-  const resolve = new Resolve();
-  const obj = {
-    modules: ['src'],
-    extensions: ['.js'],
-    alias: { React: 'src/react' },
-  };
-  const instance = resolve.merge(obj);
-
-  expect(instance).toBe(resolve);
-  expect(resolve.toConfig()).toStrictEqual(obj);
-});
-
-test('merge with values', () => {
-  const resolve = new Resolve();
-
-  resolve.modules
-    .add('src')
-    .end()
-    .extensions.add('.js')
-    .end()
-    .alias.set('React', 'src/react');
-
-  resolve.merge({
-    modules: ['dist'],
-    extensions: ['.jsx'],
-    alias: { ReactDOM: 'src/react-dom' },
-  });
-
-  expect(resolve.toConfig()).toStrictEqual({
-    modules: ['src', 'dist'],
-    extensions: ['.js', '.jsx'],
-    alias: { React: 'src/react', ReactDOM: 'src/react-dom' },
-  });
-});
-
-test('merge with omit', () => {
-  const resolve = new Resolve();
-
-  resolve.modules
-    .add('src')
-    .end()
-    .extensions.add('.js')
-    .end()
-    .alias.set('React', 'src/react');
-
-  resolve.merge(
-    {
-      modules: ['dist'],
-      extensions: ['.jsx'],
-      alias: { ReactDOM: 'src/react-dom' },
-    },
-    ['alias'],
-  );
-
-  expect(resolve.toConfig()).toStrictEqual({
-    modules: ['src', 'dist'],
-    extensions: ['.js', '.jsx'],
-    alias: { React: 'src/react' },
-  });
-});
-
-test('plugin with name', () => {
-  const resolve = new Resolve();
-
-  resolve.plugin('alpha');
-
-  expect(resolve.plugins.get('alpha').name).toBe('alpha');
-  expect(resolve.plugins.get('alpha').type).toBe('resolve.plugin');
-});
-
-test('plugin empty', () => {
-  const resolve = new Resolve();
-  const instance = resolve.plugin('stringify').use(StringifyPlugin).end();
-
-  expect(instance).toBe(resolve);
-  expect(resolve.plugins.has('stringify')).toBe(true);
-  expect(resolve.plugins.get('stringify').get('args')).toStrictEqual([]);
-});
-
-test('plugin with args', () => {
-  const resolve = new Resolve();
-
-  resolve.plugin('stringify').use(StringifyPlugin, ['alpha', 'beta']);
-
-  expect(resolve.plugins.has('stringify')).toBe(true);
-  expect(resolve.plugins.get('stringify').get('args')).toStrictEqual([
-    'alpha',
-    'beta',
-  ]);
-});
+    return super.merge(obj, [...omit, ...omissions, 'plugin']);
+  }
+};

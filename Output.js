@@ -1,20 +1,40 @@
-const Output = require('../src/Output');
+const ChainedMap = require('./ChainedMap');
 
-test('is Chainable', () => {
-  const parent = { parent: true };
-  const output = new Output(parent);
-
-  expect(output.end()).toBe(parent);
-});
-
-test('shorthand methods', () => {
-  const output = new Output();
-  const obj = {};
-
-  output.shorthands.forEach((method) => {
-    obj[method] = 'alpha';
-    expect(output[method]('alpha')).toBe(output);
-  });
-
-  expect(output.entries()).toStrictEqual(obj);
-});
+module.exports = class extends ChainedMap {
+  constructor(parent) {
+    super(parent);
+    this.extend([
+      'auxiliaryComment',
+      'chunkCallbackName',
+      'chunkFilename',
+      'chunkLoadTimeout',
+      'crossOriginLoading',
+      'devtoolFallbackModuleFilenameTemplate',
+      'devtoolLineToLine',
+      'devtoolModuleFilenameTemplate',
+      'devtoolNamespace',
+      'filename',
+      'futureEmitAssets',
+      'globalObject',
+      'hashDigest',
+      'hashDigestLength',
+      'hashFunction',
+      'hashSalt',
+      'hotUpdateChunkFilename',
+      'hotUpdateFunction',
+      'hotUpdateMainFilename',
+      'jsonpFunction',
+      'library',
+      'libraryExport',
+      'libraryTarget',
+      'path',
+      'pathinfo',
+      'publicPath',
+      'sourceMapFilename',
+      'sourcePrefix',
+      'strictModuleExceptionHandling',
+      'umdNamedDefine',
+      'webassemblyModuleFilename',
+    ]);
+  }
+};

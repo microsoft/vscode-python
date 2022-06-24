@@ -1,507 +1,141 @@
-const Rule = require('../src/Rule');
+const ChainedMap = require('./ChainedMap');
+const ChainedSet = require('./ChainedSet');
+const Orderable = require('./Orderable');
+const Use = require('./Use');
+const Resolve = require('./Resolve');
 
-test('is Chainable', () => {
-  const parent = { parent: true };
-  const rule = new Rule(parent);
+function toArray(arr) {
+  return Array.isArray(arr) ? arr : [arr];
+}
 
-  expect(rule.end()).toBe(parent);
-});
+const Rule = Orderable(
+  class extends ChainedMap {
+    constructor(parent, name, ruleType = 'rule') {
+      super(parent);
+      this.name = name;
+      this.names = [];
+      this.ruleType = ruleType;
+      this.ruleTypes = [];
 
-test('shorthand methods', () => {
-  const rule = new Rule();
-  const obj = {};
+      let rule = this;
+      while (rule instanceof Rule) {
+        this.names.unshift(rule.name);
+        this.ruleTypes.unshift(rule.ruleType);
+        rule = rule.parent;
+      }
 
-  rule.shorthands.forEach((method) => {
-    obj[method] = 'alpha';
-    expect(rule[method]('alpha')).toBe(rule);
-  });
+      this.uses = new ChainedMap(this);
+      this.include = new ChainedSet(this);
+      this.exclude = new ChainedSet(this);
+      this.rules = new ChainedMap(this);
+      this.oneOfs = new ChainedMap(this);
+      this.resolve = new Resolve(this);
+      this.extend([
+        'enforce',
+        'issuer',
+        'parser',
+        'resource',
+        'resourceQuery',
+        'sideEffects',
+        'test',
+        'type',
+      ]);
+    }
 
-  expect(rule.entries()).toStrictEqual(obj);
-});
+    use(name) {
+      return this.uses.getOrCompute(name, () => new Use(this, name));
+    }
 
-test('use', () => {
-  const rule = new Rule();
-  const instance = rule.use('babel').end();
+    rule(name) {
+      return this.rules.getOrCompute(name, () => new Rule(this, name, 'rule'));
+    }
 
-  expect(instance).toBe(rule);
-  expect(rule.uses.has('babel')).toBe(true);
-});
+    oneOf(name) {
+      return this.oneOfs.getOrCompute(
+        name,
+        () => new Rule(this, name, 'oneOf'),
+      );
+    }
 
-test('rule', () => {
-  const rule = new Rule();
-  const instance = rule.rule('babel').end();
+    pre() {
+      return this.enforce('pre');
+    }
 
-  expect(instance).toBe(rule);
-  expect(rule.rules.has('babel')).toBe(true);
-});
+    post() {
+      return this.enforce('post');
+    }
 
-test('oneOf', () => {
-  const rule = new Rule();
-  const instance = rule.oneOf('babel').end();
+    toConfig() {
+      const config = this.clean(
+        Object.assign(this.entries() || {}, {
+          include: this.include.values(),
+          exclude: this.exclude.values(),
+          rules: this.rules.values().map((rule) => rule.toConfig()),
+          oneOf: this.oneOfs.values().map((oneOf) => oneOf.toConfig()),
+          use: this.uses.values().map((use) => use.toConfig()),
+          resolve: this.resolve.toConfig(),
+        }),
+      );
 
-  expect(instance).toBe(rule);
-  expect(rule.oneOfs.has('babel')).toBe(true);
-});
+      Object.defineProperties(config, {
+        __ruleNames: { value: this.names },
+        __ruleTypes: { value: this.ruleTypes },
+      });
 
-test('resolve', () => {
-  const rule = new Rule();
-  const instance = rule.resolve.alias.set('foo', 'bar').end().end();
+      return config;
+    }
 
-  expect(instance).toBe(rule);
-  expect(rule.resolve.alias.has('foo')).toBe(true);
-});
+    merge(obj, omit = []) {
+      if (!omit.includes('include') && 'include' in obj) {
+        this.include.merge(toArray(obj.include));
+      }
 
-test('pre', () => {
-  const rule = new Rule();
-  const instance = rule.pre();
+      if (!omit.includes('exclude') && 'exclude' in obj) {
+        this.exclude.merge(toArray(obj.exclude));
+      }
 
-  expect(instance).toBe(rule);
-  expect(rule.get('enforce')).toBe('pre');
-});
+      if (!omit.includes('use') && 'use' in obj) {
+        Object.keys(obj.use).forEach((name) =>
+          this.use(name).merge(obj.use[name]),
+        );
+      }
 
-test('post', () => {
-  const rule = new Rule();
-  const instance = rule.post();
+      if (!omit.includes('rules') && 'rules' in obj) {
+        Object.keys(obj.rules).forEach((name) =>
+          this.rule(name).merge(obj.rules[name]),
+        );
+      }
 
-  expect(instance).toBe(rule);
-  expect(rule.get('enforce')).toBe('post');
-});
+      if (!omit.includes('oneOf') && 'oneOf' in obj) {
+        Object.keys(obj.oneOf).forEach((name) =>
+          this.oneOf(name).merge(obj.oneOf[name]),
+        );
+      }
 
-test('sets methods', () => {
-  const rule = new Rule();
-  const instance = rule.include
-    .add('alpha')
-    .add('beta')
-    .end()
-    .exclude.add('alpha')
-    .add('beta')
-    .end();
+      if (!omit.includes('resolve') && 'resolve' in obj) {
+        this.resolve.merge(obj.resolve);
+      }
 
-  expect(instance).toBe(rule);
-  expect(rule.include.values()).toStrictEqual(['alpha', 'beta']);
-  expect(rule.exclude.values()).toStrictEqual(['alpha', 'beta']);
-});
+      if (!omit.includes('test') && 'test' in obj) {
+        this.test(
+          obj.test instanceof RegExp || typeof obj.test === 'function'
+            ? obj.test
+            : new RegExp(obj.test),
+        );
+      }
 
-test('toConfig empty', () => {
-  const rule = new Rule();
+      return super.merge(obj, [
+        ...omit,
+        'include',
+        'exclude',
+        'use',
+        'rules',
+        'oneOf',
+        'resolve',
+        'test',
+      ]);
+    }
+  },
+);
 
-  expect(rule.toConfig()).toStrictEqual({});
-});
-
-test('toConfig with name', () => {
-  const parent = new Rule(null, 'alpha');
-  const child = parent.oneOf('beta');
-  const grandChild = child.oneOf('gamma');
-  const ruleChild = parent.rule('delta');
-
-  expect(parent.toConfig().__ruleNames).toStrictEqual(['alpha']);
-  expect(parent.toConfig().__ruleTypes).toStrictEqual(['rule']);
-  expect(child.toConfig().__ruleNames).toStrictEqual(['alpha', 'beta']);
-  expect(child.toConfig().__ruleTypes).toStrictEqual(['rule', 'oneOf']);
-  expect(grandChild.toConfig().__ruleNames).toStrictEqual([
-    'alpha',
-    'beta',
-    'gamma',
-  ]);
-  expect(grandChild.toConfig().__ruleTypes).toStrictEqual([
-    'rule',
-    'oneOf',
-    'oneOf',
-  ]);
-  expect(ruleChild.toConfig().__ruleNames).toStrictEqual(['alpha', 'delta']);
-  expect(ruleChild.toConfig().__ruleTypes).toStrictEqual(['rule', 'rule']);
-});
-
-test('toConfig with values', () => {
-  const rule = new Rule();
-
-  rule.include
-    .add('alpha')
-    .add('beta')
-    .end()
-    .exclude.add('alpha')
-    .add('beta')
-    .end()
-    .post()
-    .pre()
-    .test(/\.js$/)
-    .use('babel')
-    .loader('babel-loader')
-    .options({ presets: ['alpha'] })
-    .end()
-    .rule('minifier')
-    .resourceQuery(/minify/)
-    .use('minifier')
-    .loader('minifier-loader')
-    .end()
-    .end()
-    .oneOf('inline')
-    .resourceQuery(/inline/)
-    .use('url')
-    .loader('url-loader');
-
-  expect(rule.toConfig()).toStrictEqual({
-    test: /\.js$/,
-    enforce: 'pre',
-    include: ['alpha', 'beta'],
-    exclude: ['alpha', 'beta'],
-    rules: [
-      {
-        resourceQuery: /minify/,
-        use: [
-          {
-            loader: 'minifier-loader',
-          },
-        ],
-      },
-    ],
-    oneOf: [
-      {
-        resourceQuery: /inline/,
-        use: [
-          {
-            loader: 'url-loader',
-          },
-        ],
-      },
-    ],
-    use: [
-      {
-        loader: 'babel-loader',
-        options: {
-          presets: ['alpha'],
-        },
-      },
-    ],
-  });
-});
-
-test('toConfig with test function', () => {
-  const rule = new Rule();
-  const test = (s) => s.includes('.js');
-
-  rule.test(test);
-
-  expect(rule.toConfig()).toStrictEqual({ test });
-});
-
-test('merge empty', () => {
-  const rule = new Rule();
-  const obj = {
-    enforce: 'pre',
-    test: /\.js$/,
-    include: ['alpha', 'beta'],
-    exclude: ['alpha', 'beta'],
-    rules: {
-      minifier: {
-        resourceQuery: /minify/,
-        use: {
-          minifier: {
-            loader: 'minifier-loader',
-          },
-        },
-      },
-    },
-    oneOf: {
-      inline: {
-        resourceQuery: /inline/,
-        use: {
-          url: {
-            loader: 'url-loader',
-          },
-        },
-      },
-    },
-    use: {
-      babel: {
-        loader: 'babel-loader',
-        options: {
-          presets: ['alpha'],
-        },
-      },
-    },
-  };
-  const instance = rule.merge(obj);
-
-  expect(instance).toBe(rule);
-  expect(rule.toConfig()).toStrictEqual({
-    enforce: 'pre',
-    test: /\.js$/,
-    include: ['alpha', 'beta'],
-    exclude: ['alpha', 'beta'],
-    rules: [
-      {
-        resourceQuery: /minify/,
-        use: [
-          {
-            loader: 'minifier-loader',
-          },
-        ],
-      },
-    ],
-    oneOf: [
-      {
-        resourceQuery: /inline/,
-        use: [
-          {
-            loader: 'url-loader',
-          },
-        ],
-      },
-    ],
-    use: [
-      {
-        loader: 'babel-loader',
-        options: {
-          presets: ['alpha'],
-        },
-      },
-    ],
-  });
-});
-
-test('merge with values', () => {
-  const rule = new Rule();
-
-  rule
-    .test(/\.js$/)
-    .post()
-    .include.add('gamma')
-    .add('delta')
-    .end()
-    .use('babel')
-    .loader('babel-loader')
-    .options({ presets: ['alpha'] });
-
-  rule.merge({
-    test: /\.jsx$/,
-    enforce: 'pre',
-    include: ['alpha', 'beta'],
-    exclude: ['alpha', 'beta'],
-    rules: {
-      minifier: {
-        resourceQuery: /minify/,
-        use: {
-          minifier: {
-            loader: 'minifier-loader',
-          },
-        },
-      },
-    },
-    oneOf: {
-      inline: {
-        resourceQuery: /inline/,
-        use: {
-          url: {
-            loader: 'url-loader',
-          },
-        },
-      },
-    },
-    use: {
-      babel: {
-        options: {
-          presets: ['beta'],
-        },
-      },
-    },
-  });
-
-  expect(rule.toConfig()).toStrictEqual({
-    test: /\.jsx$/,
-    enforce: 'pre',
-    include: ['gamma', 'delta', 'alpha', 'beta'],
-    exclude: ['alpha', 'beta'],
-    rules: [
-      {
-        resourceQuery: /minify/,
-        use: [
-          {
-            loader: 'minifier-loader',
-          },
-        ],
-      },
-    ],
-    oneOf: [
-      {
-        resourceQuery: /inline/,
-        use: [
-          {
-            loader: 'url-loader',
-          },
-        ],
-      },
-    ],
-    use: [
-      {
-        loader: 'babel-loader',
-        options: {
-          presets: ['alpha', 'beta'],
-        },
-      },
-    ],
-  });
-});
-
-test('merge with omit', () => {
-  const rule = new Rule();
-
-  rule
-    .test(/\.js$/)
-    .post()
-    .include.add('gamma')
-    .add('delta')
-    .end()
-    .use('babel')
-    .loader('babel-loader')
-    .options({ presets: ['alpha'] });
-
-  rule.merge(
-    {
-      test: /\.jsx$/,
-      enforce: 'pre',
-      include: ['alpha', 'beta'],
-      exclude: ['alpha', 'beta'],
-      rules: {
-        minifier: {
-          resourceQuery: /minify/,
-          use: {
-            minifier: {
-              loader: 'minifier-loader',
-            },
-          },
-        },
-      },
-      oneOf: {
-        inline: {
-          resourceQuery: /inline/,
-          use: {
-            url: {
-              loader: 'url-loader',
-            },
-          },
-        },
-      },
-      use: {
-        babel: {
-          options: {
-            presets: ['beta'],
-          },
-        },
-      },
-    },
-    ['use', 'oneOf', 'rules'],
-  );
-
-  expect(rule.toConfig()).toStrictEqual({
-    test: /\.jsx$/,
-    enforce: 'pre',
-    include: ['gamma', 'delta', 'alpha', 'beta'],
-    exclude: ['alpha', 'beta'],
-    use: [
-      {
-        loader: 'babel-loader',
-        options: {
-          presets: ['alpha'],
-        },
-      },
-    ],
-  });
-});
-
-test('merge with include and exclude not of array type', () => {
-  const rule = new Rule();
-
-  rule.merge({
-    test: /\.jsx$/,
-    include: 'alpha',
-    exclude: 'alpha',
-  });
-
-  expect(rule.toConfig()).toStrictEqual({
-    test: /\.jsx$/,
-    include: ['alpha'],
-    exclude: ['alpha'],
-  });
-});
-
-test('merge with resolve', () => {
-  const rule = new Rule();
-
-  rule.merge({
-    resolve: {
-      alias: { foo: 'bar' },
-    },
-  });
-
-  rule.merge({
-    resolve: {
-      extensions: ['.js', '.mjs'],
-    },
-  });
-
-  expect(rule.toConfig()).toStrictEqual({
-    resolve: {
-      alias: { foo: 'bar' },
-      extensions: ['.js', '.mjs'],
-    },
-  });
-});
-
-test('ordered rules', () => {
-  const rule = new Rule();
-  rule
-    .rule('first')
-    .test(/\.first$/)
-    .end()
-    .rule('second')
-    .test(/\.second$/)
-    .end()
-    .rule('third')
-    .test(/\.third$/)
-    .end()
-    .rule('alpha')
-    .test(/\.alpha$/)
-    .before('first')
-    .end()
-    .rule('beta')
-    .test(/\.beta$/)
-    .after('second');
-
-  expect(rule.toConfig().rules.map((o) => o.test)).toStrictEqual([
-    /\.alpha$/,
-    /\.first$/,
-    /\.second$/,
-    /\.beta$/,
-    /\.third$/,
-  ]);
-});
-
-test('ordered oneOfs', () => {
-  const rule = new Rule();
-  rule
-    .oneOf('first')
-    .test(/\.first$/)
-    .end()
-    .oneOf('second')
-    .test(/\.second$/)
-    .end()
-    .oneOf('third')
-    .test(/\.third$/)
-    .end()
-    .oneOf('alpha')
-    .test(/\.alpha$/)
-    .before('first')
-    .end()
-    .oneOf('beta')
-    .test(/\.beta$/)
-    .after('second');
-
-  expect(rule.toConfig().oneOf.map((o) => o.test)).toStrictEqual([
-    /\.alpha$/,
-    /\.first$/,
-    /\.second$/,
-    /\.beta$/,
-    /\.third$/,
-  ]);
-});
+module.exports = Rule;
