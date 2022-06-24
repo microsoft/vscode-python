@@ -98,12 +98,6 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         const client = await this.factory.createLanguageClient(resource, interpreter, options);
         this.registerHandlers(client, resource);
 
-        this.disposables.push(
-            this.workspace.onDidGrantWorkspaceTrust(() => {
-                client.sendNotification('python/workspaceTrusted', { isTrusted: true });
-            }),
-        );
-
         await client.start();
 
         this.languageClient = client;
