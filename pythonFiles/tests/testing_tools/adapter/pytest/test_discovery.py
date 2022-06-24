@@ -1468,6 +1468,64 @@ class CollectorTests(unittest.TestCase):
             ],
         )
 
+    def test_mysterious_colons(self):
+        stub = util.Stub()
+        discovered = StubDiscoveredTests(stub)
+        session = StubPytestSession(stub)
+        testroot = adapter_util.ABS_PATH(adapter_util.fix_path("/a/b/c"))
+        relfile = adapter_util.fix_path("x/y/z/test_eggs.py")
+        session.items = [
+            create_stub_function_item(
+                stub,
+                nodeid=relfile + "::SpamTests:::()::test_spam",
+                name="test_spam",
+                originalname=None,
+                location=(relfile, 12, "SpamTests.test_spam"),
+                path=adapter_util.PATH_JOIN(testroot, relfile),
+                function=FakeFunc("test_spam"),
+            ),
+        ]
+        collector = _discovery.TestCollector(tests=discovered)
+
+        collector.pytest_collection_finish(session)
+
+        self.maxDiff = None
+        self.assertEqual(
+            stub.calls,
+            [
+                ("discovered.reset", None, None),
+                (
+                    "discovered.add_test",
+                    None,
+                    dict(
+                        parents=[
+                            ("./x/y/z/test_eggs.py::SpamTests", "SpamTests", "suite"),
+                            ("./x/y/z/test_eggs.py", "test_eggs.py", "file"),
+                            ("./x/y/z", "z", "folder"),
+                            ("./x/y", "y", "folder"),
+                            ("./x", "x", "folder"),
+                            (".", testroot, "folder"),
+                        ],
+                        test=info.SingleTestInfo(
+                            id="./x/y/z/test_eggs.py::SpamTests::test_spam",
+                            name="test_spam",
+                            path=info.SingleTestPath(
+                                root=testroot,
+                                relfile=adapter_util.fix_relpath(relfile),
+                                func="SpamTests.test_spam",
+                                sub=[],
+                            ),
+                            source="{}:{}".format(
+                                adapter_util.fix_relpath(relfile), 13
+                            ),
+                            markers=None,
+                            parentid="./x/y/z/test_eggs.py::SpamTests",
+                        ),
+                    ),
+                ),
+            ],
+        )
+
     def test_imported_test(self):
         # pytest will even discover tests that were imported from
         # another module!

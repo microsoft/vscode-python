@@ -95,12 +95,12 @@ from __future__ import absolute_import, print_function
 
 import sys
 
-import pytest
 import _pytest.doctest
 import _pytest.unittest
+import pytest
 
 from ..info import SingleTestInfo, SingleTestPath
-from ..util import fix_fileid, PATH_SEP, NORMCASE
+from ..util import NORMCASE, PATH_SEP, fix_fileid
 
 
 def should_never_reach_here(item, **extra):
@@ -508,6 +508,8 @@ def _normalize_test_id(
     """Return the canonical form for the given node ID."""
     while "::()::" in testid:
         testid = testid.replace("::()::", "::")
+    while ":::" in testid:
+        testid = testid.replace(":::", "::")
     if kind is None:
         return testid, testid
     orig = testid
