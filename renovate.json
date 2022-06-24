@@ -1,0 +1,11 @@
+{
+  "extends": [
+    "config:base",
+    ":maintainLockFilesWeekly",
+    ":prNotPending",
+    ":semanticCommitsDisabled",
+    ":unpublishSafe"
+  ],
+  "reviewers": ["neutrinojs/core-contributors"],
+  "pinVersions": false
+}
