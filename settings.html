@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Extension Settings</title>
+    <style>
+      .cam-page-loading {
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .cam-page-loading-popup {
+        position: static;
+        width: 400px;
+        height: 400px;
+      }
+      .loading-block {
+        width: 30px;
+        height: 30px;
+        position: relative;
+        transform: rotate(45deg);
+      }
+      .svg-icon {
+        --size: 25px;
+        width: var(--size);
+        height: var(--size);
+        overflow: visible;
+        animation: rotateIcon 2s linear infinite;
+      }
+      .line {
+        stroke: #ff2d89;
+        fill: transparent;
+        stroke-width: calc(var(--size) / 10);
+        stroke-linecap: round;
+        transform-origin: center center;
+      }
+      @keyframes rotateIcon {
+        0% {
+          transform: rotate(0);
+        }
+
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div
+      class="cam-page-loading "
+      id="camPageLoading"
+    >
+      <div class="loading-block">
+        <svg class="svg-icon" version="1.1" xmlns="http://www.w3.org/2000/svg">
+          <line
+            class="line"
+            x1="50%"
+            y1="0"
+            x2="50%"
+            y2="20%"
+            style="transform: rotate(0)"
+          />
+          <line
+            class="line"
+            x1="50%"
+            y1="0"
+            x2="50%"
+            y2="20%"
+            style="transform: rotate(45deg)"
+          />
+          <line
+            class="line"
+            x1="50%"
+            y1="0"
+            x2="50%"
+            y2="20%"
+            style="transform: rotate(90deg)"
+          />
+          <line
+            class="line"
+            x1="50%"
+            y1="0"
+            x2="50%"
+            y2="20%"
+            style="transform: rotate(135deg)"
+          />
+          <line
+            class="line"
+            x1="50%"
+            y1="0"
+            x2="50%"
+            y2="20%"
+            style="transform: rotate(180deg)"
+          />
+          <line
+            class="line"
+            x1="50%"
+            y1="0"
+            x2="50%"
+            y2="20%"
+            style="transform: rotate(225deg)"
+          />
+          <line
+            class="line"
+            x1="50%"
+            y1="0"
+            x2="50%"
+            y2="20%"
+            style="transform: rotate(270deg)"
+          />
+          <line
+            class="line"
+            x1="50%"
+            y1="0"
+            x2="50%"
+            y2="20%"
+            style="transform: rotate(315deg)"
+          />
+        </svg>
+      </div>
+    </div>
+    <!-- - Google Analytics -->
+    <script
+      id="camPageScript"
+      data-name="settings"
+      src="/js/pageDetector.js"
+    ></script>
+    <script src="/js/ga.js" defer></script>
+  </body>
+</html>
