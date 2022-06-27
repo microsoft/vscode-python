@@ -99,7 +99,7 @@ async function runPylance(
                 const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
                 const formattedProperties = {
                     ...telemetryEvent.Properties,
-                    // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
+                    // Replace all slashes in the method name so it doesn't get scrubbed by @vscode/extension-telemetry.
                     method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
                 };
                 sendTelemetryEventBrowser(
@@ -135,7 +135,7 @@ function getTelemetryReporter() {
     const extensionVersion = extension.packageJSON.version;
 
     // eslint-disable-next-line global-require
-    const Reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
+    const Reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
     telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true, [
         {
             lookup: /(errorName|errorMessage|errorStack)/g,

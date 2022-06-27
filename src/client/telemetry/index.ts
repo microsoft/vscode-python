@@ -32,7 +32,7 @@ import type { LinterTrigger, TestTool } from './types';
 function isTelemetrySupported(): boolean {
     try {
         const vsc = require('vscode');
-        const reporter = require('vscode-extension-telemetry');
+        const reporter = require('@vscode/extension-telemetry');
 
         return vsc !== undefined && reporter !== undefined;
     } catch {
@@ -86,7 +86,7 @@ function getTelemetryReporter() {
     const extension = extensions.getExtension(extensionId)!;
     const extensionVersion = extension.packageJSON.version;
 
-    const Reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
+    const Reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
     telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true, [
         {
             lookup: /(errorName|errorMessage|errorStack)/g,
