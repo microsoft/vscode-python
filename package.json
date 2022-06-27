@@ -107,13 +107,23 @@
                 "when": "workspacePlatform != webworker",
                 "steps": [
                     {
-                        "id": "python.installPythonWin",
-                        "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python from the [Microsoft Store](https://aka.ms/AAd9rms).\n\n[Install Python](https://aka.ms/AAd9rms)\n",
+                        "id": "python.createPythonFile",
+                        "title": "Create a Python file",
+                        "description": "[Open](command:toSide:workbench.action.files.openFile) or [create](command:toSide:workbench.action.files.newUntitledFile) a Python file - make sure to save it as \".py\".\n[Create Python File](command:toSide:workbench.action.files.newUntitledFile)",
                         "media": {
-                            "markdown": "resources/walkthrough/install-python-windows.md"
+                            "svg": "resources/walkthrough/open-folder.svg",
+                            "altText": "Open a Python file or a folder with a Python project."
                         },
-                        "when": "workspacePlatform == windows"
+                        "when": ""
+                    },
+                    {
+                        "id": "python.installPythonWin8",
+                        "title": "Install Python",
+                        "description": "The Python Extension requires Python to be installed. Install Python [from python.org](https://www.python.org/downloads).\n\n[Install Python](https://www.python.org/downloads)\n",
+                        "media": {
+                            "markdown": "resources/walkthrough/install-python-windows-8.md"
+                        },
+                        "when": "workspacePlatform == windows && showInstallTile"
                     },
                     {
                         "id": "python.installPythonMac",
@@ -134,16 +144,6 @@
                         },
                         "when": "workspacePlatform == linux",
                         "command": "workbench.action.terminal.new"
-                    },
-                    {
-                        "id": "python.createPythonFile",
-                        "title": "Create a Python file",
-                        "description": "[Open](command:toSide:workbench.action.files.openFile) or [create](command:toSide:python.createNewFile) a Python file - make sure to save it as \".py\".\n[Create Python File](command:toSide:python.createNewFile)",
-                        "media": {
-                            "svg": "resources/walkthrough/open-folder.svg",
-                            "altText": "Open a Python file or a folder with a Python project."
-                        },
-                        "when": ""
                     },
                     {
                         "id": "python.selectInterpreter",

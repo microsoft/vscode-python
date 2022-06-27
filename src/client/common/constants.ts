@@ -57,6 +57,7 @@ export namespace Commands {
     export const LaunchTensorBoard = 'python.launchTensorBoard';
     export const RefreshTensorBoard = 'python.refreshTensorBoard';
     export const ReportIssue = 'python.reportIssue';
+    export const InstallPython = 'python.installPython';
 }
 
 // Look at https://microsoft.github.io/vscode-codicons/dist/codicon.html for other Octicon icon ids
@@ -72,6 +73,7 @@ export namespace Octicons {
     export const Star = '$(star-full)';
     export const Gear = '$(gear)';
     export const Warning = '$(warning)';
+    export const Error = '$(error)';
 }
 
 export const DEFAULT_INTERPRETER_SETTING = 'python';

@@ -280,6 +280,14 @@ export namespace Interpreters {
 }
 
 export namespace InterpreterQuickPickList {
+    export const noPythonInstalled = localize(
+        'InterpreterQuickPickList.noPythonInstalled',
+        'Python is not installed, please download and install it',
+    );
+    export const clickForInstructions = localize(
+        'InterpreterQuickPickList.clickForInstructions',
+        'Click for instructions...',
+    );
     export const globalGroupName = localize('InterpreterQuickPickList.globalGroupName', 'Global');
     export const workspaceGroupName = localize('InterpreterQuickPickList.workspaceGroupName', 'Workspace');
     export const enterPath = {

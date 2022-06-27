@@ -14,6 +14,7 @@ import {
     IInterpreterAutoSelectionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { EnvironmentTypeComparer } from '../../client/interpreter/configuration/environmentTypeComparer';
+import { InstallPythonCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/installPython';
 import { ResetInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/resetInterpreter';
 import { SetInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/setInterpreter';
 import { SetShebangInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/setShebangInterpreter';
@@ -48,6 +49,7 @@ suite('Interpreters - Service Registry', () => {
         registerTypes(instance(serviceManager));
 
         [
+            [IExtensionSingleActivationService, InstallPythonCommand],
             [IExtensionSingleActivationService, SetInterpreterCommand],
             [IExtensionSingleActivationService, ResetInterpreterCommand],
             [IExtensionSingleActivationService, SetShebangInterpreterCommand],

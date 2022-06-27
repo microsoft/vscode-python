@@ -11,6 +11,7 @@ import { InterpreterAutoSelectionService } from './autoSelection/index';
 import { InterpreterAutoSelectionProxyService } from './autoSelection/proxy';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSelectionProxyService } from './autoSelection/types';
 import { EnvironmentTypeComparer } from './configuration/environmentTypeComparer';
+import { InstallPythonCommand } from './configuration/interpreterSelector/commands/installPython';
 import { ResetInterpreterCommand } from './configuration/interpreterSelector/commands/resetInterpreter';
 import { SetInterpreterCommand } from './configuration/interpreterSelector/commands/setInterpreter';
 import { SetShebangInterpreterCommand } from './configuration/interpreterSelector/commands/setShebangInterpreter';
@@ -40,6 +41,10 @@ import { VirtualEnvironmentPrompt } from './virtualEnvs/virtualEnvPrompt';
  */
 
 export function registerInterpreterTypes(serviceManager: IServiceManager): void {
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        InstallPythonCommand,
+    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         SetInterpreterCommand,

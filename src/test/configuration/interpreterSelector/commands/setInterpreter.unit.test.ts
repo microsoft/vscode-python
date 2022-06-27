@@ -42,7 +42,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnv
 import { EventName } from '../../../../client/telemetry/constants';
 import * as Telemetry from '../../../../client/telemetry';
 import { MockWorkspaceConfiguration } from '../../../mocks/mockWorkspaceConfig';
-import { Octicons } from '../../../../client/common/constants';
+import { Commands, Octicons } from '../../../../client/common/constants';
 import { IInterpreterService, PythonEnvironmentsChangedEvent } from '../../../../client/interpreter/contracts';
 import { createDeferred, sleep } from '../../../../client/common/utils/async';
 import { SystemVariables } from '../../../../client/common/variables/systemVariables';
@@ -126,6 +126,12 @@ suite('Set Interpreter Command', () => {
             label: `${Octicons.Gear} ${InterpreterQuickPickList.defaultInterpreterPath.label}`,
             description: defaultInterpreterPath,
             path: defaultInterpreterPath,
+            alwaysShow: true,
+        };
+
+        const noPythonInstalled = {
+            label: `${Octicons.Error} ${InterpreterQuickPickList.noPythonInstalled}`,
+            detail: InterpreterQuickPickList.clickForInstructions,
             alwaysShow: true,
         };
 
@@ -254,6 +260,66 @@ suite('Set Interpreter Command', () => {
             delete actualParameters!.customButtonSetup;
             delete actualParameters!.onChangeItem;
             assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
+        });
+
+        test('Picker should be displayed with expected items if no interpreters are available', async () => {
+            const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
+            const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+            const suggestions = [
+                expectedEnterInterpreterPathSuggestion,
+                defaultInterpreterPathSuggestion,
+                noPythonInstalled,
+            ];
+            const expectedParameters: IQuickPickParameters<QuickPickItem> = {
+                placeholder: `Selected Interpreter: ${currentPythonPath}`,
+                items: suggestions, // Verify suggestions
+                activeItem: noPythonInstalled, // Verify active item
+                matchOnDetail: true,
+                matchOnDescription: true,
+                title: InterpreterQuickPickList.browsePath.openButtonLabel,
+                sortByLabel: true,
+                keepScrollPosition: true,
+            };
+            let actualParameters: IQuickPickParameters<QuickPickItem> | undefined;
+            multiStepInput
+                .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
+                .callback((options) => {
+                    actualParameters = options;
+                })
+                .returns(() => Promise.resolve((undefined as unknown) as QuickPickItem));
+            interpreterSelector.reset();
+            interpreterSelector
+                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => []);
+
+            await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
+
+            expect(actualParameters).to.not.equal(undefined, 'Parameters not set');
+            const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
+            expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
+            delete actualParameters!.customButtonSetup;
+            delete actualParameters!.onChangeItem;
+            assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
+        });
+
+        test('Picker should install python if corresponding item is selected', async () => {
+            const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
+            const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+            multiStepInput
+                .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve((noPythonInstalled as unknown) as QuickPickItem));
+            interpreterSelector.reset();
+            interpreterSelector
+                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => []);
+            commandManager
+                .setup((c) => c.executeCommand(Commands.InstallPython))
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.once());
+
+            await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
+
+            commandManager.verifyAll();
         });
 
         test('Items displayed should be grouped if no refresh is going on', async () => {

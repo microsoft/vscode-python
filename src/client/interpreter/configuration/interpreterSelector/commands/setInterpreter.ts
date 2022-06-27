@@ -74,6 +74,12 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         alwaysShow: true,
     };
 
+    private readonly noPythonInstalled: ISpecialQuickPickItem = {
+        label: `${Octicons.Error} ${InterpreterQuickPickList.noPythonInstalled}`,
+        detail: InterpreterQuickPickList.clickForInstructions,
+        alwaysShow: true,
+    };
+
     constructor(
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IPathUtils) pathUtils: IPathUtils,
@@ -164,11 +170,12 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         } else if (selection.label === this.manualEntrySuggestion.label) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_OR_FIND);
             return this._enterOrBrowseInterpreterPath(input, state, suggestions);
+        } else if (selection.label === this.noPythonInstalled.label) {
+            this.commandManager.executeCommand(Commands.InstallPython);
         } else {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'selected' });
             state.path = (selection as IInterpreterQuickPickItem).path;
         }
-
         return undefined;
     }
 
@@ -179,7 +186,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             suggestions.push(defaultInterpreterPathSuggestion);
         }
         const interpreterSuggestions = this.getSuggestions(resource);
-        this.setRecommendedItem(interpreterSuggestions, resource);
+        this.finalizeItems(interpreterSuggestions, resource);
         suggestions.push(...interpreterSuggestions);
         return suggestions;
     }
@@ -214,7 +221,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         if (firstInterpreterSuggestion) {
             return firstInterpreterSuggestion;
         }
-        return suggestions[0];
+        const noPythonInstalledItem = suggestions.find(
+            (i) => isSpecialQuickPickItem(i) && i.label === this.noPythonInstalled.label,
+        );
+        return noPythonInstalledItem ?? suggestions[0];
     }
 
     private getDefaultInterpreterPathSuggestion(resource: Resource): ISpecialQuickPickItem | undefined {
@@ -286,6 +296,12 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 !areItemsGrouped,
             );
             if (envIndex === -1) {
+                const noPyIndex = updatedItems.findIndex(
+                    (item) => isSpecialQuickPickItem(item) && item.label === this.noPythonInstalled.label,
+                );
+                if (noPyIndex !== -1) {
+                    updatedItems.splice(noPyIndex, 1);
+                }
                 if (areItemsGrouped) {
                     addSeparatorIfApplicable(
                         updatedItems,
@@ -301,44 +317,57 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         if (envIndex !== -1 && event.new === undefined) {
             updatedItems.splice(envIndex, 1);
         }
-        this.setRecommendedItem(updatedItems, resource);
+        this.finalizeItems(updatedItems, resource);
         return updatedItems;
     }
 
-    private setRecommendedItem(items: QuickPickType[], resource: Resource) {
+    private finalizeItems(items: QuickPickType[], resource: Resource) {
         const interpreterSuggestions = this.interpreterSelector.getSuggestions(resource, true);
-        if (!this.interpreterService.refreshPromise && interpreterSuggestions.length > 0) {
-            const suggestion = this.interpreterSelector.getRecommendedSuggestion(
-                interpreterSuggestions,
-                this.workspaceService.getWorkspaceFolder(resource)?.uri,
-            );
-            if (!suggestion) {
-                return;
-            }
-            const areItemsGrouped = items.find((item) => isSeparatorItem(item) && item.label === EnvGroups.Recommended);
-            const recommended = cloneDeep(suggestion);
-            recommended.label = `${Octicons.Star} ${recommended.label}`;
-            recommended.description = areItemsGrouped
-                ? // No need to add a tag as "Recommended" group already exists.
-                  recommended.description
-                : `${recommended.description ?? ''} - ${Common.recommended}`;
-            const index = items.findIndex(
-                (item) => isInterpreterQuickPickItem(item) && item.interpreter.id === recommended.interpreter.id,
-            );
-            if (index !== -1) {
-                items[index] = recommended;
-            }
-            items.forEach((item, i) => {
-                if (
-                    isInterpreterQuickPickItem(item) &&
-                    item.interpreter.path === 'python' &&
-                    item.interpreter.envType === EnvironmentType.Conda
-                ) {
-                    if (!items[i].label.includes(Octicons.Warning)) {
-                        items[i].label = `${Octicons.Warning} ${items[i].label}`;
+        if (!this.interpreterService.refreshPromise) {
+            if (interpreterSuggestions.length) {
+                this.setRecommendedItem(interpreterSuggestions, items, resource);
+                // Add warning label to certain environments
+                items.forEach((item, i) => {
+                    if (
+                        isInterpreterQuickPickItem(item) &&
+                        item.interpreter.path === 'python' &&
+                        item.interpreter.envType === EnvironmentType.Conda
+                    ) {
+                        if (!items[i].label.includes(Octicons.Warning)) {
+                            items[i].label = `${Octicons.Warning} ${items[i].label}`;
+                        }
                     }
-                }
-            });
+                });
+            } else {
+                items.push(this.noPythonInstalled);
+            }
+        }
+    }
+
+    private setRecommendedItem(
+        interpreterSuggestions: IInterpreterQuickPickItem[],
+        items: QuickPickType[],
+        resource: Resource,
+    ) {
+        const suggestion = this.interpreterSelector.getRecommendedSuggestion(
+            interpreterSuggestions,
+            this.workspaceService.getWorkspaceFolder(resource)?.uri,
+        );
+        if (!suggestion) {
+            return;
+        }
+        const areItemsGrouped = items.find((item) => isSeparatorItem(item) && item.label === EnvGroups.Recommended);
+        const recommended = cloneDeep(suggestion);
+        recommended.label = `${Octicons.Star} ${recommended.label}`;
+        recommended.description = areItemsGrouped
+            ? // No need to add a tag as "Recommended" group already exists.
+              recommended.description
+            : `${recommended.description ?? ''} - ${Common.recommended}`;
+        const index = items.findIndex(
+            (item) => isInterpreterQuickPickItem(item) && item.interpreter.id === recommended.interpreter.id,
+        );
+        if (index !== -1) {
+            items[index] = recommended;
         }
     }
 
