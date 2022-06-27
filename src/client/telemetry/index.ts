@@ -89,7 +89,7 @@ function getTelemetryReporter() {
     const Reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
     telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true, [
         {
-            lookup: /(errorName|errorMessage|errorStack)/gs,
+            lookup: /(errorName|errorMessage|errorStack)/g,
         },
     ]);
 
