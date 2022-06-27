@@ -3,7 +3,7 @@
 
 import '../../setupNls';
 import * as vscode from 'vscode';
-import TelemetryReporter from 'vscode-extension-telemetry';
+import TelemetryReporter from '@vscode/extension-telemetry';
 import { LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/browser';
 import { LanguageClientMiddlewareBase } from '../activation/languageClientMiddlewareBase';
@@ -136,7 +136,11 @@ function getTelemetryReporter() {
 
     // eslint-disable-next-line global-require
     const Reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
-    telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true);
+    telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true, [
+        {
+            lookup: /(errorName|errorMessage|errorStack)/,
+        },
+    ]);
 
     return telemetryReporter;
 }
@@ -195,9 +199,7 @@ function sendTelemetryEventBrowser(
         };
         Object.assign(customProperties, errorProps);
 
-        // To avoid hard coding the names and forgetting to update later.
-        const errorPropNames = Object.getOwnPropertyNames(errorProps);
-        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, errorPropNames);
+        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures);
     } else {
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }

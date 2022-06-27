@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
+import TelemetryReporter from '@vscode/extension-telemetry/lib/telemetryReporter';
 
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
@@ -87,7 +87,11 @@ function getTelemetryReporter() {
     const extensionVersion = extension.packageJSON.version;
 
     const Reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
-    telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true);
+    telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true, [
+        {
+            lookup: /(errorName|errorMessage|errorStack)/gs,
+        },
+    ]);
 
     return telemetryReporter;
 }
@@ -150,10 +154,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             errorStack: ex.stack ?? '',
         };
         Object.assign(customProperties, errorProps);
-
-        // To avoid hardcoding the names and forgetting to update later.
-        const errorPropNames = Object.getOwnPropertyNames(errorProps);
-        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, errorPropNames);
+        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures);
     } else {
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }

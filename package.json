@@ -1785,6 +1785,7 @@
     },
     "dependencies": {
         "@vscode/jupyter-lsp-middleware": "^0.2.46",
+        "@vscode/extension-telemetry": "^0.6.2",
         "arch": "^2.1.0",
         "diff-match-patch": "^1.0.0",
         "fs-extra": "^10.0.1",
@@ -1811,7 +1812,6 @@
         "untildify": "^4.0.0",
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
-        "vscode-extension-telemetry": "0.4.5",
         "vscode-jsonrpc": "8.0.2-next.1",
         "vscode-languageclient": "8.0.2-next.5",
         "vscode-languageserver": "8.0.2-next.5",
