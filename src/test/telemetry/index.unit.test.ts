@@ -27,23 +27,20 @@ suite('Telemetry', () => {
         public static eventName: string[] = [];
         public static properties: Record<string, string>[] = [];
         public static measures: {}[] = [];
-        public static errorProps: string[] | undefined;
         public static exception: Error | undefined;
 
         public static clear() {
             Reporter.eventName = [];
             Reporter.properties = [];
             Reporter.measures = [];
-            Reporter.errorProps = undefined;
         }
         public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
             Reporter.eventName.push(eventName);
             Reporter.properties.push(properties!);
             Reporter.measures.push(measures!);
         }
-        public sendTelemetryErrorEvent(eventName: string, properties?: {}, measures?: {}, errorProps?: string[]) {
+        public sendTelemetryErrorEvent(eventName: string, properties?: {}, measures?: {}) {
             this.sendTelemetryEvent(eventName, properties, measures);
-            Reporter.errorProps = errorProps;
         }
         public sendTelemetryException(_error: Error, _properties?: {}, _measures?: {}): void {
             throw new Error('sendTelemetryException is unsupported');
@@ -97,7 +94,7 @@ suite('Telemetry', () => {
 
     test('Send Telemetry', () => {
         rewiremock.enable();
-        rewiremock('vscode-extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
 
         const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };
@@ -111,7 +108,7 @@ suite('Telemetry', () => {
     });
     test('Send Telemetry with no properties', () => {
         rewiremock.enable();
-        rewiremock('vscode-extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
 
         const eventName = 'Testing';
 
@@ -123,7 +120,7 @@ suite('Telemetry', () => {
     });
     test('Send Telemetry with shared properties', () => {
         rewiremock.enable();
-        rewiremock('vscode-extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
 
         const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };
@@ -140,7 +137,7 @@ suite('Telemetry', () => {
     });
     test('Shared properties will replace existing ones', () => {
         rewiremock.enable();
-        rewiremock('vscode-extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
 
         const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };
@@ -158,7 +155,7 @@ suite('Telemetry', () => {
     test('Send Exception Telemetry', () => {
         rewiremock.enable();
         const error = new Error('Boo');
-        rewiremock('vscode-extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
 
         const eventName = 'Testing';
         const measures = { start: 123, end: 987 };
@@ -176,6 +173,5 @@ suite('Telemetry', () => {
         expect(Reporter.eventName).to.deep.equal([eventName]);
         expect(Reporter.properties).to.deep.equal([expectedProperties]);
         expect(Reporter.measures).to.deep.equal([measures]);
-        expect(Reporter.errorProps).to.deep.equal(['errorName', 'errorMessage', 'errorStack']);
     });
 });

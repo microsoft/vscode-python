@@ -3,7 +3,7 @@
 
 import '../../setupNls';
 import * as vscode from 'vscode';
-import TelemetryReporter from 'vscode-extension-telemetry';
+import TelemetryReporter from '@vscode/extension-telemetry';
 import { LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/browser';
 import { LanguageClientMiddlewareBase } from '../activation/languageClientMiddlewareBase';
@@ -98,7 +98,7 @@ async function runPylance(
                 const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
                 const formattedProperties = {
                     ...telemetryEvent.Properties,
-                    // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
+                    // Replace all slashes in the method name so it doesn't get scrubbed by @vscode/extension-telemetry.
                     method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
                 };
                 sendTelemetryEventBrowser(
@@ -134,8 +134,12 @@ function getTelemetryReporter() {
     const extensionVersion = extension.packageJSON.version;
 
     // eslint-disable-next-line global-require
-    const Reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
-    telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true);
+    const Reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
+    telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true, [
+        {
+            lookup: /(errorName|errorMessage|errorStack)/g,
+        },
+    ]);
 
     return telemetryReporter;
 }
@@ -194,9 +198,7 @@ function sendTelemetryEventBrowser(
         };
         Object.assign(customProperties, errorProps);
 
-        // To avoid hard coding the names and forgetting to update later.
-        const errorPropNames = Object.getOwnPropertyNames(errorProps);
-        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, errorPropNames);
+        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures);
     } else {
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }

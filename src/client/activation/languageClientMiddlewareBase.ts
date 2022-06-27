@@ -510,7 +510,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
                 this.lastCaptured.set(lspMethod, now);
                 this.eventCount += 1;
 
-                // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
+                // Replace all slashes in the method name so it doesn't get scrubbed by @vscode/extension-telemetry.
                 const formattedMethod = lspMethod.replace(/\//g, '.');
 
                 const properties = {

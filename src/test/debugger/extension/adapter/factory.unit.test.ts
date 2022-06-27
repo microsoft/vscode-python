@@ -62,7 +62,7 @@ suite('Debugging - Adapter Factory', () => {
         process.env.VSC_PYTHON_UNIT_TEST = undefined;
         process.env.VSC_PYTHON_CI_TEST = undefined;
         rewiremock.enable();
-        rewiremock('vscode-extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
 
         const configurationService = mock(ConfigurationService);
         when(configurationService.getSettings(undefined)).thenReturn(({
