@@ -4,7 +4,7 @@
 
 ### Code Health
 
-1. Update required packages.
+1. Update vscode `extension-telemetry` package.
    ([#19375](https://github.com/microsoft/vscode-python/pull/19375))
 
 ### Thanks
