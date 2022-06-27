@@ -1,0 +1,5 @@
+// AUTOMATICALLY GENERATED: location from saved link.
+Map.setCenter(283.91315284179734, 55.386224022508955, 4)
+
+https://code.earthengine.google.com/8321ecbbbd9b016cd6b7ae5c419eb84
+'(end)'
