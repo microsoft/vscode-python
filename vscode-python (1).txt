@@ -1,0 +1,471 @@
+﻿Skip to content 
+ 
+    •  
+      In this repository All GitHub ↵ 
+      Jump to ↵ 
+    • No suggested jump to results 
+    •  
+      In this repository All GitHub ↵ 
+      Jump to ↵ 
+    •  
+      In this user All GitHub ↵ 
+      Jump to ↵ 
+    •  
+      In this repository All GitHub ↵ 
+      Jump to ↵ 
+    • 
+Dashboard Pull requests Issues 
+Marketplace 
+Explore Codespaces Sponsors Settings  5THforLIFE 
+Sign out 
+New repository Import repository New gist 
+ 
+Sorry, something went wrong. 
+Your account has been flagged.
+Because of that, your profile is hidden from the public. If you believe this is a mistake, contact support to have your account status reviewed. 
+
+{{ message }}
+/  ...  /  
+5THforLIFE  /   vscode-python  /   
+Clear 
+Tip: Type # to search pull requests 
+Type ? for help and tips 
+Tip: Type # to search issues 
+Type ? for help and tips 
+Tip: Type # to search discussions 
+Type ? for help and tips 
+Tip: Type ! to search projects 
+Type ? for help and tips 
+Tip: Type @ to search teams 
+Type ? for help and tips 
+Tip: Type @ to search people and organizations 
+Type ? for help and tips 
+Tip: Type > to activate command mode 
+Type ? for help and tips 
+Tip: Go to your accessibility settings to change your keyboard shortcuts 
+Type ? for help and tips 
+Tip: Type author:@me to search your content 
+Type ? for help and tips 
+Tip: Type is:pr to filter to pull requests 
+Type ? for help and tips 
+Tip: Type is:issue to filter to issues 
+Type ? for help and tips 
+Tip: Type is:project to filter to projects 
+Type ? for help and tips 
+Tip: Type is:open to filter to open content 
+Type ? for help and tips 
+We’ve encountered an error and some results aren't available at this time. Type a new search or try again later. 
+No results matched your search 
+Search for issues and pull requests # Search for issues, pull requests, discussions, and projects # Search for organizations, repositories, and users @ Search for projects ! Search for files / Activate command mode > Search your issues, pull requests, and discussions # author:@me Search your issues, pull requests, and discussions # author:@me Filter to pull requests # is:pr Filter to issues # is:issue Filter to discussions # is:discussion Filter to projects # is:project Filter to open issues, pull requests, and discussions # is:open 
+Create list
+Create a list to organize your starred repositories.
+ 
+Name . 
+32 remaining 
+ 
+Description . 
+160 remaining 
+. 
+Create 
+Tip: type : to add emoji to the name or description. 
+Beta Lists are currently in beta. Share feedback and report bugs. 
+5THforLIFE / vscode-python Public 
+forked from microsoft/vscode-python 
+    • Unpin 
+    • Unwatch Stop ignoring Watch 0 
+              Notifications
+      Participating and @mentions 
+      Only receive notifications from this repository when participating or @mentioned. 
+      All Activity 
+      Notified of all notifications on this repository. 
+      Ignore 
+      Never be notified. 
+      Custom
+      Select events you want to be notified of in addition to participating and @mentions. 
+      Custom 
+      Custom 
+      Select events you want to be notified of in addition to participating and @mentions. 
+       Issues 
+       Pull requests 
+       Releases 
+       Discussions 
+       Security alerts 
+      Apply Cancel 
+    • Fork 1.2k 
+        ◦ Unstar this repository?
+      This will remove {{ repoNameWithOwner }} from the {{ listsWithCount }} that it's been added to. 
+      Unstar 
+      Starred 0 
+      Star 0 
+      
+Python extension for Visual Studio Code 
+aka.ms/pvsc-marketplace 
+License
+MIT license 
+0 stars 1.2k forks 
+Unstar this repository?
+This will remove {{ repoNameWithOwner }} from the {{ listsWithCount }} that it's been added to. 
+Unstar 
+Starred 
+Star 
+
+Unwatch Stop ignoring Watch 
+Notifications
+Participating and @mentions 
+Only receive notifications from this repository when participating or @mentioned. 
+All Activity 
+Notified of all notifications on this repository. 
+Ignore 
+Never be notified. 
+Custom
+Select events you want to be notified of in addition to participating and @mentions. 
+Custom 
+Custom 
+Select events you want to be notified of in addition to participating and @mentions. 
+ Issues 
+ Pull requests 
+ Releases 
+ Discussions 
+ Security alerts 
+Apply Cancel 
+    • Code 
+    • Pull requests 0 
+    • Actions 
+    • Projects 0 
+    • Wiki 
+    • Security 
+    • Insights 
+    • Settings 
+More 
+    • Code 
+    • Pull requests 
+    • Actions 
+    • Projects 
+    • Wiki 
+    • Security 
+    • Insights 
+    • Settings 
+Open in github.dev Open in a new github.dev tab 
+5THforLIFE/vscode-python
+This commit does not belong to any branch on this repository, and may belong to a fork outside of the repository.
+main 
+Switch branches/tags 
+Branches Tags 
+Could not load branches
+Create branch: {{ refName }} from ‘main’ 
+{{ refName }} default View all branches 
+Could not load tags
+Nothing to show
+{{ refName }} default 
+View all tags 
+5 branches 178 tags 
+Code 
+    • Clone 
+      HTTPS 
+      SSH 
+      GitHub CLI 
+      Use Git or checkout with SVN using the web URL. 
+      You don't have any public SSH keys in your GitHub account. You can add a new public key, or try cloning this repository via HTTPS. 
+      Use a password-protected SSH key. 
+      Work fast with our official CLI. Learn more. 
+    • Open with GitHub Desktop 
+    • Download ZIP 
+Launching GitHub Desktop
+If nothing happens, download GitHub Desktop and try again. 
+Launching GitHub Desktop
+If nothing happens, download GitHub Desktop and try again. 
+Launching Xcode
+If nothing happens, download Xcode and try again. 
+Launching Visual Studio Code
+Your codespace will open once ready.
+There was a problem preparing your codespace, please try again.
+This branch is up to date with microsoft/vscode-python:main. 
+Contribute 
+    • This branch is not ahead of the upstream microsoft:main. 
+      No new commits yet. Enjoy your day! 
+    • Open pull request 
+Fetch upstream 
+    • This branch is not behind the upstream microsoft:main.
+      No new commits to fetch. Enjoy your day! 
+    • Compare 
+      Fetch and merge 
+    • This branch is up to date with the upstream and has conflicts that must be resolved. and we weren't able to determine if it could be merged. 
+      Open a pull request to fetch upstream and review changes or resolve conflicts. 
+    • Open pull request 
+Latest commit
+ 
+karrtikr Fix interpreter discovery related telemetry (microsoft#19319) 
+… 
+35b813f Jun 16, 2022 
+Fix interpreter discovery related telemetry (microsoft#19319) 
+35b813f 
+Git stats
+    • 6,416 commits 
+Files
+Permalink 
+Failed to load latest commit information. 
+Type
+Name
+Latest commit message
+Commit time
+.github 
+Delete the news directory (microsoft#19308) 
+Jun 14, 2022 
+.vscode 
+Update requirements to remove python version restrictions. (microsoft… 
+May 4, 2022 
+build 
+Get loader function using flag (microsoft#19085) 
+May 6, 2022 
+data 
+Remove python.pythonPath experiment (microsoft#18213) 
+Jan 6, 2022 
+images 
+Fix screenshot for open folder tile (microsoft#16890) 
+Aug 9, 2021 
+languages 
+Introduce pip requirements file highlighting 
+Sep 27, 2017 
+pythonFiles 
+Ensure pytest stub calls check for unique calls rather than adjusting… 
+Jun 13, 2022 
+resources 
+Remove python.disableInstallationCheck setting (microsoft#19245) 
+Jun 6, 2022 
+schemas 
+Remove uses of "master" (microsoft#13646) 
+Sep 3, 2020 
+src 
+Fix interpreter discovery related telemetry (microsoft#19319) 
+Jun 16, 2022 
+syntaxes 
+Run prettier on our yaml, json and md files (microsoft#10871) 
+Apr 1, 2020 
+types 
+Upgrade to LSP 3.17 for LSP notebooks support (microsoft#18742) 
+Mar 28, 2022 
+typings 
+Ensure string prototypes extension extends are unique enough (microso… 
+Apr 6, 2022 
+.editorconfig 
+microsoft#1228 multi root master (microsoft#2) 
+Nov 1, 2017 
+.eslintignore 
+Fixes to the LS no reload work (microsoft#18984) 
+Apr 22, 2022 
+.eslintrc 
+Remove start page and its build dependencies (microsoft#16834) 
+Aug 10, 2021 
+.gitattributes 
+Update to Jedi 0.17 (microsoft#11252) 
+Apr 21, 2020 
+.gitignore 
+Add localization (microsoft#18962) 
+May 5, 2022 
+.npmrc 
+Make gather an optional component (microsoft#9755) 
+Mar 8, 2020 
+.nvmrc 
+Upgrade to Node 14 (microsoft#18149) 
+Dec 13, 2021 
+.prettierrc.js 
+Update files to match new Prettier settings (microsoft#15030) 
+Dec 21, 2020 
+.sonarcloud.properties 
+Remove start page and its build dependencies (microsoft#16834) 
+Aug 10, 2021 
+.vscodeignore 
+Delete the news directory (microsoft#19308) 
+Jun 14, 2022 
+CHANGELOG.md 
+Release candidate (microsoft#19259) 
+Jun 8, 2022 
+CODE_OF_CONDUCT.md 
+Have CoC match official template 
+Apr 12, 2021 
+CONTRIBUTING.md 
+Update CONTRIBUTING.md 
+Apr 13, 2021 
+LICENSE 
+Legal stuff to make CELA happy (microsoft#5) 
+Nov 2, 2017 
+README.md 
+Make the README sound more positive around vscode.dev (microsoft#18623) 
+Mar 2, 2022 
+SECURITY.md 
+Run prettier on our yaml, json and md files (microsoft#10871) 
+Apr 1, 2020 
+SUPPORT.md 
+Add a SUPPORT.md file 
+Oct 2, 2020 
+ThirdPartyNotices-Distribution.txt 
+Release candidate (microsoft#19259) 
+Jun 8, 2022 
+ThirdPartyNotices-Repository.txt 
+Release candidate (microsoft#19259) 
+Jun 8, 2022 
+cgmanifest.json 
+Update cgmanifest (microsoft#19195) 
+May 30, 2022 
+gulpfile.js 
+Add localization (microsoft#18962) 
+May 5, 2022 
+icon.png 
+moved icon 
+Jul 2, 2017 
+package-lock.json 
+Upgrade LSP to 8.0.2-next.5 (microsoft#19260) 
+Jun 13, 2022 
+package.json 
+Fix variable name for flake8Path's description (microsoft#19313) 
+Jun 16, 2022 
+package.nls.json 
+Add missing translations (microsoft#19305) 
+Jun 14, 2022 
+requirements.in 
+Bump typing-extensions from 4.0.1 to 4.2.0 (microsoft#18939) 
+Apr 18, 2022 
+requirements.txt 
+Bump typing-extensions from 4.0.1 to 4.2.0 (microsoft#18939) 
+Apr 18, 2022 
+sprint-planning.github-issues 
+Fix issue labels (microsoft#19028) 
+May 13, 2022 
+tsconfig.browser.json 
+Migrate over to using enabledApiProposals in package.json (micros… 
+Jan 11, 2022 
+tsconfig.extension.json 
+Remove start page and its build dependencies (microsoft#16834) 
+Aug 10, 2021 
+tsconfig.json 
+Remove start page and its build dependencies (microsoft#16834) 
+Aug 10, 2021 
+tsfmt.json 
+Prettier 
+Feb 20, 2020 
+vscode-python-signing.csproj 
+VS Python analysis engine integration (microsoft#1231) 
+Mar 30, 2018 
+View code 
+Drop to upload your files
+Python extension for Visual Studio Code Support for vscode.dev Installed extensions Quick start Set up your environment Jupyter Notebook quick start Useful commands Feature details Supported locales Questions, issues, feature requests, and contributions Data and telemetry 
+README.md 
+Python extension for Visual Studio Code
+A Visual Studio Code extension with rich support for the Python language (for all actively supported versions of the language: >=3.7), including features such as IntelliSense (Pylance), linting, debugging, code navigation, code formatting, refactoring, variable explorer, test explorer, and more!
+Support for vscode.dev
+The Python extension does offer some support when running on vscode.dev (which includes github.dev). This includes partial IntelliSense for open files in the editor.
+Installed extensions
+The Python extension will automatically install the Pylance and Jupyter extensions to give you the best experience when working with Python files and Jupyter notebooks. However, Pylance is an optional dependency, meaning the Python extension will remain fully functional if it fails to be installed. You can also uninstall it at the expense of some features if you’re using a different language server.
+Extensions installed through the marketplace are subject to the Marketplace Terms of Use.
+Quick start
+    • Step 1. Install a supported version of Python on your system (note: that the system install of Python on macOS is not supported). 
+    • Step 2. Install the Python extension for Visual Studio Code. 
+    • Step 3. Open or create a Python file and start coding! 
+Set up your environment
+    • Select your Python interpreter by clicking on the status bar
+       
+    • Configure the debugger through the Debug Activity Bar
+       
+    • Configure tests by running the Configure Tests command
+       
+Jupyter Notebook quick start
+The Python extension and the Jupyter extension work together to give you a great Notebook experience in VS Code.
+    • Open or create a Jupyter Notebook file (.ipynb) and start coding in our Notebook Editor!
+       
+For more information you can:
+    • Follow our Python tutorial with step-by-step instructions for building a simple app. 
+    • Check out the Python documentation on the VS Code site for general information about using the extension. 
+    • Check out the Jupyter Notebook documentation on the VS Code site for information about using Jupyter Notebooks in VS Code. 
+Useful commands
+Open the Command Palette (Command+Shift+P on macOS and Ctrl+Shift+P on Windows/Linux) and type in one of the following commands:
+Command
+Description
+Python: Select Interpreter
+Switch between Python interpreters, versions, and environments.
+Python: Start REPL
+Start an interactive Python REPL using the selected interpreter in the VS Code terminal.
+Python: Run Python File in Terminal
+Runs the active Python file in the VS Code terminal. You can also run a Python file by right-clicking on the file and selecting Run Python File in Terminal.
+Python: Select Linter
+Switch from Pylint to Flake8 or other supported linters.
+Format Document
+Formats code using the provided formatter in the settings.json file.
+Python: Configure Tests
+Select a test framework and configure it to display the Test Explorer.
+To see all available Python commands, open the Command Palette and type Python. For Jupyter extension commands, just type Jupyter.
+Feature details
+Learn more about the rich features of the Python extension:
+    • IntelliSense: Edit your code with auto-completion, code navigation, syntax checking and more
+    • Linting: Get additional code analysis with Pylint, Flake8 and more
+    • Code formatting: Format your code with black, autopep or yapf
+    • Debugging: Debug your Python scripts, web apps, remote or multi-threaded processes
+    • Testing: Run and debug tests through the Test Explorer with unittest or pytest.
+    • Jupyter Notebooks: Create and edit Jupyter Notebooks, add and run code cells, render plots, visualize variables through the variable explorer, visualize dataframes with the data viewer, and more
+    • Environments: Automatically activate and switch between virtualenv, venv, pipenv, conda and pyenv environments
+    • Refactoring: Restructure your Python code with variable extraction, method extraction and import sorting
+Supported locales
+The extension is available in multiple languages: de, en, es, fa, fr, it, ja, ko-kr, nl, pl, pt-br, ru, tr, zh-cn, zh-tw
+Questions, issues, feature requests, and contributions
+    • If you have a question about how to accomplish something with the extension, please ask on Stack Overflow 
+    • If you come across a problem with the extension, please file an issue 
+    • Contributions are always welcome! Please see our contributing guide for more details 
+    • Any and all feedback is appreciated and welcome! 
+        ◦ If someone has already filed an issue that encompasses your feedback, please leave a 👍/👎 reaction on the issue 
+        ◦ Otherwise please start a new discussion 
+    • If you're interested in the development of the extension, you can read about our development process 
+Data and telemetry
+The Microsoft Python Extension for Visual Studio Code collects usage data and sends it to Microsoft to help improve our products and services. Read our privacy statement to learn more. This extension respects the telemetry.enableTelemetry setting which you can learn more about at https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting.
+Edit repository details
+Description 
+ 
+Website 
+ 
+Topics (separate with spaces) 
+    • 
+ 
+Include in the home page
+ Releases  Packages  Environments 
+Save changes Cancel 
+About
+Python extension for Visual Studio Code 
+aka.ms/pvsc-marketplace 
+Topics
+Resources
+Readme 
+License
+MIT license 
+Code of conduct
+Code of conduct 
+Stars
+0 stars 
+Watchers
+0 watching 
+Forks
+1.2k forks 
+Releases 
+178 tags 
+Create a new release
+Packages 0 
+No packages published 
+Publish your first package 
+Languages
+    • TypeScript 66.2% 
+    • Python 33.3% 
+    • JavaScript 0.4% 
+    • Jupyter Notebook 0.1% 
+    • HTML 0.0% 
+    • Roff 0.0% 
+    • © 2022 GitHub, Inc. 
+    • Terms 
+    • Privacy 
+    • Security 
+    • Status 
+    • Docs 
+    • Contact GitHub 
+    • Pricing 
+    • API 
+    • Training 
+    • Blog 
+    • About 
+You can’t perform that action at this time. 
+You signed in with another tab or window. Reload to refresh your session. You signed out in another tab or window. Reload to refresh your session. 
