@@ -11,9 +11,8 @@ import unittest
 from types import TracebackType
 from typing import Dict, List, Optional, Tuple, Type, TypeAlias, TypedDict
 
+from discovery import parse_unittest_discovery_args
 from typing_extensions import NotRequired
-
-from .discovery import parse_unittest_discovery_args
 
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -139,7 +138,9 @@ class UnittestTestResult(unittest.TextTestResult):
             "subtest": subtest.id() if subtest else None,
         }
 
-        self.formatted[test_id] = result
+        self.formatted[test_id] = result  # in future: send one by one as we get it.
+        print("we are adding inside formatResult: ")
+        print(result)
 
 
 class TestExecutionStatus(str, enum.Enum):
@@ -172,7 +173,7 @@ def run_tests(
     uuid: Optional[str],
 ) -> PayloadDict:
     cwd = os.path.abspath(start_dir)
-    status = TestExecutionStatus.success
+    status = TestExecutionStatus.error
     error = None
     payload: PayloadDict = {"cwd": cwd, "uuid": uuid, "status": status}
 
@@ -191,20 +192,18 @@ def run_tests(
             "pattern": pattern,
             "top_level_dir": top_level_dir,
         }
-        suite = loader.discover(**{k: v for k, v in args.items() if v is not None})
+        suite = loader.discover(start_dir, pattern, top_level_dir)
 
         # Run tests.
         runner = unittest.TextTestRunner(resultclass=UnittestTestResult)
         result: UnittestTestResult = runner.run(suite)  # type: ignore
 
-        # Filter tests by id.
-        filtered_results = {k: v for k, v in result.formatted.items() if k in test_ids}
-        payload["result"] = filtered_results
+        payload["result"] = result.formatted
 
         # Add a payload entry with the list of test ids for tests that weren't found.
-        not_found = set(test_ids) - set(filtered_results.keys())
-        if not_found:
-            payload["not_found"] = list(not_found)
+        # not_found = set(test_ids) - set(filtered_results.keys())
+        # if not_found:
+        #     payload["not_found"] = list(not_found)
     except Exception:
         status = TestExecutionStatus.error
         error = traceback.format_exc()
@@ -224,7 +223,9 @@ if __name__ == "__main__":
     argv = sys.argv[1:]
     index = argv.index("--udiscovery")
 
-    start_dir, pattern, top_level_dir = parse_unittest_discovery_args(argv[index + 1 :])
+    start_dir, pattern, top_level_dir = parse_unittest_discovery_args(
+        argv[index + 1 :]
+    )  # do we need 225,227?
 
     # start_path = pathlib.Path.home() / "Documents" / "Sandbox" / "unittest-subtest"
     # test_ids = [
@@ -236,8 +237,8 @@ if __name__ == "__main__":
 
     # Perform test execution.
     port, uuid, test_ids = parse_execution_cli_args(argv[:index])
-    run_tests(start_dir, test_ids, pattern, top_level_dir, uuid)
-
+    payload = run_tests(start_dir, test_ids, pattern, top_level_dir, uuid)
+    # print(payload)
 
 #     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
 #     addr = ("localhost", port)

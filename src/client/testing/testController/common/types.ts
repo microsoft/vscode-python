@@ -136,10 +136,16 @@ export type TestDiscoveryCommand = {
     args: string[];
 };
 
+// do we need args as string[] for exeuction? 6/27/22
+export type TestExecutionCommand = {
+    script: string;
+    args: string[];
+};
+
 export type TestCommandOptions = {
     workspaceFolder: Uri;
     cwd: string;
-    command: TestDiscoveryCommand;
+    command: TestDiscoveryCommand | TestExecutionCommand; // 6/27/22
     token?: CancellationToken;
     outChannel?: OutputChannel;
 };
@@ -159,6 +165,11 @@ export interface ITestDiscoveryAdapter {
     discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
 }
 
+// interface for execution/runner adapter 6/27/22
+export interface ITestExecutionAdapter {
+    runTests(uri: Uri): Promise<ExecutionTestPayload>;
+}
+
 // Same types as in pythonFiles/unittestadapter/utils.py
 export type DiscoveredTestType = 'folder' | 'file' | 'class' | 'test';
 
@@ -172,6 +183,7 @@ export type DiscoveredTestCommon = {
 
 export type DiscoveredTestItem = DiscoveredTestCommon & {
     lineno: number;
+    runID: string;
 };
 
 export type DiscoveredTestNode = DiscoveredTestCommon & {
@@ -183,4 +195,13 @@ export type DiscoveredTestPayload = {
     tests?: DiscoveredTestNode;
     status: 'success' | 'error';
     errors?: string[];
+};
+
+// payload for exeuctionTest 6/27/22
+export type ExecutionTestPayload = {
+    cwd: string;
+    status: 'success' | 'error';
+    result?: { [key: string]: { [key: string]: string | null } };
+    notFound?: string[];
+    error: string;
 };

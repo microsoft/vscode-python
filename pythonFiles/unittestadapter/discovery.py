@@ -10,6 +10,12 @@ import traceback
 import unittest
 from typing import List, Literal, Optional, Tuple, TypedDict, Union
 
+######
+# import debugpy
+
+# debugpy.connect(("localhost", 5678))
+# debugpy.breakpoint()
+
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PYTHON_FILES)

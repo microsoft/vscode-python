@@ -11,7 +11,13 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestProvider } from '../types';
 import { createErrorTestItem, DebugTestTag, ErrorTestItemOptions, RunTestTag } from './common/testItemUtilities';
-import { DiscoveredTestItem, DiscoveredTestNode, DiscoveredTestType, ITestDiscoveryAdapter } from './common/types';
+import {
+    DiscoveredTestItem,
+    DiscoveredTestNode,
+    DiscoveredTestType,
+    ITestDiscoveryAdapter,
+    // ITestExecutionAdapter,
+} from './common/types';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -31,7 +37,7 @@ export class WorkspaceTestAdapter {
         private testProvider: TestProvider,
         private discoveryAdapter: ITestDiscoveryAdapter,
         // TODO: Implement test running
-        // private runningAdapter: ITestRunningAdapter,
+        // private executionAdapter: ITestExecutionAdapter,
         private workspaceUri: Uri,
     ) {}
 
