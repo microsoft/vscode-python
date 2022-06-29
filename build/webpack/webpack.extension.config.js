@@ -28,6 +28,12 @@ const config = {
         rules: [
             ...common.getTranlationsLoader(),
             {
+                loader: 'vscode-nls-dev/lib/webpack-loader',
+                options: {
+                    base: constants.ExtensionRootDir,
+                },
+            },
+            {
                 test: /\.ts$/,
                 use: [
                     {

@@ -38,6 +38,8 @@ import { LspNotebooksExperiment } from '../activation/node/lspNotebooksExperimen
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
 @injectable()
 /**
  * The Language Server Watcher class implements the ILanguageServerWatcher interface, which is the one-stop shop for language server activation.

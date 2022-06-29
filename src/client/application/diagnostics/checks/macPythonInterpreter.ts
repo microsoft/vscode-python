@@ -26,7 +26,7 @@ import { Common } from '../../../common/utils/localize';
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const messages = {
-    [DiagnosticCodes.MacInterpreterSelected]: localize(
+      [DiagnosticCodes.MacInterpreterSelected]: localize(
         'DiagnosticCodes.MacInterpreterSelected',
         'The selected macOS system install of Python is not recommended, some functionality in the extension will be limited. [Install another version of Python](https://www.python.org/downloads) or select a different interpreter for the best experience. [Learn more](https://aka.ms/AA7jfor).',
     ),
