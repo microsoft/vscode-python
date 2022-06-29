@@ -28,6 +28,7 @@ class TestData(TypedDict):
 
 class TestItem(TestData):
     lineno: str
+    runID: str
 
 
 class TestNode(TestData):
@@ -147,7 +148,9 @@ def build_test_tree(
     root = build_test_node(test_directory, directory_path.name, TestNodeTypeEnum.folder)
 
     for test_case in get_test_case(suite):
-        test_id = test_case.id()
+        test_id = (
+            test_case.id()
+        )  # this test_id should be used as runner_id for execution purposes later
         if test_id.startswith("unittest.loader._FailedTest"):
             errors.append(str(test_case._exception))  # type: ignore
         else:
@@ -190,6 +193,7 @@ def build_test_tree(
                 "lineno": lineno,
                 "type_": TestNodeTypeEnum.test,
                 "id_": file_path + "\\" + class_name + "\\" + function_name,
+                "runID": test_id,
             }  # concatenate class name and function test name
             current_node["children"].append(test_node)
 
