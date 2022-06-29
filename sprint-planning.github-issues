@@ -7,7 +7,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$pvsc=repo:microsoft/vscode-python\r\n$not_DS=-label:\"area-data science\"\r\n$open=is:open"
+    "value": "$pvsc=repo:microsoft/vscode-python\n$open=is:open\n$upvotes=sort:reactions-+1-desc"
   },
   {
     "kind": 1,
@@ -17,22 +17,12 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "## P0"
+    "value": "## Important/P1"
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$pvsc $not_DS $open label:\"P0\""
-  },
-  {
-    "kind": 1,
-    "language": "markdown",
-    "value": "## P1"
-  },
-  {
-    "kind": 2,
-    "language": "github-issues",
-    "value": "$pvsc $not_DS $open label:\"P1\""
+    "value": "$pvsc $open label:\"important\""
   },
   {
     "kind": 1,
@@ -42,7 +32,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$pvsc $not_DS $open label:\"reason-regression\""
+    "value": "$pvsc $open label:\"regression\""
   },
   {
     "kind": 1,
@@ -52,7 +42,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$pvsc $not_DS $open label:\"partner ask\""
+    "value": "$pvsc $open label:\"partner ask\""
   },
   {
     "kind": 1,
@@ -67,7 +57,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$pvsc $not_DS $open sort:reactions-+1-desc label:\"feature-request\" "
+    "value": "$pvsc $open $upvotes label:\"feature-request\" "
   },
   {
     "kind": 1,
@@ -77,6 +67,6 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$pvsc $not_DS $open sort:reactions-+1-desc label:\"bug\""
+    "value": "$pvsc $open $upvotes label:\"bug\""
   }
 ]
