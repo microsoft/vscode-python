@@ -33,13 +33,18 @@ export class WorkspaceTestAdapter {
 
     private testData: DiscoveredTestNode | undefined;
 
+    // potentially a hashmap of runID : testItem?
+    runIdToTestItem: Map<string, TestItem>;
+
     constructor(
         private testProvider: TestProvider,
         private discoveryAdapter: ITestDiscoveryAdapter,
         // TODO: Implement test running
         // private executionAdapter: ITestExecutionAdapter,
-        private workspaceUri: Uri,
-    ) {}
+        private workspaceUri: Uri, // private runIdToTestItem: Map<string, TestItem>,
+    ) {
+        this.runIdToTestItem = new Map<string, TestItem>();
+    }
 
     public async discoverTests(
         testController: TestController,
@@ -154,7 +159,7 @@ export class WorkspaceTestAdapter {
                 if (workspaceNode) {
                     updateTestTree(testController, rawTestData.tests, this.testData, workspaceNode, token);
                 } else {
-                    populateTestTree(testController, rawTestData.tests, undefined, token);
+                    populateTestTree(testController, rawTestData.tests, undefined, this, token);
                 }
             } else {
                 // Delete everything from the test controller.
@@ -261,17 +266,18 @@ function updateTestTree(
                     testRoot!.children.add(testItem);
 
                     // Populate the test tree under the newly created node.
-                    populateTestTree(testController, child, testItem, token);
+                    // populateTestTree(testController, child, testItem, token, this); uncomment later
                 }
             }
         }
     });
 }
-
+// had to switch the order of the original parameter since required param cannot follow optional.
 function populateTestTree(
     testController: TestController,
     testTreeData: DiscoveredTestNode,
     testRoot: TestItem | undefined,
+    wstAdapter: WorkspaceTestAdapter,
     token?: CancellationToken,
 ): void {
     // If testRoot is undefined, use the info of the root item of testTreeData to create a test item, and append it to the test controller.
@@ -295,6 +301,8 @@ function populateTestTree(
                 testItem.range = range;
                 testItem.tags = [RunTestTag, DebugTestTag];
                 testRoot!.children.add(testItem);
+                // add to our map
+                wstAdapter.runIdToTestItem.set(child.runID, testItem);
             } else {
                 let node = testController.items.get(child.path);
 
@@ -307,7 +315,7 @@ function populateTestTree(
 
                     testRoot!.children.add(node);
                 }
-                populateTestTree(testController, child, node, token);
+                populateTestTree(testController, child, node, wstAdapter, token);
             }
         }
     });

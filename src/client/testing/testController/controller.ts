@@ -337,6 +337,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             testItems.push(i);
                             // trying to add here? test out using below two lines
                             // const message = new TestMessage('this is intentional');
+                            // runInstance.failed(i, message);
                             // runInstance.passed(i);
                         }
                     });
