@@ -7,6 +7,7 @@ import { injectable, unmanaged } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IDisposable, IDisposableRegistry, Resource } from '../../common/types';
+import { asyncFilter } from '../../common/utils/arrayUtils';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -48,9 +49,12 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
         if (diagnostics.length === 0) {
             return;
         }
-        const diagnosticsToHandle = diagnostics.filter((item) => {
+        const diagnosticsToHandle = await asyncFilter(diagnostics, async (item) => {
             if (item.invokeHandler && item.invokeHandler === 'always') {
                 return true;
+            }
+            if (!(await this.canHandle(item))) {
+                return false;
             }
             const key = this.getDiagnosticsKey(item);
             if (BaseDiagnosticsService.handledDiagnosticCodeKeys.indexOf(key) !== -1) {

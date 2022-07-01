@@ -1320,24 +1320,6 @@ export interface IEventNamePropertyMapping {
         selection: 'Yes' | 'No' | 'Ignore' | undefined;
     };
     /**
-     * Telemetry event sent with details when the user clicks a button in the "Python is not installed" prompt.
-     * * `Prompt message` :- 'Python is not installed. Please download and install Python before using the extension.'
-     */
-    /* __GDPR__
-       "python_not_installed_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
-       }
-     */
-    [EventName.PYTHON_NOT_INSTALLED_PROMPT]: {
-        /**
-         * `Download` When the 'Download' option is clicked
-         * `Ignore` When the prompt is dismissed
-         *
-         * @type {('Download' | 'Ignore' | undefined)}
-         */
-        selection: 'Download' | 'Ignore' | undefined;
-    };
-    /**
      * Telemetry event sent when the experiments service is initialized for the first time.
      */
     /* __GDPR__

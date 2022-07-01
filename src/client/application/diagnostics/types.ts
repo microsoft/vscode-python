@@ -53,6 +53,12 @@ export interface IDiagnosticCommand {
 
 export type IDiagnosticMessageOnCloseHandler = (response?: string) => void;
 
+export const IInvalidPythonPathInSettings = Symbol('IInvalidPythonPathInSettings');
+
+export interface IInvalidPythonPathInSettings extends IDiagnosticsService {
+    validateInterpreterPathInSettings(resource: Resource): Promise<boolean>;
+}
+
 export const IInvalidPythonPathInDebuggerService = Symbol('IInvalidPythonPathInDebuggerService');
 
 export interface IInvalidPythonPathInDebuggerService extends IDiagnosticsService {

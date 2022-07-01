@@ -94,7 +94,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         test('Can handle InvalidPythonPathInterpreter diagnostics', async () => {
             for (const code of [
                 DiagnosticCodes.NoPythonInterpretersDiagnostic,
-                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
+                DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
             ]) {
                 const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
                 diagnostic
@@ -148,12 +148,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
 
             const diagnostics = await diagnosticService.diagnose(undefined);
             expect(diagnostics).to.be.deep.equal(
-                [
-                    new InvalidPythonInterpreterDiagnostic(
-                        DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
-                        undefined,
-                    ),
-                ],
+                [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.InvalidPythonInterpreterDiagnostic, undefined)],
                 'not the same',
             );
             settings.verifyAll();
@@ -208,7 +203,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         });
         test('Handling no currently selected interpreter diagnostic should show select interpreter message', async () => {
             const diagnostic = new InvalidPythonInterpreterDiagnostic(
-                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
+                DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
                 undefined,
             );
             const cmd = ({} as any) as IDiagnosticCommand;
@@ -242,7 +237,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         });
         test('Handling no interpreters diagnostic should return select interpreter cmd', async () => {
             const diagnostic = new InvalidPythonInterpreterDiagnostic(
-                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
+                DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
                 undefined,
             );
             const cmd = ({} as any) as IDiagnosticCommand;
@@ -302,7 +297,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         });
         test('Handling an unsupported diagnostic code should not show a message nor return a command', async () => {
             const diagnostic = new InvalidPythonInterpreterDiagnostic(
-                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
+                DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
                 undefined,
             );
             const cmd = ({} as any) as IDiagnosticCommand;
