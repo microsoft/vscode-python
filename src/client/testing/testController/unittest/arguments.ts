@@ -73,6 +73,18 @@ export function unittestGetTestPattern(args: string[]): string {
     return 'test*.py';
 }
 
+export function unittestGetTopLevelDirectory(args: string[]): string {
+    const shortValue = getOptionValues(args, '-t');
+    if (shortValue.length === 1) {
+        return shortValue[0];
+    }
+    const longValue = getOptionValues(args, '--top-level-directory');
+    if (longValue.length === 1) {
+        return longValue[0];
+    }
+    return unittestGetTestFolders(args)[0];
+}
+
 export function getTestRunArgs(args: string[]): string[] {
     const startTestDiscoveryDirectory = unittestGetTestFolders(args)[0];
     const pattern = unittestGetTestPattern(args);

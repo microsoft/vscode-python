@@ -1,11 +1,12 @@
-import unittest
 import inspect
 import os
 import sys
 import traceback
+import unittest
 
 start_dir = sys.argv[1]
 pattern = sys.argv[2]
+top_level_dir = sys.argv[3]
 sys.path.insert(0, os.getcwd())
 
 
@@ -38,7 +39,7 @@ def generate_test_cases(suite):
 
 try:
     loader = unittest.TestLoader()
-    suite = loader.discover(start_dir, pattern=pattern)
+    suite = loader.discover(start_dir, pattern=pattern, top_level_dir=top_level_dir)
 
     print("start")  # Don't remove this line
     loader_errors = []
