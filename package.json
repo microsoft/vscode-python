@@ -109,7 +109,7 @@
                     {
                         "id": "python.createPythonFile",
                         "title": "Create a Python file",
-                        "description": "[Open](command:toSide:workbench.action.files.openFile) or [create](command:toSide:workbench.action.files.newUntitledFile) a Python file - make sure to save it as \".py\".\n[Create Python File](command:toSide:workbench.action.files.newUntitledFile)",
+                        "description": "[Open](command:toSide:workbench.action.files.openFile) or [create](command:toSide:workbench.action.files.newUntitledFile?%7B%22languageId%22%3A%22python%22%7D) a Python file - make sure to save it as \".py\".\n[Create Python File](command:toSide:workbench.action.files.newUntitledFile?%7B%22languageId%22%3A%22python%22%7D)",
                         "media": {
                             "svg": "resources/walkthrough/open-folder.svg",
                             "altText": "Open a Python file or a folder with a Python project."
