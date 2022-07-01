@@ -123,7 +123,7 @@
                         "media": {
                             "markdown": "resources/walkthrough/install-python-windows-8.md"
                         },
-                        "when": "workspacePlatform == windows && showInstallTile"
+                        "when": "workspacePlatform == windows && showInstallPythonTile"
                     },
                     {
                         "id": "python.installPythonMac",
@@ -132,7 +132,7 @@
                         "media": {
                             "markdown": "resources/walkthrough/install-python-macos.md"
                         },
-                        "when": "workspacePlatform == mac",
+                        "when": "workspacePlatform == mac && showInstallPythonTile",
                         "command": "workbench.action.terminal.new"
                     },
                     {
@@ -142,7 +142,7 @@
                         "media": {
                             "markdown": "resources/walkthrough/install-python-linux.md"
                         },
-                        "when": "workspacePlatform == linux",
+                        "when": "workspacePlatform == linux && showInstallPythonTile",
                         "command": "workbench.action.terminal.new"
                     },
                     {

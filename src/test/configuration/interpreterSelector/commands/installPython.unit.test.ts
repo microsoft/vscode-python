@@ -37,7 +37,7 @@ suite('Install Python Command', () => {
         browserService = mock<IBrowserService>();
         when(browserService.launch(anything())).thenReturn(undefined);
         contextKeyManager = mock<IContextKeyManager>();
-        when(contextKeyManager.setContext(ExtensionContextKey.showInstallTile, true)).thenResolve();
+        when(contextKeyManager.setContext(ExtensionContextKey.showInstallPythonTile, true)).thenResolve();
         platformService = mock<IPlatformService>();
         installPythonCommand = new InstallPythonCommand(
             instance(cmdManager),
@@ -77,7 +77,7 @@ suite('Install Python Command', () => {
             step: `${PVSC_EXTENSION_ID}#${PythonWelcome.name}#${PythonWelcome.linuxInstallId}`,
         };
         await installPythonCommand._installPython();
-        verify(contextKeyManager.setContext(ExtensionContextKey.showInstallTile, true)).once();
+        verify(contextKeyManager.setContext(ExtensionContextKey.showInstallPythonTile, true)).once();
         verify(browserService.launch(anything())).never();
         assert.deepEqual(walkthroughID, expectedWalkthroughID);
     });
@@ -91,7 +91,7 @@ suite('Install Python Command', () => {
             step: `${PVSC_EXTENSION_ID}#${PythonWelcome.name}#${PythonWelcome.macOSInstallId}`,
         };
         await installPythonCommand._installPython();
-        verify(contextKeyManager.setContext(ExtensionContextKey.showInstallTile, true)).once();
+        verify(contextKeyManager.setContext(ExtensionContextKey.showInstallPythonTile, true)).once();
         verify(browserService.launch(anything())).never();
         assert.deepEqual(walkthroughID, expectedWalkthroughID);
     });
@@ -106,7 +106,7 @@ suite('Install Python Command', () => {
             step: `${PVSC_EXTENSION_ID}#${PythonWelcome.name}#${PythonWelcome.windowsInstallId}`,
         };
         await installPythonCommand._installPython();
-        verify(contextKeyManager.setContext(ExtensionContextKey.showInstallTile, true)).once();
+        verify(contextKeyManager.setContext(ExtensionContextKey.showInstallPythonTile, true)).once();
         verify(browserService.launch(anything())).never();
         assert.deepEqual(walkthroughID, expectedWalkthroughID);
     });
@@ -118,6 +118,6 @@ suite('Install Python Command', () => {
         when(platformService.getVersion()).thenResolve(new SemVer('10.0.0'));
         await installPythonCommand._installPython();
         verify(browserService.launch(anything())).once();
-        verify(contextKeyManager.setContext(ExtensionContextKey.showInstallTile, true)).never();
+        verify(contextKeyManager.setContext(ExtensionContextKey.showInstallPythonTile, true)).never();
     });
 });

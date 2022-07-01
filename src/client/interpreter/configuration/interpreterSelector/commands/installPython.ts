@@ -38,11 +38,11 @@ export class InstallPythonCommand implements IExtensionSingleActivationService {
                 return;
             }
         }
-        this.showInstallTile();
+        this.showInstallPythonTile();
     }
 
-    private showInstallTile() {
-        this.contextManager.setContext(ExtensionContextKey.showInstallTile, true);
+    private showInstallPythonTile() {
+        this.contextManager.setContext(ExtensionContextKey.showInstallPythonTile, true);
         let step: string;
         if (this.platformService.isWindows) {
             step = PythonWelcome.windowsInstallId;

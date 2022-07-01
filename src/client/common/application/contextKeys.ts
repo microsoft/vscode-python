@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 export enum ExtensionContextKey {
-    showInstallTile = 'showInstallTile',
+    showInstallPythonTile = 'showInstallPythonTile',
     HasFailedTests = 'hasFailedTests',
     RefreshingTests = 'refreshingTests',
 }
