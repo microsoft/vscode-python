@@ -17,14 +17,13 @@
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.0.0.0"
 
-import os
-import sys
 import json
-import unittest
-import socket
-import traceback
-from types import CodeType, FunctionType
+import os
 import signal
+import socket
+import sys
+import traceback
+import unittest
 
 try:
     import thread
@@ -295,8 +294,8 @@ def main():
     if opts.mixed_mode:
         # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(),
         # so we have to use Win32 API in a loop to do the same thing.
+        from ctypes import c_char, windll
         from time import sleep
-        from ctypes import windll, c_char
 
         while True:
             if windll.kernel32.IsDebuggerPresent() != 0:
@@ -334,7 +333,9 @@ def main():
             # Easier approach is find the test suite and use that for running
             loader = unittest.TestLoader()
             # opts.us will be passed in
-            suites = loader.discover(opts.us, pattern=os.path.basename(opts.testFile))
+            suites = loader.discover(
+                opts.us, pattern=os.path.basename(opts.testFile), top_level_dir=opts.ut
+            )
             suite = None
             tests = None
             if opts.tests is None:
