@@ -137,10 +137,13 @@ export class UnittestController implements ITestFrameworkController {
                 testDir = relative.length > 0 ? relative : '.';
             }
 
+            const runOptionsArgs: string[] =
+                topLevelDir == null ? [startDir, pattern] : [startDir, pattern, topLevelDir];
+
             const runOptions: Options = {
                 // unittest needs to load modules in the workspace
                 // isolating it breaks unittest discovery
-                args: unittestDiscovery([startDir, pattern, topLevelDir]),
+                args: unittestDiscovery(runOptionsArgs),
                 cwd: options.cwd,
                 workspaceFolder: options.workspaceFolder,
                 token: options.token,

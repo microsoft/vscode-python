@@ -73,7 +73,7 @@ export function unittestGetTestPattern(args: string[]): string {
     return 'test*.py';
 }
 
-export function unittestGetTopLevelDirectory(args: string[]): string {
+export function unittestGetTopLevelDirectory(args: string[]): string | null {
     const shortValue = getOptionValues(args, '-t');
     if (shortValue.length === 1) {
         return shortValue[0];
@@ -82,7 +82,7 @@ export function unittestGetTopLevelDirectory(args: string[]): string {
     if (longValue.length === 1) {
         return longValue[0];
     }
-    return unittestGetTestFolders(args)[0];
+    return null;
 }
 
 export function getTestRunArgs(args: string[]): string[] {
