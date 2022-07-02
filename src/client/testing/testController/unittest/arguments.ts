@@ -88,10 +88,14 @@ export function unittestGetTopLevelDirectory(args: string[]): string | null {
 export function getTestRunArgs(args: string[]): string[] {
     const startTestDiscoveryDirectory = unittestGetTestFolders(args)[0];
     const pattern = unittestGetTestPattern(args);
+    const topLevelDir = unittestGetTopLevelDirectory(args);
 
     const failFast = args.some((arg) => arg.trim() === '-f' || arg.trim() === '--failfast');
     const verbosity = args.some((arg) => arg.trim().indexOf('-v') === 0) ? 2 : 1;
     const testArgs = [`--us=${startTestDiscoveryDirectory}`, `--up=${pattern}`, `--uvInt=${verbosity}`];
+    if (topLevelDir) {
+        testArgs.push(`--ut=${topLevelDir}`);
+    }
     if (failFast) {
         testArgs.push('--uf');
     }
