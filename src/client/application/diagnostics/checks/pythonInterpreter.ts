@@ -6,6 +6,7 @@ import { inject, injectable } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import '../../../common/extensions';
 import * as nls from 'vscode-nls';
+import * as path from 'path';
 import { IDisposableRegistry, Resource } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
@@ -16,6 +17,7 @@ import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '.
 import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService } from '../types';
 import { Common } from '../../../common/utils/localize';
 import { Commands } from '../../../common/constants';
+import { IWorkspaceService } from '../../../common/application/types';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
@@ -26,7 +28,7 @@ const messages = {
     ),
     [DiagnosticCodes.InvalidPythonInterpreterDiagnostic]: localize(
         'DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic',
-        'An Invalid Python interpreter is selected, please try changing it to enable features such as IntelliSense, linting, and debugging.',
+        'An Invalid Python interpreter is selected{0}, please try changing it to enable features such as IntelliSense, linting, and debugging.',
     ),
 };
 
@@ -34,8 +36,23 @@ export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
     constructor(
         code: DiagnosticCodes.NoPythonInterpretersDiagnostic | DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
         resource: Resource,
+        workspaceService: IWorkspaceService,
     ) {
-        super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource);
+        let formatArg = '';
+        if (workspaceService.workspaceFile) {
+            // Specify folder name in case of multiroot scenarios
+            const folder = workspaceService.getWorkspaceFolder(resource);
+            if (folder) {
+                formatArg = ` for ${path.basename(folder.uri.fsPath)}`;
+            }
+        }
+        super(
+            code,
+            messages[code].format(formatArg),
+            DiagnosticSeverity.Error,
+            DiagnosticScope.WorkspaceFolder,
+            resource,
+        );
     }
 }
 
@@ -56,17 +73,28 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
     }
 
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
+        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const hasInterpreters = await interpreterService.hasInterpreters();
 
         if (!hasInterpreters) {
-            return [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic, resource)];
+            return [
+                new InvalidPythonInterpreterDiagnostic(
+                    DiagnosticCodes.NoPythonInterpretersDiagnostic,
+                    resource,
+                    workspaceService,
+                ),
+            ];
         }
 
         const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
         if (!currentInterpreter) {
             return [
-                new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.InvalidPythonInterpreterDiagnostic, resource),
+                new InvalidPythonInterpreterDiagnostic(
+                    DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
+                    resource,
+                    workspaceService,
+                ),
             ];
         }
         return [];
