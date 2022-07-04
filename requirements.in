@@ -4,7 +4,7 @@
 # 2) pip-compile --generate-hashes requirements.in
 
 # Unittest test adapter
-typing-extensions==4.2.0
+typing-extensions==4.3.0
 
 # Sort Imports
 isort==5.10.1
