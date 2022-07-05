@@ -5,27 +5,27 @@
 ### Enhancements
 
 -   Add `breakpoint` support for `django-html` & `django-txt` by Lakshmikanth2001 in https://github.com/microsoft/vscode-python/pull/19288
--   Fix new unittest discovery issue by @ksy7588 in https://github.com/microsoft/vscode-python/pull/19324
--   Trigger refresh when using `Select Interpreter` command if no envs were found previously by @karrtikr in https://github.com/microsoft/vscode-python/pull/19361
+-   Fix `unittest` discovery issue with experimental component by [ksy7588](https://githib.com/ksy7588) in ([#19324](https://github.com/microsoft/vscode-python/pull/19324)).
+-   Trigger refresh when using `Select Interpreter` command if no envs were found previously by [karrtikr](https://githib.com/karrtikr) in ([#19361](https://github.com/microsoft/vscode-python/pull/19361)).
 
 ### Bug Fixes
 
--   Fix variable name for flake8Path's description by @usta in https://github.com/microsoft/vscode-python/pull/19313
--   Ensure we dispose objects on deactivate. by @karthiknadig in https://github.com/microsoft/vscode-python/pull/19341
--   Ensure we can change interpreters after trusting a workspace by @karrtikr in https://github.com/microsoft/vscode-python/pull/19353
--   Fix for :::: in node id for pytest. by @karthiknadig in https://github.com/microsoft/vscode-python/pull/19356
--   Ensure we register for interpreter change when moving from untrusted to trusted. by @karthiknadig in https://github.com/microsoft/vscode-python/pull/19351
+-   Fix variable name for `flake8Path`'s description by [usta](https://githib.com/usta) in ([#19313](https://github.com/microsoft/vscode-python/pull/19313)).
+-   Ensure we dispose objects on deactivate by [karthiknadig](https://githib.com/karthiknadig) in ([#19341](https://github.com/microsoft/vscode-python/pull/19341)).
+-   Ensure we can change interpreters after trusting a workspace by [karrtikr](https://githib.com/karrtikr) in ([#19353](https://github.com/microsoft/vscode-python/pull/19353)).
+-   Fix for `::::` in node id for `pytest` by [karthiknadig](https://githib.com/karthiknadig) in ([#19356](https://github.com/microsoft/vscode-python/pull/19356)).
+-   Ensure we register for interpreter change when moving from untrusted to trusted. by [karthiknadig](https://githib.com/karthiknadig) in ([#19351](https://github.com/microsoft/vscode-python/pull/19351)).
 
 ### Code Health
 
--   Update CI for using GItHub Actions for release notes by @brettcannon in https://github.com/microsoft/vscode-python/pull/19273
--   Add missing translations by @paulacamargo25 in https://github.com/microsoft/vscode-python/pull/19305
--   Delete the `news` directory by @brettcannon in https://github.com/microsoft/vscode-python/pull/19308
--   Fix interpreter discovery related telemetry by @karrtikr in https://github.com/microsoft/vscode-python/pull/19319
--   Simplify and merge async dispose and dispose. by @karthiknadig in https://github.com/microsoft/vscode-python/pull/19348
--   Updating required packages. by @karthiknadig in https://github.com/microsoft/vscode-python/pull/19375
--   Update the issue notebook by @brettcannon in https://github.com/microsoft/vscode-python/pull/19388
--   Remove notebookeditor proposed API by @karthiknadig in https://github.com/microsoft/vscode-python/pull/19392
+-   Update CI for using GitHub Actions for release notes by [brettcannon](https://githib.com/brettcannon) in ([#19273](https://github.com/microsoft/vscode-python/pull/19273)).
+-   Add missing translations by [paulacamargo25](https://githib.com/paulacamargo25) in ([#19305](https://github.com/microsoft/vscode-python/pull/19305)).
+-   Delete the `news` directory by [brettcannon](https://githib.com/brettcannon) in ([#19308](https://github.com/microsoft/vscode-python/pull/19308)).
+-   Fix interpreter discovery related telemetry by [karrtikr](https://githib.com/karrtikr) in ([#19319](https://github.com/microsoft/vscode-python/pull/19319)).
+-   Simplify and merge async dispose and dispose by [karthiknadig](https://githib.com/karthiknadig) in ([#19348](https://github.com/microsoft/vscode-python/pull/19348)).
+-   Updating required packages by [karthiknadig](https://githib.com/karthiknadig) in ([#19375](https://github.com/microsoft/vscode-python/pull/19375)).
+-   Update the issue notebook by [brettcannon](https://githib.com/brettcannon) in ([#19388](https://github.com/microsoft/vscode-python/pull/19388)).
+-   Remove `notebookeditor` proposed API by [karthiknadig](https://githib.com/karthiknadig) in ([#19392](https://github.com/microsoft/vscode-python/pull/19392)).
 
 **Full Changelog**: https://github.com/microsoft/vscode-python/compare/2022.8.1...2022.10.0
 
