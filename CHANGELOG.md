@@ -1,6 +1,146 @@
 # Changelog
 
-## 2022.8.0-rc (8 June 2022)
+## 2022.10.0-rc (7 July 2022)
+
+### Enhancements
+
+-   Add `breakpoint` support for `django-html` & `django-txt` by Lakshmikanth2001 in https://github.com/microsoft/vscode-python/pull/19288
+-   Fix new unittest discovery issue by @ksy7588 in https://github.com/microsoft/vscode-python/pull/19324
+-   Trigger refresh when using `Select Interpreter` command if no envs were found previously by @karrtikr in https://github.com/microsoft/vscode-python/pull/19361
+
+### Bug Fixes
+
+-   Fix variable name for flake8Path's description by @usta in https://github.com/microsoft/vscode-python/pull/19313
+-   Ensure we dispose objects on deactivate. by @karthiknadig in https://github.com/microsoft/vscode-python/pull/19341
+-   Ensure we can change interpreters after trusting a workspace by @karrtikr in https://github.com/microsoft/vscode-python/pull/19353
+-   Fix for :::: in node id for pytest. by @karthiknadig in https://github.com/microsoft/vscode-python/pull/19356
+-   Ensure we register for interpreter change when moving from untrusted to trusted. by @karthiknadig in https://github.com/microsoft/vscode-python/pull/19351
+
+### Code Health
+
+-   Update CI for using GItHub Actions for release notes by @brettcannon in https://github.com/microsoft/vscode-python/pull/19273
+-   Add missing translations by @paulacamargo25 in https://github.com/microsoft/vscode-python/pull/19305
+-   Delete the `news` directory by @brettcannon in https://github.com/microsoft/vscode-python/pull/19308
+-   Fix interpreter discovery related telemetry by @karrtikr in https://github.com/microsoft/vscode-python/pull/19319
+-   Simplify and merge async dispose and dispose. by @karthiknadig in https://github.com/microsoft/vscode-python/pull/19348
+-   Updating required packages. by @karthiknadig in https://github.com/microsoft/vscode-python/pull/19375
+-   Update the issue notebook by @brettcannon in https://github.com/microsoft/vscode-python/pull/19388
+-   Remove notebookeditor proposed API by @karthiknadig in https://github.com/microsoft/vscode-python/pull/19392
+
+**Full Changelog**: https://github.com/microsoft/vscode-python/compare/2022.8.1...2022.10.0
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [poetry](https://pypi.org/project/poetry/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2022.8.1 (28 June 2022)
+
+### Code Health
+
+1. Update vscode `extension-telemetry` package.
+   ([#19375](https://github.com/microsoft/vscode-python/pull/19375))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [jedi-language-server](https://pypi.org/project/jedi-language-server/)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [poetry](https://pypi.org/project/poetry/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2022.8.0 (9 June 2022)
 
 ### Enhancements
 
