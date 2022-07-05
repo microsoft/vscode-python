@@ -12,6 +12,7 @@ from types import TracebackType
 from typing import Dict, List, Optional, Tuple, Type, TypeAlias, TypedDict
 
 from discovery import parse_unittest_discovery_args
+from testing_tools import socket_manager
 from typing_extensions import NotRequired
 
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
@@ -65,6 +66,7 @@ class TestOutcomeEnum(str, enum.Enum):
 
 
 class UnittestTestResult(unittest.TextTestResult):
+    # formatted: List[Dict[str, Dict[str, str | None]]] = []
     formatted: Dict[str, Dict[str, str | None]] = dict()
 
     def startTest(self, test: unittest.TestCase):
@@ -138,7 +140,10 @@ class UnittestTestResult(unittest.TextTestResult):
             "subtest": subtest.id() if subtest else None,
         }
 
-        self.formatted[test_id] = result  # in future: send one by one as we get it.
+        self.formatted[test_id] = result  # in future: send one by one as we get it.only
+        # tempResult = {test_id: result} ##
+        # tempResult = {result}
+        # self.formatted.append(tempResult) ##
         print("we are adding inside formatResult: ")
         print(result)
 
@@ -240,14 +245,14 @@ if __name__ == "__main__":
     payload = run_tests(start_dir, test_ids, pattern, top_level_dir, uuid)
     # print(payload)
 
-#     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
-#     addr = ("localhost", port)
-#     with socket_manager.SocketManager(addr) as s:
-#         data = json.dumps(payload)
-#         request = f"""POST / HTTP/1.1
-# Host: localhost:{port}
-# Content-Length: {len(data)}
-# Content-Type: application/json
+    #     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
+    addr = ("localhost", port)
+    with socket_manager.SocketManager(addr) as s:
+        data = json.dumps(payload)
+        request = f"""POST / HTTP/1.1
+Host: localhost:{port}
+Content-Length: {len(data)}
+Content-Type: application/json
 
-# {data}"""
-#         result = s.socket.sendall(request.encode("utf-8"))  # type: ignore
+{data}"""
+        result = s.socket.sendall(request.encode("utf-8"))  # type: ignore

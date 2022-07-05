@@ -15,7 +15,7 @@ import {
     CancellationTokenSource,
     Uri,
     EventEmitter,
-    TestMessage,
+    // TestMessage,
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IWorkspaceService } from '../../common/application/types';
@@ -32,9 +32,16 @@ import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { TestProvider } from '../types';
 import { PythonTestServer } from './common/server';
 import { DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
-import { ITestController, ITestDiscoveryAdapter, ITestFrameworkController, TestRefreshOptions } from './common/types';
+import {
+    ITestController,
+    ITestDiscoveryAdapter,
+    ITestFrameworkController,
+    TestRefreshOptions,
+    ITestExecutionAdapter,
+} from './common/types';
 import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
 import { WorkspaceTestAdapter } from './workspaceTestAdapter';
+import { UnittestTestExecutionAdapter } from './unittest/testExecutionAdapter';
 
 // Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
 type EventPropertyType = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_TRIGGER];
@@ -144,18 +151,26 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             const settings = this.configSettings.getSettings(workspace.uri);
 
             let discoveryAdapter: ITestDiscoveryAdapter;
+            let executionAdapter: ITestExecutionAdapter; // added 6/30
             let testProvider: TestProvider;
             if (settings.testing.unittestEnabled) {
                 discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);
+                executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = UNITTEST_PROVIDER;
             } else {
                 // TODO: PYTEST DISCOVERY ADAPTER
                 // this is a placeholder for now
                 discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, { ...this.configSettings });
+                executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = PYTEST_PROVIDER;
             }
 
-            const workspaceTestAdapter = new WorkspaceTestAdapter(testProvider, discoveryAdapter, workspace.uri);
+            const workspaceTestAdapter = new WorkspaceTestAdapter(
+                testProvider,
+                discoveryAdapter,
+                executionAdapter,
+                workspace.uri,
+            );
 
             this.testAdapters.set(workspace.uri, workspaceTestAdapter);
 
@@ -335,13 +350,18 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                         const w = this.workspaceService.getWorkspaceFolder(i.uri);
                         if (w?.uri.fsPath === workspace.uri.fsPath) {
                             testItems.push(i);
-                            // trying to add here? test out using below two lines
+                            // trying to add here??? test out using below two lines
                             // const message = new TestMessage('this is intentional');
                             // runInstance.failed(i, message);
                             // runInstance.passed(i);
                         }
                     });
-
+                    // 6/30
+                    const testAdapter =
+                        this.testAdapters.get(workspace.uri) ||
+                        (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                    testAdapter.executeTests(this.testController, runInstance, token);
+                    //
                     const settings = this.configSettings.getSettings(workspace.uri);
                     if (testItems.length > 0) {
                         if (settings.testing.pytestEnabled) {
@@ -366,17 +386,19 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 tool: 'unittest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
-                            return this.unittest.runTests(
-                                {
-                                    includes: testItems,
-                                    excludes: request.exclude ?? [],
-                                    runKind: request.profile?.kind ?? TestRunProfileKind.Run,
-                                    runInstance,
-                                },
-                                workspace,
-                                token,
-                                this.testController,
-                            );
+                            // 6/30
+
+                            // return this.unittest.runTests(
+                            //     {
+                            //         includes: testItems,
+                            //         excludes: request.exclude ?? [],
+                            //         runKind: request.profile?.kind ?? TestRunProfileKind.Run,
+                            //         runInstance,
+                            //     },
+                            //     workspace,
+                            //     token,
+                            //     this.testController,
+                            // );
                         }
                     }
 
@@ -388,7 +410,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             );
         } finally {
             runInstance.appendOutput(`Finished running tests!\r\n`);
-            runInstance.end();
+            // runInstance.end(); //
             dispose.dispose();
 
             if (unconfiguredWorkspaces.length > 0) {

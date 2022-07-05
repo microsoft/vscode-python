@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import * as util from 'util';
-import { CancellationToken, Position, Range, TestController, TestItem, Uri } from 'vscode';
+import { CancellationToken, Position, Range, TestController, TestItem, TestMessage, TestRun, Uri } from 'vscode';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
 import { traceError } from '../../logging';
@@ -16,7 +16,7 @@ import {
     DiscoveredTestNode,
     DiscoveredTestType,
     ITestDiscoveryAdapter,
-    // ITestExecutionAdapter,
+    ITestExecutionAdapter,
 } from './common/types';
 
 /**
@@ -40,10 +40,48 @@ export class WorkspaceTestAdapter {
         private testProvider: TestProvider,
         private discoveryAdapter: ITestDiscoveryAdapter,
         // TODO: Implement test running
-        // private executionAdapter: ITestExecutionAdapter,
+        private executionAdapter: ITestExecutionAdapter,
         private workspaceUri: Uri, // private runIdToTestItem: Map<string, TestItem>,
     ) {
         this.runIdToTestItem = new Map<string, TestItem>();
+    }
+
+    public async executeTests(
+        testController: TestController,
+        runInstance: TestRun,
+        token?: CancellationToken,
+    ): Promise<void> {
+        const rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri);
+        // const temp = rawTestExecData.result;
+        if (rawTestExecData !== undefined && rawTestExecData.result !== undefined) {
+            for (const keyTemp of Object.keys(rawTestExecData.result)) {
+                // console.log(keyTemp, rawTestExecData.result[keyTemp]);
+                // check for result and update the UI accordingly.
+                if (rawTestExecData.result[keyTemp].outcome === 'failure') {
+                    const message = new TestMessage('this is temporary message');
+                    const grabTestItem = this.runIdToTestItem.get(keyTemp);
+                    if (grabTestItem !== undefined) {
+                        // runInstance.failed(grabTestItem, message); // choose appropriate one
+                        runInstance.passed(grabTestItem); // choose appropriate one
+                    }
+                } else if (rawTestExecData.result[keyTemp].outcome === 'success') {
+                    const grabTestItem = this.runIdToTestItem.get(keyTemp);
+                    if (grabTestItem !== undefined) {
+                        const message = new TestMessage('this is temporary message');
+                        // runInstance.failed(grabTestItem, message); // choose appropriate one
+                        runInstance.passed(grabTestItem); // choose appropriate one
+                    }
+                }
+            }
+        }
+
+        // console.log(temp);
+        // console.log(temp?.testRunID);
+
+        // console.log(rawTestExecData);
+        // console.log(token);
+        // console.log(runInstance);
+        // console.log(testController);
     }
 
     public async discoverTests(

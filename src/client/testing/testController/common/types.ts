@@ -201,7 +201,15 @@ export type DiscoveredTestPayload = {
 export type ExecutionTestPayload = {
     cwd: string;
     status: 'success' | 'error';
-    result?: { [key: string]: { [key: string]: string | null } };
+    result?: {
+        [testRunID: string]: {
+            test?: string;
+            outcome?: string;
+            message?: string;
+            traceback?: string;
+            subtest?: string;
+        };
+    };
     notFound?: string[];
     error: string;
 };

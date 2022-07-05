@@ -66,6 +66,6 @@ function buildExecutionCommand(args: string[]): TestExecutionCommand {
 
     return {
         script: executionScript,
-        args: ['--uexecution', ...args],
+        args: ['--udiscovery', ...args],
     };
 }
