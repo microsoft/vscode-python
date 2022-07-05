@@ -106,7 +106,8 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
         const interpreter = await this.interpreterService.getActiveInterpreter(workspaceFolder);
         if (
             this.currentlySelectedInterpreterDisplay &&
-            this.currentlySelectedInterpreterDisplay === interpreter?.detailedDisplayName
+            this.currentlySelectedInterpreterDisplay === interpreter?.detailedDisplayName &&
+            this.currentlySelectedInterpreterPath === interpreter.path
         ) {
             return;
         }
