@@ -122,7 +122,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
 
             try {
                 await client.stop();
-                await client.dispose();
+                // await client.dispose();
             } catch (ex) {
                 traceError('Stopping language client failed', ex);
             }

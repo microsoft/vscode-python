@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
+import { LanguageClient } from 'vscode-languageclient/node';
 import { IJupyterExtensionDependencyManager } from '../../common/application/types';
 import { IServiceContainer } from '../../ioc/types';
 import { JupyterExtensionIntegration } from '../../jupyter/jupyterIntegration';
@@ -15,8 +16,12 @@ import { LspNotebooksExperiment } from './lspNotebooksExperiment';
 export class NodeLanguageClientMiddleware extends LanguageClientMiddleware {
     private readonly lspNotebooksExperiment: LspNotebooksExperiment;
 
-    public constructor(serviceContainer: IServiceContainer, serverVersion?: string) {
-        super(serviceContainer, LanguageServerType.Node, serverVersion);
+    public constructor(
+        serviceContainer: IServiceContainer,
+        getClient: () => LanguageClient | undefined,
+        serverVersion?: string,
+    ) {
+        super(serviceContainer, LanguageServerType.Node, getClient, serverVersion);
 
         this.lspNotebooksExperiment = serviceContainer.get<LspNotebooksExperiment>(LspNotebooksExperiment);
         this.setupHidingMiddleware(serviceContainer);
