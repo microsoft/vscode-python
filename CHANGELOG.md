@@ -4,9 +4,10 @@
 
 ### Enhancements
 
--   Add `breakpoint` support for `django-html` & `django-txt` by Lakshmikanth2001 in https://github.com/microsoft/vscode-python/pull/19288
+-   Add `breakpoint` support for `django-html` & `django-txt` by [Lakshmikanth2001](https://github.com/Lakshmikanth2001) in ([#19288](https://github.com/microsoft/vscode-python/pull/19288)).
 -   Fix `unittest` discovery issue with experimental component by [ksy7588](https://github.com/ksy7588) in ([#19324](https://github.com/microsoft/vscode-python/pull/19324)).
 -   Trigger refresh when using `Select Interpreter` command if no envs were found previously by [karrtikr](https://github.com/karrtikr) in ([#19361](https://github.com/microsoft/vscode-python/pull/19361)).
+-   Update `debugpy` to 1.6.2.
 
 ### Bug Fixes
 
