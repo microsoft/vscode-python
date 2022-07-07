@@ -303,6 +303,10 @@ export class LanguageServerWatcher
 
     // Watch for interpreter changes.
     private async onDidChangeInterpreter(event: InterpreterConfigurationScope): Promise<void> {
+        if (this.languageServerType === LanguageServerType.Node) {
+            // Pylance client already handles interpreter changes, so restarting LS can be skipped.
+            return Promise.resolve();
+        }
         // Reactivate the language server (if in a multiroot workspace scenario, pick the correct one).
         return this.activate(event.uri);
     }
