@@ -104,7 +104,6 @@ export class InterpreterPathService implements IInterpreterPathService {
             const globalValue = pythonConfig.inspect<string>('defaultInterpreterPath')!.globalValue;
             if (globalValue !== pythonPath) {
                 await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
-                this._didChangeInterpreterEmitter.fire({ uri: undefined, configTarget });
             }
             return;
         }
