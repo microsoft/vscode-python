@@ -1,16 +1,19 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import io
 import json
 import os
 import urllib.request as url_lib
 import zipfile
-from packaging.version import parse as version_parser
 
+from packaging.version import parse as version_parser
 
 EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEBUGGER_DEST = os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python")
 DEBUGGER_PACKAGE = "debugpy"
 DEBUGGER_PYTHON_ABI_VERSIONS = ("cp39",)
-DEBUGGER_VERSION = "1.6.0"  # can also be "latest"
+DEBUGGER_VERSION = "1.6.2"  # can also be "latest"
 
 
 def _contains(s, parts=()):
