@@ -30,6 +30,7 @@ import {
     FormattingOptions,
     LinkedEditingRanges,
     Location,
+    NotebookCell,
     NotebookDocument,
     Position,
     Position as VPosition,
@@ -50,14 +51,12 @@ import {
     ConfigurationParams,
     ConfigurationRequest,
     DidChangeNotebookDocumentNotification,
-    DidCloseTextDocumentNotification,
-    DidOpenTextDocumentNotification,
     HandleDiagnosticsSignature,
     LanguageClient,
     Middleware,
-    NotebookCell,
     NotebookCellKind,
     NotebookDocumentChangeEvent,
+    VNotebookDocumentChangeEvent,
 } from 'vscode-languageclient/node';
 
 import { ProvideDeclarationSignature } from 'vscode-languageclient/lib/common/declaration';
@@ -103,12 +102,13 @@ import { ProvideReferencesSignature } from 'vscode-languageclient/lib/common/ref
 import { ProvideRenameEditsSignature, PrepareRenameSignature } from 'vscode-languageclient/lib/common/rename';
 import { ProvideSignatureHelpSignature } from 'vscode-languageclient/lib/common/signatureHelp';
 import { ProvideWorkspaceSymbolsSignature } from 'vscode-languageclient/lib/common/workspaceSymbol';
-import { Dictionary } from 'lodash';
 
 interface NotebookMetadata {
     cellCount: number;
 }
-interface InputBoxMetadata {}
+interface InputBoxMetadata {
+    uri: Uri;
+}
 
 /**
  * This class is a temporary solution to handling intellisense and diagnostics in python based notebooks.
@@ -128,69 +128,11 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
             params: ConfigurationParams,
             token: CancellationToken,
             next: ConfigurationRequest.HandlerSignature,
-        ) => {
-            // Handle workspace/configuration requests.
-            const settings = next(params, token);
-            // if (isThenable(settings)) {
-            //     settings = await settings;
-            // }
-            // if (settings instanceof ResponseError) {
-            //     return settings;
-            // }
-
-            // for (const [i, item] of params.items.entries()) {
-            //     if (item.section === 'python') {
-            //         (settings[i] as any).pythonPath = this.pythonPath;
-
-            //         // Always disable indexing on notebook. User can't use
-            //         // auto import on notebook anyway.
-            //         (settings[i] as any).analysis.indexing = false;
-
-            //         (settings[i] as any).notebookHeader = this.getNotebookHeader(
-            //             item.scopeUri ? Uri.parse(item.scopeUri) : Uri.parse('')
-            //         );
-            //     }
-            // }
-
-            return settings;
-        },
+        ) => next(params, token),
     };
 
     public dispose(): void {
         // Nothing to dispose at the moment
-    }
-
-    public stopWatching(notebook: NotebookDocument): void {
-        // Close all of the cells. This should cause diags and other things to be cleared
-        const client = this.getClient();
-        if (client && notebook.cellCount > 0) {
-            notebook.getCells().forEach((c) => {
-                const params = client.code2ProtocolConverter.asCloseTextDocumentParams(c.document);
-                client.sendNotification(DidCloseTextDocumentNotification.type, params);
-            });
-
-            // Set the diagnostics to nothing for all the cells
-            if (client.diagnostics) {
-                notebook.getCells().forEach((c) => {
-                    client.diagnostics?.set(c.document.uri, []);
-                });
-            }
-        }
-    }
-
-    public startWatching(notebook: NotebookDocument): void {
-        // We need to talk directly to the language client here.
-        const client = this.getClient();
-
-        // Mimic a document open for all cells
-        if (client && notebook.cellCount > 0) {
-            notebook.getCells().forEach((c) => {
-                this.didOpen(c.document, (ev) => {
-                    const params = client.code2ProtocolConverter.asOpenTextDocumentParams(ev);
-                    client.sendNotification(DidOpenTextDocumentNotification.type, params);
-                });
-            });
-        }
     }
 
     private notebookMetadataMap: Map<string, NotebookMetadata> = new Map<string, NotebookMetadata>();
@@ -202,12 +144,12 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
             await next(document);
         }
 
-        const notebookPath = `${document.uri.fsPath.replace('InteractiveInput-', 'Interactive-')}.interactive`;
+        const notebookPath = `${document.uri.fsPath.replace('\\InteractiveInput-', 'Interactive-')}.interactive`;
         const notebookUri = document.uri.with({ scheme: 'vscode-interactive', path: notebookPath });
         const notebookMetadata = this.notebookMetadataMap.get(notebookUri.toString());
 
         if (!notebookMetadata) {
-            this.unlinkedInputBoxMap.set(document.uri.toString(), { cellCount: 99 });
+            this.unlinkedInputBoxMap.set(notebookUri.toString(), { uri: document.uri });
             return;
         }
 
@@ -219,7 +161,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
                 array: {
                     start: notebookMetadata.cellCount,
                     deleteCount: 0,
-                    cells: [NotebookCell.create(NotebookCellKind.Code, document.uri.toString())],
+                    cells: [{ kind: NotebookCellKind.Code, document: document.uri.toString() }],
                 },
                 didOpen: [
                     {
@@ -243,10 +185,66 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
     }
 
     public async didClose(document: TextDocument, next: (ev: TextDocument) => void): Promise<void> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            await next(document);
-        }
+        await next(document);
     }
+
+    public async didOpenNotebook(
+        notebookDocument: NotebookDocument,
+        cells: NotebookCell[],
+        next: (notebookDocument: NotebookDocument, cells: NotebookCell[]) => void,
+    ): Promise<void> {
+        if (notebookDocument.uri.scheme === 'vscode-interactive') {
+            this.notebookMetadataMap.set(notebookDocument.uri.toString(), { cellCount: notebookDocument.cellCount });
+
+            const inputBoxMetadata = this.unlinkedInputBoxMap.get(notebookDocument.uri.toString());
+            if (inputBoxMetadata) {
+                this.getClient()?.sendNotification(DidChangeNotebookDocumentNotification.method, {
+                    notebookDocument: notebookDocument.uri,
+                    change: {
+                        cells: {
+                            structure: {
+                                array: {
+                                    start: notebookDocument.cellCount,
+                                    deleteCount: 0,
+                                    cells: [{ kind: NotebookCellKind.Code, document: inputBoxMetadata.uri }],
+                                },
+                                didOpen: [{ uri: inputBoxMetadata.uri, languageId: 'python', version: 0 }],
+                            },
+                        },
+                    },
+                });
+
+                this.unlinkedInputBoxMap.delete(notebookDocument.uri.toString());
+            }
+        }
+
+        await next(notebookDocument, cells);
+    }
+
+    public async didChangeNotebook(
+        event: VNotebookDocumentChangeEvent,
+        next: (event: VNotebookDocumentChangeEvent) => void,
+    ): Promise<void> {
+        await next(event);
+    }
+
+    public async didCloseNotebook(
+        notebookDocument: NotebookDocument,
+        cells: NotebookCell[],
+        next: (notebookDocument: NotebookDocument, cells: NotebookCell[]) => void,
+    ): Promise<void> {
+        if (notebookDocument.uri.scheme === 'vscode-interactive') {
+            this.notebookMetadataMap.delete(notebookDocument.uri.toString());
+        }
+
+        await next(notebookDocument, cells);
+    }
+
+    notebooks = {
+        didOpen: this.didOpenNotebook.bind(this),
+        didChange: this.didChangeNotebook.bind(this),
+        didClose: this.didCloseNotebook.bind(this),
+    };
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public provideCompletionItem(
@@ -256,9 +254,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideCompletionItemsSignature,
     ) {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, position, context, token);
-        }
+        return next(document, position, context, token);
     }
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -268,9 +264,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideHoverSignature,
     ) {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, position, token);
-        }
+        return next(document, position, token);
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -293,9 +287,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideSignatureHelpSignature,
     ): ProviderResult<SignatureHelp> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, position, context, token);
-        }
+        return next(document, position, context, token);
     }
 
     public provideDefinition(
@@ -304,9 +296,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideDefinitionSignature,
     ): ProviderResult<Definition | DefinitionLink[]> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, position, token);
-        }
+        return next(document, position, token);
     }
 
     public provideReferences(
@@ -318,9 +308,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideReferencesSignature,
     ): ProviderResult<Location[]> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, position, options, token);
-        }
+        return next(document, position, options, token);
     }
 
     public provideDocumentHighlights(
@@ -329,9 +317,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideDocumentHighlightsSignature,
     ): ProviderResult<DocumentHighlight[]> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, position, token);
-        }
+        return next(document, position, token);
     }
 
     public provideDocumentSymbols(
@@ -339,9 +325,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideDocumentSymbolsSignature,
     ): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, token);
-        }
+        return next(document, token);
     }
 
     public provideWorkspaceSymbols(
@@ -361,9 +345,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideCodeActionsSignature,
     ): ProviderResult<(Command | CodeAction)[]> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, range, context, token);
-        }
+        return next(document, range, context, token);
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -372,9 +354,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideCodeLensesSignature,
     ): ProviderResult<CodeLens[]> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, token);
-        }
+        return next(document, token);
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -397,9 +377,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideDocumentFormattingEditsSignature,
     ): ProviderResult<TextEdit[]> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, options, token);
-        }
+        return next(document, options, token);
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -410,9 +388,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideDocumentRangeFormattingEditsSignature,
     ): ProviderResult<TextEdit[]> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, range, options, token);
-        }
+        return next(document, range, options, token);
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -424,9 +400,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideOnTypeFormattingEditsSignature,
     ): ProviderResult<TextEdit[]> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, position, ch, options, token);
-        }
+        return next(document, position, ch, options, token);
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -437,9 +411,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideRenameEditsSignature,
     ): ProviderResult<WorkspaceEdit> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, position, newName, token);
-        }
+        return next(document, position, newName, token);
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -455,9 +427,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
               placeholder: string;
           }
     > {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, position, token);
-        }
+        return next(document, position, token);
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -466,9 +436,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideDocumentLinksSignature,
     ): ProviderResult<DocumentLink[]> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, token);
-        }
+        return next(document, token);
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -485,12 +453,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
     }
 
     public handleDiagnostics(uri: Uri, diagnostics: Diagnostic[], next: HandleDiagnosticsSignature): void {
-        if (this.shouldProvideIntellisense(uri)) {
-            return next(uri, diagnostics);
-        }
-
-        // Swallow all other diagnostics
-        next(uri, []);
+        return next(uri, diagnostics);
     }
 
     public provideTypeDefinition(
@@ -499,9 +462,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideTypeDefinitionSignature,
     ) {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, position, token);
-        }
+        return next(document, position, token);
     }
 
     public provideImplementation(
@@ -510,9 +471,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideImplementationSignature,
     ): ProviderResult<Definition | DefinitionLink[]> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, position, token);
-        }
+        return next(document, position, token);
     }
 
     public provideDocumentColors(
@@ -520,9 +479,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideDocumentColorsSignature,
     ): ProviderResult<ColorInformation[]> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, token);
-        }
+        return next(document, token);
     }
 
     public provideColorPresentations(
@@ -534,9 +491,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideColorPresentationSignature,
     ): ProviderResult<ColorPresentation[]> {
-        if (this.shouldProvideIntellisense(context.document.uri)) {
-            return next(color, context, token);
-        }
+        return next(color, context, token);
     }
 
     public provideFoldingRanges(
@@ -545,9 +500,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideFoldingRangeSignature,
     ): ProviderResult<FoldingRange[]> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, context, token);
-        }
+        return next(document, context, token);
     }
 
     public provideDeclaration(
@@ -556,9 +509,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideDeclarationSignature,
     ): ProviderResult<Declaration> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, position, token);
-        }
+        return next(document, position, token);
     }
 
     public provideSelectionRanges(
@@ -567,9 +518,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideSelectionRangeSignature,
     ): ProviderResult<SelectionRange[]> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, positions, token);
-        }
+        return next(document, positions, token);
     }
 
     public prepareCallHierarchy(
@@ -578,9 +527,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: PrepareCallHierarchySignature,
     ): ProviderResult<CallHierarchyItem | CallHierarchyItem[]> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, positions, token);
-        }
+        return next(document, positions, token);
     }
 
     public provideCallHierarchyIncomingCalls(
@@ -588,9 +535,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: CallHierarchyIncomingCallsSignature,
     ): ProviderResult<CallHierarchyIncomingCall[]> {
-        if (this.shouldProvideIntellisense(item.uri)) {
-            return next(item, token);
-        }
+        return next(item, token);
     }
 
     public provideCallHierarchyOutgoingCalls(
@@ -598,9 +543,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: CallHierarchyOutgoingCallsSignature,
     ): ProviderResult<CallHierarchyOutgoingCall[]> {
-        if (this.shouldProvideIntellisense(item.uri)) {
-            return next(item, token);
-        }
+        return next(item, token);
     }
 
     public provideDocumentSemanticTokens(
@@ -608,9 +551,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: DocumentSemanticsTokensSignature,
     ): ProviderResult<SemanticTokens> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, token);
-        }
+        return next(document, token);
     }
 
     public provideDocumentSemanticTokensEdits(
@@ -619,9 +560,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: DocumentSemanticsTokensEditsSignature,
     ): ProviderResult<SemanticTokensEdits | SemanticTokens> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, previousResultId, token);
-        }
+        return next(document, previousResultId, token);
     }
 
     public provideDocumentRangeSemanticTokens(
@@ -630,9 +569,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: DocumentRangeSemanticTokensSignature,
     ): ProviderResult<SemanticTokens> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, range, token);
-        }
+        return next(document, range, token);
     }
 
     public provideLinkedEditingRange(
@@ -641,13 +578,6 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         token: CancellationToken,
         next: ProvideLinkedEditingRangeSignature,
     ): ProviderResult<LinkedEditingRanges> {
-        if (this.shouldProvideIntellisense(document.uri)) {
-            return next(document, position, token);
-        }
-    }
-
-    private shouldProvideIntellisense(_uri: Uri): boolean {
-        // Make sure document is allowed
-        return true;
+        return next(document, position, token);
     }
 }

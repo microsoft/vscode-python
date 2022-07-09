@@ -171,6 +171,29 @@ export class LanguageClientMiddlewareBase implements Middleware {
         return this.callNext('willSaveWaitUntil', arguments);
     }
 
+    public async didOpenNotebook() {
+        return this.callNotebooksNext('didOpen', arguments);
+    }
+
+    public async didSaveNotebook() {
+        return this.callNotebooksNext('didSave', arguments);
+    }
+
+    public async didChangeNotebook() {
+        return this.callNotebooksNext('didChange', arguments);
+    }
+
+    public async didCloseNotebook() {
+        return this.callNotebooksNext('didClose', arguments);
+    }
+
+    notebooks = {
+        didOpen: this.didOpenNotebook.bind(this),
+        didSave: this.didSaveNotebook.bind(this),
+        didChange: this.didChangeNotebook.bind(this),
+        didClose: this.didCloseNotebook.bind(this),
+    };
+
     public async provideCompletionItem() {
         if (await this.connected) {
             return this.callNextAndSendTelemetry(
@@ -458,6 +481,17 @@ export class LanguageClientMiddlewareBase implements Middleware {
         if (this.notebookAddon && (this.notebookAddon as any)[funcName]) {
             // It would be nice to use args.callee, but not supported in strict mode
             return (this.notebookAddon as any)[funcName](...args);
+        }
+
+        return args[args.length - 1](...args);
+    }
+
+    private callNotebooksNext(funcName: 'didOpen' | 'didSave' | 'didChange' | 'didClose', args: IArguments) {
+        // This function uses the last argument to call the 'next' item. If we're allowing notebook
+        // middleware, it calls into the notebook middleware first.
+        if (this.notebookAddon?.notebooks && (this.notebookAddon.notebooks as any)[funcName]) {
+            // It would be nice to use args.callee, but not supported in strict mode
+            return (this.notebookAddon.notebooks as any)[funcName](...args);
         }
 
         return args[args.length - 1](...args);
