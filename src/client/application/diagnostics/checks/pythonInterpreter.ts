@@ -48,11 +48,15 @@ export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
         scope = DiagnosticScope.WorkspaceFolder,
     ) {
         let formatArg = '';
-        if (workspaceService.workspaceFile) {
+        if (
+            workspaceService.workspaceFile &&
+            workspaceService.workspaceFolders &&
+            workspaceService.workspaceFolders?.length > 1
+        ) {
             // Specify folder name in case of multiroot scenarios
             const folder = workspaceService.getWorkspaceFolder(resource);
             if (folder) {
-                formatArg = ` for ${path.basename(folder.uri.fsPath)}`;
+                formatArg = ` ${localize('Common.for', 'for')} ${path.basename(folder.uri.fsPath)}`;
             }
         }
         super(code, messages[code].format(formatArg), DiagnosticSeverity.Error, scope, resource, undefined, 'always');
