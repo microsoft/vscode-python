@@ -45,6 +45,7 @@ export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
         code: DiagnosticCodes.NoPythonInterpretersDiagnostic | DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
         resource: Resource,
         workspaceService: IWorkspaceService,
+        scope = DiagnosticScope.WorkspaceFolder,
     ) {
         let formatArg = '';
         if (workspaceService.workspaceFile) {
@@ -54,15 +55,7 @@ export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
                 formatArg = ` for ${path.basename(folder.uri.fsPath)}`;
             }
         }
-        super(
-            code,
-            messages[code].format(formatArg),
-            DiagnosticSeverity.Error,
-            DiagnosticScope.WorkspaceFolder,
-            resource,
-            undefined,
-            'always',
-        );
+        super(code, messages[code].format(formatArg), DiagnosticSeverity.Error, scope, resource, undefined, 'always');
     }
 }
 
@@ -93,6 +86,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
                     DiagnosticCodes.NoPythonInterpretersDiagnostic,
                     resource,
                     workspaceService,
+                    DiagnosticScope.Global,
                 ),
             ];
         }
