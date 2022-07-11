@@ -182,7 +182,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             settings.verifyAll();
             interpreterService.verifyAll();
         });
-        test('Handling no interpreters diagnostic should return download link', async () => {
+        test('Handling no interpreters diagnostic should return select interpreter cmd', async () => {
             const diagnostic = new InvalidPythonInterpreterDiagnostic(
                 DiagnosticCodes.NoPythonInterpretersDiagnostic,
                 undefined,
@@ -219,6 +219,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     command: cmd,
                 },
             ]);
+            expect(messagePrompt!.onClose).to.not.be.equal(undefined, 'onClose handler should be set.');
         });
 
         test('Handling no currently selected interpreter diagnostic should show select interpreter message', async () => {
@@ -254,41 +255,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([
                 { prompt: Common.selectPythonInterpreter, command: cmd },
             ]);
-        });
-        test('Handling no interpreters diagnostic should return select interpreter cmd', async () => {
-            const diagnostic = new InvalidPythonInterpreterDiagnostic(
-                DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
-                undefined,
-                workspaceService.object,
-            );
-            const cmd = ({} as any) as IDiagnosticCommand;
-            let messagePrompt: MessageCommandPrompt | undefined;
-            messageHandler
-                .setup((i) => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
-                .callback((_d, p: MessageCommandPrompt) => (messagePrompt = p))
-                .returns(() => Promise.resolve())
-                .verifiable(typemoq.Times.once());
-            commandFactory
-                .setup((f) =>
-                    f.createCommand(
-                        typemoq.It.isAny(),
-                        typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                            type: 'executeVSCCommand',
-                        }),
-                    ),
-                )
-                .returns(() => cmd)
-                .verifiable(typemoq.Times.once());
-
-            await diagnosticService.handle([diagnostic]);
-
-            messageHandler.verifyAll();
-            commandFactory.verifyAll();
-            expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
             expect(messagePrompt!.onClose).be.equal(undefined, 'onClose handler should not be set.');
-            expect(messagePrompt!.commandPrompts).to.be.deep.equal([
-                { prompt: 'Select Python Interpreter', command: cmd },
-            ]);
         });
         test('Handling an empty diagnostic should not show a message nor return a command', async () => {
             const diagnostics: IDiagnostic[] = [];

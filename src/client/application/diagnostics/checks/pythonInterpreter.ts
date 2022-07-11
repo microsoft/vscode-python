@@ -14,10 +14,18 @@ import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
 import { DiagnosticCodes } from '../constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../promptHandler';
-import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService } from '../types';
+import {
+    DiagnosticScope,
+    IDiagnostic,
+    IDiagnosticCommand,
+    IDiagnosticHandlerService,
+    IDiagnosticMessageOnCloseHandler,
+} from '../types';
 import { Common } from '../../../common/utils/localize';
 import { Commands } from '../../../common/constants';
 import { IWorkspaceService } from '../../../common/application/types';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { EventName } from '../../../telemetry/constants';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
@@ -125,7 +133,8 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
                     return;
                 }
                 const commandPrompts = this.getCommandPrompts(diagnostic);
-                await messageService.handle(diagnostic, { commandPrompts, message: diagnostic.message });
+                const onClose = getOnCloseHandler(diagnostic);
+                await messageService.handle(diagnostic, { commandPrompts, message: diagnostic.message, onClose });
             }),
         );
     }
@@ -142,4 +151,15 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
             },
         ];
     }
+}
+
+function getOnCloseHandler(diagnostic: IDiagnostic): IDiagnosticMessageOnCloseHandler | undefined {
+    if (diagnostic.code === DiagnosticCodes.NoPythonInterpretersDiagnostic) {
+        return (response?: string) => {
+            sendTelemetryEvent(EventName.PYTHON_NOT_INSTALLED_PROMPT, undefined, {
+                selection: response ? 'Download' : 'Ignore',
+            });
+        };
+    }
+    return undefined;
 }
