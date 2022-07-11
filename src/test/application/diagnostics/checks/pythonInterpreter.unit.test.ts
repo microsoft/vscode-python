@@ -18,6 +18,7 @@ import {
     MessageCommandPrompt,
 } from '../../../../client/application/diagnostics/promptHandler';
 import {
+    DiagnosticScope,
     IDiagnostic,
     IDiagnosticCommand,
     IDiagnosticHandlerService,
@@ -134,6 +135,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                         DiagnosticCodes.NoPythonInterpretersDiagnostic,
                         undefined,
                         workspaceService.object,
+                        DiagnosticScope.Global,
                     ),
                 ],
                 'not the same',
