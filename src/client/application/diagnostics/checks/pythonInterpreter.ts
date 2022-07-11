@@ -32,7 +32,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 const messages = {
     [DiagnosticCodes.NoPythonInterpretersDiagnostic]: localize(
         'DiagnosticCodes.NoPythonInterpretersDiagnostic',
-        'No Python interpreter is selected. You need to select a Python interpreter to enable features such as IntelliSense, linting, and debugging.',
+        'No Python interpreter is selected. Please select a Python interpreter to enable features such as IntelliSense, linting, and debugging.',
     ),
     [DiagnosticCodes.InvalidPythonInterpreterDiagnostic]: localize(
         'DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic',
