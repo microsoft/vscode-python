@@ -34,6 +34,7 @@ export class PowershellActivationNotAvailableDiagnostic extends BaseDiagnostic {
             DiagnosticSeverity.Warning,
             DiagnosticScope.Global,
             resource,
+            undefined,
             'always',
         );
     }

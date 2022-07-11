@@ -39,7 +39,6 @@ export class InvalidLaunchJsonDebuggerDiagnostic extends BaseDiagnostic {
             DiagnosticSeverity.Error,
             DiagnosticScope.WorkspaceFolder,
             resource,
-            'always',
             shouldShowPrompt,
         );
     }
@@ -131,9 +130,9 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
     }
 
     private async handleDiagnostic(diagnostic: IDiagnostic): Promise<void> {
-        if (!this.canHandle(diagnostic)) {
-            return;
-        }
+        // if (!this.canHandle(diagnostic)) {
+        //     return;
+        // }
         if (!diagnostic.shouldShowPrompt) {
             await this.fixLaunchJson(diagnostic.code);
             return;

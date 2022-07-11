@@ -38,7 +38,15 @@ class InvalidPythonPathInDebuggerDiagnostic extends BaseDiagnostic {
             | DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
         resource: Resource,
     ) {
-        super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource, 'always');
+        super(
+            code,
+            messages[code],
+            DiagnosticSeverity.Error,
+            DiagnosticScope.WorkspaceFolder,
+            resource,
+            undefined,
+            'always',
+        );
     }
 }
 

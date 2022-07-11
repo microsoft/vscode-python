@@ -22,8 +22,8 @@ export abstract class BaseDiagnostic implements IDiagnostic {
         public readonly severity: DiagnosticSeverity,
         public readonly scope: DiagnosticScope,
         public readonly resource: Resource,
-        public readonly invokeHandler: 'always' | 'default' = 'default',
         public readonly shouldShowPrompt = true,
+        public readonly invokeHandler: 'always' | 'default' = 'default',
     ) {}
 }
 
@@ -50,11 +50,11 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
             return;
         }
         const diagnosticsToHandle = await asyncFilter(diagnostics, async (item) => {
-            if (item.invokeHandler && item.invokeHandler === 'always') {
-                return true;
-            }
             if (!(await this.canHandle(item))) {
                 return false;
+            }
+            if (item.invokeHandler && item.invokeHandler === 'always') {
+                return true;
             }
             const key = this.getDiagnosticsKey(item);
             if (BaseDiagnosticsService.handledDiagnosticCodeKeys.indexOf(key) !== -1) {

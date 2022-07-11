@@ -52,6 +52,8 @@ export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
             DiagnosticSeverity.Error,
             DiagnosticScope.WorkspaceFolder,
             resource,
+            undefined,
+            'always',
         );
     }
 }

@@ -24,8 +24,11 @@ import {
     IDiagnosticsService,
 } from '../../../../client/application/diagnostics/types';
 import { CommandsWithoutArgs } from '../../../../client/common/application/commands';
+import { IWorkspaceService } from '../../../../client/common/application/types';
+import { Commands } from '../../../../client/common/constants';
 import { IPlatformService } from '../../../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings } from '../../../../client/common/types';
+import { Common } from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
 import { IInterpreterHelper, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
@@ -38,11 +41,17 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
     let settings: typemoq.IMock<IPythonSettings>;
     let interpreterService: typemoq.IMock<IInterpreterService>;
     let platformService: typemoq.IMock<IPlatformService>;
+    let workspaceService: typemoq.IMock<IWorkspaceService>;
     let helper: typemoq.IMock<IInterpreterHelper>;
     const pythonPath = 'My Python Path in Settings';
     let serviceContainer: typemoq.IMock<IServiceContainer>;
     function createContainer() {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
+        workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
+        workspaceService.setup((w) => w.workspaceFile).returns(() => undefined);
+        serviceContainer
+            .setup((s) => s.get(typemoq.It.isValue(IWorkspaceService)))
+            .returns(() => workspaceService.object);
         messageHandler = typemoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
         serviceContainer
             .setup((s) =>
@@ -107,17 +116,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 diagnostic.verifyAll();
             }
         });
-        test('Can not handle non-InvalidPythonPathInterpreter diagnostics', async () => {
-            const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
-            diagnostic
-                .setup((d) => d.code)
-                .returns(() => 'Something Else' as any)
-                .verifiable(typemoq.Times.atLeastOnce());
 
-            const canHandle = await diagnosticService.canHandle(diagnostic.object);
-            expect(canHandle).to.be.equal(false, 'Invalid value');
-            diagnostic.verifyAll();
-        });
         test('Should return diagnostics if there are no interpreters after double-checking', async () => {
             interpreterService
                 .setup((i) => i.hasInterpreters())
@@ -130,7 +129,13 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
 
             const diagnostics = await diagnosticService.diagnose(undefined);
             expect(diagnostics).to.be.deep.equal(
-                [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic, undefined)],
+                [
+                    new InvalidPythonInterpreterDiagnostic(
+                        DiagnosticCodes.NoPythonInterpretersDiagnostic,
+                        undefined,
+                        workspaceService.object,
+                    ),
+                ],
                 'not the same',
             );
         });
@@ -148,7 +153,13 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
 
             const diagnostics = await diagnosticService.diagnose(undefined);
             expect(diagnostics).to.be.deep.equal(
-                [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.InvalidPythonInterpreterDiagnostic, undefined)],
+                [
+                    new InvalidPythonInterpreterDiagnostic(
+                        DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
+                        undefined,
+                        workspaceService.object,
+                    ),
+                ],
                 'not the same',
             );
             settings.verifyAll();
@@ -175,6 +186,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             const diagnostic = new InvalidPythonInterpreterDiagnostic(
                 DiagnosticCodes.NoPythonInterpretersDiagnostic,
                 undefined,
+                workspaceService.object,
             );
             const cmd = ({} as any) as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
@@ -187,7 +199,10 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .setup((f) =>
                     f.createCommand(
                         typemoq.It.isAny(),
-                        typemoq.It.isObjectWith<CommandOption<'launch', string>>({ type: 'launch' }),
+                        typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
+                            type: 'executeVSCCommand',
+                            options: Commands.Set_Interpreter,
+                        }),
                     ),
                 )
                 .returns(() => cmd)
@@ -198,13 +213,19 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             messageHandler.verifyAll();
             commandFactory.verifyAll();
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
-            expect(messagePrompt!.commandPrompts).to.be.deep.equal([{ prompt: 'Download', command: cmd }]);
-            expect(messagePrompt!.onClose).to.not.be.equal(undefined, 'onClose handler should be set.');
+            expect(messagePrompt!.commandPrompts).to.be.deep.equal([
+                {
+                    prompt: Common.selectPythonInterpreter,
+                    command: cmd,
+                },
+            ]);
         });
+
         test('Handling no currently selected interpreter diagnostic should show select interpreter message', async () => {
             const diagnostic = new InvalidPythonInterpreterDiagnostic(
                 DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
                 undefined,
+                workspaceService.object,
             );
             const cmd = ({} as any) as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
@@ -230,15 +251,15 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             messageHandler.verifyAll();
             commandFactory.verifyAll();
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
-            expect(messagePrompt!.onClose).be.equal(undefined, 'onClose handler should not be set.');
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([
-                { prompt: 'Select Python Interpreter', command: cmd },
+                { prompt: Common.selectPythonInterpreter, command: cmd },
             ]);
         });
         test('Handling no interpreters diagnostic should return select interpreter cmd', async () => {
             const diagnostic = new InvalidPythonInterpreterDiagnostic(
                 DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
                 undefined,
+                workspaceService.object,
             );
             const cmd = ({} as any) as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
@@ -299,6 +320,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             const diagnostic = new InvalidPythonInterpreterDiagnostic(
                 DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
                 undefined,
+                workspaceService.object,
             );
             const cmd = ({} as any) as IDiagnosticCommand;
             const diagnosticServiceMock = (typemoq.Mock.ofInstance(diagnosticService) as any) as typemoq.IMock<
