@@ -9,6 +9,7 @@ import { IEnvironmentVariablesProvider } from '../../client/common/variables/typ
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { JediLSExtensionManager } from '../../client/languageServer/jediLSExtensionManager';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 suite('Language Server - Jedi LS extension manager', () => {
     let manager: JediLSExtensionManager;
@@ -37,9 +38,17 @@ suite('Language Server - Jedi LS extension manager', () => {
         assert.notStrictEqual(manager.serverProxy, undefined);
     });
 
-    test('canStartLanguageServer should return true', () => {
-        const result = manager.canStartLanguageServer();
+    test('canStartLanguageServer should return true if an interpreter is passed in', () => {
+        const result = manager.canStartLanguageServer(({
+            path: 'path/to/interpreter',
+        } as unknown) as PythonEnvironment);
 
         assert.strictEqual(result, true);
+    });
+
+    test('canStartLanguageServer should return false otherwise', () => {
+        const result = manager.canStartLanguageServer(undefined);
+
+        assert.strictEqual(result, false);
     });
 });

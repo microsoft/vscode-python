@@ -180,7 +180,7 @@ export class LanguageServerWatcher
         const languageServerExtensionManager = this.createLanguageServer(serverType);
         this.workspaceLanguageServers.set(key, languageServerExtensionManager);
 
-        if (languageServerExtensionManager.canStartLanguageServer()) {
+        if (languageServerExtensionManager.canStartLanguageServer(interpreter)) {
             // Start the language server.
             await languageServerExtensionManager.startLanguageServer(lsResource, interpreter);
 

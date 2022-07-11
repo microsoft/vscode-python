@@ -31,7 +31,7 @@ export interface ILanguageServerCapabilities extends ILanguageServer {
 export interface ILanguageServerExtensionManager extends ILanguageServerCapabilities {
     startLanguageServer(resource: Resource, interpreter?: PythonEnvironment): Promise<void>;
     stopLanguageServer(): Promise<void>;
-    canStartLanguageServer(): boolean;
+    canStartLanguageServer(interpreter: PythonEnvironment | undefined): boolean;
     languageServerNotAvailable(): Promise<void>;
     dispose(): void;
 }
