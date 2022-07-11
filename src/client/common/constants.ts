@@ -73,6 +73,7 @@ export namespace Octicons {
     export const Gear = '$(gear)';
     export const Warning = '$(warning)';
     export const Error = '$(error)';
+    export const Lightbulb = '$(lightbulb)';
 }
 
 export const DEFAULT_INTERPRETER_SETTING = 'python';

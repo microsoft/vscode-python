@@ -135,6 +135,12 @@ suite('Set Interpreter Command', () => {
             alwaysShow: true,
         };
 
+        const tipToReloadWindow = {
+            label: `${Octicons.Lightbulb} Reload the window if you installed Python but don't see it`,
+            detail: `Click to run \`Developer: Reload Window\` command`,
+            alwaysShow: true,
+        };
+
         const refreshedItem: IInterpreterQuickPickItem = {
             description: interpreterPath,
             detail: '',
@@ -314,6 +320,26 @@ suite('Set Interpreter Command', () => {
                 .returns(() => []);
             commandManager
                 .setup((c) => c.executeCommand(Commands.InstallPython))
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.once());
+
+            await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
+
+            commandManager.verifyAll();
+        });
+
+        test('Picker should reload window if corresponding item is selected', async () => {
+            const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
+            const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
+            multiStepInput
+                .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve((tipToReloadWindow as unknown) as QuickPickItem));
+            interpreterSelector.reset();
+            interpreterSelector
+                .setup((i) => i.getSuggestions(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => []);
+            commandManager
+                .setup((c) => c.executeCommand('workbench.action.reloadWindow'))
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
 

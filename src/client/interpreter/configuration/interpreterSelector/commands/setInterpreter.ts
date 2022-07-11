@@ -15,6 +15,7 @@ import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
 import { getIcon } from '../../../../common/utils/icons';
 import { Common, InterpreterQuickPickList } from '../../../../common/utils/localize';
+import { noop } from '../../../../common/utils/misc';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
@@ -77,6 +78,14 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     private readonly noPythonInstalled: ISpecialQuickPickItem = {
         label: `${Octicons.Error} ${InterpreterQuickPickList.noPythonInstalled}`,
         detail: InterpreterQuickPickList.clickForInstructions,
+        alwaysShow: true,
+    };
+
+    private wasNoPythonInstalledItemClicked = false;
+
+    private readonly tipToReloadWindow: ISpecialQuickPickItem = {
+        label: `${Octicons.Lightbulb} Reload the window if you installed Python but don't see it`,
+        detail: `Click to run \`Developer: Reload Window\` command`,
         alwaysShow: true,
     };
 
@@ -171,7 +180,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_OR_FIND);
             return this._enterOrBrowseInterpreterPath(input, state, suggestions);
         } else if (selection.label === this.noPythonInstalled.label) {
-            this.commandManager.executeCommand(Commands.InstallPython);
+            this.commandManager.executeCommand(Commands.InstallPython).then(noop, noop);
+            this.wasNoPythonInstalledItemClicked = true;
+        } else if (selection.label === this.tipToReloadWindow.label) {
+            this.commandManager.executeCommand('workbench.action.reloadWindow').then(noop, noop);
         } else {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'selected' });
             state.path = (selection as IInterpreterQuickPickItem).path;
@@ -302,6 +314,12 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 if (noPyIndex !== -1) {
                     updatedItems.splice(noPyIndex, 1);
                 }
+                const tryReloadIndex = updatedItems.findIndex(
+                    (item) => isSpecialQuickPickItem(item) && item.label === this.tipToReloadWindow.label,
+                );
+                if (tryReloadIndex !== -1) {
+                    updatedItems.splice(tryReloadIndex, 1);
+                }
                 if (areItemsGrouped) {
                     addSeparatorIfApplicable(
                         updatedItems,
@@ -340,6 +358,9 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 });
             } else {
                 items.push(this.noPythonInstalled);
+                if (this.wasNoPythonInstalledItemClicked) {
+                    items.push(this.tipToReloadWindow);
+                }
             }
         }
     }
