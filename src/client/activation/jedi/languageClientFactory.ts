@@ -24,7 +24,7 @@ export class JediLanguageClientFactory implements ILanguageClientFactory {
         const lsScriptPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'run-jedi-language-server.py');
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
         const serverOptions: ServerOptions = {
-            command: interpreter ? interpreter.path : 'pythonz',
+            command: interpreter ? interpreter.path : 'python',
             args: [lsScriptPath],
         };
 
