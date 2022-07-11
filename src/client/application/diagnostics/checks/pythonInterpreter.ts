@@ -56,7 +56,7 @@ export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
             // Specify folder name in case of multiroot scenarios
             const folder = workspaceService.getWorkspaceFolder(resource);
             if (folder) {
-                formatArg = ` ${localize('Common.for', 'for')} ${path.basename(folder.uri.fsPath)}`;
+                formatArg = ` ${localize('Common.forWorkspace', 'for workspace')} ${path.basename(folder.uri.fsPath)}`;
             }
         }
         super(code, messages[code].format(formatArg), DiagnosticSeverity.Error, scope, resource, undefined, 'always');
