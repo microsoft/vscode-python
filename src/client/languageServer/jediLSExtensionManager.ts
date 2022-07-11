@@ -80,16 +80,19 @@ export class JediLSExtensionManager extends LanguageServerCapabilities
 
     // eslint-disable-next-line class-methods-use-this
     canStartLanguageServer(interpreter: PythonEnvironment | undefined): boolean {
-        // Return true for now since it's shipped with the extension.
+        if (!interpreter) {
+            traceError('Unable to start Jedi language server as a valid interpreter is not selected');
+            return false;
+        }
+        // Otherwise return true for now since it's shipped with the extension.
         // Update this when JediLSP is pulled in a separate extension.
-        return !!interpreter;
+        return true;
     }
 
     // eslint-disable-next-line class-methods-use-this
     languageServerNotAvailable(): Promise<void> {
         // Nothing to do here.
         // Update this when JediLSP is pulled in a separate extension.
-        traceError('Unable to start Jedi language server as a valid interpreter is not selected');
         return Promise.resolve();
     }
 }
