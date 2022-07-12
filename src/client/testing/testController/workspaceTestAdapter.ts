@@ -4,6 +4,7 @@
 import * as path from 'path';
 import * as util from 'util';
 import { CancellationToken, Position, Range, TestController, TestItem, TestMessage, TestRun, Uri } from 'vscode';
+import { Location } from 'vscode'; //
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
 import { traceError } from '../../logging';
@@ -36,6 +37,8 @@ export class WorkspaceTestAdapter {
     // potentially a hashmap of runID : testItem?
     runIdToTestItem: Map<string, TestItem>;
 
+    runIdToVSid: Map<string, string>;
+
     constructor(
         private testProvider: TestProvider,
         private discoveryAdapter: ITestDiscoveryAdapter,
@@ -44,6 +47,7 @@ export class WorkspaceTestAdapter {
         private workspaceUri: Uri, // private runIdToTestItem: Map<string, TestItem>,
     ) {
         this.runIdToTestItem = new Map<string, TestItem>();
+        this.runIdToVSid = new Map<string, string>();
     }
 
     public async executeTests(
@@ -52,27 +56,59 @@ export class WorkspaceTestAdapter {
         token?: CancellationToken,
     ): Promise<void> {
         const rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri);
-        // const temp = rawTestExecData.result;
+
         if (rawTestExecData !== undefined && rawTestExecData.result !== undefined) {
             for (const keyTemp of Object.keys(rawTestExecData.result)) {
-                // console.log(keyTemp, rawTestExecData.result[keyTemp]);
                 // check for result and update the UI accordingly.
                 if (rawTestExecData.result[keyTemp].outcome === 'failure') {
-                    const message = new TestMessage('this is temporary message');
+                    const text = `${rawTestExecData.result[keyTemp].test} failed: ${
+                        rawTestExecData.result[keyTemp].message ?? rawTestExecData.result[keyTemp].outcome
+                    }\r\n`;
+                    const message = new TestMessage(text);
                     const grabTestItem = this.runIdToTestItem.get(keyTemp);
-                    if (grabTestItem !== undefined) {
-                        // runInstance.failed(grabTestItem, message); // choose appropriate one
-                        runInstance.passed(grabTestItem); // choose appropriate one
+                    const giveMeRealID = grabTestItem?.id;
+                    if (giveMeRealID) {
+                        const grabTestREAL = testController.items.size;
+                        console.log(grabTestREAL);
                     }
+                    let tempArr: TestItem[];
+                    tempArr = [];
+
+                    // fetch inidividual testItem and store into tempArr
+                    testController.items.forEach((i) =>
+                        i.children.forEach((z) =>
+                            z.children.forEach((x) => x.children.forEach((indi) => tempArr.push(indi))),
+                        ),
+                    );
+                    const grabVSid = this.runIdToVSid.get(keyTemp);
+                    // search through freshly built array of testItem to find the failed test and update UI.
+                    tempArr.forEach((indiItem) => {
+                        if (indiItem.id === grabVSid) {
+                            if (indiItem.uri && indiItem.range) {
+                                message.location = new Location(indiItem.uri, indiItem.range);
+                                runInstance.failed(indiItem, message);
+                            }
+                        }
+                    });
+                    // if (grabTestItem !== undefined) {
+                    //     if (grabTestItem.uri && grabTestItem.range) {
+                    //         message.location = new Location(grabTestItem.uri, grabTestItem.range);
+                    //     }
+                    //     runInstance.failed(grabTestItem, message); // choose appropriate one
+                    //     runInstance.appendOutput('you failed');
+                    //     // runInstance.passed(grabTestItem); // choose appropriate one
+                    // }
                 } else if (rawTestExecData.result[keyTemp].outcome === 'success') {
                     const grabTestItem = this.runIdToTestItem.get(keyTemp);
                     if (grabTestItem !== undefined) {
                         const message = new TestMessage('this is temporary message');
                         // runInstance.failed(grabTestItem, message); // choose appropriate one
                         runInstance.passed(grabTestItem); // choose appropriate one
+                        runInstance.appendOutput('You passed');
                     }
                 }
             }
+            runInstance.end();
         }
 
         // console.log(temp);
@@ -320,7 +356,9 @@ function populateTestTree(
 ): void {
     // If testRoot is undefined, use the info of the root item of testTreeData to create a test item, and append it to the test controller.
     if (!testRoot) {
+        // const cleanChildPath = testTreeData.path.replace('\\\\', '\\'); // exyts
         testRoot = testController.createTestItem(testTreeData.path, testTreeData.name, Uri.file(testTreeData.path));
+        // testRoot = testController.createTestItem(testTreeData.path, testTreeData.name, Uri.file(cleanChildPath));
         testRoot.canResolveChildren = true;
         testRoot.tags = [RunTestTag, DebugTestTag];
 
@@ -333,7 +371,16 @@ function populateTestTree(
             // Try to identify if we fall into TestItem or TestNode?
 
             if (isTestItem(child)) {
+                // warning warning: I think there is a problem with child.path being double dash instead of single dash in legacy code
+                // maybe thats why uri getting messed up=> highly likely
+                // const regex = /\\\\/g;
+                // const cleanChildPath = child.path.replace(regex, '\\');
+                // const cleanChildPath = child.path.replace('\\\\', '\\');
                 const testItem = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
+                testItem.tags = [RunTestTag, DebugTestTag];
+                // const testItem = testController.createTestItem(child.id_, child.name, Uri.file(cleanChildPath));
+
+                // const trackerVar = Uri.file(cleanChildPath).fsPath;
                 const range = new Range(new Position(child.lineno - 1, 0), new Position(child.lineno, 0));
                 testItem.canResolveChildren = false;
                 testItem.range = range;
@@ -341,13 +388,15 @@ function populateTestTree(
                 testRoot!.children.add(testItem);
                 // add to our map
                 wstAdapter.runIdToTestItem.set(child.runID, testItem);
+                wstAdapter.runIdToVSid.set(child.runID, child.id_);
             } else {
                 let node = testController.items.get(child.path);
 
                 if (!node) {
                     // replace child.path with child.id_ (unique)
+                    // const cleanChildPath = child.path.replace('\\\\', '\\');
                     node = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
-
+                    // node = testController.createTestItem(child.id_, child.name, Uri.file(cleanChildPath));
                     node.canResolveChildren = true;
                     node.tags = [RunTestTag, DebugTestTag];
 

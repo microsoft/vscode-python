@@ -361,7 +361,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                         this.testAdapters.get(workspace.uri) ||
                         (this.testAdapters.values().next().value as WorkspaceTestAdapter);
                     testAdapter.executeTests(this.testController, runInstance, token);
-                    //
+
                     const settings = this.configSettings.getSettings(workspace.uri);
                     if (testItems.length > 0) {
                         if (settings.testing.pytestEnabled) {
@@ -369,16 +369,16 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 tool: 'pytest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
-                            return this.pytest.runTests(
-                                {
-                                    includes: testItems,
-                                    excludes: request.exclude ?? [],
-                                    runKind: request.profile?.kind ?? TestRunProfileKind.Run,
-                                    runInstance,
-                                },
-                                workspace,
-                                token,
-                            );
+                            // return this.pytest.runTests(
+                            //     {
+                            //         includes: testItems,
+                            //         excludes: request.exclude ?? [],
+                            //         runKind: request.profile?.kind ?? TestRunProfileKind.Run,
+                            //         runInstance,
+                            //     },
+                            //     workspace,
+                            //     token,
+                            // );
                         }
                         if (settings.testing.unittestEnabled) {
                             // potentially sqeeze in the new exeuction way here?
@@ -386,7 +386,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 tool: 'unittest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
-                            // 6/30
+                            // 6/30 below is old way.
 
                             // return this.unittest.runTests(
                             //     {
