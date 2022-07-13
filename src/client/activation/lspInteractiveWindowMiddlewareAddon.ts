@@ -92,13 +92,19 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         cells: NotebookCell[],
         next: (notebookDocument: NotebookDocument, cells: NotebookCell[]) => void,
     ): Promise<void> {
+        await next(notebookDocument, cells);
+
+        // TODO:
+        // What to do with versions?
+        // Maybe change the didOpen message instead of adding didChange?
+
         if (notebookDocument.uri.scheme === 'vscode-interactive') {
             this.notebookMetadataMap.set(notebookDocument.uri.toString(), { cellCount: notebookDocument.cellCount });
 
             const inputBoxMetadata = this.unlinkedInputBoxMap.get(notebookDocument.uri.toString());
             if (inputBoxMetadata) {
                 this.getClient()?.sendNotification(DidChangeNotebookDocumentNotification.method, {
-                    notebookDocument: notebookDocument.uri,
+                    notebookDocument: { uri: notebookDocument.uri, version: 0 },
                     change: {
                         cells: {
                             structure: {
@@ -116,8 +122,6 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
                 this.unlinkedInputBoxMap.delete(notebookDocument.uri.toString());
             }
         }
-
-        await next(notebookDocument, cells);
     }
 
     public async didChangeNotebook(
