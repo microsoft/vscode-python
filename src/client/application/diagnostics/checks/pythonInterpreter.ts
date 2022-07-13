@@ -23,9 +23,10 @@ import {
 } from '../types';
 import { Common } from '../../../common/utils/localize';
 import { Commands } from '../../../common/constants';
-import { IWorkspaceService } from '../../../common/application/types';
+import { ICommandManager, IWorkspaceService } from '../../../common/application/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
+import { IExtensionSingleActivationService } from '../../../activation/types';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
@@ -66,7 +67,10 @@ export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
 export const InvalidPythonInterpreterServiceId = 'InvalidPythonInterpreterServiceId';
 
 @injectable()
-export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
+export class InvalidPythonInterpreterService extends BaseDiagnosticsService
+    implements IExtensionSingleActivationService {
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
+
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
@@ -76,6 +80,15 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
             serviceContainer,
             disposableRegistry,
             false,
+        );
+    }
+
+    public async activate(): Promise<void> {
+        const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.TriggerEnvironmentSelection, (resource: Resource) =>
+                this.triggerEnvSelectionIfNecessary(resource),
+            ),
         );
     }
 
@@ -108,7 +121,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
         return [];
     }
 
-    public async validateInterpreterPathInSettings(resource: Resource): Promise<boolean> {
+    public async triggerEnvSelectionIfNecessary(resource: Resource): Promise<boolean> {
         const diagnostics = await this.diagnose(resource);
         if (!diagnostics.length) {
             return true;

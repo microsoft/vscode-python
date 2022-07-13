@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { IApplicationDiagnostics } from '../types';
 import { ApplicationDiagnostics } from './applicationDiagnostics';
@@ -71,6 +72,10 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IDiagnosticsService,
         InvalidPythonInterpreterService,
         InvalidPythonInterpreterServiceId,
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        InvalidPythonInterpreterService,
     );
     serviceManager.addSingleton<IDiagnosticsService>(
         IDiagnosticsService,

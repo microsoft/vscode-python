@@ -4,6 +4,7 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
+import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { ApplicationDiagnostics } from '../../../client/application/diagnostics/applicationDiagnostics';
 import {
     EnvironmentPathVariableDiagnosticsService,
@@ -13,10 +14,6 @@ import {
     InvalidLaunchJsonDebuggerService,
     InvalidLaunchJsonDebuggerServiceId,
 } from '../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
-import {
-    InvalidPythonPathInDebuggerService,
-    InvalidPythonPathInDebuggerServiceId,
-} from '../../../client/application/diagnostics/checks/invalidPythonPathInDebugger';
 import {
     JediPython27NotSupportedDiagnosticService,
     JediPython27NotSupportedDiagnosticServiceId,
@@ -101,8 +98,14 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
         verify(
             serviceManager.addSingleton<IDiagnosticsService>(
                 IDiagnosticsService,
-                InvalidPythonPathInDebuggerService,
-                InvalidPythonPathInDebuggerServiceId,
+                InvalidPythonInterpreterService,
+                InvalidPythonInterpreterServiceId,
+            ),
+        );
+        verify(
+            serviceManager.addSingleton<IExtensionSingleActivationService>(
+                IExtensionSingleActivationService,
+                InvalidPythonInterpreterService,
             ),
         );
         verify(

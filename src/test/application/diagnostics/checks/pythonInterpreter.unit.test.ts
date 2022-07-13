@@ -5,6 +5,7 @@
 
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
+import { IExtensionSingleActivationService } from '../../../../client/activation/types';
 import { BaseDiagnosticsService } from '../../../../client/application/diagnostics/base';
 import { InvalidLaunchJsonDebuggerDiagnostic } from '../../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
 import {
@@ -25,30 +26,31 @@ import {
     IDiagnosticsService,
 } from '../../../../client/application/diagnostics/types';
 import { CommandsWithoutArgs } from '../../../../client/common/application/commands';
-import { IWorkspaceService } from '../../../../client/common/application/types';
+import { ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { Commands } from '../../../../client/common/constants';
 import { IPlatformService } from '../../../../client/common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IPythonSettings } from '../../../../client/common/types';
+import { IDisposable, IDisposableRegistry, Resource } from '../../../../client/common/types';
 import { Common } from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
 import { IInterpreterHelper, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 suite('Application Diagnostics - Checks Python Interpreter', () => {
-    let diagnosticService: IDiagnosticsService;
+    let diagnosticService: IDiagnosticsService & IExtensionSingleActivationService;
     let messageHandler: typemoq.IMock<IDiagnosticHandlerService<MessageCommandPrompt>>;
     let commandFactory: typemoq.IMock<IDiagnosticsCommandFactory>;
-    let settings: typemoq.IMock<IPythonSettings>;
     let interpreterService: typemoq.IMock<IInterpreterService>;
     let platformService: typemoq.IMock<IPlatformService>;
     let workspaceService: typemoq.IMock<IWorkspaceService>;
+    let commandManager: typemoq.IMock<ICommandManager>;
     let helper: typemoq.IMock<IInterpreterHelper>;
-    const pythonPath = 'My Python Path in Settings';
     let serviceContainer: typemoq.IMock<IServiceContainer>;
     function createContainer() {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
+        commandManager = typemoq.Mock.ofType<ICommandManager>();
+        serviceContainer.setup((s) => s.get(typemoq.It.isValue(ICommandManager))).returns(() => commandManager.object);
         workspaceService.setup((w) => w.workspaceFile).returns(() => undefined);
         serviceContainer
             .setup((s) => s.get(typemoq.It.isValue(IWorkspaceService)))
@@ -66,13 +68,6 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         serviceContainer
             .setup((s) => s.get(typemoq.It.isValue(IDiagnosticsCommandFactory)))
             .returns(() => commandFactory.object);
-        settings = typemoq.Mock.ofType<IPythonSettings>();
-        settings.setup((s) => s.pythonPath).returns(() => pythonPath);
-        const configService = typemoq.Mock.ofType<IConfigurationService>();
-        configService.setup((c) => c.getSettings(typemoq.It.isAny())).returns(() => settings.object);
-        serviceContainer
-            .setup((s) => s.get(typemoq.It.isValue(IConfigurationService)))
-            .returns(() => configService.object);
         interpreterService = typemoq.Mock.ofType<IInterpreterService>();
         serviceContainer
             .setup((s) => s.get(typemoq.It.isValue(IInterpreterService)))
@@ -99,6 +94,27 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 }
             })(createContainer(), []);
             (diagnosticService as any)._clear();
+        });
+
+        test('Registers command to trigger environment prompts', async () => {
+            let triggerFunction: ((resource: Resource) => Promise<boolean>) | undefined;
+            commandManager
+                .setup((c) => c.registerCommand(Commands.TriggerEnvironmentSelection, typemoq.It.isAny()))
+                .callback((_, cb) => (triggerFunction = cb))
+                .returns(() => typemoq.Mock.ofType<IDisposable>().object);
+            await diagnosticService.activate();
+            expect(triggerFunction).to.not.equal(undefined);
+            interpreterService.setup((i) => i.hasInterpreters()).returns(() => Promise.resolve(false));
+            let result1 = await triggerFunction!(undefined);
+            expect(result1).to.equal(false);
+
+            interpreterService.reset();
+            interpreterService.setup((i) => i.hasInterpreters()).returns(() => Promise.resolve(true));
+            interpreterService
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
+                .returns(() => Promise.resolve(({ path: 'interpreterpath' } as unknown) as PythonEnvironment));
+            const result2 = await triggerFunction!(undefined);
+            expect(result2).to.equal(true);
         });
 
         test('Can handle InvalidPythonPathInterpreter diagnostics', async () => {
@@ -164,7 +180,6 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 ],
                 'not the same',
             );
-            settings.verifyAll();
             interpreterService.verifyAll();
         });
         test('Should return empty diagnostics if there are interpreters and a current interpreter', async () => {
@@ -181,7 +196,6 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
 
             const diagnostics = await diagnosticService.diagnose(undefined);
             expect(diagnostics).to.be.deep.equal([], 'not the same');
-            settings.verifyAll();
             interpreterService.verifyAll();
         });
         test('Handling no interpreters diagnostic should return select interpreter cmd', async () => {

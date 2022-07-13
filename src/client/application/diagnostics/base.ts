@@ -34,7 +34,7 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
     constructor(
         @unmanaged() private readonly supportedDiagnosticCodes: string[],
         @unmanaged() protected serviceContainer: IServiceContainer,
-        @unmanaged() disposableRegistry: IDisposableRegistry,
+        @unmanaged() protected disposableRegistry: IDisposableRegistry,
         @unmanaged() public readonly runInBackground: boolean = false,
         @unmanaged() public readonly runInUntrustedWorkspace: boolean = false,
     ) {

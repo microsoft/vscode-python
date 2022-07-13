@@ -57,6 +57,7 @@ export namespace Commands {
     export const RefreshTensorBoard = 'python.refreshTensorBoard';
     export const ReportIssue = 'python.reportIssue';
     export const InstallPython = 'python.installPython';
+    export const TriggerEnvironmentSelection = 'python.triggerEnvSelection';
 }
 
 // Look at https://microsoft.github.io/vscode-codicons/dist/codicon.html for other Octicon icon ids
