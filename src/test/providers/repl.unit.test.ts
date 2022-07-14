@@ -11,8 +11,10 @@ import {
     IWorkspaceService,
 } from '../../client/common/application/types';
 import { Commands } from '../../client/common/constants';
+import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ReplProvider } from '../../client/providers/replProvider';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { ICodeExecutionService } from '../../client/terminals/types';
 
 suite('REPL Provider', () => {
@@ -23,6 +25,7 @@ suite('REPL Provider', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let activeResourceService: TypeMoq.IMock<IActiveResourceService>;
     let replProvider: ReplProvider;
+    let interpreterService: TypeMoq.IMock<IInterpreterService>;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
@@ -37,6 +40,11 @@ suite('REPL Provider', () => {
             .returns(() => codeExecutionService.object);
         serviceContainer.setup((c) => c.get(IDocumentManager)).returns(() => documentManager.object);
         serviceContainer.setup((c) => c.get(IActiveResourceService)).returns(() => activeResourceService.object);
+        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+        serviceContainer.setup((c) => c.get(IInterpreterService)).returns(() => interpreterService.object);
     });
     teardown(() => {
         try {
@@ -68,10 +76,10 @@ suite('REPL Provider', () => {
         disposable.verify((d) => d.dispose(), TypeMoq.Times.once());
     });
 
-    test('Ensure execution is carried smoothly in the handler if there are no errors', () => {
+    test('Ensure execution is carried smoothly in the handler if there are no errors', async () => {
         const resource = Uri.parse('a');
         const disposable = TypeMoq.Mock.ofType<Disposable>();
-        let commandHandler: undefined | (() => void);
+        let commandHandler: undefined | (() => Promise<void>);
         commandManager
             .setup((c) =>
                 c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
@@ -87,7 +95,7 @@ suite('REPL Provider', () => {
 
         replProvider = new ReplProvider(serviceContainer.object);
         expect(commandHandler).not.to.be.equal(undefined, 'Handler not set');
-        commandHandler!.call(replProvider);
+        await commandHandler!.call(replProvider);
 
         serviceContainer.verify(
             (c) => c.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('repl')),

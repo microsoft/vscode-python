@@ -35,8 +35,10 @@ import {
 import { createDeferred, createDeferredFromPromise } from '../../client/common/utils/async';
 import { Common, Diagnostics } from '../../client/common/utils/localize';
 import { noop } from '../../client/common/utils/misc';
+import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { sleep } from '../core';
 
 suite('Import Sort Provider', () => {
@@ -51,6 +53,7 @@ suite('Import Sort Provider', () => {
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let persistentStateFactory: TypeMoq.IMock<IPersistentStateFactory>;
     let extensions: TypeMoq.IMock<IExtensions>;
+    let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let sortProvider: SortImportsEditingProvider;
 
     setup(() => {
@@ -76,6 +79,11 @@ suite('Import Sort Provider', () => {
         serviceContainer.setup((c) => c.get(IEditorUtils)).returns(() => editorUtils.object);
         serviceContainer.setup((c) => c.get(IDisposableRegistry)).returns(() => []);
         serviceContainer.setup((c) => c.get(IExtensions)).returns(() => extensions.object);
+        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+        serviceContainer.setup((c) => c.get(IInterpreterService)).returns(() => interpreterService.object);
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         sortProvider = new SortImportsEditingProvider(serviceContainer.object);
     });

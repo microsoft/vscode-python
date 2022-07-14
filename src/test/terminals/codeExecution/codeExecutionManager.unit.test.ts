@@ -11,6 +11,8 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionManager } from '../../../client/terminals/codeExecution/codeExecutionManager';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../../client/terminals/types';
 import { IConfigurationService } from '../../../client/common/types';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('Terminal - Code Execution Manager', () => {
     let executionManager: ICodeExecutionManager;
@@ -21,6 +23,7 @@ suite('Terminal - Code Execution Manager', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let interpreterService: TypeMoq.IMock<IInterpreterService>;
     setup(() => {
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         fileSystem.setup((f) => f.readFile(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
@@ -36,6 +39,11 @@ suite('Terminal - Code Execution Manager', () => {
         commandManager = TypeMoq.Mock.ofType<ICommandManager>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+        serviceContainer.setup((c) => c.get(IInterpreterService)).returns(() => interpreterService.object);
         executionManager = new CodeExecutionManager(
             commandManager.object,
             documentManager.object,
