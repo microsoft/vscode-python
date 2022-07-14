@@ -356,11 +356,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             // runInstance.passed(i);
                         }
                     });
-                    // 6/30
-                    const testAdapter =
-                        this.testAdapters.get(workspace.uri) ||
-                        (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                    testAdapter.executeTests(this.testController, runInstance, token);
 
                     const settings = this.configSettings.getSettings(workspace.uri);
                     if (testItems.length > 0) {
@@ -386,6 +381,12 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 tool: 'unittest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
+                            // 6/30
+                            const testAdapter =
+                                this.testAdapters.get(workspace.uri) ||
+                                (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                            return testAdapter.executeTests(this.testController, runInstance, token);
+
                             // 6/30 below is old way.
 
                             // return this.unittest.runTests(
@@ -410,9 +411,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             );
         } finally {
             runInstance.appendOutput(`Finished running tests!\r\n`);
-            // runInstance.end(); //
+            runInstance.end(); //
             dispose.dispose();
-
             if (unconfiguredWorkspaces.length > 0) {
                 this.runWithoutConfigurationEvent.fire(unconfiguredWorkspaces);
             }

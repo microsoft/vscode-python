@@ -30,7 +30,8 @@ import {
  * and uses them to insert/update/remove items in the `TestController` instance behind the testing UI whenever the `PythonTestController` requests a refresh.
  */
 export class WorkspaceTestAdapter {
-    private discovering: Deferred<void> | undefined = undefined;
+    // private discovering: Deferred<void> | undefined = undefined; ????
+    private discovering: Deferred<void> | undefined;
 
     private testData: DiscoveredTestNode | undefined;
 
@@ -60,32 +61,45 @@ export class WorkspaceTestAdapter {
         if (rawTestExecData !== undefined && rawTestExecData.result !== undefined) {
             for (const keyTemp of Object.keys(rawTestExecData.result)) {
                 // check for result and update the UI accordingly.
+                let tempArr: TestItem[];
+                tempArr = [];
+
+                // fetch inidividual testItem and store into tempArr
+                testController.items.forEach((i) =>
+                    i.children.forEach((z) =>
+                        z.children.forEach((x) => x.children.forEach((indi) => tempArr.push(indi))),
+                    ),
+                );
                 if (rawTestExecData.result[keyTemp].outcome === 'failure') {
                     const text = `${rawTestExecData.result[keyTemp].test} failed: ${
                         rawTestExecData.result[keyTemp].message ?? rawTestExecData.result[keyTemp].outcome
                     }\r\n`;
                     const message = new TestMessage(text);
                     const grabTestItem = this.runIdToTestItem.get(keyTemp);
-                    const giveMeRealID = grabTestItem?.id;
-                    if (giveMeRealID) {
-                        const grabTestREAL = testController.items.size;
-                        console.log(grabTestREAL);
-                    }
-                    let tempArr: TestItem[];
-                    tempArr = [];
 
-                    // fetch inidividual testItem and store into tempArr
-                    testController.items.forEach((i) =>
-                        i.children.forEach((z) =>
-                            z.children.forEach((x) => x.children.forEach((indi) => tempArr.push(indi))),
-                        ),
-                    );
+                    // const giveMeRealID = grabTestItem?.id;
+                    // if (giveMeRealID) {
+                    //     const grabTestREAL = testController.items.size;
+                    //     // console.log(grabTestREAL);
+                    // }
+                    // let tempArr: TestItem[];
+                    // tempArr = [];
+
+                    // // fetch inidividual testItem and store into tempArr
+                    // testController.items.forEach((i) =>
+                    //     i.children.forEach((z) =>
+                    //         z.children.forEach((x) => x.children.forEach((indi) => tempArr.push(indi))),
+                    //     ),
+                    // );
+                    // note that keyTemp is a runId for unittest library...
                     const grabVSid = this.runIdToVSid.get(keyTemp);
                     // search through freshly built array of testItem to find the failed test and update UI.
                     tempArr.forEach((indiItem) => {
                         if (indiItem.id === grabVSid) {
                             if (indiItem.uri && indiItem.range) {
                                 message.location = new Location(indiItem.uri, indiItem.range);
+                                runInstance.started(indiItem);
+                                // console.log('fail');
                                 runInstance.failed(indiItem, message);
                             }
                         }
@@ -100,15 +114,26 @@ export class WorkspaceTestAdapter {
                     // }
                 } else if (rawTestExecData.result[keyTemp].outcome === 'success') {
                     const grabTestItem = this.runIdToTestItem.get(keyTemp);
+                    const grabVSid = this.runIdToVSid.get(keyTemp);
                     if (grabTestItem !== undefined) {
-                        const message = new TestMessage('this is temporary message');
-                        // runInstance.failed(grabTestItem, message); // choose appropriate one
-                        runInstance.passed(grabTestItem); // choose appropriate one
-                        runInstance.appendOutput('You passed');
+                        //     const message = new TestMessage('this is temporary message');
+                        //     // runInstance.failed(grabTestItem, message); // choose appropriate one
+                        tempArr.forEach((indiItem) => {
+                            if (indiItem.id === grabVSid) {
+                                if (indiItem.uri && indiItem.range) {
+                                    runInstance.started(grabTestItem);
+                                    // console.log('success');
+                                    runInstance.passed(grabTestItem); // choose appropriate one
+                                }
+                            }
+                        });
+                        // runInstance.started(grabTestItem);
+                        // runInstance.passed(grabTestItem); // choose appropriate one
+                        // runInstance.appendOutput('You passed');
                     }
                 }
             }
-            runInstance.end();
+            // runInstance.end();
         }
 
         // console.log(temp);
@@ -381,7 +406,10 @@ function populateTestTree(
                 // const testItem = testController.createTestItem(child.id_, child.name, Uri.file(cleanChildPath));
 
                 // const trackerVar = Uri.file(cleanChildPath).fsPath;
-                const range = new Range(new Position(child.lineno - 1, 0), new Position(child.lineno, 0));
+                const range = new Range(
+                    new Position(Number(child.lineno) - 1, 0),
+                    new Position(Number(child.lineno), 0),
+                );
                 testItem.canResolveChildren = false;
                 testItem.range = range;
                 testItem.tags = [RunTestTag, DebugTestTag];
