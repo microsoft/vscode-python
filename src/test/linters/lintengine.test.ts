@@ -10,9 +10,11 @@ import { PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../../client/common/co
 import '../../client/common/extensions';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, ILintingSettings, IOutputChannel, IPythonSettings } from '../../client/common/types';
+import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LintingEngine } from '../../client/linters/lintingEngine';
 import { ILinterManager, ILintingEngine } from '../../client/linters/types';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { initialize } from '../initialize';
 
 suite('Linting - LintingEngine', () => {
@@ -67,6 +69,12 @@ suite('Linting - LintingEngine', () => {
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ILintingEngine), TypeMoq.It.isAny()))
             .returns(() => lintingEngine);
+
+        const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+        serviceContainer.setup((c) => c.get(IInterpreterService)).returns(() => interpreterService.object);
     });
 
     test('Ensure document.uri is passed into isLintingEnabled', () => {
