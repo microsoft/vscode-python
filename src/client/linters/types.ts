@@ -74,7 +74,7 @@ export enum LintMessageSeverity {
 export const ILintingEngine = Symbol('ILintingEngine');
 export interface ILintingEngine {
     readonly diagnostics: vscode.DiagnosticCollection;
-    lintOpenPythonFiles(): Promise<vscode.DiagnosticCollection>;
+    lintOpenPythonFiles(trigger?: LinterTrigger): Promise<vscode.DiagnosticCollection>;
     lintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<void>;
     clearDiagnostics(document: vscode.TextDocument): void;
 }

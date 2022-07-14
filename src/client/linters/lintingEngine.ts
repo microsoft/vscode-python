@@ -63,9 +63,9 @@ export class LintingEngine implements ILintingEngine {
         }
     }
 
-    public async lintOpenPythonFiles(): Promise<vscode.DiagnosticCollection> {
+    public async lintOpenPythonFiles(trigger: LinterTrigger = 'auto'): Promise<vscode.DiagnosticCollection> {
         this.diagnosticCollection.clear();
-        const promises = this.documents.textDocuments.map(async (document) => this.lintDocument(document, 'auto'));
+        const promises = this.documents.textDocuments.map(async (document) => this.lintDocument(document, trigger));
         await Promise.all(promises);
         return this.diagnosticCollection;
     }
@@ -169,7 +169,7 @@ export class LintingEngine implements ILintingEngine {
     private async shouldLintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<boolean> {
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const interpreter = await interpreterService.getActiveInterpreter(document.uri);
-        if (!interpreter && trigger !== 'auto') {
+        if (!interpreter && trigger === 'manual') {
             this.serviceContainer
                 .get<ICommandManager>(ICommandManager)
                 .executeCommand(Commands.TriggerEnvironmentSelection, document.uri)

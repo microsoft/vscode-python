@@ -112,7 +112,7 @@ export class LinterCommands implements IDisposable {
 
     public runLinting(): Promise<DiagnosticCollection> {
         const engine = this.serviceContainer.get<ILintingEngine>(ILintingEngine);
-        return engine.lintOpenPythonFiles();
+        return engine.lintOpenPythonFiles('manual');
     }
 
     private get settingsUri(): Uri | undefined {

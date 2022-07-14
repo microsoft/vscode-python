@@ -8,7 +8,7 @@ import { EventName } from './constants';
 
 export type EditorLoadTelemetry = IEventNamePropertyMapping[EventName.EDITOR_LOAD];
 
-export type LinterTrigger = 'auto' | 'save';
+export type LinterTrigger = 'auto' | 'save' | 'manual';
 
 export type LintingTelemetry = IEventNamePropertyMapping[EventName.LINTING];
 
