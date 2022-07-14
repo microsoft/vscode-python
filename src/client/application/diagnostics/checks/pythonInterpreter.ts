@@ -27,6 +27,8 @@ import { ICommandManager, IWorkspaceService } from '../../../common/application/
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { IExtensionSingleActivationService } from '../../../activation/types';
+import { cache } from '../../../common/utils/decorators';
+import { noop } from '../../../common/utils/misc';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
@@ -90,6 +92,12 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
                 this.triggerEnvSelectionIfNecessary(resource),
             ),
         );
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        this.disposableRegistry.push(
+            interpreterService.onDidChangeInterpreterConfiguration((e) =>
+                commandManager.executeCommand(Commands.TriggerEnvironmentSelection, e).then(noop, noop),
+            ),
+        );
     }
 
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
@@ -130,6 +138,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
         return false;
     }
 
+    @cache(1000, true) // This is to handle throttling of multiple events.
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         if (diagnostics.length === 0) {
             return;
