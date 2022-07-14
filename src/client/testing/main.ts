@@ -146,6 +146,12 @@ export class UnitTestManagementService implements IExtensionActivationService {
         if (!wkspace) {
             return;
         }
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+        if (!(await interpreterService.getActiveInterpreter(wkspace))) {
+            commandManager.executeCommand('python.triggerEnvSelection', wkspace);
+            return;
+        }
         const configurationService = this.serviceContainer.get<ITestConfigurationService>(ITestConfigurationService);
         await configurationService.promptToEnableAndConfigureTestFramework(wkspace!);
     }

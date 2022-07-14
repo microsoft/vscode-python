@@ -17,12 +17,14 @@ import {
     EventEmitter,
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IWorkspaceService } from '../../common/application/types';
+import { ICommandManager, IWorkspaceService } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
-import { traceVerbose } from '../../logging';
+import { noop } from '../../common/utils/misc';
+import { IInterpreterService } from '../../interpreter/contracts';
+import { traceError, traceVerbose } from '../../logging';
 import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
@@ -77,6 +79,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         @inject(ITestFrameworkController) @named(UNITTEST_PROVIDER) private readonly unittest: ITestFrameworkController,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
     ) {
         this.refreshCancellation = new CancellationTokenSource();
 
@@ -248,7 +252,17 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         } else {
             traceVerbose('Testing: Refreshing all test data');
             const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
-            await Promise.all(workspaces.map((workspace) => this.refreshTestDataInternal(workspace.uri)));
+            await Promise.all(
+                workspaces.map(async (workspace) => {
+                    if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
+                        this.commandManager
+                            .executeCommand('python.triggerEnvSelection', workspace.uri)
+                            .then(noop, noop);
+                        return;
+                    }
+                    await this.refreshTestDataInternal(workspace.uri);
+                }),
+            );
         }
         this.refreshingCompletedEvent.fire();
         return Promise.resolve();
@@ -268,7 +282,15 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             traceVerbose('Testing: Refreshing all test data');
             this.sendTriggerTelemetry('auto');
             const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
-            await Promise.all(workspaces.map((workspace) => this.refreshTestDataInternal(workspace.uri)));
+            await Promise.all(
+                workspaces.map(async (workspace) => {
+                    if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
+                        traceError('Cannot trigger test discovery as a valid interpreter is not selected');
+                        return;
+                    }
+                    await this.refreshTestDataInternal(workspace.uri);
+                }),
+            );
         }
         return Promise.resolve();
     }
@@ -296,7 +318,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         const unconfiguredWorkspaces: WorkspaceFolder[] = [];
         try {
             await Promise.all(
-                workspaces.map((workspace) => {
+                workspaces.map(async (workspace) => {
+                    if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
+                        this.commandManager
+                            .executeCommand('python.triggerEnvSelection', workspace.uri)
+                            .then(noop, noop);
+                        return undefined;
+                    }
                     const testItems: TestItem[] = [];
                     // If the run request includes test items then collect only items that belong to
                     // `workspace`. If there are no items in the run request then just run the `workspace`
