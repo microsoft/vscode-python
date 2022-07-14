@@ -256,7 +256,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 workspaces.map(async (workspace) => {
                     if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
                         this.commandManager
-                            .executeCommand('python.triggerEnvSelection', workspace.uri)
+                            .executeCommand(constants.Commands.TriggerEnvironmentSelection, workspace.uri)
                             .then(noop, noop);
                         return;
                     }
@@ -321,7 +321,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 workspaces.map(async (workspace) => {
                     if (!(await this.interpreterService.getActiveInterpreter(workspace.uri))) {
                         this.commandManager
-                            .executeCommand('python.triggerEnvSelection', workspace.uri)
+                            .executeCommand(constants.Commands.TriggerEnvironmentSelection, workspace.uri)
                             .then(noop, noop);
                         return undefined;
                     }

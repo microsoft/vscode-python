@@ -17,6 +17,7 @@ import {
 import { createDeferred, createDeferredFromPromise, Deferred } from '../common/utils/async';
 import { Common, Diagnostics } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
+import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { traceError } from '../logging';
 import { captureTelemetry } from '../telemetry';
@@ -108,6 +109,15 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     }
 
     public async sortImports(uri?: Uri): Promise<void> {
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const interpreter = await interpreterService.getActiveInterpreter(uri);
+        if (!interpreter) {
+            this.serviceContainer
+                .get<ICommandManager>(ICommandManager)
+                .executeCommand(Commands.TriggerEnvironmentSelection, uri)
+                .then(noop, noop);
+            return;
+        }
         const extension = this.extensions.getExtension('ms-python.isort');
         if (extension && extension.isActive) {
             // Don't run isort from python extension if isort extension is active.

@@ -7,11 +7,13 @@ import { inject, injectable } from 'inversify';
 import { Minimatch } from 'minimatch';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IDocumentManager, IWorkspaceService } from '../common/application/types';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
+import { Commands } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
-import { isNotebookCell } from '../common/utils/misc';
+import { isNotebookCell, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
+import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryWhenDone } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -75,7 +77,7 @@ export class LintingEngine implements ILintingEngine {
         this.diagnosticCollection.set(document.uri, []);
 
         // Check if we need to lint this document
-        if (!(await this.shouldLintDocument(document))) {
+        if (!(await this.shouldLintDocument(document, trigger))) {
             return;
         }
 
@@ -164,7 +166,16 @@ export class LintingEngine implements ILintingEngine {
         return diagnostic;
     }
 
-    private async shouldLintDocument(document: vscode.TextDocument): Promise<boolean> {
+    private async shouldLintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<boolean> {
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const interpreter = await interpreterService.getActiveInterpreter(document.uri);
+        if (!interpreter && trigger !== 'auto') {
+            this.serviceContainer
+                .get<ICommandManager>(ICommandManager)
+                .executeCommand(Commands.TriggerEnvironmentSelection, document.uri)
+                .then(noop, noop);
+            return false;
+        }
         if (!(await this.linterManager.isLintingEnabled(document.uri))) {
             this.diagnosticCollection.set(document.uri, []);
             return false;

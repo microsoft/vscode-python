@@ -121,7 +121,8 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         );
         if (debugConfiguration.pythonPath === '${command:python.interpreterPath}' || !debugConfiguration.pythonPath) {
             const interpreterPath =
-                (await this.interpreterService.getActiveInterpreter(workspaceFolder))?.path ?? 'python';
+                (await this.interpreterService.getActiveInterpreter(workspaceFolder))?.path ??
+                this.configurationService.getSettings(workspaceFolder).pythonPath;
             debugConfiguration.pythonPath = interpreterPath;
             this.pythonPathSource = PythonPathSource.settingsJson;
         } else {

@@ -12,6 +12,7 @@ import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { traceError } from '../../logging';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -38,6 +39,12 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         [Commands.Exec_In_Terminal, Commands.Exec_In_Terminal_Icon].forEach((cmd) => {
             this.disposableRegistry.push(
                 this.commandManager.registerCommand(cmd as any, async (file: Resource) => {
+                    const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+                    const interpreter = await interpreterService.getActiveInterpreter(file);
+                    if (!interpreter) {
+                        this.commandManager.executeCommand(Commands.TriggerEnvironmentSelection, file).then(noop, noop);
+                        return;
+                    }
                     const trigger = cmd === Commands.Exec_In_Terminal ? 'command' : 'icon';
                     await this.executeFileInTerminal(file, trigger)
                         .then(() => {
@@ -50,6 +57,12 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         });
         this.disposableRegistry.push(
             this.commandManager.registerCommand(Commands.Exec_Selection_In_Terminal as any, async (file: Resource) => {
+                const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+                const interpreter = await interpreterService.getActiveInterpreter(file);
+                if (!interpreter) {
+                    this.commandManager.executeCommand(Commands.TriggerEnvironmentSelection, file).then(noop, noop);
+                    return;
+                }
                 await this.executeSelectionInTerminal().then(() => {
                     if (this.shouldTerminalFocusOnStart(file))
                         this.commandManager.executeCommand('workbench.action.terminal.focus');
@@ -60,6 +73,12 @@ export class CodeExecutionManager implements ICodeExecutionManager {
             this.commandManager.registerCommand(
                 Commands.Exec_Selection_In_Django_Shell as any,
                 async (file: Resource) => {
+                    const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+                    const interpreter = await interpreterService.getActiveInterpreter(file);
+                    if (!interpreter) {
+                        this.commandManager.executeCommand(Commands.TriggerEnvironmentSelection, file).then(noop, noop);
+                        return;
+                    }
                     await this.executeSelectionInDjangoShell().then(() => {
                         if (this.shouldTerminalFocusOnStart(file))
                             this.commandManager.executeCommand('workbench.action.terminal.focus');

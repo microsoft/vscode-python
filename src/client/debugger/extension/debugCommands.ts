@@ -12,6 +12,8 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ILaunchJsonReader } from './configuration/types';
 import { DebugPurpose, LaunchRequestArguments } from '../types';
+import { IInterpreterService } from '../../interpreter/contracts';
+import { noop } from '../../common/utils/misc';
 
 @injectable()
 export class DebugCommands implements IExtensionSingleActivationService {
@@ -22,12 +24,18 @@ export class DebugCommands implements IExtensionSingleActivationService {
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(ILaunchJsonReader) private readonly launchJsonReader: ILaunchJsonReader,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
     ) {}
 
     public activate(): Promise<void> {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.Debug_In_Terminal, async (file?: Uri) => {
                 sendTelemetryEvent(EventName.DEBUG_IN_TERMINAL_BUTTON);
+                const interpreter = await this.interpreterService.getActiveInterpreter(file);
+                if (!interpreter) {
+                    this.commandManager.executeCommand(Commands.TriggerEnvironmentSelection, file).then(noop, noop);
+                    return;
+                }
                 const config = await this.getDebugConfiguration(file);
                 this.debugService.startDebugging(undefined, config);
             }),
