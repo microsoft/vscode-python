@@ -6,6 +6,7 @@
 'use strict';
 
 const path = require('path');
+const webpack = require('webpack');
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
 const packageRoot = path.resolve(__dirname, '..', '..');
@@ -35,7 +36,12 @@ const nodeConfig = (_, { mode }) => ({
         extensions: ['.ts', '.js'],
         fallback: { path: require.resolve('path-browserify') },
     },
-    plugins: [new NodePolyfillPlugin()],
+    plugins: [
+        new NodePolyfillPlugin(),
+        new webpack.optimize.LimitChunkCountPlugin({
+            maxChunks: 1,
+        }),
+    ],
     externals: {
         vscode: 'commonjs vscode',
 
