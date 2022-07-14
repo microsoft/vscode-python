@@ -691,7 +691,7 @@ class CollectorTests(unittest.TestCase):
                     ],
                     test=info.SingleTestInfo(
                         id="./test_spam.py::test_each[10-10]",
-                        name="test_each[10-10]",
+                        name="10-10",
                         path=info.SingleTestPath(
                             root=testroot,
                             relfile=relfile1,
@@ -760,7 +760,7 @@ class CollectorTests(unittest.TestCase):
                     ],
                     test=info.SingleTestInfo(
                         id="./x/y/z/test_eggs.py::All::BasicTests::test_each[1+2-3]",
-                        name="test_each[1+2-3]",
+                        name="1+2-3",
                         path=info.SingleTestPath(
                             root=testroot,
                             relfile=adapter_util.fix_relpath(relfile2),
@@ -1033,7 +1033,7 @@ class CollectorTests(unittest.TestCase):
                         ],
                         test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::test_spam[a-[b]-c]",
-                            name="test_spam[a-[b]-c]",
+                            name="a-[b]-c",
                             path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=adapter_util.fix_relpath(relfile),
