@@ -5,6 +5,7 @@
 
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
+import { EventEmitter, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../../client/activation/types';
 import { BaseDiagnosticsService } from '../../../../client/application/diagnostics/base';
 import { InvalidLaunchJsonDebuggerDiagnostic } from '../../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
@@ -35,6 +36,7 @@ import { noop } from '../../../../client/common/utils/misc';
 import { IInterpreterHelper, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
+import { sleep } from '../../../core';
 
 suite('Application Diagnostics - Checks Python Interpreter', () => {
     let diagnosticService: IDiagnosticsService & IExtensionSingleActivationService;
@@ -115,6 +117,27 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => Promise.resolve(({ path: 'interpreterpath' } as unknown) as PythonEnvironment));
             const result2 = await triggerFunction!(undefined);
             expect(result2).to.equal(true);
+        });
+
+        test('Changes to interpreter configuration triggers environment prompts', async () => {
+            commandManager
+                .setup((c) => c.registerCommand(Commands.TriggerEnvironmentSelection, typemoq.It.isAny()))
+                .returns(() => typemoq.Mock.ofType<IDisposable>().object);
+            const interpreterEvent = new EventEmitter<Uri | undefined>();
+            interpreterService
+                .setup((i) => i.onDidChangeInterpreterConfiguration)
+                .returns(() => interpreterEvent.event);
+            await diagnosticService.activate();
+
+            commandManager
+                .setup((c) => c.executeCommand(Commands.TriggerEnvironmentSelection, undefined))
+                .returns(() => Promise.resolve())
+                .verifiable(typemoq.Times.once());
+
+            interpreterEvent.fire(undefined);
+            await sleep(1);
+
+            commandManager.verifyAll();
         });
 
         test('Can handle InvalidPythonPathInterpreter diagnostics', async () => {
