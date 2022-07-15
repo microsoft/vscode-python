@@ -230,21 +230,21 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
                 // TODO: Use new test discovery mechanism
-                traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
-                const workspace = this.workspaceService.getWorkspaceFolder(uri);
-                console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
-                const testAdapter =
-                    this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                testAdapter.discoverTests(
-                    this.testController,
-                    this.refreshCancellation.token,
-                    this.testAdapters.size > 1,
-                    this.workspaceService.workspaceFile?.fsPath,
-                );
-                // Ensure we send test telemetry if it gets disabled again
-                this.sendTestDisabledTelemetry = true;
+                // traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
+                // const workspace = this.workspaceService.getWorkspaceFolder(uri);
+                // console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
+                // const testAdapter =
+                //     this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                // testAdapter.discoverTests(
+                //     this.testController,
+                //     this.refreshCancellation.token,
+                //     this.testAdapters.size > 1,
+                //     this.workspaceService.workspaceFile?.fsPath,
+                // );
+                // // Ensure we send test telemetry if it gets disabled again
+                // this.sendTestDisabledTelemetry = true;
                 // comment below 229 to run the new way and uncomment above 212 ~ 227
-                // await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+                await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else {
                 if (this.sendTestDisabledTelemetry) {
                     this.sendTestDisabledTelemetry = false;
@@ -350,10 +350,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                         const w = this.workspaceService.getWorkspaceFolder(i.uri);
                         if (w?.uri.fsPath === workspace.uri.fsPath) {
                             testItems.push(i);
-                            // trying to add here??? test out using below two lines
-                            // const message = new TestMessage('this is intentional');
-                            // runInstance.failed(i, message);
-                            // runInstance.passed(i);
                         }
                     });
 
@@ -364,16 +360,16 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 tool: 'pytest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
-                            // return this.pytest.runTests(
-                            //     {
-                            //         includes: testItems,
-                            //         excludes: request.exclude ?? [],
-                            //         runKind: request.profile?.kind ?? TestRunProfileKind.Run,
-                            //         runInstance,
-                            //     },
-                            //     workspace,
-                            //     token,
-                            // );
+                            return this.pytest.runTests(
+                                {
+                                    includes: testItems,
+                                    excludes: request.exclude ?? [],
+                                    runKind: request.profile?.kind ?? TestRunProfileKind.Run,
+                                    runInstance,
+                                },
+                                workspace,
+                                token,
+                            );
                         }
                         if (settings.testing.unittestEnabled) {
                             // potentially sqeeze in the new exeuction way here?
@@ -381,25 +377,25 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 tool: 'unittest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
-                            // 6/30
-                            const testAdapter =
-                                this.testAdapters.get(workspace.uri) ||
-                                (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                            return testAdapter.executeTests(this.testController, runInstance, token);
+                            // new execution runner/adapter
+                            // const testAdapter =
+                            //     this.testAdapters.get(workspace.uri) ||
+                            //     (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                            // return testAdapter.executeTests(this.testController, runInstance, token);
 
-                            // 6/30 below is old way.
+                            // below is old way of running unittest execution
 
-                            // return this.unittest.runTests(
-                            //     {
-                            //         includes: testItems,
-                            //         excludes: request.exclude ?? [],
-                            //         runKind: request.profile?.kind ?? TestRunProfileKind.Run,
-                            //         runInstance,
-                            //     },
-                            //     workspace,
-                            //     token,
-                            //     this.testController,
-                            // );
+                            return this.unittest.runTests(
+                                {
+                                    includes: testItems,
+                                    excludes: request.exclude ?? [],
+                                    runKind: request.profile?.kind ?? TestRunProfileKind.Run,
+                                    runInstance,
+                                },
+                                workspace,
+                                token,
+                                this.testController,
+                            );
                         }
                     }
 
@@ -411,7 +407,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             );
         } finally {
             runInstance.appendOutput(`Finished running tests!\r\n`);
-            runInstance.end(); //
+            runInstance.end();
             dispose.dispose();
             if (unconfiguredWorkspaces.length > 0) {
                 this.runWithoutConfigurationEvent.fire(unconfiguredWorkspaces);

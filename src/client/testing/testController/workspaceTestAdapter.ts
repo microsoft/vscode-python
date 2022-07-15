@@ -33,6 +33,8 @@ export class WorkspaceTestAdapter {
     // private discovering: Deferred<void> | undefined = undefined; ????
     private discovering: Deferred<void> | undefined;
 
+    private executing: Deferred<void> | undefined;
+
     private testData: DiscoveredTestNode | undefined;
 
     // potentially a hashmap of runID : testItem?
@@ -56,13 +58,41 @@ export class WorkspaceTestAdapter {
         runInstance: TestRun,
         token?: CancellationToken,
     ): Promise<void> {
-        const rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri);
+        if (this.executing) {
+            return this.executing.promise;
+        }
+
+        const deferred = createDeferred<void>();
+        this.executing = deferred;
+
+        let rawTestExecData;
+        try {
+            rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri);
+            deferred.resolve();
+        } catch (ex) {
+            // handle token and telemetry here
+            sendTelemetryEvent(EventName.UNITTEST_RUN_ALL_FAILED, undefined);
+
+            const cancel = token?.isCancellationRequested
+                ? Testing.cancelUnittestExecution
+                : Testing.errorUnittestExecution;
+            traceError(`${cancel}\r\n`, ex);
+
+            // Also report on the test view
+            const message = util.format(`${cancel} ${Testing.seePythonOutput}\r\n`, ex);
+            const options = buildErrorNodeOptions(this.workspaceUri, message);
+            const errorNode = createErrorTestItem(testController, options);
+            testController.items.add(errorNode);
+
+            deferred.reject(ex as Error);
+        } finally {
+            this.executing = undefined;
+        }
 
         if (rawTestExecData !== undefined && rawTestExecData.result !== undefined) {
             for (const keyTemp of Object.keys(rawTestExecData.result)) {
                 // check for result and update the UI accordingly.
-                let tempArr: TestItem[];
-                tempArr = [];
+                const tempArr: TestItem[] = [];
 
                 // fetch inidividual testItem and store into tempArr
                 testController.items.forEach((i) =>
@@ -70,27 +100,18 @@ export class WorkspaceTestAdapter {
                         z.children.forEach((x) => x.children.forEach((indi) => tempArr.push(indi))),
                     ),
                 );
+
                 if (rawTestExecData.result[keyTemp].outcome === 'failure') {
+                    const traceback = rawTestExecData.result[keyTemp].traceback
+                        ? rawTestExecData.result[keyTemp]
+                              .traceback!.splitLines({ trim: false, removeEmptyEntries: true })
+                              .join('\r\n')
+                        : '';
                     const text = `${rawTestExecData.result[keyTemp].test} failed: ${
                         rawTestExecData.result[keyTemp].message ?? rawTestExecData.result[keyTemp].outcome
-                    }\r\n`;
+                    }\r\n${traceback}\r\n`;
                     const message = new TestMessage(text);
-                    const grabTestItem = this.runIdToTestItem.get(keyTemp);
 
-                    // const giveMeRealID = grabTestItem?.id;
-                    // if (giveMeRealID) {
-                    //     const grabTestREAL = testController.items.size;
-                    //     // console.log(grabTestREAL);
-                    // }
-                    // let tempArr: TestItem[];
-                    // tempArr = [];
-
-                    // // fetch inidividual testItem and store into tempArr
-                    // testController.items.forEach((i) =>
-                    //     i.children.forEach((z) =>
-                    //         z.children.forEach((x) => x.children.forEach((indi) => tempArr.push(indi))),
-                    //     ),
-                    // );
                     // note that keyTemp is a runId for unittest library...
                     const grabVSid = this.runIdToVSid.get(keyTemp);
                     // search through freshly built array of testItem to find the failed test and update UI.
@@ -99,50 +120,27 @@ export class WorkspaceTestAdapter {
                             if (indiItem.uri && indiItem.range) {
                                 message.location = new Location(indiItem.uri, indiItem.range);
                                 runInstance.started(indiItem);
-                                // console.log('fail');
                                 runInstance.failed(indiItem, message);
                             }
                         }
                     });
-                    // if (grabTestItem !== undefined) {
-                    //     if (grabTestItem.uri && grabTestItem.range) {
-                    //         message.location = new Location(grabTestItem.uri, grabTestItem.range);
-                    //     }
-                    //     runInstance.failed(grabTestItem, message); // choose appropriate one
-                    //     runInstance.appendOutput('you failed');
-                    //     // runInstance.passed(grabTestItem); // choose appropriate one
-                    // }
                 } else if (rawTestExecData.result[keyTemp].outcome === 'success') {
                     const grabTestItem = this.runIdToTestItem.get(keyTemp);
                     const grabVSid = this.runIdToVSid.get(keyTemp);
                     if (grabTestItem !== undefined) {
-                        //     const message = new TestMessage('this is temporary message');
-                        //     // runInstance.failed(grabTestItem, message); // choose appropriate one
                         tempArr.forEach((indiItem) => {
                             if (indiItem.id === grabVSid) {
                                 if (indiItem.uri && indiItem.range) {
                                     runInstance.started(grabTestItem);
-                                    // console.log('success');
-                                    runInstance.passed(grabTestItem); // choose appropriate one
+                                    runInstance.passed(grabTestItem);
                                 }
                             }
                         });
-                        // runInstance.started(grabTestItem);
-                        // runInstance.passed(grabTestItem); // choose appropriate one
-                        // runInstance.appendOutput('You passed');
                     }
                 }
             }
-            // runInstance.end();
         }
-
-        // console.log(temp);
-        // console.log(temp?.testRunID);
-
-        // console.log(rawTestExecData);
-        // console.log(token);
-        // console.log(runInstance);
-        // console.log(testController);
+        return Promise.resolve();
     }
 
     public async discoverTests(

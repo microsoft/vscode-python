@@ -514,6 +514,11 @@ export namespace Testing {
     );
     export const errorUnittestDiscovery = localize('Testing.errorUnittestDiscovery', 'Unittest test discovery error');
     export const seePythonOutput = localize('Testing.seePythonOutput', '(see Output > Python)');
+    export const cancelUnittestExecution = localize(
+        'Testing.cancelUnittestExecution',
+        'Canceled unittest test execution',
+    );
+    export const errorUnittestExecution = localize('Testing.errorUnittestExecution', 'Unittest test execution error');
 }
 
 export namespace OutdatedDebugger {
