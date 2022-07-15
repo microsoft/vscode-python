@@ -47,7 +47,7 @@ suite('Linting - Linter Commands', () => {
     });
 
     test('Run Linting method will lint all open files', async () => {
-        when(lintingEngine.lintOpenPythonFiles()).thenResolve(('Hello' as unknown) as DiagnosticCollection);
+        when(lintingEngine.lintOpenPythonFiles('manual')).thenResolve(('Hello' as unknown) as DiagnosticCollection);
 
         const result = await linterCommands.runLinting();
 
