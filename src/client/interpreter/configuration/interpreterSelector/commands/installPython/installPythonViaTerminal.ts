@@ -20,7 +20,7 @@ import { traceVerbose } from '../../../../../logging';
  */
 @injectable()
 export class InstallPythonViaTerminal implements IExtensionSingleActivationService {
-    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: true, virtualWorkspace: false };
 
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
