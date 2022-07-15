@@ -2,18 +2,19 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import * as fs from 'fs';
 import { EOL } from 'os';
+import * as TypeMoq from 'typemoq';
 import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import { commands, ConfigurationTarget, Position, Range, Uri, window, workspace } from 'vscode';
 import { Commands } from '../../client/common/constants';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
-import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
 import { ISortImportsEditingProvider } from '../../client/providers/types';
 import { CondaService } from '../../client/pythonEnvironments/common/environmentManagers/condaService';
 import { updateSetting } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_TIMEOUT } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 const sortingPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'sorting');
 const fileToFormatWithoutConfig = path.join(sortingPath, 'noconfig', 'before.py');
@@ -65,8 +66,12 @@ suite('Sorting', () => {
         ioc.registerProcessTypes();
         ioc.registerInterpreterStorageTypes();
         await ioc.registerMockInterpreterTypes();
+        const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
         ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
-        ioc.serviceManager.rebindInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
+        ioc.serviceManager.rebindInstance<IInterpreterService>(IInterpreterService, interpreterService.object);
     }
     test('Without Config', async () => {
         const textDocument = await workspace.openTextDocument(fileToFormatWithoutConfig);
