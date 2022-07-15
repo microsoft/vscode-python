@@ -1,25 +1,17 @@
 /* eslint-disable class-methods-use-this */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import {
-    Disposable,
-    NotebookCell,
-    NotebookDocument,
-    Position,
-    Range,
-    TextDocument,
-    TextDocumentChangeEvent,
-    TextDocumentContentChangeEvent,
-} from 'vscode';
+import { Disposable, NotebookCell, NotebookDocument, TextDocument, TextDocumentChangeEvent } from 'vscode';
+import { Converter } from 'vscode-languageclient/lib/common/codeConverter';
 import {
     DidChangeNotebookDocumentNotification,
-    DidChangeTextDocumentParams,
     LanguageClient,
     Middleware,
     NotebookCellKind,
     NotebookDocumentChangeEvent,
     VNotebookDocumentChangeEvent,
 } from 'vscode-languageclient/node';
+import * as proto from 'vscode-languageserver-protocol';
 
 interface NotebookMetadata {
     cellCount: number;
@@ -28,7 +20,7 @@ interface InputBoxMetadata {
     textDocument: TextDocument;
 }
 
-type TextContent = Required<Required<Required<NotebookDocumentChangeEvent>['cells']>['textContent']>[0];
+type TextContent = Required<Required<Required<proto.NotebookDocumentChangeEvent>['cells']>['textContent']>[0];
 
 /**
  * This class is a temporary solution to handling intellisense and diagnostics in python based notebooks.
@@ -107,96 +99,24 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         const notebookUri = event.document.uri.with({ scheme: 'vscode-interactive', path: notebookPath });
         const notebookMetadata = this.notebookMetadataMap.get(notebookUri.toString());
         if (notebookMetadata) {
-            this.getClient()?.sendNotification(DidChangeNotebookDocumentNotification.type, {
-                notebookDocument: { uri: notebookUri.toString(), version: 0 }, // TODO: Fix version
-                change: {
-                    cells: {
-                        textContent: [this._asTextContentChange(event)],
+            const client = this.getClient();
+            if (client) {
+                client.sendNotification(proto.DidChangeNotebookDocumentNotification.type, {
+                    notebookDocument: { uri: notebookUri.toString(), version: 0 }, // TODO: Fix version
+                    change: {
+                        cells: {
+                            textContent: [this._asTextContentChange(event, client.code2ProtocolConverter)],
+                        },
                     },
-                },
-            });
+                });
+            }
         }
     }
 
-    private _asChangeTextDocumentParams(arg: TextDocumentChangeEvent): DidChangeTextDocumentParams {
-        // if (isTextDocument(arg)) {
-        // 	let result: proto.DidChangeTextDocumentParams = {
-        // 		textDocument: {
-        // 			uri: _uriConverter(arg.uri),
-        // 			version: arg.version
-        // 		},
-        // 		contentChanges: [{ text: arg.getText() }]
-        // 	};
-        // 	return result;
-        // } else if (isTextDocumentChangeEvent(arg)) {
-        const { document } = arg;
-        const result: DidChangeTextDocumentParams = {
-            textDocument: {
-                uri: document.uri.toString(),
-                version: document.version,
-            },
-            contentChanges: arg.contentChanges.map(
-                (change): TextDocumentContentChangeEvent => {
-                    const { range } = change;
-                    return {
-                        range: this.getClient()!.code2ProtocolConverter.asRange(range),
-                        //  new Range(
-                        //     new Position(range.start.line, range.start.character),
-                        //     new Position(range.end.line, range.end.character),
-                        // ),
-                        rangeLength: change.rangeLength,
-                        rangeOffset: change.rangeOffset,
-                        text: change.text,
-                    };
-                },
-            ),
-        };
-        return result;
-        // } else {
-        // 	throw Error('Unsupported text document change parameter');
-        // }
-    }
-
-    private _asTextContentChange(event: TextDocumentChangeEvent): TextContent {
-        const params = this._asChangeTextDocumentParams(event);
+    private _asTextContentChange(event: TextDocumentChangeEvent, c2pConverter: Converter): TextContent {
+        const params = c2pConverter.asChangeTextDocumentParams(event);
         return { document: params.textDocument, changes: params.contentChanges };
     }
-
-    // private _asNotebookDocumentChangeEvent(event: NotebookDocumentChangeEvent): NotebookDocumentChangeEvent {
-    //     const result: NotebookDocumentChangeEvent = Object.create(null);
-    //     // if (event.metadata) {
-    //     //     result.metadata = Converter.c2p.asMetadata(event.metadata);
-    //     // }
-    //     if (event.cells !== undefined) {
-    //         const cells: Required<NotebookDocumentChangeEvent>['cells'] = Object.create(null);
-    //         const changedCells = event.cells;
-    //         // if (changedCells.structure) {
-    //         //     cells.structure = {
-    //         //         array: {
-    //         //             start: changedCells.structure.array.start,
-    //         //             deleteCount: changedCells.structure.array.deleteCount,
-    //         //             cells: changedCells.structure.array.cells !== undefined ? changedCells.structure.array.cells.map(cell => Converter.c2p.asNotebookCell(cell, base)) : undefined
-    //         //         },
-    //         //         didOpen: changedCells.structure.didOpen !== undefined
-    //         //             ? changedCells.structure.didOpen.map(cell => base.asOpenTextDocumentParams(cell.document).textDocument)
-    //         //             : undefined,
-    //         //         didClose: changedCells.structure.didClose !== undefined
-    //         //             ? changedCells.structure.didClose.map(cell => base.asCloseTextDocumentParams(cell.document).textDocument)
-    //         //             : undefined
-    //         //     };
-    //         // }
-    //         // if (changedCells.data !== undefined) {
-    //         //     cells.data = changedCells.data.map(cell => Converter.c2p.asNotebookCell(cell, base));
-    //         // }
-    //         if (changedCells.textContent !== undefined) {
-    //             cells.textContent = changedCells.textContent.map((x) => this._asTextContentChange(x));
-    //         }
-    //         // if (Object.keys(cells).length > 0) {
-    //         //     result.cells = cells;
-    //         // }
-    //     }
-    //     return result;
-    // }
 
     public async didClose(document: TextDocument, next: (ev: TextDocument) => void): Promise<void> {
         if (document.uri.scheme !== 'vscode-interactive-input') {
