@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { Disposable, NotebookCell, NotebookDocument, TextDocument, Uri } from 'vscode';
+import { Disposable, NotebookCell, NotebookDocument, TextDocument, TextDocumentChangeEvent } from 'vscode';
 import {
     DidChangeNotebookDocumentNotification,
     LanguageClient,
@@ -15,7 +15,7 @@ interface NotebookMetadata {
     cellCount: number;
 }
 interface InputBoxMetadata {
-    uri: Uri;
+    textDocument: TextDocument;
 }
 
 /**
@@ -27,6 +27,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
     constructor(private readonly getClient: () => LanguageClient | undefined) {
         // Make sure a bunch of functions are bound to this. VS code can call them without a this context
         this.didOpen = this.didOpen.bind(this);
+        this.didChange = this.didChange.bind(this);
         this.didClose = this.didClose.bind(this);
     }
 
@@ -41,6 +42,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
     public async didOpen(document: TextDocument, next: (ev: TextDocument) => void): Promise<void> {
         if (document.uri.scheme !== 'vscode-interactive-input') {
             await next(document);
+            return;
         }
 
         const notebookPath = `${document.uri.fsPath.replace('\\InteractiveInput-', 'Interactive-')}.interactive`;
@@ -48,7 +50,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         const notebookMetadata = this.notebookMetadataMap.get(notebookUri.toString());
 
         if (!notebookMetadata) {
-            this.unlinkedInputBoxMap.set(notebookUri.toString(), { uri: document.uri });
+            this.unlinkedInputBoxMap.set(notebookUri.toString(), { textDocument: document });
             return;
         }
 
@@ -83,8 +85,40 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         }
     }
 
+    public async didChange(event: TextDocumentChangeEvent, next: (ev: TextDocumentChangeEvent) => void): Promise<void> {
+        if (event.document.uri.scheme !== 'vscode-interactive-input') {
+            await next(event);
+            return;
+        }
+
+        const notebookPath = `${event.document.uri.fsPath.replace('\\InteractiveInput-', 'Interactive-')}.interactive`;
+        const notebookUri = event.document.uri.with({ scheme: 'vscode-interactive', path: notebookPath });
+        const notebookMetadata = this.notebookMetadataMap.get(notebookUri.toString());
+        if (notebookMetadata) {
+            this.getClient()?.sendNotification(DidChangeNotebookDocumentNotification.method, {
+                notebookDocument: { uri: notebookUri.toString(), version: 0 },
+                change: {
+                    cells: {
+                        textContent: {
+                            document: event.document,
+                            changes: event.contentChanges,
+                        },
+                    },
+                },
+            });
+        }
+    }
+
     public async didClose(document: TextDocument, next: (ev: TextDocument) => void): Promise<void> {
-        await next(document);
+        if (document.uri.scheme !== 'vscode-interactive-input') {
+            await next(document);
+            return;
+        }
+
+        const notebookPath = `${document.uri.fsPath.replace('\\InteractiveInput-', 'Interactive-')}.interactive`;
+        const notebookUri = document.uri.with({ scheme: 'vscode-interactive', path: notebookPath });
+
+        this.unlinkedInputBoxMap.delete(notebookUri.toString());
     }
 
     public async didOpenNotebook(
@@ -92,36 +126,31 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         cells: NotebookCell[],
         next: (notebookDocument: NotebookDocument, cells: NotebookCell[]) => void,
     ): Promise<void> {
-        await next(notebookDocument, cells);
-
-        // TODO:
-        // What to do with versions?
-        // Maybe change the didOpen message instead of adding didChange?
-
         if (notebookDocument.uri.scheme === 'vscode-interactive') {
             this.notebookMetadataMap.set(notebookDocument.uri.toString(), { cellCount: notebookDocument.cellCount });
 
             const inputBoxMetadata = this.unlinkedInputBoxMap.get(notebookDocument.uri.toString());
             if (inputBoxMetadata) {
-                this.getClient()?.sendNotification(DidChangeNotebookDocumentNotification.method, {
-                    notebookDocument: { uri: notebookDocument.uri, version: 0 },
-                    change: {
-                        cells: {
-                            structure: {
-                                array: {
-                                    start: notebookDocument.cellCount,
-                                    deleteCount: 0,
-                                    cells: [{ kind: NotebookCellKind.Code, document: inputBoxMetadata.uri }],
-                                },
-                                didOpen: [{ uri: inputBoxMetadata.uri, languageId: 'python', version: 0 }],
-                            },
-                        },
-                    },
+                const inputBoxIndex = notebookDocument.cellCount;
+                // notebookDocument.cellCount += 1;
+                cells.push({
+                    index: inputBoxIndex,
+                    notebook: notebookDocument,
+                    kind: NotebookCellKind.Code,
+                    document: inputBoxMetadata.textDocument,
+                    metadata: {},
+                    outputs: [],
+                    executionSummary: undefined,
                 });
 
                 this.unlinkedInputBoxMap.delete(notebookDocument.uri.toString());
             }
         }
+
+        await next(notebookDocument, cells);
+
+        // TODO:
+        // What to do with versions?
     }
 
     public async didChangeNotebook(
