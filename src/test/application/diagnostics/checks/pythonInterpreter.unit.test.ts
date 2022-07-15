@@ -6,7 +6,6 @@
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { EventEmitter, Uri } from 'vscode';
-import { IExtensionSingleActivationService } from '../../../../client/activation/types';
 import { BaseDiagnosticsService } from '../../../../client/application/diagnostics/base';
 import { InvalidLaunchJsonDebuggerDiagnostic } from '../../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
 import {
@@ -24,7 +23,6 @@ import {
     IDiagnostic,
     IDiagnosticCommand,
     IDiagnosticHandlerService,
-    IDiagnosticsService,
 } from '../../../../client/application/diagnostics/types';
 import { CommandsWithoutArgs } from '../../../../client/common/application/commands';
 import { ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
@@ -39,7 +37,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnv
 import { sleep } from '../../../core';
 
 suite('Application Diagnostics - Checks Python Interpreter', () => {
-    let diagnosticService: IDiagnosticsService & IExtensionSingleActivationService;
+    let diagnosticService: InvalidPythonInterpreterService;
     let messageHandler: typemoq.IMock<IDiagnosticHandlerService<MessageCommandPrompt>>;
     let commandFactory: typemoq.IMock<IDiagnosticsCommandFactory>;
     let interpreterService: typemoq.IMock<IInterpreterService>;
@@ -157,6 +155,11 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             }
         });
 
+        test('Should return empty diagnostics', async () => {
+            const diagnostics = await diagnosticService.diagnose(undefined);
+            expect(diagnostics).to.be.deep.equal([], 'not the same');
+        });
+
         test('Should return diagnostics if there are no interpreters after double-checking', async () => {
             interpreterService
                 .setup((i) => i.hasInterpreters())
@@ -167,7 +170,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .returns(() => [])
                 .verifiable(typemoq.Times.once());
 
-            const diagnostics = await diagnosticService.diagnose(undefined);
+            const diagnostics = await diagnosticService._manualDiagnose(undefined);
             expect(diagnostics).to.be.deep.equal(
                 [
                     new InvalidPythonInterpreterDiagnostic(
@@ -192,7 +195,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 })
                 .verifiable(typemoq.Times.once());
 
-            const diagnostics = await diagnosticService.diagnose(undefined);
+            const diagnostics = await diagnosticService._manualDiagnose(undefined);
             expect(diagnostics).to.be.deep.equal(
                 [
                     new InvalidPythonInterpreterDiagnostic(
@@ -217,7 +220,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 })
                 .verifiable(typemoq.Times.once());
 
-            const diagnostics = await diagnosticService.diagnose(undefined);
+            const diagnostics = await diagnosticService._manualDiagnose(undefined);
             expect(diagnostics).to.be.deep.equal([], 'not the same');
             interpreterService.verifyAll();
         });

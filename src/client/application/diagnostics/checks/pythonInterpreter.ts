@@ -100,7 +100,12 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
         );
     }
 
-    public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
+    // eslint-disable-next-line class-methods-use-this
+    public async diagnose(_resource: Resource): Promise<IDiagnostic[]> {
+        return [];
+    }
+
+    public async _manualDiagnose(resource: Resource): Promise<IDiagnostic[]> {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const hasInterpreters = await interpreterService.hasInterpreters();
@@ -130,7 +135,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
     }
 
     public async triggerEnvSelectionIfNecessary(resource: Resource): Promise<boolean> {
-        const diagnostics = await this.diagnose(resource);
+        const diagnostics = await this._manualDiagnose(resource);
         if (!diagnostics.length) {
             return true;
         }
