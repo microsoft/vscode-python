@@ -15,6 +15,7 @@ import {
 } from '../../client/interpreter/autoSelection/types';
 import { EnvironmentTypeComparer } from '../../client/interpreter/configuration/environmentTypeComparer';
 import { InstallPythonCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/installPython';
+import { InstallPythonViaTerminal } from '../../client/interpreter/configuration/interpreterSelector/commands/installPython/installPythonViaTerminal';
 import { ResetInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/resetInterpreter';
 import { SetInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/setInterpreter';
 import { SetShebangInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/setShebangInterpreter';
@@ -50,6 +51,7 @@ suite('Interpreters - Service Registry', () => {
 
         [
             [IExtensionSingleActivationService, InstallPythonCommand],
+            [IExtensionSingleActivationService, InstallPythonViaTerminal],
             [IExtensionSingleActivationService, SetInterpreterCommand],
             [IExtensionSingleActivationService, ResetInterpreterCommand],
             [IExtensionSingleActivationService, SetShebangInterpreterCommand],

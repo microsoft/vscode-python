@@ -4,13 +4,13 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IExtensionSingleActivationService } from '../../../../activation/types';
-import { ExtensionContextKey } from '../../../../common/application/contextKeys';
-import { ICommandManager, IContextKeyManager } from '../../../../common/application/types';
-import { PythonWelcome } from '../../../../common/application/walkThroughs';
-import { Commands, PVSC_EXTENSION_ID } from '../../../../common/constants';
-import { IBrowserService, IDisposableRegistry } from '../../../../common/types';
-import { IPlatformService } from '../../../../common/platform/types';
+import { IExtensionSingleActivationService } from '../../../../../activation/types';
+import { ExtensionContextKey } from '../../../../../common/application/contextKeys';
+import { ICommandManager, IContextKeyManager } from '../../../../../common/application/types';
+import { PythonWelcome } from '../../../../../common/application/walkThroughs';
+import { Commands, PVSC_EXTENSION_ID } from '../../../../../common/constants';
+import { IBrowserService, IDisposableRegistry } from '../../../../../common/types';
+import { IPlatformService } from '../../../../../common/platform/types';
 
 @injectable()
 export class InstallPythonCommand implements IExtensionSingleActivationService {

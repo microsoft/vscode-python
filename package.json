@@ -126,7 +126,7 @@
                     {
                         "id": "python.installPythonMac",
                         "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Open Terminal](command:workbench.action.terminal.new)\n",
+                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Install Python via Brew](command:python.installPythonOnMac)\n",
                         "media": {
                             "markdown": "resources/walkthrough/install-python-macos.md"
                         },
@@ -136,7 +136,7 @@
                     {
                         "id": "python.installPythonLinux",
                         "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Open Terminal](command:workbench.action.terminal.new)\n",
+                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Install Python via terminal](command:python.installPythonOnLinux)\n",
                         "media": {
                             "markdown": "resources/walkthrough/install-python-linux.md"
                         },
@@ -1804,7 +1804,8 @@
         "vscode-nls": "^5.0.1",
         "vscode-tas-client": "^0.1.22",
         "winreg": "^1.2.4",
-        "xml2js": "^0.4.19"
+        "xml2js": "^0.4.19",
+        "which":"^2.0.2"
     },
     "devDependencies": {
         "@istanbuljs/nyc-config-typescript": "^1.0.2",
@@ -1828,6 +1829,7 @@
         "@types/uuid": "^8.3.4",
         "@types/vscode": "~1.68.0",
         "@types/winreg": "^1.2.30",
+        "@types/which":"^2.0.1",
         "@types/xml2js": "^0.4.2",
         "@typescript-eslint/eslint-plugin": "^3.7.0",
         "@typescript-eslint/parser": "^3.7.0",

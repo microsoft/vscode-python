@@ -16,6 +16,8 @@ export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
  * @interface ICommandNameWithoutArgumentTypeMapping
  */
 interface ICommandNameWithoutArgumentTypeMapping {
+    [Commands.InstallPythonOnMac]: [];
+    [Commands.InstallPythonOnLinux]: [];
     [Commands.InstallPython]: [];
     [Commands.ClearWorkspaceInterpreter]: [];
     [Commands.Set_Interpreter]: [];

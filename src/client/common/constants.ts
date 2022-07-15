@@ -57,6 +57,8 @@ export namespace Commands {
     export const RefreshTensorBoard = 'python.refreshTensorBoard';
     export const ReportIssue = 'python.reportIssue';
     export const InstallPython = 'python.installPython';
+    export const InstallPythonOnMac = 'python.installPythonOnMac';
+    export const InstallPythonOnLinux = 'python.installPythonOnLinux';
     export const TriggerEnvironmentSelection = 'python.triggerEnvSelection';
 }
 
