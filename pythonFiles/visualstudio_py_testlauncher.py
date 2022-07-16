@@ -24,6 +24,7 @@ import socket
 import sys
 import traceback
 import unittest
+from types import CodeType, FunctionType
 
 try:
     import thread

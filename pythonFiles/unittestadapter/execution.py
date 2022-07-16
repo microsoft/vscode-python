@@ -144,8 +144,8 @@ class UnittestTestResult(unittest.TextTestResult):
         # tempResult = {test_id: result} ##
         # tempResult = {result}
         # self.formatted.append(tempResult) ##
-        print("we are adding inside formatResult: ")
-        print(result)
+        # print("we are adding inside formatResult: ")
+        # print(result)
 
 
 class TestExecutionStatus(str, enum.Enum):
@@ -218,7 +218,7 @@ def run_tests(
 
     payload["status"] = status
 
-    print(f"payload: \n{json.dumps(payload, indent=4)}")
+    # print(f"payload: \n{json.dumps(payload, indent=4)}")
 
     return payload
 
@@ -236,7 +236,7 @@ if __name__ == "__main__":
     # test_ids = [
     #     "subfolder.test_two.TestClassTwo.test_two_two",
     #     "test_one.TestClassOne.test_func_one",
-    #     "test_eight.TestClassEight.test_func_eight",
+    #     "test_eight.TestClassEight.test_func_eight"
     # ]
     # uuid = "abcd"
 

@@ -19,6 +19,7 @@ import {
     ITestDiscoveryAdapter,
     ITestExecutionAdapter,
 } from './common/types';
+import { fixLogLines } from './common/utils';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -100,7 +101,7 @@ export class WorkspaceTestAdapter {
                         z.children.forEach((x) => x.children.forEach((indi) => tempArr.push(indi))),
                     ),
                 );
-
+                runInstance.appendOutput('DOEDJODJEODJOPADKASJIKAOJDIOASD');
                 if (rawTestExecData.result[keyTemp].outcome === 'failure') {
                     const traceback = rawTestExecData.result[keyTemp].traceback
                         ? rawTestExecData.result[keyTemp]
@@ -121,6 +122,7 @@ export class WorkspaceTestAdapter {
                                 message.location = new Location(indiItem.uri, indiItem.range);
                                 runInstance.started(indiItem);
                                 runInstance.failed(indiItem, message);
+                                runInstance.appendOutput(fixLogLines(text)); // added 7/15
                             }
                         }
                     });
@@ -133,6 +135,7 @@ export class WorkspaceTestAdapter {
                                 if (indiItem.uri && indiItem.range) {
                                     runInstance.started(grabTestItem);
                                     runInstance.passed(grabTestItem);
+                                    runInstance.appendOutput('Passed here');
                                 }
                             }
                         });
