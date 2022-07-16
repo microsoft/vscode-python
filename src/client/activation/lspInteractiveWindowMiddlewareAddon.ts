@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { Disposable, NotebookCell, NotebookDocument, TextDocument, TextDocumentChangeEvent } from 'vscode';
+import { Disposable, NotebookCell, NotebookDocument, TextDocument, TextDocumentChangeEvent, Uri } from 'vscode';
 import { Converter } from 'vscode-languageclient/lib/common/codeConverter';
 import {
     DidChangeNotebookDocumentNotification,
@@ -37,20 +37,18 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         // Nothing to dispose at the moment
     }
 
-    private notebookMetadataMap: Map<string, NotebookMetadata> = new Map<string, NotebookMetadata>();
+    private interactiveWindowMetadataMap: Map<string, NotebookMetadata> = new Map<string, NotebookMetadata>();
 
     private unlinkedInputBoxMap: Map<string, InputBoxMetadata> = new Map<string, InputBoxMetadata>();
 
-    public async didOpen(document: TextDocument, next: (ev: TextDocument) => void): Promise<void> {
-        if (document.uri.scheme !== 'vscode-interactive-input') {
+    public async didOpen(document: TextDocument, next: (ev: TextDocument) => Promise<void>): Promise<void> {
+        const notebookUri = getNotebookUriForTextDocument(document);
+        if (!notebookUri) {
             await next(document);
             return;
         }
 
-        const notebookPath = `${document.uri.fsPath.replace('\\InteractiveInput-', 'Interactive-')}.interactive`;
-        const notebookUri = document.uri.with({ scheme: 'vscode-interactive', path: notebookPath });
-        const notebookMetadata = this.notebookMetadataMap.get(notebookUri.toString());
-
+        const notebookMetadata = this.interactiveWindowMetadataMap.get(notebookUri.toString());
         if (!notebookMetadata) {
             this.unlinkedInputBoxMap.set(notebookUri.toString(), { textDocument: document });
             return;
@@ -69,8 +67,8 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
                 didOpen: [
                     {
                         uri: document.uri.toString(),
-                        languageId: 'python',
-                        version: 0,
+                        languageId: document.languageId,
+                        version: document.version,
                         text: document.getText(),
                     },
                 ],
@@ -87,15 +85,17 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         }
     }
 
-    public async didChange(event: TextDocumentChangeEvent, next: (ev: TextDocumentChangeEvent) => void): Promise<void> {
-        if (event.document.uri.scheme !== 'vscode-interactive-input') {
+    public async didChange(
+        event: TextDocumentChangeEvent,
+        next: (ev: TextDocumentChangeEvent) => Promise<void>,
+    ): Promise<void> {
+        const notebookUri = getNotebookUriForTextDocument(event.document);
+        if (!notebookUri) {
             await next(event);
             return;
         }
 
-        const notebookPath = `${event.document.uri.fsPath.replace('\\InteractiveInput-', 'Interactive-')}.interactive`;
-        const notebookUri = event.document.uri.with({ scheme: 'vscode-interactive', path: notebookPath });
-        const notebookMetadata = this.notebookMetadataMap.get(notebookUri.toString());
+        const notebookMetadata = this.interactiveWindowMetadataMap.get(notebookUri.toString());
         if (notebookMetadata) {
             const client = this.getClient();
             if (client) {
@@ -121,14 +121,12 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         return { document: params.textDocument, changes: params.contentChanges };
     }
 
-    public async didClose(document: TextDocument, next: (ev: TextDocument) => void): Promise<void> {
-        if (document.uri.scheme !== 'vscode-interactive-input') {
+    public async didClose(document: TextDocument, next: (ev: TextDocument) => Promise<void>): Promise<void> {
+        const notebookUri = getNotebookUriForTextDocument(document);
+        if (!notebookUri) {
             await next(document);
             return;
         }
-
-        const notebookPath = `${document.uri.fsPath.replace('\\InteractiveInput-', 'Interactive-')}.interactive`;
-        const notebookUri = document.uri.with({ scheme: 'vscode-interactive', path: notebookPath });
 
         this.unlinkedInputBoxMap.delete(notebookUri.toString());
     }
@@ -136,14 +134,16 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
     public async didOpenNotebook(
         notebookDocument: NotebookDocument,
         cells: NotebookCell[],
-        next: (notebookDocument: NotebookDocument, cells: NotebookCell[]) => void,
+        next: (notebookDocument: NotebookDocument, cells: NotebookCell[]) => Promise<void>,
     ): Promise<void> {
         if (notebookDocument.uri.scheme !== 'vscode-interactive') {
             await next(notebookDocument, cells);
             return;
         }
 
-        this.notebookMetadataMap.set(notebookDocument.uri.toString(), { cellCount: notebookDocument.cellCount });
+        this.interactiveWindowMetadataMap.set(notebookDocument.uri.toString(), {
+            cellCount: notebookDocument.cellCount,
+        });
 
         const inputBoxMetadata = this.unlinkedInputBoxMap.get(notebookDocument.uri.toString());
         if (inputBoxMetadata) {
@@ -170,7 +170,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
     // eslint-disable-next-line class-methods-use-this
     public async didChangeNotebook(
         event: VNotebookDocumentChangeEvent,
-        next: (event: VNotebookDocumentChangeEvent) => void,
+        next: (event: VNotebookDocumentChangeEvent) => Promise<void>,
     ): Promise<void> {
         await next(event);
     }
@@ -178,10 +178,10 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
     public async didCloseNotebook(
         notebookDocument: NotebookDocument,
         cells: NotebookCell[],
-        next: (notebookDocument: NotebookDocument, cells: NotebookCell[]) => void,
+        next: (notebookDocument: NotebookDocument, cells: NotebookCell[]) => Promise<void>,
     ): Promise<void> {
         if (notebookDocument.uri.scheme === 'vscode-interactive') {
-            this.notebookMetadataMap.delete(notebookDocument.uri.toString());
+            this.interactiveWindowMetadataMap.delete(notebookDocument.uri.toString());
         }
 
         await next(notebookDocument, cells);
@@ -192,4 +192,14 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         didChange: this.didChangeNotebook.bind(this),
         didClose: this.didCloseNotebook.bind(this),
     };
+}
+
+function getNotebookUriForTextDocument(textDocument: TextDocument): Uri | undefined {
+    if (textDocument.uri.scheme !== 'vscode-interactive-input') {
+        return undefined;
+    }
+
+    const notebookPath = `${textDocument.uri.fsPath.replace('\\InteractiveInput-', 'Interactive-')}.interactive`;
+    const notebookUri = textDocument.uri.with({ scheme: 'vscode-interactive', path: notebookPath });
+    return notebookUri;
 }
