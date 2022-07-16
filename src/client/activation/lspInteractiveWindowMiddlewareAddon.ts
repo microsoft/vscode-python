@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { Disposable, NotebookCell, NotebookDocument, TextDocument, TextDocumentChangeEvent } from 'vscode';
@@ -23,9 +22,8 @@ interface InputBoxMetadata {
 type TextContent = Required<Required<Required<proto.NotebookDocumentChangeEvent>['cells']>['textContent']>[0];
 
 /**
- * This class is a temporary solution to handling intellisense and diagnostics in python based notebooks.
- *
- * It is responsible for sending requests to pylance if they are allowed.
+ * Detects the input box text documents of Interactive Windows and makes them appear to be
+ * the last cell of their corresponding notebooks.
  */
 export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposable {
     constructor(private readonly getClient: () => LanguageClient | undefined) {
@@ -105,7 +103,12 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
                     notebookDocument: { uri: notebookUri.toString(), version: 0 }, // TODO: Fix version
                     change: {
                         cells: {
-                            textContent: [this._asTextContentChange(event, client.code2ProtocolConverter)],
+                            textContent: [
+                                LspInteractiveWindowMiddlewareAddon._asTextContentChange(
+                                    event,
+                                    client.code2ProtocolConverter,
+                                ),
+                            ],
                         },
                     },
                 });
@@ -113,7 +116,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         }
     }
 
-    private _asTextContentChange(event: TextDocumentChangeEvent, c2pConverter: Converter): TextContent {
+    private static _asTextContentChange(event: TextDocumentChangeEvent, c2pConverter: Converter): TextContent {
         const params = c2pConverter.asChangeTextDocumentParams(event);
         return { document: params.textDocument, changes: params.contentChanges };
     }
@@ -145,7 +148,6 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         const inputBoxMetadata = this.unlinkedInputBoxMap.get(notebookDocument.uri.toString());
         if (inputBoxMetadata) {
             const inputBoxIndex = notebookDocument.cellCount;
-            // notebookDocument.cellCount += 1;
             const newCells = [
                 ...cells,
                 {
@@ -163,11 +165,9 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
 
             await next(notebookDocument, newCells);
         }
-
-        // TODO:
-        // What to do with versions?
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public async didChangeNotebook(
         event: VNotebookDocumentChangeEvent,
         next: (event: VNotebookDocumentChangeEvent) => void,
