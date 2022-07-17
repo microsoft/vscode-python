@@ -173,7 +173,7 @@ class PayloadDict(TypedDict):
 def run_tests(
     start_dir: str,
     test_ids: List[str],
-    pattern: Optional[str],
+    pattern: str,
     top_level_dir: Optional[str],
     uuid: Optional[str],
 ) -> PayloadDict:
