@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
+import { getExperimentationService, IExperimentationService } from 'vscode-tas-client';
 import * as nls from 'vscode-nls';
 import { traceLog } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -18,6 +18,11 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const EXP_MEMENTO_KEY = 'VSCode.ABExp.FeatureData';
 const EXP_CONFIG_ID = 'vscode';
+
+export enum TargetPopulation {
+    Insiders = 'python-insider',
+    Public = 'python-public',
+}
 
 @injectable()
 export class ExperimentService implements IExperimentService {
