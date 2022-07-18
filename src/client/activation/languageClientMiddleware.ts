@@ -11,13 +11,12 @@ import { LanguageServerType } from './types';
 
 import { createHidingMiddleware } from '@vscode/jupyter-lsp-middleware';
 import { LanguageClient } from 'vscode-languageclient/node';
-import { LspInteractiveWindowMiddlewareAddon } from './lspInteractiveWindowMiddlewareAddon';
 
 export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
     public constructor(
         serviceContainer: IServiceContainer,
         serverType: LanguageServerType,
-        private getClient: () => LanguageClient | undefined,
+        protected getClient: () => LanguageClient | undefined,
         serverVersion?: string,
     ) {
         super(serviceContainer, serverType, sendTelemetryEvent, serverVersion);
@@ -40,8 +39,6 @@ export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
         // Enable notebook support if jupyter support is installed
         if (this.shouldCreateHidingMiddleware(jupyterDependencyManager)) {
             this.notebookAddon = createHidingMiddleware();
-        } else {
-            this.notebookAddon = new LspInteractiveWindowMiddlewareAddon(this.getClient);
         }
 
         disposables.push(
@@ -57,9 +54,7 @@ export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
 
     protected async onExtensionChange(jupyterDependencyManager: IJupyterExtensionDependencyManager): Promise<void> {
         if (jupyterDependencyManager && !this.notebookAddon) {
-            if (!this.shouldCreateHidingMiddleware(jupyterDependencyManager)) {
-                this.notebookAddon = new LspInteractiveWindowMiddlewareAddon(this.getClient);
-            } else {
+            if (this.shouldCreateHidingMiddleware(jupyterDependencyManager)) {
                 this.notebookAddon = createHidingMiddleware();
             }
         }

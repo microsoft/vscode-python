@@ -8,6 +8,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { JupyterExtensionIntegration } from '../../jupyter/jupyterIntegration';
 import { traceLog } from '../../logging';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
+import { LspInteractiveWindowMiddlewareAddon } from '../lspInteractiveWindowMiddlewareAddon';
 
 import { LanguageServerType } from '../types';
 
@@ -15,6 +16,8 @@ import { LspNotebooksExperiment } from './lspNotebooksExperiment';
 
 export class NodeLanguageClientMiddleware extends LanguageClientMiddleware {
     private readonly lspNotebooksExperiment: LspNotebooksExperiment;
+
+    private readonly jupyterExtensionIntegration: JupyterExtensionIntegration;
 
     public constructor(
         serviceContainer: IServiceContainer,
@@ -25,6 +28,16 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddleware {
 
         this.lspNotebooksExperiment = serviceContainer.get<LspNotebooksExperiment>(LspNotebooksExperiment);
         this.setupHidingMiddleware(serviceContainer);
+
+        this.jupyterExtensionIntegration = serviceContainer.get<JupyterExtensionIntegration>(
+            JupyterExtensionIntegration,
+        );
+        if (!this.notebookAddon && this.lspNotebooksExperiment.isInNotebooksExperiment()) {
+            this.notebookAddon = new LspInteractiveWindowMiddlewareAddon(
+                this.getClient,
+                this.jupyterExtensionIntegration,
+            );
+        }
     }
 
     protected shouldCreateHidingMiddleware(jupyterDependencyManager: IJupyterExtensionDependencyManager): boolean {
@@ -40,6 +53,13 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddleware {
         }
 
         super.onExtensionChange(jupyterDependencyManager);
+
+        if (jupyterDependencyManager && !this.notebookAddon && this.lspNotebooksExperiment.isInNotebooksExperiment()) {
+            this.notebookAddon = new LspInteractiveWindowMiddlewareAddon(
+                this.getClient,
+                this.jupyterExtensionIntegration,
+            );
+        }
     }
 
     protected async getPythonPathOverride(uri: Uri | undefined): Promise<string | undefined> {
@@ -47,10 +67,7 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddleware {
             return undefined;
         }
 
-        const jupyterExtensionIntegration = this.serviceContainer?.get<JupyterExtensionIntegration>(
-            JupyterExtensionIntegration,
-        );
-        const jupyterPythonPathFunction = jupyterExtensionIntegration?.getJupyterPythonPathFunction();
+        const jupyterPythonPathFunction = this.jupyterExtensionIntegration.getJupyterPythonPathFunction();
         if (!jupyterPythonPathFunction) {
             return undefined;
         }

@@ -11,6 +11,7 @@ import {
     VNotebookDocumentChangeEvent,
 } from 'vscode-languageclient/node';
 import * as proto from 'vscode-languageserver-protocol';
+import { JupyterExtensionIntegration } from '../jupyter/jupyterIntegration';
 
 interface NotebookMetadata {
     cellCount: number;
@@ -26,7 +27,10 @@ type TextContent = Required<Required<Required<proto.NotebookDocumentChangeEvent>
  * the last cell of their corresponding notebooks.
  */
 export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposable {
-    constructor(private readonly getClient: () => LanguageClient | undefined) {
+    constructor(
+        private readonly getClient: () => LanguageClient | undefined,
+        private readonly jupyterExtensionIntegration: JupyterExtensionIntegration,
+    ) {
         // Make sure a bunch of functions are bound to this. VS code can call them without a this context
         this.didOpen = this.didOpen.bind(this);
         this.didChange = this.didChange.bind(this);
@@ -42,7 +46,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
     private unlinkedInputBoxMap: Map<string, InputBoxMetadata> = new Map<string, InputBoxMetadata>();
 
     public async didOpen(document: TextDocument, next: (ev: TextDocument) => Promise<void>): Promise<void> {
-        const notebookUri = getNotebookUriForTextDocument(document);
+        const notebookUri = this.getNotebookUriForTextDocumentUri(document.uri);
         if (!notebookUri) {
             await next(document);
             return;
@@ -89,7 +93,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         event: TextDocumentChangeEvent,
         next: (ev: TextDocumentChangeEvent) => Promise<void>,
     ): Promise<void> {
-        const notebookUri = getNotebookUriForTextDocument(event.document);
+        const notebookUri = this.getNotebookUriForTextDocumentUri(event.document.uri);
         if (!notebookUri) {
             await next(event);
             return;
@@ -122,7 +126,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
     }
 
     public async didClose(document: TextDocument, next: (ev: TextDocument) => Promise<void>): Promise<void> {
-        const notebookUri = getNotebookUriForTextDocument(document);
+        const notebookUri = this.getNotebookUriForTextDocumentUri(document.uri);
         if (!notebookUri) {
             await next(document);
             return;
@@ -192,14 +196,13 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         didChange: this.didChangeNotebook.bind(this),
         didClose: this.didCloseNotebook.bind(this),
     };
-}
 
-function getNotebookUriForTextDocument(textDocument: TextDocument): Uri | undefined {
-    if (textDocument.uri.scheme !== 'vscode-interactive-input') {
-        return undefined;
+    private getNotebookUriForTextDocumentUri(textDocumentUri: Uri): Uri | undefined {
+        const getNotebookUriFunction = this.jupyterExtensionIntegration.getGetNotebookUriForTextDocumentUriFunction();
+        if (!getNotebookUriFunction) {
+            return undefined;
+        }
+
+        return getNotebookUriFunction(textDocumentUri);
     }
-
-    const notebookPath = `${textDocument.uri.fsPath.replace('\\InteractiveInput-', 'Interactive-')}.interactive`;
-    const notebookUri = textDocument.uri.with({ scheme: 'vscode-interactive', path: notebookPath });
-    return notebookUri;
 }

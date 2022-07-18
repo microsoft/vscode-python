@@ -159,6 +159,8 @@ type PythonApiForJupyterExtension = {
     ): Promise<string[] | undefined>;
 
     registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
+
+    registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void;
 };
 
 type JupyterExtensionApi = {
@@ -185,6 +187,8 @@ export class JupyterExtensionIntegration {
     private jupyterExtension: Extension<JupyterExtensionApi> | undefined;
 
     private jupyterPythonPathFunction: ((uri: Uri) => Promise<string | undefined>) | undefined;
+
+    private getNotebookUriForTextDocumentUriFunction: ((textDocumentUri: Uri) => Uri | undefined) | undefined;
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
@@ -281,6 +285,8 @@ export class JupyterExtensionIntegration {
                 this.envActivation.getEnvironmentActivationShellCommands(resource, interpreter),
             registerJupyterPythonPathFunction: (func: (uri: Uri) => Promise<string | undefined>) =>
                 this.registerJupyterPythonPathFunction(func),
+            registerGetNotebookUriForTextDocumentUriFunction: (func: (textDocumentUri: Uri) => Uri | undefined) =>
+                this.registerGetNotebookUriForTextDocumentUriFunction(func),
         });
         return undefined;
     }
@@ -333,5 +339,13 @@ export class JupyterExtensionIntegration {
 
     public getJupyterPythonPathFunction(): ((uri: Uri) => Promise<string | undefined>) | undefined {
         return this.jupyterPythonPathFunction;
+    }
+
+    public registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void {
+        this.getNotebookUriForTextDocumentUriFunction = func;
+    }
+
+    public getGetNotebookUriForTextDocumentUriFunction(): ((textDocumentUri: Uri) => Uri | undefined) | undefined {
+        return this.getNotebookUriForTextDocumentUriFunction;
     }
 }
