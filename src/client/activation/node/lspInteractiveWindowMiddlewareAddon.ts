@@ -11,7 +11,7 @@ import {
     VNotebookDocumentChangeEvent,
 } from 'vscode-languageclient/node';
 import * as proto from 'vscode-languageserver-protocol';
-import { JupyterExtensionIntegration } from '../jupyter/jupyterIntegration';
+import { JupyterExtensionIntegration } from '../../jupyter/jupyterIntegration';
 
 interface NotebookMetadata {
     cellCount: number;

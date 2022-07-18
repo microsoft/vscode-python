@@ -8,7 +8,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { JupyterExtensionIntegration } from '../../jupyter/jupyterIntegration';
 import { traceLog } from '../../logging';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
-import { LspInteractiveWindowMiddlewareAddon } from '../lspInteractiveWindowMiddlewareAddon';
+import { LspInteractiveWindowMiddlewareAddon } from './lspInteractiveWindowMiddlewareAddon';
 
 import { LanguageServerType } from '../types';
 
