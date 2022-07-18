@@ -66,7 +66,7 @@ class TestOutcomeEnum(str, enum.Enum):
 
 
 class UnittestTestResult(unittest.TextTestResult):
-    # formatted: List[Dict[str, Dict[str, str | None]]] = []
+
     formatted: Dict[str, Dict[str, str | None]] = dict()
 
     def startTest(self, test: unittest.TestCase):
@@ -140,12 +140,7 @@ class UnittestTestResult(unittest.TextTestResult):
             "subtest": subtest.id() if subtest else None,
         }
 
-        self.formatted[test_id] = result  # in future: send one by one as we get it.only
-        # tempResult = {test_id: result} ##
-        # tempResult = {result}
-        # self.formatted.append(tempResult) ##
-        # print("we are adding inside formatResult: ")
-        # print(result)
+        self.formatted[test_id] = result
 
 
 class TestExecutionStatus(str, enum.Enum):
@@ -243,7 +238,6 @@ if __name__ == "__main__":
     # Perform test execution.
     port, uuid, test_ids = parse_execution_cli_args(argv[:index])
     payload = run_tests(start_dir, test_ids, pattern, top_level_dir, uuid)
-    # print(payload)
 
     #     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
     addr = ("localhost", port)

@@ -101,7 +101,7 @@ export class WorkspaceTestAdapter {
                         z.children.forEach((x) => x.children.forEach((indi) => tempArr.push(indi))),
                     ),
                 );
-                runInstance.appendOutput('DOEDJODJEODJOPADKASJIKAOJDIOASD');
+
                 if (rawTestExecData.result[keyTemp].outcome === 'failure') {
                     const traceback = rawTestExecData.result[keyTemp].traceback
                         ? rawTestExecData.result[keyTemp]

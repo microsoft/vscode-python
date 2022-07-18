@@ -136,7 +136,6 @@ export type TestDiscoveryCommand = {
     args: string[];
 };
 
-// do we need args as string[] for exeuction? 6/27/22
 export type TestExecutionCommand = {
     script: string;
     args: string[];
@@ -145,7 +144,7 @@ export type TestExecutionCommand = {
 export type TestCommandOptions = {
     workspaceFolder: Uri;
     cwd: string;
-    command: TestDiscoveryCommand | TestExecutionCommand; // 6/27/22
+    command: TestDiscoveryCommand | TestExecutionCommand;
     token?: CancellationToken;
     outChannel?: OutputChannel;
 };
