@@ -56,7 +56,7 @@
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true
     },
-    "python.languageServer": "Pylance",
+    "python.languageServer": "Default",
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
     "cucumberautocomplete.skipDocStringsFormat": true,
