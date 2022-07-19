@@ -91,8 +91,8 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
             return;
         }
 
-        const notebookMetadata = this.interactiveWindowMap.get(notebookUri.toString());
-        if (notebookMetadata) {
+        const notebookDocument = this.interactiveWindowMap.get(notebookUri.toString());
+        if (notebookDocument) {
             const client = this.getClient();
             if (client) {
                 client.sendNotification(proto.DidChangeNotebookDocumentNotification.type, {
