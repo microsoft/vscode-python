@@ -8,17 +8,9 @@ import {
     Middleware,
     NotebookCellKind,
     NotebookDocumentChangeEvent,
-    VNotebookDocumentChangeEvent,
 } from 'vscode-languageclient/node';
 import * as proto from 'vscode-languageserver-protocol';
 import { JupyterExtensionIntegration } from '../../jupyter/jupyterIntegration';
-
-interface NotebookMetadata {
-    cellCount: number;
-}
-interface InputBoxMetadata {
-    textDocument: TextDocument;
-}
 
 type TextContent = Required<Required<Required<proto.NotebookDocumentChangeEvent>['cells']>['textContent']>[0];
 
@@ -41,9 +33,9 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         // Nothing to dispose at the moment
     }
 
-    private interactiveWindowMetadataMap: Map<string, NotebookMetadata> = new Map<string, NotebookMetadata>();
+    private interactiveWindowMap: Map<string, NotebookDocument> = new Map<string, NotebookDocument>();
 
-    private unlinkedInputBoxMap: Map<string, InputBoxMetadata> = new Map<string, InputBoxMetadata>();
+    private unlinkedInputBoxMap: Map<string, TextDocument> = new Map<string, TextDocument>();
 
     public async didOpen(document: TextDocument, next: (ev: TextDocument) => Promise<void>): Promise<void> {
         const notebookUri = this.getNotebookUriForTextDocumentUri(document.uri);
@@ -52,9 +44,9 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
             return;
         }
 
-        const notebookMetadata = this.interactiveWindowMetadataMap.get(notebookUri.toString());
-        if (!notebookMetadata) {
-            this.unlinkedInputBoxMap.set(notebookUri.toString(), { textDocument: document });
+        const notebookDocument = this.interactiveWindowMap.get(notebookUri.toString());
+        if (!notebookDocument) {
+            this.unlinkedInputBoxMap.set(notebookUri.toString(), document);
             return;
         }
 
@@ -64,7 +56,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
 
             cells.structure = {
                 array: {
-                    start: notebookMetadata.cellCount,
+                    start: notebookDocument.cellCount,
                     deleteCount: 0,
                     cells: [{ kind: NotebookCellKind.Code, document: document.uri.toString() }],
                 },
@@ -99,7 +91,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
             return;
         }
 
-        const notebookMetadata = this.interactiveWindowMetadataMap.get(notebookUri.toString());
+        const notebookMetadata = this.interactiveWindowMap.get(notebookUri.toString());
         if (notebookMetadata) {
             const client = this.getClient();
             if (client) {
@@ -145,12 +137,10 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
             return;
         }
 
-        this.interactiveWindowMetadataMap.set(notebookDocument.uri.toString(), {
-            cellCount: notebookDocument.cellCount,
-        });
+        this.interactiveWindowMap.set(notebookDocument.uri.toString(), notebookDocument);
 
-        const inputBoxMetadata = this.unlinkedInputBoxMap.get(notebookDocument.uri.toString());
-        if (inputBoxMetadata) {
+        const inputBoxTextDocument = this.unlinkedInputBoxMap.get(notebookDocument.uri.toString());
+        if (inputBoxTextDocument) {
             const inputBoxIndex = notebookDocument.cellCount;
             const newCells = [
                 ...cells,
@@ -158,7 +148,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
                     index: inputBoxIndex,
                     notebook: notebookDocument,
                     kind: NotebookCellKind.Code,
-                    document: inputBoxMetadata.textDocument,
+                    document: inputBoxTextDocument,
                     metadata: {},
                     outputs: [],
                     executionSummary: undefined,
@@ -171,21 +161,13 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         }
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    public async didChangeNotebook(
-        event: VNotebookDocumentChangeEvent,
-        next: (event: VNotebookDocumentChangeEvent) => Promise<void>,
-    ): Promise<void> {
-        await next(event);
-    }
-
     public async didCloseNotebook(
         notebookDocument: NotebookDocument,
         cells: NotebookCell[],
         next: (notebookDocument: NotebookDocument, cells: NotebookCell[]) => Promise<void>,
     ): Promise<void> {
         if (notebookDocument.uri.scheme === 'vscode-interactive') {
-            this.interactiveWindowMetadataMap.delete(notebookDocument.uri.toString());
+            this.interactiveWindowMap.delete(notebookDocument.uri.toString());
         }
 
         await next(notebookDocument, cells);
@@ -193,7 +175,6 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
 
     notebooks = {
         didOpen: this.didOpenNotebook.bind(this),
-        didChange: this.didChangeNotebook.bind(this),
         didClose: this.didCloseNotebook.bind(this),
     };
 
