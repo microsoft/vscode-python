@@ -47,8 +47,10 @@ export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
     }
 
     protected async onExtensionChange(jupyterDependencyManager: IJupyterExtensionDependencyManager): Promise<void> {
-        if (jupyterDependencyManager && !this.notebookAddon) {
-            if (this.shouldCreateHidingMiddleware(jupyterDependencyManager)) {
+        if (jupyterDependencyManager) {
+            if (this.notebookAddon && !this.shouldCreateHidingMiddleware(jupyterDependencyManager)) {
+                this.notebookAddon = undefined;
+            } else if (!this.notebookAddon && this.shouldCreateHidingMiddleware(jupyterDependencyManager)) {
                 this.notebookAddon = createHidingMiddleware();
             }
         }

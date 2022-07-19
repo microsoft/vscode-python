@@ -52,13 +52,15 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddleware {
             await this.lspNotebooksExperiment.onJupyterInstalled();
         }
 
-        super.onExtensionChange(jupyterDependencyManager);
-
-        if (jupyterDependencyManager && !this.notebookAddon && this.lspNotebooksExperiment.isInNotebooksExperiment()) {
-            this.notebookAddon = new LspInteractiveWindowMiddlewareAddon(
-                this.getClient,
-                this.jupyterExtensionIntegration,
-            );
+        if (this.lspNotebooksExperiment.isInNotebooksExperiment()) {
+            if (!this.notebookAddon) {
+                this.notebookAddon = new LspInteractiveWindowMiddlewareAddon(
+                    this.getClient,
+                    this.jupyterExtensionIntegration,
+                );
+            }
+        } else {
+            super.onExtensionChange(jupyterDependencyManager);
         }
     }
 
