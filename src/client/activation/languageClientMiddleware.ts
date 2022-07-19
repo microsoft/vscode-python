@@ -10,15 +10,9 @@ import { LanguageClientMiddlewareBase } from './languageClientMiddlewareBase';
 import { LanguageServerType } from './types';
 
 import { createHidingMiddleware } from '@vscode/jupyter-lsp-middleware';
-import { LanguageClient } from 'vscode-languageclient/node';
 
 export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
-    public constructor(
-        serviceContainer: IServiceContainer,
-        serverType: LanguageServerType,
-        protected getClient: () => LanguageClient | undefined,
-        serverVersion?: string,
-    ) {
+    public constructor(serviceContainer: IServiceContainer, serverType: LanguageServerType, serverVersion?: string) {
         super(serviceContainer, serverType, sendTelemetryEvent, serverVersion);
     }
 

@@ -582,7 +582,8 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
     // eslint-disable-next-line class-methods-use-this
     replaceNotebookCells(
         _uri: vscode.Uri,
-        _range: vscode.NotebookRange,
+        _start: number,
+        _end: number,
         _cells: vscode.NotebookCellData[],
         _metadata?: vscode.WorkspaceEditEntryMetadata,
     ): void {
@@ -596,21 +597,6 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
         _outputs: vscode.NotebookCellOutput[],
         _metadata?: vscode.WorkspaceEditEntryMetadata,
     ): void {
-        // Noop.
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    replaceNotebookCellMetadata(
-        _uri: vscode.Uri,
-        _index: number,
-        _cellMetadata: { [key: string]: any },
-        _metadata?: vscode.WorkspaceEditEntryMetadata | undefined,
-    ): void {
-        // Noop.
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    replaceNotebookMetadata(_uri: vscode.Uri, _value: { [key: string]: any }): void {
         // Noop.
     }
 

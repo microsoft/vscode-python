@@ -39,7 +39,7 @@ export async function deactivate(): Promise<void> {
     languageClient = undefined;
 
     await client?.stop();
-    // await client?.dispose();
+    await client?.dispose();
 }
 
 async function runPylance(

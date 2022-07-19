@@ -21,10 +21,10 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddleware {
 
     public constructor(
         serviceContainer: IServiceContainer,
-        getClient: () => LanguageClient | undefined,
+        private getClient: () => LanguageClient | undefined,
         serverVersion?: string,
     ) {
-        super(serviceContainer, LanguageServerType.Node, getClient, serverVersion);
+        super(serviceContainer, LanguageServerType.Node, serverVersion);
 
         this.lspNotebooksExperiment = serviceContainer.get<LspNotebooksExperiment>(LspNotebooksExperiment);
         this.setupHidingMiddleware(serviceContainer);
