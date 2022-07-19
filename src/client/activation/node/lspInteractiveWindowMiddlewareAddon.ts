@@ -33,9 +33,12 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         // Nothing to dispose at the moment
     }
 
-    private interactiveWindowMap: Map<string, NotebookDocument> = new Map<string, NotebookDocument>();
+    // Map of document URIs to NotebookDocuments for all known notebooks.
+    private notebookDocumentMap: Map<string, NotebookDocument> = new Map<string, NotebookDocument>();
 
-    private unlinkedInputBoxMap: Map<string, TextDocument> = new Map<string, TextDocument>();
+    // Map of document URIs to TextDocuments that should be linked to a notebook
+    // whose didOpen we're expecting to see in the future.
+    private unlinkedTextDocumentMap: Map<string, TextDocument> = new Map<string, TextDocument>();
 
     public async didOpen(document: TextDocument, next: (ev: TextDocument) => Promise<void>): Promise<void> {
         const notebookUri = this.getNotebookUriForTextDocumentUri(document.uri);
@@ -44,9 +47,9 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
             return;
         }
 
-        const notebookDocument = this.interactiveWindowMap.get(notebookUri.toString());
+        const notebookDocument = this.notebookDocumentMap.get(notebookUri.toString());
         if (!notebookDocument) {
-            this.unlinkedInputBoxMap.set(notebookUri.toString(), document);
+            this.unlinkedTextDocumentMap.set(notebookUri.toString(), document);
             return;
         }
 
@@ -91,7 +94,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
             return;
         }
 
-        const notebookDocument = this.interactiveWindowMap.get(notebookUri.toString());
+        const notebookDocument = this.notebookDocumentMap.get(notebookUri.toString());
         if (notebookDocument) {
             const client = this.getClient();
             if (client) {
@@ -124,7 +127,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
             return;
         }
 
-        this.unlinkedInputBoxMap.delete(notebookUri.toString());
+        this.unlinkedTextDocumentMap.delete(notebookUri.toString());
     }
 
     public async didOpenNotebook(
@@ -132,32 +135,28 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         cells: NotebookCell[],
         next: (notebookDocument: NotebookDocument, cells: NotebookCell[]) => Promise<void>,
     ): Promise<void> {
-        if (notebookDocument.uri.scheme !== 'vscode-interactive') {
-            await next(notebookDocument, cells);
-            return;
-        }
+        this.notebookDocumentMap.set(notebookDocument.uri.toString(), notebookDocument);
 
-        this.interactiveWindowMap.set(notebookDocument.uri.toString(), notebookDocument);
-
-        const inputBoxTextDocument = this.unlinkedInputBoxMap.get(notebookDocument.uri.toString());
-        if (inputBoxTextDocument) {
-            const inputBoxIndex = notebookDocument.cellCount;
+        const relatedTextDocument = this.unlinkedTextDocumentMap.get(notebookDocument.uri.toString());
+        if (relatedTextDocument) {
             const newCells = [
                 ...cells,
                 {
-                    index: inputBoxIndex,
+                    index: notebookDocument.cellCount,
                     notebook: notebookDocument,
                     kind: NotebookCellKind.Code,
-                    document: inputBoxTextDocument,
+                    document: relatedTextDocument,
                     metadata: {},
                     outputs: [],
                     executionSummary: undefined,
                 },
             ];
 
-            this.unlinkedInputBoxMap.delete(notebookDocument.uri.toString());
+            this.unlinkedTextDocumentMap.delete(notebookDocument.uri.toString());
 
             await next(notebookDocument, newCells);
+        } else {
+            await next(notebookDocument, cells);
         }
     }
 
@@ -166,9 +165,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         cells: NotebookCell[],
         next: (notebookDocument: NotebookDocument, cells: NotebookCell[]) => Promise<void>,
     ): Promise<void> {
-        if (notebookDocument.uri.scheme === 'vscode-interactive') {
-            this.interactiveWindowMap.delete(notebookDocument.uri.toString());
-        }
+        this.notebookDocumentMap.delete(notebookDocument.uri.toString());
 
         await next(notebookDocument, cells);
     }
