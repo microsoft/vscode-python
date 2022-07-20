@@ -32,7 +32,6 @@ import {
     IInterpreterPathService,
     IInterpreterSettings,
     ILintingSettings,
-    InterpreterDisplayInfo,
     IPythonSettings,
     ISortImportSettings,
     ITensorBoardSettings,
