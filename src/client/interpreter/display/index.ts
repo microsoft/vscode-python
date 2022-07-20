@@ -1,5 +1,13 @@
 import { inject, injectable } from 'inversify';
-import { Disposable, LanguageStatusItem, LanguageStatusSeverity, StatusBarAlignment, StatusBarItem, Uri } from 'vscode';
+import {
+    Disposable,
+    LanguageStatusItem,
+    LanguageStatusSeverity,
+    StatusBarAlignment,
+    StatusBarItem,
+    ThemeColor,
+    Uri,
+} from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { Commands, PYTHON_LANGUAGE } from '../../common/constants';
@@ -133,6 +141,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
             } else {
                 this.statusBar.tooltip = '';
                 this.statusBar.color = '';
+                this.statusBar.backgroundColor = new ThemeColor('statusBarItem.warningBackground');
                 this.statusBar.text = `$(alert) ${InterpreterQuickPickList.browsePath.openButtonLabel}`;
                 this.currentlySelectedInterpreterDisplay = undefined;
             }
@@ -153,8 +162,10 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
                 text = text.startsWith('Python') ? text.substring('Python'.length).trim() : text;
                 this.languageStatus.text = text;
                 this.currentlySelectedInterpreterDisplay = interpreter.detailedDisplayName;
+                this.languageStatus.severity = LanguageStatusSeverity.Information;
             } else {
-                this.languageStatus.text = '$(alert) No Interpreter Selected';
+                this.languageStatus.severity = LanguageStatusSeverity.Warning;
+                this.languageStatus.text = `$(alert) ${InterpreterQuickPickList.browsePath.openButtonLabel}`;
                 this.languageStatus.detail = undefined;
                 this.currentlySelectedInterpreterDisplay = undefined;
             }

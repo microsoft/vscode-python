@@ -31,6 +31,7 @@ import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IServiceContainer } from '../../client/ioc/types';
 import * as logging from '../../client/logging';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { ThemeColor } from '../mocks/vsc';
 
 const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
@@ -274,6 +275,11 @@ suite('Interpreters Display', () => {
                         TypeMoq.Times.once(),
                     );
                 } else {
+                    statusBar.verify(
+                        (s) =>
+                            (s.backgroundColor = TypeMoq.It.isValue(new ThemeColor('statusBarItem.warningBackground'))),
+                        TypeMoq.Times.once(),
+                    );
                     statusBar.verify((s) => (s.color = TypeMoq.It.isValue('')), TypeMoq.Times.once());
                     statusBar.verify(
                         (s) =>

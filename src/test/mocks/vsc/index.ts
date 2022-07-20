@@ -17,6 +17,10 @@ export function escapeCodicons(text: string): string {
     return text.replace(escapeCodiconsRegex, (match, escaped) => (escaped ? match : `\\${match}`));
 }
 
+export class ThemeColor {
+    constructor(public readonly id: string) {}
+}
+
 export enum ExtensionKind {
     /**
      * Extension runs where the UI runs.
