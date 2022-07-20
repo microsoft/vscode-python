@@ -30,7 +30,9 @@ import {
     IExperiments,
     IFormattingSettings,
     IInterpreterPathService,
+    IInterpreterSettings,
     ILintingSettings,
+    InterpreterDisplayInfo,
     IPythonSettings,
     ISortImportSettings,
     ITensorBoardSettings,
@@ -87,6 +89,8 @@ export class PythonSettings implements IPythonSettings {
     public envFile = '';
 
     public venvPath = '';
+
+    public interpreter!: IInterpreterSettings;
 
     public venvFolders: string[] = [];
 
@@ -246,6 +250,7 @@ export class PythonSettings implements IPythonSettings {
         const poetryPath = systemVariables.resolveAny(pythonSettings.get<string>('poetryPath'))!;
         this.poetryPath = poetryPath && poetryPath.length > 0 ? getAbsolutePath(poetryPath, workspaceRoot) : poetryPath;
 
+        this.interpreter = pythonSettings.get<IInterpreterSettings>('interpreter') ?? { displayInfo: 'pythonContext' };
         // Get as a string and verify; don't just accept.
         let userLS = pythonSettings.get<string>('languageServer');
         userLS = systemVariables.resolveAny(userLS);

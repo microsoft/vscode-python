@@ -587,6 +587,22 @@
                     "scope": "resource",
                     "type": "string"
                 },
+                "python.interpreter.displayInfo": {
+                    "default": "pythonContext",
+                    "description": "%python.interpreter.displayInfo.description%",
+                    "enum": [
+                        "never",
+                        "pythonContext",
+                        "always"
+                    ],
+                    "enumDescriptions": [
+                        "%python.interpreter.displayInfo.never.description%",
+                        "%python.interpreter.displayInfo.pythonContext.description%",
+                        "%python.interpreter.displayInfo.always.description%"
+                    ],
+                    "scope": "machine",
+                    "type": "string"
+                },
                 "python.linting.flake8CategorySeverity.W": {
                     "default": "Warning",
                     "description": "%python.linting.flake8CategorySeverity.W.description%",

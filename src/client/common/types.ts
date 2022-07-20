@@ -179,6 +179,7 @@ export interface ICurrentProcess {
 }
 
 export interface IPythonSettings {
+    readonly interpreter: IInterpreterSettings;
     readonly pythonPath: string;
     readonly venvPath: string;
     readonly venvFolders: string[];
@@ -232,6 +233,9 @@ export interface Flake8CategorySeverity {
 export interface IMypyCategorySeverity {
     readonly error: DiagnosticSeverity;
     readonly note: DiagnosticSeverity;
+}
+export interface IInterpreterSettings {
+    displayInfo: 'never' | 'pythonContext' | 'always';
 }
 
 export interface ILintingSettings {
