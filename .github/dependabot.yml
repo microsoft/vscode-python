@@ -5,7 +5,7 @@ updates:
     schedule:
       interval: daily
     labels:
-      - 'skip news'
+      - 'no-changelog'
 
   # Not skipping the news for some Python dependencies in case it's actually useful to communicate to users.
   - package-ecosystem: 'pip'
@@ -19,11 +19,11 @@ updates:
       - dependency-name: isort
       - dependency-name: jedi-language-server
     labels:
-      - 'skip news'
+      - 'no-changelog'
   # Activate when we feel ready to keep up with frequency.
   # - package-ecosystem: 'npm'
   #   directory: /
   #   schedule:
   #     interval: daily
   #   default_labels:
-  #     - "skip news"
+  #     - "no-changelog"
