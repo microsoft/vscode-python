@@ -1,7 +1,7 @@
 changelog:
   exclude:
     labels:
-      - 'skip news'
+      - 'no-changelog'
     authors:
       - 'dependabot'
 
