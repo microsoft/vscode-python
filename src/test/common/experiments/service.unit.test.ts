@@ -13,7 +13,7 @@ import { ApplicationEnvironment } from '../../../client/common/application/appli
 import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { Channel } from '../../../client/common/constants';
-import { ExperimentService } from '../../../client/common/experiments/service';
+import { ExperimentService, TargetPopulation } from '../../../client/common/experiments/service';
 import { PersistentState } from '../../../client/common/persistentState';
 import { IPersistentStateFactory } from '../../../client/common/types';
 import { registerLogger } from '../../../client/logging';
@@ -80,18 +80,18 @@ suite('Experimentation service', () => {
     suite('Initialization', () => {
         test('Users with a release version of the extension should be in the Public target population', () => {
             const getExperimentationServiceStub = sinon.stub(tasClient, 'getExperimentationService');
-
             configureSettings(true, [], []);
             configureApplicationEnvironment('stable', extensionVersion);
 
             // eslint-disable-next-line no-new
             new ExperimentService(instance(workspaceService), instance(appEnvironment), instance(stateFactory));
 
+            // @ts-ignore I dont know how else to ignore this issue.
             sinon.assert.calledWithExactly(
                 getExperimentationServiceStub,
                 PVSC_EXTENSION_ID_FOR_TESTS,
                 extensionVersion,
-                tasClient.TargetPopulation.Public,
+                sinon.match(TargetPopulation.Public),
                 sinon.match.any,
                 globalMemento,
             );
@@ -110,7 +110,7 @@ suite('Experimentation service', () => {
                 getExperimentationServiceStub,
                 PVSC_EXTENSION_ID_FOR_TESTS,
                 extensionVersion,
-                tasClient.TargetPopulation.Insiders,
+                sinon.match(TargetPopulation.Insiders),
                 sinon.match.any,
                 globalMemento,
             );
