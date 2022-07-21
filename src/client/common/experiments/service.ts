@@ -19,6 +19,11 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 const EXP_MEMENTO_KEY = 'VSCode.ABExp.FeatureData';
 const EXP_CONFIG_ID = 'vscode';
 
+/**
+ * We're defining a custom TargetPopulation specific for the Python extension.
+ * This is done so ExP's Control Tower is able to differentiate between
+ * VS Code insiders users and Python extension insiders (pre-release) users.
+ */
 export enum TargetPopulation {
     Insiders = 'python-insider',
     Public = 'python-public',
