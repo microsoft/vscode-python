@@ -42,6 +42,7 @@ import {
 import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
 import { WorkspaceTestAdapter } from './workspaceTestAdapter';
 import { UnittestTestExecutionAdapter } from './unittest/testExecutionAdapter';
+// import { ITestDebugLauncher } from '../common/types';
 
 // Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
 type EventPropertyType = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_TRIGGER];
@@ -86,9 +87,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         @inject(ITestFrameworkController) @named(PYTEST_PROVIDER) private readonly pytest: ITestFrameworkController,
         @inject(ITestFrameworkController) @named(UNITTEST_PROVIDER) private readonly unittest: ITestFrameworkController,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory, // @inject(ITestDebugLauncher) private readonly debugLauncher: ITestDebugLauncher, new unittest execution debugger
     ) {
         this.refreshCancellation = new CancellationTokenSource();
 
@@ -142,6 +143,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         };
 
         this.pythonTestServer = new PythonTestServer(this.pythonExecFactory);
+        // this.pythonTestServer = new PythonTestServer(this.pythonExecFactory, this.debugLauncher);
     }
 
     public async activate(): Promise<void> {
@@ -381,7 +383,12 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             // const testAdapter =
                             //     this.testAdapters.get(workspace.uri) ||
                             //     (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                            // return testAdapter.executeTests(this.testController, runInstance, token);
+                            // return testAdapter.executeTests(
+                            //     this.testController,
+                            //     runInstance,
+                            //     token,
+                            //     request.profile?.kind === TestRunProfileKind.Debug,
+                            // );
 
                             // below is old way of running unittest execution
 

@@ -13,6 +13,8 @@ import {
 import { traceLog } from '../../../logging';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { DEFAULT_TEST_PORT } from './utils';
+import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
+import { UNITTEST_PROVIDER } from '../../common/constants';
 
 export class PythonTestServer implements ITestServer, Disposable {
     private _onDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
@@ -23,7 +25,7 @@ export class PythonTestServer implements ITestServer, Disposable {
 
     public port: number;
 
-    constructor(private executionFactory: IPythonExecutionFactory) {
+    constructor(private executionFactory: IPythonExecutionFactory, private debugLauncher?: ITestDebugLauncher) {
         this.uuids = new Map();
 
         this.port = DEFAULT_TEST_PORT;
@@ -97,7 +99,26 @@ export class PythonTestServer implements ITestServer, Disposable {
         }
 
         try {
-            await execService.exec(args, spawnOptions);
+            // check if there exist the launchOption provided.
+            // If there is the launch option provided, that means we need to launch the debugger
+            // if (launchOptions) {
+            // } else {
+            //     await execService.exec(args, spawnOptions);
+            // }
+            if (options.debugBool) {
+                const launchOptions: LaunchOptions = {
+                    cwd: options.cwd,
+                    args,
+                    token: options.token,
+                    testProvider: UNITTEST_PROVIDER,
+                };
+                if (this.debugLauncher) {
+                    await this.debugLauncher.launchDebugger(launchOptions);
+                }
+            } else {
+                await execService.exec(args, spawnOptions);
+            }
+            // await execService.exec(args, spawnOptions);
         } catch (ex) {
             this.uuids.delete(uuid);
             this._onDataReceived.fire({

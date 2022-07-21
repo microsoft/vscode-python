@@ -48,7 +48,7 @@ export class WorkspaceTestAdapter {
         private discoveryAdapter: ITestDiscoveryAdapter,
         // TODO: Implement test running
         private executionAdapter: ITestExecutionAdapter,
-        private workspaceUri: Uri, // private runIdToTestItem: Map<string, TestItem>,
+        private workspaceUri: Uri,
     ) {
         this.runIdToTestItem = new Map<string, TestItem>();
         this.runIdToVSid = new Map<string, string>();
@@ -58,6 +58,7 @@ export class WorkspaceTestAdapter {
         testController: TestController,
         runInstance: TestRun,
         token?: CancellationToken,
+        debugBool?: boolean,
     ): Promise<void> {
         if (this.executing) {
             return this.executing.promise;
@@ -68,7 +69,7 @@ export class WorkspaceTestAdapter {
 
         let rawTestExecData;
         try {
-            rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri);
+            rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri, debugBool);
             deferred.resolve();
         } catch (ex) {
             // handle token and telemetry here

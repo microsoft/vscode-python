@@ -37,7 +37,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         }
     }
 
-    public async runTests(uri: Uri): Promise<ExecutionTestPayload> {
+    public async runTests(uri: Uri, debugBool?: boolean): Promise<ExecutionTestPayload> {
         if (!this.deferred) {
             const settings = this.configSettings.getSettings(uri);
             const { unittestArgs } = settings.testing;
@@ -49,6 +49,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                 workspaceFolder: uri,
                 command,
                 cwd: this.cwd,
+                debugBool,
             };
 
             this.deferred = createDeferred<ExecutionTestPayload>();
