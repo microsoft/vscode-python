@@ -21,8 +21,8 @@ const EXP_CONFIG_ID = 'vscode';
 
 /**
  * We're defining a custom TargetPopulation specific for the Python extension.
- * This is done so ExP's Control Tower is able to differentiate between
- * VS Code insiders users and Python extension insiders (pre-release) users.
+ * This is done so the exp framework is able to differentiate between
+ * VS Code insiders/public users and Python extension insiders (pre-release)/public users.
  */
 export enum TargetPopulation {
     Insiders = 'python-insider',
