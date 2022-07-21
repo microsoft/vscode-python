@@ -587,18 +587,18 @@
                     "scope": "resource",
                     "type": "string"
                 },
-                "python.interpreter.displayInfo": {
-                    "default": "pythonContext",
-                    "description": "%python.interpreter.displayInfo.description%",
+                "python.interpreter.infoVisibility": {
+                    "default": "onPythonRelated",
+                    "description": "%python.interpreter.infoVisibility.description%",
                     "enum": [
                         "never",
-                        "pythonContext",
+                        "onPythonRelated",
                         "always"
                     ],
                     "enumDescriptions": [
-                        "%python.interpreter.displayInfo.never.description%",
-                        "%python.interpreter.displayInfo.pythonContext.description%",
-                        "%python.interpreter.displayInfo.always.description%"
+                        "%python.interpreter.infoVisibility.never.description%",
+                        "%python.interpreter.infoVisibility.onPythonRelated.description%",
+                        "%python.interpreter.infoVisibility.always.description%"
                     ],
                     "scope": "machine",
                     "type": "string"

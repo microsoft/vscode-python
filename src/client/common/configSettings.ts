@@ -249,7 +249,9 @@ export class PythonSettings implements IPythonSettings {
         const poetryPath = systemVariables.resolveAny(pythonSettings.get<string>('poetryPath'))!;
         this.poetryPath = poetryPath && poetryPath.length > 0 ? getAbsolutePath(poetryPath, workspaceRoot) : poetryPath;
 
-        this.interpreter = pythonSettings.get<IInterpreterSettings>('interpreter') ?? { displayInfo: 'pythonContext' };
+        this.interpreter = pythonSettings.get<IInterpreterSettings>('interpreter') ?? {
+            infoVisibility: 'onPythonRelated',
+        };
         // Get as a string and verify; don't just accept.
         let userLS = pythonSettings.get<string>('languageServer');
         userLS = systemVariables.resolveAny(userLS);

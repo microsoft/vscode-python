@@ -235,7 +235,7 @@ export interface IMypyCategorySeverity {
     readonly note: DiagnosticSeverity;
 }
 export interface IInterpreterSettings {
-    displayInfo: 'never' | 'pythonContext' | 'always';
+    infoVisibility: 'never' | 'onPythonRelated' | 'always';
 }
 
 export interface ILintingSettings {
