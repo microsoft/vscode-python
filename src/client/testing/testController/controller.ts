@@ -92,7 +92,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory, // @inject(ITestDebugLauncher) private readonly debugLauncher: ITestDebugLauncher, new unittest execution debugger
     ) {
         this.refreshCancellation = new CancellationTokenSource();
-
+        // add to const later => @inject(ITestDebugLauncher) private readonly debugLauncher: ITestDebugLauncher, new unittest execution debugger
         this.testController = tests.createTestController('python-tests', 'Python Tests');
         this.disposables.push(this.testController);
 
