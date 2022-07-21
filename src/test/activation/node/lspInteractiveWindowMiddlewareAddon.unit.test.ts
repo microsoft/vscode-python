@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { NotebookCell, NotebookCellKind, NotebookDocument, NotebookRange, TextDocument, Uri } from 'vscode';
+import { NotebookCell, NotebookCellKind, NotebookDocument, TextDocument, Uri } from 'vscode';
 import { expect } from 'chai';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { LanguageClient } from 'vscode-languageclient/node';
@@ -150,7 +150,6 @@ suite('Pylance Language Server - Interactive Window LSP Notebooks', () => {
 
     function createTextDocument(uri: Uri): TextDocument {
         const textDocumentMock = mock<TextDocument>();
-
         when(textDocumentMock.uri).thenReturn(uri);
         when(textDocumentMock.languageId).thenReturn('python');
         when(textDocumentMock.version).thenReturn(11);
@@ -159,22 +158,15 @@ suite('Pylance Language Server - Interactive Window LSP Notebooks', () => {
     }
 
     function createNotebookDocument(uri: Uri, cellCount: number): [NotebookDocument, NotebookCell[]] {
+        const notebookDocumentMock = mock<NotebookDocument>();
+        when(notebookDocumentMock.uri).thenReturn(uri);
+        when(notebookDocumentMock.notebookType).thenReturn('jupyter');
+        when(notebookDocumentMock.version).thenReturn(20);
+        when(notebookDocumentMock.cellCount).thenReturn(cellCount);
+
+        const notebookDocument = instance(notebookDocumentMock);
+
         const cells: NotebookCell[] = [];
-
-        const notebookDocument = {
-            uri,
-            notebookType: 'jupyter',
-            version: 0,
-            isDirty: false,
-            isUntitled: false,
-            isClosed: false,
-            metadata: {},
-            cellCount,
-            cellAt: (index: number) => cells[index],
-            getCells: (range?: NotebookRange) => cells.slice(range?.start, range?.end),
-            save: async () => false,
-        };
-
         for (let i = 0; i < cellCount; i = i + 1) {
             cells.push({
                 index: i,
