@@ -176,7 +176,7 @@ export class PythonSettings implements IPythonSettings {
                 defaultLS,
             );
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
-            settings.onDidChange((event) => this.configChanged.fire(event));
+            settings.onDidChange((event) => PythonSettings.debounceConfigChangeNotification(event));
             // Pass null to avoid VSC from complaining about not passing in a value.
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -186,6 +186,12 @@ export class PythonSettings implements IPythonSettings {
         }
 
         return PythonSettings.pythonSettings.get(workspaceFolderKey)!;
+    }
+
+    @debounceSync(1)
+    // eslint-disable-next-line class-methods-use-this
+    protected static debounceConfigChangeNotification(event?: ConfigurationChangeEvent): void {
+        PythonSettings.configChanged.fire(event);
     }
 
     public static getSettingsUriAndTarget(
