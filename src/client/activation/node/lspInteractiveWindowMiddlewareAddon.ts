@@ -54,28 +54,29 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
         }
 
         try {
-            const result: NotebookDocumentChangeEvent = Object.create(null);
-            const cells: Required<NotebookDocumentChangeEvent>['cells'] = Object.create(null);
-
-            cells.structure = {
-                array: {
-                    start: notebookDocument.cellCount,
-                    deleteCount: 0,
-                    cells: [{ kind: NotebookCellKind.Code, document: document.uri.toString() }],
-                },
-                didOpen: [
-                    {
-                        uri: document.uri.toString(),
-                        languageId: document.languageId,
-                        version: document.version,
-                        text: document.getText(),
+            const result: NotebookDocumentChangeEvent = {
+                cells: {
+                    structure: {
+                        array: {
+                            start: notebookDocument.cellCount,
+                            deleteCount: 0,
+                            cells: [{ kind: NotebookCellKind.Code, document: document.uri.toString() }],
+                        },
+                        didOpen: [
+                            {
+                                uri: document.uri.toString(),
+                                languageId: document.languageId,
+                                version: document.version,
+                                text: document.getText(),
+                            },
+                        ],
+                        didClose: undefined,
                     },
-                ],
-                didClose: undefined,
+                },
             };
 
             await this.getClient()?.sendNotification(DidChangeNotebookDocumentNotification.type, {
-                notebookDocument: { version: 0, uri: notebookUri.toString() }, // TODO: Fix version
+                notebookDocument: { version: notebookDocument.version, uri: notebookUri.toString() },
                 change: result,
             });
         } catch (error) {
@@ -99,7 +100,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
             const client = this.getClient();
             if (client) {
                 client.sendNotification(proto.DidChangeNotebookDocumentNotification.type, {
-                    notebookDocument: { uri: notebookUri.toString(), version: 0 }, // TODO: Fix version
+                    notebookDocument: { uri: notebookUri.toString(), version: notebookDocument.version },
                     change: {
                         cells: {
                             textContent: [
