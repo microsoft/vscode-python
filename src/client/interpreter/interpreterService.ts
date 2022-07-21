@@ -1,7 +1,15 @@
 // eslint-disable-next-line max-classes-per-file
 import { inject, injectable } from 'inversify';
 import * as pathUtils from 'path';
-import { Disposable, Event, EventEmitter, ProgressLocation, ProgressOptions, Uri } from 'vscode';
+import {
+    ConfigurationChangeEvent,
+    Disposable,
+    Event,
+    EventEmitter,
+    ProgressLocation,
+    ProgressOptions,
+    Uri,
+} from 'vscode';
 import '../common/extensions';
 import { IApplicationShell, IDocumentManager } from '../common/application/types';
 import {
@@ -95,20 +103,39 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
         const filter = new (class implements IInterpreterStatusbarVisibilityFilter {
-            constructor(private readonly docManager: IDocumentManager) {}
+            constructor(
+                private readonly docManager: IDocumentManager,
+                private readonly configService: IConfigurationService,
+                private readonly disposablesReg: IDisposableRegistry,
+            ) {
+                this.disposablesReg.push(
+                    this.configService.onDidChange(async (event: ConfigurationChangeEvent | undefined) => {
+                        if (event?.affectsConfiguration('python.interpreter.infoVisibility')) {
+                            this.interpreterVisibilityEmitter.fire();
+                        }
+                    }),
+                );
+            }
 
             public readonly interpreterVisibilityEmitter = new EventEmitter<void>();
 
             public readonly changed = this.interpreterVisibilityEmitter.event;
 
             get hidden() {
+                const visibility = this.configService.getSettings().interpreter.infoVisibility;
+                if (visibility === 'never') {
+                    return true;
+                }
+                if (visibility === 'always') {
+                    return false;
+                }
                 const document = this.docManager.activeTextEditor?.document;
                 if (document?.fileName.endsWith('settings.json')) {
                     return false;
                 }
                 return document?.languageId !== PYTHON_LANGUAGE;
             }
-        })(documentManager);
+        })(documentManager, this.configService, disposables);
         interpreterDisplay.registerVisibilityFilter(filter);
         disposables.push(
             this.onDidChangeInterpreters((e): void => {

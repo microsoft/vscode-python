@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationTarget, Event, Uri, WorkspaceConfiguration, ConfigurationChangeEvent } from 'vscode';
 import { IInterpreterAutoSelectionService } from '../../interpreter/autoSelection/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
@@ -16,6 +16,11 @@ export class ConfigurationService implements IConfigurationService {
 
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    public get onDidChange(): Event<ConfigurationChangeEvent | undefined> {
+        return PythonSettings.onConfigChange();
     }
 
     public getSettings(resource?: Uri): IPythonSettings {

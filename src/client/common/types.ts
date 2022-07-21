@@ -7,6 +7,7 @@ import { Socket } from 'net';
 import { Request as RequestResult } from 'request';
 import {
     CancellationToken,
+    ConfigurationChangeEvent,
     ConfigurationTarget,
     DiagnosticSeverity,
     Disposable,
@@ -196,7 +197,6 @@ export interface IPythonSettings {
     readonly envFile: string;
     readonly globalModuleInstallation: boolean;
     readonly pylanceLspNotebooksEnabled: boolean;
-    readonly onDidChange: Event<void>;
     readonly experiments: IExperiments;
     readonly languageServer: LanguageServerType;
     readonly languageServerIsDefault: boolean;
@@ -312,6 +312,7 @@ export interface IAutoCompleteSettings {
 
 export const IConfigurationService = Symbol('IConfigurationService');
 export interface IConfigurationService {
+    readonly onDidChange: Event<ConfigurationChangeEvent | undefined>;
     getSettings(resource?: Uri): IPythonSettings;
     isTestExecution(): boolean;
     updateSetting(setting: string, value?: unknown, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
