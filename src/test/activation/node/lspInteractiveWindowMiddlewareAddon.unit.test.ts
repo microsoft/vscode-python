@@ -4,19 +4,9 @@
 
 'use strict';
 
-import {
-    NotebookCell,
-    NotebookCellKind,
-    NotebookDocument,
-    NotebookRange,
-    Position,
-    Range,
-    TextDocument,
-    TextLine,
-    Uri,
-} from 'vscode';
+import { NotebookCell, NotebookCellKind, NotebookDocument, NotebookRange, TextDocument, Uri } from 'vscode';
 import { expect } from 'chai';
-import { anything, capture, instance, mock, verify } from 'ts-mockito';
+import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { LanguageClient } from 'vscode-languageclient/node';
 import { LspInteractiveWindowMiddlewareAddon } from '../../../client/activation/node/lspInteractiveWindowMiddlewareAddon';
 import { JupyterExtensionIntegration } from '../../../client/jupyter/jupyterIntegration';
@@ -159,34 +149,13 @@ suite('Pylance Language Server - Interactive Window LSP Notebooks', () => {
     }
 
     function createTextDocument(uri: Uri): TextDocument {
-        const textLine: TextLine = {
-            lineNumber: 0,
-            text: '',
-            range: new Range(0, 0, 0, 0),
-            rangeIncludingLineBreak: new Range(0, 0, 0, 0),
-            firstNonWhitespaceCharacterIndex: 0,
-            isEmptyOrWhitespace: false,
-        };
+        const textDocumentMock = mock<TextDocument>();
 
-        return {
-            uri,
-            fileName: 'foo',
-            isUntitled: false,
-            languageId: 'python',
-            version: 0,
-            isDirty: false,
-            isClosed: false,
-            eol: 0,
-            lineCount: 0,
-            save: async () => false,
-            lineAt: (_: number | Position) => textLine,
-            offsetAt: (position: Position) => position.character,
-            positionAt: (_: number) => new Position(0, 0),
-            getText: (_?: Range | undefined) => '',
-            getWordRangeAtPosition: (_: Position, _a?: RegExp) => undefined,
-            validateRange: (range: Range) => range,
-            validatePosition: (position: Position) => position,
-        };
+        when(textDocumentMock.uri).thenReturn(uri);
+        when(textDocumentMock.languageId).thenReturn('python');
+        when(textDocumentMock.version).thenReturn(11);
+
+        return instance(textDocumentMock);
     }
 
     function createNotebookDocument(uri: Uri, cellCount: number): [NotebookDocument, NotebookCell[]] {
