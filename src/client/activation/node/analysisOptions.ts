@@ -24,6 +24,7 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
             experimentationSupport: true,
             trustedWorkspaceSupport: true,
             lspNotebooksSupport: this.lspNotebooksExperiment.isInNotebooksExperiment(),
+            lspInteractiveWindowSupport: this.lspNotebooksExperiment.isInNotebooksExperimentWithInteractiveWindowSupport(),
         } as unknown) as LanguageClientOptions;
     }
 }
