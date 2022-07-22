@@ -143,7 +143,7 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
         const pylanceVersion = extensions.getExtension(PYLANCE_EXTENSION_ID)?.packageJSON.version;
         return (
             pylanceVersion &&
-            (semver.gte(pylanceVersion, '2022.7.41') || semver.prerelease(pylanceVersion)?.includes('dev'))
+            (semver.gte(pylanceVersion, '2022.7.51') || semver.prerelease(pylanceVersion)?.includes('dev'))
         );
     }
 
