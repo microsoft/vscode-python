@@ -141,6 +141,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
                 this.currentlySelectedInterpreterDisplay = interpreter.detailedDisplayName;
             } else {
                 this.statusBar.tooltip = '';
+                this.statusBar.color = '';
                 this.statusBar.backgroundColor = new ThemeColor('statusBarItem.warningBackground');
                 this.statusBar.text = `$(alert) ${InterpreterQuickPickList.browsePath.openButtonLabel}`;
                 this.currentlySelectedInterpreterDisplay = undefined;
