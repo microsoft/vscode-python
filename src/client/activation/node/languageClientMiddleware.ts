@@ -32,7 +32,7 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddleware {
         this.jupyterExtensionIntegration = serviceContainer.get<JupyterExtensionIntegration>(
             JupyterExtensionIntegration,
         );
-        if (!this.notebookAddon && this.lspNotebooksExperiment.isInNotebooksExperiment()) {
+        if (!this.notebookAddon && this.lspNotebooksExperiment.isInNotebooksExperimentWithInteractiveWindowSupport()) {
             this.notebookAddon = new LspInteractiveWindowMiddlewareAddon(
                 this.getClient,
                 this.jupyterExtensionIntegration,
@@ -52,7 +52,7 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddleware {
             await this.lspNotebooksExperiment.onJupyterInstalled();
         }
 
-        if (this.lspNotebooksExperiment.isInNotebooksExperiment()) {
+        if (this.lspNotebooksExperiment.isInNotebooksExperimentWithInteractiveWindowSupport()) {
             if (!this.notebookAddon) {
                 this.notebookAddon = new LspInteractiveWindowMiddlewareAddon(
                     this.getClient,
