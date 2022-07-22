@@ -68,6 +68,7 @@ export class PylanceLSExtensionManager extends LanguageServerCapabilities
             environmentService,
             workspaceService,
             extensions,
+            serviceContainer,
         );
         this.serverManager = new NodeLanguageServerManager(
             serviceContainer,

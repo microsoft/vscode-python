@@ -20,6 +20,8 @@ import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 import { traceDecoratorError, traceDecoratorVerbose, traceError } from '../../logging';
 import { IWorkspaceService } from '../../common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
+import { IServiceContainer } from '../../ioc/types';
+import { PylanceTypeCheckingModeStatusItem } from '../pylanceTypeCheckingModeStatus';
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 namespace InExperiment {
@@ -47,6 +49,19 @@ namespace GetExperimentValue {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
+namespace RecommendSettings {
+    export const Method = 'python/recommendSettingsRequest';
+
+    export interface IRequest {
+        settings: { settingName: string; value: unknown }[];
+    }
+
+    export interface IResponse {
+        value: unknown;
+    }
+}
+
 export class NodeLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
 
@@ -63,6 +78,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         private readonly environmentService: IEnvironmentVariablesProvider,
         private readonly workspace: IWorkspaceService,
         private readonly extensions: IExtensions,
+        private readonly services: IServiceContainer,
     ) {}
 
     private static versionTelemetryProps(instance: NodeLanguageServerProxy) {
@@ -194,6 +210,17 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
             ): Promise<GetExperimentValue.IResponse<T>> => {
                 const value = await this.experimentService.getExperimentValue<T>(params.experimentName);
                 return { value };
+            },
+        );
+
+        client.onRequest(
+            RecommendSettings.Method,
+            async (params: RecommendSettings.IRequest): Promise<RecommendSettings.IResponse> => {
+                const typeCheckingStatusItem = this.services.get<PylanceTypeCheckingModeStatusItem>(
+                    PylanceTypeCheckingModeStatusItem,
+                );
+                await typeCheckingStatusItem.updateStatusItem(this.workspace, params.settings);
+                return { value: undefined };
             },
         );
 
