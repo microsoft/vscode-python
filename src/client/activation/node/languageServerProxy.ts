@@ -219,7 +219,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
                 const typeCheckingStatusItem = this.services.get<PylanceTypeCheckingModeStatusItem>(
                     PylanceTypeCheckingModeStatusItem,
                 );
-                await typeCheckingStatusItem.updateStatusItem(this.workspace, params.settings);
+                await typeCheckingStatusItem.setSettings(params.settings);
                 return { value: undefined };
             },
         );

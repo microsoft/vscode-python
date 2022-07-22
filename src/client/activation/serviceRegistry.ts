@@ -21,10 +21,6 @@ import { LspNotebooksExperiment } from './node/lspNotebooksExperiment';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, PartialModeStatusItem);
-    serviceManager.addSingleton<IExtensionActivationService>(
-        IExtensionActivationService,
-        PylanceTypeCheckingModeStatusItem,
-    );
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
     serviceManager.addSingleton<ILanguageServerOutputChannel>(
         ILanguageServerOutputChannel,
@@ -44,4 +40,9 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addBinding(ILanguageServerWatcher, ILanguageServerCache);
     serviceManager.addSingleton<LspNotebooksExperiment>(LspNotebooksExperiment, LspNotebooksExperiment);
     serviceManager.addBinding(LspNotebooksExperiment, IExtensionSingleActivationService);
+    serviceManager.addSingleton<PylanceTypeCheckingModeStatusItem>(
+        PylanceTypeCheckingModeStatusItem,
+        PylanceTypeCheckingModeStatusItem,
+    );
+    serviceManager.addBinding(PylanceTypeCheckingModeStatusItem, IExtensionSingleActivationService);
 }
