@@ -10,17 +10,21 @@ import { PythonVersion } from './pythonVersion';
  * The supported Python environment types.
  */
 export enum EnvironmentType {
-    Unknown = 'Unknown',
     Conda = 'Conda',
-    VirtualEnv = 'VirtualEnv',
+    // Complex virtual envs
     Pipenv = 'PipEnv',
-    Pyenv = 'Pyenv',
-    Venv = 'Venv',
-    WindowsStore = 'WindowsStore',
     Poetry = 'Poetry',
+    // Simple virtual envs
+    VirtualEnv = 'VirtualEnv',
+    Venv = 'Venv',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
+    // Global
     Global = 'Global',
     System = 'System',
+    WindowsStore = 'WindowsStore',
+    Unknown = 'Unknown',
+    // Pyenv
+    Pyenv = 'Pyenv',
 }
 
 export const virtualEnvTypes = [

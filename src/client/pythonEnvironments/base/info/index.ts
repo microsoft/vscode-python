@@ -29,7 +29,7 @@ export enum PythonEnvKind {
 export interface EnvPathType {
     /**
      * Path to environment folder or path to interpreter that uniquely identifies an environment.
-     * Virtual environments lacking an interpreter are identified by environment folder paths,
+     * Environments lacking an interpreter are identified by environment folder paths,
      * whereas other envs can be identified using interpreter path.
      */
     path: string;

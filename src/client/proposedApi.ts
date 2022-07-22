@@ -33,7 +33,7 @@ function getVersionString(env: PythonEnvInfo): string[] {
     if (env.version.release) {
         ver.push(`${env.version.release}`);
         if (env.version.sysVersion) {
-            ver.push(`${env.version.release}`);
+            ver.push(`${env.version.sysVersion}`);
         }
     }
     return ver;

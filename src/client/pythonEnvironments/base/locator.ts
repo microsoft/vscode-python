@@ -153,8 +153,7 @@ export type BasicEnvInfo = {
  * events emitted via `onChanged` do not need to provide information
  * for the specific environments that changed.
  */
-export interface ILocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
-    extends IPythonEnvsWatcher<E> {
+export interface ILocator<I = PythonEnvInfo, E = PythonEnvsChangedEvent> extends IPythonEnvsWatcher<E> {
     /**
      * Iterate over the enviroments known tos this locator.
      *
