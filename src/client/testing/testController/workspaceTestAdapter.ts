@@ -97,9 +97,18 @@ export class WorkspaceTestAdapter {
                 const tempArr: TestItem[] = [];
 
                 // fetch inidividual testItem and store into tempArr
+                // testController.items.forEach((i) =>
+                //     i.children.forEach((z) =>
+                //         z.children.forEach((x) => x.children.forEach((indi) => tempArr.push(indi))),
+                //     ),
+                // );
                 testController.items.forEach((i) =>
                     i.children.forEach((z) =>
-                        z.children.forEach((x) => x.children.forEach((indi) => tempArr.push(indi))),
+                        z.children.forEach((x) =>
+                            x.children.forEach((indi) =>
+                                indi.children.forEach((eachTestMethod) => tempArr.push(eachTestMethod)),
+                            ),
+                        ),
                     ),
                 );
 
@@ -127,7 +136,10 @@ export class WorkspaceTestAdapter {
                             }
                         }
                     });
-                } else if (rawTestExecData.result[keyTemp].outcome === 'success') {
+                } else if (
+                    rawTestExecData.result[keyTemp].outcome === 'success' ||
+                    rawTestExecData.result[keyTemp].outcome === 'expected-failure'
+                ) {
                     const grabTestItem = this.runIdToTestItem.get(keyTemp);
                     const grabVSid = this.runIdToVSid.get(keyTemp);
                     if (grabTestItem !== undefined) {
@@ -137,6 +149,20 @@ export class WorkspaceTestAdapter {
                                     runInstance.started(grabTestItem);
                                     runInstance.passed(grabTestItem);
                                     runInstance.appendOutput('Passed here');
+                                }
+                            }
+                        });
+                    }
+                } else if (rawTestExecData.result[keyTemp].outcome === 'skipped') {
+                    const grabTestItem = this.runIdToTestItem.get(keyTemp);
+                    const grabVSid = this.runIdToVSid.get(keyTemp);
+                    if (grabTestItem !== undefined) {
+                        tempArr.forEach((indiItem) => {
+                            if (indiItem.id === grabVSid) {
+                                if (indiItem.uri && indiItem.range) {
+                                    runInstance.started(grabTestItem);
+                                    runInstance.skipped(grabTestItem);
+                                    runInstance.appendOutput('Skipped here');
                                 }
                             }
                         });
