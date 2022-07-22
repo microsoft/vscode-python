@@ -3,8 +3,8 @@
 
 import { chain } from '../../common/utils/async';
 import { Disposables } from '../../common/utils/resourceLifecycle';
-import { PythonEnvInfo } from './info';
 import {
+    BasicEnvInfo,
     ILocator,
     IPythonEnvsIterator,
     isProgressEvent,
@@ -59,10 +59,10 @@ export function combineIterators<I>(iterators: IPythonEnvsIterator<I>[]): IPytho
  *
  * Events and iterator results are combined.
  */
-export class Locators<I = PythonEnvInfo> extends PythonEnvsWatchers implements ILocator<I> {
+export class Locators<I = BasicEnvInfo> extends PythonEnvsWatchers implements ILocator<I> {
     constructor(
         // The locators will be watched as well as iterated.
-        private readonly locators: ReadonlyArray<ILocator<I>>,
+        private locators: ILocator<I>[],
     ) {
         super(locators);
     }
@@ -70,5 +70,10 @@ export class Locators<I = PythonEnvInfo> extends PythonEnvsWatchers implements I
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<I> {
         const iterators = this.locators.map((loc) => loc.iterEnvs(query));
         return combineIterators(iterators);
+    }
+
+    public addLocator(locator: ILocator<I>): void {
+        this.locators = [...this.locators, locator];
+        this.addWatcher(locator);
     }
 }

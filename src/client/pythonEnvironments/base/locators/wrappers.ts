@@ -3,12 +3,14 @@
 
 // eslint-disable-next-line max-classes-per-file
 import { Uri } from 'vscode';
+import { ILocatorClass } from '../../../apiTypes';
 import { IDisposable } from '../../../common/types';
 import { iterEmpty } from '../../../common/utils/async';
 import { getURIFilter } from '../../../common/utils/misc';
 import { Disposables } from '../../../common/utils/resourceLifecycle';
+import { CustomLocator } from '../../converter';
 import { PythonEnvInfo } from '../info';
-import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../locator';
+import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../locator';
 import { combineIterators, Locators } from '../locators';
 import { LazyResourceBasedLocator } from './common/resourceBasedLocator';
 
@@ -16,23 +18,32 @@ import { LazyResourceBasedLocator } from './common/resourceBasedLocator';
  * A wrapper around all locators used by the extension.
  */
 
-export class ExtensionLocators<I = PythonEnvInfo> extends Locators<I> {
+export class ExtensionLocators extends Locators<BasicEnvInfo> {
     constructor(
         // These are expected to be low-level locators (e.g. system).
-        private readonly nonWorkspace: ILocator<I>[],
+        private nonWorkspace: ILocator<BasicEnvInfo>[],
         // This is expected to be a locator wrapping any found in
         // the workspace (i.e. WorkspaceLocators).
-        private readonly workspace: ILocator<I>,
+        private workspace: WorkspaceLocators,
     ) {
         super([...nonWorkspace, workspace]);
     }
 
-    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<I> {
-        const iterators: IPythonEnvsIterator<I>[] = [this.workspace.iterEnvs(query)];
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
+        const iterators: IPythonEnvsIterator<BasicEnvInfo>[] = [this.workspace.iterEnvs(query)];
         if (!query?.searchLocations?.doNotIncludeNonRooted) {
             iterators.push(...this.nonWorkspace.map((loc) => loc.iterEnvs(query)));
         }
         return combineIterators(iterators);
+    }
+
+    public addNewLocator(LocatorClass: ILocatorClass, isWorkspace: boolean): void {
+        if (isWorkspace) {
+            this.workspace.addNewLocator(LocatorClass);
+        }
+        if (!isWorkspace) {
+            this.nonWorkspace = [...this.nonWorkspace, new CustomLocator(new LocatorClass())];
+        }
     }
 }
 type WorkspaceLocatorFactoryResult<I> = ILocator<I> & Partial<IDisposable>;
@@ -52,12 +63,15 @@ type WatchRootsFunc = (args: WatchRootsArgs) => IDisposable;
  * The factories are used to produce the locators for each workspace folder.
  */
 
-export class WorkspaceLocators<I = PythonEnvInfo> extends LazyResourceBasedLocator<I> {
-    private readonly locators: Record<RootURI, [ILocator<I>, IDisposable]> = {};
+export class WorkspaceLocators extends LazyResourceBasedLocator<BasicEnvInfo> {
+    private readonly locators: Record<RootURI, [Locators<BasicEnvInfo>, IDisposable]> = {};
 
     private readonly roots: Record<RootURI, Uri> = {};
 
-    constructor(private readonly watchRoots: WatchRootsFunc, private readonly factories: WorkspaceLocatorFactory<I>[]) {
+    constructor(
+        private readonly watchRoots: WatchRootsFunc,
+        private readonly factory: WorkspaceLocatorFactory<BasicEnvInfo>,
+    ) {
         super();
     }
 
@@ -69,7 +83,7 @@ export class WorkspaceLocators<I = PythonEnvInfo> extends LazyResourceBasedLocat
         roots.forEach((root) => this.removeRoot(root));
     }
 
-    protected doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<I> {
+    protected doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
         const iterators = Object.keys(this.locators).map((key) => {
             if (query?.searchLocations !== undefined) {
                 const root = this.roots[key];
@@ -78,7 +92,7 @@ export class WorkspaceLocators<I = PythonEnvInfo> extends LazyResourceBasedLocat
                 // Ignore any requests for global envs.
                 if (!query.searchLocations.roots.some(filter)) {
                     // This workspace folder did not match the query, so skip it!
-                    return iterEmpty<I>();
+                    return iterEmpty<BasicEnvInfo>();
                 }
             }
             // The query matches or was not location-specific.
@@ -107,15 +121,13 @@ export class WorkspaceLocators<I = PythonEnvInfo> extends LazyResourceBasedLocat
 
     private addRoot(root: Uri): void {
         // Create the root's locator, wrapping each factory-generated locator.
-        const locators: ILocator<I>[] = [];
+        const locators: ILocator<BasicEnvInfo>[] = [];
         const disposables = new Disposables();
-        this.factories.forEach((create) => {
-            create(root).forEach((loc) => {
-                locators.push(loc);
-                if (loc.dispose !== undefined) {
-                    disposables.push(loc as IDisposable);
-                }
-            });
+        this.factory(root).forEach((loc) => {
+            locators.push(loc);
+            if (loc.dispose !== undefined) {
+                disposables.push(loc as IDisposable);
+            }
         });
         const locator = new Locators(locators);
         // Cache it.
@@ -131,6 +143,16 @@ export class WorkspaceLocators<I = PythonEnvInfo> extends LazyResourceBasedLocat
                 this.emitter.fire(e);
             }),
         );
+    }
+
+    public addNewLocator(LocatorClass: ILocatorClass): void {
+        Object.keys(this.roots).forEach((key) => {
+            const root = this.roots[key];
+            const newLocator = new LocatorClass(root.fsPath);
+            const convertedLocator: ILocator<BasicEnvInfo> = new CustomLocator(newLocator);
+            const [locators] = this.locators[key];
+            locators.addLocator(convertedLocator);
+        });
     }
 
     private removeRoot(root: Uri): void {

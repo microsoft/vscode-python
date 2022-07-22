@@ -30,4 +30,10 @@ export class PythonEnvsWatchers implements IPythonEnvsWatcher, IDisposable {
     public async dispose(): Promise<void> {
         await this.disposables.dispose();
     }
+
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    protected addWatcher(w: IPythonEnvsWatcher) {
+        const disposable = w.onChanged((e) => this.watcher.fire(e));
+        this.disposables.push(disposable);
+    }
 }
