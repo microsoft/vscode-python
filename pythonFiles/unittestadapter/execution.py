@@ -11,9 +11,14 @@ import unittest
 from types import TracebackType
 from typing import Dict, List, Optional, Tuple, Type, TypeAlias, TypedDict
 
+########
+# import debugpy
 from discovery import parse_unittest_discovery_args
 from testing_tools import socket_manager
 from typing_extensions import NotRequired
+
+# debugpy.connect(("localhost", 5678))
+# debugpy.breakpoint()
 
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -41,12 +46,12 @@ def parse_execution_cli_args(args: List[str]) -> Tuple[int, str | None, List[str
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--port", default=DEFAULT_PORT)
     arg_parser.add_argument("--uuid")
-    arg_parser.add_argument("--testids")
+    arg_parser.add_argument("--testids", nargs="+")
     parsed_args, _ = arg_parser.parse_known_args(args)
 
-    test_ids: List[str] = parsed_args.testids.split(",") if parsed_args.testids else []
+    # test_ids: List[str] = parsed_args.testids.split(",") if parsed_args.testids else []
 
-    return (int(parsed_args.port), parsed_args.uuid, test_ids)
+    return (int(parsed_args.port), parsed_args.uuid, parsed_args.testids)
 
 
 ErrorType: TypeAlias = (
@@ -196,7 +201,11 @@ def run_tests(
 
         # Run tests.
         runner = unittest.TextTestRunner(resultclass=UnittestTestResult)
-        result: UnittestTestResult = runner.run(suite)  # type: ignore
+        ### lets try to tailer our own suite so we can figure out running only the ones we want
+        loader = unittest.TestLoader()
+        tailor = loader.loadTestsFromNames(test_ids)
+        # result: UnittestTestResult = runner.run(suite)  # type: ignore
+        result: UnittestTestResult = runner.run(tailor)
 
         payload["result"] = result.formatted
 
@@ -236,8 +245,8 @@ if __name__ == "__main__":
     # uuid = "abcd"
 
     # Perform test execution.
-    port, uuid, test_ids = parse_execution_cli_args(argv[:index])
-    payload = run_tests(start_dir, test_ids, pattern, top_level_dir, uuid)
+    port, uuid, testids = parse_execution_cli_args(argv[:index])
+    payload = run_tests(start_dir, testids, pattern, top_level_dir, uuid)
 
     #     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
     addr = ("localhost", port)

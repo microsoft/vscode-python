@@ -148,6 +148,7 @@ export type TestCommandOptions = {
     token?: CancellationToken;
     outChannel?: OutputChannel;
     debugBool?: boolean;
+    testIds?: string[];
 };
 
 /**
@@ -167,7 +168,7 @@ export interface ITestDiscoveryAdapter {
 
 // interface for execution/runner adapter 6/27/22
 export interface ITestExecutionAdapter {
-    runTests(uri: Uri, debugBool?: boolean): Promise<ExecutionTestPayload>;
+    runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload>;
 }
 
 // Same types as in pythonFiles/unittestadapter/utils.py

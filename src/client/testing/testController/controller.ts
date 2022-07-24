@@ -387,6 +387,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             return testAdapter.executeTests(
                                 this.testController,
                                 runInstance,
+                                testItems,
                                 token,
                                 request.profile?.kind === TestRunProfileKind.Debug,
                             );

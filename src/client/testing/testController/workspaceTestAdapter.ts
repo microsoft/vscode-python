@@ -11,7 +11,13 @@ import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestProvider } from '../types';
-import { createErrorTestItem, DebugTestTag, ErrorTestItemOptions, RunTestTag } from './common/testItemUtilities';
+import {
+    createErrorTestItem,
+    DebugTestTag,
+    ErrorTestItemOptions,
+    getTestCaseNodes,
+    RunTestTag,
+} from './common/testItemUtilities';
 import {
     DiscoveredTestItem,
     DiscoveredTestNode,
@@ -43,6 +49,8 @@ export class WorkspaceTestAdapter {
 
     runIdToVSid: Map<string, string>;
 
+    vsIdToRunId: Map<string, string>;
+
     constructor(
         private testProvider: TestProvider,
         private discoveryAdapter: ITestDiscoveryAdapter,
@@ -52,11 +60,13 @@ export class WorkspaceTestAdapter {
     ) {
         this.runIdToTestItem = new Map<string, TestItem>();
         this.runIdToVSid = new Map<string, string>();
+        this.vsIdToRunId = new Map<string, string>();
     }
 
     public async executeTests(
         testController: TestController,
         runInstance: TestRun,
+        includes: TestItem[],
         token?: CancellationToken,
         debugBool?: boolean,
     ): Promise<void> {
@@ -68,8 +78,24 @@ export class WorkspaceTestAdapter {
         this.executing = deferred;
 
         let rawTestExecData;
+        const testCaseNodes: TestItem[] = [];
+        const testCaseIds: string[] = [];
         try {
-            rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri, debugBool);
+            // first fetch all the individual test Items that we necessarily want
+            includes.forEach((t) => {
+                const nodes = getTestCaseNodes(t);
+                testCaseNodes.push(...nodes);
+            });
+            // iterate through testItems nodes and fetch their unittest runID to pass in as argument
+            testCaseNodes.forEach((node) => {
+                const runId = this.vsIdToRunId.get(node.id);
+                if (runId) {
+                    testCaseIds.push(runId);
+                }
+            });
+
+            // need to get the testItems runIds so that we can pass in here.
+            rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri, testCaseIds, debugBool);
             deferred.resolve();
         } catch (ex) {
             // handle token and telemetry here
@@ -97,11 +123,12 @@ export class WorkspaceTestAdapter {
                 const tempArr: TestItem[] = [];
 
                 // fetch inidividual testItem and store into tempArr
-                // testController.items.forEach((i) =>
-                //     i.children.forEach((z) =>
-                //         z.children.forEach((x) => x.children.forEach((indi) => tempArr.push(indi))),
-                //     ),
-                // );
+                // one directory above.
+                testController.items.forEach((i) =>
+                    i.children.forEach((z) =>
+                        z.children.forEach((x) => x.children.forEach((indi) => tempArr.push(indi))),
+                    ),
+                );
                 testController.items.forEach((i) =>
                     i.children.forEach((z) =>
                         z.children.forEach((x) =>
@@ -445,6 +472,7 @@ function populateTestTree(
                 // add to our map
                 wstAdapter.runIdToTestItem.set(child.runID, testItem);
                 wstAdapter.runIdToVSid.set(child.runID, child.id_);
+                wstAdapter.vsIdToRunId.set(child.id_, child.runID);
             } else {
                 let node = testController.items.get(child.path);
 

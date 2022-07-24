@@ -90,9 +90,25 @@ export class PythonTestServer implements ITestServer, Disposable {
         const execService = await this.executionFactory.createActivatedEnvironment(creationOptions);
 
         // Add the generated UUID to the data to be sent (expecting to receive it back).
-        const args = [options.command.script, '--port', this.port.toString(), '--uuid', uuid].concat(
-            options.command.args,
-        );
+        // first check if we have testIds passed in (in case of execution) and
+        // insert appropriate flag and test id array
+        let args = [];
+        if (options.testIds) {
+            args = [
+                options.command.script,
+                '--port',
+                this.port.toString(),
+                '--uuid',
+                uuid,
+                '--testids',
+                ...options.testIds,
+            ].concat(options.command.args);
+        } else {
+            // if not case of execution, go with the normal args
+            args = [options.command.script, '--port', this.port.toString(), '--uuid', uuid].concat(
+                options.command.args,
+            );
+        }
 
         if (options.outChannel) {
             options.outChannel.appendLine(`python ${args.join(' ')}`);
