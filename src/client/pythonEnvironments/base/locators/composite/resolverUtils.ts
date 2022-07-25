@@ -70,12 +70,10 @@ function getSearchLocation(env: PythonEnvInfo): Uri | undefined {
     const isRootedEnv = folders.some((f) => isParentPath(env.executable.filename, f));
     if (isRootedEnv) {
         // For environments inside roots, we need to set search location so they can be queried accordingly.
-        // Search location particularly for virtual environments is intended as the directory in which the
-        // environment was found in.
-        // For eg.the default search location for an env containing 'bin' or 'Scripts' directory is:
+        // In certain usecases environment directory can itself be a root, for eg. `python -m venv .`.
+        // So choose folder to environment path to search for this env.
         //
-        // searchLocation <--- Default search location directory
-        // |__ env
+        // |__ env <--- Default search location directory
         //    |__ bin or Scripts
         //        |__ python  <--- executable
         return Uri.file(env.location);
