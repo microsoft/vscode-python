@@ -331,7 +331,7 @@ suite('Resolver Utils', () => {
                 version,
                 arch: Architecture.Unknown,
                 distro: { org: '' },
-                searchLocation: Uri.file(path.dirname(location)),
+                searchLocation: Uri.file(location),
                 source: [],
             };
             setEnvDisplayString(info);

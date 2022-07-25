@@ -92,7 +92,7 @@ suite('Python envs locator - Environments Resolver', () => {
             version,
             arch: Architecture.Unknown,
             distro: { org: '' },
-            searchLocation: Uri.file(path.dirname(location)),
+            searchLocation: Uri.file(location),
             source: [],
         };
     }
