@@ -78,7 +78,7 @@ function getSearchLocation(env: PythonEnvInfo): Uri | undefined {
         // |__ env
         //    |__ bin or Scripts
         //        |__ python  <--- executable
-        return Uri.file(path.dirname(env.location));
+        return Uri.file(env.location);
     }
     return undefined;
 }
