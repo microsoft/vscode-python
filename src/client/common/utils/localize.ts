@@ -34,7 +34,7 @@ export namespace Diagnostics {
     );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',
-        'You need to select a Python interpreter before you start debugging.\n\nTip: click on "Select Python Interpreter" in the status bar.',
+        'You need to select a Python interpreter before you start debugging.\n\nTip: click on "Select Interpreter" in the status bar.',
     );
     export const invalidPythonPathInDebuggerLaunch = localize(
         'diagnostics.invalidPythonPathInDebuggerLaunch',

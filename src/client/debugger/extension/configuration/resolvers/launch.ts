@@ -13,7 +13,6 @@ import { IConfigurationService } from '../../../../common/types';
 import { IInterpreterService } from '../../../../interpreter/contracts';
 import { DebuggerTypeName } from '../../../constants';
 import { DebugOptions, DebugPurpose, LaunchRequestArguments } from '../../../types';
-import { PythonPathSource } from '../../types';
 import { BaseConfigurationResolver } from './base';
 import { IDebugEnvironmentVariablesService } from './helper';
 
@@ -195,9 +194,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.debugAdapterPython,
             debugConfiguration.debugLauncherPython,
         ]) {
-            const source =
-                executable === debugConfiguration.pythonPath ? this.pythonPathSource : PythonPathSource.launchJson;
-            if (!(await diagnosticService.validatePythonPath(executable, source, folder?.uri))) {
+            if (!(await diagnosticService.validatePythonPath(executable, this.pythonPathSource, folder?.uri))) {
                 return false;
             }
         }

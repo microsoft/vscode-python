@@ -124,9 +124,12 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
                 (await this.interpreterService.getActiveInterpreter(workspaceFolder))?.path ??
                 this.configurationService.getSettings(workspaceFolder).pythonPath;
             debugConfiguration.pythonPath = interpreterPath;
-            this.pythonPathSource = PythonPathSource.settingsJson;
         } else {
             debugConfiguration.pythonPath = systemVariables.resolveAny(debugConfiguration.pythonPath);
+        }
+        if (debugConfiguration.python === '${command:python.interpreterPath}' || !debugConfiguration.python) {
+            this.pythonPathSource = PythonPathSource.settingsJson;
+        } else {
             this.pythonPathSource = PythonPathSource.launchJson;
         }
         debugConfiguration.python = systemVariables.resolveAny(debugConfiguration.python);
