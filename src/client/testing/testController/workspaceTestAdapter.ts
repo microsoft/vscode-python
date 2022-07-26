@@ -138,8 +138,24 @@ export class WorkspaceTestAdapter {
                         ),
                     ),
                 );
+                // try to go down one more level
+                testController.items.forEach((i) =>
+                    i.children.forEach((z) =>
+                        z.children.forEach((x) =>
+                            x.children.forEach((indi) =>
+                                indi.children.forEach((eachTestMethod) =>
+                                    eachTestMethod.children.forEach((moreTests) => tempArr.push(moreTests)),
+                                ),
+                            ),
+                        ),
+                    ),
+                );
 
-                if (rawTestExecData.result[keyTemp].outcome === 'failure') {
+                if (
+                    rawTestExecData.result[keyTemp].outcome === 'failure' ||
+                    rawTestExecData.result[keyTemp].outcome === 'subtest-failure' ||
+                    rawTestExecData.result[keyTemp].outcome === 'passed-unexpected'
+                ) {
                     const traceback = rawTestExecData.result[keyTemp].traceback
                         ? rawTestExecData.result[keyTemp]
                               .traceback!.splitLines({ trim: false, removeEmptyEntries: true })
@@ -165,7 +181,8 @@ export class WorkspaceTestAdapter {
                     });
                 } else if (
                     rawTestExecData.result[keyTemp].outcome === 'success' ||
-                    rawTestExecData.result[keyTemp].outcome === 'expected-failure'
+                    rawTestExecData.result[keyTemp].outcome === 'expected-failure' ||
+                    rawTestExecData.result[keyTemp].outcome === 'subtest-passed'
                 ) {
                     const grabTestItem = this.runIdToTestItem.get(keyTemp);
                     const grabVSid = this.runIdToVSid.get(keyTemp);
