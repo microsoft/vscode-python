@@ -15,7 +15,6 @@ import {
     CancellationTokenSource,
     Uri,
     EventEmitter,
-    // TestMessage,
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IWorkspaceService } from '../../common/application/types';
@@ -89,11 +88,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory, // @inject(ITestDebugLauncher) private readonly debugLauncher: ITestDebugLauncher, new unittest execution debugger
+        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
         @inject(ITestDebugLauncher) private readonly debugLauncher: ITestDebugLauncher,
     ) {
         this.refreshCancellation = new CancellationTokenSource();
-        // add to const later => @inject(ITestDebugLauncher) private readonly debugLauncher: ITestDebugLauncher, new unittest execution debugger
+
         this.testController = tests.createTestController('python-tests', 'Python Tests');
         this.disposables.push(this.testController);
 
@@ -143,7 +142,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             return this.refreshTestData(undefined, { forceRefresh: true });
         };
 
-        // this.pythonTestServer = new PythonTestServer(this.pythonExecFactory); old one
+        // this.pythonTestServer = new PythonTestServer(this.pythonExecFactory); // old way where debugLauncher did not have to be passed
         this.pythonTestServer = new PythonTestServer(this.pythonExecFactory, this.debugLauncher);
     }
 
@@ -154,7 +153,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             const settings = this.configSettings.getSettings(workspace.uri);
 
             let discoveryAdapter: ITestDiscoveryAdapter;
-            let executionAdapter: ITestExecutionAdapter; // added 6/30
+            let executionAdapter: ITestExecutionAdapter;
             let testProvider: TestProvider;
             if (settings.testing.unittestEnabled) {
                 discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);

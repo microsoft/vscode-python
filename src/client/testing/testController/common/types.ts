@@ -166,7 +166,7 @@ export interface ITestDiscoveryAdapter {
     discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
 }
 
-// interface for execution/runner adapter 6/27/22
+// interface for execution/runner adapter
 export interface ITestExecutionAdapter {
     runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload>;
 }
@@ -198,7 +198,6 @@ export type DiscoveredTestPayload = {
     errors?: string[];
 };
 
-// payload for exeuctionTest 6/27/22
 export type ExecutionTestPayload = {
     cwd: string;
     status: 'success' | 'error';

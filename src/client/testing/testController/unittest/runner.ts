@@ -67,7 +67,6 @@ export class UnittestRunner implements ITestsRunner {
             nodes.forEach((n) => {
                 if (n.uri) {
                     const fsRunIds = fileToTestCases.get(n.uri.fsPath);
-                    console.log(fsRunIds); // check this
                     if (fsRunIds) {
                         fsRunIds.push(n);
                     } else {

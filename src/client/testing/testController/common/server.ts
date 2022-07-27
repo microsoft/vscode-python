@@ -115,12 +115,6 @@ export class PythonTestServer implements ITestServer, Disposable {
         }
 
         try {
-            // check if there exist the launchOption provided.
-            // If there is the launch option provided, that means we need to launch the debugger
-            // if (launchOptions) {
-            // } else {
-            //     await execService.exec(args, spawnOptions);
-            // }
             if (options.debugBool) {
                 const launchOptions: LaunchOptions = {
                     cwd: options.cwd,
@@ -134,7 +128,6 @@ export class PythonTestServer implements ITestServer, Disposable {
             } else {
                 await execService.exec(args, spawnOptions);
             }
-            // await execService.exec(args, spawnOptions);
         } catch (ex) {
             this.uuids.delete(uuid);
             this._onDataReceived.fire({

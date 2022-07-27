@@ -3,8 +3,17 @@
 
 import * as path from 'path';
 import * as util from 'util';
-import { CancellationToken, Position, Range, TestController, TestItem, TestMessage, TestRun, Uri } from 'vscode';
-import { Location } from 'vscode'; //
+import {
+    CancellationToken,
+    Position,
+    Range,
+    TestController,
+    TestItem,
+    TestMessage,
+    TestRun,
+    Uri,
+    Location,
+} from 'vscode';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
 import { traceError } from '../../logging';
@@ -37,14 +46,12 @@ import { fixLogLines } from './common/utils';
  * and uses them to insert/update/remove items in the `TestController` instance behind the testing UI whenever the `PythonTestController` requests a refresh.
  */
 export class WorkspaceTestAdapter {
-    // private discovering: Deferred<void> | undefined = undefined; ????
     private discovering: Deferred<void> | undefined;
 
     private executing: Deferred<void> | undefined;
 
     private testData: DiscoveredTestNode | undefined;
 
-    // potentially a hashmap of runID : testItem?
     runIdToTestItem: Map<string, TestItem>;
 
     runIdToVSid: Map<string, string>;
@@ -54,7 +61,6 @@ export class WorkspaceTestAdapter {
     constructor(
         private testProvider: TestProvider,
         private discoveryAdapter: ITestDiscoveryAdapter,
-        // TODO: Implement test running
         private executionAdapter: ITestExecutionAdapter,
         private workspaceUri: Uri,
     ) {
@@ -175,7 +181,7 @@ export class WorkspaceTestAdapter {
                                 message.location = new Location(indiItem.uri, indiItem.range);
                                 runInstance.started(indiItem);
                                 runInstance.failed(indiItem, message);
-                                runInstance.appendOutput(fixLogLines(text)); // added 7/15
+                                runInstance.appendOutput(fixLogLines(text));
                             }
                         }
                     });
@@ -437,7 +443,7 @@ function updateTestTree(
                     testRoot!.children.add(testItem);
 
                     // Populate the test tree under the newly created node.
-                    // populateTestTree(testController, child, testItem, token, this); uncomment later
+                    // populateTestTree(testController, child, testItem, token, this); // uncomment later
                 }
             }
         }
@@ -453,9 +459,8 @@ function populateTestTree(
 ): void {
     // If testRoot is undefined, use the info of the root item of testTreeData to create a test item, and append it to the test controller.
     if (!testRoot) {
-        // const cleanChildPath = testTreeData.path.replace('\\\\', '\\'); // exyts
         testRoot = testController.createTestItem(testTreeData.path, testTreeData.name, Uri.file(testTreeData.path));
-        // testRoot = testController.createTestItem(testTreeData.path, testTreeData.name, Uri.file(cleanChildPath));
+
         testRoot.canResolveChildren = true;
         testRoot.tags = [RunTestTag, DebugTestTag];
 
@@ -465,19 +470,10 @@ function populateTestTree(
     // Recursively populate the tree with test data.
     testTreeData.children.forEach((child) => {
         if (!token?.isCancellationRequested) {
-            // Try to identify if we fall into TestItem or TestNode?
-
             if (isTestItem(child)) {
-                // warning warning: I think there is a problem with child.path being double dash instead of single dash in legacy code
-                // maybe thats why uri getting messed up=> highly likely
-                // const regex = /\\\\/g;
-                // const cleanChildPath = child.path.replace(regex, '\\');
-                // const cleanChildPath = child.path.replace('\\\\', '\\');
                 const testItem = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
                 testItem.tags = [RunTestTag, DebugTestTag];
-                // const testItem = testController.createTestItem(child.id_, child.name, Uri.file(cleanChildPath));
 
-                // const trackerVar = Uri.file(cleanChildPath).fsPath;
                 const range = new Range(
                     new Position(Number(child.lineno) - 1, 0),
                     new Position(Number(child.lineno), 0),
@@ -494,10 +490,8 @@ function populateTestTree(
                 let node = testController.items.get(child.path);
 
                 if (!node) {
-                    // replace child.path with child.id_ (unique)
-                    // const cleanChildPath = child.path.replace('\\\\', '\\');
                     node = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
-                    // node = testController.createTestItem(child.id_, child.name, Uri.file(cleanChildPath));
+
                     node.canResolveChildren = true;
                     node.tags = [RunTestTag, DebugTestTag];
 
