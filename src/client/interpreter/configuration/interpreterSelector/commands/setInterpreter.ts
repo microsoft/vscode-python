@@ -126,10 +126,6 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         // times so that the visible items do not change.
         const preserveOrderWhenFiltering = !!this.interpreterService.refreshPromise;
         const suggestions = this.getItems(state.workspace);
-        // Discovery is no longer guranteed to be auto-triggered on extension load, so trigger it when
-        // user interacts with the interpreter picker but only once per session. Users can rely on the
-        // refresh button if they want to trigger it more than once.
-        this.interpreterService.triggerRefresh(undefined, { ifNotTriggerredAlready: true }).ignoreErrors();
         state.path = undefined;
         const currentInterpreterPathDisplay = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
@@ -154,6 +150,17 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                     tooltip: InterpreterQuickPickList.refreshInterpreterList,
                 },
                 callback: () => this.interpreterService.triggerRefresh().ignoreErrors(),
+            },
+            initialize: () => {
+                // Note discovery is no longer guranteed to be auto-triggered on extension load, so trigger it when
+                // user interacts with the interpreter picker but only once per session. Users can rely on the
+                // refresh button if they want to trigger it more than once. However if no envs were found previously,
+                // always trigger a refresh.
+                if (this.interpreterService.getInterpreters().length === 0) {
+                    this.interpreterService.triggerRefresh().ignoreErrors();
+                } else {
+                    this.interpreterService.triggerRefresh(undefined, { ifNotTriggerredAlready: true }).ignoreErrors();
+                }
             },
             onChangeItem: {
                 event: this.interpreterService.onDidChangeInterpreters,
@@ -341,7 +348,8 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
 
     private finalizeItems(items: QuickPickType[], resource: Resource) {
         const interpreterSuggestions = this.interpreterSelector.getSuggestions(resource, true);
-        if (!this.interpreterService.refreshPromise) {
+        const r = this.interpreterService.refreshPromise;
+        if (!r) {
             if (interpreterSuggestions.length) {
                 this.setRecommendedItem(interpreterSuggestions, items, resource);
                 // Add warning label to certain environments
@@ -357,8 +365,16 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                     }
                 });
             } else {
-                items.push(this.noPythonInstalled);
-                if (this.wasNoPythonInstalledItemClicked) {
+                const doesNoPyItemExist = items.some(
+                    (item) => isSpecialQuickPickItem(item) && item.label === this.noPythonInstalled.label,
+                );
+                if (doesNoPyItemExist) {
+                    items.push(this.noPythonInstalled);
+                }
+                if (
+                    this.wasNoPythonInstalledItemClicked &&
+                    items.some((item) => isSpecialQuickPickItem(item) && item.label === this.tipToReloadWindow.label)
+                ) {
                     items.push(this.tipToReloadWindow);
                 }
             }

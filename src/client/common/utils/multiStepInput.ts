@@ -54,6 +54,10 @@ export interface IQuickPickParameters<T extends QuickPickItem, E = any> {
     keepScrollPosition?: boolean;
     sortByLabel?: boolean;
     acceptFilterBoxTextAsSelection?: boolean;
+    /**
+     * A method called only after quickpick has been created and all handlers are registered.
+     */
+    initialize?: () => void;
     onChangeItem?: {
         callback: (event: E, quickPick: QuickPick<T>) => void;
         event: Event<E>;
@@ -120,6 +124,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         onChangeItem,
         keepScrollPosition,
         sortByLabel,
+        initialize,
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>> {
         const disposables: Disposable[] = [];
         try {
@@ -175,6 +180,9 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     disposables.push(onChangeItem.event((e) => onChangeItem.callback(e, input)));
                 }
                 this.current.show();
+                if (initialize) {
+                    initialize();
+                }
                 // Keep scroll position is only meant to keep scroll position when updating items,
                 // so do it after initialization. This ensures quickpick starts with the active
                 // item in focus when this is true, instead of having scroll position at top.

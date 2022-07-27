@@ -199,7 +199,7 @@ export type TriggerRefreshOptions = {
      */
     clearCache?: boolean;
     /**
-     * Only trigger a refresh if it hasn't already been triggered for this session, or if no envs were found previously.
+     * Only trigger a refresh if it hasn't already been triggered for this session.
      */
     ifNotTriggerredAlready?: boolean;
 };

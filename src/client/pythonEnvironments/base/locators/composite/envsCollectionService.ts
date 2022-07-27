@@ -104,8 +104,8 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         const stopWatch = new StopWatch();
         let refreshPromise = this.getRefreshPromiseForQuery(query);
         if (!refreshPromise) {
-            if (options?.ifNotTriggerredAlready && this.hasRefreshFinished(query) && this.getEnvs().length) {
-                // Do not trigger another refresh if a refresh has previously finished and envs were found.
+            if (options?.ifNotTriggerredAlready && this.hasRefreshFinished(query)) {
+                // Do not trigger another refresh if a refresh has previously finished.
                 return Promise.resolve();
             }
             refreshPromise = this.startRefresh(query, options);
