@@ -205,7 +205,7 @@ def run_tests(
         loader = unittest.TestLoader()
         tailor: unittest.TestSuite = loader.loadTestsFromNames(test_ids)
         # result: UnittestTestResult = runner.run(suite)  # type: ignore
-        result: UnittestTestResult = runner.run(tailor)
+        result: UnittestTestResult = runner.run(tailor)  # type: ignore
 
         payload["result"] = result.formatted
 
