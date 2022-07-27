@@ -365,15 +365,12 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                     }
                 });
             } else {
-                const doesNoPyItemExist = items.some(
-                    (item) => isSpecialQuickPickItem(item) && item.label === this.noPythonInstalled.label,
-                );
-                if (doesNoPyItemExist) {
+                if (!items.some((i) => isSpecialQuickPickItem(i) && i.label === this.noPythonInstalled.label)) {
                     items.push(this.noPythonInstalled);
                 }
                 if (
                     this.wasNoPythonInstalledItemClicked &&
-                    items.some((item) => isSpecialQuickPickItem(item) && item.label === this.tipToReloadWindow.label)
+                    !items.some((i) => isSpecialQuickPickItem(i) && i.label === this.tipToReloadWindow.label)
                 ) {
                     items.push(this.tipToReloadWindow);
                 }
