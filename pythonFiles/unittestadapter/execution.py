@@ -203,7 +203,7 @@ def run_tests(
         runner = unittest.TextTestRunner(resultclass=UnittestTestResult)
         ### lets try to tailer our own suite so we can figure out running only the ones we want
         loader = unittest.TestLoader()
-        tailor = loader.loadTestsFromNames(test_ids)
+        tailor: unittest.TestSuite = loader.loadTestsFromNames(test_ids)
         # result: UnittestTestResult = runner.run(suite)  # type: ignore
         result: UnittestTestResult = runner.run(tailor)
 
