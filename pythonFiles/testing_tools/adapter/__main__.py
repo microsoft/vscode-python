@@ -9,11 +9,6 @@ import sys
 from . import pytest, report
 from .errors import UnsupportedCommandError, UnsupportedToolError
 
-##########
-# import debugpy
-
-
-# debugpy.connect(("localhost", 5678))
 TOOLS = {
     "pytest": {
         "_add_subparser": pytest.add_cli_subparser,

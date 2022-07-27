@@ -11,20 +11,14 @@ import unittest
 from types import TracebackType
 from typing import Dict, List, Optional, Tuple, Type, TypeAlias, TypedDict
 
-########
-# import debugpy
 from discovery import parse_unittest_discovery_args
 from testing_tools import socket_manager
 from typing_extensions import NotRequired
-
-# debugpy.connect(("localhost", 5678))
-# debugpy.breakpoint()
 
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PYTHON_FILES)
 
-# from testing_tools import socket_manager
 
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
@@ -48,8 +42,6 @@ def parse_execution_cli_args(args: List[str]) -> Tuple[int, str | None, List[str
     arg_parser.add_argument("--uuid")
     arg_parser.add_argument("--testids", nargs="+")
     parsed_args, _ = arg_parser.parse_known_args(args)
-
-    # test_ids: List[str] = parsed_args.testids.split(",") if parsed_args.testids else []
 
     return (int(parsed_args.port), parsed_args.uuid, parsed_args.testids)
 
@@ -201,10 +193,9 @@ def run_tests(
 
         # Run tests.
         runner = unittest.TextTestRunner(resultclass=UnittestTestResult)
-        ### lets try to tailer our own suite so we can figure out running only the ones we want
+        # lets try to tailer our own suite so we can figure out running only the ones we want
         loader = unittest.TestLoader()
         tailor: unittest.TestSuite = loader.loadTestsFromNames(test_ids)
-        # result: UnittestTestResult = runner.run(suite)  # type: ignore
         result: UnittestTestResult = runner.run(tailor)  # type: ignore
 
         payload["result"] = result.formatted
@@ -232,23 +223,13 @@ if __name__ == "__main__":
     argv = sys.argv[1:]
     index = argv.index("--udiscovery")
 
-    start_dir, pattern, top_level_dir = parse_unittest_discovery_args(
-        argv[index + 1 :]
-    )  # do we need 225,227?
-
-    # start_path = pathlib.Path.home() / "Documents" / "Sandbox" / "unittest-subtest"
-    # test_ids = [
-    #     "subfolder.test_two.TestClassTwo.test_two_two",
-    #     "test_one.TestClassOne.test_func_one",
-    #     "test_eight.TestClassEight.test_func_eight"
-    # ]
-    # uuid = "abcd"
+    start_dir, pattern, top_level_dir = parse_unittest_discovery_args(argv[index + 1 :])
 
     # Perform test execution.
     port, uuid, testids = parse_execution_cli_args(argv[:index])
     payload = run_tests(start_dir, testids, pattern, top_level_dir, uuid)
 
-    #     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
+    # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
     addr = ("localhost", port)
     with socket_manager.SocketManager(addr) as s:
         data = json.dumps(payload)
