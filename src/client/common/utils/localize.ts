@@ -279,7 +279,7 @@ export namespace Interpreters {
     );
     export const installPythonTerminalMessage = localize(
         'Interpreters.installPythonTerminalMessage',
-        '💡 Please try installing python package using your package manager. Alternatively you can also download it from https://www.python.org/downloads',
+        '💡 Please try installing the python package using your package manager. Alternatively you can also download it from https://www.python.org/downloads',
     );
 }
 
