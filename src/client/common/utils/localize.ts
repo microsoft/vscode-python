@@ -277,6 +277,10 @@ export namespace Interpreters {
         'Interpreters.selectInterpreterTip',
         'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar',
     );
+    export const installPythonTerminalMessage = localize(
+        'Interpreters.installPythonTerminalMessage',
+        '💡 Please try installing python package using your package manager. Alternatively you can also download it from https://www.python.org/downloads',
+    );
 }
 
 export namespace InterpreterQuickPickList {
