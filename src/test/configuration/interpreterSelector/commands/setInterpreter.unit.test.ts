@@ -263,6 +263,7 @@ suite('Set Interpreter Command', () => {
             expect(actualParameters).to.not.equal(undefined, 'Parameters not set');
             const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
             expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
+            delete actualParameters!.initialize;
             delete actualParameters!.customButtonSetup;
             delete actualParameters!.onChangeItem;
             assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
@@ -303,6 +304,7 @@ suite('Set Interpreter Command', () => {
             expect(actualParameters).to.not.equal(undefined, 'Parameters not set');
             const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
             expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
+            delete actualParameters!.initialize;
             delete actualParameters!.customButtonSetup;
             delete actualParameters!.onChangeItem;
             assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
@@ -458,6 +460,7 @@ suite('Set Interpreter Command', () => {
             expect(actualParameters).to.not.equal(undefined, 'Parameters not set');
             const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
             expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
+            delete actualParameters!.initialize;
             delete actualParameters!.customButtonSetup;
             delete actualParameters!.onChangeItem;
             assert.deepStrictEqual(actualParameters?.items, expectedParameters.items, 'Params not equal');
@@ -542,6 +545,7 @@ suite('Set Interpreter Command', () => {
             const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
             expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
 
+            delete actualParameters!.initialize;
             delete actualParameters!.customButtonSetup;
             delete actualParameters!.onChangeItem;
 
