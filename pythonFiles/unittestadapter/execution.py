@@ -46,7 +46,7 @@ def parse_execution_cli_args(args: List[str]) -> Tuple[int, str | None, List[str
     return (int(parsed_args.port), parsed_args.uuid, parsed_args.testids)
 
 
-ErrorType: TypeAlias = (
+ErrorType = (
     Tuple[Type[BaseException], BaseException, TracebackType] | Tuple[None, None, None]
 )
 
