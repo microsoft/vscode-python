@@ -28,7 +28,7 @@ import { CommandsWithoutArgs } from '../../../../client/common/application/comma
 import { ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { Commands } from '../../../../client/common/constants';
 import { IPlatformService } from '../../../../client/common/platform/types';
-import { IDisposable, IDisposableRegistry, Resource } from '../../../../client/common/types';
+import { IDisposable, IDisposableRegistry, IInterpreterPathService, Resource } from '../../../../client/common/types';
 import { Common } from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
 import { IInterpreterHelper, IInterpreterService } from '../../../../client/interpreter/contracts';
@@ -46,6 +46,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
     let commandManager: typemoq.IMock<ICommandManager>;
     let helper: typemoq.IMock<IInterpreterHelper>;
     let serviceContainer: typemoq.IMock<IServiceContainer>;
+    let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
     function createContainer() {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
@@ -76,6 +77,11 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         serviceContainer
             .setup((s) => s.get(typemoq.It.isValue(IPlatformService)))
             .returns(() => platformService.object);
+        interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
+        interpreterPathService.setup((i) => i.get(typemoq.It.isAny())).returns(() => 'customPython');
+        serviceContainer
+            .setup((s) => s.get(typemoq.It.isValue(IInterpreterPathService)))
+            .returns(() => interpreterPathService.object);
         helper = typemoq.Mock.ofType<IInterpreterHelper>();
         serviceContainer.setup((s) => s.get(typemoq.It.isValue(IInterpreterHelper))).returns(() => helper.object);
         serviceContainer.setup((s) => s.get(typemoq.It.isValue(IDisposableRegistry))).returns(() => []);
@@ -160,7 +166,9 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             expect(diagnostics).to.be.deep.equal([], 'not the same');
         });
 
-        test('Should return diagnostics if there are no interpreters after double-checking', async () => {
+        test('Should return diagnostics if there are no interpreters and no interpreter has been explicitly set', async () => {
+            interpreterPathService.reset();
+            interpreterPathService.setup((i) => i.get(typemoq.It.isAny())).returns(() => 'python');
             interpreterService
                 .setup((i) => i.hasInterpreters())
                 .returns(() => Promise.resolve(false))
