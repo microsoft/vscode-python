@@ -122,9 +122,8 @@ export class PythonTestServer implements ITestServer, Disposable {
                     token: options.token,
                     testProvider: UNITTEST_PROVIDER,
                 };
-                if (this.debugLauncher) {
-                    await this.debugLauncher.launchDebugger(launchOptions);
-                }
+
+                await this.debugLauncher!.launchDebugger(launchOptions);
             } else {
                 await execService.exec(args, spawnOptions);
             }
