@@ -94,6 +94,7 @@ export class WorkspaceTestAdapter {
             });
             // iterate through testItems nodes and fetch their unittest runID to pass in as argument
             testCaseNodes.forEach((node) => {
+                runInstance.started(node); // do the vscode ui test item start here before runtest
                 const runId = this.vsIdToRunId.get(node.id);
                 if (runId) {
                     testCaseIds.push(runId);
@@ -126,36 +127,13 @@ export class WorkspaceTestAdapter {
         if (rawTestExecData !== undefined && rawTestExecData.result !== undefined) {
             for (const keyTemp of Object.keys(rawTestExecData.result)) {
                 // check for result and update the UI accordingly.
-                const tempArr: TestItem[] = [];
+                const testCases: TestItem[] = [];
 
-                // fetch inidividual testItem and store into tempArr
-                // one directory above.
-                testController.items.forEach((i) =>
-                    i.children.forEach((z) =>
-                        z.children.forEach((x) => x.children.forEach((indi) => tempArr.push(indi))),
-                    ),
-                );
-                testController.items.forEach((i) =>
-                    i.children.forEach((z) =>
-                        z.children.forEach((x) =>
-                            x.children.forEach((indi) =>
-                                indi.children.forEach((eachTestMethod) => tempArr.push(eachTestMethod)),
-                            ),
-                        ),
-                    ),
-                );
-                // try to go down one more level
-                testController.items.forEach((i) =>
-                    i.children.forEach((z) =>
-                        z.children.forEach((x) =>
-                            x.children.forEach((indi) =>
-                                indi.children.forEach((eachTestMethod) =>
-                                    eachTestMethod.children.forEach((moreTests) => tempArr.push(moreTests)),
-                                ),
-                            ),
-                        ),
-                    ),
-                );
+                // grab leaf level test items
+                testController.items.forEach((i) => {
+                    const tempArr: TestItem[] = getTestCaseNodes(i);
+                    testCases.push(...tempArr);
+                });
 
                 if (
                     rawTestExecData.result[keyTemp].outcome === 'failure' ||
@@ -175,11 +153,10 @@ export class WorkspaceTestAdapter {
                     // note that keyTemp is a runId for unittest library...
                     const grabVSid = this.runIdToVSid.get(keyTemp);
                     // search through freshly built array of testItem to find the failed test and update UI.
-                    tempArr.forEach((indiItem) => {
+                    testCases.forEach((indiItem) => {
                         if (indiItem.id === grabVSid) {
                             if (indiItem.uri && indiItem.range) {
                                 message.location = new Location(indiItem.uri, indiItem.range);
-                                runInstance.started(indiItem);
                                 runInstance.failed(indiItem, message);
                                 runInstance.appendOutput(fixLogLines(text));
                             }
@@ -193,10 +170,9 @@ export class WorkspaceTestAdapter {
                     const grabTestItem = this.runIdToTestItem.get(keyTemp);
                     const grabVSid = this.runIdToVSid.get(keyTemp);
                     if (grabTestItem !== undefined) {
-                        tempArr.forEach((indiItem) => {
+                        testCases.forEach((indiItem) => {
                             if (indiItem.id === grabVSid) {
                                 if (indiItem.uri && indiItem.range) {
-                                    runInstance.started(grabTestItem);
                                     runInstance.passed(grabTestItem);
                                     runInstance.appendOutput('Passed here');
                                 }
@@ -207,10 +183,9 @@ export class WorkspaceTestAdapter {
                     const grabTestItem = this.runIdToTestItem.get(keyTemp);
                     const grabVSid = this.runIdToVSid.get(keyTemp);
                     if (grabTestItem !== undefined) {
-                        tempArr.forEach((indiItem) => {
+                        testCases.forEach((indiItem) => {
                             if (indiItem.id === grabVSid) {
                                 if (indiItem.uri && indiItem.range) {
-                                    runInstance.started(grabTestItem);
                                     runInstance.skipped(grabTestItem);
                                     runInstance.appendOutput('Skipped here');
                                 }
