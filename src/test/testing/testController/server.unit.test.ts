@@ -134,11 +134,12 @@ suite('Python Test Server', () => {
             hostname: 'localhost',
             method: 'POST',
             port,
-            Requestuuid: fakeUuid,
+            // Requestuuid: fakeUuid,
         };
 
         const request = http.request(requestOptions, (res) => {
             res.setEncoding('utf8');
+            res.rawHeaders.push(...['Reuqestuuid', fakeUuid]);
         });
 
         const postData = JSON.stringify({ status: 'success', uuid: fakeUuid });
