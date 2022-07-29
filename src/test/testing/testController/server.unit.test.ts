@@ -113,7 +113,8 @@ suite('Python Test Server', () => {
     test('If the server receives data, it should fire an event if it is a known uuid', async () => {
         const deferred = createDeferred();
         const options = {
-            command: { script: 'myscript', args: ['-foo', 'foo'] },
+            // command: { script: 'myscript', args: ['-foo', 'foo'] },
+            command: { script: 'myscript', args: ['-foo', 'foo', '--uuid', fakeUuid] },
             workspaceFolder: Uri.file('/foo/bar'),
             cwd: '/foo/bar',
         };
@@ -139,7 +140,7 @@ suite('Python Test Server', () => {
 
         const request = http.request(requestOptions, (res) => {
             res.setEncoding('utf8');
-            res.rawHeaders.push(...['Reuqestuuid', fakeUuid]);
+            // res.rawHeaders.push(...['Reuqestuuid', fakeUuid]);
         });
 
         const postData = JSON.stringify({ status: 'success', uuid: fakeUuid });
