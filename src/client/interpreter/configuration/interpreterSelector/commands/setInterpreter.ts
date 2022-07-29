@@ -28,6 +28,7 @@ import { EnvironmentType } from '../../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { IInterpreterService, PythonEnvironmentsChangedEvent } from '../../../contracts';
+import { isProblematicCondaEnvironment } from '../../environmentTypeComparer';
 import {
     IInterpreterQuickPickItem,
     IInterpreterSelector,
@@ -354,11 +355,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 this.setRecommendedItem(interpreterSuggestions, items, resource);
                 // Add warning label to certain environments
                 items.forEach((item, i) => {
-                    if (
-                        isInterpreterQuickPickItem(item) &&
-                        item.interpreter.path === 'python' &&
-                        item.interpreter.envType === EnvironmentType.Conda
-                    ) {
+                    if (isInterpreterQuickPickItem(item) && isProblematicCondaEnvironment(item.interpreter)) {
                         if (!items[i].label.includes(Octicons.Warning)) {
                             items[i].label = `${Octicons.Warning} ${items[i].label}`;
                         }

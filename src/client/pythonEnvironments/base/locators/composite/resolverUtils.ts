@@ -67,7 +67,7 @@ export async function resolveBasicEnv(env: BasicEnvInfo, useCache = false): Prom
 
 function getSearchLocation(env: PythonEnvInfo): Uri | undefined {
     const folders = getWorkspaceFolders();
-    const isRootedEnv = folders.some((f) => isParentPath(env.executable.filename, f));
+    const isRootedEnv = folders.some((f) => isParentPath(env.executable.filename, f) || isParentPath(env.location, f));
     if (isRootedEnv) {
         // For environments inside roots, we need to set search location so they can be queried accordingly.
         // In certain usecases environment directory can itself be a root, for eg. `python -m venv .`.

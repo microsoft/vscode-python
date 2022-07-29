@@ -41,6 +41,12 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
      * Always sort with newest version of Python first within each subgroup.
      */
     public compare(a: PythonEnvironment, b: PythonEnvironment): number {
+        if (isProblematicCondaEnvironment(a)) {
+            return 1;
+        }
+        if (isProblematicCondaEnvironment(b)) {
+            return -1;
+        }
         // Check environment location.
         const envLocationComparison = compareEnvironmentLocation(a, b, this.workspaceFolderPath);
         if (envLocationComparison !== 0) {
@@ -84,6 +90,9 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
         // because we would have to add a way to match environments to a workspace.
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
         const filteredInterpreters = interpreters.filter((i) => {
+            if (isProblematicCondaEnvironment(i)) {
+                return false;
+            }
             if (getEnvLocationHeuristic(i, workspaceUri?.folderUri.fsPath || '') === EnvLocationHeuristic.Local) {
                 return true;
             }
@@ -150,6 +159,10 @@ function isBaseCondaEnvironment(environment: PythonEnvironment): boolean {
         environment.envType === EnvironmentType.Conda &&
         (environment.envName === 'base' || environment.envName === 'miniconda')
     );
+}
+
+export function isProblematicCondaEnvironment(environment: PythonEnvironment): boolean {
+    return environment.envType === EnvironmentType.Conda && environment.path === 'python';
 }
 
 /**
