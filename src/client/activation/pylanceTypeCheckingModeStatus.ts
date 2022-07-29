@@ -39,20 +39,13 @@ export class PylanceTypeCheckingModeStatusItem implements IExtensionSingleActiva
     ) {
         this.commandManager.registerCommand(Commands.Set_TypeChecking, this.handlerUpdateTypeCheckingMode.bind(this));
 
-        const configChangeTrigger = new DelayedTrigger(this.updateStatusItem.bind(this), 500, 'Configuration Change');
-        this.configChangeTrigger = configChangeTrigger;
-        this.disposables.push(configChangeTrigger);
+        const configChangedTrigger = new DelayedTrigger(this.updateStatusItem.bind(this), 500, 'Configuration Change');
+        this.configChangeTrigger = configChangedTrigger;
+        this.disposables.push(configChangedTrigger);
     }
 
     public async activate(): Promise<void> {
-        const typeCheckingMode = this.workspace.getConfiguration('python.analysis').get<string>('typeCheckingMode');
-        if (typeCheckingMode) {
-            this.statusItem = this.createStatusItem(typeCheckingMode);
-            if (this.statusItem) {
-                this.disposables.push(this.statusItem);
-            }
-        }
-
+        this.updateStatusItem();
         this.registerHandlers();
     }
 
@@ -60,28 +53,24 @@ export class PylanceTypeCheckingModeStatusItem implements IExtensionSingleActiva
     private registerHandlers() {
         this.disposables.push(
             this.workspace.onDidChangeConfiguration((e) => {
-                if (e.affectsConfiguration(TypeCheckingSettingName)) {
+                if (
+                    e.affectsConfiguration(TypeCheckingSettingName) ||
+                    e.affectsConfiguration('python.languageServer')
+                ) {
                     this.configChangeTrigger.trigger();
                 }
             }),
         );
-        // this.disposables.push(
-        //     this.documentManager.onDidChangeActiveTextEditor((e) => {
-        //         if (e?.document.languageId === PYTHON_LANGUAGE) {
-        //             this.configChangeTrigger.trigger(e.document);
-        //         }
-        //     }),
-        // );
     }
 
     public dispose(): void {
+        this.statusItem?.dispose();
         this.statusItem = undefined;
         this.disposables.forEach((d) => d.dispose());
     }
 
     public async setSettings(recommendedSettings?: { settingName: string; value: unknown }[]): Promise<void> {
-        const isPylance = this.configService.getSettings().languageServer === LanguageServerType.Node;
-        if (!isPylance || !this.statusItem) {
+        if (!this.isPylance()) {
             return;
         }
 
@@ -93,22 +82,40 @@ export class PylanceTypeCheckingModeStatusItem implements IExtensionSingleActiva
             });
         }
 
-        const typeMode = vscode.workspace.getConfiguration('python.analysis').get<string>('typeCheckingMode') ?? '';
+        await this.updateStatusItem();
+    }
 
-        this.updateTypeCheckingStatusDetails(this.statusItem!, typeMode);
+    private isPylance() {
+        return this.configService.getSettings().languageServer === LanguageServerType.Node;
     }
 
     public async updateStatusItem(): Promise<void> {
-        const isPylance = this.configService.getSettings().languageServer === LanguageServerType.Node;
-        if (!isPylance || !this.statusItem) {
+        // handle clean up and creation of status item
+        if (!this.isPylance()) {
+            this.statusItem?.dispose();
+            this.statusItem = undefined;
             return;
         }
 
-        const typeMode = vscode.workspace.getConfiguration('python.analysis').get<string>('typeCheckingMode') ?? '';
-        this.updateTypeCheckingStatusDetails(this.statusItem, typeMode);
+        if (!this.statusItem) {
+            this.statusItem = this.createStatusItem();
+        }
+
+        if (this.statusItem) {
+            const typeCheckingMode =
+                vscode.workspace.getConfiguration('python.analysis').get<string>('typeCheckingMode') ?? '';
+            const inspection = vscode.workspace.getConfiguration('python.analysis').inspect<string>('typeCheckingMode');
+            const isDefault = inspection?.workspaceValue === undefined && inspection?.globalValue === undefined;
+
+            this.updateTypeCheckingStatusDetails(this.statusItem, typeCheckingMode, isDefault);
+        }
     }
 
     public async handlerUpdateTypeCheckingMode(typeCheckingMode: string): Promise<void | undefined> {
+        if (!this.isPylance()) {
+            return;
+        }
+
         await this.configService.updateSetting(
             'analysis.typeCheckingMode',
             typeCheckingMode,
@@ -117,7 +124,8 @@ export class PylanceTypeCheckingModeStatusItem implements IExtensionSingleActiva
         );
     }
 
-    private createStatusItem(typeCheckingMode: string) {
+    // eslint-disable-next-line class-methods-use-this
+    private createStatusItem() {
         if (!('createLanguageStatusItem' in vscode.languages)) {
             return undefined;
         }
@@ -126,16 +134,23 @@ export class PylanceTypeCheckingModeStatusItem implements IExtensionSingleActiva
             language: 'python',
         });
 
-        this.updateTypeCheckingStatusDetails(statusItem, typeCheckingMode);
         return statusItem;
     }
 
-    private updateTypeCheckingStatusDetails(statusItem: vscode.LanguageStatusItem, typeCheckingMode: string) {
+    private updateTypeCheckingStatusDetails(
+        statusItem: vscode.LanguageStatusItem,
+        typeCheckingMode: string,
+        isDefault: boolean,
+    ) {
+        statusItem.command = undefined;
         statusItem.name = LanguageService.statusItem.name;
         statusItem.text = `${LanguageService.pylanceTypeCheckingModeOffStatusItem.text}: ${typeCheckingMode}`;
 
         if (typeCheckingMode === 'off' && this.recommendedTypeMode === 'basic') {
-            statusItem.severity = vscode.LanguageStatusSeverity.Warning;
+            // Only show the dot/jiggle if the user has not set typechecking
+            statusItem.severity = isDefault
+                ? vscode.LanguageStatusSeverity.Warning
+                : vscode.LanguageStatusSeverity.Information;
             statusItem.command = {
                 title: LanguageService.pylanceTypeCheckingModeOffStatusItem.titleOn,
                 command: Commands.Set_TypeChecking,
@@ -150,6 +165,7 @@ export class PylanceTypeCheckingModeStatusItem implements IExtensionSingleActiva
             };
         } else {
             statusItem.severity = vscode.LanguageStatusSeverity.Information;
+            statusItem.command = undefined;
         }
     }
 }
