@@ -113,8 +113,7 @@ suite('Python Test Server', () => {
     test('If the server receives data, it should fire an event if it is a known uuid', async () => {
         const deferred = createDeferred();
         const options = {
-            // command: { script: 'myscript', args: ['-foo', 'foo'] },
-            command: { script: 'myscript', args: ['-foo', 'foo', '--uuid', fakeUuid] },
+            command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
             cwd: '/foo/bar',
         };
@@ -135,12 +134,11 @@ suite('Python Test Server', () => {
             hostname: 'localhost',
             method: 'POST',
             port,
-            // Requestuuid: fakeUuid,
+            headers: { Requestuuid: fakeUuid },
         };
 
         const request = http.request(requestOptions, (res) => {
             res.setEncoding('utf8');
-            // res.rawHeaders.push(...['Reuqestuuid', fakeUuid]);
         });
 
         const postData = JSON.stringify({ status: 'success', uuid: fakeUuid });
@@ -148,9 +146,8 @@ suite('Python Test Server', () => {
         request.end();
 
         await deferred.promise;
-        // eslint-disable-next-line prefer-template
-        const temp = response + 'SEPARATER' + postData;
-        assert.deepStrictEqual(response, postData, temp);
+
+        assert.deepStrictEqual(response, postData);
     });
     test('If the server receives malformed data, it should display a log message, and not fire an event', async () => {
         const deferred = createDeferred();
@@ -176,6 +173,7 @@ suite('Python Test Server', () => {
             hostname: 'localhost',
             method: 'POST',
             port,
+            headers: { Requestuuid: fakeUuid },
         };
 
         const request = http.request(requestOptions, (res) => {
@@ -215,6 +213,7 @@ suite('Python Test Server', () => {
             hostname: 'localhost',
             method: 'POST',
             port,
+            headers: { Requestuuid: fakeUuid },
         };
         // request.hasHeader()
         const request = http.request(requestOptions, (res) => {
@@ -253,8 +252,14 @@ suite('Python Test Server', () => {
             hostname: 'localhost',
             method: 'POST',
             port,
+            headers: { Requestuuid: 'some-other-uuid' },
         };
-
+        const requestOptions2 = {
+            hostname: 'localhost',
+            method: 'POST',
+            port,
+            headers: { Requestuuid: fakeUuid },
+        };
         const requestOne = http.request(requestOptions, (res) => {
             res.setEncoding('utf8');
         });
@@ -262,7 +267,7 @@ suite('Python Test Server', () => {
         requestOne.write(postDataOne);
         requestOne.end();
 
-        const requestTwo = http.request(requestOptions, (res) => {
+        const requestTwo = http.request(requestOptions2, (res) => {
             res.setEncoding('utf8');
         });
         const postDataTwo = JSON.stringify({ status: 'success', uuid: fakeUuid, payload: 'foo' });
