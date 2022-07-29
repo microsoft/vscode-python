@@ -10,6 +10,7 @@ import { IPythonExecutionFactory, IPythonExecutionService } from '../../../clien
 import { createDeferred } from '../../../client/common/utils/async';
 import { PythonTestServer } from '../../../client/testing/testController/common/server';
 import * as logging from '../../../client/logging';
+import { ITestDebugLauncher } from '../../../client/testing/common/types';
 
 suite('Python Test Server', () => {
     const fakeUuid = 'fake-uuid';
@@ -21,6 +22,7 @@ suite('Python Test Server', () => {
     let execArgs: string[];
     let v4Stub: sinon.SinonStub;
     let traceLogStub: sinon.SinonStub;
+    let debugLauncher: ITestDebugLauncher;
 
     setup(() => {
         sandbox = sinon.createSandbox();
@@ -53,7 +55,7 @@ suite('Python Test Server', () => {
             cwd: '/foo/bar',
         };
 
-        server = new PythonTestServer(stubExecutionFactory);
+        server = new PythonTestServer(stubExecutionFactory, debugLauncher);
 
         await server.sendCommand(options);
         const { port } = server;
@@ -75,7 +77,7 @@ suite('Python Test Server', () => {
             outChannel,
         };
 
-        server = new PythonTestServer(stubExecutionFactory);
+        server = new PythonTestServer(stubExecutionFactory, debugLauncher);
 
         await server.sendCommand(options);
 
@@ -99,7 +101,7 @@ suite('Python Test Server', () => {
             cwd: '/foo/bar',
         };
 
-        server = new PythonTestServer(stubExecutionFactory);
+        server = new PythonTestServer(stubExecutionFactory, debugLauncher);
         server.onDataReceived(({ data }) => {
             eventData = JSON.parse(data);
         });
@@ -120,7 +122,7 @@ suite('Python Test Server', () => {
 
         let response;
 
-        server = new PythonTestServer(stubExecutionFactory);
+        server = new PythonTestServer(stubExecutionFactory, debugLauncher);
         server.onDataReceived(({ data }) => {
             response = data;
             deferred.resolve();
@@ -159,7 +161,7 @@ suite('Python Test Server', () => {
 
         let response;
 
-        server = new PythonTestServer(stubExecutionFactory);
+        server = new PythonTestServer(stubExecutionFactory, debugLauncher);
         server.onDataReceived(({ data }) => {
             response = data;
             deferred.resolve();
@@ -199,7 +201,7 @@ suite('Python Test Server', () => {
 
         let response;
 
-        server = new PythonTestServer(stubExecutionFactory);
+        server = new PythonTestServer(stubExecutionFactory, debugLauncher);
         server.onDataReceived(({ data }) => {
             response = data;
             deferred.resolve();
@@ -238,7 +240,7 @@ suite('Python Test Server', () => {
 
         let response;
 
-        server = new PythonTestServer(stubExecutionFactory);
+        server = new PythonTestServer(stubExecutionFactory, debugLauncher);
         server.onDataReceived(({ data }) => {
             response = data;
             deferred.resolve();
