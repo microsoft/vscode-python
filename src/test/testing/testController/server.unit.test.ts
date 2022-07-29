@@ -139,16 +139,14 @@ suite('Python Test Server', () => {
         const request = http.request(requestOptions, (res) => {
             res.setEncoding('utf8');
         });
-        // const postData = JSON.stringify({ status: 'success', uuid: fakeUuid });
-        const postData = JSON.stringify({ status: 'sucess' });
+        const postData = JSON.stringify({ status: 'success', uuid: fakeUuid });
         request.write(postData);
         request.end();
 
-        await deferred.promise;
-        console.log('**********************************');
-        console.log(response);
-        console.log(postData);
-        assert.deepStrictEqual(response, postData);
+        // await deferred.promise;
+        // eslint-disable-next-line prefer-template
+        const temp = response + 'SEPARATER' + postData;
+        assert.deepStrictEqual(response, postData, temp);
     });
     test('If the server receives malformed data, it should display a log message, and not fire an event', async () => {
         const deferred = createDeferred();
@@ -214,7 +212,7 @@ suite('Python Test Server', () => {
             method: 'POST',
             port,
         };
-
+        // request.hasHeader()
         const request = http.request(requestOptions, (res) => {
             res.setEncoding('utf8');
         });
