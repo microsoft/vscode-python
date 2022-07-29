@@ -134,16 +134,18 @@ suite('Python Test Server', () => {
             hostname: 'localhost',
             method: 'POST',
             port,
+            Requestuuid: fakeUuid,
         };
 
         const request = http.request(requestOptions, (res) => {
             res.setEncoding('utf8');
         });
+
         const postData = JSON.stringify({ status: 'success', uuid: fakeUuid });
         request.write(postData);
         request.end();
 
-        // await deferred.promise;
+        await deferred.promise;
         // eslint-disable-next-line prefer-template
         const temp = response + 'SEPARATER' + postData;
         assert.deepStrictEqual(response, postData, temp);
