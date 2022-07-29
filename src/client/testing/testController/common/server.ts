@@ -25,7 +25,7 @@ export class PythonTestServer implements ITestServer, Disposable {
 
     public port: number;
 
-    constructor(private executionFactory: IPythonExecutionFactory, private debugLauncher?: ITestDebugLauncher) {
+    constructor(private executionFactory: IPythonExecutionFactory, private debugLauncher: ITestDebugLauncher) {
         this.uuids = new Map();
 
         this.port = DEFAULT_TEST_PORT;
