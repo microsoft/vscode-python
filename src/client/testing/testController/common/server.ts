@@ -51,8 +51,6 @@ export class PythonTestServer implements ITestServer, Disposable {
                 if (cwd) {
                     this._onDataReceived.fire({ cwd, data });
                     this.uuids.delete(uuid);
-                } else {
-                    traceLog(`cannot find invalid uuid`);
                 }
             } catch (ex) {
                 traceLog(`Error processing test server request: ${ex} observe`);
