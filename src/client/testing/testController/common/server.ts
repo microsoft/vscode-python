@@ -39,10 +39,10 @@ export class PythonTestServer implements ITestServer, Disposable {
                 }
 
                 const data = Buffer.concat(buffers).toString();
-
+                // grab the uuid from the header
+                const indexRequestuuid = request.rawHeaders.indexOf('Requestuuid');
+                const uuid = request.rawHeaders[indexRequestuuid + 1];
                 response.end();
-
-                const { uuid } = JSON.parse(data);
 
                 // Check if the uuid we received exists in the list of active ones.
                 // If yes, process the response, if not, ignore it.

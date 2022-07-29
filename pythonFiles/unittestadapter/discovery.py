@@ -72,7 +72,6 @@ def parse_unittest_discovery_args(args: List[str]) -> Tuple[str, str, Union[str,
 
 class PayloadDict(TypedDict):
     cwd: str
-    uuid: Union[str, None]
     status: Literal["success", "error"]
     tests: NotRequired[TestNode]
     errors: NotRequired[List[str]]
@@ -86,7 +85,7 @@ def discover_tests(
     The returned dict has the following keys:
 
     - cwd: Absolute path to the test start directory;
-    - uuid: UUID sent by the caller of the Python script, that needs to be sent back as an integrity check;
+    - uuid: UUID sent by the caller of the Python script, that needs to be sent back as an integrity check; --> now moved to header
     - status: Test discovery status, can be "success" or "error";
     - tests: Discoverered tests if any, not present otherwise. Note that the status can be "error" but the payload can still contain tests;
     - errors: Discovery errors if any, not present otherwise.
@@ -112,7 +111,7 @@ def discover_tests(
     }
     """
     cwd = os.path.abspath(start_dir)
-    payload: PayloadDict = {"cwd": cwd, "status": "success", "uuid": uuid}
+    payload: PayloadDict = {"cwd": cwd, "status": "success"}
     tests = None
     errors: List[str] = []
 
@@ -154,6 +153,7 @@ if __name__ == "__main__":
 Host: localhost:{port}
 Content-Length: {len(data)}
 Content-Type: application/json
+Requestuuid: {uuid}
 
 {data}"""
         result = s.socket.sendall(request.encode("utf-8"))  # type: ignore

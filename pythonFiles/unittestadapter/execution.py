@@ -150,7 +150,6 @@ TestResultTypeAlias: TypeAlias = Dict[str, Dict[str, str | None]]
 
 class PayloadDict(TypedDict):
     cwd: str
-    uuid: str | None
     status: TestExecutionStatus
     result: NotRequired[TestResultTypeAlias]
     not_found: NotRequired[List[str]]
@@ -172,7 +171,7 @@ def run_tests(
     cwd = os.path.abspath(start_dir)
     status = TestExecutionStatus.error
     error = None
-    payload: PayloadDict = {"cwd": cwd, "uuid": uuid, "status": status}
+    payload: PayloadDict = {"cwd": cwd, "status": status}
 
     try:
         # If it's a file, split path and file name.
@@ -237,6 +236,7 @@ if __name__ == "__main__":
 Host: localhost:{port}
 Content-Length: {len(data)}
 Content-Type: application/json
+Requestuuid: {uuid}
 
 {data}"""
         result = s.socket.sendall(request.encode("utf-8"))  # type: ignore
