@@ -44,12 +44,9 @@ export class PythonTestServer implements ITestServer, Disposable {
                 const uuid = request.rawHeaders[indexRequestuuid + 1];
                 response.end();
 
+                JSON.parse(data);
                 // Check if the uuid we received exists in the list of active ones.
                 // If yes, process the response, if not, ignore it.
-
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const { checkException } = JSON.parse(data);
-
                 const cwd = this.uuids.get(uuid);
                 if (cwd) {
                     this._onDataReceived.fire({ cwd, data });
@@ -58,7 +55,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                     traceLog(`cannot find invalid uuid`);
                 }
             } catch (ex) {
-                traceLog(`Error processing test server request: ${ex}`);
+                traceLog(`Error processing test server request: ${ex} observe`);
                 this._onDataReceived.fire({ cwd: '', data: '' });
             }
         };
