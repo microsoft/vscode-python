@@ -23,6 +23,7 @@ from unittestadapter.utils import TestNode, build_test_tree
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
 
 from typing_extensions import NotRequired
+from utils import parse_unittest_args
 
 DEFAULT_PORT = "45454"
 
@@ -42,32 +43,6 @@ def parse_discovery_cli_args(args: List[str]) -> Tuple[int, Union[str, None]]:
     parsed_args, _ = arg_parser.parse_known_args(args)
 
     return int(parsed_args.port), parsed_args.uuid
-
-
-def parse_unittest_discovery_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
-    """Parse command-line arguments that should be forwarded to unittest to perform discovery.
-
-    Valid unittest arguments are: -v, -s, -p, -t and their long-form counterparts,
-    however we only care about the last three.
-
-    The returned tuple contains the following items
-    - start_directory: The directory where to start discovery, defaults to .
-    - pattern: The pattern to match test files, defaults to test*.py
-    - top_level_directory: The top-level directory of the project, defaults to None, and unittest will use start_directory behind the scenes.
-    """
-
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--start-directory", "-s", default=".")
-    arg_parser.add_argument("--pattern", "-p", default="test*.py")
-    arg_parser.add_argument("--top-level-directory", "-t", default=None)
-
-    parsed_args, _ = arg_parser.parse_known_args(args)
-
-    return (
-        parsed_args.start_directory,
-        parsed_args.pattern,
-        parsed_args.top_level_directory,
-    )
 
 
 class PayloadDict(TypedDict):
@@ -139,7 +114,7 @@ if __name__ == "__main__":
     argv = sys.argv[1:]
     index = argv.index("--udiscovery")
 
-    start_dir, pattern, top_level_dir = parse_unittest_discovery_args(argv[index + 1 :])
+    start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
 
     # Perform test discovery.
     port, uuid = parse_discovery_cli_args(argv[:index])

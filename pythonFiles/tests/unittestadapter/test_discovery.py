@@ -10,9 +10,8 @@ from unittestadapter.discovery import (
     DEFAULT_PORT,
     discover_tests,
     parse_discovery_cli_args,
-    parse_unittest_discovery_args,
 )
-from unittestadapter.utils import TestNodeTypeEnum
+from unittestadapter.utils import TestNodeTypeEnum, parse_unittest_args
 
 from .helpers import TEST_DATA_PATH, is_same_tree
 
@@ -68,7 +67,7 @@ def test_parse_unittest_args(args: List[str], expected: List[str]) -> None:
     """The parse_unittest_args function should return values for the start_dir, pattern, and top_level_dir arguments
     when passed as command-line options, and ignore unrecognized arguments.
     """
-    actual = parse_unittest_discovery_args(args)
+    actual = parse_unittest_args(args)
 
     assert actual == expected
 

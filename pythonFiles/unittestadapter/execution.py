@@ -11,17 +11,14 @@ import unittest
 from types import TracebackType
 from typing import Dict, List, Optional, Tuple, Type, TypeAlias, TypedDict
 
-from discovery import parse_unittest_discovery_args
-from testing_tools import socket_manager
-from typing_extensions import NotRequired
-
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PYTHON_FILES)
-
-
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
+from testing_tools import socket_manager
+from typing_extensions import NotRequired
+from utils import parse_unittest_args
 
 DEFAULT_PORT = "45454"
 
@@ -222,7 +219,7 @@ if __name__ == "__main__":
     argv = sys.argv[1:]
     index = argv.index("--udiscovery")
 
-    start_dir, pattern, top_level_dir = parse_unittest_discovery_args(argv[index + 1 :])
+    start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
 
     # Perform test execution.
     port, uuid, testids = parse_execution_cli_args(argv[:index])
