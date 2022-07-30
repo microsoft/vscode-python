@@ -11,15 +11,15 @@ import unittest
 from types import TracebackType
 from typing import Dict, List, Optional, Tuple, Type, TypeAlias, TypedDict
 
+from testing_tools import socket_manager
+from typing_extensions import NotRequired
+from unittestadapter.utils import parse_unittest_args
+
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PYTHON_FILES)
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
-from testing_tools import socket_manager
-from typing_extensions import NotRequired
-from unittestadapter.utils import parse_unittest_args
-
 DEFAULT_PORT = "45454"
 
 
