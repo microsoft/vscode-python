@@ -136,7 +136,7 @@ suite('Python Test Server', () => {
             hostname: 'localhost',
             method: 'POST',
             port,
-            headers: { Requestuuid: fakeUuid },
+            headers: { 'Request-uuid': fakeUuid },
         };
 
         const request = http.request(requestOptions, (res) => {
@@ -175,7 +175,7 @@ suite('Python Test Server', () => {
             hostname: 'localhost',
             method: 'POST',
             port,
-            headers: { Requestuuid: fakeUuid },
+            headers: { 'Request-uuid': fakeUuid },
         };
 
         const request = http.request(requestOptions, (res) => {
@@ -215,7 +215,7 @@ suite('Python Test Server', () => {
             hostname: 'localhost',
             method: 'POST',
             port,
-            headers: { Requestuuid: fakeUuid },
+            headers: { 'Request-uuid': fakeUuid },
         };
         // request.hasHeader()
         const request = http.request(requestOptions, (res) => {
@@ -254,13 +254,13 @@ suite('Python Test Server', () => {
             hostname: 'localhost',
             method: 'POST',
             port,
-            headers: { Requestuuid: 'some-other-uuid' },
+            headers: { 'Request-uuid': 'some-other-uuid' },
         };
         const requestOptions2 = {
             hostname: 'localhost',
             method: 'POST',
             port,
-            headers: { Requestuuid: fakeUuid },
+            headers: { 'Request-uuid': fakeUuid },
         };
         const requestOne = http.request(requestOptions, (res) => {
             res.setEncoding('utf8');

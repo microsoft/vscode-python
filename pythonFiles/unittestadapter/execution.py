@@ -236,7 +236,7 @@ if __name__ == "__main__":
 Host: localhost:{port}
 Content-Length: {len(data)}
 Content-Type: application/json
-Requestuuid: {uuid}
+Request-uuid: {uuid}
 
 {data}"""
         result = s.socket.sendall(request.encode("utf-8"))  # type: ignore

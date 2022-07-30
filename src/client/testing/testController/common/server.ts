@@ -40,7 +40,7 @@ export class PythonTestServer implements ITestServer, Disposable {
 
                 const data = Buffer.concat(buffers).toString();
                 // grab the uuid from the header
-                const indexRequestuuid = request.rawHeaders.indexOf('Requestuuid');
+                const indexRequestuuid = request.rawHeaders.indexOf('Request-uuid');
                 const uuid = request.rawHeaders[indexRequestuuid + 1];
                 response.end();
 
