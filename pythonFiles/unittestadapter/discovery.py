@@ -85,7 +85,7 @@ def discover_tests(
     The returned dict has the following keys:
 
     - cwd: Absolute path to the test start directory;
-    - uuid: UUID sent by the caller of the Python script, that needs to be sent back as an integrity check; --> now moved to header
+    - uuid: UUID sent by the caller of the Python script, that needs to be sent back as an integrity check;
     - status: Test discovery status, can be "success" or "error";
     - tests: Discoverered tests if any, not present otherwise. Note that the status can be "error" but the payload can still contain tests;
     - errors: Discovery errors if any, not present otherwise.
