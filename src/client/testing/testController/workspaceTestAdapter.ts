@@ -50,7 +50,7 @@ export class WorkspaceTestAdapter {
 
     private executing: Deferred<void> | undefined;
 
-    private testData: DiscoveredTestNode | undefined;
+    // private testData: DiscoveredTestNode | undefined;
 
     runIdToTestItem: Map<string, TestItem>;
 
