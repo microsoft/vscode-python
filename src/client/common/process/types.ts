@@ -89,7 +89,7 @@ export const IPythonExecutionService = Symbol('IPythonExecutionService');
 
 export interface IPythonExecutionService {
     getInterpreterInformation(): Promise<InterpreterInformation | undefined>;
-    getExecutablePath(): Promise<string>;
+    getExecutablePath(): Promise<string | undefined>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
     getModuleVersion(moduleName: string): Promise<string | undefined>;
     getExecutionInfo(pythonArgs?: string[]): PythonExecInfo;
@@ -105,7 +105,7 @@ export interface IPythonExecutionService {
 export interface IPythonEnvironment {
     getInterpreterInformation(): Promise<InterpreterInformation | undefined>;
     getExecutionObservableInfo(pythonArgs?: string[], pythonExecutable?: string): PythonExecInfo;
-    getExecutablePath(): Promise<string>;
+    getExecutablePath(): Promise<string | undefined>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
     getModuleVersion(moduleName: string): Promise<string | undefined>;
     getExecutionInfo(pythonArgs?: string[], pythonExecutable?: string): PythonExecInfo;

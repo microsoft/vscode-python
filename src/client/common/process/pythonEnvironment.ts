@@ -12,8 +12,9 @@ import { IFileSystem } from '../platform/types';
 import * as internalPython from './internal/python';
 import { ExecutionResult, IProcessService, IPythonEnvironment, ShellOptions, SpawnOptions } from './types';
 
+const cachedExecutablePath: Map<string, Promise<string | undefined>> = new Map<string, Promise<string | undefined>>();
+
 class PythonEnvironment implements IPythonEnvironment {
-    private cachedExecutablePath: Map<string, Promise<string>> = new Map<string, Promise<string>>();
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
 
     constructor(
@@ -45,20 +46,20 @@ class PythonEnvironment implements IPythonEnvironment {
         return this.cachedInterpreterInformation;
     }
 
-    public async getExecutablePath(): Promise<string> {
+    public async getExecutablePath(): Promise<string | undefined> {
         // If we've passed the python file, then return the file.
         // This is because on mac if using the interpreter /usr/bin/python2.7 we can get a different value for the path
         if (await this.deps.isValidExecutable(this.pythonPath)) {
             return this.pythonPath;
         }
-        const result = this.cachedExecutablePath.get(this.pythonPath);
+        const result = cachedExecutablePath.get(this.pythonPath);
         if (result !== undefined) {
             // Another call for this environment has already been made, return its result
             return result;
         }
         const python = this.getExecutionInfo();
         const promise = getExecutablePath(python, this.deps.shellExec);
-        this.cachedExecutablePath.set(this.pythonPath, promise);
+        cachedExecutablePath.set(this.pythonPath, promise);
         return promise;
     }
 
