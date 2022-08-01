@@ -197,7 +197,7 @@ def run_tests(
         payload["result"] = result.formatted
 
         # Add a payload entry with the list of test ids for tests that weren't found.
-        not_found = set(test_ids) - set(tailor.keys())
+        not_found = set(tailor) - set(suite)  # type: ignore
         if not_found:
             payload["skipped"] = list(not_found)
     except Exception:
