@@ -22,3 +22,6 @@ torch-tb-profiler
 
 # extension build tests
 freezegun
+
+# pin setup tools to prevent issue with 'use_2to3'
+setuptools==57.5.0
