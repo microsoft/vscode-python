@@ -320,7 +320,7 @@ export class WorkspaceTestAdapter {
             }
 
             // Save new test data state.
-            this.testData = rawTestData.tests;
+            // this.testData = rawTestData.tests;
         }
 
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: this.testProvider, failed: false });
