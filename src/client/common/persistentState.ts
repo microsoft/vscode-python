@@ -6,7 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { traceError, traceVerbose } from '../logging';
+import { traceError } from '../logging';
 import { ICommandManager } from './application/types';
 import { Commands } from './constants';
 import {
@@ -18,6 +18,7 @@ import {
     WORKSPACE_MEMENTO,
 } from './types';
 import { cache } from './utils/decorators';
+import { noop } from './utils/misc';
 
 export class PersistentState<T> implements IPersistentState<T> {
     constructor(
@@ -74,7 +75,6 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
         WORKSPACE_PERSISTENT_KEYS,
         [],
     );
-    private cleanedOnce = false;
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceState: Memento,
@@ -130,10 +130,6 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
     }
 
     private async cleanAllPersistentStates(): Promise<void> {
-        if (this.cleanedOnce) {
-            traceError('Storage can only be cleaned once per session, reload window.');
-            return;
-        }
         await Promise.all(
             this._globalKeysStorage.value.map(async (keyContent) => {
                 const storage = this.createGlobalPersistentState(keyContent.key);
@@ -148,8 +144,7 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
         );
         await this._globalKeysStorage.updateValue([]);
         await this._workspaceKeysStorage.updateValue([]);
-        this.cleanedOnce = true;
-        traceVerbose('Finished clearing storage.');
+        this.cmdManager?.executeCommand('workbench.action.reloadWindow').then(noop);
     }
 }
 

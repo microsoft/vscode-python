@@ -51,7 +51,7 @@ export namespace Commands {
     export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
     export const PickLocalProcess = 'python.pickLocalProcess';
     export const GetSelectedInterpreterPath = 'python.interpreterPath';
-    export const ClearStorage = 'python.clearPersistentStorage';
+    export const ClearStorage = 'python.clearCacheAndReload';
     export const ClearWorkspaceInterpreter = 'python.clearWorkspaceInterpreter';
     export const LaunchTensorBoard = 'python.launchTensorBoard';
     export const RefreshTensorBoard = 'python.refreshTensorBoard';

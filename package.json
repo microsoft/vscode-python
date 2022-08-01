@@ -83,7 +83,7 @@
         "onCommand:python.clearWorkspaceInterpreter",
         "onCommand:python.enableSourceMapSupport",
         "onCommand:python.launchTensorBoard",
-        "onCommand:python.clearPersistentStorage",
+        "onCommand:python.clearCacheAndReload",
         "onWalkthrough:pythonWelcome",
         "onWalkthrough:pythonWelcomeWithDS",
         "onWalkthrough:pythonDataScienceWelcome",
@@ -254,8 +254,8 @@
             },
             {
                 "category": "Python",
-                "command": "python.clearPersistentStorage",
-                "title": "%python.command.python.clearPersistentStorage.title%"
+                "command": "python.clearCacheAndReload",
+                "title": "%python.command.python.clearCacheAndReload.title%"
             },
             {
                 "category": "Python",
@@ -1525,8 +1525,8 @@
                 },
                 {
                     "category": "Python",
-                    "command": "python.clearPersistentStorage",
-                    "title": "%python.command.python.clearPersistentStorage.title%",
+                    "command": "python.clearCacheAndReload",
+                    "title": "%python.command.python.clearCacheAndReload.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported"
                 },
                 {
