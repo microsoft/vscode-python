@@ -332,103 +332,103 @@ function isTestItem(test: DiscoveredTestNode | DiscoveredTestItem): test is Disc
     return test.type_ === 'test';
 }
 
-function deleteTestTree(testController: TestController, root?: TestItem) {
-    if (root) {
-        const { children } = root;
+// function deleteTestTree(testController: TestController, root?: TestItem) {
+//     if (root) {
+//         const { children } = root;
 
-        children.forEach((child) => {
-            deleteTestTree(testController, child);
+//         children.forEach((child) => {
+//             deleteTestTree(testController, child);
 
-            const { id } = child;
-            testController.items.delete(id);
-        });
+//             const { id } = child;
+//             testController.items.delete(id);
+//         });
 
-        testController.items.delete(root.id);
-    }
-}
+//         testController.items.delete(root.id);
+//     }
+// }
 
-function updateTestTree(
-    testController: TestController,
-    updatedData: DiscoveredTestNode,
-    localData: DiscoveredTestNode | undefined,
-    testRoot: TestItem | undefined,
-    token?: CancellationToken,
-): void {
-    // If testRoot is undefined, use the info of the root item of testTreeData to create a test item, and append it to the test controller.
-    if (!testRoot) {
-        testRoot = testController.createTestItem(updatedData.path, updatedData.name, Uri.file(updatedData.path));
-        testRoot.canResolveChildren = true;
-        testRoot.tags = [RunTestTag, DebugTestTag];
+// function updateTestTree(
+//     testController: TestController,
+//     updatedData: DiscoveredTestNode,
+//     localData: DiscoveredTestNode | undefined,
+//     testRoot: TestItem | undefined,
+//     token?: CancellationToken,
+// ): void {
+//     // If testRoot is undefined, use the info of the root item of testTreeData to create a test item, and append it to the test controller.
+//     if (!testRoot) {
+//         testRoot = testController.createTestItem(updatedData.path, updatedData.name, Uri.file(updatedData.path));
+//         testRoot.canResolveChildren = true;
+//         testRoot.tags = [RunTestTag, DebugTestTag];
 
-        testController.items.add(testRoot);
-    }
+//         testController.items.add(testRoot);
+//     }
 
-    // Delete existing items if they don't exist in the updated tree.
-    if (localData) {
-        localData.children.forEach((local) => {
-            if (!token?.isCancellationRequested) {
-                const exists = updatedData.children.find(
-                    (node) => local.name === node.name && local.path === node.path && local.type_ === node.type_,
-                );
+//     // Delete existing items if they don't exist in the updated tree.
+//     if (localData) {
+//         localData.children.forEach((local) => {
+//             if (!token?.isCancellationRequested) {
+//                 const exists = updatedData.children.find(
+//                     (node) => local.name === node.name && local.path === node.path && local.type_ === node.type_,
+//                 );
 
-                if (!exists) {
-                    // Delete this node and all its children.
-                    const testItem = testController.items.get(local.path);
-                    deleteTestTree(testController, testItem);
-                }
-            }
-        });
-    }
+//                 if (!exists) {
+//                     // Delete this node and all its children.
+//                     const testItem = testController.items.get(local.path);
+//                     deleteTestTree(testController, testItem);
+//                 }
+//             }
+//         });
+//     }
 
-    // Go through the updated tree, update the existing nodes, and create new ones if necessary.
-    updatedData.children.forEach((child) => {
-        if (!token?.isCancellationRequested) {
-            let root = testController.items.get(child.path);
-            if (!root) {
-                // try with id
-                root = testController.items.get(child.id_);
-            }
-            if (root) {
-                root.busy = true;
-                // Update existing test node or item.
-                if (isTestItem(child)) {
-                    // Update the only property that can be updated.
-                    root.label = child.name;
-                } else {
-                    const localNode = localData?.children.find(
-                        (node) => child.name === node.name && child.path === node.path && child.type_ === node.type_,
-                    );
-                    updateTestTree(testController, child, localNode as DiscoveredTestNode, root, token);
-                }
-                root.busy = false;
-            } else {
-                // Create new test node or item.
-                let testItem;
-                if (isTestItem(child)) {
-                    testItem = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
-                    // testItem = testController.createTestItem(child.uniqueID, child.name, Uri.file(child.path));
-                    const range = new Range(new Position(child.lineno - 1, 0), new Position(child.lineno, 0));
+//     // Go through the updated tree, update the existing nodes, and create new ones if necessary.
+//     updatedData.children.forEach((child) => {
+//         if (!token?.isCancellationRequested) {
+//             let root = testController.items.get(child.path);
+//             if (!root) {
+//                 // try with id
+//                 root = testController.items.get(child.id_);
+//             }
+//             if (root) {
+//                 root.busy = true;
+//                 // Update existing test node or item.
+//                 if (isTestItem(child)) {
+//                     // Update the only property that can be updated.
+//                     root.label = child.name;
+//                 } else {
+//                     const localNode = localData?.children.find(
+//                         (node) => child.name === node.name && child.path === node.path && child.type_ === node.type_,
+//                     );
+//                     updateTestTree(testController, child, localNode as DiscoveredTestNode, root, token);
+//                 }
+//                 root.busy = false;
+//             } else {
+//                 // Create new test node or item.
+//                 let testItem;
+//                 if (isTestItem(child)) {
+//                     testItem = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
+//                     // testItem = testController.createTestItem(child.uniqueID, child.name, Uri.file(child.path));
+//                     const range = new Range(new Position(child.lineno - 1, 0), new Position(child.lineno, 0));
 
-                    testItem.canResolveChildren = false;
+//                     testItem.canResolveChildren = false;
 
-                    testItem.tags = [RunTestTag, DebugTestTag];
-                    testItem.range = range;
+//                     testItem.tags = [RunTestTag, DebugTestTag];
+//                     testItem.range = range;
 
-                    testRoot!.children.add(testItem);
-                } else {
-                    testItem = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
-                    testItem.canResolveChildren = true;
-                    testItem.tags = [RunTestTag, DebugTestTag];
+//                     testRoot!.children.add(testItem);
+//                 } else {
+//                     testItem = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
+//                     testItem.canResolveChildren = true;
+//                     testItem.tags = [RunTestTag, DebugTestTag];
 
-                    testRoot!.children.add(testItem);
+//                     testRoot!.children.add(testItem);
 
-                    // Populate the test tree under the newly created node.
-                    // populateTestTree(testController, child, testItem, token, this); // uncomment later
-                }
-            }
-        }
-    });
-}
+//                     // Populate the test tree under the newly created node.
+//                     // populateTestTree(testController, child, testItem, token, this); // uncomment later
+//                 }
+//             }
+//         }
+//     });
+// }
 // had to switch the order of the original parameter since required param cannot follow optional.
 function populateTestTree(
     testController: TestController,
