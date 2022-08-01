@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2022.11.0-dev",
+    "version": "2022.12.0-rc",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -1822,7 +1822,7 @@
         "vscode-tas-client": "^0.1.22",
         "winreg": "^1.2.4",
         "xml2js": "^0.4.19",
-        "which":"^2.0.2"
+        "which": "^2.0.2"
     },
     "devDependencies": {
         "@istanbuljs/nyc-config-typescript": "^1.0.2",
@@ -1846,7 +1846,7 @@
         "@types/uuid": "^8.3.4",
         "@types/vscode": "~1.68.0",
         "@types/winreg": "^1.2.30",
-        "@types/which":"^2.0.1",
+        "@types/which": "^2.0.1",
         "@types/xml2js": "^0.4.2",
         "@typescript-eslint/eslint-plugin": "^3.7.0",
         "@typescript-eslint/parser": "^3.7.0",
