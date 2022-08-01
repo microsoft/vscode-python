@@ -309,7 +309,8 @@ export class WorkspaceTestAdapter {
                 // If the test root for this folder exists: Workspace refresh, update its children.
                 // Otherwise, it is a freshly discovered workspace, and we need to create a new test root and populate the test tree.
                 if (workspaceNode) {
-                    updateTestTree(testController, rawTestData.tests, this.testData, workspaceNode, token);
+                    // updateTestTree(testController, rawTestData.tests, this.testData, workspaceNode, token);
+                    populateTestTree(testController, rawTestData.tests, undefined, this, token);
                 } else {
                     populateTestTree(testController, rawTestData.tests, undefined, this, token);
                 }
@@ -382,7 +383,11 @@ function updateTestTree(
     // Go through the updated tree, update the existing nodes, and create new ones if necessary.
     updatedData.children.forEach((child) => {
         if (!token?.isCancellationRequested) {
-            const root = testController.items.get(child.path);
+            let root = testController.items.get(child.path);
+            if (!root) {
+                // try with id
+                root = testController.items.get(child.id_);
+            }
             if (root) {
                 root.busy = true;
                 // Update existing test node or item.
@@ -411,7 +416,7 @@ function updateTestTree(
 
                     testRoot!.children.add(testItem);
                 } else {
-                    testItem = testController.createTestItem(child.path, child.name, Uri.file(child.path));
+                    testItem = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
                     testItem.canResolveChildren = true;
                     testItem.tags = [RunTestTag, DebugTestTag];
 
