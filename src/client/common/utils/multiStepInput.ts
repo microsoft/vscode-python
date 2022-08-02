@@ -12,7 +12,7 @@ import { IApplicationShell } from '../application/types';
 // Borrowed from https://github.com/Microsoft/vscode-extension-samples/blob/master/quickinput-sample/src/multiStepInput.ts
 // Why re-invent the wheel :)
 
-class InputFlowAction {
+export class InputFlowAction {
     public static back = new InputFlowAction();
 
     public static cancel = new InputFlowAction();

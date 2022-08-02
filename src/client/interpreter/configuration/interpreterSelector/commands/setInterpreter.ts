@@ -14,11 +14,12 @@ import { isParentPath } from '../../../../common/platform/fs-paths';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
 import { getIcon } from '../../../../common/utils/icons';
-import { Common, InterpreterQuickPickList, Interpreters } from '../../../../common/utils/localize';
+import { Common, InterpreterQuickPickList } from '../../../../common/utils/localize';
 import { noop } from '../../../../common/utils/misc';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
+    InputFlowAction,
     InputStep,
     IQuickPickParameters,
 } from '../../../../common/utils/multiStepInput';
@@ -453,8 +454,11 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             if (uris && uris.length > 0) {
                 state.path = uris[0].fsPath;
                 this.sendInterpreterEntryTelemetry(state.path!, state.workspace);
+            } else {
+                return Promise.reject(InputFlowAction.resume);
             }
         }
+        return Promise.resolve();
     }
 
     @captureTelemetry(EventName.SELECT_INTERPRETER)
