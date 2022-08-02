@@ -11,12 +11,12 @@ import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/inf
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import * as externalDeps from '../../../../../client/pythonEnvironments/common/externalDependencies';
-import { WindowsStoreLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsStoreLocator';
+import { MicrosoftStoreLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/microsoftStoreLocator';
 import { TEST_TIMEOUT } from '../../../../constants';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { traceWarn } from '../../../../../client/logging';
 
-class WindowsStoreEnvs {
+class MicrosoftStoreEnvs {
     private executables: string[] = [];
 
     private dirs: string[] = [];
@@ -42,7 +42,7 @@ class WindowsStoreEnvs {
     }
 
     public async update(version: string): Promise<void> {
-        // On update windows store removes the directory and re-adds it.
+        // On update microsoft store removes the directory and re-adds it.
         const dirName = path.join(this.storeAppRoot, `PythonSoftwareFoundation.Python.${version}_qbz5n2kfra8p0`);
         try {
             await fs.rmdir(dirName);
@@ -74,11 +74,11 @@ class WindowsStoreEnvs {
     }
 }
 
-suite('Windows Store Locator', async () => {
+suite('Microsoft Store Locator', async () => {
     const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
     const testStoreAppRoot = path.join(testLocalAppData, 'Microsoft', 'WindowsApps');
-    const windowsStoreEnvs = new WindowsStoreEnvs(testStoreAppRoot);
-    let locator: WindowsStoreLocator;
+    const windowsStoreEnvs = new MicrosoftStoreEnvs(testStoreAppRoot);
+    let locator: MicrosoftStoreLocator;
 
     const localAppDataOldValue = process.env.LOCALAPPDATA;
 
@@ -103,7 +103,7 @@ suite('Windows Store Locator', async () => {
     });
 
     async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
-        locator = new WindowsStoreLocator();
+        locator = new MicrosoftStoreLocator();
         await getEnvs(locator.iterEnvs()); // Force the watchers to start.
         // Wait for watchers to get ready
         await sleep(1000);
@@ -122,7 +122,7 @@ suite('Windows Store Locator', async () => {
         let actualEvent: PythonEnvsChangedEvent;
         const deferred = createDeferred<void>();
         const expectedEvent = {
-            kind: PythonEnvKind.WindowsStore,
+            kind: PythonEnvKind.MicrosoftStore,
             type: FileChangeType.Created,
             searchLocation: Uri.file(testStoreAppRoot),
         };
@@ -143,7 +143,7 @@ suite('Windows Store Locator', async () => {
         let actualEvent: PythonEnvsChangedEvent;
         const deferred = createDeferred<void>();
         const expectedEvent = {
-            kind: PythonEnvKind.WindowsStore,
+            kind: PythonEnvKind.MicrosoftStore,
             type: FileChangeType.Deleted,
             searchLocation: Uri.file(testStoreAppRoot),
         };
@@ -167,7 +167,7 @@ suite('Windows Store Locator', async () => {
         let actualEvent: PythonEnvsChangedEvent;
         const deferred = createDeferred<void>();
         const expectedEvent = {
-            kind: PythonEnvKind.WindowsStore,
+            kind: PythonEnvKind.MicrosoftStore,
             type: FileChangeType.Changed,
             searchLocation: Uri.file(testStoreAppRoot),
         };

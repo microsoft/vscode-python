@@ -111,7 +111,7 @@ suite('Install Python Command', () => {
         assert.deepEqual(walkthroughID, expectedWalkthroughID);
     });
 
-    test('Opens windows store app on Windows otherwise', async () => {
+    test('Opens microsoft store app on Windows otherwise', async () => {
         when(platformService.isWindows).thenReturn(true);
         when(platformService.isLinux).thenReturn(false);
         when(platformService.isMac).thenReturn(false);

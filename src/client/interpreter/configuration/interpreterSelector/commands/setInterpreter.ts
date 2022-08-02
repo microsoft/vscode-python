@@ -543,7 +543,7 @@ function getGroup(item: IInterpreterQuickPickItem, workspacePath?: string) {
         case EnvironmentType.Global:
         case EnvironmentType.System:
         case EnvironmentType.Unknown:
-        case EnvironmentType.WindowsStore:
+        case EnvironmentType.MicrosoftStore:
             return EnvGroups.Global;
         default:
             return EnvGroups[item.interpreter.envType];

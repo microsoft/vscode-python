@@ -231,7 +231,7 @@ export function getEnvID(interpreterPath: string, envFolderPath?: string): strin
  * Remarks: The current comparison assumes that if the path to the executables are the same
  * then it is the same environment. Additionally, if the paths are not same but executables
  * are in the same directory and the version of python is the same than we can assume it
- * to be same environment. This later case is needed for comparing windows store python,
+ * to be same environment. This later case is needed for comparing microsoft store python,
  * where multiple versions of python executables are all put in the same directory.
  */
 export function areSameEnv(

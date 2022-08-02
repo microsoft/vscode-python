@@ -36,7 +36,7 @@ function getResolvers(): Map<PythonEnvKind, (env: BasicEnvInfo, useCache?: boole
         resolvers.set(k, resolveSimpleEnv);
     });
     resolvers.set(PythonEnvKind.Conda, resolveCondaEnv);
-    resolvers.set(PythonEnvKind.WindowsStore, resolveWindowsStoreEnv);
+    resolvers.set(PythonEnvKind.MicrosoftStore, resolveMicrosoftStoreEnv);
     resolvers.set(PythonEnvKind.Pyenv, resolvePyenvEnv);
     return resolvers;
 }
@@ -231,10 +231,10 @@ async function isBaseCondaPyenvEnvironment(executablePath: string) {
     return arePathsSame(path.dirname(location), pyenvVersionDir);
 }
 
-async function resolveWindowsStoreEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
+async function resolveMicrosoftStoreEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     const { executablePath } = env;
     return buildEnvInfo({
-        kind: PythonEnvKind.WindowsStore,
+        kind: PythonEnvKind.MicrosoftStore,
         executable: executablePath,
         version: parsePythonVersionFromPath(executablePath),
         org: 'Microsoft',

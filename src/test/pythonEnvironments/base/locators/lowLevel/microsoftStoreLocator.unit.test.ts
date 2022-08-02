@@ -11,14 +11,14 @@ import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/inf
 import { BasicEnvInfo } from '../../../../../client/pythonEnvironments/base/locator';
 import * as externalDep from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import {
-    getWindowsStorePythonExes,
-    WindowsStoreLocator,
-} from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsStoreLocator';
+    getMicrosoftStorePythonExes,
+    MicrosoftStoreLocator,
+} from '../../../../../client/pythonEnvironments/base/locators/lowLevel/microsoftStoreLocator';
 import { getEnvs } from '../../common';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertBasicEnvsEqual } from '../envTestUtils';
 
-suite('Windows Store', () => {
+suite('Microsoft Store', () => {
     suite('Utils', () => {
         let getEnvVarStub: sinon.SinonStub;
         const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
@@ -39,7 +39,7 @@ suite('Windows Store', () => {
                 path.join(testStoreAppRoot, 'python3.8.exe'),
             ];
 
-            const actual = await getWindowsStorePythonExes();
+            const actual = await getMicrosoftStorePythonExes();
             assert.deepEqual(actual, expected);
         });
     });
@@ -47,7 +47,7 @@ suite('Windows Store', () => {
     suite('Locator', () => {
         let stubShellExec: sinon.SinonStub;
         let getEnvVar: sinon.SinonStub;
-        let locator: WindowsStoreLocator;
+        let locator: MicrosoftStoreLocator;
         let watchLocationForPatternStub: sinon.SinonStub;
 
         const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
@@ -82,7 +82,7 @@ suite('Windows Store', () => {
         function createExpectedInfo(executable: string): BasicEnvInfo {
             return {
                 executablePath: executable,
-                kind: PythonEnvKind.WindowsStore,
+                kind: PythonEnvKind.MicrosoftStore,
             };
         }
 
@@ -108,7 +108,7 @@ suite('Windows Store', () => {
                 },
             });
 
-            locator = new WindowsStoreLocator();
+            locator = new MicrosoftStoreLocator();
         });
 
         teardown(async () => {

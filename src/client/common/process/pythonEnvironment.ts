@@ -171,18 +171,18 @@ export async function createCondaEnv(
     return new PythonEnvironment(interpreterPath, deps);
 }
 
-export function createWindowsStoreEnv(
+export function createMicrosoftStoreEnv(
     pythonPath: string,
     // These are used to generate the deps.
     procs: IProcessService,
 ): PythonEnvironment {
     const deps = createDeps(
         /**
-         * With windows store python apps, we have generally use the
+         * With microsoft store python apps, we have generally use the
          * symlinked python executable.  The actual file is not accessible
          * by the user due to permission issues (& rest of exension fails
          * when using that executable).  Hence lets not resolve the
-         * executable using sys.executable for windows store python
+         * executable using sys.executable for microsoft store python
          * interpreters.
          */
         async (_f: string) => true,

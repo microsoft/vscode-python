@@ -10,7 +10,7 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import {
     createCondaEnv,
     createPythonEnv,
-    createWindowsStoreEnv,
+    createMicrosoftStoreEnv,
 } from '../../../client/common/process/pythonEnvironment';
 import { IProcessService, StdErrError } from '../../../client/common/process/types';
 import { Architecture } from '../../../client/common/utils/platform';
@@ -343,7 +343,7 @@ suite('CondaEnvironment', () => {
     });
 });
 
-suite('WindowsStoreEnvironment', () => {
+suite('MicrosoftStoreEnvironment', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     const pythonPath = 'foo';
 
@@ -351,8 +351,8 @@ suite('WindowsStoreEnvironment', () => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
     });
 
-    test('Should return pythonPath if it is the path to the windows store interpreter', async () => {
-        const env = createWindowsStoreEnv(pythonPath, processService.object);
+    test('Should return pythonPath if it is the path to the microsoft store interpreter', async () => {
+        const env = createMicrosoftStoreEnv(pythonPath, processService.object);
 
         const executablePath = await env.getExecutablePath();
 
