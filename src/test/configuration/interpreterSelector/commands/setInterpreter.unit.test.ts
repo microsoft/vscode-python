@@ -759,8 +759,10 @@ suite('Set Interpreter Command', () => {
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(expectedEnterInterpreterPathSuggestion));
 
-            await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
+            const step = await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await step!(multiStepInput.object as any, state);
             assert(
                 _enterOrBrowseInterpreterPath.calledOnceWith(multiStepInput.object, {
                     path: undefined,
@@ -782,6 +784,11 @@ suite('Set Interpreter Command', () => {
             items,
             acceptFilterBoxTextAsSelection: true,
         };
+        let getItemsStub: sinon.SinonStub;
+        setup(() => {
+            getItemsStub = sinon.stub(SetInterpreterCommand.prototype, '_getItems').returns([]);
+        });
+        teardown(() => sinon.restore());
 
         test('Picker should be displayed with expected items', async () => {
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
@@ -791,7 +798,7 @@ suite('Set Interpreter Command', () => {
                 .returns(() => Promise.resolve((undefined as unknown) as QuickPickItem))
                 .verifiable(TypeMoq.Times.once());
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
 
             multiStepInput.verifyAll();
         });
@@ -803,7 +810,7 @@ suite('Set Interpreter Command', () => {
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve('enteredPath'));
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
 
             expect(state.path).to.equal('enteredPath', '');
         });
@@ -817,7 +824,7 @@ suite('Set Interpreter Command', () => {
                 .setup((a) => a.showOpenDialog(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([expectedPathUri]));
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
 
             expect(state.path).to.equal(expectedPathUri.fsPath, '');
         });
@@ -840,7 +847,7 @@ suite('Set Interpreter Command', () => {
                 .verifiable(TypeMoq.Times.once());
             platformService.setup((p) => p.isWindows).returns(() => true);
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
 
             appShell.verifyAll();
         });
@@ -858,7 +865,7 @@ suite('Set Interpreter Command', () => {
             appShell.setup((a) => a.showOpenDialog(expectedParams)).verifiable(TypeMoq.Times.once());
             platformService.setup((p) => p.isWindows).returns(() => false);
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
 
             appShell.verifyAll();
         });
@@ -891,7 +898,7 @@ suite('Set Interpreter Command', () => {
                     .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve('enteredPath'));
 
-                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
+                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
                 const existsTelemetry = telemetryEvents[1];
 
                 sinon.assert.callCount(sendTelemetryStub, 2);
@@ -915,7 +922,7 @@ suite('Set Interpreter Command', () => {
                     .returns(() => Promise.resolve([{ fsPath: 'browsedPath' } as Uri]));
                 platformService.setup((p) => p.isWindows).returns(() => false);
 
-                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, []);
+                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
                 const existsTelemetry = telemetryEvents[1];
 
                 sinon.assert.callCount(sendTelemetryStub, 2);
@@ -975,8 +982,9 @@ suite('Set Interpreter Command', () => {
                 if (discovered) {
                     suggestions.push({ interpreter: { path: expandedPath } } as IInterpreterQuickPickItem);
                 }
-
-                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state, suggestions);
+                getItemsStub.restore();
+                getItemsStub = sinon.stub(SetInterpreterCommand.prototype, '_getItems').returns(suggestions);
+                await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
                 return telemetryEvents[1];
             };
 

@@ -126,7 +126,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         // If the list is refreshing, it's crucial to maintain sorting order at all
         // times so that the visible items do not change.
         const preserveOrderWhenFiltering = !!this.interpreterService.refreshPromise;
-        const suggestions = this.getItems(state.workspace);
+        const suggestions = this._getItems(state.workspace);
         state.path = undefined;
         const currentInterpreterPathDisplay = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
@@ -204,7 +204,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'escape' });
         } else if (selection.label === this.manualEntrySuggestion.label) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_OR_FIND);
-            return this._enterOrBrowseInterpreterPath(input, state, suggestions);
+            return this._enterOrBrowseInterpreterPath.bind(this);
         } else if (selection.label === this.noPythonInstalled.label) {
             this.commandManager.executeCommand(Commands.InstallPython).then(noop, noop);
             this.wasNoPythonInstalledItemClicked = true;
@@ -217,7 +217,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         return undefined;
     }
 
-    private getItems(resource: Resource) {
+    public _getItems(resource: Resource): QuickPickType[] {
         const suggestions: QuickPickType[] = [this.manualEntrySuggestion];
         const defaultInterpreterPathSuggestion = this.getDefaultInterpreterPathSuggestion(resource);
         if (defaultInterpreterPathSuggestion) {
@@ -424,7 +424,6 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     public async _enterOrBrowseInterpreterPath(
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs,
-        suggestions: QuickPickType[],
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         const items: QuickPickItem[] = [
             {
@@ -443,7 +442,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             // User entered text in the filter box to enter path to python, store it
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'enter' });
             state.path = selection;
-            this.sendInterpreterEntryTelemetry(selection, state.workspace, suggestions);
+            this.sendInterpreterEntryTelemetry(selection, state.workspace);
         } else if (selection && selection.label === InterpreterQuickPickList.browsePath.label) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'browse' });
             const filtersKey = 'Executables';
@@ -457,7 +456,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             });
             if (uris && uris.length > 0) {
                 state.path = uris[0].fsPath;
-                this.sendInterpreterEntryTelemetry(state.path!, state.workspace, suggestions);
+                this.sendInterpreterEntryTelemetry(state.path!, state.workspace);
             }
         }
     }
@@ -490,7 +489,8 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
      * @param selection Intepreter path that was either entered manually or picked by browsing through the filesystem.
      */
     // eslint-disable-next-line class-methods-use-this
-    private sendInterpreterEntryTelemetry(selection: string, workspace: Resource, suggestions: QuickPickType[]): void {
+    private sendInterpreterEntryTelemetry(selection: string, workspace: Resource): void {
+        const suggestions = this._getItems(workspace);
         let interpreterPath = path.normalize(untildify(selection));
 
         if (!path.isAbsolute(interpreterPath)) {
