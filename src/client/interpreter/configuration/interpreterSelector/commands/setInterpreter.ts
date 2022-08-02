@@ -14,7 +14,7 @@ import { isParentPath } from '../../../../common/platform/fs-paths';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
 import { getIcon } from '../../../../common/utils/icons';
-import { Common, InterpreterQuickPickList } from '../../../../common/utils/localize';
+import { Common, InterpreterQuickPickList, Interpreters } from '../../../../common/utils/localize';
 import { noop } from '../../../../common/utils/misc';
 import {
     IMultiStepInput,
@@ -127,6 +127,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         // times so that the visible items do not change.
         const preserveOrderWhenFiltering = !!this.interpreterService.refreshPromise;
         const suggestions = this._getItems(state.workspace);
+        const refreshButton = {
+            iconPath: getIcon(REFRESH_BUTTON_ICON),
+            tooltip: InterpreterQuickPickList.refreshInterpreterList,
+        };
         state.path = undefined;
         const currentInterpreterPathDisplay = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
@@ -146,10 +150,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             matchOnDescription: true,
             title: InterpreterQuickPickList.browsePath.openButtonLabel,
             customButtonSetup: {
-                button: {
-                    iconPath: getIcon(REFRESH_BUTTON_ICON),
-                    tooltip: InterpreterQuickPickList.refreshInterpreterList,
-                },
+                button: refreshButton,
                 callback: (quickpickInput) => {
                     quickpickInput.buttons = [
                         {
@@ -159,13 +160,8 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                     ];
                     this.interpreterService
                         .triggerRefresh()
-                        .then(() => {
-                            quickpickInput.buttons = [
-                                {
-                                    iconPath: getIcon(REFRESH_BUTTON_ICON),
-                                    tooltip: InterpreterQuickPickList.refreshInterpreterList,
-                                },
-                            ];
+                        .finally(() => {
+                            quickpickInput.buttons = [refreshButton];
                         })
                         .ignoreErrors();
                 },

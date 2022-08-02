@@ -319,7 +319,7 @@ export namespace InterpreterQuickPickList {
     );
     export const refreshingInterpreterList = localize(
         'InterpreterQuickPickList.refreshingInterpreterList',
-        'Refreshing Interpreter list',
+        'Refreshing Interpreter list...',
     );
 }
 
