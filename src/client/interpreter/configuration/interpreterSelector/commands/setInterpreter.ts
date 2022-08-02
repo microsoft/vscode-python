@@ -23,7 +23,7 @@ import {
     IQuickPickParameters,
 } from '../../../../common/utils/multiStepInput';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
-import { REFRESH_BUTTON_ICON } from '../../../../debugger/extension/attachQuickPick/types';
+import { REFRESHING_BUTTON_ICON, REFRESH_BUTTON_ICON } from '../../../../debugger/extension/attachQuickPick/types';
 import { EnvironmentType } from '../../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
@@ -150,7 +150,25 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                     iconPath: getIcon(REFRESH_BUTTON_ICON),
                     tooltip: InterpreterQuickPickList.refreshInterpreterList,
                 },
-                callback: () => this.interpreterService.triggerRefresh().ignoreErrors(),
+                callback: (quickpickInput) => {
+                    quickpickInput.buttons = [
+                        {
+                            iconPath: getIcon(REFRESHING_BUTTON_ICON),
+                            tooltip: InterpreterQuickPickList.refreshingInterpreterList,
+                        },
+                    ];
+                    this.interpreterService
+                        .triggerRefresh()
+                        .then(() => {
+                            quickpickInput.buttons = [
+                                {
+                                    iconPath: getIcon(REFRESH_BUTTON_ICON),
+                                    tooltip: InterpreterQuickPickList.refreshInterpreterList,
+                                },
+                            ];
+                        })
+                        .ignoreErrors();
+                },
             },
             initialize: () => {
                 // Note discovery is no longer guranteed to be auto-triggered on extension load, so trigger it when

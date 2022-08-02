@@ -317,6 +317,10 @@ export namespace InterpreterQuickPickList {
         'InterpreterQuickPickList.refreshInterpreterList',
         'Refresh Interpreter list',
     );
+    export const refreshingInterpreterList = localize(
+        'InterpreterQuickPickList.refreshingInterpreterList',
+        'Refreshing Interpreter list',
+    );
 }
 
 export namespace OutputChannelNames {
