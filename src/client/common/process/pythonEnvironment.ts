@@ -8,6 +8,7 @@ import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/ex
 import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { getExecutablePath } from '../../pythonEnvironments/info/executable';
 import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
+import { isTestExecution } from '../constants';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from './internal/python';
 import { ExecutionResult, IProcessService, IPythonEnvironment, ShellOptions, SpawnOptions } from './types';
@@ -53,7 +54,7 @@ class PythonEnvironment implements IPythonEnvironment {
             return this.pythonPath;
         }
         const result = cachedExecutablePath.get(this.pythonPath);
-        if (result !== undefined) {
+        if (result !== undefined && !isTestExecution()) {
             // Another call for this environment has already been made, return its result
             return result;
         }
