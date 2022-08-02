@@ -847,7 +847,7 @@ suite('Set Interpreter Command', () => {
                 .verifiable(TypeMoq.Times.once());
             platformService.setup((p) => p.isWindows).returns(() => true);
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state).ignoreErrors();
 
             appShell.verifyAll();
         });
@@ -865,7 +865,7 @@ suite('Set Interpreter Command', () => {
             appShell.setup((a) => a.showOpenDialog(expectedParams)).verifiable(TypeMoq.Times.once());
             platformService.setup((p) => p.isWindows).returns(() => false);
 
-            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state);
+            await setInterpreterCommand._enterOrBrowseInterpreterPath(multiStepInput.object, state).ignoreErrors();
 
             appShell.verifyAll();
         });
