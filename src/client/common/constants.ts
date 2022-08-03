@@ -79,7 +79,13 @@ export namespace Octicons {
     export const Lightbulb = '$(lightbulb)';
 }
 
+/**
+ * Look at https://code.visualstudio.com/api/references/icons-in-labels#icon-listing for ThemeIcon ids.
+ * Using a theme icon is preferred over a custom icon as it gives product theme authors the possibility
+ * to change the icons.
+ */
 export namespace ThemeIcons {
+    export const ClearAll = 'clear-all';
     export const Refresh = 'refresh';
     export const SpinningLoader = 'loading~spin';
 }

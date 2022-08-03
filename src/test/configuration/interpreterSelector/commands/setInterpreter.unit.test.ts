@@ -16,7 +16,7 @@ import {
     WorkspaceFolder,
 } from 'vscode';
 import { cloneDeep } from 'lodash';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IPlatformService } from '../../../../client/common/platform/types';
@@ -261,10 +261,10 @@ suite('Set Interpreter Command', () => {
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
 
             expect(actualParameters).to.not.equal(undefined, 'Parameters not set');
-            const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
-            expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
+            const refreshButtons = actualParameters!.customButtonSetups;
+            expect(refreshButtons).to.not.equal(undefined, 'Callback not set');
             delete actualParameters!.initialize;
-            delete actualParameters!.customButtonSetup;
+            delete actualParameters!.customButtonSetups;
             delete actualParameters!.onChangeItem;
             assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
         });
@@ -302,10 +302,10 @@ suite('Set Interpreter Command', () => {
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
 
             expect(actualParameters).to.not.equal(undefined, 'Parameters not set');
-            const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
-            expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
+            const refreshButtons = actualParameters!.customButtonSetups;
+            expect(refreshButtons).to.not.equal(undefined, 'Callback not set');
             delete actualParameters!.initialize;
-            delete actualParameters!.customButtonSetup;
+            delete actualParameters!.customButtonSetups;
             delete actualParameters!.onChangeItem;
             assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
         });
@@ -458,10 +458,10 @@ suite('Set Interpreter Command', () => {
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
 
             expect(actualParameters).to.not.equal(undefined, 'Parameters not set');
-            const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
-            expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
+            const refreshButtons = actualParameters!.customButtonSetups;
+            expect(refreshButtons).to.not.equal(undefined, 'Callback not set');
             delete actualParameters!.initialize;
-            delete actualParameters!.customButtonSetup;
+            delete actualParameters!.customButtonSetups;
             delete actualParameters!.onChangeItem;
             assert.deepStrictEqual(actualParameters?.items, expectedParameters.items, 'Params not equal');
         });
@@ -542,11 +542,11 @@ suite('Set Interpreter Command', () => {
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
 
             expect(actualParameters).to.not.equal(undefined, 'Parameters not set');
-            const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
-            expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
+            const refreshButtons = actualParameters!.customButtonSetups;
+            expect(refreshButtons).to.not.equal(undefined, 'Callback not set');
 
             delete actualParameters!.initialize;
-            delete actualParameters!.customButtonSetup;
+            delete actualParameters!.customButtonSetups;
             delete actualParameters!.onChangeItem;
 
             assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
@@ -566,12 +566,19 @@ suite('Set Interpreter Command', () => {
             await setInterpreterCommand._pickInterpreter(multiStepInput.object, state);
 
             expect(actualParameters).to.not.equal(undefined, 'Parameters not set');
-            const refreshButtonCallback = actualParameters!.customButtonSetup?.callback;
-            expect(refreshButtonCallback).to.not.equal(undefined, 'Callback not set');
+            const refreshButtons = actualParameters!.customButtonSetups;
+            expect(refreshButtons).to.not.equal(undefined, 'Callback not set');
 
-            when(interpreterService.triggerRefresh()).thenResolve();
-            await refreshButtonCallback!({} as QuickPick<QuickPickItem>); // Invoke callback, meaning that the refresh button is clicked.
-            verify(interpreterService.triggerRefresh()).once();
+            expect(refreshButtons?.length).to.equal(2);
+            let arg;
+            when(interpreterService.triggerRefresh(undefined, anything())).thenCall((_, _arg) => {
+                arg = _arg;
+                return Promise.resolve();
+            });
+            await refreshButtons![0].callback!({} as QuickPick<QuickPickItem>); // Invoke callback, meaning that the refresh button is clicked.
+            expect(arg).to.deep.equal({ clearCache: true });
+            await refreshButtons![1].callback!({} as QuickPick<QuickPickItem>); // Invoke callback, meaning that the refresh button is clicked.
+            expect(arg).to.deep.equal({ clearCache: false });
         });
 
         test('Events to update quickpick updates the quickpick accordingly', async () => {

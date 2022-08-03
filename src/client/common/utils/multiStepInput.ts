@@ -48,7 +48,7 @@ export interface IQuickPickParameters<T extends QuickPickItem, E = any> {
     items: T[];
     activeItem?: T;
     placeholder: string;
-    customButtonSetup?: QuickInputButtonSetup;
+    customButtonSetups?: QuickInputButtonSetup[];
     matchOnDescription?: boolean;
     matchOnDetail?: boolean;
     keepScrollPosition?: boolean;
@@ -86,7 +86,7 @@ export interface IMultiStepInput<S> {
         items,
         activeItem,
         placeholder,
-        customButtonSetup,
+        customButtonSetups,
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>>;
     showInputBox<P extends InputBoxParameters>({
         title,
@@ -117,7 +117,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         items,
         activeItem,
         placeholder,
-        customButtonSetup,
+        customButtonSetups,
         matchOnDescription,
         matchOnDetail,
         acceptFilterBoxTextAsSelection,
@@ -145,15 +145,22 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     input.activeItems = [];
                 }
                 input.buttons = this.steps.length > 1 ? [QuickInputButtons.Back] : [];
-                if (customButtonSetup) {
-                    input.buttons = [...input.buttons, customButtonSetup.button];
+                if (customButtonSetups) {
+                    for (const customButtonSetup of customButtonSetups) {
+                        input.buttons = [...input.buttons, customButtonSetup.button];
+                    }
                 }
                 disposables.push(
                     input.onDidTriggerButton(async (item) => {
                         if (item === QuickInputButtons.Back) {
                             reject(InputFlowAction.back);
-                        } else if (JSON.stringify(item) === JSON.stringify(customButtonSetup?.button)) {
-                            await customButtonSetup?.callback(input);
+                        }
+                        if (customButtonSetups) {
+                            for (const customButtonSetup of customButtonSetups) {
+                                if (JSON.stringify(item) === JSON.stringify(customButtonSetup?.button)) {
+                                    await customButtonSetup?.callback(input);
+                                }
+                            }
                         }
                     }),
                     input.onDidChangeSelection((selectedItems) => resolve(selectedItems[0])),

@@ -75,6 +75,16 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         alwaysShow: true,
     };
 
+    private readonly refreshButton = {
+        iconPath: new ThemeIcon(ThemeIcons.Refresh),
+        tooltip: InterpreterQuickPickList.refreshInterpreterList,
+    };
+
+    private readonly hardRefreshButton = {
+        iconPath: new ThemeIcon(ThemeIcons.ClearAll),
+        tooltip: InterpreterQuickPickList.clearAllAndRefreshInterpreterList,
+    };
+
     private readonly noPythonInstalled: ISpecialQuickPickItem = {
         label: `${Octicons.Error} ${InterpreterQuickPickList.noPythonInstalled}`,
         detail: InterpreterQuickPickList.clickForInstructions,
@@ -126,10 +136,6 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         // times so that the visible items do not change.
         const preserveOrderWhenFiltering = !!this.interpreterService.refreshPromise;
         const suggestions = this._getItems(state.workspace);
-        const refreshButton = {
-            iconPath: new ThemeIcon(ThemeIcons.Refresh),
-            tooltip: InterpreterQuickPickList.refreshInterpreterList,
-        };
         state.path = undefined;
         const currentInterpreterPathDisplay = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
@@ -148,23 +154,20 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             matchOnDetail: true,
             matchOnDescription: true,
             title: InterpreterQuickPickList.browsePath.openButtonLabel,
-            customButtonSetup: {
-                button: refreshButton,
-                callback: (quickpickInput) => {
-                    quickpickInput.buttons = [
-                        {
-                            iconPath: new ThemeIcon(ThemeIcons.SpinningLoader),
-                            tooltip: InterpreterQuickPickList.refreshingInterpreterList,
-                        },
-                    ];
-                    this.interpreterService
-                        .triggerRefresh()
-                        .finally(() => {
-                            quickpickInput.buttons = [refreshButton];
-                        })
-                        .ignoreErrors();
+            customButtonSetups: [
+                {
+                    button: this.hardRefreshButton,
+                    callback: (quickpickInput) => {
+                        this.refreshButtonCallback(quickpickInput, true);
+                    },
                 },
-            },
+                {
+                    button: this.refreshButton,
+                    callback: (quickpickInput) => {
+                        this.refreshButtonCallback(quickpickInput, false);
+                    },
+                },
+            ],
             initialize: () => {
                 // Note discovery is no longer guranteed to be auto-triggered on extension load, so trigger it when
                 // user interacts with the interpreter picker but only once per session. Users can rely on the
@@ -413,6 +416,21 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         if (index !== -1) {
             items[index] = recommended;
         }
+    }
+
+    private refreshButtonCallback(input: QuickPick<QuickPickItem>, clearCache: boolean) {
+        input.buttons = [
+            {
+                iconPath: new ThemeIcon(ThemeIcons.SpinningLoader),
+                tooltip: InterpreterQuickPickList.refreshingInterpreterList,
+            },
+        ];
+        this.interpreterService
+            .triggerRefresh(undefined, { clearCache })
+            .finally(() => {
+                input.buttons = [this.hardRefreshButton, this.refreshButton];
+            })
+            .ignoreErrors();
     }
 
     @captureTelemetry(EventName.SELECT_INTERPRETER_ENTER_BUTTON)
