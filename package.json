@@ -16,7 +16,6 @@
             "description": "Only Partial IntelliSense supported."
         }
     },
-    "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
     "enabledApiProposals": [
         "quickPickSortByLabel",
