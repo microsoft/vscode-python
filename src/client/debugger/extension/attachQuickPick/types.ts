@@ -27,4 +27,3 @@ export interface IAttachPicker {
 }
 
 export const REFRESH_BUTTON_ICON = 'refresh.svg';
-export const REFRESHING_BUTTON_ICON = 'refreshing.svg';

@@ -6,14 +6,13 @@
 import { inject, injectable } from 'inversify';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
-import { QuickPick, QuickPickItem, QuickPickItemKind } from 'vscode';
+import { QuickPick, QuickPickItem, QuickPickItemKind, ThemeIcon } from 'vscode';
 import * as nls from 'vscode-nls';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
-import { Commands, Octicons } from '../../../../common/constants';
+import { Commands, Octicons, ThemeIcons } from '../../../../common/constants';
 import { isParentPath } from '../../../../common/platform/fs-paths';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
-import { getIcon } from '../../../../common/utils/icons';
 import { Common, InterpreterQuickPickList } from '../../../../common/utils/localize';
 import { noop } from '../../../../common/utils/misc';
 import {
@@ -24,7 +23,6 @@ import {
     IQuickPickParameters,
 } from '../../../../common/utils/multiStepInput';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
-import { REFRESHING_BUTTON_ICON, REFRESH_BUTTON_ICON } from '../../../../debugger/extension/attachQuickPick/types';
 import { EnvironmentType } from '../../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
@@ -129,7 +127,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         const preserveOrderWhenFiltering = !!this.interpreterService.refreshPromise;
         const suggestions = this._getItems(state.workspace);
         const refreshButton = {
-            iconPath: getIcon(REFRESH_BUTTON_ICON),
+            iconPath: new ThemeIcon(ThemeIcons.Refresh),
             tooltip: InterpreterQuickPickList.refreshInterpreterList,
         };
         state.path = undefined;
@@ -155,7 +153,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 callback: (quickpickInput) => {
                     quickpickInput.buttons = [
                         {
-                            iconPath: getIcon(REFRESHING_BUTTON_ICON),
+                            iconPath: new ThemeIcon(ThemeIcons.SpinningLoader),
                             tooltip: InterpreterQuickPickList.refreshingInterpreterList,
                         },
                     ];

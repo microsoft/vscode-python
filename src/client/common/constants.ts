@@ -79,6 +79,11 @@ export namespace Octicons {
     export const Lightbulb = '$(lightbulb)';
 }
 
+export namespace ThemeIcons {
+    export const Refresh = 'refresh';
+    export const SpinningLoader = 'loading~spin';
+}
+
 export const DEFAULT_INTERPRETER_SETTING = 'python';
 
 export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';
