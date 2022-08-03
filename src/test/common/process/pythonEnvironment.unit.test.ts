@@ -202,7 +202,7 @@ suite('PythonEnvironment', () => {
         expect(result).to.equal(executablePath, "getExecutablePath() sbould not return pythonPath if it's not a file");
     });
 
-    test('getExecutablePath should throw if the result of exec() writes to stderr', async () => {
+    test('getExecutablePath should return `undefined` if the result of exec() writes to stderr', async () => {
         const stderr = 'bar';
         fileSystem.setup((f) => f.pathExists(pythonPath)).returns(() => Promise.resolve(false));
         processService
@@ -210,9 +210,9 @@ suite('PythonEnvironment', () => {
             .returns(() => Promise.reject(new StdErrError(stderr)));
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
 
-        const result = env.getExecutablePath();
+        const result = await env.getExecutablePath();
 
-        await expect(result).to.eventually.be.rejectedWith(stderr);
+        expect(result).to.be.equal(undefined);
     });
 
     test('isModuleInstalled should call processService.exec()', async () => {

@@ -1,6 +1,6 @@
 # Changelog
 
-Please look at https://github.com/microsoft/vscode-python/releases for the latest releases and changelogs.
+**Please see https://github.com/microsoft/vscode-python/releases for the latest release notes. The notes below have been kept for historical purposes.**
 
 ## 2022.10.1 (14 July 2022)
 
