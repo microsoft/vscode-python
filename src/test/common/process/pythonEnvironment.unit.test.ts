@@ -10,7 +10,7 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import {
     createCondaEnv,
     createPythonEnv,
-    createWindowsStoreEnv,
+    createMicrosoftStoreEnv,
 } from '../../../client/common/process/pythonEnvironment';
 import { IProcessService, StdErrError } from '../../../client/common/process/types';
 import { Architecture } from '../../../client/common/utils/platform';
@@ -202,7 +202,7 @@ suite('PythonEnvironment', () => {
         expect(result).to.equal(executablePath, "getExecutablePath() sbould not return pythonPath if it's not a file");
     });
 
-    test('getExecutablePath should throw if the result of exec() writes to stderr', async () => {
+    test('getExecutablePath should return `undefined` if the result of exec() writes to stderr', async () => {
         const stderr = 'bar';
         fileSystem.setup((f) => f.pathExists(pythonPath)).returns(() => Promise.resolve(false));
         processService
@@ -210,9 +210,9 @@ suite('PythonEnvironment', () => {
             .returns(() => Promise.reject(new StdErrError(stderr)));
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
 
-        const result = env.getExecutablePath();
+        const result = await env.getExecutablePath();
 
-        await expect(result).to.eventually.be.rejectedWith(stderr);
+        expect(result).to.be.equal(undefined);
     });
 
     test('isModuleInstalled should call processService.exec()', async () => {
@@ -343,7 +343,7 @@ suite('CondaEnvironment', () => {
     });
 });
 
-suite('WindowsStoreEnvironment', () => {
+suite('MicrosoftStoreEnvironment', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     const pythonPath = 'foo';
 
@@ -351,8 +351,8 @@ suite('WindowsStoreEnvironment', () => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
     });
 
-    test('Should return pythonPath if it is the path to the windows store interpreter', async () => {
-        const env = createWindowsStoreEnv(pythonPath, processService.object);
+    test('Should return pythonPath if it is the path to the microsoft store interpreter', async () => {
+        const env = createMicrosoftStoreEnv(pythonPath, processService.object);
 
         const executablePath = await env.getExecutablePath();
 

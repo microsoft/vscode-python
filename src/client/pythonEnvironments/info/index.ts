@@ -16,7 +16,7 @@ export enum EnvironmentType {
     Pipenv = 'PipEnv',
     Pyenv = 'Pyenv',
     Venv = 'Venv',
-    WindowsStore = 'WindowsStore',
+    MicrosoftStore = 'MicrosoftStore',
     Poetry = 'Poetry',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
     Global = 'Global',
@@ -105,8 +105,8 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType): string
         case EnvironmentType.VirtualEnv: {
             return 'virtualenv';
         }
-        case EnvironmentType.WindowsStore: {
-            return 'windows store';
+        case EnvironmentType.MicrosoftStore: {
+            return 'microsoft store';
         }
         case EnvironmentType.Poetry: {
             return 'poetry';

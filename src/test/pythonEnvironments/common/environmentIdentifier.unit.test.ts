@@ -79,7 +79,7 @@ suite('Environment Identifier', () => {
         });
     });
 
-    suite('Windows Store', () => {
+    suite('Microsoft Store', () => {
         let getEnvVar: sinon.SinonStub;
         let pathExists: sinon.SinonStub;
         const fakeLocalAppDataPath = path.join(TEST_LAYOUT_ROOT, 'storeApps');
@@ -98,13 +98,13 @@ suite('Environment Identifier', () => {
             pathExists.restore();
         });
         executable.forEach((exe) => {
-            test(`Path to local app data windows store interpreter (${exe})`, async () => {
+            test(`Path to local app data microsoft store interpreter (${exe})`, async () => {
                 getEnvVar.withArgs('LOCALAPPDATA').returns(fakeLocalAppDataPath);
                 const interpreterPath = path.join(fakeLocalAppDataPath, 'Microsoft', 'WindowsApps', exe);
                 const envType: PythonEnvKind = await identifyEnvironment(interpreterPath);
-                assert.deepEqual(envType, PythonEnvKind.WindowsStore);
+                assert.deepEqual(envType, PythonEnvKind.MicrosoftStore);
             });
-            test(`Path to local app data windows store interpreter app sub-directory (${exe})`, async () => {
+            test(`Path to local app data microsoft store interpreter app sub-directory (${exe})`, async () => {
                 getEnvVar.withArgs('LOCALAPPDATA').returns(fakeLocalAppDataPath);
                 const interpreterPath = path.join(
                     fakeLocalAppDataPath,
@@ -114,9 +114,9 @@ suite('Environment Identifier', () => {
                     exe,
                 );
                 const envType: PythonEnvKind = await identifyEnvironment(interpreterPath);
-                assert.deepEqual(envType, PythonEnvKind.WindowsStore);
+                assert.deepEqual(envType, PythonEnvKind.MicrosoftStore);
             });
-            test(`Path to program files windows store interpreter app sub-directory (${exe})`, async () => {
+            test(`Path to program files microsoft store interpreter app sub-directory (${exe})`, async () => {
                 const interpreterPath = path.join(
                     fakeProgramFilesPath,
                     'WindowsApps',
@@ -124,13 +124,13 @@ suite('Environment Identifier', () => {
                     exe,
                 );
                 const envType: PythonEnvKind = await identifyEnvironment(interpreterPath);
-                assert.deepEqual(envType, PythonEnvKind.WindowsStore);
+                assert.deepEqual(envType, PythonEnvKind.MicrosoftStore);
             });
             test(`Local app data not set (${exe})`, async () => {
                 getEnvVar.withArgs('LOCALAPPDATA').returns(undefined);
                 const interpreterPath = path.join(fakeLocalAppDataPath, 'Microsoft', 'WindowsApps', exe);
                 const envType: PythonEnvKind = await identifyEnvironment(interpreterPath);
-                assert.deepEqual(envType, PythonEnvKind.WindowsStore);
+                assert.deepEqual(envType, PythonEnvKind.MicrosoftStore);
             });
             test(`Program files app data not set (${exe})`, async () => {
                 const interpreterPath = path.join(
@@ -143,14 +143,14 @@ suite('Environment Identifier', () => {
                 pathExists.withArgs(path.join(path.dirname(interpreterPath), 'idle.exe')).resolves(true);
 
                 const envType: PythonEnvKind = await identifyEnvironment(interpreterPath);
-                assert.deepEqual(envType, PythonEnvKind.WindowsStore);
+                assert.deepEqual(envType, PythonEnvKind.MicrosoftStore);
             });
             test(`Path using forward slashes (${exe})`, async () => {
                 const interpreterPath = path
                     .join(fakeLocalAppDataPath, 'Microsoft', 'WindowsApps', exe)
                     .replace('\\', '/');
                 const envType: PythonEnvKind = await identifyEnvironment(interpreterPath);
-                assert.deepEqual(envType, PythonEnvKind.WindowsStore);
+                assert.deepEqual(envType, PythonEnvKind.MicrosoftStore);
             });
             test(`Path using long path style slashes (${exe})`, async () => {
                 const interpreterPath = path
@@ -163,7 +163,7 @@ suite('Environment Identifier', () => {
                     return Promise.resolve(false);
                 });
                 const envType: PythonEnvKind = await identifyEnvironment(`\\\\?\\${interpreterPath}`);
-                assert.deepEqual(envType, PythonEnvKind.WindowsStore);
+                assert.deepEqual(envType, PythonEnvKind.MicrosoftStore);
             });
         });
     });

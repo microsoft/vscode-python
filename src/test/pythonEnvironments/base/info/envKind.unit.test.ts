@@ -10,7 +10,7 @@ import { getKindDisplayName, getPrioritizedEnvKinds } from '../../../../client/p
 const KIND_NAMES: [PythonEnvKind, string][] = [
     // We handle PythonEnvKind.Unknown separately.
     [PythonEnvKind.System, 'system'],
-    [PythonEnvKind.WindowsStore, 'winStore'],
+    [PythonEnvKind.MicrosoftStore, 'winStore'],
     [PythonEnvKind.Pyenv, 'pyenv'],
     [PythonEnvKind.Poetry, 'poetry'],
     [PythonEnvKind.Custom, 'customGlobal'],

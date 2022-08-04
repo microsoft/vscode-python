@@ -90,7 +90,7 @@ suite('Python envs locator utils - getQueryFilter', () => {
         ([
             [PythonEnvKind.Unknown, [env3]],
             [PythonEnvKind.System, [env1, env5]],
-            [PythonEnvKind.WindowsStore, []],
+            [PythonEnvKind.MicrosoftStore, []],
             [PythonEnvKind.Pyenv, [env2, env4]],
             [PythonEnvKind.Venv, [envL1, envSL1, envSL5]],
             [PythonEnvKind.Conda, [env6, envL2, envSL3]],

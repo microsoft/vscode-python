@@ -50,7 +50,7 @@ export interface IComponentAdapter {
     // Undefined is expected on this API, if the environment is not conda env.
     getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
 
-    isWindowsStoreInterpreter(pythonPath: string): Promise<boolean>;
+    isMicrosoftStoreInterpreter(pythonPath: string): Promise<boolean>;
 }
 
 export const ICondaService = Symbol('ICondaService');

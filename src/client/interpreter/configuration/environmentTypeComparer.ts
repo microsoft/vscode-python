@@ -36,7 +36,7 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
      * The comparison guidelines are:
      * 1. Local environments first (same path as the workspace root);
      * 2. Global environments next (anything not local), with conda environments at a lower priority, and "base" being last;
-     * 3. Globally-installed interpreters (/usr/bin/python3, Windows Store).
+     * 3. Globally-installed interpreters (/usr/bin/python3, Microsoft Store).
      *
      * Always sort with newest version of Python first within each subgroup.
      */
@@ -236,7 +236,7 @@ function getPrioritizedEnvironmentType(): EnvironmentType[] {
         EnvironmentType.VirtualEnv,
         EnvironmentType.Conda,
         EnvironmentType.Pyenv,
-        EnvironmentType.WindowsStore,
+        EnvironmentType.MicrosoftStore,
         EnvironmentType.Global,
         EnvironmentType.System,
         EnvironmentType.Unknown,

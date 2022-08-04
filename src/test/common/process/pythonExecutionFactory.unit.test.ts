@@ -99,7 +99,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(interpreterPathExpHelper.get(anything())).thenReturn('selected interpreter path');
 
                 pyenvs = mock<IComponentAdapter>();
-                when(pyenvs.isWindowsStoreInterpreter(anyString())).thenResolve(true);
+                when(pyenvs.isMicrosoftStoreInterpreter(anyString())).thenResolve(true);
 
                 executionService = typemoq.Mock.ofType<IPythonExecutionService>();
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -170,7 +170,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const service = await factory.create({ resource, pythonPath: 'HELLO' });
 
                 expect(service).to.not.equal(undefined);
-                verify(pyenvs.isWindowsStoreInterpreter('HELLO')).once();
+                verify(pyenvs.isMicrosoftStoreInterpreter('HELLO')).once();
                 verify(pythonSettings.pythonPath).never();
             });
 
