@@ -7,7 +7,7 @@ on:
 env:
   # To update the list of labels, see `getLabels.js`.
   REPO_LABELS: '["area-data science","area-debugging","area-diagnostics","area-editor-*","area-environments","area-formatting","area-intellisense","area-internal","area-linting","area-terminal","area-testing","author-verification-requested","bug","community ask","debt","dependencies","documentation","experimenting","feature-request","good first issue","help wanted","important","info-needed","invalid-testplan-item","investigating","iteration-candidate","iteration-plan","iteration-plan-draft","javascript","linux"]'
-  TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25"]'
+  TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25","eleanorjboyd"]'
 
 permissions:
   issues: write
