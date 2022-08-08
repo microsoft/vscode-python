@@ -309,7 +309,12 @@
       "typecheckingmode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "useimportheuristic" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "uselibrarycodefortypes" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "workspacecount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+      "workspacecount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "variableinlaytypehints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "functionReturnInlayTypeHints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "disableworkspacesymbol" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "watchforlibrarychanges" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "lspnotebooks" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
    }
 */
 /* __GDPR__
