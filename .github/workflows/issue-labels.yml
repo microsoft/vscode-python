@@ -4,6 +4,11 @@ on:
   issues:
     types: [opened, reopened]
 
+env:
+  # To update the list of labels, see `getLabels.js`.
+  REPO_LABELS: '["area-data science","area-debugging","area-diagnostics","area-editor-*","area-environments","area-formatting","area-intellisense","area-internal","area-linting","area-terminal","area-testing","author-verification-requested","bug","community ask","debt","dependencies","documentation","experimenting","feature-request","good first issue","help wanted","important","info-needed","invalid-testplan-item","investigating","iteration-candidate","iteration-plan","iteration-plan-draft","javascript","linux"]'
+  TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25"]'
+
 permissions:
   issues: write
 
@@ -11,10 +16,6 @@ jobs:
   # From https://github.com/marketplace/actions/github-script#apply-a-label-to-an-issue.
   add-classify-label:
     name: "Add 'triage-needed' and remove unrecognizable labels and assignees"
-    env:
-      # To update the list of labels, see `getLabels.js`.
-      REPO_LABELS: '["area-data science","area-debugging","area-diagnostics","area-editor-*","area-environments","area-formatting","area-intellisense","area-internal","area-linting","area-terminal","area-testing","author-verification-requested","bug","community ask","debt","dependencies","documentation","experimenting","feature-request","good first issue","help wanted","important","info-needed","invalid-testplan-item","investigating","iteration-candidate","iteration-plan","iteration-plan-draft","javascript","linux"]'
-      TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25"]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v6
