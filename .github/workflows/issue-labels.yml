@@ -15,7 +15,7 @@ permissions:
 jobs:
   # From https://github.com/marketplace/actions/github-script#apply-a-label-to-an-issue.
   add-classify-label:
-    name: "Add 'triage-needed' and remove unrecognizable labels and assignees"
+    name: "Add 'triage-needed' and remove unrecognizable labels & assignees"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v6
