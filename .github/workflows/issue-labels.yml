@@ -57,13 +57,3 @@ jobs:
             } else {
               console.log('This issue already has a "needs __", "iteration-plan", "release-plan", or the "testplan-item" label, do not add the "triage-needed" label.')
             }
-            const knownLabels = ${{ env.REPO_LABELS }}
-            for( const label of labels) {
-              if (!knownLabels.includes(label)) {
-                await github.rest.issues.deleteLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  name: label,
-                })
-              }
-            }
