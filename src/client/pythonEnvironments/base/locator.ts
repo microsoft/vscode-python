@@ -14,6 +14,62 @@ import {
     PythonEnvsWatcher,
 } from './watcher';
 
+export interface ILocatorClass {
+    new (root?: string): ILocatorAPI;
+}
+
+export interface ILocatorAPI {
+    iterEnvs?(): IPythonEnvsIterator<EnvInfo>;
+    readonly onChanged?: Event<LocatorEnvsChangedEvent>;
+}
+
+export type EnvInfo = {
+    envSources: EnvSource[];
+    executablePath: string;
+    envPath?: string;
+};
+
+/**
+ * These can be used when querying for a particular env.
+ */
+interface EnvironmentProviderMetadata {
+    readonly envType: EnvType;
+    readonly searchLocation?: string;
+    readonly envSources: EnvSource[];
+    readonly isRootBasedLocator: boolean;
+}
+
+type EnvironmentMetaData = EnvironmentProviderMetadata;
+
+export interface LocatorEnvsChangedEvent {
+    /**
+     * Any details known about the environment which can be used for query.
+     */
+    env?: EnvironmentMetaData;
+    type: EnvChangeType;
+}
+
+export type EnvChangeType = 'add' | 'remove' | 'update';
+
+export enum EnvType {
+    VirtualEnv = 'VirtualEnv',
+    Conda = 'Conda',
+    Unknown = 'Unknown',
+    Global = 'GlobalInterpreter',
+}
+
+export enum EnvSource {
+    Conda = 'Conda',
+    Pipenv = 'PipEnv',
+    Poetry = 'Poetry',
+    VirtualEnv = 'VirtualEnv',
+    Venv = 'Venv',
+    VirtualEnvWrapper = 'VirtualEnvWrapper',
+    WindowsStore = 'WindowsStore',
+    Pyenv = 'Pyenv',
+    Custom = 'Custom',
+}
+
 /**
  * A single update to a previously provided Python env object.
  */
@@ -153,7 +209,9 @@ export type BasicEnvInfo = {
  * events emitted via `onChanged` do not need to provide information
  * for the specific environments that changed.
  */
-export interface ILocator<I = PythonEnvInfo, E = PythonEnvsChangedEvent> extends IPythonEnvsWatcher<E> {
+export interface ILocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
+    extends IPythonEnvsWatcher<E>,
+        IEnvProvider {
     /**
      * Iterate over the enviroments known tos this locator.
      *
@@ -171,6 +229,10 @@ export interface ILocator<I = PythonEnvInfo, E = PythonEnvsChangedEvent> extends
      * @returns - the fast async iterator of Python envs, which may have incomplete info
      */
     iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator<I>;
+}
+
+export interface IEnvProvider {
+    addNewLocator?(LocatorClass: ILocatorClass, isWorkspace: boolean): void;
 }
 
 interface IResolver {
@@ -203,7 +265,7 @@ export type TriggerRefreshOptions = {
     ifNotTriggerredAlready?: boolean;
 };
 
-export interface IDiscoveryAPI {
+export interface IDiscoveryAPI extends IEnvProvider {
     /**
      * Tracks discovery progress for current list of known environments, i.e when it starts, finishes or any other relevant
      * stage. Note the progress for a particular query is currently not tracked or reported, this only indicates progress of

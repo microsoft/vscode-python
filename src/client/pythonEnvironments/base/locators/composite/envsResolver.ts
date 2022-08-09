@@ -34,6 +34,8 @@ export class PythonEnvsResolver implements IResolvingLocator {
         return this.parentLocator.onChanged;
     }
 
+    public addNewLocator = this.parentLocator.addNewLocator;
+
     constructor(
         private readonly parentLocator: ILocator<BasicEnvInfo>,
         private readonly environmentInfoService: IEnvironmentInfoService,

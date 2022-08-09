@@ -27,6 +27,8 @@ export class PythonEnvsReducer implements ILocator<BasicEnvInfo> {
         return this.parentLocator.onChanged;
     }
 
+    public addNewLocator = this.parentLocator.addNewLocator;
+
     constructor(private readonly parentLocator: ILocator<BasicEnvInfo>) {}
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {

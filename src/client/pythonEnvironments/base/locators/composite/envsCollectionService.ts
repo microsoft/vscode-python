@@ -47,6 +47,8 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return this.progress.event;
     }
 
+    public addNewLocator = this.locator.addNewLocator;
+
     public getRefreshPromise(options?: GetRefreshEnvironmentsOptions): Promise<void> | undefined {
         const stage = options?.stage ?? ProgressReportStage.discoveryFinished;
         return this.progressPromises.get(stage)?.promise;
