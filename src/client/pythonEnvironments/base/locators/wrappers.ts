@@ -3,7 +3,7 @@
 
 // eslint-disable-next-line max-classes-per-file
 import { Uri } from 'vscode';
-import { ILocatorClass } from '../../../apiTypes';
+import { ILocatorFactory } from '../../../apiTypes';
 import { IDisposable } from '../../../common/types';
 import { iterEmpty } from '../../../common/utils/async';
 import { getURIFilter } from '../../../common/utils/misc';
@@ -37,12 +37,12 @@ export class ExtensionLocators extends Locators<BasicEnvInfo> {
         return combineIterators(iterators);
     }
 
-    public addNewLocator(LocatorClass: ILocatorClass, isWorkspace: boolean): void {
+    public addNewLocator(locatorFactory: ILocatorFactory, isWorkspace: boolean): void {
         if (isWorkspace) {
-            this.workspace.addNewLocator(LocatorClass);
+            this.workspace.addNewLocator(locatorFactory);
         }
         if (!isWorkspace) {
-            this.nonWorkspace = [...this.nonWorkspace, new CustomLocator(new LocatorClass())];
+            this.nonWorkspace = [...this.nonWorkspace, new CustomLocator(locatorFactory())];
         }
     }
 }
@@ -145,10 +145,10 @@ export class WorkspaceLocators extends LazyResourceBasedLocator<BasicEnvInfo> {
         );
     }
 
-    public addNewLocator(LocatorClass: ILocatorClass): void {
+    public addNewLocator(locatorFactory: ILocatorFactory): void {
         Object.keys(this.roots).forEach((key) => {
             const root = this.roots[key];
-            const newLocator = new LocatorClass(root.fsPath);
+            const newLocator = locatorFactory(root.fsPath);
             const convertedLocator: ILocator<BasicEnvInfo> = new CustomLocator(newLocator);
             const [locators] = this.locators[key];
             locators.addLocator(convertedLocator);

@@ -245,18 +245,17 @@ export interface IProposedExtensionAPI {
         registerEnvironmentProvider(
             environmentProvider: IEnvironmentProvider,
             metadata: EnvironmentProviderMetadata,
-        ): Promise<void>;
+        ): Promise<void>; // TODO: Disposable??
     };
 }
 
 interface IEnvironmentProvider {
-    locator: ILocatorClass;
+    // TODO: createEnv
+    createLocator: ILocatorFactory;
     getEnvironmentDetails: (env: EnvInfo) => Promise<EnvironmentDetails | undefined>;
 }
 
-export interface ILocatorClass {
-    new (root?: string): ILocatorAPI;
-}
+export type ILocatorFactory = (root?: string) => ILocatorAPI;
 
 export interface ILocatorAPI {
     iterEnvs?(): IPythonEnvsIterator<EnvInfo>;

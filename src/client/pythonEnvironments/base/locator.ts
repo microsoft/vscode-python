@@ -14,10 +14,7 @@ import {
     PythonEnvsWatcher,
 } from './watcher';
 
-export interface ILocatorClass {
-    new (root?: string): ILocatorAPI;
-}
-
+export type ILocatorFactory = (root?: string) => ILocatorAPI;
 export interface ILocatorAPI {
     iterEnvs?(): IPythonEnvsIterator<EnvInfo>;
     readonly onChanged?: Event<LocatorEnvsChangedEvent>;
@@ -232,7 +229,7 @@ export interface ILocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEve
 }
 
 export interface IEnvProvider {
-    addNewLocator?(LocatorClass: ILocatorClass, isWorkspace: boolean): void;
+    addNewLocator?(locatorFactory: ILocatorFactory, isWorkspace: boolean): void;
 }
 
 interface IResolver {
