@@ -39,6 +39,7 @@ jobs:
                 issue_number: context.issue.number,
                 labels: ['triage-needed']
               })
+              const knownTriagers = ${{ env.TRIAGERS }}
               const currentAssignees = await github.rest.issues
                 .get({
                     owner: context.repo.owner,
@@ -57,7 +58,6 @@ jobs:
               console.log('This issue already has a "needs __", "iteration-plan", "release-plan", or the "testplan-item" label, do not add the "triage-needed" label.')
             }
             const knownLabels = ${{ env.REPO_LABELS }}
-            const knownTriagers = ${{ env.TRIAGERS }}
             for( const label of labels) {
               if (!knownLabels.includes(label)) {
                 await github.rest.issues.deleteLabel({
