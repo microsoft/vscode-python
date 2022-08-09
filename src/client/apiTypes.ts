@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
@@ -103,19 +104,35 @@ export interface EnvironmentDetailsOptions {
 export interface EnvironmentDetails {
     executable: {
         path: string;
-        run: string[];
-        env?: any;
-        shell?: boolean;
-        shellCommand?: Record<'cmd' | 'fish' | 'bash' | 'string', { run: string[] }>;
+        // run: string[];
+        // env?: any;
+        // shell?: boolean;
+        // shellCommand?: Record<'cmd' | 'fish' | 'bash' | 'string', { run: string[] }>;
         bitness?: Architecture;
         cwd?: string;
         sysPrefix: string;
+    };
+    executionAPIs: {
+        // Functions would only require the arguments. The env provider can internally decide on the commands.
+        // Support option of whether to run as a process or VSCode terminal.
+        // However note we cannot pass this into the debugger at the moment, as VSCode itself handles execution.
+        // Gotta add support in VSCode for that, they already support that for LSP.
+        shellExec: Function;
+        shellExecObservable: Function;
+        exec: Function;
+        execObservable: Function;
+    };
+    distributor?: {
+        // PEP 514 (https://www.python.org/dev/peps/pep-0514/)
+        name: string; // Could even be used for Pyenv.
+        url?: string; // 'https://www.python.org';
     };
     environment?: {
         type: EnvType;
         name?: string;
         path: string;
         project?: string; // Any specific project environment is created for.
+        source: EnvSource[];
     };
     version: {
         major: number;
@@ -136,9 +153,8 @@ export interface EnvironmentDetails {
             serial: number;
         };
     };
-    environmentSource: EnvSource[];
     // Are the results specific to the environment (variables, working directory, etc.)?
-    contextSensitive: boolean;
+    // contextSensitive: boolean;
 }
 
 export interface EnvironmentsChangedParams {
@@ -290,21 +306,22 @@ export interface LocatorEnvsChangedEvent {
 
 export type EnvChangeType = 'add' | 'remove' | 'update';
 
-export enum EnvType {
+export type EnvType = KnownEnvTypes | string;
+
+export enum KnownEnvTypes {
     VirtualEnv = 'VirtualEnv',
     Conda = 'Conda',
     Unknown = 'Unknown',
-    Global = 'GlobalInterpreter',
+    Global = 'Global',
 }
 
-export enum EnvSource {
+export type EnvSource = KnownEnvSourceTypes | string;
+
+export enum KnownEnvSourceTypes {
     Conda = 'Conda',
     Pipenv = 'PipEnv',
     Poetry = 'Poetry',
     VirtualEnv = 'VirtualEnv',
     Venv = 'Venv',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
-    WindowsStore = 'WindowsStore',
-    Pyenv = 'Pyenv',
-    Custom = 'Custom',
 }
