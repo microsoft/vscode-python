@@ -108,8 +108,8 @@ export interface EnvironmentDetails {
         // env?: any;
         // shell?: boolean;
         // shellCommand?: Record<'cmd' | 'fish' | 'bash' | 'string', { run: string[] }>;
+        // cwd?: string;
         bitness?: Architecture;
-        cwd?: string;
         sysPrefix: string;
     };
     executionAPIs: {
@@ -121,6 +121,7 @@ export interface EnvironmentDetails {
         shellExecObservable: Function;
         exec: Function;
         execObservable: Function;
+        // createActivatedTerminal???
     };
     distributor?: {
         // PEP 514 (https://www.python.org/dev/peps/pep-0514/)
