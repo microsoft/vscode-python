@@ -3,7 +3,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Event, Uri } from 'vscode';
+import { Event, Terminal, Uri } from 'vscode';
 import { Resource } from './common/types';
 import { Architecture } from './common/utils/platform';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './jupyter/types';
@@ -117,11 +117,11 @@ export interface EnvironmentDetails {
         // Support option of whether to run as a process or VSCode terminal.
         // However note we cannot pass this into the debugger at the moment, as VSCode itself handles execution.
         // Gotta add support in VSCode for that, they already support that for LSP.
+        // TODO: Gotta support this for upstream debugger
         shellExec: Function;
         shellExecObservable: Function;
         exec: Function;
         execObservable: Function;
-        // createActivatedTerminal???
     };
     distributor?: {
         // PEP 514 (https://www.python.org/dev/peps/pep-0514/)
@@ -134,6 +134,22 @@ export interface EnvironmentDetails {
         path: string;
         project?: string; // Any specific project environment is created for.
         source: EnvSource[];
+        activationAPIs?: // Contribute to this if you want Python extension to handle activation for any terminals that get created.
+        | {
+                  usingEnvironmentVariableCollection: {
+                      // TODO: Think of whether to pass in the extensions collection object here.
+                      // Maybe we shouldn't pass it because other extension does not own the collections of the Python extensions?
+                      setCollection(): void;
+                      resetCollection(): void;
+                  };
+              }
+            | {
+                  usingTerminal: {
+                      // Maybe we can also pass in the terminal type here with the terminal object
+                      activateTerminal(terminal: Terminal): Promise<boolean>;
+                      deactivateTerminal(terminal: Terminal): Promise<boolean>;
+                  };
+              };
     };
     version: {
         major: number;
