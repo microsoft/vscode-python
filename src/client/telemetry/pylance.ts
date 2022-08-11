@@ -314,7 +314,7 @@
       "functionReturnInlayTypeHints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "disableworkspacesymbol" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "watchforlibrarychanges" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "lspnotebooks" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "lspnotebooks" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
    }
 */
 /* __GDPR__
