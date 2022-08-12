@@ -115,25 +115,6 @@ type VersionInfo = {
 export interface EnvironmentDetails {
     executable: {
         path: string;
-        run: {
-            // Functions would only require the arguments. The env provider can internally decide on the commands.
-            // Support option of whether to run as a process or VSCode terminal.
-            // However note we cannot pass this into the debugger at the moment, as VSCode itself handles execution.
-            // Gotta add support in VSCode for that, they already support that for LSP.
-            // TODO: Gotta support this for upstream debugger
-            exec: Function;
-            shellExec: Function; // Only for backwards compatibility.
-            execObservable: Function;
-            /**
-             * Uses a VSCode terminal.
-             * */
-            terminalExec: () => void;
-            /**
-             * Any environment variables that can be used to activate the environment, if supported.
-             * If not provided, Python extension itself uses the other execution APIs to calculate it.
-             */
-            env?: { [key: string]: string | null | undefined };
-        };
         bitness?: Architecture;
         sysPrefix: string;
     };
@@ -163,11 +144,22 @@ export interface EnvironmentDetails {
 type EnvironmentDetailsByProvider = Partial<EnvironmentDetails> & Pick<EnvironmentDetails, 'executable'>;
 
 interface IEnvironmentProvider {
+    /**
+     * Factory function calling which create the locator.
+     */
     createLocator: ILocatorFactory;
-    getEnvironmentDetails: (env: EnvInfo) => Promise<EnvironmentDetailsByProvider | undefined>;
+    /**
+     * Returns true if provided environment is recognized by the provider.
+     */
+    canIdentifyEnvironment: (env: BaseEnvInfo) => Promise<boolean>;
+    /**
+     * This is only called if this provider can identify the environment.
+     * Returns details or `undefined` if it was found if env is invalid.
+     */
+    getEnvironmentDetails: (env: BaseEnvInfo) => Promise<EnvironmentDetailsByProvider | undefined>;
 }
 
-export type ILocatorFactory = INonWorkspaceLocatorFactory | IWorkspaceLocatorFactory;
+export type ILocatorFactory = IWorkspaceLocatorFactory | INonWorkspaceLocatorFactory;
 export type INonWorkspaceLocatorFactory = () => ILocatorAPI;
 export type IWorkspaceLocatorFactory = (root: string) => ILocatorAPI;
 
@@ -176,8 +168,11 @@ export interface ILocatorAPI {
     readonly onChanged?: Event<LocatorEnvsChangedEvent>;
 }
 
-export type EnvInfo = {
+export type EnvInfo = BaseEnvInfo & {
     envSources: EnvSource[];
+};
+
+export type BaseEnvInfo = {
     executablePath: string;
     envPath?: string;
 };
