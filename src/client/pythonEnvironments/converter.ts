@@ -54,7 +54,7 @@ function convertKind(source: string): PythonEnvKind {
  * Converts the proposed interface into a class implementing basic interface.
  * ILocator<EnvInfo, LocatorEnvsChangedEvent> ======> ILocator<BasicEnvInfo, PythonEnvsChangedEvent>
  */
-export class CustomLocator implements ILocator<BasicEnvInfo> {
+export class ConvertLocator implements ILocator<BasicEnvInfo> {
     private readonly didChange = new EventEmitter<PythonEnvsChangedEvent>();
 
     private eventKeys: Record<EnvChangeType, FileChangeType> = {

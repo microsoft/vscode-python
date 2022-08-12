@@ -3,21 +3,21 @@
 
 // eslint-disable-next-line max-classes-per-file
 import { Uri } from 'vscode';
+import { ILocatorFactory } from '../../../apiTypes';
 import { IDisposable } from '../../../common/types';
 import { iterEmpty } from '../../../common/utils/async';
 import { getURIFilter } from '../../../common/utils/misc';
 import { Disposables } from '../../../common/utils/resourceLifecycle';
-import { CustomLocator } from '../../converter';
+import { ConvertLocator } from '../../converter';
 import { PythonEnvInfo } from '../info';
 import {
     BasicEnvInfo,
-    IEnvProvider,
     ILocator,
-    ILocatorFactory,
     INonWorkspaceLocatorFactory,
     IPythonEnvsIterator,
     PythonLocatorQuery,
     IWorkspaceLocatorFactory,
+    ILocatorProvider,
 } from '../locator';
 import { combineIterators, Locators } from '../locators';
 import { LazyResourceBasedLocator } from './common/resourceBasedLocator';
@@ -32,7 +32,7 @@ function IsNonWorkspaceLocatorFactory(
  * A wrapper around all locators used by the extension.
  */
 
-export class ExtensionLocators extends Locators<BasicEnvInfo> implements IEnvProvider {
+export class ExtensionLocators extends Locators<BasicEnvInfo> implements ILocatorProvider {
     constructor(
         // These are expected to be low-level locators (e.g. system).
         private nonWorkspace: ILocator<BasicEnvInfo>[],
@@ -53,7 +53,7 @@ export class ExtensionLocators extends Locators<BasicEnvInfo> implements IEnvPro
 
     public addNewLocator(locatorFactory: ILocatorFactory): void {
         if (IsNonWorkspaceLocatorFactory(locatorFactory)) {
-            this.nonWorkspace = [...this.nonWorkspace, new CustomLocator(locatorFactory())];
+            this.nonWorkspace = [...this.nonWorkspace, new ConvertLocator(locatorFactory())];
         } else {
             this.workspace.addNewLocator(locatorFactory);
         }
@@ -162,7 +162,7 @@ export class WorkspaceLocators extends LazyResourceBasedLocator<BasicEnvInfo> {
         Object.keys(this.roots).forEach((key) => {
             const root = this.roots[key];
             const newLocator = locatorFactory(root.fsPath);
-            const convertedLocator: ILocator<BasicEnvInfo> = new CustomLocator(newLocator);
+            const convertedLocator: ILocator<BasicEnvInfo> = new ConvertLocator(newLocator);
             const [locators] = this.locators[key];
             locators.addLocator(convertedLocator);
         });

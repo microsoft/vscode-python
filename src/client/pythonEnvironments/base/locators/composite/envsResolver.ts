@@ -10,6 +10,7 @@ import { getEnvPath, setEnvDisplayString } from '../../info/env';
 import { InterpreterInformation } from '../../info/interpreter';
 import {
     BasicEnvInfo,
+    IInternalEnvironmentProvider,
     ILocator,
     IPythonEnvsIterator,
     IResolvingLocator,
@@ -34,7 +35,11 @@ export class PythonEnvsResolver implements IResolvingLocator {
         return this.parentLocator.onChanged;
     }
 
-    public addNewLocator = this.parentLocator.addNewLocator;
+    public addNewProvider(provider: IInternalEnvironmentProvider): void {
+        if (this.parentLocator.addNewLocator) {
+            this.parentLocator.addNewLocator(provider.createLocator);
+        }
+    }
 
     constructor(
         private readonly parentLocator: ILocator<BasicEnvInfo>,

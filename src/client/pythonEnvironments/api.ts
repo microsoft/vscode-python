@@ -20,7 +20,7 @@ export type GetLocatorFunc = () => Promise<IDiscoveryAPI>;
 class PythonEnvironments implements IDiscoveryAPI {
     private locator!: IDiscoveryAPI;
 
-    public addNewLocator = this.locator.addNewLocator;
+    public addNewProvider = this.locator.addNewProvider;
 
     constructor(
         // These are factories for the sub-components the full component is composed of:
@@ -29,7 +29,7 @@ class PythonEnvironments implements IDiscoveryAPI {
 
     public async activate(): Promise<void> {
         this.locator = await this.getLocator();
-        this.addNewLocator = this.locator.addNewLocator;
+        this.addNewProvider = this.locator.addNewProvider;
     }
 
     public get onProgress(): Event<ProgressNotificationEvent> {

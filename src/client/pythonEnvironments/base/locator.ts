@@ -54,6 +54,7 @@ export interface EnvironmentDetails {
 type EnvironmentDetailsByProvider = Partial<EnvironmentDetails> & Pick<EnvironmentDetails, 'executable'>;
 
 interface IEnvironmentProvider extends ILocatorFactoryAPI, IResolverAPI {}
+export interface IInternalEnvironmentProvider extends ILocatorFactoryAPI, IInternalResolverAPI {}
 
 interface ILocatorFactoryAPI {
     /**
@@ -308,7 +309,7 @@ export type BasicEnvInfo = {
  */
 export interface ILocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
     extends IPythonEnvsWatcher<E>,
-        IEnvProvider {
+        ILocatorProvider {
     /**
      * Iterate over the enviroments known tos this locator.
      *
@@ -328,8 +329,12 @@ export interface ILocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEve
     iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator<I>;
 }
 
-export interface IEnvProvider {
+export interface ILocatorProvider {
     addNewLocator?(locatorFactory: ILocatorFactory): void;
+}
+
+export interface IEnvProvider {
+    addNewProvider?(environmentProvider: IInternalEnvironmentProvider): void;
 }
 
 interface IResolver {
@@ -342,7 +347,7 @@ interface IResolver {
     resolveEnv(path: string): Promise<PythonEnvInfo | undefined>;
 }
 
-export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ILocator<I> {}
+export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ILocator<I>, IEnvProvider {}
 
 export interface GetRefreshEnvironmentsOptions {
     /**
