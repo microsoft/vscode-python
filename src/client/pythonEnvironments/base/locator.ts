@@ -65,7 +65,7 @@ interface ILocatorFactoryAPI {
 export type ProposedDetailsAPI = (env: BaseEnvInfo) => Promise<EnvironmentDetailsByProvider | undefined>;
 export type InternalDetailsAPI = (env: BasicEnvInfo) => Promise<PythonEnvInfo | undefined>;
 
-interface IResolverAPI {
+export interface IResolverAPI {
     /**
      * Returns true if provided environment is recognized by the provider.
      */
@@ -75,6 +75,18 @@ interface IResolverAPI {
      * Returns details or `undefined` if it was found if env is invalid.
      */
     getEnvironmentDetails: ProposedDetailsAPI;
+}
+
+export interface IInternalResolverAPI {
+    /**
+     * Returns true if provided environment is recognized by the provider.
+     */
+    canIdentifyEnvironment: (path: UniquePathType) => Promise<boolean>;
+    /**
+     * This is only called if this provider can identify the environment.
+     * Returns details or `undefined` if it was found if env is invalid.
+     */
+    getEnvironmentDetails: InternalDetailsAPI;
 }
 
 export type ILocatorFactory = IWorkspaceLocatorFactory | INonWorkspaceLocatorFactory;
