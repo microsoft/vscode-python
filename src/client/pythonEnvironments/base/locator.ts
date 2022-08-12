@@ -16,6 +16,14 @@ import {
     PythonEnvsWatcher,
 } from './watcher';
 
+export interface EnvironmentDetailsOptions {
+    useCache: boolean;
+    /**
+     * Return details provided by the specific provider, throws error if provider not found.
+     */
+    providerId?: ProviderID;
+}
+
 type VersionInfo = {
     major: number;
     minor: number;
@@ -27,25 +35,6 @@ type VersionInfo = {
 export interface EnvironmentDetails {
     executable: {
         path: string;
-        run: {
-            // Functions would only require the arguments. The env provider can internally decide on the commands.
-            // Support option of whether to run as a process or VSCode terminal.
-            // However note we cannot pass this into the debugger at the moment, as VSCode itself handles execution.
-            // Gotta add support in VSCode for that, they already support that for LSP.
-            // TODO: Gotta support this for upstream debugger
-            exec: Function;
-            shellExec: Function; // Only for backwards compatibility.
-            execObservable: Function;
-            /**
-             * Uses a VSCode terminal.
-             * */
-            terminalExec: () => void;
-            /**
-             * Any environment variables that can be used to activate the environment, if supported.
-             * If not provided, Python extension itself uses the other execution APIs to calculate it.
-             */
-            env?: { [key: string]: string | null | undefined };
-        };
         bitness?: Architecture;
         sysPrefix: string;
     };
@@ -68,19 +57,76 @@ export interface EnvironmentDetails {
     };
 }
 
-type isRootBasedLocatorFactory = (root: string) => ILocatorAPI;
-export type ILocatorFactory = ILocatorAPI | isRootBasedLocatorFactory;
+/**
+ * Provider is only required to provide the `executable` key, rest are optional. So construct a type using
+ * `EnvironmentDetails` where `executable` is the only required key.
+ */
+type EnvironmentDetailsByProvider = Partial<EnvironmentDetails> & Pick<EnvironmentDetails, 'executable'>;
+
+interface IEnvironmentProvider extends ILocatorFactoryAPI, IResolverAPI {}
+
+interface ILocatorFactoryAPI {
+    /**
+     * Factory function calling which create the locator.
+     */
+    createLocator: ILocatorFactory;
+}
+
+export type ProposedDetailsAPI = (env: BaseEnvInfo) => Promise<EnvironmentDetailsByProvider | undefined>;
+
+export type InternalDetailsAPI = (env: BasicEnvInfo) => Promise<PythonEnvInfo | undefined>;
+
+interface IResolverAPI {
+    /**
+     * Returns true if provided environment is recognized by the provider.
+     */
+    canIdentifyEnvironment: (env: BaseEnvInfo) => Promise<boolean>;
+    /**
+     * This is only called if this provider can identify the environment.
+     * Returns details or `undefined` if it was found if env is invalid.
+     */
+    getEnvironmentDetails: ProposedDetailsAPI;
+}
+
+export type ILocatorFactory = IWorkspaceLocatorFactory | INonWorkspaceLocatorFactory;
+export type INonWorkspaceLocatorFactory = () => ILocatorAPI;
+export type IWorkspaceLocatorFactory = (root: string) => ILocatorAPI;
 
 export interface ILocatorAPI {
     iterEnvs?(): IPythonEnvsIterator<EnvInfo>;
     readonly onChanged?: Event<LocatorEnvsChangedEvent>;
 }
 
-export type EnvInfo = {
+export type EnvInfo = BaseEnvInfo & {
     envSources: EnvSource[];
+};
+
+export type BaseEnvInfo = {
     executablePath: string;
     envPath?: string;
 };
+
+type ProviderID = string;
+
+/**
+ * These can be used when querying for a particular env.
+ */
+interface EnvironmentProviderMetadata {
+    /**
+     * Details about the environments the locator provides.
+     * Useful when querying for a particular env.
+     */
+    readonly environments?: EnvironmentMetaData;
+    /**
+     * If locator requires a workspace root to search envs within.
+     */
+    readonly isWorkspaceBasedLocator: boolean;
+    /**
+     * An Identifier for the provider.
+     */
+    readonly providerId: ProviderID;
+}
+
 interface EnvironmentMetaData {
     readonly envType: EnvType;
     readonly envSources: EnvSource[];

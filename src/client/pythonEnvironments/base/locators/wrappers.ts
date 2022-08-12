@@ -3,14 +3,22 @@
 
 // eslint-disable-next-line max-classes-per-file
 import { Uri } from 'vscode';
-import { ILocatorFactory, INonWorkspaceLocatorFactory, IWorkspaceLocatorFactory } from '../../../apiTypes';
 import { IDisposable } from '../../../common/types';
 import { iterEmpty } from '../../../common/utils/async';
 import { getURIFilter } from '../../../common/utils/misc';
 import { Disposables } from '../../../common/utils/resourceLifecycle';
 import { CustomLocator } from '../../converter';
 import { PythonEnvInfo } from '../info';
-import { BasicEnvInfo, IEnvProvider, ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../locator';
+import {
+    BasicEnvInfo,
+    IEnvProvider,
+    ILocator,
+    ILocatorFactory,
+    INonWorkspaceLocatorFactory,
+    IPythonEnvsIterator,
+    PythonLocatorQuery,
+    IWorkspaceLocatorFactory,
+} from '../locator';
 import { combineIterators, Locators } from '../locators';
 import { LazyResourceBasedLocator } from './common/resourceBasedLocator';
 

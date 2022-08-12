@@ -143,11 +143,16 @@ export interface EnvironmentDetails {
  */
 type EnvironmentDetailsByProvider = Partial<EnvironmentDetails> & Pick<EnvironmentDetails, 'executable'>;
 
-interface IEnvironmentProvider {
+interface IEnvironmentProvider extends ILocatorFactoryAPI, IResolverAPI {}
+
+interface ILocatorFactoryAPI {
     /**
      * Factory function calling which create the locator.
      */
     createLocator: ILocatorFactory;
+}
+
+interface IResolverAPI {
     /**
      * Returns true if provided environment is recognized by the provider.
      */
