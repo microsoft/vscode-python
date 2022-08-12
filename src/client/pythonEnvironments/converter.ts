@@ -5,7 +5,7 @@ import { EventEmitter, Event } from 'vscode';
 import { EnvChangeType, ILocatorAPI, LocatorEnvsChangedEvent, EnvInfo } from '../apiTypes';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { traceVerbose } from '../logging';
-import { PythonEnvInfo, PythonEnvKind } from './base/info';
+import { PythonEnvInfo, PythonEnvKind, UniquePathType } from './base/info';
 import { buildEnvInfo } from './base/info/env';
 import {
     ILocator,
@@ -17,12 +17,14 @@ import {
     ProgressReportStage,
     InternalDetailsAPI,
     ProposedDetailsAPI,
+    ProposedIdentifierAPI,
+    InternalIdentifierAPI,
 } from './base/locator';
 import { PythonEnvsChangedEvent } from './base/watcher';
 
-export function convertIdentifierAPI(proposed: ProposedDetailsAPI): InternalDetailsAPI {
-    return async (env: BasicEnvInfo): Promise<PythonEnvInfo | undefined> => {
-        const details = await proposed({ executablePath: env.executablePath, envPath: env.envPath });
+export function convertIdentifierAPI(proposed: ProposedIdentifierAPI): InternalIdentifierAPI {
+    return async (path: UniquePathType): Promise<boolean> => {
+        const details = await proposed(path);
         if (!details) {
             return undefined;
         }

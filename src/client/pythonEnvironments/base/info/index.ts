@@ -26,13 +26,15 @@ export enum PythonEnvKind {
     OtherVirtual = 'virt-other',
 }
 
+export type UniquePathType = string;
+
 export interface EnvPathType {
     /**
      * Path to environment folder or path to interpreter that uniquely identifies an environment.
      * Environments lacking an interpreter are identified by environment folder paths,
      * whereas other envs can be identified using interpreter path.
      */
-    path: string;
+    path: UniquePathType;
     pathType: 'envFolderPath' | 'interpreterPath';
 }
 

@@ -7,7 +7,7 @@
 import { Event, Uri } from 'vscode';
 import { IAsyncIterableIterator, iterEmpty } from '../../common/utils/async';
 import { Architecture } from '../../common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, StandardVersionInfo } from './info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, StandardVersionInfo, UniquePathType } from './info';
 import {
     BasicPythonEnvsChangedEvent,
     IPythonEnvsWatcher,
@@ -69,7 +69,7 @@ interface IResolverAPI {
     /**
      * Returns true if provided environment is recognized by the provider.
      */
-    canIdentifyEnvironment: (env: BaseEnvInfo) => Promise<boolean>;
+    canIdentifyEnvironment: (path: UniquePathType) => Promise<boolean>;
     /**
      * This is only called if this provider can identify the environment.
      * Returns details or `undefined` if it was found if env is invalid.
@@ -105,7 +105,7 @@ interface EnvironmentProviderMetadata {
      * Details about the environments the locator provides.
      * Useful when querying for a particular env.
      */
-    readonly environments?: EnvironmentMetaData;
+    readonly environments: EnvironmentMetaData;
     /**
      * If locator requires a workspace root to search envs within.
      */
