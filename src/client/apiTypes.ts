@@ -3,7 +3,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Event, Terminal, Uri } from 'vscode';
+import { Disposable, Event, Uri } from 'vscode';
 import { Resource } from './common/types';
 import { Architecture } from './common/utils/platform';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './jupyter/types';
@@ -98,35 +98,44 @@ export interface IExtensionApi {
 
 export interface EnvironmentDetailsOptions {
     useCache: boolean;
-    // noShell?: boolean; // For execution without shell
+    /**
+     * Return details provided by the specific provider, throws error if provider not found.
+     */
+    providerId?: ProviderID;
 }
+
+type VersionInfo = {
+    major: number;
+    minor: number;
+    micro: number;
+    releaselevel: 'alpha' | 'beta' | 'candidate' | 'final';
+    serial: number;
+};
 
 export interface EnvironmentDetails {
     executable: {
         path: string;
-        // run: string[];
-        // env?: any;
-        // shell?: boolean;
-        // shellCommand?: Record<'cmd' | 'fish' | 'bash' | 'string', { run: string[] }>;
-        // cwd?: string;
+        run: {
+            // Functions would only require the arguments. The env provider can internally decide on the commands.
+            // Support option of whether to run as a process or VSCode terminal.
+            // However note we cannot pass this into the debugger at the moment, as VSCode itself handles execution.
+            // Gotta add support in VSCode for that, they already support that for LSP.
+            // TODO: Gotta support this for upstream debugger
+            exec: Function;
+            shellExec: Function; // Only for backwards compatibility.
+            execObservable: Function;
+            /**
+             * Uses a VSCode terminal.
+             * */
+            terminalExec: () => void;
+            /**
+             * Any environment variables that can be used to activate the environment, if supported.
+             * If not provided, Python extension itself uses the other execution APIs to calculate it.
+             */
+            env?: { [key: string]: string | null | undefined };
+        };
         bitness?: Architecture;
         sysPrefix: string;
-    };
-    executionAPIs: {
-        // Functions would only require the arguments. The env provider can internally decide on the commands.
-        // Support option of whether to run as a process or VSCode terminal.
-        // However note we cannot pass this into the debugger at the moment, as VSCode itself handles execution.
-        // Gotta add support in VSCode for that, they already support that for LSP.
-        // TODO: Gotta support this for upstream debugger
-        shellExec: Function;
-        shellExecObservable: Function;
-        exec: Function;
-        execObservable: Function;
-    };
-    distributor?: {
-        // PEP 514 (https://www.python.org/dev/peps/pep-0514/)
-        name: string; // Could even be used for Pyenv.
-        url?: string; // 'https://www.python.org';
     };
     environment?: {
         type: EnvType;
@@ -134,29 +143,17 @@ export interface EnvironmentDetails {
         path: string;
         project?: string; // Any specific project environment is created for.
         source: EnvSource[];
-        activate: { [key: string]: string | null | undefined };
-    };
-    version: {
-        major: number;
-        minor: number;
-        micro: number;
-        releaselevel: 'alpha' | 'beta' | 'candidate' | 'final';
-        serial: number;
+    };;
+    version: VersionInfo & {
         sysVersion?: string;
-    };
+    };;
     implementation?: {
         // `sys.implementation`
         name: string;
-        version: {
-            major: number;
-            minor: number;
-            micro: number;
-            releaselevel: 'alpha' | 'beta' | 'candidate' | 'final';
+        version: VersionInfo & {
             serial: number;
         };
     };
-    // Are the results specific to the environment (variables, working directory, etc.)?
-    // contextSensitive: boolean;
 }
 
 export interface EnvironmentsChangedParams {
@@ -263,17 +260,24 @@ export interface IProposedExtensionAPI {
         registerEnvironmentProvider(
             environmentProvider: IEnvironmentProvider,
             metadata: EnvironmentProviderMetadata,
-        ): Promise<void>; // TODO: Disposable??
+        ): Promise<Disposable>; // TODO: Disposable?? // TODO: Confirm whether this should return a promise??
     };
 }
 
+/**
+ * Provider is only expected to provide the executable key, so construct a type using `EnvironmentDetails`
+ * where `executable` is the only necessary key.
+ */
+type EnvironmentDetailsByProvider = Omit<Partial<EnvironmentDetails>, 'executable'> &
+    Pick<EnvironmentDetails, 'executable'>;
+
 interface IEnvironmentProvider {
-    // TODO: createEnv
     createLocator: ILocatorFactory;
-    getEnvironmentDetails: (env: EnvInfo) => Promise<EnvironmentDetails | undefined>;
+    getEnvironmentDetails: (env: EnvInfo) => Promise<EnvironmentDetailsByProvider | undefined>;
 }
 
-export type ILocatorFactory = (root?: string) => ILocatorAPI;
+type isRootBasedLocatorFactory = ((root: string) => ILocatorAPI);
+export type ILocatorFactory = (() => ILocatorAPI) | isRootBasedLocatorFactory;
 
 export interface ILocatorAPI {
     iterEnvs?(): IPythonEnvsIterator<EnvInfo>;
@@ -286,23 +290,40 @@ export type EnvInfo = {
     envPath?: string;
 };
 
+type ProviderID = string;
+
 /**
  * These can be used when querying for a particular env.
  */
 interface EnvironmentProviderMetadata {
-    readonly envType: EnvType;
-    readonly searchLocation?: string;
-    readonly envSources: EnvSource[]; // Think of whether it should be an array?
+    /**
+     * Details about the environments the locator provides.
+     * Useful when querying for a particular env.
+     */
+    readonly environments?: EnvironmentMetaData;
+    /**
+     * If locator requires a root to search envs within.
+     */
     readonly isRootBasedLocator: boolean;
+    /**
+     * An Identifier for the provider.
+     */
+    readonly providerId: ProviderID;
 }
 
-type EnvironmentMetaData = EnvironmentProviderMetadata;
+ interface EnvironmentMetaData {
+    readonly envType: EnvType;
+    readonly envSources: EnvSource[];
+}
 
 export interface LocatorEnvsChangedEvent {
     /**
      * Any details known about the environment which can be used for query.
      */
     env?: EnvironmentMetaData;
+    /**
+     * Details about how the environment was modified.
+     **/
     type: EnvChangeType;
 }
 
@@ -326,4 +347,5 @@ export enum KnownEnvSourceTypes {
     VirtualEnv = 'VirtualEnv',
     Venv = 'Venv',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
+    Pyenv = 'Pyenv',
 }
