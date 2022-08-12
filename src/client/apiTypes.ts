@@ -143,10 +143,10 @@ export interface EnvironmentDetails {
         path: string;
         project?: string; // Any specific project environment is created for.
         source: EnvSource[];
-    };;
+    };
     version: VersionInfo & {
         sysVersion?: string;
-    };;
+    };
     implementation?: {
         // `sys.implementation`
         name: string;
@@ -154,6 +154,92 @@ export interface EnvironmentDetails {
             serial: number;
         };
     };
+}
+
+/**
+ * Provider is only required to provide the `executable` key, rest are optional. So construct a type using
+ * `EnvironmentDetails` where `executable` is the only required key.
+ */
+type EnvironmentDetailsByProvider = Partial<EnvironmentDetails> & Pick<EnvironmentDetails, 'executable'>;
+
+interface IEnvironmentProvider {
+    createLocator: ILocatorFactory;
+    getEnvironmentDetails: (env: EnvInfo) => Promise<EnvironmentDetailsByProvider | undefined>;
+}
+
+export type ILocatorFactory = INonWorkspaceLocatorFactory | IWorkspaceLocatorFactory;
+export type INonWorkspaceLocatorFactory = () => ILocatorAPI;
+export type IWorkspaceLocatorFactory = (root: string) => ILocatorAPI;
+
+export interface ILocatorAPI {
+    iterEnvs?(): IPythonEnvsIterator<EnvInfo>;
+    readonly onChanged?: Event<LocatorEnvsChangedEvent>;
+}
+
+export type EnvInfo = {
+    envSources: EnvSource[];
+    executablePath: string;
+    envPath?: string;
+};
+
+type ProviderID = string;
+
+/**
+ * These can be used when querying for a particular env.
+ */
+interface EnvironmentProviderMetadata {
+    /**
+     * Details about the environments the locator provides.
+     * Useful when querying for a particular env.
+     */
+    readonly environments?: EnvironmentMetaData;
+    /**
+     * If locator requires a workspace root to search envs within.
+     */
+    readonly isWorkspaceBasedLocator: boolean;
+    /**
+     * An Identifier for the provider.
+     */
+    readonly providerId: ProviderID;
+}
+
+interface EnvironmentMetaData {
+    readonly envType: EnvType;
+    readonly envSources: EnvSource[];
+}
+
+export interface LocatorEnvsChangedEvent {
+    /**
+     * Any details known about the environment which can be used for query.
+     */
+    env?: EnvironmentMetaData;
+    /**
+     * Details about how the environment was modified.
+     * */
+    type: EnvChangeType;
+}
+
+export type EnvChangeType = 'add' | 'remove' | 'update';
+
+export type EnvType = KnownEnvTypes | string;
+
+export enum KnownEnvTypes {
+    VirtualEnv = 'VirtualEnv',
+    Conda = 'Conda',
+    Unknown = 'Unknown',
+    Global = 'Global',
+}
+
+export type EnvSource = KnownEnvSourceTypes | string;
+
+export enum KnownEnvSourceTypes {
+    Conda = 'Conda',
+    Pipenv = 'PipEnv',
+    Poetry = 'Poetry',
+    VirtualEnv = 'VirtualEnv',
+    Venv = 'Venv',
+    VirtualEnvWrapper = 'VirtualEnvWrapper',
+    Pyenv = 'Pyenv',
 }
 
 export interface EnvironmentsChangedParams {
@@ -262,90 +348,4 @@ export interface IProposedExtensionAPI {
             metadata: EnvironmentProviderMetadata,
         ): Promise<Disposable>; // TODO: Disposable?? // TODO: Confirm whether this should return a promise??
     };
-}
-
-/**
- * Provider is only expected to provide the executable key, so construct a type using `EnvironmentDetails`
- * where `executable` is the only necessary key.
- */
-type EnvironmentDetailsByProvider = Omit<Partial<EnvironmentDetails>, 'executable'> &
-    Pick<EnvironmentDetails, 'executable'>;
-
-interface IEnvironmentProvider {
-    createLocator: ILocatorFactory;
-    getEnvironmentDetails: (env: EnvInfo) => Promise<EnvironmentDetailsByProvider | undefined>;
-}
-
-type isRootBasedLocatorFactory = ((root: string) => ILocatorAPI);
-export type ILocatorFactory = (() => ILocatorAPI) | isRootBasedLocatorFactory;
-
-export interface ILocatorAPI {
-    iterEnvs?(): IPythonEnvsIterator<EnvInfo>;
-    readonly onChanged?: Event<LocatorEnvsChangedEvent>;
-}
-
-export type EnvInfo = {
-    envSources: EnvSource[];
-    executablePath: string;
-    envPath?: string;
-};
-
-type ProviderID = string;
-
-/**
- * These can be used when querying for a particular env.
- */
-interface EnvironmentProviderMetadata {
-    /**
-     * Details about the environments the locator provides.
-     * Useful when querying for a particular env.
-     */
-    readonly environments?: EnvironmentMetaData;
-    /**
-     * If locator requires a root to search envs within.
-     */
-    readonly isRootBasedLocator: boolean;
-    /**
-     * An Identifier for the provider.
-     */
-    readonly providerId: ProviderID;
-}
-
- interface EnvironmentMetaData {
-    readonly envType: EnvType;
-    readonly envSources: EnvSource[];
-}
-
-export interface LocatorEnvsChangedEvent {
-    /**
-     * Any details known about the environment which can be used for query.
-     */
-    env?: EnvironmentMetaData;
-    /**
-     * Details about how the environment was modified.
-     **/
-    type: EnvChangeType;
-}
-
-export type EnvChangeType = 'add' | 'remove' | 'update';
-
-export type EnvType = KnownEnvTypes | string;
-
-export enum KnownEnvTypes {
-    VirtualEnv = 'VirtualEnv',
-    Conda = 'Conda',
-    Unknown = 'Unknown',
-    Global = 'Global',
-}
-
-export type EnvSource = KnownEnvSourceTypes | string;
-
-export enum KnownEnvSourceTypes {
-    Conda = 'Conda',
-    Pipenv = 'PipEnv',
-    Poetry = 'Poetry',
-    VirtualEnv = 'VirtualEnv',
-    Venv = 'Venv',
-    VirtualEnvWrapper = 'VirtualEnvWrapper',
-    Pyenv = 'Pyenv',
 }

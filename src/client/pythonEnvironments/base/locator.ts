@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -5,6 +6,7 @@
 
 import { Event, Uri } from 'vscode';
 import { IAsyncIterableIterator, iterEmpty } from '../../common/utils/async';
+import { Architecture } from '../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from './info';
 import {
     BasicPythonEnvsChangedEvent,
@@ -14,7 +16,61 @@ import {
     PythonEnvsWatcher,
 } from './watcher';
 
-export type ILocatorFactory = (root?: string) => ILocatorAPI;
+type VersionInfo = {
+    major: number;
+    minor: number;
+    micro: number;
+    releaselevel: 'alpha' | 'beta' | 'candidate' | 'final';
+    serial: number;
+};
+
+export interface EnvironmentDetails {
+    executable: {
+        path: string;
+        run: {
+            // Functions would only require the arguments. The env provider can internally decide on the commands.
+            // Support option of whether to run as a process or VSCode terminal.
+            // However note we cannot pass this into the debugger at the moment, as VSCode itself handles execution.
+            // Gotta add support in VSCode for that, they already support that for LSP.
+            // TODO: Gotta support this for upstream debugger
+            exec: Function;
+            shellExec: Function; // Only for backwards compatibility.
+            execObservable: Function;
+            /**
+             * Uses a VSCode terminal.
+             * */
+            terminalExec: () => void;
+            /**
+             * Any environment variables that can be used to activate the environment, if supported.
+             * If not provided, Python extension itself uses the other execution APIs to calculate it.
+             */
+            env?: { [key: string]: string | null | undefined };
+        };
+        bitness?: Architecture;
+        sysPrefix: string;
+    };
+    environment?: {
+        type: EnvType;
+        name?: string;
+        path: string;
+        project?: string; // Any specific project environment is created for.
+        source: EnvSource[];
+    };
+    version: VersionInfo & {
+        sysVersion?: string;
+    };
+    implementation?: {
+        // `sys.implementation`
+        name: string;
+        version: VersionInfo & {
+            serial: number;
+        };
+    };
+}
+
+type isRootBasedLocatorFactory = (root: string) => ILocatorAPI;
+export type ILocatorFactory = ILocatorAPI | isRootBasedLocatorFactory;
+
 export interface ILocatorAPI {
     iterEnvs?(): IPythonEnvsIterator<EnvInfo>;
     readonly onChanged?: Event<LocatorEnvsChangedEvent>;
@@ -25,46 +81,43 @@ export type EnvInfo = {
     executablePath: string;
     envPath?: string;
 };
-
-/**
- * These can be used when querying for a particular env.
- */
-interface EnvironmentProviderMetadata {
+interface EnvironmentMetaData {
     readonly envType: EnvType;
-    readonly searchLocation?: string;
     readonly envSources: EnvSource[];
-    readonly isRootBasedLocator: boolean;
 }
-
-type EnvironmentMetaData = EnvironmentProviderMetadata;
 
 export interface LocatorEnvsChangedEvent {
     /**
      * Any details known about the environment which can be used for query.
      */
     env?: EnvironmentMetaData;
+    /**
+     * Details about how the environment was modified.
+     * */
     type: EnvChangeType;
 }
 
 export type EnvChangeType = 'add' | 'remove' | 'update';
 
-export enum EnvType {
+export type EnvType = KnownEnvTypes | string;
+
+export enum KnownEnvTypes {
     VirtualEnv = 'VirtualEnv',
     Conda = 'Conda',
     Unknown = 'Unknown',
-    Global = 'GlobalInterpreter',
+    Global = 'Global',
 }
 
-export enum EnvSource {
+export type EnvSource = KnownEnvSourceTypes | string;
+
+export enum KnownEnvSourceTypes {
     Conda = 'Conda',
     Pipenv = 'PipEnv',
     Poetry = 'Poetry',
     VirtualEnv = 'VirtualEnv',
     Venv = 'Venv',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
-    WindowsStore = 'WindowsStore',
     Pyenv = 'Pyenv',
-    Custom = 'Custom',
 }
 
 /**
@@ -229,7 +282,7 @@ export interface ILocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEve
 }
 
 export interface IEnvProvider {
-    addNewLocator?(locatorFactory: ILocatorFactory, isWorkspace: boolean): void;
+    addNewLocator?(locatorFactory: ILocatorFactory): void;
 }
 
 interface IResolver {

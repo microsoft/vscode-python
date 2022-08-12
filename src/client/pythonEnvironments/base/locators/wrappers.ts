@@ -3,22 +3,28 @@
 
 // eslint-disable-next-line max-classes-per-file
 import { Uri } from 'vscode';
-import { ILocatorFactory } from '../../../apiTypes';
+import { ILocatorFactory, INonWorkspaceLocatorFactory, IWorkspaceLocatorFactory } from '../../../apiTypes';
 import { IDisposable } from '../../../common/types';
 import { iterEmpty } from '../../../common/utils/async';
 import { getURIFilter } from '../../../common/utils/misc';
 import { Disposables } from '../../../common/utils/resourceLifecycle';
 import { CustomLocator } from '../../converter';
 import { PythonEnvInfo } from '../info';
-import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../locator';
+import { BasicEnvInfo, IEnvProvider, ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../locator';
 import { combineIterators, Locators } from '../locators';
 import { LazyResourceBasedLocator } from './common/resourceBasedLocator';
+
+function IsNonWorkspaceLocatorFactory(
+    pet: IWorkspaceLocatorFactory | INonWorkspaceLocatorFactory,
+): pet is INonWorkspaceLocatorFactory {
+    return pet.length === 0;
+}
 
 /**
  * A wrapper around all locators used by the extension.
  */
 
-export class ExtensionLocators extends Locators<BasicEnvInfo> {
+export class ExtensionLocators extends Locators<BasicEnvInfo> implements IEnvProvider {
     constructor(
         // These are expected to be low-level locators (e.g. system).
         private nonWorkspace: ILocator<BasicEnvInfo>[],
@@ -37,12 +43,11 @@ export class ExtensionLocators extends Locators<BasicEnvInfo> {
         return combineIterators(iterators);
     }
 
-    public addNewLocator(locatorFactory: ILocatorFactory, isWorkspace: boolean): void {
-        if (isWorkspace) {
-            this.workspace.addNewLocator(locatorFactory);
-        }
-        if (!isWorkspace) {
+    public addNewLocator(locatorFactory: ILocatorFactory): void {
+        if (IsNonWorkspaceLocatorFactory(locatorFactory)) {
             this.nonWorkspace = [...this.nonWorkspace, new CustomLocator(locatorFactory())];
+        } else {
+            this.workspace.addNewLocator(locatorFactory);
         }
     }
 }
@@ -145,7 +150,7 @@ export class WorkspaceLocators extends LazyResourceBasedLocator<BasicEnvInfo> {
         );
     }
 
-    public addNewLocator(locatorFactory: ILocatorFactory): void {
+    public addNewLocator(locatorFactory: IWorkspaceLocatorFactory): void {
         Object.keys(this.roots).forEach((key) => {
             const root = this.roots[key];
             const newLocator = locatorFactory(root.fsPath);
