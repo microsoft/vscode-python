@@ -5,7 +5,8 @@ import { EventEmitter, Event } from 'vscode';
 import { EnvChangeType, ILocatorAPI, LocatorEnvsChangedEvent, EnvInfo } from '../apiTypes';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { traceVerbose } from '../logging';
-import { PythonEnvKind } from './base/info';
+import { PythonEnvInfo, PythonEnvKind } from './base/info';
+import { buildEnvInfo } from './base/info/env';
 import {
     ILocator,
     BasicEnvInfo,
@@ -14,8 +15,48 @@ import {
     ProgressNotificationEvent,
     isProgressEvent,
     ProgressReportStage,
+    InternalDetailsAPI,
+    ProposedDetailsAPI,
 } from './base/locator';
 import { PythonEnvsChangedEvent } from './base/watcher';
+
+export function convertIdentifierAPI(proposed: ProposedDetailsAPI): InternalDetailsAPI {
+    return async (env: BasicEnvInfo): Promise<PythonEnvInfo | undefined> => {
+        const details = await proposed({ executablePath: env.executablePath, envPath: env.envPath });
+        if (!details) {
+            return undefined;
+        }
+        const envInfo = buildEnvInfo({
+            kind: convertKind(details.environment?.source[0] ?? PythonEnvKind.Unknown),
+            version: details.version,
+            executable: details.executable.path,
+            arch: details.executable.bitness,
+            sysPrefix: details.executable.sysPrefix,
+        });
+        return envInfo;
+    };
+}
+
+export function convertDetailsAPI(proposed: ProposedDetailsAPI): InternalDetailsAPI {
+    return async (env: BasicEnvInfo): Promise<PythonEnvInfo | undefined> => {
+        const details = await proposed({ executablePath: env.executablePath, envPath: env.envPath });
+        if (!details) {
+            return undefined;
+        }
+        const envInfo = buildEnvInfo({
+            kind: convertKind(details.environment?.source[0] ?? PythonEnvKind.Unknown),
+            version: details.version,
+            executable: details.executable.path,
+            arch: details.executable.bitness,
+            sysPrefix: details.executable.sysPrefix,
+        });
+        return envInfo;
+    };
+}
+
+function convertKind(source: string): PythonEnvKind {
+    return (source as unknown) as PythonEnvKind;
+}
 
 /**
  * Converts the proposed interface into a class implementing basic interface.

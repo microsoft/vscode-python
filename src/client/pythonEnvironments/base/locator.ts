@@ -7,7 +7,7 @@
 import { Event, Uri } from 'vscode';
 import { IAsyncIterableIterator, iterEmpty } from '../../common/utils/async';
 import { Architecture } from '../../common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from './info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, StandardVersionInfo } from './info';
 import {
     BasicPythonEnvsChangedEvent,
     IPythonEnvsWatcher,
@@ -24,14 +24,6 @@ export interface EnvironmentDetailsOptions {
     providerId?: ProviderID;
 }
 
-type VersionInfo = {
-    major: number;
-    minor: number;
-    micro: number;
-    releaselevel: 'alpha' | 'beta' | 'candidate' | 'final';
-    serial: number;
-};
-
 export interface EnvironmentDetails {
     executable: {
         path: string;
@@ -45,15 +37,13 @@ export interface EnvironmentDetails {
         project?: string; // Any specific project environment is created for.
         source: EnvSource[];
     };
-    version: VersionInfo & {
+    version: StandardVersionInfo & {
         sysVersion?: string;
     };
     implementation?: {
         // `sys.implementation`
         name: string;
-        version: VersionInfo & {
-            serial: number;
-        };
+        version: StandardVersionInfo;
     };
 }
 
@@ -73,7 +63,6 @@ interface ILocatorFactoryAPI {
 }
 
 export type ProposedDetailsAPI = (env: BaseEnvInfo) => Promise<EnvironmentDetailsByProvider | undefined>;
-
 export type InternalDetailsAPI = (env: BasicEnvInfo) => Promise<PythonEnvInfo | undefined>;
 
 interface IResolverAPI {

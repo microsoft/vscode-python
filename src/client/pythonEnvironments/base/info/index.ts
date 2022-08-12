@@ -135,13 +135,16 @@ export type PythonVersionRelease = {
     serial: number;
 };
 
+export type StandardVersionInfo = BasicVersionInfo & {
+    release?: PythonVersionRelease;
+};
+
 /**
  * Version information for a Python build/installation.
  *
  * @prop sysVersion - the raw text from `sys.version`
  */
-export type PythonVersion = BasicVersionInfo & {
-    release?: PythonVersionRelease;
+export type PythonVersion = StandardVersionInfo & {
     sysVersion?: string;
 };
 
