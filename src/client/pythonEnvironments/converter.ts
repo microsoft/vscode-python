@@ -21,6 +21,8 @@ import {
     IInternalResolverAPI,
     IInternalEnvironmentProvider,
     IEnvironmentProvider,
+    EnvironmentProviderMetadata,
+    InternalEnvironmentProviderMetadata,
 } from './base/locator';
 import { PythonEnvsChangedEvent } from './base/watcher';
 
@@ -28,6 +30,16 @@ export function convertProviderAPI(proposed: IEnvironmentProvider): IInternalEnv
     return {
         createLocator: proposed.createLocator,
         ...convertResolverAPI(proposed),
+    };
+}
+
+export function convertProviderMetaData(proposed: EnvironmentProviderMetadata): InternalEnvironmentProviderMetadata {
+    return {
+        providerId: proposed.providerId,
+        environments: {
+            envKinds: proposed.environments.envSources.map((e) => convertKind(e)),
+            envType: proposed.environments.envType,
+        },
     };
 }
 

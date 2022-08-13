@@ -113,16 +113,32 @@ type ProviderID = string;
 /**
  * These can be used when querying for a particular env.
  */
-interface EnvironmentProviderMetadata {
+export interface EnvironmentProviderMetadata {
     /**
      * Details about the environments the locator provides.
      * Useful when querying for a particular env.
      */
     readonly environments: EnvironmentMetaData;
     /**
-     * If locator requires a workspace root to search envs within.
+     * An Identifier for the provider.
      */
-    readonly isWorkspaceBasedLocator: boolean;
+    readonly providerId: ProviderID;
+}
+
+interface InternalEnvironmentMetaData {
+    readonly envType: EnvType;
+    readonly envKinds: PythonEnvKind[];
+}
+
+/**
+ * These can be used when querying for a particular env.
+ */
+export interface InternalEnvironmentProviderMetadata {
+    /**
+     * Details about the environments the locator provides.
+     * Useful when querying for a particular env.
+     */
+    readonly environments: InternalEnvironmentMetaData;
     /**
      * An Identifier for the provider.
      */
