@@ -19,8 +19,17 @@ import {
     ProposedDetailsAPI,
     IResolverAPI,
     IInternalResolverAPI,
+    IInternalEnvironmentProvider,
+    IEnvironmentProvider,
 } from './base/locator';
 import { PythonEnvsChangedEvent } from './base/watcher';
+
+export function convertProviderAPI(proposed: IEnvironmentProvider): IInternalEnvironmentProvider {
+    return {
+        createLocator: proposed.createLocator,
+        ...convertResolverAPI(proposed),
+    };
+}
 
 export function convertResolverAPI(proposed: IResolverAPI): IInternalResolverAPI {
     return {

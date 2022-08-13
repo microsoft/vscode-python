@@ -53,7 +53,6 @@ export interface EnvironmentDetails {
  */
 type EnvironmentDetailsByProvider = Partial<EnvironmentDetails> & Pick<EnvironmentDetails, 'executable'>;
 
-interface IEnvironmentProvider extends ILocatorFactoryAPI, IResolverAPI {}
 export interface IInternalEnvironmentProvider extends ILocatorFactoryAPI, IInternalResolverAPI {}
 
 interface ILocatorFactoryAPI {
@@ -94,6 +93,7 @@ export type ILocatorFactory = IWorkspaceLocatorFactory | INonWorkspaceLocatorFac
 export type INonWorkspaceLocatorFactory = () => ILocatorAPI;
 export type IWorkspaceLocatorFactory = (root: string) => ILocatorAPI;
 
+export interface IEnvironmentProvider extends ILocatorFactoryAPI, IResolverAPI {}
 export interface ILocatorAPI {
     iterEnvs?(): IPythonEnvsIterator<EnvInfo>;
     readonly onChanged?: Event<LocatorEnvsChangedEvent>;
@@ -309,7 +309,7 @@ export type BasicEnvInfo = {
  */
 export interface ILocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
     extends IPythonEnvsWatcher<E>,
-        ILocatorProvider {
+        ILocatorRegister {
     /**
      * Iterate over the enviroments known tos this locator.
      *
@@ -329,11 +329,11 @@ export interface ILocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEve
     iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator<I>;
 }
 
-export interface ILocatorProvider {
+export interface ILocatorRegister {
     addNewLocator?(locatorFactory: ILocatorFactory): void;
 }
 
-export interface IEnvProvider {
+export interface IEnvProviderRegister {
     addNewProvider?(environmentProvider: IInternalEnvironmentProvider): void;
 }
 
@@ -347,7 +347,7 @@ interface IResolver {
     resolveEnv(path: string): Promise<PythonEnvInfo | undefined>;
 }
 
-export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ILocator<I>, IEnvProvider {}
+export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ILocator<I>, IEnvProviderRegister {}
 
 export interface GetRefreshEnvironmentsOptions {
     /**
@@ -367,7 +367,7 @@ export type TriggerRefreshOptions = {
     ifNotTriggerredAlready?: boolean;
 };
 
-export interface IDiscoveryAPI extends IEnvProvider {
+export interface IDiscoveryAPI extends IEnvProviderRegister {
     /**
      * Tracks discovery progress for current list of known environments, i.e when it starts, finishes or any other relevant
      * stage. Note the progress for a particular query is currently not tracked or reported, this only indicates progress of

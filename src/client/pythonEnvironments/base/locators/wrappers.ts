@@ -17,7 +17,7 @@ import {
     IPythonEnvsIterator,
     PythonLocatorQuery,
     IWorkspaceLocatorFactory,
-    ILocatorProvider,
+    ILocatorRegister,
 } from '../locator';
 import { combineIterators, Locators } from '../locators';
 import { LazyResourceBasedLocator } from './common/resourceBasedLocator';
@@ -32,7 +32,7 @@ function IsNonWorkspaceLocatorFactory(
  * A wrapper around all locators used by the extension.
  */
 
-export class ExtensionLocators extends Locators<BasicEnvInfo> implements ILocatorProvider {
+export class ExtensionLocators extends Locators<BasicEnvInfo> implements ILocatorRegister {
     constructor(
         // These are expected to be low-level locators (e.g. system).
         private nonWorkspace: ILocator<BasicEnvInfo>[],
