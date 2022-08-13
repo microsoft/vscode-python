@@ -126,7 +126,6 @@ export interface EnvironmentProviderMetadata {
 }
 
 interface InternalEnvironmentMetaData {
-    readonly envType: EnvType;
     readonly envKinds: PythonEnvKind[];
 }
 
@@ -147,7 +146,7 @@ export interface InternalEnvironmentProviderMetadata {
 
 interface EnvironmentMetaData {
     readonly envType: EnvType;
-    readonly envSources: EnvSource[];
+    readonly envSources?: EnvSource[];
 }
 
 export interface LocatorEnvsChangedEvent {

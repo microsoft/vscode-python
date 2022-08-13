@@ -3,7 +3,6 @@
 
 // eslint-disable-next-line max-classes-per-file
 import { Uri } from 'vscode';
-import { ILocatorFactory } from '../../../apiTypes';
 import { IDisposable } from '../../../common/types';
 import { iterEmpty } from '../../../common/utils/async';
 import { getURIFilter } from '../../../common/utils/misc';
@@ -18,6 +17,7 @@ import {
     PythonLocatorQuery,
     IWorkspaceLocatorFactory,
     ILocatorRegister,
+    ILocatorFactory,
 } from '../locator';
 import { combineIterators, Locators } from '../locators';
 import { LazyResourceBasedLocator } from './common/resourceBasedLocator';

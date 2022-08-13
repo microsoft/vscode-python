@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { EventEmitter, Event } from 'vscode';
-import { EnvChangeType, ILocatorAPI, LocatorEnvsChangedEvent, EnvInfo } from '../apiTypes';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { traceVerbose } from '../logging';
 import { PythonEnvInfo, PythonEnvKind } from './base/info';
@@ -23,6 +22,10 @@ import {
     IEnvironmentProvider,
     EnvironmentProviderMetadata,
     InternalEnvironmentProviderMetadata,
+    EnvChangeType,
+    EnvInfo,
+    ILocatorAPI,
+    LocatorEnvsChangedEvent,
 } from './base/locator';
 import { PythonEnvsChangedEvent } from './base/watcher';
 
@@ -37,8 +40,7 @@ export function convertProviderMetaData(proposed: EnvironmentProviderMetadata): 
     return {
         providerId: proposed.providerId,
         environments: {
-            envKinds: proposed.environments.envSources.map((e) => convertKind(e)),
-            envType: proposed.environments.envType,
+            envKinds: proposed.environments.envSources?.map((e) => convertKind(e)) ?? [PythonEnvKind.Unknown],
         },
     };
 }

@@ -5,12 +5,14 @@
 
 import { Disposable, Event, Uri } from 'vscode';
 import { Resource } from './common/types';
-import { Architecture } from './common/utils/platform';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './jupyter/types';
 import { EnvPathType } from './pythonEnvironments/base/info';
 import {
+    EnvironmentDetails,
+    EnvironmentDetailsOptions,
+    EnvironmentProviderMetadata,
     GetRefreshEnvironmentsOptions,
-    IPythonEnvsIterator,
+    IEnvironmentProvider,
     ProgressNotificationEvent,
 } from './pythonEnvironments/base/locator';
 
@@ -96,152 +98,6 @@ export interface IExtensionApi {
     };
 }
 
-export interface EnvironmentDetailsOptions {
-    useCache: boolean;
-    /**
-     * Return details provided by the specific provider, throws error if provider not found.
-     */
-    providerId?: ProviderID;
-}
-
-type VersionInfo = {
-    major: number;
-    minor: number;
-    micro: number;
-    releaselevel: 'alpha' | 'beta' | 'candidate' | 'final';
-    serial: number;
-};
-
-export interface EnvironmentDetails {
-    executable: {
-        path: string;
-        bitness?: Architecture;
-        sysPrefix: string;
-    };
-    environment?: {
-        type: EnvType;
-        name?: string;
-        path: string;
-        project?: string; // Any specific project environment is created for.
-        source: EnvSource[];
-    };
-    version: VersionInfo & {
-        sysVersion?: string;
-    };
-    implementation?: {
-        // `sys.implementation`
-        name: string;
-        version: VersionInfo & {
-            serial: number;
-        };
-    };
-}
-
-/**
- * Provider is only required to provide the `executable` key, rest are optional. So construct a type using
- * `EnvironmentDetails` where `executable` is the only required key.
- */
-type EnvironmentDetailsByProvider = Partial<EnvironmentDetails> & Pick<EnvironmentDetails, 'executable'>;
-
-interface IEnvironmentProvider extends ILocatorFactoryAPI, IResolverAPI {}
-
-interface ILocatorFactoryAPI {
-    /**
-     * Factory function calling which create the locator.
-     */
-    createLocator: ILocatorFactory;
-}
-
-interface IResolverAPI {
-    /**
-     * Returns true if provided environment is recognized by the provider.
-     */
-    canIdentifyEnvironment: (env: BaseEnvInfo) => Promise<boolean>;
-    /**
-     * This is only called if this provider can identify the environment.
-     * Returns details or `undefined` if it was found if env is invalid.
-     */
-    getEnvironmentDetails: (env: BaseEnvInfo) => Promise<EnvironmentDetailsByProvider | undefined>;
-}
-
-export type ILocatorFactory = IWorkspaceLocatorFactory | INonWorkspaceLocatorFactory;
-export type INonWorkspaceLocatorFactory = () => ILocatorAPI;
-export type IWorkspaceLocatorFactory = (root: string) => ILocatorAPI;
-
-export interface ILocatorAPI {
-    iterEnvs?(): IPythonEnvsIterator<EnvInfo>;
-    readonly onChanged?: Event<LocatorEnvsChangedEvent>;
-}
-
-export type EnvInfo = BaseEnvInfo & {
-    envSources: EnvSource[];
-};
-
-export type BaseEnvInfo = {
-    executablePath: string;
-    envPath?: string;
-};
-
-type ProviderID = string;
-
-/**
- * These can be used when querying for a particular env.
- */
-interface EnvironmentProviderMetadata {
-    /**
-     * Details about the environments the locator provides.
-     * Useful when querying for a particular env.
-     */
-    readonly environments?: EnvironmentMetaData;
-    /**
-     * If locator requires a workspace root to search envs within.
-     */
-    readonly isWorkspaceBasedLocator: boolean;
-    /**
-     * An Identifier for the provider.
-     */
-    readonly providerId: ProviderID;
-}
-
-interface EnvironmentMetaData {
-    readonly envType: EnvType;
-    readonly envSources: EnvSource[];
-}
-
-export interface LocatorEnvsChangedEvent {
-    /**
-     * Any details known about the environment which can be used for query.
-     */
-    env?: EnvironmentMetaData;
-    /**
-     * Details about how the environment was modified.
-     * */
-    type: EnvChangeType;
-}
-
-export type EnvChangeType = 'add' | 'remove' | 'update';
-
-export type EnvType = KnownEnvTypes | string;
-
-export enum KnownEnvTypes {
-    VirtualEnv = 'VirtualEnv',
-    Conda = 'Conda',
-    Unknown = 'Unknown',
-    Global = 'Global',
-}
-
-export type EnvSource = KnownEnvSourceTypes | string;
-
-export enum KnownEnvSourceTypes {
-    Conda = 'Conda',
-    Pipenv = 'PipEnv',
-    Poetry = 'Poetry',
-    VirtualEnv = 'VirtualEnv',
-    Venv = 'Venv',
-    VirtualEnvWrapper = 'VirtualEnvWrapper',
-    Pyenv = 'Pyenv',
-}
-
 export interface EnvironmentsChangedParams {
     /**
      * Path to environment folder or path to interpreter that uniquely identifies an environment.
@@ -272,10 +128,6 @@ export interface IProposedExtensionAPI {
          * This event is triggered when the active environment changes.
          */
         onDidActiveEnvironmentChanged: Event<ActiveEnvironmentChangedParams>;
-        /**
-         * An event that is emitted when execution details (for a resource) change. For instance, when interpreter configuration changes.
-         */
-        readonly onDidChangeExecutionDetails: Event<Uri | undefined>;
         /**
          * Returns the path to the python binary selected by the user or as in the settings.
          * This is just the path to the python binary, this does not provide activation or any
@@ -330,7 +182,7 @@ export interface IProposedExtensionAPI {
              *     * clearCache : When true, this will clear the cache before environment refresh
              *                    is triggered.
              */
-            refreshEnvironment(options?: RefreshEnvironmentsOptions): Promise<EnvPathType[] | undefined>;
+            refreshEnvironments(options?: RefreshEnvironmentsOptions): Promise<EnvPathType[] | undefined>;
             /**
              * Returns a promise for the ongoing refresh. Returns `undefined` if there are no active
              * refreshes going on.
@@ -343,9 +195,11 @@ export interface IProposedExtensionAPI {
              */
             readonly onRefreshProgress: Event<ProgressNotificationEvent>;
         };
-        registerEnvironmentProvider(
-            environmentProvider: IEnvironmentProvider,
-            metadata: EnvironmentProviderMetadata,
-        ): Promise<Disposable>; // TODO: Disposable?? // TODO: Confirm whether this should return a promise??
+        // registerEnvironmentProvider(
+        //     environmentProvider: IEnvironmentProvider,
+        //     metadata: EnvironmentProviderMetadata,
+        // ): Promise<Disposable>;
+        // TODO: Confirm whether this should return a promise??
+        // For eg. If we also initialize a refresh a background.
     };
 }

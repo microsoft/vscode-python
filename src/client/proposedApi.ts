@@ -4,8 +4,6 @@
 import { ConfigurationTarget, EventEmitter } from 'vscode';
 import {
     ActiveEnvironmentChangedParams,
-    EnvironmentDetails,
-    EnvironmentDetailsOptions,
     EnvironmentsChangedParams,
     IProposedExtensionAPI,
     RefreshEnvironmentsOptions,
