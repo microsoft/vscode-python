@@ -346,11 +346,14 @@ export interface ILocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEve
 }
 
 export interface ILocatorRegister {
-    addNewLocator?(locatorFactory: ILocatorFactory): void;
+    addNewLocator?(locatorFactory: ILocatorFactory, metadata: InternalEnvironmentProviderMetadata): void;
 }
 
 export interface IEnvProviderRegister {
-    addNewProvider?(environmentProvider: IInternalEnvironmentProvider): void;
+    addNewProvider?(
+        environmentProvider: IInternalEnvironmentProvider,
+        metadata: InternalEnvironmentProviderMetadata,
+    ): void;
 }
 
 interface IResolver {

@@ -3,7 +3,7 @@
 
 import { cloneDeep } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
-import { identifyEnvironment } from '../../../common/environmentIdentifier';
+import { identifyEnvironment, registerIdentifier } from '../../../common/environmentIdentifier';
 import { IEnvironmentInfoService } from '../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
 import { getEnvPath, setEnvDisplayString } from '../../info/env';
@@ -12,6 +12,7 @@ import {
     BasicEnvInfo,
     IInternalEnvironmentProvider,
     ILocator,
+    InternalEnvironmentProviderMetadata,
     IPythonEnvsIterator,
     IResolvingLocator,
     isProgressEvent,
@@ -21,7 +22,7 @@ import {
     PythonLocatorQuery,
 } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
-import { resolveBasicEnv } from './resolverUtils';
+import { registerResolver, resolveBasicEnv } from './resolverUtils';
 import { traceVerbose, traceWarn } from '../../../../logging';
 import { getEnvironmentDirFromPath, getInterpreterPathFromDir, isPythonExecutable } from '../../../common/commonUtils';
 import { getEmptyVersion } from '../../info/pythonVersion';
@@ -35,10 +36,12 @@ export class PythonEnvsResolver implements IResolvingLocator {
         return this.parentLocator.onChanged;
     }
 
-    public addNewProvider(provider: IInternalEnvironmentProvider): void {
+    public addNewProvider(provider: IInternalEnvironmentProvider, metadata: InternalEnvironmentProviderMetadata): void {
         if (this.parentLocator.addNewLocator) {
-            this.parentLocator.addNewLocator(provider.createLocator);
+            this.parentLocator.addNewLocator(provider.createLocator, metadata);
         }
+        registerIdentifier(metadata.environments.envKinds[0], provider.canIdentifyEnvironment);
+        registerResolver(metadata.environments.envKinds[0], provider.getEnvironmentDetails);
     }
 
     constructor(
@@ -51,6 +54,9 @@ export class PythonEnvsResolver implements IResolvingLocator {
         path = executablePath.length ? executablePath : envPath;
         const kind = await identifyEnvironment(path);
         const environment = await resolveBasicEnv({ kind, executablePath, envPath });
+        if (!environment) {
+            return undefined;
+        }
         const info = await this.environmentInfoService.getEnvironmentInfo(environment);
         if (!info) {
             return undefined;
@@ -93,8 +99,11 @@ export class PythonEnvsResolver implements IResolvingLocator {
                     );
                 } else if (seen[event.index] !== undefined) {
                     const old = seen[event.index];
-                    seen[event.index] = await resolveBasicEnv(event.update, true);
-                    didUpdate.fire({ old, index: event.index, update: seen[event.index] });
+                    const env = await resolveBasicEnv(event.update, true);
+                    didUpdate.fire({ old, index: event.index, update: env });
+                    if (env) {
+                        seen[event.index] = env;
+                    }
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
                 } else {
                     // This implies a problem in a downstream locator
@@ -111,10 +120,12 @@ export class PythonEnvsResolver implements IResolvingLocator {
         while (!result.done) {
             // Use cache from the current refresh where possible.
             const currEnv = await resolveBasicEnv(result.value, true);
-            seen.push(currEnv);
-            yield currEnv;
-            this.resolveInBackground(seen.indexOf(currEnv), state, didUpdate, seen).ignoreErrors();
-            result = await iterator.next();
+            if (currEnv) {
+                seen.push(currEnv);
+                yield currEnv;
+                this.resolveInBackground(seen.indexOf(currEnv), state, didUpdate, seen).ignoreErrors();
+                result = await iterator.next();
+            }
         }
         if (iterator.onUpdated === undefined) {
             state.done = true;

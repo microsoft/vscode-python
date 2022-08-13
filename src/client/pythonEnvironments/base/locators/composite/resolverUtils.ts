@@ -27,18 +27,22 @@ import { BasicEnvInfo } from '../../locator';
 import { parseVersionFromExecutable } from '../../info/executable';
 import { traceError, traceWarn } from '../../../../logging';
 
-function getResolvers(): Map<PythonEnvKind, (env: BasicEnvInfo, useCache?: boolean) => Promise<PythonEnvInfo>> {
-    const resolvers = new Map<PythonEnvKind, (_: BasicEnvInfo, useCache?: boolean) => Promise<PythonEnvInfo>>();
-    Object.values(PythonEnvKind).forEach((k) => {
-        resolvers.set(k, resolveGloballyInstalledEnv);
-    });
-    virtualEnvKinds.forEach((k) => {
-        resolvers.set(k, resolveSimpleEnv);
-    });
-    resolvers.set(PythonEnvKind.Conda, resolveCondaEnv);
-    resolvers.set(PythonEnvKind.WindowsStore, resolveWindowsStoreEnv);
-    resolvers.set(PythonEnvKind.Pyenv, resolvePyenvEnv);
-    return resolvers;
+const resolvers = new Map<PythonEnvKind, (_: BasicEnvInfo, useCache?: boolean) => Promise<PythonEnvInfo | undefined>>();
+Object.values(PythonEnvKind).forEach((k) => {
+    resolvers.set(k, resolveGloballyInstalledEnv);
+});
+virtualEnvKinds.forEach((k) => {
+    resolvers.set(k, resolveSimpleEnv);
+});
+resolvers.set(PythonEnvKind.Conda, resolveCondaEnv);
+resolvers.set(PythonEnvKind.WindowsStore, resolveWindowsStoreEnv);
+resolvers.set(PythonEnvKind.Pyenv, resolvePyenvEnv);
+
+export function registerResolver(
+    kind: PythonEnvKind,
+    resolver: (_: BasicEnvInfo, useCache?: boolean) => Promise<PythonEnvInfo | undefined>,
+): void {
+    resolvers.set(kind, resolver);
 }
 
 /**
@@ -46,11 +50,13 @@ function getResolvers(): Map<PythonEnvKind, (env: BasicEnvInfo, useCache?: boole
  * executable and returns it. Notice `undefined` is never returned, so environment
  * returned could still be invalid.
  */
-export async function resolveBasicEnv(env: BasicEnvInfo, useCache = false): Promise<PythonEnvInfo> {
+export async function resolveBasicEnv(env: BasicEnvInfo, useCache = false): Promise<PythonEnvInfo | undefined> {
     const { kind, source } = env;
-    const resolvers = getResolvers();
     const resolverForKind = resolvers.get(kind)!;
     const resolvedEnv = await resolverForKind(env, useCache);
+    if (!resolvedEnv) {
+        return undefined;
+    }
     resolvedEnv.searchLocation = getSearchLocation(resolvedEnv);
     resolvedEnv.source = uniq(resolvedEnv.source.concat(source ?? []));
     if (getOSType() === OSType.Windows && resolvedEnv.source?.includes(PythonEnvSource.WindowsRegistry)) {
