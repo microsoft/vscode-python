@@ -304,6 +304,12 @@ export namespace InterpreterQuickPickList {
             'Use Python from `python.defaultInterpreterPath` setting',
         ),
     };
+    export const tooltipMessages = {
+        notUsingVirtualEnv: localize(
+            'InterpreterQuickPickList.tooltipMessages.notUsingVirtualEnv',
+            "It's recommended to create a virtual environment to keep the project's dependencies isolated from the system ones",
+        ),
+    };
     export const browsePath = {
         label: localize('InterpreterQuickPickList.browsePath.label', 'Find...'),
         detail: localize(

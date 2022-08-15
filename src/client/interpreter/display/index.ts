@@ -16,7 +16,7 @@ import { IDisposableRegistry, IPathUtils, Resource } from '../../common/types';
 import { InterpreterQuickPickList } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { traceLog } from '../../logging';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { PythonEnvironment, virtualEnvTypes } from '../../pythonEnvironments/info';
 import {
     IInterpreterDisplay,
     IInterpreterHelper,
@@ -139,6 +139,12 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
                 this.statusBar.text = text ?? '';
                 this.statusBar.backgroundColor = undefined;
                 this.currentlySelectedInterpreterDisplay = interpreter.detailedDisplayName;
+                if (!virtualEnvTypes.includes(interpreter.envType)) {
+                    const application = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+                    application.showWarningMessage(InterpreterQuickPickList.tooltipMessages.notUsingVirtualEnv);
+                    this.statusBar.tooltip = InterpreterQuickPickList.tooltipMessages.notUsingVirtualEnv;
+                    this.statusBar.text = `$(alert) ${this.statusBar.text}`;
+                }
             } else {
                 this.statusBar.tooltip = '';
                 this.statusBar.color = '';
