@@ -2,16 +2,18 @@
 // Licensed under the MIT License.
 
 import { ConfigurationTarget, EventEmitter } from 'vscode';
-import {
-    ActiveEnvironmentChangedParams,
-    EnvironmentsChangedParams,
-    IProposedExtensionAPI,
-    RefreshEnvironmentsOptions,
-} from './apiTypes';
 import { arePathsSame } from './common/platform/fs-paths';
 import { IInterpreterPathService, Resource } from './common/types';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
+import {
+    EnvironmentsChangedParams,
+    ActiveEnvironmentChangedParams,
+    IProposedExtensionAPI,
+    EnvironmentDetailsOptions,
+    EnvironmentDetails,
+    RefreshEnvironmentsOptions,
+} from './proposedApiTypes';
 import { PythonEnvInfo } from './pythonEnvironments/base/info';
 import { getEnvPath } from './pythonEnvironments/base/info/env';
 import { GetRefreshEnvironmentsOptions, IDiscoveryAPI } from './pythonEnvironments/base/locator';

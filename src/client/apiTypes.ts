@@ -3,18 +3,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, Event, Uri } from 'vscode';
+import { Event, Uri } from 'vscode';
 import { Resource } from './common/types';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './jupyter/types';
-import { EnvPathType } from './pythonEnvironments/base/info';
-import {
-    EnvironmentDetails,
-    EnvironmentDetailsOptions,
-    EnvironmentProviderMetadata,
-    GetRefreshEnvironmentsOptions,
-    IEnvironmentProvider,
-    ProgressNotificationEvent,
-} from './pythonEnvironments/base/locator';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -95,111 +86,5 @@ export interface IExtensionApi {
          * @param serverProvider object called back when picking jupyter server URI
          */
         registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
-    };
-}
-
-export interface EnvironmentsChangedParams {
-    /**
-     * Path to environment folder or path to interpreter that uniquely identifies an environment.
-     * Environments lacking an interpreter are identified by environment folder paths,
-     * whereas other envs can be identified using executable path.
-     */
-    path?: string;
-    type: 'add' | 'remove' | 'update' | 'clear-all';
-}
-
-export interface ActiveEnvironmentChangedParams {
-    /**
-     * Path to environment folder or path to interpreter that uniquely identifies an environment.
-     * Environments lacking an interpreter are identified by environment folder paths,
-     * whereas other envs can be identified using executable path.
-     */
-    path: string;
-    resource?: Uri;
-}
-
-export interface RefreshEnvironmentsOptions {
-    clearCache?: boolean;
-}
-
-export interface IProposedExtensionAPI {
-    environment: {
-        /**
-         * This event is triggered when the active environment changes.
-         */
-        onDidActiveEnvironmentChanged: Event<ActiveEnvironmentChangedParams>;
-        /**
-         * Returns the path to the python binary selected by the user or as in the settings.
-         * This is just the path to the python binary, this does not provide activation or any
-         * other activation command. The `resource` if provided will be used to determine the
-         * python binary in a multi-root scenario. If resource is `undefined` then the API
-         * returns what ever is set for the workspace.
-         * @param resource : Uri of a file or workspace
-         */
-        getActiveEnvironmentPath(resource?: Resource): Promise<EnvPathType | undefined>;
-        /**
-         * Returns details for the given interpreter. Details such as absolute interpreter path,
-         * version, type (conda, pyenv, etc). Metadata such as `sysPrefix` can be found under
-         * metadata field.
-         * @param path : Full path to environment folder or interpreter whose details you need.
-         * @param options : [optional]
-         *     * useCache : When true, cache is checked first for any data, returns even if there
-         *                  is partial data.
-         */
-        getEnvironmentDetails(
-            path: string,
-            options?: EnvironmentDetailsOptions,
-        ): Promise<EnvironmentDetails | undefined>;
-        /**
-         * Sets the active environment path for the python extension for the resource. Configuration target
-         * will always be the workspace folder.
-         * @param path : Full path to environment folder or interpreter to set.
-         * @param resource : [optional] Uri of a file ro workspace to scope to a particular workspace
-         *                   folder.
-         */
-        setActiveEnvironment(path: string, resource?: Resource): Promise<void>;
-        locator: {
-            /**
-             * Returns paths to environments that uniquely identifies an environment found by the extension
-             * at the time of calling. This API will *not* trigger a refresh. If a refresh is going on it
-             * will *not* wait for the refresh to finish. This will return what is known so far. To get
-             * complete list `await` on promise returned by `getRefreshPromise()`.
-             *
-             * Environments lacking an interpreter are identified by environment folder paths,
-             * whereas other envs can be identified using executable path.
-             */
-            getEnvironmentPaths(): Promise<EnvPathType[] | undefined>;
-            /**
-             * This event is triggered when the known environment list changes, like when a environment
-             * is found, existing environment is removed, or some details changed on an environment.
-             */
-            onDidEnvironmentsChanged: Event<EnvironmentsChangedParams[]>;
-            /**
-             * This API will re-trigger environment discovery. Extensions can wait on the returned
-             * promise to get the updated environment list. If there is a refresh already going on
-             * then it returns the promise for that refresh.
-             * @param options : [optional]
-             *     * clearCache : When true, this will clear the cache before environment refresh
-             *                    is triggered.
-             */
-            refreshEnvironments(options?: RefreshEnvironmentsOptions): Promise<EnvPathType[] | undefined>;
-            /**
-             * Returns a promise for the ongoing refresh. Returns `undefined` if there are no active
-             * refreshes going on.
-             */
-            getRefreshPromise(options?: GetRefreshEnvironmentsOptions): Promise<void> | undefined;
-            /**
-             * Tracks discovery progress for current list of known environments, i.e when it starts, finishes or any other relevant
-             * stage. Note the progress for a particular query is currently not tracked or reported, this only indicates progress of
-             * the entire collection.
-             */
-            readonly onRefreshProgress: Event<ProgressNotificationEvent>;
-        };
-        // registerEnvironmentProvider(
-        //     environmentProvider: IEnvironmentProvider,
-        //     metadata: EnvironmentProviderMetadata,
-        // ): Promise<Disposable>;
-        // TODO: Confirm whether this should return a promise??
-        // For eg. If we also initialize a refresh a background.
     };
 }
