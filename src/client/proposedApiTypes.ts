@@ -1,11 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/ban-types */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
-
 import { Event, Uri } from 'vscode';
 
 // https://github.com/microsoft/vscode-python/wiki/Proposed-Environment-APIs
@@ -35,7 +30,7 @@ export interface IProposedExtensionAPI {
          *                  is partial data.
          */
         getEnvironmentDetails(
-            path: string,
+            path: UniquePathType,
             options?: EnvironmentDetailsOptions,
         ): Promise<EnvironmentDetails | undefined>;
         /**
@@ -45,7 +40,7 @@ export interface IProposedExtensionAPI {
          * @param resource : [optional] Uri of a file ro workspace to scope to a particular workspace
          *                   folder.
          */
-        setActiveEnvironment(path: string, resource?: Resource): Promise<void>;
+        setActiveEnvironment(path: UniquePathType, resource?: Resource): Promise<void>;
         locator: {
             /**
              * Returns paths to environments that uniquely identifies an environment found by the extension
@@ -173,6 +168,9 @@ export interface EnvironmentDetails {
 }
 
 export interface EnvironmentDetailsOptions {
+    /**
+     * When true, cache is checked first for any data, returns even if there is partial data.
+     */
     useCache: boolean;
 }
 
