@@ -207,14 +207,27 @@ export interface EnvPathType {
 
 export interface EnvironmentsChangedParams {
     path?: UniquePathType;
+    /**
+     * Types:
+     * * "add": New environment is added.
+     * * "remove": Existing environment in the list is removed.
+     * * "update": New information found about existing environment.
+     * * "clear-all": Remove all of the items in the list. (This is fired when refresh is triggered)
+     */
     type: 'add' | 'remove' | 'update' | 'clear-all';
 }
 
 export interface ActiveEnvironmentChangedParams {
     path: UniquePathType;
+    /**
+     * Uri of a file or workspace the environment changed for.
+     */
     resource?: Uri;
 }
 
 export interface RefreshEnvironmentsOptions {
+    /**
+     * When `true`, this will clear the cache before environment refresh is triggered.
+     */
     clearCache?: boolean;
 }
