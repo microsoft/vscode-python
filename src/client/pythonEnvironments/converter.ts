@@ -38,15 +38,16 @@ export function convertProviderAPI(proposed: IEnvironmentProvider): IInternalEnv
 
 export function convertProviderMetaData(proposed: EnvironmentProviderMetadata): InternalEnvironmentProviderMetadata {
     return {
-        providerId: proposed.providerId,
+        extensionId: proposed.extensionId,
         environments: {
-            envKinds: proposed.environments.envSources?.map((e) => convertKind(e)) ?? [PythonEnvKind.Unknown],
+            envKinds: proposed.environments?.envSources?.map((e) => convertKind(e)) ?? [PythonEnvKind.Unknown],
         },
     };
 }
 
 function convertResolverAPI(proposed: IResolverAPI): IInternalResolverAPI {
     return {
+        envKind: proposed.envSource ? convertKind(proposed.envSource) : undefined,
         canIdentifyEnvironment: proposed.canIdentifyEnvironment,
         getEnvironmentDetails: convertDetailsAPI(proposed.getEnvironmentDetails),
     };

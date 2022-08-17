@@ -19,9 +19,9 @@ import {
 export interface EnvironmentDetailsOptions {
     useCache: boolean;
     /**
-     * Return details provided by the specific provider, throws error if provider not found.
+     * Return details provided by the specific extension, throws error if provider not found.
      */
-    providerId?: ProviderID;
+    extensionId?: ExtensionID;
 }
 
 export interface EnvironmentDetails {
@@ -30,13 +30,15 @@ export interface EnvironmentDetails {
         bitness?: Architecture;
         sysPrefix: string;
     };
-    environment?: {
-        type: EnvType;
-        name?: string;
-        path: string;
-        project?: string; // Any specific project environment is created for.
-        source: EnvSource[];
-    };
+    environment:
+        | {
+              type: EnvType;
+              name?: string;
+              path: string;
+              project?: string; // Any specific project environment is created for.
+              source: EnvSource[];
+          }
+        | undefined;
     version: StandardVersionInfo & {
         sysVersion?: string;
     };
@@ -51,9 +53,13 @@ export interface EnvironmentDetails {
  * Provider is only required to provide the `executable` key, rest are optional. So construct a type using
  * `EnvironmentDetails` where `executable` is the only required key.
  */
-type EnvironmentDetailsByProvider = Partial<EnvironmentDetails> & Pick<EnvironmentDetails, 'executable'>;
+type EnvironmentDetailsByProvider = Partial<EnvironmentDetails> &
+    Pick<EnvironmentDetails, 'executable'> &
+    Pick<EnvironmentDetails, 'environment'>;
 
-export interface IInternalEnvironmentProvider extends ILocatorFactoryAPI, IInternalResolverAPI {}
+export type IInternalEnvironmentProvider =
+    | (ILocatorFactoryAPI & IInternalResolverAPI & IInternalIdentifierAPI)
+    | (ILocatorFactoryAPI & IInternalResolverAPI);
 
 interface ILocatorFactoryAPI {
     /**
@@ -65,38 +71,52 @@ interface ILocatorFactoryAPI {
 export type ProposedDetailsAPI = (env: BaseEnvInfo) => Promise<EnvironmentDetailsByProvider | undefined>;
 export type InternalDetailsAPI = (env: BasicEnvInfo) => Promise<PythonEnvInfo | undefined>;
 
-export interface IResolverAPI {
+export interface IDetailsAPI {
     /**
-     * Returns true if provided environment is recognized by the provider.
-     */
-    canIdentifyEnvironment: (path: UniquePathType) => Promise<boolean>;
-    /**
-     * This is only called if this provider can identify the environment.
+     * This is only called if the provider:
+     * * Can identify the environment.
+     * * Or can iterate out the environment.
      * Returns details or `undefined` if it was found if env is invalid.
      */
     getEnvironmentDetails: ProposedDetailsAPI;
 }
 
-export interface IInternalResolverAPI {
+export type IResolverAPI = IDetailsAPI | (IDetailsAPI & IIdentifierAPI);
+
+/**
+ * Identifier need not be registered
+ */
+interface IIdentifierAPI {
+    /**
+     * Environment source the provider identifies.
+     */
+    readonly envSource: EnvSource;
     /**
      * Returns true if provided environment is recognized by the provider.
      */
     canIdentifyEnvironment: (path: UniquePathType) => Promise<boolean>;
-    /**
-     * This is only called if this provider can identify the environment.
-     * Returns details or `undefined` if it was found if env is invalid.
-     */
+}
+
+export interface IInternalResolverAPI {
     getEnvironmentDetails: InternalDetailsAPI;
+}
+
+interface IInternalIdentifierAPI {
+    readonly envKind: PythonEnvKind;
+    /**
+     * Returns true if provided environment is recognized by the provider.
+     */
+    canIdentifyEnvironment: (path: UniquePathType) => Promise<boolean>;
 }
 
 export type ILocatorFactory = IWorkspaceLocatorFactory | INonWorkspaceLocatorFactory;
 export type INonWorkspaceLocatorFactory = () => ILocatorAPI;
 export type IWorkspaceLocatorFactory = (root: string) => ILocatorAPI;
 
-export interface IEnvironmentProvider extends ILocatorFactoryAPI, IResolverAPI {}
+export type IEnvironmentProvider = ILocatorFactoryAPI & IResolverAPI;
 export interface ILocatorAPI {
-    iterEnvs?(): IPythonEnvsIterator<EnvInfo>;
-    readonly onChanged?: Event<LocatorEnvsChangedEvent>;
+    iterEnvs(): IPythonEnvsIterator<EnvInfo>;
+    readonly onChanged: Event<LocatorEnvsChangedEvent>;
 }
 
 export type EnvInfo = BaseEnvInfo & {
@@ -108,7 +128,7 @@ export type BaseEnvInfo = {
     envPath?: string;
 };
 
-type ProviderID = string;
+type ExtensionID = string;
 
 /**
  * These can be used when querying for a particular env.
@@ -118,11 +138,11 @@ export interface EnvironmentProviderMetadata {
      * Details about the environments the locator provides.
      * Useful when querying for a particular env.
      */
-    readonly environments: EnvironmentMetaData;
+    readonly environments?: EnvironmentMetaData;
     /**
-     * An Identifier for the provider.
+     * An Identifier for the extension registering the provider.
      */
-    readonly providerId: ProviderID;
+    readonly extensionId: ExtensionID;
 }
 
 interface InternalEnvironmentMetaData {
@@ -138,10 +158,7 @@ export interface InternalEnvironmentProviderMetadata {
      * Useful when querying for a particular env.
      */
     readonly environments: InternalEnvironmentMetaData;
-    /**
-     * An Identifier for the provider.
-     */
-    readonly providerId: ProviderID;
+    readonly extensionId: ExtensionID;
 }
 
 interface EnvironmentMetaData {
@@ -168,7 +185,6 @@ export enum KnownEnvTypes {
     VirtualEnv = 'VirtualEnv',
     Conda = 'Conda',
     Unknown = 'Unknown',
-    Global = 'Global',
 }
 
 export type EnvSource = KnownEnvSourceTypes | string;

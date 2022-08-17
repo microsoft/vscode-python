@@ -42,10 +42,11 @@ import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 import { IStartupDurations } from './types';
 import { runAfterActivation } from './common/utils/runAfterActivation';
 import { IInterpreterService } from './interpreter/contracts';
-import { IExtensionApi, IProposedExtensionAPI } from './apiTypes';
+import { IExtensionApi } from './apiTypes';
 import { buildProposedApi } from './proposedApi';
 import { WorkspaceService } from './common/application/workspace';
 import { disposeAll } from './common/utils/resourceLifecycle';
+import { IProposedExtensionAPI } from './proposedApiTypes';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
