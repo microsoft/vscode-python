@@ -301,20 +301,23 @@
       "autoimportcompletions" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "autosearchpaths" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "completefunctionparens" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "disableworkspacesymbol" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "enableextractcodeaction" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "formatontype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+      "functionReturnInlayTypeHints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "hasconfigfile" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "hasextrapaths" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "importformat" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
       "indexing" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "lspinteractivewindows" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+      "lspnotebooks" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
       "openfilesonly" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "typecheckingmode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "useimportheuristic" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "uselibrarycodefortypes" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "workspacecount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "variableinlaytypehints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "functionReturnInlayTypeHints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "disableworkspacesymbol" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "watchforlibrarychanges" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "lspnotebooks" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+      "workspacecount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
    }
 */
 /* __GDPR__
