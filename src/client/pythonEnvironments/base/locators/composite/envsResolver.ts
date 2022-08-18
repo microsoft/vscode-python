@@ -40,7 +40,13 @@ export class PythonEnvsResolver implements IResolvingLocator {
         if (this.parentLocator.addNewLocator) {
             this.parentLocator.addNewLocator(provider.createLocator, metadata);
         }
-        registerIdentifier(metadata.environments.envKinds[0], provider.canIdentifyEnvironment);
+        if (provider.kindIdentifier) {
+            registerIdentifier(
+                provider.kindIdentifier.envKind,
+                provider.kindIdentifier.canIdentifyEnvironment,
+                metadata.extensionId,
+            );
+        }
         registerResolver(metadata.environments.envKinds[0], provider.getEnvironmentDetails);
     }
 

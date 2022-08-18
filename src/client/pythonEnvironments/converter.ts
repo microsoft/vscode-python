@@ -47,8 +47,12 @@ export function convertProviderMetaData(proposed: EnvironmentProviderMetadata): 
 
 function convertResolverAPI(proposed: IResolverAPI): IInternalResolverAPI {
     return {
-        envKind: proposed.envSource ? convertKind(proposed.envSource) : undefined,
-        canIdentifyEnvironment: proposed.canIdentifyEnvironment,
+        kindIdentifier: proposed.sourceIdentifier
+            ? {
+                  envKind: convertKind(proposed.sourceIdentifier.envSource),
+                  canIdentifyEnvironment: proposed.sourceIdentifier.canIdentifyEnvironment,
+              }
+            : undefined,
         getEnvironmentDetails: convertDetailsAPI(proposed.getEnvironmentDetails),
     };
 }

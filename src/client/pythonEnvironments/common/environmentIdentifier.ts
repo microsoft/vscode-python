@@ -16,10 +16,20 @@ import {
 } from './environmentManagers/simplevirtualenvs';
 import { isWindowsStoreEnvironment } from './environmentManagers/windowsStoreEnv';
 
-const identifiers: Map<PythonEnvKind, (path: string) => Promise<boolean>> = new Map();
+type IdentifierType = (path: string) => Promise<boolean>;
+type IdentifiersType = { identifier: IdentifierType; extensionId?: string };
+const identifiers: Map<PythonEnvKind, IdentifiersType[] | IdentifierType> = new Map();
 
-export function registerIdentifier(kind: PythonEnvKind, identifier: (path: string) => Promise<boolean>): void {
-    identifiers.set(kind, identifier);
+export function registerIdentifier(kind: PythonEnvKind, identifier: IdentifierType, extensionId: string): void {
+    const identifiersForKind = identifiers.get(kind);
+    if (!identifiersForKind) {
+        identifiers.set(kind, identifier);
+    } else if (Array.isArray(identifiersForKind)) {
+        identifiersForKind.push({ identifier, extensionId });
+        identifiers.set(kind, identifiersForKind);
+    } else {
+        identifiers.set(kind, [{ identifier, extensionId }, { identifier: identifiersForKind }]);
+    }
 }
 
 const notImplemented = () => Promise.resolve(false);
@@ -47,15 +57,22 @@ identifiers.set(PythonEnvKind.OtherGlobal, isGloballyInstalledEnv);
 export async function identifyEnvironment(path: string): Promise<PythonEnvKind> {
     const prioritizedEnvTypes = getPrioritizedEnvKinds();
     for (const e of prioritizedEnvTypes) {
-        const identifier = identifiers.get(e);
-        if (
-            identifier &&
-            (await identifier(path).catch((ex) => {
-                traceWarn(`Identifier for ${e} failed to identify ${path}`, ex);
-                return false;
-            }))
-        ) {
-            return e;
+        const value = identifiers.get(e);
+        if (value) {
+            let identifier: IdentifierType;
+            if (Array.isArray(value)) {
+                identifier = value[0].identifier;
+            } else {
+                identifier = value;
+            }
+            if (
+                await identifier(path).catch((ex) => {
+                    traceWarn(`Identifier for ${e} failed to identify ${path}`, ex);
+                    return false;
+                })
+            ) {
+                return e;
+            }
         }
     }
     return PythonEnvKind.Unknown;

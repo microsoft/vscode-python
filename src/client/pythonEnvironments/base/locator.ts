@@ -70,22 +70,22 @@ interface ILocatorFactoryAPI {
 
 export type ProposedDetailsAPI = (env: BaseEnvInfo) => Promise<EnvironmentDetailsByProvider | undefined>;
 export type InternalDetailsAPI = (env: BasicEnvInfo) => Promise<PythonEnvInfo | undefined>;
-
-export interface IDetailsAPI {
+export interface IResolverAPI {
     /**
-     * This is only called if the provider:
-     * * Can identify the environment.
-     * * Or can iterate out the environment.
+     * Carries API to check if an environment can be recognized by the provider. Providers
+     * which returns details about an {@link EnvSource} are expected to
+     * provide this.
+     */
+    readonly sourceIdentifier: IIdentifierAPI | undefined;
+    /**
      * Returns details or `undefined` if it was found if env is invalid.
+     * This is only called if:
+     * * The provider can identify the environment.
+     * * To get more details out of an environment already iterated by the provider.
      */
     getEnvironmentDetails: ProposedDetailsAPI;
 }
 
-export type IResolverAPI = IDetailsAPI | (IDetailsAPI & IIdentifierAPI);
-
-/**
- * Identifier need not be registered
- */
 interface IIdentifierAPI {
     /**
      * Environment source the provider identifies.
@@ -98,6 +98,7 @@ interface IIdentifierAPI {
 }
 
 export interface IInternalResolverAPI {
+    readonly kindIdentifier: IInternalIdentifierAPI | undefined;
     getEnvironmentDetails: InternalDetailsAPI;
 }
 
