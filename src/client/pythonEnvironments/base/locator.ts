@@ -57,9 +57,7 @@ type EnvironmentDetailsByProvider = Partial<EnvironmentDetails> &
     Pick<EnvironmentDetails, 'executable'> &
     Pick<EnvironmentDetails, 'environment'>;
 
-export type IInternalEnvironmentProvider =
-    | (ILocatorFactoryAPI & IInternalResolverAPI & IInternalIdentifierAPI)
-    | (ILocatorFactoryAPI & IInternalResolverAPI);
+export type IInternalEnvironmentProvider = ILocatorFactoryAPI & IInternalResolverAPI;
 
 interface ILocatorFactoryAPI {
     /**
@@ -72,11 +70,13 @@ export type ProposedDetailsAPI = (env: BaseEnvInfo) => Promise<EnvironmentDetail
 export type InternalDetailsAPI = (env: BasicEnvInfo) => Promise<PythonEnvInfo | undefined>;
 export interface IResolverAPI {
     /**
-     * Carries API to check if an environment can be recognized by the provider. Providers
-     * which returns details about an {@link EnvSource} are expected to
-     * provide this.
+     * Environment source the provider identifies/resolves.
      */
-    readonly sourceIdentifier: IIdentifierAPI | undefined;
+    readonly envSource: EnvSource | undefined;
+    /**
+     * Returns true if provided environment is recognized by the provider.
+     */
+    canIdentifyEnvironment: (path: UniquePathType) => Promise<boolean>;
     /**
      * Returns details or `undefined` if it was found if env is invalid.
      * This is only called if:
@@ -86,28 +86,10 @@ export interface IResolverAPI {
     getEnvironmentDetails: ProposedDetailsAPI;
 }
 
-interface IIdentifierAPI {
-    /**
-     * Environment source the provider identifies.
-     */
-    readonly envSource: EnvSource;
-    /**
-     * Returns true if provided environment is recognized by the provider.
-     */
-    canIdentifyEnvironment: (path: UniquePathType) => Promise<boolean>;
-}
-
 export interface IInternalResolverAPI {
-    readonly kindIdentifier: IInternalIdentifierAPI | undefined;
-    getEnvironmentDetails: InternalDetailsAPI;
-}
-
-interface IInternalIdentifierAPI {
-    readonly envKind: PythonEnvKind;
-    /**
-     * Returns true if provided environment is recognized by the provider.
-     */
+    readonly envKind: PythonEnvKind | undefined;
     canIdentifyEnvironment: (path: UniquePathType) => Promise<boolean>;
+    getEnvironmentDetails: InternalDetailsAPI;
 }
 
 export type ILocatorFactory = IWorkspaceLocatorFactory | INonWorkspaceLocatorFactory;

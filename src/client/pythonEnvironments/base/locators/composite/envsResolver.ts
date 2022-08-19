@@ -5,7 +5,7 @@ import { cloneDeep } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { identifyEnvironment, registerIdentifier } from '../../../common/environmentIdentifier';
 import { IEnvironmentInfoService } from '../../info/environmentInfoService';
-import { PythonEnvInfo } from '../../info';
+import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { getEnvPath, setEnvDisplayString } from '../../info/env';
 import { InterpreterInformation } from '../../info/interpreter';
 import {
@@ -40,14 +40,21 @@ export class PythonEnvsResolver implements IResolvingLocator {
         if (this.parentLocator.addNewLocator) {
             this.parentLocator.addNewLocator(provider.createLocator, metadata);
         }
-        if (provider.kindIdentifier) {
+        if (provider.envKind) {
+            registerIdentifier(provider.envKind, provider.canIdentifyEnvironment, metadata.extensionId);
+            registerResolver(provider.envKind, provider.getEnvironmentDetails, metadata.extensionId);
+        } else {
             registerIdentifier(
-                provider.kindIdentifier.envKind,
-                provider.kindIdentifier.canIdentifyEnvironment,
+                metadata.extensionId as PythonEnvKind,
+                provider.canIdentifyEnvironment,
+                metadata.extensionId,
+            );
+            registerResolver(
+                metadata.extensionId as PythonEnvKind,
+                provider.getEnvironmentDetails,
                 metadata.extensionId,
             );
         }
-        registerResolver(metadata.environments.envKinds[0], provider.getEnvironmentDetails);
     }
 
     constructor(
