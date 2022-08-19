@@ -91,7 +91,10 @@ export class ConvertLocator implements ILocator<BasicEnvInfo> {
         return this.didChange.event;
     }
 
-    constructor(private readonly parentLocator: ILocatorAPI) {
+    constructor(
+        private readonly parentLocator: ILocatorAPI,
+        private readonly metadata: InternalEnvironmentProviderMetadata,
+    ) {
         if (parentLocator.onChanged) {
             parentLocator.onChanged((e: LocatorEnvsChangedEvent) => {
                 const event: PythonEnvsChangedEvent = { type: this.eventKeys[`${e.type}`] };
@@ -104,61 +107,71 @@ export class ConvertLocator implements ILocator<BasicEnvInfo> {
     public iterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>();
         const incomingIterator = this.parentLocator.iterEnvs!();
-        const iterator = iterEnvsIterator(incomingIterator, didUpdate);
+        const iterator = this.iterEnvsIterator(incomingIterator, didUpdate);
         iterator.onUpdated = didUpdate.event;
         return iterator;
     }
-}
 
-async function* iterEnvsIterator(
-    iterator: IPythonEnvsIterator<EnvInfo>,
-    didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>,
-): IPythonEnvsIterator<BasicEnvInfo> {
-    const state = {
-        done: false,
-        pending: 0,
-    };
-    const seen: BasicEnvInfo[] = [];
+    private async *iterEnvsIterator(
+        iterator: IPythonEnvsIterator<EnvInfo>,
+        didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>,
+    ): IPythonEnvsIterator<BasicEnvInfo> {
+        const state = {
+            done: false,
+            pending: 0,
+        };
+        const seen: BasicEnvInfo[] = [];
 
-    if (iterator.onUpdated !== undefined) {
-        const listener = iterator.onUpdated((event) => {
-            state.pending += 1;
-            if (isProgressEvent(event)) {
-                if (event.stage === ProgressReportStage.discoveryFinished) {
-                    state.done = true;
-                    listener.dispose();
+        if (iterator.onUpdated !== undefined) {
+            const listener = iterator.onUpdated((event) => {
+                state.pending += 1;
+                if (isProgressEvent(event)) {
+                    if (event.stage === ProgressReportStage.discoveryFinished) {
+                        state.done = true;
+                        listener.dispose();
+                    } else {
+                        didUpdate.fire(event);
+                    }
+                } else if (event.update === undefined) {
+                    throw new Error(
+                        'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in reducer',
+                    );
+                } else if (seen[event.index] !== undefined) {
+                    const oldEnv = seen[event.index];
+                    seen[event.index] = this.convertToBasicEnv(event.update);
+                    didUpdate.fire({ index: event.index, old: oldEnv, update: this.convertToBasicEnv(event.update) });
                 } else {
-                    didUpdate.fire(event);
+                    // This implies a problem in a downstream locator
+                    traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
                 }
-            } else if (event.update === undefined) {
-                throw new Error(
-                    'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in reducer',
-                );
-            } else if (seen[event.index] !== undefined) {
-                const oldEnv = seen[event.index];
-                seen[event.index] = convertToBasicEnv(event.update);
-                didUpdate.fire({ index: event.index, old: oldEnv, update: convertToBasicEnv(event.update) });
-            } else {
-                // This implies a problem in a downstream locator
-                traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
-            }
-            state.pending -= 1;
+                state.pending -= 1;
+                checkIfFinishedAndNotify(state, didUpdate);
+            });
+        } else {
+            didUpdate.fire({ stage: ProgressReportStage.discoveryStarted });
+        }
+
+        let result = await iterator.next();
+        while (!result.done) {
+            const currEnv = this.convertToBasicEnv(result.value);
+            yield currEnv;
+            seen.push(currEnv);
+            result = await iterator.next();
+        }
+        if (iterator.onUpdated === undefined) {
+            state.done = true;
             checkIfFinishedAndNotify(state, didUpdate);
-        });
-    } else {
-        didUpdate.fire({ stage: ProgressReportStage.discoveryStarted });
+        }
     }
 
-    let result = await iterator.next();
-    while (!result.done) {
-        const currEnv = convertToBasicEnv(result.value);
-        yield currEnv;
-        seen.push(currEnv);
-        result = await iterator.next();
-    }
-    if (iterator.onUpdated === undefined) {
-        state.done = true;
-        checkIfFinishedAndNotify(state, didUpdate);
+    private convertToBasicEnv(env: EnvInfo): BasicEnvInfo {
+        // TODO: Support multiple kinds
+        return {
+            executablePath: env.executablePath,
+            envPath: env.envPath,
+            kind: convertKind(env.envSources[0]),
+            extensionId: this.metadata.extensionId,
+        };
     }
 }
 
@@ -175,9 +188,4 @@ function checkIfFinishedAndNotify(
         didUpdate.fire({ stage: ProgressReportStage.discoveryFinished });
         didUpdate.dispose();
     }
-}
-
-function convertToBasicEnv(env: EnvInfo): BasicEnvInfo {
-    // TODO: Use kind converter
-    return { executablePath: env.executablePath, envPath: env.envPath, kind: PythonEnvKind.Unknown };
 }
