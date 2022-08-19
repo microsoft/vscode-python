@@ -106,7 +106,7 @@ async function createLocator(
     // This is shared.
 ): Promise<IDiscoveryAPI> {
     // Create the low-level locators.
-    let locators: ILocator<BasicEnvInfo> = new ExtensionLocators(
+    const locators: ILocator<BasicEnvInfo> = new ExtensionLocators(
         // Here we pull the locators together.
         createNonWorkspaceLocators(ext),
         createWorkspaceLocator(ext),
@@ -116,9 +116,9 @@ async function createLocator(
     const envInfoService = getEnvironmentInfoService(ext.disposables);
 
     // Build the stack of composite locators.
-    locators = new PythonEnvsReducer(locators);
+    const reducer = new PythonEnvsReducer(locators);
     const resolvingLocator = new PythonEnvsResolver(
-        locators,
+        reducer,
         // These are shared.
         envInfoService,
     );

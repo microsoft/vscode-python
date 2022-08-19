@@ -51,7 +51,7 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
         architecture: arch,
     };
 
-    const envType = convertedKinds.get(kind);
+    const envType = convertedKinds.get(kind[0]);
     if (envType !== undefined) {
         env.envType = envType;
     }

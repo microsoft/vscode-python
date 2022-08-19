@@ -23,12 +23,12 @@ import { getPyenvVersionsDir, parsePyenvVersion } from '../../../common/environm
 import { Architecture, getOSType, OSType } from '../../../../common/utils/platform';
 import { getPythonVersionFromPath as parsePythonVersionFromPath, parseVersion } from '../../info/pythonVersion';
 import { getRegistryInterpreters, getRegistryInterpretersSync } from '../../../common/windowsUtils';
-import { BasicEnvInfo } from '../../locator';
+import { CompositeEnvInfo } from '../../locator';
 import { parseVersionFromExecutable } from '../../info/executable';
 import { traceError, traceWarn } from '../../../../logging';
 import { sortExtensionSource } from '../../info/envKind';
 
-type ResolverType = (_: BasicEnvInfo, useCache?: boolean) => Promise<PythonEnvInfo | undefined>;
+type ResolverType = (_: CompositeEnvInfo, useCache?: boolean) => Promise<PythonEnvInfo | undefined>;
 type ResolversType = { resolver: ResolverType; extensionId?: string }[];
 const resolvers = new Map<PythonEnvKind, ResolverType | ResolversType>();
 Object.values(PythonEnvKind).forEach((k) => {
@@ -43,7 +43,7 @@ resolvers.set(PythonEnvKind.Pyenv, resolvePyenvEnv);
 
 export function registerResolver(
     kind: PythonEnvKind,
-    resolver: (_: BasicEnvInfo, useCache?: boolean) => Promise<PythonEnvInfo | undefined>,
+    resolver: (_: CompositeEnvInfo, useCache?: boolean) => Promise<PythonEnvInfo | undefined>,
     extensionId: string,
 ): void {
     const resolversForKind = resolvers.get(kind);
@@ -59,16 +59,19 @@ export function registerResolver(
 }
 
 /**
- * Find as much info about the given Basic Python env as possible without running the
+ * Find as much info about the given Python env as possible without running the
  * executable and returns it. Notice `undefined` is never returned, so environment
  * returned could still be invalid.
  */
-export async function resolveBasicEnv(env: BasicEnvInfo, useCache = false): Promise<PythonEnvInfo | undefined> {
+export async function resolveCompositeEnv(env: CompositeEnvInfo, useCache = false): Promise<PythonEnvInfo | undefined> {
     const { kind, source } = env;
-    const value = resolvers.get(kind[0]);
+    let value = resolvers.get(kind[0]);
     if (!value) {
-        traceError('No resolver found for kind:', kind[0]);
-        return undefined;
+        value = env.extensionId ? resolvers.get(env.extensionId as PythonEnvKind) : undefined;
+        if (!value) {
+            traceError('No resolver found for env:', JSON.stringify(env));
+            return undefined;
+        }
     }
     let resolverForKind: ResolverType;
     if (Array.isArray(value)) {
@@ -146,7 +149,7 @@ async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
     }
 }
 
-async function resolveGloballyInstalledEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
+async function resolveGloballyInstalledEnv(env: CompositeEnvInfo): Promise<PythonEnvInfo> {
     const { executablePath } = env;
     let version;
     try {
@@ -162,7 +165,7 @@ async function resolveGloballyInstalledEnv(env: BasicEnvInfo): Promise<PythonEnv
     return envInfo;
 }
 
-async function resolveSimpleEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
+async function resolveSimpleEnv(env: CompositeEnvInfo): Promise<PythonEnvInfo> {
     const { executablePath, kind } = env;
     const envInfo = buildEnvInfo({
         kind,
@@ -175,7 +178,7 @@ async function resolveSimpleEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     return envInfo;
 }
 
-async function resolveCondaEnv(env: BasicEnvInfo, useCache?: boolean): Promise<PythonEnvInfo> {
+async function resolveCondaEnv(env: CompositeEnvInfo, useCache?: boolean): Promise<PythonEnvInfo> {
     const { executablePath } = env;
     const conda = await Conda.getConda();
     if (conda === undefined) {
@@ -184,7 +187,7 @@ async function resolveCondaEnv(env: BasicEnvInfo, useCache?: boolean): Promise<P
     const envs = (await conda?.getEnvList(useCache)) ?? [];
     for (const { name, prefix } of envs) {
         let executable = await getInterpreterPathFromDir(prefix);
-        const currEnv: BasicEnvInfo = { executablePath: executable ?? '', kind: env.kind, envPath: prefix };
+        const currEnv: CompositeEnvInfo = { executablePath: executable ?? '', kind: env.kind, envPath: prefix };
         if (areSameEnv(env, currEnv)) {
             if (env.executablePath.length > 0) {
                 executable = env.executablePath;
@@ -215,7 +218,7 @@ async function resolveCondaEnv(env: BasicEnvInfo, useCache?: boolean): Promise<P
     return resolveSimpleEnv(env);
 }
 
-async function resolvePyenvEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
+async function resolvePyenvEnv(env: CompositeEnvInfo): Promise<PythonEnvInfo> {
     const { executablePath } = env;
     const location = getEnvironmentDirFromPath(executablePath);
     const name = path.basename(location);
@@ -268,7 +271,7 @@ async function isBaseCondaPyenvEnvironment(executablePath: string) {
     return arePathsSame(path.dirname(location), pyenvVersionDir);
 }
 
-async function resolveWindowsStoreEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
+async function resolveWindowsStoreEnv(env: CompositeEnvInfo): Promise<PythonEnvInfo> {
     const { executablePath } = env;
     return buildEnvInfo({
         kind: env.kind,

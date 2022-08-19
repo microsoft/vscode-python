@@ -9,6 +9,8 @@ import { areSameEnv } from '../../info/env';
 import { sortExtensionSource, sortKindFunction } from '../../info/envKind';
 import {
     BasicEnvInfo,
+    CompositeEnvInfo,
+    convertBasicToComposite,
     ILocator,
     IPythonEnvsIterator,
     isProgressEvent,
@@ -22,7 +24,7 @@ import { PythonEnvsChangedEvent } from '../../watcher';
 /**
  * Combines duplicate environments received from the incoming locator into one and passes on unique environments
  */
-export class PythonEnvsReducer implements ILocator<BasicEnvInfo> {
+export class PythonEnvsReducer implements ILocator<CompositeEnvInfo> {
     public get onChanged(): Event<PythonEnvsChangedEvent> {
         return this.parentLocator.onChanged;
     }
@@ -31,8 +33,8 @@ export class PythonEnvsReducer implements ILocator<BasicEnvInfo> {
 
     constructor(private readonly parentLocator: ILocator<BasicEnvInfo>) {}
 
-    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
-        const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>();
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<CompositeEnvInfo> {
+        const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<CompositeEnvInfo> | ProgressNotificationEvent>();
         const incomingIterator = this.parentLocator.iterEnvs(query);
         const iterator = iterEnvsIterator(incomingIterator, didUpdate);
         iterator.onUpdated = didUpdate.event;
@@ -42,13 +44,13 @@ export class PythonEnvsReducer implements ILocator<BasicEnvInfo> {
 
 async function* iterEnvsIterator(
     iterator: IPythonEnvsIterator<BasicEnvInfo>,
-    didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>,
-): IPythonEnvsIterator<BasicEnvInfo> {
+    didUpdate: EventEmitter<PythonEnvUpdatedEvent<CompositeEnvInfo> | ProgressNotificationEvent>,
+): IPythonEnvsIterator<CompositeEnvInfo> {
     const state = {
         done: false,
         pending: 0,
     };
-    const seen: BasicEnvInfo[] = [];
+    const seen: CompositeEnvInfo[] = [];
 
     if (iterator.onUpdated !== undefined) {
         const listener = iterator.onUpdated((event) => {
@@ -66,8 +68,8 @@ async function* iterEnvsIterator(
                 );
             } else if (seen[event.index] !== undefined) {
                 const oldEnv = seen[event.index];
-                seen[event.index] = event.update;
-                didUpdate.fire({ index: event.index, old: oldEnv, update: event.update });
+                seen[event.index] = convertBasicToComposite(event.update);
+                didUpdate.fire({ index: event.index, old: oldEnv, update: seen[event.index] });
             } else {
                 // This implies a problem in a downstream locator
                 traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
@@ -81,7 +83,7 @@ async function* iterEnvsIterator(
 
     let result = await iterator.next();
     while (!result.done) {
-        const currEnv = result.value;
+        const currEnv = convertBasicToComposite(result.value);
         const oldIndex = seen.findIndex((s) => areSameEnv(s, currEnv));
         if (oldIndex !== -1) {
             resolveDifferencesInBackground(oldIndex, currEnv, state, didUpdate, seen).ignoreErrors();
@@ -100,10 +102,10 @@ async function* iterEnvsIterator(
 
 async function resolveDifferencesInBackground(
     oldIndex: number,
-    newEnv: BasicEnvInfo,
+    newEnv: CompositeEnvInfo,
     state: { done: boolean; pending: number },
-    didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>,
-    seen: BasicEnvInfo[],
+    didUpdate: EventEmitter<PythonEnvUpdatedEvent<CompositeEnvInfo> | ProgressNotificationEvent>,
+    seen: CompositeEnvInfo[],
 ) {
     state.pending += 1;
     // It's essential we increment the pending call count before any asynchronus calls in this method.
@@ -125,7 +127,7 @@ async function resolveDifferencesInBackground(
  */
 function checkIfFinishedAndNotify(
     state: { done: boolean; pending: number },
-    didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>,
+    didUpdate: EventEmitter<PythonEnvUpdatedEvent<CompositeEnvInfo> | ProgressNotificationEvent>,
 ) {
     if (state.done && state.pending === 0) {
         didUpdate.fire({ stage: ProgressReportStage.discoveryFinished });
@@ -133,7 +135,7 @@ function checkIfFinishedAndNotify(
     }
 }
 
-function resolveEnvCollision(oldEnv: BasicEnvInfo, newEnv: BasicEnvInfo): BasicEnvInfo {
+function resolveEnvCollision(oldEnv: CompositeEnvInfo, newEnv: CompositeEnvInfo): CompositeEnvInfo {
     const [env] = sortEnvInfoByPriority(oldEnv, newEnv);
     const merged = cloneDeep(env);
     merged.source = union(oldEnv.source ?? [], newEnv.source ?? []);
@@ -145,8 +147,8 @@ function resolveEnvCollision(oldEnv: BasicEnvInfo, newEnv: BasicEnvInfo): BasicE
  * Selects an environment based on the environment selection priority. This should
  * match the priority in the environment identifier.
  */
-function sortEnvInfoByPriority(...envs: BasicEnvInfo[]): BasicEnvInfo[] {
-    return envs.sort((a: BasicEnvInfo, b: BasicEnvInfo) => {
+function sortEnvInfoByPriority(...envs: CompositeEnvInfo[]): CompositeEnvInfo[] {
+    return envs.sort((a: CompositeEnvInfo, b: CompositeEnvInfo) => {
         const kindDiff = sortKindFunction(getTopKind(a.kind), getTopKind(b.kind));
         if (kindDiff !== 0) {
             return kindDiff;

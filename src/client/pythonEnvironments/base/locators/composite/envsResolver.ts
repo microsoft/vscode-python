@@ -9,7 +9,7 @@ import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { getEnvPath, setEnvDisplayString } from '../../info/env';
 import { InterpreterInformation } from '../../info/interpreter';
 import {
-    BasicEnvInfo,
+    CompositeEnvInfo,
     IInternalEnvironmentProvider,
     ILocator,
     InternalEnvironmentProviderMetadata,
@@ -22,7 +22,7 @@ import {
     PythonLocatorQuery,
 } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
-import { registerResolver, resolveBasicEnv } from './resolverUtils';
+import { registerResolver, resolveCompositeEnv } from './resolverUtils';
 import { traceVerbose, traceWarn } from '../../../../logging';
 import { getEnvironmentDirFromPath, getInterpreterPathFromDir, isPythonExecutable } from '../../../common/commonUtils';
 import { getEmptyVersion } from '../../info/pythonVersion';
@@ -58,7 +58,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
     }
 
     constructor(
-        private readonly parentLocator: ILocator<BasicEnvInfo>,
+        private readonly parentLocator: ILocator<CompositeEnvInfo>,
         private readonly environmentInfoService: IEnvironmentInfoService,
     ) {}
 
@@ -66,7 +66,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
         const [executablePath, envPath] = await getExecutablePathAndEnvPath(path);
         path = executablePath.length ? executablePath : envPath;
         const kind = await identifyEnvironment(path);
-        const environment = await resolveBasicEnv({ kind: [kind], executablePath, envPath });
+        const environment = await resolveCompositeEnv({ kind: [kind], executablePath, envPath });
         if (!environment) {
             return undefined;
         }
@@ -86,7 +86,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
     }
 
     private async *iterEnvsIterator(
-        iterator: IPythonEnvsIterator<BasicEnvInfo>,
+        iterator: IPythonEnvsIterator<CompositeEnvInfo>,
         didUpdate: EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>,
     ): IPythonEnvsIterator {
         const state = {
@@ -112,7 +112,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
                     );
                 } else if (seen[event.index] !== undefined) {
                     const old = seen[event.index];
-                    const env = await resolveBasicEnv(event.update, true);
+                    const env = await resolveCompositeEnv(event.update, true);
                     didUpdate.fire({ old, index: event.index, update: env });
                     if (env) {
                         seen[event.index] = env;
@@ -132,7 +132,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
         let result = await iterator.next();
         while (!result.done) {
             // Use cache from the current refresh where possible.
-            const currEnv = await resolveBasicEnv(result.value, true);
+            const currEnv = await resolveCompositeEnv(result.value, true);
             if (currEnv) {
                 seen.push(currEnv);
                 yield currEnv;

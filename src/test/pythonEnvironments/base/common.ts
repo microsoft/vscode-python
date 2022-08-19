@@ -17,7 +17,7 @@ import {
 import { buildEnvInfo } from '../../../client/pythonEnvironments/base/info/env';
 import { getEmptyVersion, parseVersion } from '../../../client/pythonEnvironments/base/info/pythonVersion';
 import {
-    BasicEnvInfo,
+    CompositeEnvInfo,
     IPythonEnvsIterator,
     isProgressEvent,
     Locator,
@@ -53,7 +53,7 @@ export function createLocatedEnv(
             ? getEmptyVersion() // an empty version
             : parseVersion(versionStr);
     const env = buildEnvInfo({
-        kind,
+        kind: [kind],
         executable,
         location,
         version,
@@ -71,8 +71,8 @@ export function createBasicEnv(
     executablePath: string,
     source?: PythonEnvSource[],
     envPath?: string,
-): BasicEnvInfo {
-    const basicEnv = { executablePath, kind, source, envPath };
+): CompositeEnvInfo {
+    const basicEnv = { executablePath, kind: [kind], source, envPath };
     if (!source) {
         delete basicEnv.source;
     }

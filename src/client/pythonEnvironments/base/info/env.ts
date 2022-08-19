@@ -20,7 +20,7 @@ import {
     PythonVersion,
     virtualEnvKinds,
 } from '.';
-import { BasicEnvInfo } from '../locator';
+import { CompositeEnvInfo, convertKindIntoArray } from '../locator';
 
 /**
  * Create a new info object with all values empty.
@@ -28,7 +28,7 @@ import { BasicEnvInfo } from '../locator';
  * @param init - if provided, these values are applied to the new object
  */
 export function buildEnvInfo(init?: {
-    kind?: PythonEnvKind[];
+    kind?: PythonEnvKind[] | PythonEnvKind;
     executable?: string;
     name?: string;
     location?: string;
@@ -83,7 +83,7 @@ export function buildEnvInfo(init?: {
 export function copyEnvInfo(
     env: PythonEnvInfo,
     updates?: {
-        kind?: PythonEnvKind[];
+        kind?: PythonEnvKind[] | PythonEnvKind;
     },
 ): PythonEnvInfo {
     // We don't care whether or not extra/hidden properties
@@ -98,7 +98,7 @@ export function copyEnvInfo(
 function updateEnv(
     env: PythonEnvInfo,
     updates: {
-        kind?: PythonEnvKind[];
+        kind?: PythonEnvKind[] | PythonEnvKind;
         executable?: string;
         location?: string;
         version?: PythonVersion;
@@ -106,7 +106,7 @@ function updateEnv(
     },
 ): void {
     if (updates.kind !== undefined) {
-        env.kind = updates.kind;
+        env.kind = convertKindIntoArray(updates.kind);
     }
     if (updates.executable !== undefined) {
         env.executable.filename = updates.executable;
@@ -173,7 +173,7 @@ function buildEnvDisplayString(env: PythonEnvInfo, getAllDetails = false): strin
  * If insufficient data is provided to generate a minimal object, such
  * that it is not identifiable, then `undefined` is returned.
  */
-function getMinimalPartialInfo(env: string | PythonEnvInfo | BasicEnvInfo): Partial<PythonEnvInfo> | undefined {
+function getMinimalPartialInfo(env: string | PythonEnvInfo | CompositeEnvInfo): Partial<PythonEnvInfo> | undefined {
     if (typeof env === 'string') {
         if (env === '') {
             return undefined;
@@ -235,8 +235,8 @@ export function getEnvID(interpreterPath: string, envFolderPath?: string): strin
  * where multiple versions of python executables are all put in the same directory.
  */
 export function areSameEnv(
-    left: string | PythonEnvInfo | BasicEnvInfo,
-    right: string | PythonEnvInfo | BasicEnvInfo,
+    left: string | PythonEnvInfo | CompositeEnvInfo,
+    right: string | PythonEnvInfo | CompositeEnvInfo,
     allowPartialMatch = true,
 ): boolean | undefined {
     const leftInfo = getMinimalPartialInfo(left);

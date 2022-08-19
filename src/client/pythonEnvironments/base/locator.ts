@@ -296,13 +296,30 @@ export type PythonLocatorQuery = BasicPythonLocatorQuery & {
 
 type QueryForEvent<E> = E extends PythonEnvsChangedEvent ? PythonLocatorQuery : BasicPythonLocatorQuery;
 
-export type BasicEnvInfo = {
-    kind: PythonEnvKind[];
+export type BasicEnvInfo<T = PythonEnvKind[] | PythonEnvKind> = {
+    kind: T;
     executablePath: string;
     source?: PythonEnvSource[];
     envPath?: string;
     extensionId?: ExtensionID;
 };
+
+/**
+ * A version of `BasicEnvInfo` used for composite locators.
+ */
+export type CompositeEnvInfo = BasicEnvInfo<PythonEnvKind[]>;
+
+export function convertBasicToComposite(env: BasicEnvInfo): CompositeEnvInfo {
+    env.kind = convertKindIntoArray(env.kind);
+    return env as CompositeEnvInfo;
+}
+
+export function convertKindIntoArray(kind: PythonEnvKind | PythonEnvKind[]): PythonEnvKind[] {
+    if (!Array.isArray(kind)) {
+        kind = [kind];
+    }
+    return kind;
+}
 
 /**
  * A single Python environment locator.

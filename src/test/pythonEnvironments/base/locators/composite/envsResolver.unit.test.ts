@@ -18,7 +18,7 @@ import {
 } from '../../../../../client/pythonEnvironments/base/info';
 import { getEmptyVersion, parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
 import {
-    BasicEnvInfo,
+    CompositeEnvInfo,
     isProgressEvent,
     ProgressNotificationEvent,
     ProgressReportStage,
@@ -80,7 +80,7 @@ suite('Python envs locator - Environments Resolver', () => {
         return {
             name,
             location,
-            kind,
+            kind: [kind],
             executable: {
                 filename: interpreterPath,
                 sysPrefix: '',
@@ -130,7 +130,7 @@ suite('Python envs locator - Environments Resolver', () => {
                 "Python ('win1': venv)",
             );
             const envsReturnedByParentLocator = [env1];
-            const parentLocator = new SimpleLocator<BasicEnvInfo>(envsReturnedByParentLocator);
+            const parentLocator = new SimpleLocator<CompositeEnvInfo>(envsReturnedByParentLocator);
             const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
 
             const iterator = resolver.iterEnvs();
@@ -153,7 +153,7 @@ suite('Python envs locator - Environments Resolver', () => {
                 path.join(testVirtualHomeDir, '.venvs', 'win1'),
             );
             const envsReturnedByParentLocator = [env1];
-            const parentLocator = new SimpleLocator<BasicEnvInfo>(envsReturnedByParentLocator);
+            const parentLocator = new SimpleLocator<CompositeEnvInfo>(envsReturnedByParentLocator);
             const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
 
             const iterator = resolver.iterEnvs();
@@ -179,7 +179,7 @@ suite('Python envs locator - Environments Resolver', () => {
                 path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
             );
             const envsReturnedByParentLocator = [env1];
-            const parentLocator = new SimpleLocator<BasicEnvInfo>(envsReturnedByParentLocator);
+            const parentLocator = new SimpleLocator<CompositeEnvInfo>(envsReturnedByParentLocator);
             const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
 
             // Act
@@ -208,8 +208,8 @@ suite('Python envs locator - Environments Resolver', () => {
                 path.join(testVirtualHomeDir, '.venvs', 'win1'),
             );
             const envsReturnedByParentLocator = [env];
-            const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>();
-            const parentLocator = new SimpleLocator<BasicEnvInfo>(envsReturnedByParentLocator, {
+            const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<CompositeEnvInfo> | ProgressNotificationEvent>();
+            const parentLocator = new SimpleLocator<CompositeEnvInfo>(envsReturnedByParentLocator, {
                 onUpdated: didUpdate.event,
             });
             const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
@@ -254,8 +254,8 @@ suite('Python envs locator - Environments Resolver', () => {
                 path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
             );
             const envsReturnedByParentLocator = [env];
-            const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>();
-            const parentLocator = new SimpleLocator<BasicEnvInfo>(envsReturnedByParentLocator, {
+            const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<CompositeEnvInfo> | ProgressNotificationEvent>();
+            const parentLocator = new SimpleLocator<CompositeEnvInfo>(envsReturnedByParentLocator, {
                 onUpdated: didUpdate.event,
             });
             const resolver = new PythonEnvsResolver(parentLocator, envInfoService);
