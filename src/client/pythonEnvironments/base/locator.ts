@@ -147,13 +147,17 @@ interface EnvironmentMetaData {
 
 export interface LocatorEnvsChangedEvent {
     /**
-     * Any details known about the environment which can be used for query.
-     */
-    env?: EnvironmentMetaData;
-    /**
      * Details about how the environment was modified.
      * */
     type: EnvChangeType;
+    /**
+     * The unique ID for the environment affected.
+     */
+    pathId: UniquePathType;
+    /**
+     * Any other details known about the environment which can be used for query.
+     */
+    env?: EnvironmentMetaData;
 }
 
 export type EnvChangeType = 'add' | 'remove' | 'update';

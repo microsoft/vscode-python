@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { EventEmitter, Event } from 'vscode';
+import { EventEmitter, Event, Uri } from 'vscode';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { traceVerbose } from '../logging';
 import { PythonEnvInfo, PythonEnvKind } from './base/info';
@@ -97,8 +97,11 @@ export class ConvertLocator implements ILocator<BasicEnvInfo> {
     ) {
         if (parentLocator.onChanged) {
             parentLocator.onChanged((e: LocatorEnvsChangedEvent) => {
-                const event: PythonEnvsChangedEvent = { type: this.eventKeys[`${e.type}`] };
-                // TODO: Add translation for other events.
+                const event: PythonEnvsChangedEvent = {
+                    type: this.eventKeys[`${e.type}`],
+                    kind: e.env?.envSources ? convertKind(e.env?.envSources[0]) : undefined,
+                    searchLocation: Uri.file(e.pathId),
+                };
                 this.didChange.fire(event);
             });
         }
