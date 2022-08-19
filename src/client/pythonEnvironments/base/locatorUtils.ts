@@ -26,7 +26,7 @@ export function getQueryFilter(query: PythonLocatorQuery): (env: PythonEnvInfo) 
         if (kinds === undefined) {
             return true;
         }
-        return kinds.includes(env.kind);
+        return kinds.includes(env.kind[0]);
     }
     function checkSearchLocation(env: PythonEnvInfo): boolean {
         if (env.searchLocation === undefined) {

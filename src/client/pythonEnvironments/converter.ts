@@ -60,7 +60,7 @@ function convertDetailsAPI(proposed: ProposedDetailsAPI): InternalDetailsAPI {
             return undefined;
         }
         const envInfo = buildEnvInfo({
-            kind: convertKind(details.environment?.source[0] ?? PythonEnvKind.Unknown),
+            kind: details.environment?.source.map((k) => convertKind(k)),
             version: details.version,
             executable: details.executable.path,
             arch: details.executable.bitness,
@@ -165,11 +165,11 @@ export class ConvertLocator implements ILocator<BasicEnvInfo> {
     }
 
     private convertToBasicEnv(env: EnvInfo): BasicEnvInfo {
-        // TODO: Support multiple kinds
+        const sources = Array.isArray(env.envSource) ? env.envSource : [env.envSource];
         return {
             executablePath: env.executablePath,
             envPath: env.envPath,
-            kind: convertKind(env.envSources[0]),
+            kind: sources.map((s) => convertKind(s)),
             extensionId: this.metadata.extensionId,
         };
     }

@@ -18,6 +18,7 @@ import {
     IWorkspaceLocatorFactory,
     ILocatorRegister,
     ILocatorFactory,
+    InternalEnvironmentProviderMetadata,
 } from '../locator';
 import { combineIterators, Locators } from '../locators';
 import { LazyResourceBasedLocator } from './common/resourceBasedLocator';
@@ -51,11 +52,11 @@ export class ExtensionLocators extends Locators<BasicEnvInfo> implements ILocato
         return combineIterators(iterators);
     }
 
-    public addNewLocator(locatorFactory: ILocatorFactory): void {
+    public addNewLocator(locatorFactory: ILocatorFactory, metadata: InternalEnvironmentProviderMetadata): void {
         if (IsNonWorkspaceLocatorFactory(locatorFactory)) {
-            this.nonWorkspace = [...this.nonWorkspace, new ConvertLocator(locatorFactory())];
+            this.nonWorkspace = [...this.nonWorkspace, new ConvertLocator(locatorFactory(), metadata)];
         } else {
-            this.workspace.addNewLocator(locatorFactory);
+            this.workspace.addNewLocator(locatorFactory, metadata);
         }
     }
 }
@@ -158,11 +159,14 @@ export class WorkspaceLocators extends LazyResourceBasedLocator<BasicEnvInfo> {
         );
     }
 
-    public addNewLocator(locatorFactory: IWorkspaceLocatorFactory): void {
+    public addNewLocator(
+        locatorFactory: IWorkspaceLocatorFactory,
+        metadata: InternalEnvironmentProviderMetadata,
+    ): void {
         Object.keys(this.roots).forEach((key) => {
             const root = this.roots[key];
             const newLocator = locatorFactory(root.fsPath);
-            const convertedLocator: ILocator<BasicEnvInfo> = new ConvertLocator(newLocator);
+            const convertedLocator: ILocator<BasicEnvInfo> = new ConvertLocator(newLocator, metadata);
             const [locators] = this.locators[key];
             locators.addLocator(convertedLocator);
         });

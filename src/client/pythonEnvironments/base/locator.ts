@@ -99,7 +99,7 @@ export interface ILocatorAPI {
 }
 
 export type EnvInfo = BaseEnvInfo & {
-    envSources: EnvSource[];
+    envSource: EnvSource[] | EnvSource;
 };
 
 export type BaseEnvInfo = {
