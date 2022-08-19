@@ -106,7 +106,7 @@ export enum PythonEnvSource {
  */
 type PythonEnvBaseInfo = {
     id?: string;
-    kind: PythonEnvKind;
+    kind: PythonEnvKind[];
     executable: PythonExecutableInfo;
     // One of (name, location) must be non-empty.
     name: string;

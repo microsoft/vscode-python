@@ -102,7 +102,7 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
         env: PythonEnvInfo,
         priority?: EnvironmentInfoServiceQueuePriority,
     ): Promise<InterpreterInformation | undefined> {
-        if (env.kind === PythonEnvKind.Conda && env.executable.filename === 'python') {
+        if (env.kind.includes(PythonEnvKind.Conda) && env.executable.filename === 'python') {
             const emptyInterpreterInfo: InterpreterInformation = {
                 arch: Architecture.Unknown,
                 executable: {
@@ -131,7 +131,8 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
         if (r === undefined) {
             // Even though env kind is not conda, it can still be a conda environment
             // as complete env info may not be available at this time.
-            const isCondaEnv = env.kind === PythonEnvKind.Conda || (await isCondaEnvironment(env.executable.filename));
+            const isCondaEnv =
+                env.kind.includes(PythonEnvKind.Conda) || (await isCondaEnvironment(env.executable.filename));
             if (isCondaEnv) {
                 traceInfo(
                     `Validating ${env.executable.filename} normally failed with error, falling back to using conda run: (${reason})`,

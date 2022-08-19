@@ -18,10 +18,6 @@ import {
 
 export interface EnvironmentDetailsOptions {
     useCache: boolean;
-    /**
-     * Return details provided by the specific extension, throws error if provider not found.
-     */
-    extensionId?: ExtensionID;
 }
 
 export interface EnvironmentDetails {
@@ -74,7 +70,7 @@ export interface IResolverAPI {
      */
     readonly envSource: EnvSource | undefined;
     /**
-     * Returns true if provided environment is recognized by the provider.
+     * Returns true if provided environment comes from the specified env source.
      */
     canIdentifyEnvironment: (path: UniquePathType) => Promise<boolean>;
     /**
@@ -301,11 +297,11 @@ export type PythonLocatorQuery = BasicPythonLocatorQuery & {
 type QueryForEvent<E> = E extends PythonEnvsChangedEvent ? PythonLocatorQuery : BasicPythonLocatorQuery;
 
 export type BasicEnvInfo = {
-    kind: PythonEnvKind;
+    kind: PythonEnvKind[];
     executablePath: string;
     source?: PythonEnvSource[];
     envPath?: string;
-    extensionId?: string;
+    extensionId?: ExtensionID;
 };
 
 /**

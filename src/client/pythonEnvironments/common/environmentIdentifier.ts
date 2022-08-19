@@ -3,7 +3,7 @@
 
 import { traceWarn } from '../../logging';
 import { PythonEnvKind } from '../base/info';
-import { getPrioritizedEnvKinds } from '../base/info/envKind';
+import { getPrioritizedEnvKinds, sortExtensionSource } from '../base/info/envKind';
 import { isCondaEnvironment } from './environmentManagers/conda';
 import { isGloballyInstalledEnv } from './environmentManagers/globalInstalledEnvs';
 import { isPipenvEnvironment } from './environmentManagers/pipenv';
@@ -61,7 +61,7 @@ export async function identifyEnvironment(path: string): Promise<PythonEnvKind> 
         if (value) {
             let identifier: IdentifierType;
             if (Array.isArray(value)) {
-                identifier = value[0].identifier;
+                identifier = value.sort((a, b) => sortExtensionSource(a.extensionId, b.extensionId))[0].identifier;
             } else {
                 identifier = value;
             }

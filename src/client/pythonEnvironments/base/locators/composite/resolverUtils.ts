@@ -26,6 +26,7 @@ import { getRegistryInterpreters, getRegistryInterpretersSync } from '../../../c
 import { BasicEnvInfo } from '../../locator';
 import { parseVersionFromExecutable } from '../../info/executable';
 import { traceError, traceWarn } from '../../../../logging';
+import { sortExtensionSource } from '../../info/envKind';
 
 type ResolverType = (_: BasicEnvInfo, useCache?: boolean) => Promise<PythonEnvInfo | undefined>;
 type ResolversType = { resolver: ResolverType; extensionId?: string }[];
@@ -62,20 +63,18 @@ export function registerResolver(
  * executable and returns it. Notice `undefined` is never returned, so environment
  * returned could still be invalid.
  */
-export async function resolveBasicEnv(
-    env: BasicEnvInfo,
-    useCache = false,
-    extensionId?: string,
-): Promise<PythonEnvInfo | undefined> {
+export async function resolveBasicEnv(env: BasicEnvInfo, useCache = false): Promise<PythonEnvInfo | undefined> {
     const { kind, source } = env;
-    const value = resolvers.get(kind);
+    const value = resolvers.get(kind[0]);
     if (!value) {
-        traceError('No resolver found for kind:', kind);
+        traceError('No resolver found for kind:', kind[0]);
         return undefined;
     }
     let resolverForKind: ResolverType;
     if (Array.isArray(value)) {
-        const resolver = extensionId ? value.find((v) => v.extensionId === extensionId)?.resolver : value[0].resolver;
+        const resolver = env.extensionId
+            ? value.find((v) => v.extensionId === env.extensionId)?.resolver
+            : value.sort((a, b) => sortExtensionSource(a.extensionId, b.extensionId))[0].resolver;
         if (!resolver) {
             return undefined;
         }
@@ -136,7 +135,7 @@ async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
         } catch (ex) {
             version = UNKNOWN_PYTHON_VERSION;
         }
-        env.kind = env.kind === PythonEnvKind.Unknown ? PythonEnvKind.OtherGlobal : env.kind;
+        env.kind = [env.kind[0] === PythonEnvKind.Unknown ? PythonEnvKind.OtherGlobal : env.kind[0]];
         env.version = comparePythonVersionSpecificity(version, env.version) > 0 ? version : env.version;
         env.distro.defaultDisplayName = data.companyDisplayName;
         env.arch = data.bitnessStr === '32bit' ? Architecture.x86 : Architecture.x64;
@@ -185,7 +184,7 @@ async function resolveCondaEnv(env: BasicEnvInfo, useCache?: boolean): Promise<P
     const envs = (await conda?.getEnvList(useCache)) ?? [];
     for (const { name, prefix } of envs) {
         let executable = await getInterpreterPathFromDir(prefix);
-        const currEnv: BasicEnvInfo = { executablePath: executable ?? '', kind: PythonEnvKind.Conda, envPath: prefix };
+        const currEnv: BasicEnvInfo = { executablePath: executable ?? '', kind: env.kind, envPath: prefix };
         if (areSameEnv(env, currEnv)) {
             if (env.executablePath.length > 0) {
                 executable = env.executablePath;
@@ -194,7 +193,7 @@ async function resolveCondaEnv(env: BasicEnvInfo, useCache?: boolean): Promise<P
             }
             const info = buildEnvInfo({
                 executable,
-                kind: PythonEnvKind.Conda,
+                kind: env.kind,
                 org: AnacondaCompanyName,
                 location: prefix,
                 source: [],
@@ -212,7 +211,7 @@ async function resolveCondaEnv(env: BasicEnvInfo, useCache?: boolean): Promise<P
         } info' command`,
     );
     // Environment could still be valid, resolve as a simple env.
-    env.kind = PythonEnvKind.Unknown;
+    env.kind.shift();
     return resolveSimpleEnv(env);
 }
 
@@ -226,7 +225,7 @@ async function resolvePyenvEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     const versionStrings = parsePyenvVersion(name);
 
     const envInfo = buildEnvInfo({
-        kind: PythonEnvKind.Pyenv,
+        kind: env.kind,
         executable: executablePath,
         source: [],
         location,
@@ -272,7 +271,7 @@ async function isBaseCondaPyenvEnvironment(executablePath: string) {
 async function resolveWindowsStoreEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     const { executablePath } = env;
     return buildEnvInfo({
-        kind: PythonEnvKind.WindowsStore,
+        kind: env.kind,
         executable: executablePath,
         version: parsePythonVersionFromPath(executablePath),
         org: 'Microsoft',

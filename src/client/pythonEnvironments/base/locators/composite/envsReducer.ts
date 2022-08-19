@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { cloneDeep, isEqual, uniq } from 'lodash';
+import { cloneDeep, isEqual, union } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../logging';
 import { PythonEnvKind } from '../../info';
 import { areSameEnv } from '../../info/env';
-import { getPrioritizedEnvKinds } from '../../info/envKind';
+import { sortExtensionSource, sortKindFunction } from '../../info/envKind';
 import {
     BasicEnvInfo,
     ILocator,
@@ -136,7 +136,8 @@ function checkIfFinishedAndNotify(
 function resolveEnvCollision(oldEnv: BasicEnvInfo, newEnv: BasicEnvInfo): BasicEnvInfo {
     const [env] = sortEnvInfoByPriority(oldEnv, newEnv);
     const merged = cloneDeep(env);
-    merged.source = uniq((oldEnv.source ?? []).concat(newEnv.source ?? []));
+    merged.source = union(oldEnv.source ?? [], newEnv.source ?? []);
+    merged.kind = union(merged.kind, oldEnv.kind, newEnv.kind);
     return merged;
 }
 
@@ -145,10 +146,15 @@ function resolveEnvCollision(oldEnv: BasicEnvInfo, newEnv: BasicEnvInfo): BasicE
  * match the priority in the environment identifier.
  */
 function sortEnvInfoByPriority(...envs: BasicEnvInfo[]): BasicEnvInfo[] {
-    // TODO: When we consolidate the PythonEnvKind and EnvironmentType we should have
-    // one location where we define priority.
-    const envKindByPriority: PythonEnvKind[] = getPrioritizedEnvKinds();
-    return envs.sort(
-        (a: BasicEnvInfo, b: BasicEnvInfo) => envKindByPriority.indexOf(a.kind) - envKindByPriority.indexOf(b.kind),
-    );
+    return envs.sort((a: BasicEnvInfo, b: BasicEnvInfo) => {
+        const kindDiff = sortKindFunction(getTopKind(a.kind), getTopKind(b.kind));
+        if (kindDiff !== 0) {
+            return kindDiff;
+        }
+        return sortExtensionSource(a.extensionId, b.extensionId);
+    });
+}
+
+function getTopKind(kinds: PythonEnvKind[]) {
+    return kinds.sort(sortKindFunction)[0];
 }

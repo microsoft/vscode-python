@@ -66,7 +66,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
         const [executablePath, envPath] = await getExecutablePathAndEnvPath(path);
         path = executablePath.length ? executablePath : envPath;
         const kind = await identifyEnvironment(path);
-        const environment = await resolveBasicEnv({ kind, executablePath, envPath });
+        const environment = await resolveBasicEnv({ kind: [kind], executablePath, envPath });
         if (!environment) {
             return undefined;
         }

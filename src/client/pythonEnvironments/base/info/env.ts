@@ -28,7 +28,7 @@ import { BasicEnvInfo } from '../locator';
  * @param init - if provided, these values are applied to the new object
  */
 export function buildEnvInfo(init?: {
-    kind?: PythonEnvKind;
+    kind?: PythonEnvKind[];
     executable?: string;
     name?: string;
     location?: string;
@@ -44,7 +44,7 @@ export function buildEnvInfo(init?: {
     const env: PythonEnvInfo = {
         name: init?.name ?? '',
         location: '',
-        kind: PythonEnvKind.Unknown,
+        kind: [PythonEnvKind.Unknown],
         executable: {
             filename: '',
             sysPrefix: init?.sysPrefix ?? '',
@@ -83,7 +83,7 @@ export function buildEnvInfo(init?: {
 export function copyEnvInfo(
     env: PythonEnvInfo,
     updates?: {
-        kind?: PythonEnvKind;
+        kind?: PythonEnvKind[];
     },
 ): PythonEnvInfo {
     // We don't care whether or not extra/hidden properties
@@ -98,7 +98,7 @@ export function copyEnvInfo(
 function updateEnv(
     env: PythonEnvInfo,
     updates: {
-        kind?: PythonEnvKind;
+        kind?: PythonEnvKind[];
         executable?: string;
         location?: string;
         version?: PythonVersion;
@@ -135,8 +135,8 @@ export function setEnvDisplayString(env: PythonEnvInfo): void {
 
 function buildEnvDisplayString(env: PythonEnvInfo, getAllDetails = false): string {
     // main parts
-    const shouldDisplayKind = getAllDetails || env.searchLocation || globallyInstalledEnvKinds.includes(env.kind);
-    const shouldDisplayArch = !virtualEnvKinds.includes(env.kind);
+    const shouldDisplayKind = getAllDetails || env.searchLocation || globallyInstalledEnvKinds.includes(env.kind[0]);
+    const shouldDisplayArch = !virtualEnvKinds.includes(env.kind[0]);
     const displayNameParts: string[] = ['Python'];
     if (env.version && !isVersionEmpty(env.version)) {
         displayNameParts.push(getVersionDisplayString(env.version));
@@ -156,7 +156,7 @@ function buildEnvDisplayString(env: PythonEnvInfo, getAllDetails = false): strin
         envSuffixParts.push(`'${env.name}'`);
     }
     if (shouldDisplayKind) {
-        const kindName = getKindDisplayName(env.kind);
+        const kindName = getKindDisplayName(env.kind[0]);
         if (kindName !== '') {
             envSuffixParts.push(kindName);
         }

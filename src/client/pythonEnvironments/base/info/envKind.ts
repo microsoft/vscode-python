@@ -70,3 +70,27 @@ export function getPrioritizedEnvKinds(): PythonEnvKind[] {
         PythonEnvKind.Unknown,
     ];
 }
+
+const envKindByPriority = getPrioritizedEnvKinds();
+
+export const sortKindFunction = (a: PythonEnvKind, b: PythonEnvKind): number =>
+    envKindByPriority.indexOf(a) - envKindByPriority.indexOf(b);
+
+/**
+ * Sorts which extension id should be preferred for resolving, identification, reducing etc.
+ *
+ * Note `extensionId` property is considered `undefined` if env is discovered by Python extension.
+ */
+export const sortExtensionSource = (extensionId1: string | undefined, extensionId2: string | undefined): number => {
+    // If another extension provides an env, prefer that over what Python extension provides.
+    if (extensionId1) {
+        if (extensionId2) {
+            return sortExtensionSource(extensionId1, extensionId2);
+        }
+        return -1;
+    }
+    if (extensionId2) {
+        return 1;
+    }
+    return 0;
+};
