@@ -130,6 +130,8 @@ export class PythonSettings implements IPythonSettings {
 
     public languageServerIsDefault = true;
 
+    public formatOnType: boolean | undefined = undefined;
+
     protected readonly changed = new EventEmitter<ConfigurationChangeEvent | undefined>();
 
     private static readonly configChanged = new EventEmitter<ConfigurationChangeEvent | undefined>();
@@ -181,8 +183,8 @@ export class PythonSettings implements IPythonSettings {
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const config = workspace.getConfiguration('editor', resource || (null as any));
-            const formatOnType = config ? config.get('formatOnType', false) : false;
-            sendTelemetryEvent(EventName.FORMAT_ON_TYPE, undefined, { enabled: formatOnType });
+            settings.formatOnType = config ? config.get('formatOnType', undefined) : undefined;
+            sendTelemetryEvent(EventName.FORMAT_ON_TYPE, undefined, { enabled: settings.formatOnType ?? false });
         }
 
         return PythonSettings.pythonSettings.get(workspaceFolderKey)!;
