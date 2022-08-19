@@ -27,7 +27,9 @@ import { BasicEnvInfo } from '../../locator';
 import { parseVersionFromExecutable } from '../../info/executable';
 import { traceError, traceWarn } from '../../../../logging';
 
-const resolvers = new Map<PythonEnvKind, (_: BasicEnvInfo, useCache?: boolean) => Promise<PythonEnvInfo | undefined>>();
+type ResolverType = (_: BasicEnvInfo, useCache?: boolean) => Promise<PythonEnvInfo | undefined>;
+type ResolversType = { resolver: ResolverType; extensionId?: string }[];
+const resolvers = new Map<PythonEnvKind, ResolverType | ResolversType>();
 Object.values(PythonEnvKind).forEach((k) => {
     resolvers.set(k, resolveGloballyInstalledEnv);
 });
@@ -41,7 +43,17 @@ resolvers.set(PythonEnvKind.Pyenv, resolvePyenvEnv);
 export function registerResolver(
     kind: PythonEnvKind,
     resolver: (_: BasicEnvInfo, useCache?: boolean) => Promise<PythonEnvInfo | undefined>,
+    extensionId: string,
 ): void {
+    const resolversForKind = resolvers.get(kind);
+    if (!resolversForKind) {
+        resolvers.set(kind, resolver);
+    } else if (Array.isArray(resolversForKind)) {
+        resolversForKind.push({ resolver, extensionId });
+        resolvers.set(kind, resolversForKind);
+    } else {
+        resolvers.set(kind, [{ resolver, extensionId }, { resolver: resolversForKind }]);
+    }
     resolvers.set(kind, resolver);
 }
 
@@ -50,9 +62,27 @@ export function registerResolver(
  * executable and returns it. Notice `undefined` is never returned, so environment
  * returned could still be invalid.
  */
-export async function resolveBasicEnv(env: BasicEnvInfo, useCache = false): Promise<PythonEnvInfo | undefined> {
+export async function resolveBasicEnv(
+    env: BasicEnvInfo,
+    useCache = false,
+    extensionId?: string,
+): Promise<PythonEnvInfo | undefined> {
     const { kind, source } = env;
-    const resolverForKind = resolvers.get(kind)!;
+    const value = resolvers.get(kind);
+    if (!value) {
+        traceError('No resolver found for kind:', kind);
+        return undefined;
+    }
+    let resolverForKind: ResolverType;
+    if (Array.isArray(value)) {
+        const resolver = extensionId ? value.find((v) => v.extensionId === extensionId)?.resolver : value[0].resolver;
+        if (!resolver) {
+            return undefined;
+        }
+        resolverForKind = resolver;
+    } else {
+        resolverForKind = value;
+    }
     const resolvedEnv = await resolverForKind(env, useCache);
     if (!resolvedEnv) {
         return undefined;
