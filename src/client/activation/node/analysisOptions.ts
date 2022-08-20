@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { ConfigurationTarget } from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient';
 import { IWorkspaceService } from '../../common/application/types';
-import { IConfigurationService, IExperimentService } from '../../common/types';
+import { IExperimentService } from '../../common/types';
 
 import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
 import { ILanguageServerOutputChannel } from '../types';
@@ -14,7 +15,6 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
     constructor(
         lsOutputChannel: ILanguageServerOutputChannel,
         workspace: IWorkspaceService,
-        private readonly configurationService: IConfigurationService,
         private readonly experimentService: IExperimentService,
         private readonly lspNotebooksExperiment: LspNotebooksExperiment,
     ) {
@@ -23,19 +23,39 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
 
     // eslint-disable-next-line class-methods-use-this
     protected async getInitializationOptions(): Promise<LanguageClientOptions> {
-        const inExperiment = await this.experimentService.inExperiment('pylanceAutoIndent');
-        const pythonSettings = this.configurationService.getSettings();
-        if (pythonSettings.formatOnType === undefined) {
-            this.configurationService.updateSectionSetting('editor', 'formatOnType', true);
-        }
-        const enableAutoIndent = inExperiment && pythonSettings.formatOnType !== false;
-
         return ({
             experimentationSupport: true,
             trustedWorkspaceSupport: true,
             lspNotebooksSupport: this.lspNotebooksExperiment.isInNotebooksExperiment(),
             lspInteractiveWindowSupport: this.lspNotebooksExperiment.isInNotebooksExperimentWithInteractiveWindowSupport(),
-            autoIndentSupport: enableAutoIndent,
+            autoIndentSupport: await this.isAutoIndentEnabled(),
         } as unknown) as LanguageClientOptions;
+    }
+
+    private async isAutoIndentEnabled() {
+        const editorConfig = this.workspace.getConfiguration('editor', undefined, /* languageSpecific */ true);
+        const formatOnTypeSetting = 'formatOnType';
+        const formatOnTypeEffectiveValue = editorConfig.get(formatOnTypeSetting);
+        const formatOnTypeInspect = editorConfig.inspect(formatOnTypeSetting);
+
+        let formatOnTypeSetForPython = false;
+        if (formatOnTypeInspect?.languageIds) {
+            formatOnTypeSetForPython = formatOnTypeInspect.languageIds.indexOf('python') >= 0;
+        }
+
+        let enableAutoIndent = formatOnTypeEffectiveValue;
+
+        const inExperiment = await this.experimentService.inExperiment('pylanceAutoIndent');
+        if (inExperiment && !formatOnTypeEffectiveValue && !formatOnTypeSetForPython) {
+            editorConfig.update(
+                formatOnTypeSetting,
+                /* value */ true,
+                ConfigurationTarget.Global,
+                /* overrideInLanguage */ true,
+            );
+            enableAutoIndent = true;
+        }
+
+        return enableAutoIndent;
     }
 }

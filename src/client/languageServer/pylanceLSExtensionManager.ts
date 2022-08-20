@@ -58,7 +58,6 @@ export class PylanceLSExtensionManager extends LanguageServerCapabilities
         this.analysisOptions = new NodeLanguageServerAnalysisOptions(
             outputChannel,
             workspaceService,
-            configurationService,
             experimentService,
             lspNotebooksExperiment,
         );

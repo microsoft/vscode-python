@@ -10,7 +10,7 @@ import { LspNotebooksExperiment } from '../../../client/activation/node/lspNoteb
 import { ILanguageServerOutputChannel } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { PYTHON, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { IConfigurationService, IExperimentService, IOutputChannel } from '../../../client/common/types';
+import { IExperimentService, IOutputChannel } from '../../../client/common/types';
 
 suite('Pylance Language Server - Analysis Options', () => {
     class TestClass extends NodeLanguageServerAnalysisOptions {
@@ -32,7 +32,6 @@ suite('Pylance Language Server - Analysis Options', () => {
     let outputChannel: IOutputChannel;
     let lsOutputChannel: typemoq.IMock<ILanguageServerOutputChannel>;
     let workspace: typemoq.IMock<IWorkspaceService>;
-    let configurationService: IConfigurationService;
     let experimentService: IExperimentService;
     let lspNotebooksExperiment: typemoq.IMock<LspNotebooksExperiment>;
 
@@ -42,14 +41,12 @@ suite('Pylance Language Server - Analysis Options', () => {
         workspace.setup((w) => w.isVirtualWorkspace).returns(() => false);
         lsOutputChannel = typemoq.Mock.ofType<ILanguageServerOutputChannel>();
         lsOutputChannel.setup((l) => l.channel).returns(() => outputChannel);
-        configurationService = typemoq.Mock.ofType<IConfigurationService>().object;
         experimentService = typemoq.Mock.ofType<IExperimentService>().object;
         lspNotebooksExperiment = typemoq.Mock.ofType<LspNotebooksExperiment>();
         lspNotebooksExperiment.setup((l) => l.isInNotebooksExperiment()).returns(() => false);
         analysisOptions = new TestClass(
             lsOutputChannel.object,
             workspace.object,
-            configurationService,
             experimentService,
             lspNotebooksExperiment.object,
         );

@@ -66,7 +66,7 @@ export class ConfigurationService implements IConfigurationService {
         ) {
             return;
         }
-        await configSection.update(setting, value, configTarget, /* overrideInLanguage */ true);
+        await configSection.update(setting, value, configTarget);
         await this.verifySetting(configSection, configTarget, setting, value);
     }
 
