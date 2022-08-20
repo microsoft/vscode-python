@@ -54,6 +54,13 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
                 /* overrideInLanguage */ true,
             );
             enableAutoIndent = true;
+        } else if (!inExperiment) {
+            editorConfig.update(
+                formatOnTypeSetting,
+                /* value */ undefined,
+                ConfigurationTarget.Global,
+                /* overrideInLanguage */ true,
+            );
         }
 
         return enableAutoIndent;
