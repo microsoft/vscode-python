@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { assert, expect } from 'chai';
 import * as typemoq from 'typemoq';
-import { WorkspaceFolder } from 'vscode';
+import { WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { DocumentFilter } from 'vscode-languageclient/node';
 
 import { NodeLanguageServerAnalysisOptions } from '../../../client/activation/node/analysisOptions';
@@ -39,6 +39,9 @@ suite('Pylance Language Server - Analysis Options', () => {
         outputChannel = typemoq.Mock.ofType<IOutputChannel>().object;
         workspace = typemoq.Mock.ofType<IWorkspaceService>();
         workspace.setup((w) => w.isVirtualWorkspace).returns(() => false);
+        const workspaceConfig = typemoq.Mock.ofType<WorkspaceConfiguration>();
+        workspace.setup((w) => w.getConfiguration('editor', undefined, true)).returns(() => workspaceConfig.object);
+        workspaceConfig.setup((w) => w.get('formatOnType')).returns(() => true);
         lsOutputChannel = typemoq.Mock.ofType<ILanguageServerOutputChannel>();
         lsOutputChannel.setup((l) => l.channel).returns(() => outputChannel);
         experimentService = typemoq.Mock.ofType<IExperimentService>().object;
