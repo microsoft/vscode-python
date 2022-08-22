@@ -10,6 +10,9 @@ import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
 import { ILanguageServerOutputChannel } from '../types';
 import { LspNotebooksExperiment } from './lspNotebooksExperiment';
 
+const editorConfigSection = 'editor';
+const formatOnTypeConfigSetting = 'formatOnType';
+
 export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsBase {
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
@@ -33,36 +36,38 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
     }
 
     private async isAutoIndentEnabled() {
-        const editorConfig = this.workspace.getConfiguration('editor', undefined, /* languageSpecific */ true);
-        const formatOnTypeSetting = 'formatOnType';
-        const formatOnTypeEffectiveValue = editorConfig.get(formatOnTypeSetting);
-        const formatOnTypeInspect = editorConfig.inspect(formatOnTypeSetting);
+        const editorConfig = this.getPythonSpecificEditorSection();
+        const formatOnTypeEffectiveValue = editorConfig.get(formatOnTypeConfigSetting);
+        const formatOnTypeInspect = editorConfig.inspect(formatOnTypeConfigSetting);
 
         let formatOnTypeSetForPython = false;
         if (formatOnTypeInspect?.languageIds) {
             formatOnTypeSetForPython = formatOnTypeInspect.languageIds.indexOf('python') >= 0;
         }
 
-        let enableAutoIndent = formatOnTypeEffectiveValue;
+        if (formatOnTypeSetForPython && !formatOnTypeEffectiveValue) {
+            // User has explicitly disabled auto-indent
+            return false;
+        }
 
         const inExperiment = await this.experimentService.inExperiment('pylanceAutoIndent');
-        if (inExperiment && !formatOnTypeEffectiveValue && !formatOnTypeSetForPython) {
+
+        let enableAutoIndent = formatOnTypeEffectiveValue;
+        if (inExperiment !== formatOnTypeSetForPython) {
             await editorConfig.update(
-                formatOnTypeSetting,
-                /* value */ true,
+                formatOnTypeConfigSetting,
+                inExperiment ? true : undefined,
                 ConfigurationTarget.Global,
                 /* overrideInLanguage */ true,
             );
-            enableAutoIndent = true;
-        } else if (!inExperiment) {
-            await editorConfig.update(
-                formatOnTypeSetting,
-                /* value */ undefined,
-                ConfigurationTarget.Global,
-                /* overrideInLanguage */ true,
-            );
+
+            enableAutoIndent = this.getPythonSpecificEditorSection().get(formatOnTypeConfigSetting);
         }
 
         return enableAutoIndent;
+    }
+
+    private getPythonSpecificEditorSection() {
+        return this.workspace.getConfiguration(editorConfigSection, undefined, /* languageSpecific */ true);
     }
 }
