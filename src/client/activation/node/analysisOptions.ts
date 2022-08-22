@@ -47,7 +47,7 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
 
         const inExperiment = await this.experimentService.inExperiment('pylanceAutoIndent');
         if (inExperiment && !formatOnTypeEffectiveValue && !formatOnTypeSetForPython) {
-            editorConfig.update(
+            await editorConfig.update(
                 formatOnTypeSetting,
                 /* value */ true,
                 ConfigurationTarget.Global,
@@ -55,7 +55,7 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
             );
             enableAutoIndent = true;
         } else if (!inExperiment) {
-            editorConfig.update(
+            await editorConfig.update(
                 formatOnTypeSetting,
                 /* value */ undefined,
                 ConfigurationTarget.Global,
