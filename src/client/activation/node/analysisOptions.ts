@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationTarget, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationTarget, extensions, WorkspaceConfiguration } from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient';
+import * as semver from 'semver';
 import { IWorkspaceService } from '../../common/application/types';
+import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { IExperimentService } from '../../common/types';
 
 import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
@@ -41,7 +43,7 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         const formatOnTypeInspect = editorConfig.inspect(formatOnTypeConfigSetting);
         const formatOnTypeSetForPython = formatOnTypeInspect?.globalLanguageValue !== undefined;
 
-        const inExperiment = await this.experimentService.inExperiment('pylanceAutoIndent');
+        const inExperiment = await this.isInAutoIndentExperiment();
 
         if (inExperiment !== formatOnTypeSetForPython) {
             if (inExperiment) {
@@ -54,6 +56,15 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         }
 
         return inExperiment && formatOnTypeEffectiveValue;
+    }
+
+    private async isInAutoIndentExperiment(): Promise<boolean> {
+        if (await this.experimentService.inExperiment('pylanceAutoIndent')) {
+            return true;
+        }
+
+        const pylanceVersion = extensions.getExtension(PYLANCE_EXTENSION_ID)?.packageJSON.version;
+        return pylanceVersion && semver.prerelease(pylanceVersion)?.includes('dev');
     }
 
     private getPythonSpecificEditorSection() {
