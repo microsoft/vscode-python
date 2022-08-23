@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationTarget } from 'vscode';
+import { ConfigurationTarget, WorkspaceConfiguration } from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient';
 import { IWorkspaceService } from '../../common/application/types';
 import { IExperimentService } from '../../common/types';
@@ -41,20 +41,14 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         const formatOnTypeInspect = editorConfig.inspect(formatOnTypeConfigSetting);
         const formatOnTypeSetForPython = formatOnTypeInspect?.globalLanguageValue !== undefined;
 
-        if (formatOnTypeInspect?.globalLanguageValue === false) {
-            // User has explicitly disabled auto-indent
-            return false;
-        }
-
         const inExperiment = await this.experimentService.inExperiment('pylanceAutoIndent');
 
         if (inExperiment !== formatOnTypeSetForPython) {
-            await editorConfig.update(
-                formatOnTypeConfigSetting,
-                inExperiment ? true : undefined,
-                ConfigurationTarget.Global,
-                /* overrideInLanguage */ true,
-            );
+            if (inExperiment) {
+                await NodeLanguageServerAnalysisOptions.setPythonSpecificFormatOnType(editorConfig, true);
+            } else if (formatOnTypeInspect?.globalLanguageValue !== false) {
+                await NodeLanguageServerAnalysisOptions.setPythonSpecificFormatOnType(editorConfig, undefined);
+            }
 
             formatOnTypeEffectiveValue = this.getPythonSpecificEditorSection().get(formatOnTypeConfigSetting);
         }
@@ -64,5 +58,17 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
 
     private getPythonSpecificEditorSection() {
         return this.workspace.getConfiguration(editorConfigSection, undefined, /* languageSpecific */ true);
+    }
+
+    private static async setPythonSpecificFormatOnType(
+        editorConfig: WorkspaceConfiguration,
+        value: boolean | undefined,
+    ) {
+        await editorConfig.update(
+            formatOnTypeConfigSetting,
+            value,
+            ConfigurationTarget.Global,
+            /* overrideInLanguage */ true,
+        );
     }
 }
