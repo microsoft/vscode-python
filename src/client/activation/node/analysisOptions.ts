@@ -41,6 +41,11 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         const formatOnTypeInspect = editorConfig.inspect(formatOnTypeConfigSetting);
         const formatOnTypeSetForPython = formatOnTypeInspect?.globalLanguageValue !== undefined;
 
+        if (formatOnTypeInspect?.globalLanguageValue === false) {
+            // User has explicitly disabled auto-indent
+            return false;
+        }
+
         const inExperiment = await this.experimentService.inExperiment('pylanceAutoIndent');
 
         if (inExperiment !== formatOnTypeSetForPython) {
