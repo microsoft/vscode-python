@@ -37,22 +37,12 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
 
     private async isAutoIndentEnabled() {
         const editorConfig = this.getPythonSpecificEditorSection();
-        const formatOnTypeEffectiveValue = editorConfig.get(formatOnTypeConfigSetting);
+        let formatOnTypeEffectiveValue = editorConfig.get(formatOnTypeConfigSetting);
         const formatOnTypeInspect = editorConfig.inspect(formatOnTypeConfigSetting);
-
-        let formatOnTypeSetForPython = false;
-        if (formatOnTypeInspect?.languageIds) {
-            formatOnTypeSetForPython = formatOnTypeInspect.languageIds.indexOf('python') >= 0;
-        }
-
-        if (formatOnTypeSetForPython && !formatOnTypeEffectiveValue) {
-            // User has explicitly disabled auto-indent
-            return false;
-        }
+        const formatOnTypeSetForPython = formatOnTypeInspect?.globalLanguageValue !== undefined;
 
         const inExperiment = await this.experimentService.inExperiment('pylanceAutoIndent');
 
-        let enableAutoIndent = formatOnTypeEffectiveValue;
         if (inExperiment !== formatOnTypeSetForPython) {
             await editorConfig.update(
                 formatOnTypeConfigSetting,
@@ -61,10 +51,10 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
                 /* overrideInLanguage */ true,
             );
 
-            enableAutoIndent = this.getPythonSpecificEditorSection().get(formatOnTypeConfigSetting);
+            formatOnTypeEffectiveValue = this.getPythonSpecificEditorSection().get(formatOnTypeConfigSetting);
         }
 
-        return enableAutoIndent;
+        return inExperiment && formatOnTypeEffectiveValue;
     }
 
     private getPythonSpecificEditorSection() {
