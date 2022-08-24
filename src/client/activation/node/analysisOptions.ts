@@ -12,8 +12,8 @@ import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
 import { ILanguageServerOutputChannel } from '../types';
 import { LspNotebooksExperiment } from './lspNotebooksExperiment';
 
-const editorConfigSection = 'editor';
-const formatOnTypeConfigSetting = 'formatOnType';
+const EDITOR_CONFIG_SECTION = 'editor';
+const FORMAT_ON_TYPE_CONFIG_SETTING = 'formatOnType';
 
 export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsBase {
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
@@ -39,8 +39,8 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
 
     private async isAutoIndentEnabled() {
         const editorConfig = this.getPythonSpecificEditorSection();
-        let formatOnTypeEffectiveValue = editorConfig.get(formatOnTypeConfigSetting);
-        const formatOnTypeInspect = editorConfig.inspect(formatOnTypeConfigSetting);
+        let formatOnTypeEffectiveValue = editorConfig.get(FORMAT_ON_TYPE_CONFIG_SETTING);
+        const formatOnTypeInspect = editorConfig.inspect(FORMAT_ON_TYPE_CONFIG_SETTING);
         const formatOnTypeSetForPython = formatOnTypeInspect?.globalLanguageValue !== undefined;
 
         const inExperiment = await this.isInAutoIndentExperiment();
@@ -52,7 +52,7 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
                 await NodeLanguageServerAnalysisOptions.setPythonSpecificFormatOnType(editorConfig, undefined);
             }
 
-            formatOnTypeEffectiveValue = this.getPythonSpecificEditorSection().get(formatOnTypeConfigSetting);
+            formatOnTypeEffectiveValue = this.getPythonSpecificEditorSection().get(FORMAT_ON_TYPE_CONFIG_SETTING);
         }
 
         return inExperiment && formatOnTypeEffectiveValue;
@@ -68,7 +68,7 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
     }
 
     private getPythonSpecificEditorSection() {
-        return this.workspace.getConfiguration(editorConfigSection, undefined, /* languageSpecific */ true);
+        return this.workspace.getConfiguration(EDITOR_CONFIG_SECTION, undefined, /* languageSpecific */ true);
     }
 
     private static async setPythonSpecificFormatOnType(
@@ -76,7 +76,7 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         value: boolean | undefined,
     ) {
         await editorConfig.update(
-            formatOnTypeConfigSetting,
+            FORMAT_ON_TYPE_CONFIG_SETTING,
             value,
             ConfigurationTarget.Global,
             /* overrideInLanguage */ true,
