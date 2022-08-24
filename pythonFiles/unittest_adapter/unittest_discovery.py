@@ -17,7 +17,7 @@ sys.path.insert(0, PYTHON_FILES)
 from testing_tools import socket_manager
 
 # If I use from utils then there will be an import error in test_discovery.py.
-from unittestadapter.utils import TestNode, build_test_tree, parse_unittest_args
+from unittest_adapter.utils import TestNode, build_test_tree, parse_unittest_args
 
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
