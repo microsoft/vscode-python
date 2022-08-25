@@ -59,7 +59,7 @@ export class PythonTestServer implements ITestServer, Disposable {
         };
 
         this.server = http.createServer(requestListener);
-        this.server.listen(() => {
+        this.server.listen(undefined, 'localhost', () => {
             this.port = (this.server.address() as net.AddressInfo).port;
         });
     }
