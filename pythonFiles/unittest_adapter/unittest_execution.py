@@ -18,7 +18,7 @@ sys.path.insert(0, PYTHON_FILES)
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
 from testing_tools import socket_manager
 from typing_extensions import NotRequired
-from unittestadapter.utils import parse_unittest_args
+from unittest_adapter.utils import parse_unittest_args
 
 DEFAULT_PORT = "45454"
 

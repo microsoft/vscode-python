@@ -38,9 +38,12 @@ import {
     TestRefreshOptions,
     ITestExecutionAdapter,
 } from './common/types';
-import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
+// TODO: create pytest and add to import
+import { UnittestTestDiscoveryAdapter } from './unittest/unittestDiscoveryAdapter';
+import { UnittestTestExecutionAdapter } from './unittest/unittestExecutionAdapter';
+import { PytestTestDiscoveryAdapter } from './pytest/pytestDiscoveryAdapter';
+import { PytestTestExecutionAdapter } from './pytest/pytestExecutionAdapter';
 import { WorkspaceTestAdapter } from './workspaceTestAdapter';
-import { UnittestTestExecutionAdapter } from './unittest/testExecutionAdapter';
 import { ITestDebugLauncher } from '../common/types';
 
 // Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
@@ -156,14 +159,19 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             let discoveryAdapter: ITestDiscoveryAdapter;
             let executionAdapter: ITestExecutionAdapter;
             let testProvider: TestProvider;
-            if (settings.testing.unittestEnabled) {
+            if (settings.testing.pytestEnabled) {
+                console.log('settings.testing.pytestEnabled = true');
+                discoveryAdapter = new PytestTestDiscoveryAdapter(this.pythonTestServer, { ...this.configSettings }); // what is the ... for
+                executionAdapter = new PytestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
+                testProvider = PYTEST_PROVIDER;
+            } else if (settings.testing.unittestEnabled) {
+                console.log('settings.testing.unittestEnabled = true');
                 discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);
                 executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = UNITTEST_PROVIDER;
             } else {
-                // TODO: PYTEST DISCOVERY ADAPTER
-                // this is a placeholder for now
-                discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, { ...this.configSettings });
+                // this would be an error because neither is enabled?
+                discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);
                 executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = PYTEST_PROVIDER;
             }
@@ -227,27 +235,29 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             if (settings.testing.pytestEnabled) {
                 traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
 
+                // pytest needs to be added in the new design
+
                 // Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
 
                 await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
                 // TODO: Use new test discovery mechanism
-                // traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
-                // const workspace = this.workspaceService.getWorkspaceFolder(uri);
-                // console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
-                // const testAdapter =
-                //     this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                // testAdapter.discoverTests(
-                //     this.testController,
-                //     this.refreshCancellation.token,
-                //     this.testAdapters.size > 1,
-                //     this.workspaceService.workspaceFile?.fsPath,
-                // );
-                // // Ensure we send test telemetry if it gets disabled again
-                // this.sendTestDisabledTelemetry = true;
+                traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
+                const workspace = this.workspaceService.getWorkspaceFolder(uri);
+                console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
+                const testAdapter =
+                    this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                testAdapter.discoverTests(
+                    this.testController,
+                    this.refreshCancellation.token,
+                    this.testAdapters.size > 1,
+                    this.workspaceService.workspaceFile?.fsPath,
+                );
+                // Ensure we send test telemetry if it gets disabled again
+                this.sendTestDisabledTelemetry = true;
                 // comment below 229 to run the new way and uncomment above 212 ~ 227
-                await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+                // await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else {
                 if (this.sendTestDisabledTelemetry) {
                     this.sendTestDisabledTelemetry = false;
@@ -293,6 +303,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             const settings = this.configSettings.getSettings(item.uri);
             if (settings.testing.pytestEnabled) {
                 return this.pytest.resolveChildren(this.testController, item, this.refreshCancellation.token);
+                // ** check resolve children functionality
             }
             if (settings.testing.unittestEnabled) {
                 return this.unittest.resolveChildren(this.testController, item, this.refreshCancellation.token);
@@ -360,9 +371,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     if (testItems.length > 0) {
                         if (settings.testing.pytestEnabled) {
                             sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
+                                // seems like this telemetry is named incorrectly?
                                 tool: 'pytest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
+                            // ** update this to reflect the nwe execution style before
                             return this.pytest.runTests(
                                 {
                                     includes: testItems,
@@ -491,6 +504,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             }),
         );
     }
+
+    // ** not sure about the telemetry
 
     /**
      * Send UNITTEST_DISCOVERY_TRIGGER telemetry event only once per trigger type.
