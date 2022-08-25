@@ -146,6 +146,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     }
 
     public async activate(): Promise<void> {
+        await this.pythonTestServer.serverReady();
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
         workspaces.forEach((workspace) => {
             console.warn(`instantiating test adapters - workspace name: ${workspace.name}`);
