@@ -6,8 +6,8 @@ import * as sinon from 'sinon';
 
 import { TestController, TestItem, Uri } from 'vscode';
 import { IConfigurationService } from '../../../client/common/types';
-import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/testDiscoveryAdapter';
-import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter'; // 7/7
+import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/unittestDiscoveryAdapter';
+import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/unittestExecutionAdapter'; // 7/7
 import { WorkspaceTestAdapter } from '../../../client/testing/testController/workspaceTestAdapter';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
