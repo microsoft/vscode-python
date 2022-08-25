@@ -22,6 +22,4 @@ jobs:
         with:
           node-version: lts/*
 
-      - run: npm i @vscode/telemetry-extractor
-
-      - run: npx "@vscode/telemetry-extrator" -s src/client/telemetry
+      - run: npx --package=@vscode/telemetry-extrator vscode-telemetry-extractor -s src/client/telemetry
