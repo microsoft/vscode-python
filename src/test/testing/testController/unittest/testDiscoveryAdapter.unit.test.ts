@@ -7,7 +7,7 @@ import { Uri } from 'vscode';
 import { IConfigurationService } from '../../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { ITestServer, TestCommandOptions } from '../../../../client/testing/testController/common/types';
-import { UnittestTestDiscoveryAdapter } from '../../../../client/testing/testController/unittest/testDiscoveryAdapter';
+import { UnittestTestDiscoveryAdapter } from '../../../../client/testing/testController/unittest/unittestDiscoveryAdapter';
 
 suite('Unittest test discovery adapter', () => {
     let stubConfigSettings: IConfigurationService;

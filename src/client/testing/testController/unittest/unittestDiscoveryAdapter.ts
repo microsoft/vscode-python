@@ -16,7 +16,7 @@ import {
 } from '../common/types';
 
 /**
- * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.
+ * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
  */
 export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     private deferred: Deferred<DiscoveredTestPayload> | undefined;
