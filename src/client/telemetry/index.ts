@@ -1785,7 +1785,7 @@ export interface IEventNamePropertyMapping {
      * `selection` is one of 'yes', 'no', or 'do not ask again'.
      */
     /* __GDPR__
-       "tensorboard.launch_prompt_selection" : { "owner": "greazer" }
+       "tensorboard.launch_prompt_selection" : { "owner": "donjayamanne" }
      */
 
     [EventName.TENSORBOARD_LAUNCH_PROMPT_SELECTION]: {
@@ -1802,8 +1802,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.session_launch" : {
-          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" },
-          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" }
+          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
        }
      */
     [EventName.TENSORBOARD_SESSION_LAUNCH]: {
@@ -1821,8 +1821,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.session_daemon_startup_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" },
-          "result" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+          "result" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
        }
      */
     [EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION]: {
@@ -1838,7 +1838,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.session_e2e_startup_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
        }
      */
     [EventName.TENSORBOARD_SESSION_E2E_STARTUP_DURATION]: never | undefined;
@@ -1849,7 +1849,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.session_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
        }
      */
     [EventName.TENSORBOARD_SESSION_DURATION]: never | undefined;
@@ -1866,8 +1866,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.entrypoint_shown" : {
-          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" },
-          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" }
+          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
        }
      */
     [EventName.TENSORBOARD_ENTRYPOINT_SHOWN]: {
@@ -1879,7 +1879,7 @@ export interface IEventNamePropertyMapping {
      * dependencies for launching an integrated TensorBoard session.
      */
     /* __GDPR__
-       "tensorboard.session_duration" : { "owner": "greazer" }
+       "tensorboard.session_duration" : { "owner": "donjayamanne" }
      */
     [EventName.TENSORBOARD_INSTALL_PROMPT_SHOWN]: never | undefined;
     /**
@@ -1889,8 +1889,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.install_prompt_selection" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" },
-          "operationtype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "greazer" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+          "operationtype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
        }
      */
     [EventName.TENSORBOARD_INSTALL_PROMPT_SELECTION]: {
@@ -1901,7 +1901,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when we find an active integrated terminal running tensorboard.
      */
     /* __GDPR__
-       "tensorboard_detected_in_integrated_terminal" : { "owner": "greazer" }
+       "tensorboard_detected_in_integrated_terminal" : { "owner": "donjayamanne" }
      */
     [EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL]: never | undefined;
     /**
@@ -1911,10 +1911,10 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "tensorboard.package_install_result" : {
-          "wasprofilerpluginattempted" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "greazer" },
-          "wastensorboardattempted" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "greazer" },
-          "wasprofilerplugininstalled" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "greazer" },
-          "wastensorboardinstalled" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "greazer" }
+          "wasprofilerpluginattempted" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "donjayamanne" },
+          "wastensorboardattempted" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "donjayamanne" },
+          "wasprofilerplugininstalled" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "donjayamanne" },
+          "wastensorboardinstalled" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "donjayamanne" }
        }
      */
 
@@ -1931,7 +1931,7 @@ export interface IEventNamePropertyMapping {
      * `from torch import profiler`.
      */
     /* __GDPR__
-       "tensorboard.torch_profiler_import" : { "owner": "greazer" }
+       "tensorboard.torch_profiler_import" : { "owner": "donjayamanne" }
      */
     [EventName.TENSORBOARD_TORCH_PROFILER_IMPORT]: never | undefined;
     /**
@@ -1940,7 +1940,7 @@ export interface IEventNamePropertyMapping {
      * PyTorch profiler TensorBoard plugin.
      */
     /* __GDPR__
-       "tensorboard_jump_to_source_request" : { "owner": "greazer" }
+       "tensorboard_jump_to_source_request" : { "owner": "donjayamanne" }
      */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_REQUEST]: never | undefined;
     /**
@@ -1950,7 +1950,7 @@ export interface IEventNamePropertyMapping {
      * on the machine currently running TensorBoard.
      */
     /* __GDPR__
-       "tensorboard_jump_to_source_file_not_found" : { "owner": "greazer" }
+       "tensorboard_jump_to_source_file_not_found" : { "owner": "donjayamanne" }
      */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND]: never | undefined;
     /* __GDPR__
