@@ -1,8 +1,8 @@
 name: 'Telemetry'
 on:
   pull_request:
-  paths:
-    - 'src/client/telemetry/*.ts'
+    paths:
+      - 'src/client/telemetry/*.ts'
   push:
     branches-ignore:
       - 'main'
