@@ -12,7 +12,6 @@ import {
 } from '../../../common/process/types';
 import { traceLog } from '../../../logging';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
-import { DEFAULT_TEST_PORT } from './utils';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 
@@ -23,12 +22,10 @@ export class PythonTestServer implements ITestServer, Disposable {
 
     private server: http.Server;
 
-    public port: number;
+    private ready: Promise<void>;
 
     constructor(private executionFactory: IPythonExecutionFactory, private debugLauncher: ITestDebugLauncher) {
         this.uuids = new Map();
-
-        this.port = DEFAULT_TEST_PORT;
 
         const requestListener: http.RequestListener = async (request, response) => {
             const buffers = [];
@@ -59,9 +56,19 @@ export class PythonTestServer implements ITestServer, Disposable {
         };
 
         this.server = http.createServer(requestListener);
-        this.server.listen(() => {
-            this.port = (this.server.address() as net.AddressInfo).port;
+        this.ready = new Promise((resolve, _reject) => {
+            this.server.listen(undefined, 'localhost', () => {
+                resolve();
+            });
         });
+    }
+
+    public serverReady(): Promise<void> {
+        return this.ready;
+    }
+
+    public getPort(): number {
+        return (this.server.address() as net.AddressInfo).port;
     }
 
     public dispose(): void {
@@ -98,7 +105,7 @@ export class PythonTestServer implements ITestServer, Disposable {
             args = [
                 options.command.script,
                 '--port',
-                this.port.toString(),
+                this.getPort().toString(),
                 '--uuid',
                 uuid,
                 '--testids',
@@ -106,7 +113,7 @@ export class PythonTestServer implements ITestServer, Disposable {
             ].concat(options.command.args);
         } else {
             // if not case of execution, go with the normal args
-            args = [options.command.script, '--port', this.port.toString(), '--uuid', uuid].concat(
+            args = [options.command.script, '--port', this.getPort().toString(), '--uuid', uuid].concat(
                 options.command.args,
             );
         }

@@ -142,14 +142,15 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             return this.refreshTestData(undefined, { forceRefresh: true });
         };
 
-        // this.pythonTestServer = new PythonTestServer(this.pythonExecFactory); // old way where debugLauncher did not have to be passed
         this.pythonTestServer = new PythonTestServer(this.pythonExecFactory, this.debugLauncher);
     }
 
     public async activate(): Promise<void> {
+        traceVerbose('Waiting for test server to start...');
+        await this.pythonTestServer.serverReady();
+        traceVerbose('Test server started.');
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
         workspaces.forEach((workspace) => {
-            console.warn(`instantiating test adapters - workspace name: ${workspace.name}`);
             const settings = this.configSettings.getSettings(workspace.uri);
 
             let discoveryAdapter: ITestDiscoveryAdapter;
