@@ -916,12 +916,9 @@
                 },
                 "python.pylanceLspNotebooksEnabled": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "%python.pylanceLspNotebooksEnabled.description%",
-                    "scope": "machine",
-                    "tags": [
-                        "experimental"
-                    ]
+                    "scope": "machine"
                 },
                 "python.sortImports.args": {
                     "default": [],
