@@ -64,7 +64,7 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         }
 
         const pylanceVersion = extensions.getExtension(PYLANCE_EXTENSION_ID)?.packageJSON.version;
-        return pylanceVersion && semver.prerelease(pylanceVersion)?.includes('dev');
+        return pylanceVersion && semver.prerelease(pylanceVersion)?.includes('dev') === true;
     }
 
     private getPythonSpecificEditorSection() {
