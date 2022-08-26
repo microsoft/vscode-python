@@ -63,8 +63,8 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
             return true;
         }
 
-        const pylanceVersion = extensions.getExtension(PYLANCE_EXTENSION_ID)?.packageJSON.version;
-        return pylanceVersion && semver.prerelease(pylanceVersion)?.includes('dev') === true;
+        const pylanceVersion = extensions.getExtension(PYLANCE_EXTENSION_ID)?.packageJSON.version as string;
+        return pylanceVersion !== undefined && semver.prerelease(pylanceVersion)?.includes('dev') === true;
     }
 
     private getPythonSpecificEditorSection() {
