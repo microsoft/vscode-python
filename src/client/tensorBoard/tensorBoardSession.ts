@@ -27,7 +27,7 @@ import * as nls from 'vscode-nls';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';
 import { tensorboardLauncher } from '../common/process/internal/scripts';
-import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../common/process/types';
+import { IPythonExecutionFactory, ObservableExecutionResult } from '../common/process/types';
 import {
     IDisposableRegistry,
     IInstaller,
