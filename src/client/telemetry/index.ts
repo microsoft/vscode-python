@@ -1388,7 +1388,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "language_server_enabled" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.LANGUAGE_SERVER_ENABLED]: {
@@ -1399,7 +1399,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "language_server_ready" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.LANGUAGE_SERVER_READY]: {
@@ -1410,7 +1410,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "language_server_startup" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.LANGUAGE_SERVER_STARTUP]: {
@@ -1421,7 +1421,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "language_server_telemetry" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.LANGUAGE_SERVER_TELEMETRY]: unknown;
@@ -1432,7 +1432,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "language_server_request" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.LANGUAGE_SERVER_REQUEST]: unknown;
@@ -1441,7 +1441,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "jedi_language_server.enabled" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.JEDI_LANGUAGE_SERVER_ENABLED]: {
@@ -1452,7 +1452,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "jedi_language_server.ready" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.JEDI_LANGUAGE_SERVER_READY]: {
@@ -1463,7 +1463,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "jedi_language_server.startup" : {
-          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.JEDI_LANGUAGE_SERVER_STARTUP]: {
@@ -1475,7 +1475,7 @@ export interface IEventNamePropertyMapping {
      * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     /* __GDPR__
-       "jedi_language_server.request" : { "owner": "kimadeline" }
+       "jedi_language_server.request" : { "owner": "karthiknadig" }
      */
     [EventName.JEDI_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
@@ -1483,7 +1483,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "extension_survey_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.EXTENSION_SURVEY_PROMPT]: {
@@ -1524,7 +1524,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
      */
     /* __GDPR__
-       "unittest.configure" : { "owner": "kimadeline" }
+       "unittest.configure" : { "owner": "eleanorjboyd" }
      */
     [EventName.UNITTEST_CONFIGURE]: never | undefined;
     /**
@@ -1532,9 +1532,9 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "unittest.configuring" : {
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "kimadeline" }
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd" }
        }
      */
     [EventName.UNITTEST_CONFIGURING]: {
@@ -1612,7 +1612,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "unittest.discovery.trigger" : {
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
        }
      */
     [EventName.UNITTEST_DISCOVERY_TRIGGER]: {
@@ -1633,7 +1633,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "unittest.discovering" : {
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
        }
      */
     [EventName.UNITTEST_DISCOVERING]: {
@@ -1649,8 +1649,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "unittest.discovery.done" : {
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
        }
      */
     [EventName.UNITTEST_DISCOVERY_DONE]: {
@@ -1671,7 +1671,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when cancelling discovering tests
      */
     /* __GDPR__
-       "unittest.discovery.stop" : { "owner": "kimadeline" }
+       "unittest.discovery.stop" : { "owner": "eleanorjboyd" }
      */
     [EventName.UNITTEST_DISCOVERING_STOP]: never | undefined;
     /**
@@ -1679,8 +1679,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "unittest.run" : {
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" },
-          "debugging" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "kimadeline" }
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "debugging" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
        }
      */
     [EventName.UNITTEST_RUN]: {
@@ -1697,21 +1697,21 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when cancelling running tests
      */
     /* __GDPR__
-       "unittest.run.stop" : { "owner": "kimadeline" }
+       "unittest.run.stop" : { "owner": "eleanorjboyd" }
      */
     [EventName.UNITTEST_RUN_STOP]: never | undefined;
     /**
      * Telemetry event sent when run all failed test command is triggered
      */
     /* __GDPR__
-       "unittest.run.all_failed" : { "owner": "kimadeline" }
+       "unittest.run.all_failed" : { "owner": "eleanorjboyd" }
      */
     [EventName.UNITTEST_RUN_ALL_FAILED]: never | undefined;
     /**
      * Telemetry event sent when testing is disabled for a workspace.
      */
     /* __GDPR__
-       "unittest.disabled" : { "owner": "kimadeline" }
+       "unittest.disabled" : { "owner": "eleanorjboyd" }
      */
     [EventName.UNITTEST_DISABLED]: never | undefined;
     /*

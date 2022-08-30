@@ -31,9 +31,9 @@ export class FlaskLaunchDebugConfigurationProvider implements IDebugConfiguratio
             module: 'flask',
             env: {
                 FLASK_APP: application || 'app.py',
-                FLASK_ENV: 'development',
+                FLASK_DEBUG: '1',
             },
-            args: ['run', '--no-debugger'],
+            args: ['run', '--no-debugger', '--no-reload'],
             jinja: true,
             justMyCode: true,
         };

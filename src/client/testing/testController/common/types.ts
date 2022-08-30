@@ -160,6 +160,7 @@ export type TestCommandOptions = {
 export interface ITestServer {
     readonly onDataReceived: Event<DataReceivedEvent>;
     sendCommand(options: TestCommandOptions): Promise<void>;
+    serverReady(): Promise<void>;
 }
 
 export interface ITestDiscoveryAdapter {

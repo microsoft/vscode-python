@@ -10,6 +10,7 @@ import {
     Middleware,
     ResponseError,
 } from 'vscode-languageclient';
+import { ConfigurationItem } from 'vscode-languageserver-protocol';
 
 import { HiddenFilePrefix } from '../common/constants';
 import { IConfigurationService } from '../common/types';
@@ -96,6 +97,8 @@ export class LanguageClientMiddlewareBase implements Middleware {
                         settingDict._envPYTHONPATH = envPYTHONPATH;
                     }
                 }
+
+                this.configurationHook(item, settings[i] as LSPObject);
             }
 
             return settings;
@@ -106,6 +109,9 @@ export class LanguageClientMiddlewareBase implements Middleware {
     protected async getPythonPathOverride(_uri: Uri | undefined): Promise<string | undefined> {
         return undefined;
     }
+
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-empty-function
+    protected configurationHook(_item: ConfigurationItem, _settings: LSPObject): void {}
 
     private get connected(): Promise<boolean> {
         return this.connectedPromise.promise;

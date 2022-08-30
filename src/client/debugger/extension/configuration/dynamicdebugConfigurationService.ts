@@ -54,9 +54,9 @@ export class DynamicPythonDebugConfigurationService implements IDynamicDebugConf
                 module: 'flask',
                 env: {
                     FLASK_APP: path.relative(folder.uri.fsPath, flaskPath),
-                    FLASK_ENV: 'development',
+                    FLASK_DEBUG: '1',
                 },
-                args: ['run', '--no-debugger'],
+                args: ['run', '--no-debugger', '--no-reload'],
                 jinja: true,
                 justMyCode: true,
             });
