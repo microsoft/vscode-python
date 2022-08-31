@@ -44,11 +44,11 @@ export interface IProposedExtensionAPI {
         locator: {
             /**
              * Returns paths to environments that uniquely identifies an environment found by the extension
-             * at the time of calling. This API will *not* trigger a refresh. If a refresh is going on it
-             * will *not* wait for the refresh to finish. This will return what is known so far. To get
+             * at the time of calling. It returns the values currently in memory. This API will *not* trigger a refresh. If a refresh is going on it
+             * will *not* wait for the refresh to finish.  This will return what is known so far. To get
              * complete list `await` on promise returned by `getRefreshPromise()`.
              */
-            getEnvironmentPaths(): Promise<EnvironmentPath[] | undefined>;
+            getEnvironmentPaths(): EnvironmentPath[] | undefined;
             /**
              * This event is triggered when the known environment list changes, like when a environment
              * is found, existing environment is removed, or some details changed on an environment.
@@ -203,17 +203,29 @@ export interface EnvironmentPath {
     executablePath: string | undefined;
 }
 
-export interface EnvironmentsChangedParams {
-    pathID?: UniquePathType;
-    /**
-     * Types:
-     * * "add": New environment is added.
-     * * "remove": Existing environment in the list is removed.
-     * * "update": New information found about existing environment.
-     * * "clear-all": Remove all of the items in the list. (This is fired when a hard refresh is triggered)
-     */
-    type: 'add' | 'remove' | 'update' | 'clear-all';
-}
+export type EnvironmentsChangedParams =
+    | {
+          pathID: UniquePathType;
+          /**
+           * * "add": New environment is added.
+           * * "remove": Existing environment in the list is removed.
+           * * "update": New information found about existing environment.
+           */
+          type: 'add' | 'remove' | 'update';
+      }
+    | {
+          /**
+           * * "clear-all": Remove all of the items in the list. (This is fired when a hard refresh is triggered)
+           */
+          type: 'clear-all';
+      }
+    | {
+          location: string;
+          /**
+           * * "created": New environment is created in some location.
+           */
+          type: 'created';
+      };
 
 export interface ActiveEnvironmentChangedParams {
     pathID: UniquePathType;
