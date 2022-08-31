@@ -233,9 +233,9 @@ export type EnvironmentsChangedParams =
 export interface ActiveEnvironmentChangedParams {
     pathID: UniquePathType;
     /**
-     * Uri of a file inside a workspace or workspace folder the environment changed for.
+     * Workspace folder the environment changed for.
      */
-    resource?: Resource;
+    resource?: WorkspaceFolder;
 }
 
 export interface RefreshEnvironmentsOptions {
