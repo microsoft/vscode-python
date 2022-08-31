@@ -204,15 +204,14 @@ export interface EnvironmentPath {
 }
 
 export type EnvironmentsChangedParams =
-    | {
-          path: EnvironmentPath;
+    | ({
           /**
            * * "add": New environment is added.
            * * "remove": Existing environment in the list is removed.
            * * "update": New information found about existing environment.
            */
           type: 'add' | 'remove' | 'update';
-      }
+      } & EnvironmentPath)
     | {
           /**
            * * "clear-all": Remove all of the items in the list. (This is fired when a hard refresh is triggered)
@@ -235,7 +234,7 @@ export interface ActiveEnvironmentChangedParams {
     /**
      * Workspace folder the environment changed for.
      */
-    resource?: WorkspaceFolder;
+    resource: WorkspaceFolder | undefined;
 }
 
 export interface RefreshEnvironmentsOptions {
