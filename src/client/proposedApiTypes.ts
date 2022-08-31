@@ -24,23 +24,23 @@ export interface IProposedExtensionAPI {
          * Returns details for the given python executable. Details such as absolute python executable path,
          * version, type (conda, pyenv, etc). Metadata such as `sysPrefix` can be found under
          * metadata field.
-         * @param path : Full path to environment folder or python executable whose details you need.
+         * @param pathID : Full path to environment folder or python executable whose details you need.
          * @param options : [optional]
          *     * useCache : When true, cache is checked first for any data, returns even if there
          *                  is partial data.
          */
         getEnvironmentDetails(
-            path: EnvironmentPath | UniquePathType,
+            pathID: UniquePathType | EnvironmentPath,
             options?: EnvironmentDetailsOptions,
         ): Promise<EnvironmentDetails | undefined>;
         /**
          * Sets the active environment path for the python extension for the resource. Configuration target
          * will always be the workspace folder.
-         * @param path : Full path to environment folder or python executable to set.
+         * @param pathID : Full path to environment folder or python executable to set.
          * @param resource : [optional] Uri of a file ro workspace to scope to a particular workspace
          *                   folder.
          */
-        setActiveEnvironment(path: EnvironmentPath | UniquePathType, resource?: Resource): Promise<void>;
+        setActiveEnvironment(pathID: UniquePathType | EnvironmentPath, resource?: Resource): Promise<void>;
         locator: {
             /**
              * Returns paths to environments that uniquely identifies an environment found by the extension
@@ -137,7 +137,7 @@ export interface EnvironmentDetails {
         | {
               type: EnvType;
               name?: string;
-              path: string;
+              folderPath: string;
               /**
                * Any specific workspace folder this environment is created for.
                * What if that workspace folder is not opened yet? We should still provide a workspace folder so it can be filtered out.
@@ -205,7 +205,7 @@ export interface EnvironmentPath {
 
 export type EnvironmentsChangedParams =
     | {
-          pathID: UniquePathType;
+          path: EnvironmentPath;
           /**
            * * "add": New environment is added.
            * * "remove": Existing environment in the list is removed.
@@ -220,6 +220,9 @@ export type EnvironmentsChangedParams =
           type: 'clear-all';
       }
     | {
+          /**
+           * The location at which the environment got created.
+           */
           location: string;
           /**
            * * "created": New environment is created in some location.
