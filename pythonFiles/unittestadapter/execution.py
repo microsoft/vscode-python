@@ -11,18 +11,14 @@ import unittest
 from types import TracebackType
 from typing import Dict, List, Optional, Tuple, Type, TypeAlias, TypedDict
 
-from typing_extensions import NotRequired
-
-from .discovery import parse_unittest_discovery_args
-
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PYTHON_FILES)
-
-# from testing_tools import socket_manager
-
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
+from testing_tools import socket_manager
+from typing_extensions import NotRequired
+from unittestadapter.utils import parse_unittest_args
 
 DEFAULT_PORT = "45454"
 
@@ -41,15 +37,13 @@ def parse_execution_cli_args(args: List[str]) -> Tuple[int, str | None, List[str
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--port", default=DEFAULT_PORT)
     arg_parser.add_argument("--uuid")
-    arg_parser.add_argument("--testids")
+    arg_parser.add_argument("--testids", nargs="+")
     parsed_args, _ = arg_parser.parse_known_args(args)
 
-    test_ids: List[str] = parsed_args.testids.split(",") if parsed_args.testids else []
-
-    return (int(parsed_args.port), parsed_args.uuid, test_ids)
+    return (int(parsed_args.port), parsed_args.uuid, parsed_args.testids)
 
 
-ErrorType: TypeAlias = (
+ErrorType = (
     Tuple[Type[BaseException], BaseException, TracebackType] | Tuple[None, None, None]
 )
 
@@ -66,6 +60,7 @@ class TestOutcomeEnum(str, enum.Enum):
 
 
 class UnittestTestResult(unittest.TextTestResult):
+
     formatted: Dict[str, Dict[str, str | None]] = dict()
 
     def startTest(self, test: unittest.TestCase):
@@ -152,7 +147,6 @@ TestResultTypeAlias: TypeAlias = Dict[str, Dict[str, str | None]]
 
 class PayloadDict(TypedDict):
     cwd: str
-    uuid: str | None
     status: TestExecutionStatus
     result: NotRequired[TestResultTypeAlias]
     not_found: NotRequired[List[str]]
@@ -167,14 +161,14 @@ class PayloadDict(TypedDict):
 def run_tests(
     start_dir: str,
     test_ids: List[str],
-    pattern: Optional[str],
+    pattern: str,
     top_level_dir: Optional[str],
     uuid: Optional[str],
 ) -> PayloadDict:
     cwd = os.path.abspath(start_dir)
-    status = TestExecutionStatus.success
+    status = TestExecutionStatus.error
     error = None
-    payload: PayloadDict = {"cwd": cwd, "uuid": uuid, "status": status}
+    payload: PayloadDict = {"cwd": cwd, "status": status}
 
     try:
         # If it's a file, split path and file name.
@@ -191,20 +185,17 @@ def run_tests(
             "pattern": pattern,
             "top_level_dir": top_level_dir,
         }
-        suite = loader.discover(**{k: v for k, v in args.items() if v is not None})
+        suite = loader.discover(start_dir, pattern, top_level_dir)
 
         # Run tests.
         runner = unittest.TextTestRunner(resultclass=UnittestTestResult)
-        result: UnittestTestResult = runner.run(suite)  # type: ignore
+        # lets try to tailer our own suite so we can figure out running only the ones we want
+        loader = unittest.TestLoader()
+        tailor: unittest.TestSuite = loader.loadTestsFromNames(test_ids)
+        result: UnittestTestResult = runner.run(tailor)  # type: ignore
 
-        # Filter tests by id.
-        filtered_results = {k: v for k, v in result.formatted.items() if k in test_ids}
-        payload["result"] = filtered_results
+        payload["result"] = result.formatted
 
-        # Add a payload entry with the list of test ids for tests that weren't found.
-        not_found = set(test_ids) - set(filtered_results.keys())
-        if not_found:
-            payload["not_found"] = list(not_found)
     except Exception:
         status = TestExecutionStatus.error
         error = traceback.format_exc()
@@ -214,7 +205,7 @@ def run_tests(
 
     payload["status"] = status
 
-    print(f"payload: \n{json.dumps(payload, indent=4)}")
+    # print(f"payload: \n{json.dumps(payload, indent=4)}")
 
     return payload
 
@@ -224,29 +215,21 @@ if __name__ == "__main__":
     argv = sys.argv[1:]
     index = argv.index("--udiscovery")
 
-    start_dir, pattern, top_level_dir = parse_unittest_discovery_args(argv[index + 1 :])
-
-    # start_path = pathlib.Path.home() / "Documents" / "Sandbox" / "unittest-subtest"
-    # test_ids = [
-    #     "subfolder.test_two.TestClassTwo.test_two_two",
-    #     "test_one.TestClassOne.test_func_one",
-    #     "test_eight.TestClassEight.test_func_eight",
-    # ]
-    # uuid = "abcd"
+    start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
 
     # Perform test execution.
-    port, uuid, test_ids = parse_execution_cli_args(argv[:index])
-    run_tests(start_dir, test_ids, pattern, top_level_dir, uuid)
+    port, uuid, testids = parse_execution_cli_args(argv[:index])
+    payload = run_tests(start_dir, testids, pattern, top_level_dir, uuid)
 
+    # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
+    addr = ("localhost", port)
+    with socket_manager.SocketManager(addr) as s:
+        data = json.dumps(payload)
+        request = f"""POST / HTTP/1.1
+Host: localhost:{port}
+Content-Length: {len(data)}
+Content-Type: application/json
+Request-uuid: {uuid}
 
-#     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
-#     addr = ("localhost", port)
-#     with socket_manager.SocketManager(addr) as s:
-#         data = json.dumps(payload)
-#         request = f"""POST / HTTP/1.1
-# Host: localhost:{port}
-# Content-Length: {len(data)}
-# Content-Type: application/json
-
-# {data}"""
-#         result = s.socket.sendall(request.encode("utf-8"))  # type: ignore
+{data}"""
+        result = s.socket.sendall(request.encode("utf-8"))  # type: ignore

@@ -3,27 +3,34 @@
 
 'use strict';
 
+import { expect } from 'chai';
 import rewiremock from 'rewiremock';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { ICommandManager } from '../../../../client/common/application/types';
+import { ICommandManager, ITerminalManager } from '../../../../client/common/application/types';
 import { Commands } from '../../../../client/common/constants';
-import { ITerminalService, ITerminalServiceFactory } from '../../../../client/common/terminal/types';
+import { ITerminalService } from '../../../../client/common/terminal/types';
 import { IDisposable } from '../../../../client/common/types';
+import { Interpreters } from '../../../../client/common/utils/localize';
 import { InstallPythonViaTerminal } from '../../../../client/interpreter/configuration/interpreterSelector/commands/installPython/installPythonViaTerminal';
 
 suite('Install Python via Terminal', () => {
     let cmdManager: ICommandManager;
-    let terminalServiceFactory: ITerminalServiceFactory;
+    let terminalServiceFactory: ITerminalManager;
     let installPythonCommand: InstallPythonViaTerminal;
     let terminalService: ITerminalService;
+    let message: string | undefined;
     setup(() => {
         rewiremock.enable();
         cmdManager = mock<ICommandManager>();
-        terminalServiceFactory = mock<ITerminalServiceFactory>();
+        terminalServiceFactory = mock<ITerminalManager>();
         terminalService = mock<ITerminalService>();
-        when(terminalServiceFactory.getTerminalService(anything())).thenReturn(instance(terminalService));
+        message = undefined;
+        when(terminalServiceFactory.createTerminal(anything())).thenCall((options) => {
+            message = options.message;
+            return instance(terminalService);
+        });
         installPythonCommand = new InstallPythonViaTerminal(instance(cmdManager), instance(terminalServiceFactory), []);
     });
 
@@ -32,11 +39,17 @@ suite('Install Python via Terminal', () => {
         sinon.restore();
     });
 
-    test('Sends expected commands when InstallPythonOnLinux command is executed if no dnf is available', async () => {
+    test('Sends expected commands when InstallPythonOnLinux command is executed if apt is available', async () => {
         let installCommandHandler: () => Promise<void>;
         when(cmdManager.registerCommand(Commands.InstallPythonOnLinux, anything())).thenCall((_, cb) => {
             installCommandHandler = cb;
             return TypeMoq.Mock.ofType<IDisposable>().object;
+        });
+        rewiremock('which').with((cmd: string) => {
+            if (cmd === 'apt') {
+                return 'path/to/apt';
+            }
+            throw new Error('Command not found');
         });
         await installPythonCommand.activate();
         when(terminalService.sendText('sudo apt-get update')).thenResolve();
@@ -67,6 +80,23 @@ suite('Install Python via Terminal', () => {
         await installCommandHandler!();
 
         verify(terminalService.sendText('sudo dnf install python3')).once();
+        expect(message).to.be.equal(undefined);
+    });
+
+    test('Creates terminal with appropriate message when InstallPythonOnLinux command is executed if no known linux package managers are available', async () => {
+        let installCommandHandler: () => Promise<void>;
+        when(cmdManager.registerCommand(Commands.InstallPythonOnLinux, anything())).thenCall((_, cb) => {
+            installCommandHandler = cb;
+            return TypeMoq.Mock.ofType<IDisposable>().object;
+        });
+        rewiremock('which').with((_cmd: string) => {
+            throw new Error('Command not found');
+        });
+
+        await installPythonCommand.activate();
+        await installCommandHandler!();
+
+        expect(message).to.be.equal(Interpreters.installPythonTerminalMessage);
     });
 
     test('Sends expected commands on Mac when InstallPythonOnMac command is executed if no dnf is available', async () => {
@@ -81,5 +111,6 @@ suite('Install Python via Terminal', () => {
         await installCommandHandler!();
 
         verify(terminalService.sendText('brew install python3')).once();
+        expect(message).to.be.equal(undefined);
     });
 });

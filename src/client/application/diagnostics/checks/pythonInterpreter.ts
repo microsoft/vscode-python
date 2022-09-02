@@ -7,7 +7,7 @@ import { DiagnosticSeverity } from 'vscode';
 import '../../../common/extensions';
 import * as nls from 'vscode-nls';
 import * as path from 'path';
-import { IDisposableRegistry, Resource } from '../../../common/types';
+import { IDisposableRegistry, IInterpreterPathService, Resource } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
@@ -109,8 +109,10 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const hasInterpreters = await interpreterService.hasInterpreters();
+        const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
+        const isInterpreterSetToDefault = interpreterPathService.get(resource) === 'python';
 
-        if (!hasInterpreters) {
+        if (!hasInterpreters && isInterpreterSetToDefault) {
             return [
                 new InvalidPythonInterpreterDiagnostic(
                     DiagnosticCodes.NoPythonInterpretersDiagnostic,

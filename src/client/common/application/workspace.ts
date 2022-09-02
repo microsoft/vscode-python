@@ -39,8 +39,16 @@ export class WorkspaceService implements IWorkspaceService {
     public get workspaceFile() {
         return workspace.workspaceFile;
     }
-    public getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration {
-        return workspace.getConfiguration(section, resource || null);
+    public getConfiguration(
+        section?: string,
+        resource?: Uri,
+        languageSpecific: boolean = false,
+    ): WorkspaceConfiguration {
+        if (languageSpecific) {
+            return workspace.getConfiguration(section, { uri: resource, languageId: 'python' });
+        } else {
+            return workspace.getConfiguration(section, resource);
+        }
     }
     public getWorkspaceFolder(uri: Resource): WorkspaceFolder | undefined {
         return uri ? workspace.getWorkspaceFolder(uri) : undefined;

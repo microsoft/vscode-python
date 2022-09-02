@@ -1,4 +1,0 @@
-gidgethub[httpx]
-trio
-pyyaml
-wheel  # For PyYAML

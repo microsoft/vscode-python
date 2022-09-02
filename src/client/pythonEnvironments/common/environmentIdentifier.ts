@@ -14,7 +14,7 @@ import {
     isVirtualenvEnvironment as isVirtualEnvEnvironment,
     isVirtualenvwrapperEnvironment as isVirtualEnvWrapperEnvironment,
 } from './environmentManagers/simplevirtualenvs';
-import { isWindowsStoreEnvironment } from './environmentManagers/windowsStoreEnv';
+import { isMicrosoftStoreEnvironment } from './environmentManagers/microsoftStoreEnv';
 
 type IdentifierType = (path: string) => Promise<boolean>;
 type IdentifiersType = { identifier: IdentifierType; extensionId?: string };
@@ -39,7 +39,7 @@ Object.values(PythonEnvKind).forEach((k) => {
 });
 
 identifiers.set(PythonEnvKind.Conda, isCondaEnvironment);
-identifiers.set(PythonEnvKind.WindowsStore, isWindowsStoreEnvironment);
+identifiers.set(PythonEnvKind.MicrosoftStore, isMicrosoftStoreEnvironment);
 identifiers.set(PythonEnvKind.Pipenv, isPipenvEnvironment);
 identifiers.set(PythonEnvKind.Pyenv, isPyenvEnvironment);
 identifiers.set(PythonEnvKind.Poetry, isPoetryEnvironment);

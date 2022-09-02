@@ -137,6 +137,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
                 let text = interpreter.detailedDisplayName;
                 text = text?.startsWith('Python') ? text?.substring('Python'.length)?.trim() : text;
                 this.statusBar.text = text ?? '';
+                this.statusBar.backgroundColor = undefined;
                 this.currentlySelectedInterpreterDisplay = interpreter.detailedDisplayName;
             } else {
                 this.statusBar.tooltip = '';

@@ -25,6 +25,8 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
 
     private isInExperiment: boolean | undefined;
 
+    private supportsInteractiveWindow: boolean | undefined;
+
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
@@ -60,6 +62,10 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
         return this.isInExperiment ?? false;
     }
 
+    public isInNotebooksExperimentWithInteractiveWindowSupport(): boolean {
+        return this.supportsInteractiveWindow ?? false;
+    }
+
     private updateExperimentSupport(): void {
         const wasInExperiment = this.isInExperiment;
         const isInTreatmentGroup = this.configurationService.getSettings().pylanceLspNotebooksEnabled;
@@ -87,6 +93,18 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_LSP_NOTEBOOKS);
         }
 
+        this.supportsInteractiveWindow = false;
+        if (!this.isInExperiment) {
+            traceLog(`LSP Notebooks interactive window support is disabled -- not in LSP Notebooks experiment`);
+        } else if (!LspNotebooksExperiment.jupyterSupportsLspInteractiveWindow()) {
+            traceLog(`LSP Notebooks interactive window support is disabled -- Jupyter is not new enough`);
+        } else if (!LspNotebooksExperiment.pylanceSupportsLspInteractiveWindow()) {
+            traceLog(`LSP Notebooks interactive window support is disabled -- Pylance is not new enough`);
+        } else {
+            this.supportsInteractiveWindow = true;
+            traceLog(`LSP Notebooks interactive window support is enabled`);
+        }
+
         // Our "in experiment" status can only change from false to true. That's possible if Pylance
         // or Jupyter is installed after Python is activated. A true to false transition would require
         // either Pylance or Jupyter to be uninstalled or downgraded after Python activated, and that
@@ -111,6 +129,21 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
         return (
             pylanceVersion &&
             (semver.gte(pylanceVersion, '2022.5.3-pre.1') || semver.prerelease(pylanceVersion)?.includes('dev'))
+        );
+    }
+
+    private static jupyterSupportsLspInteractiveWindow(): boolean {
+        const jupyterVersion = extensions.getExtension(JUPYTER_EXTENSION_ID)?.packageJSON.version;
+        return (
+            jupyterVersion && (semver.gt(jupyterVersion, '2022.7.1002041057') || semver.patch(jupyterVersion) === 100)
+        );
+    }
+
+    private static pylanceSupportsLspInteractiveWindow(): boolean {
+        const pylanceVersion = extensions.getExtension(PYLANCE_EXTENSION_ID)?.packageJSON.version;
+        return (
+            pylanceVersion &&
+            (semver.gte(pylanceVersion, '2022.7.51') || semver.prerelease(pylanceVersion)?.includes('dev'))
         );
     }
 

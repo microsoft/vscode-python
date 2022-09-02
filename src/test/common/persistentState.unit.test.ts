@@ -55,12 +55,17 @@ suite('Persistent State', () => {
         // Verify states are updated correctly
         expect(globalKey1State.value).to.equal('key1Value');
         expect(globalKey2State.value).to.equal('key2Value');
+        cmdManager
+            .setup((c) => c.executeCommand('workbench.action.reloadWindow'))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.once());
 
         await clearStorageCommand!(); // Invoke command
 
         // Verify states are now reset to their default value.
         expect(globalKey1State.value).to.equal('defaultKey1Value');
         expect(globalKey2State.value).to.equal(undefined);
+        cmdManager.verifyAll();
     });
 
     test('Workspace states created are restored on invoking clean storage command', async () => {
@@ -85,12 +90,17 @@ suite('Persistent State', () => {
         // Verify states are updated correctly
         expect(workspaceKey1State.value).to.equal('key1Value');
         expect(workspaceKey2State.value).to.equal('key2Value');
+        cmdManager
+            .setup((c) => c.executeCommand('workbench.action.reloadWindow'))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.once());
 
         await clearStorageCommand!(); // Invoke command
 
         // Verify states are now reset to their default value.
         expect(workspaceKey1State.value).to.equal(undefined);
         expect(workspaceKey2State.value).to.equal('defaultKey2Value');
+        cmdManager.verifyAll();
     });
 
     test('Ensure internal global storage extension uses to track other storages does not contain duplicate entries', async () => {

@@ -12,7 +12,7 @@ import { IApplicationShell } from '../application/types';
 // Borrowed from https://github.com/Microsoft/vscode-extension-samples/blob/master/quickinput-sample/src/multiStepInput.ts
 // Why re-invent the wheel :)
 
-class InputFlowAction {
+export class InputFlowAction {
     public static back = new InputFlowAction();
 
     public static cancel = new InputFlowAction();
@@ -48,12 +48,16 @@ export interface IQuickPickParameters<T extends QuickPickItem, E = any> {
     items: T[];
     activeItem?: T;
     placeholder: string;
-    customButtonSetup?: QuickInputButtonSetup;
+    customButtonSetups?: QuickInputButtonSetup[];
     matchOnDescription?: boolean;
     matchOnDetail?: boolean;
     keepScrollPosition?: boolean;
     sortByLabel?: boolean;
     acceptFilterBoxTextAsSelection?: boolean;
+    /**
+     * A method called only after quickpick has been created and all handlers are registered.
+     */
+    initialize?: () => void;
     onChangeItem?: {
         callback: (event: E, quickPick: QuickPick<T>) => void;
         event: Event<E>;
@@ -82,7 +86,7 @@ export interface IMultiStepInput<S> {
         items,
         activeItem,
         placeholder,
-        customButtonSetup,
+        customButtonSetups,
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>>;
     showInputBox<P extends InputBoxParameters>({
         title,
@@ -113,13 +117,14 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         items,
         activeItem,
         placeholder,
-        customButtonSetup,
+        customButtonSetups,
         matchOnDescription,
         matchOnDetail,
         acceptFilterBoxTextAsSelection,
         onChangeItem,
         keepScrollPosition,
         sortByLabel,
+        initialize,
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>> {
         const disposables: Disposable[] = [];
         try {
@@ -140,18 +145,22 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     input.activeItems = [];
                 }
                 input.buttons = this.steps.length > 1 ? [QuickInputButtons.Back] : [];
-                if (customButtonSetup) {
-                    input.buttons = [...input.buttons, customButtonSetup.button];
+                if (customButtonSetups) {
+                    for (const customButtonSetup of customButtonSetups) {
+                        input.buttons = [...input.buttons, customButtonSetup.button];
+                    }
                 }
                 disposables.push(
                     input.onDidTriggerButton(async (item) => {
                         if (item === QuickInputButtons.Back) {
                             reject(InputFlowAction.back);
-                        } else if (item === customButtonSetup?.button) {
-                            await customButtonSetup.callback(input);
-                        } else {
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            resolve(item as any);
+                        }
+                        if (customButtonSetups) {
+                            for (const customButtonSetup of customButtonSetups) {
+                                if (JSON.stringify(item) === JSON.stringify(customButtonSetup?.button)) {
+                                    await customButtonSetup?.callback(input);
+                                }
+                            }
                         }
                     }),
                     input.onDidChangeSelection((selectedItems) => resolve(selectedItems[0])),
@@ -175,6 +184,9 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     disposables.push(onChangeItem.event((e) => onChangeItem.callback(e, input)));
                 }
                 this.current.show();
+                if (initialize) {
+                    initialize();
+                }
                 // Keep scroll position is only meant to keep scroll position when updating items,
                 // so do it after initialization. This ensures quickpick starts with the active
                 // item in focus when this is true, instead of having scroll position at top.

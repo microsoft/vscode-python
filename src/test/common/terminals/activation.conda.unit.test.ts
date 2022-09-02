@@ -332,7 +332,10 @@ suite('Terminal Environment Activation conda', () => {
                 componentAdapter.object,
             );
 
-            const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
+            const activationCommands = await provider.getActivationCommands(
+                undefined,
+                testParams.isWindows ? TerminalShellType.commandPrompt : TerminalShellType.bash,
+            );
 
             expect(activationCommands).to.deep.equal(testParams.expectedResult, 'Incorrect Activation command');
         });

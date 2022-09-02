@@ -31,9 +31,17 @@ import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { TestProvider } from '../types';
 import { PythonTestServer } from './common/server';
 import { DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
-import { ITestController, ITestDiscoveryAdapter, ITestFrameworkController, TestRefreshOptions } from './common/types';
+import {
+    ITestController,
+    ITestDiscoveryAdapter,
+    ITestFrameworkController,
+    TestRefreshOptions,
+    ITestExecutionAdapter,
+} from './common/types';
 import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
 import { WorkspaceTestAdapter } from './workspaceTestAdapter';
+import { UnittestTestExecutionAdapter } from './unittest/testExecutionAdapter';
+import { ITestDebugLauncher } from '../common/types';
 
 // Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
 type EventPropertyType = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_TRIGGER];
@@ -78,9 +86,10 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         @inject(ITestFrameworkController) @named(PYTEST_PROVIDER) private readonly pytest: ITestFrameworkController,
         @inject(ITestFrameworkController) @named(UNITTEST_PROVIDER) private readonly unittest: ITestFrameworkController,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
+        @inject(ITestDebugLauncher) private readonly debugLauncher: ITestDebugLauncher,
     ) {
         this.refreshCancellation = new CancellationTokenSource();
 
@@ -133,28 +142,38 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             return this.refreshTestData(undefined, { forceRefresh: true });
         };
 
-        this.pythonTestServer = new PythonTestServer(this.pythonExecFactory);
+        this.pythonTestServer = new PythonTestServer(this.pythonExecFactory, this.debugLauncher);
     }
 
     public async activate(): Promise<void> {
+        traceVerbose('Waiting for test server to start...');
+        await this.pythonTestServer.serverReady();
+        traceVerbose('Test server started.');
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
         workspaces.forEach((workspace) => {
-            console.warn(`instantiating test adapters - workspace name: ${workspace.name}`);
             const settings = this.configSettings.getSettings(workspace.uri);
 
             let discoveryAdapter: ITestDiscoveryAdapter;
+            let executionAdapter: ITestExecutionAdapter;
             let testProvider: TestProvider;
             if (settings.testing.unittestEnabled) {
                 discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);
+                executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = UNITTEST_PROVIDER;
             } else {
                 // TODO: PYTEST DISCOVERY ADAPTER
                 // this is a placeholder for now
                 discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, { ...this.configSettings });
+                executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = PYTEST_PROVIDER;
             }
 
-            const workspaceTestAdapter = new WorkspaceTestAdapter(testProvider, discoveryAdapter, workspace.uri);
+            const workspaceTestAdapter = new WorkspaceTestAdapter(
+                testProvider,
+                discoveryAdapter,
+                executionAdapter,
+                workspace.uri,
+            );
 
             this.testAdapters.set(workspace.uri, workspaceTestAdapter);
 
@@ -311,6 +330,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             `Running Tests for Workspace(s): ${workspaces.map((w) => w.uri.fsPath).join(';')}`,
             true,
         );
+
         const dispose = token.onCancellationRequested(() => {
             runInstance.end();
         });
@@ -355,10 +375,25 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             );
                         }
                         if (settings.testing.unittestEnabled) {
+                            // potentially sqeeze in the new exeuction way here?
                             sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
                                 tool: 'unittest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
+                            // new execution runner/adapter
+                            // const testAdapter =
+                            //     this.testAdapters.get(workspace.uri) ||
+                            //     (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                            // return testAdapter.executeTests(
+                            //     this.testController,
+                            //     runInstance,
+                            //     testItems,
+                            //     token,
+                            //     request.profile?.kind === TestRunProfileKind.Debug,
+                            // );
+
+                            // below is old way of running unittest execution
+
                             return this.unittest.runTests(
                                 {
                                     includes: testItems,
@@ -383,7 +418,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             runInstance.appendOutput(`Finished running tests!\r\n`);
             runInstance.end();
             dispose.dispose();
-
             if (unconfiguredWorkspaces.length > 0) {
                 this.runWithoutConfigurationEvent.fire(unconfiguredWorkspaces);
             }

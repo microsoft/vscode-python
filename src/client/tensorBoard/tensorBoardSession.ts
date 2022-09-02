@@ -27,7 +27,7 @@ import * as nls from 'vscode-nls';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';
 import { tensorboardLauncher } from '../common/process/internal/scripts';
-import { IProcessServiceFactory, ObservableExecutionResult } from '../common/process/types';
+import { IPythonExecutionFactory, ObservableExecutionResult } from '../common/process/types';
 import {
     IDisposableRegistry,
     IInstaller,
@@ -94,7 +94,7 @@ export class TensorBoardSession {
         private readonly installer: IInstaller,
         private readonly interpreterService: IInterpreterService,
         private readonly workspaceService: IWorkspaceService,
-        private readonly processServiceFactory: IProcessServiceFactory,
+        private readonly pythonExecFactory: IPythonExecutionFactory,
         private readonly commandManager: ICommandManager,
         private readonly disposables: IDisposableRegistry,
         private readonly applicationShell: IApplicationShell,
@@ -378,8 +378,8 @@ export class TensorBoardSession {
     // Times out if it hasn't started up after 1 minute.
     // Hold on to the process so we can kill it when the webview is closed.
     private async startTensorboardSession(logDir: string): Promise<boolean> {
-        const pythonExecutable = await this.interpreterService.getActiveInterpreter();
-        if (!pythonExecutable) {
+        const interpreter = await this.interpreterService.getActiveInterpreter();
+        if (!interpreter) {
             return false;
         }
 
@@ -395,10 +395,13 @@ export class TensorBoardSession {
             cancellable: true,
         };
 
-        const processService = await this.processServiceFactory.create();
+        const processService = await this.pythonExecFactory.createActivatedEnvironment({
+            allowEnvironmentFetchExceptions: true,
+            interpreter,
+        });
         const args = tensorboardLauncher([logDir]);
         const sessionStartStopwatch = new StopWatch();
-        const observable = processService.execObservable(pythonExecutable.path, args);
+        const observable = processService.execObservable(args, {});
 
         const result = await this.applicationShell.withProgress(
             progressOptions,

@@ -7,6 +7,7 @@ import * as sinon from 'sinon';
 import { TestController, TestItem, Uri } from 'vscode';
 import { IConfigurationService } from '../../../client/common/types';
 import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/testDiscoveryAdapter';
+import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter'; // 7/7
 import { WorkspaceTestAdapter } from '../../../client/testing/testController/workspaceTestAdapter';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
@@ -109,8 +110,13 @@ suite('Workspace test adapter', () => {
             discoverTestsStub.resolves();
 
             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings);
-
-            const workspaceTestAdapter = new WorkspaceTestAdapter('unittest', testDiscoveryAdapter, Uri.parse('foo'));
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings); // 7/7
+            const workspaceTestAdapter = new WorkspaceTestAdapter(
+                'unittest',
+                testDiscoveryAdapter,
+                testExecutionAdapter,
+                Uri.parse('foo'),
+            );
 
             await workspaceTestAdapter.discoverTests(testController);
 
@@ -129,8 +135,13 @@ suite('Workspace test adapter', () => {
             );
 
             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings);
-
-            const workspaceTestAdapter = new WorkspaceTestAdapter('unittest', testDiscoveryAdapter, Uri.parse('foo'));
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings); // 7/7
+            const workspaceTestAdapter = new WorkspaceTestAdapter(
+                'unittest',
+                testDiscoveryAdapter,
+                testExecutionAdapter,
+                Uri.parse('foo'),
+            );
 
             // Try running discovery twice
             const one = workspaceTestAdapter.discoverTests(testController);
@@ -145,8 +156,14 @@ suite('Workspace test adapter', () => {
             discoverTestsStub.resolves({ status: 'success' });
 
             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings);
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings);
 
-            const workspaceTestAdapter = new WorkspaceTestAdapter('unittest', testDiscoveryAdapter, Uri.parse('foo'));
+            const workspaceTestAdapter = new WorkspaceTestAdapter(
+                'unittest',
+                testDiscoveryAdapter,
+                testExecutionAdapter,
+                Uri.parse('foo'),
+            );
 
             await workspaceTestAdapter.discoverTests(testController);
 
@@ -161,8 +178,14 @@ suite('Workspace test adapter', () => {
             discoverTestsStub.rejects(new Error('foo'));
 
             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings);
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings);
 
-            const workspaceTestAdapter = new WorkspaceTestAdapter('unittest', testDiscoveryAdapter, Uri.parse('foo'));
+            const workspaceTestAdapter = new WorkspaceTestAdapter(
+                'unittest',
+                testDiscoveryAdapter,
+                testExecutionAdapter,
+                Uri.parse('foo'),
+            );
 
             await workspaceTestAdapter.discoverTests(testController);
 

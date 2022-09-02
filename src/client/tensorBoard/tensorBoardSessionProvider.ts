@@ -8,7 +8,7 @@ import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
-import { IProcessServiceFactory } from '../common/process/types';
+import { IPythonExecutionFactory } from '../common/process/types';
 import { IDisposableRegistry, IInstaller, IPersistentState, IPersistentStateFactory } from '../common/types';
 import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -39,7 +39,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
+        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
         @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
     ) {
@@ -96,7 +96,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                 this.installer,
                 this.interpreterService,
                 this.workspaceService,
-                this.processServiceFactory,
+                this.pythonExecFactory,
                 this.commandManager,
                 this.disposables,
                 this.applicationShell,

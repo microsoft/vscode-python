@@ -62,6 +62,7 @@ export function initialize() {
     };
 }
 
+mockedVSCode.ThemeIcon = vscodeMocks.ThemeIcon;
 mockedVSCode.ThemeColor = vscodeMocks.ThemeColor;
 mockedVSCode.MarkdownString = vscodeMocks.MarkdownString;
 mockedVSCode.Hover = vscodeMocks.Hover;

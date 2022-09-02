@@ -12,7 +12,7 @@ export function getKindDisplayName(kind: PythonEnvKind): string {
     for (const [candidate, value] of [
         // Note that Unknown is excluded here.
         [PythonEnvKind.System, 'system'],
-        [PythonEnvKind.WindowsStore, 'windows store'],
+        [PythonEnvKind.MicrosoftStore, 'microsoft store'],
         [PythonEnvKind.Pyenv, 'pyenv'],
         [PythonEnvKind.Poetry, 'poetry'],
         [PythonEnvKind.Custom, 'custom'],
@@ -40,7 +40,7 @@ export function getKindDisplayName(kind: PythonEnvKind): string {
  * Top level we have the following environment types, since they leave a unique signature
  * in the environment or * use a unique path for the environments they create.
  *  1. Conda
- *  2. Windows Store
+ *  2. Microsoft Store
  *  3. PipEnv
  *  4. Pyenv
  *  5. Poetry
@@ -57,7 +57,7 @@ export function getPrioritizedEnvKinds(): PythonEnvKind[] {
     return [
         PythonEnvKind.Pyenv,
         PythonEnvKind.Conda,
-        PythonEnvKind.WindowsStore,
+        PythonEnvKind.MicrosoftStore,
         PythonEnvKind.Pipenv,
         PythonEnvKind.Poetry,
         PythonEnvKind.Venv,

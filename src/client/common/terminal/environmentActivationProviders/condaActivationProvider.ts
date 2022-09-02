@@ -87,7 +87,11 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                 );
                 // eslint-disable-next-line camelcase
                 if (activatePath?.path) {
-                    if (this.platform.isWindows) {
+                    if (
+                        this.platform.isWindows &&
+                        targetShell !== TerminalShellType.bash &&
+                        targetShell !== TerminalShellType.gitbash
+                    ) {
                         return [activatePath.path, `conda activate ${condaEnv.toCommandArgumentForPythonExt()}`];
                     }
 

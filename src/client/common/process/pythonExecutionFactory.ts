@@ -10,7 +10,7 @@ import { EventName } from '../../telemetry/constants';
 import { IFileSystem } from '../platform/types';
 import { IConfigurationService, IDisposableRegistry, IInterpreterPathService } from '../types';
 import { ProcessService } from './proc';
-import { createCondaEnv, createPythonEnv, createWindowsStoreEnv } from './pythonEnvironment';
+import { createCondaEnv, createPythonEnv, createMicrosoftStoreEnv } from './pythonEnvironment';
 import { createPythonProcessService } from './pythonProcess';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
@@ -82,10 +82,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             return condaExecutionService;
         }
 
-        const windowsStoreInterpreterCheck = this.pyenvs.isWindowsStoreInterpreter.bind(this.pyenvs);
+        const windowsStoreInterpreterCheck = this.pyenvs.isMicrosoftStoreInterpreter.bind(this.pyenvs);
 
         const env = (await windowsStoreInterpreterCheck(pythonPath))
-            ? createWindowsStoreEnv(pythonPath, processService)
+            ? createMicrosoftStoreEnv(pythonPath, processService)
             : createPythonEnv(pythonPath, processService, this.fileSystem);
 
         return createPythonService(processService, env);

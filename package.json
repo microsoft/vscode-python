@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2022.11.0-dev",
+    "version": "2022.15.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -16,7 +16,6 @@
             "description": "Only Partial IntelliSense supported."
         }
     },
-    "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
     "enabledApiProposals": [
         "quickPickSortByLabel",
@@ -83,7 +82,7 @@
         "onCommand:python.clearWorkspaceInterpreter",
         "onCommand:python.enableSourceMapSupport",
         "onCommand:python.launchTensorBoard",
-        "onCommand:python.clearPersistentStorage",
+        "onCommand:python.clearCacheAndReload",
         "onWalkthrough:pythonWelcome",
         "onWalkthrough:pythonWelcomeWithDS",
         "onWalkthrough:pythonDataScienceWelcome",
@@ -254,8 +253,8 @@
             },
             {
                 "category": "Python",
-                "command": "python.clearPersistentStorage",
-                "title": "%python.command.python.clearPersistentStorage.title%"
+                "command": "python.clearCacheAndReload",
+                "title": "%python.command.python.clearCacheAndReload.title%"
             },
             {
                 "category": "Python",
@@ -587,6 +586,22 @@
                     "scope": "resource",
                     "type": "string"
                 },
+                "python.interpreter.infoVisibility": {
+                    "default": "onPythonRelated",
+                    "description": "%python.interpreter.infoVisibility.description%",
+                    "enum": [
+                        "never",
+                        "onPythonRelated",
+                        "always"
+                    ],
+                    "enumDescriptions": [
+                        "%python.interpreter.infoVisibility.never.description%",
+                        "%python.interpreter.infoVisibility.onPythonRelated.description%",
+                        "%python.interpreter.infoVisibility.always.description%"
+                    ],
+                    "scope": "machine",
+                    "type": "string"
+                },
                 "python.linting.flake8CategorySeverity.W": {
                     "default": "Warning",
                     "description": "%python.linting.flake8CategorySeverity.W.description%",
@@ -901,12 +916,9 @@
                 },
                 "python.pylanceLspNotebooksEnabled": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "%python.pylanceLspNotebooksEnabled.description%",
-                    "scope": "machine",
-                    "tags": [
-                        "experimental"
-                    ]
+                    "scope": "machine"
                 },
                 "python.sortImports.args": {
                     "default": [],
@@ -1183,11 +1195,14 @@
                         "properties": {
                             "args": {
                                 "default": [],
-                                "description": "Command line arguments passed to the program",
+                                "description": "Command line arguments passed to the program.",
                                 "items": {
                                     "type": "string"
                                 },
-                                "type": "array"
+                                "type": [
+                                    "array",
+                                    "string"
+                                ]
                             },
                             "autoReload": {
                                 "default": {},
@@ -1509,8 +1524,8 @@
                 },
                 {
                     "category": "Python",
-                    "command": "python.clearPersistentStorage",
-                    "title": "%python.command.python.clearPersistentStorage.title%",
+                    "command": "python.clearCacheAndReload",
+                    "title": "%python.command.python.clearCacheAndReload.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported"
                 },
                 {
@@ -1806,7 +1821,7 @@
         "vscode-tas-client": "^0.1.22",
         "winreg": "^1.2.4",
         "xml2js": "^0.4.19",
-        "which":"^2.0.2"
+        "which": "^2.0.2"
     },
     "devDependencies": {
         "@istanbuljs/nyc-config-typescript": "^1.0.2",
@@ -1830,11 +1845,11 @@
         "@types/uuid": "^8.3.4",
         "@types/vscode": "~1.68.0",
         "@types/winreg": "^1.2.30",
-        "@types/which":"^2.0.1",
+        "@types/which": "^2.0.1",
         "@types/xml2js": "^0.4.2",
         "@typescript-eslint/eslint-plugin": "^3.7.0",
         "@typescript-eslint/parser": "^3.7.0",
-        "@vscode/telemetry-extractor": "^1.9.7",
+        "@vscode/telemetry-extractor": ">=1.9.8",
         "@vscode/test-electron": "^2.1.3",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
@@ -1880,7 +1895,6 @@
         "vsce": "^2.6.6",
         "vscode-debugadapter-testsupport": "^1.27.0",
         "vscode-nls-dev": "^4.0.0",
-        "vscode-telemetry-extractor": "^1.9.5",
         "webpack": "^5.70.0",
         "webpack-bundle-analyzer": "^4.5.0",
         "webpack-cli": "^4.9.2",

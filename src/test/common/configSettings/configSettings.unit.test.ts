@@ -19,6 +19,7 @@ import {
     IAutoCompleteSettings,
     IExperiments,
     IFormattingSettings,
+    IInterpreterSettings,
     ILintingSettings,
     ISortImportSettings,
     ITerminalSettings,
@@ -109,6 +110,7 @@ suite('Python Settings', async () => {
         config.setup((c) => c.get<any[]>('devOptions')).returns(() => sourceSettings.devOptions);
 
         // complex settings
+        config.setup((c) => c.get<IInterpreterSettings>('interpreter')).returns(() => sourceSettings.interpreter);
         config.setup((c) => c.get<ILintingSettings>('linting')).returns(() => sourceSettings.linting);
         config.setup((c) => c.get<ISortImportSettings>('sortImports')).returns(() => sourceSettings.sortImports);
         config.setup((c) => c.get<IFormattingSettings>('formatting')).returns(() => sourceSettings.formatting);
@@ -143,6 +145,21 @@ suite('Python Settings', async () => {
         ['globalModuleInstallation'].forEach(async (settingName) => {
             testIfValueIsUpdated(settingName, true);
         });
+    });
+
+    test('Interpreter settings object', () => {
+        initializeConfig(expected);
+        config
+            .setup((c) => c.get<string>('condaPath'))
+            .returns(() => expected.condaPath)
+            .verifiable(TypeMoq.Times.once());
+
+        settings.update(config.object);
+
+        expect(settings.interpreter).to.deep.equal({
+            infoVisibility: 'onPythonRelated',
+        });
+        config.verifyAll();
     });
 
     test('condaPath updated', () => {

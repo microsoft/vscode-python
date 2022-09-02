@@ -136,12 +136,19 @@ export type TestDiscoveryCommand = {
     args: string[];
 };
 
+export type TestExecutionCommand = {
+    script: string;
+    args: string[];
+};
+
 export type TestCommandOptions = {
     workspaceFolder: Uri;
     cwd: string;
-    command: TestDiscoveryCommand;
+    command: TestDiscoveryCommand | TestExecutionCommand;
     token?: CancellationToken;
     outChannel?: OutputChannel;
+    debugBool?: boolean;
+    testIds?: string[];
 };
 
 /**
@@ -153,10 +160,16 @@ export type TestCommandOptions = {
 export interface ITestServer {
     readonly onDataReceived: Event<DataReceivedEvent>;
     sendCommand(options: TestCommandOptions): Promise<void>;
+    serverReady(): Promise<void>;
 }
 
 export interface ITestDiscoveryAdapter {
     discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
+}
+
+// interface for execution/runner adapter
+export interface ITestExecutionAdapter {
+    runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload>;
 }
 
 // Same types as in pythonFiles/unittestadapter/utils.py
@@ -172,6 +185,7 @@ export type DiscoveredTestCommon = {
 
 export type DiscoveredTestItem = DiscoveredTestCommon & {
     lineno: number;
+    runID: string;
 };
 
 export type DiscoveredTestNode = DiscoveredTestCommon & {
@@ -183,4 +197,20 @@ export type DiscoveredTestPayload = {
     tests?: DiscoveredTestNode;
     status: 'success' | 'error';
     errors?: string[];
+};
+
+export type ExecutionTestPayload = {
+    cwd: string;
+    status: 'success' | 'error';
+    result?: {
+        [testRunID: string]: {
+            test?: string;
+            outcome?: string;
+            message?: string;
+            traceback?: string;
+            subtest?: string;
+        };
+    };
+    notFound?: string[];
+    error: string;
 };

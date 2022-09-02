@@ -9,7 +9,7 @@ import { getSearchPathEntries } from '../../../../common/utils/exec';
 import { Disposables } from '../../../../common/utils/resourceLifecycle';
 import { iterPythonExecutablesInDir, looksLikeBasicGlobalPython } from '../../../common/commonUtils';
 import { isPyenvShimDir } from '../../../common/environmentManagers/pyenv';
-import { isWindowsStoreDir } from '../../../common/environmentManagers/windowsStoreEnv';
+import { isMicrosoftStoreDir } from '../../../common/environmentManagers/microsoftStoreEnv';
 import { PythonEnvKind, PythonEnvSource } from '../../info';
 import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { Locators } from '../../locators';
@@ -35,14 +35,14 @@ export class WindowsPathEnvVarLocator implements ILocator<BasicEnvInfo>, IDispos
             .filter(
                 (dirname) =>
                     // Filter out following directories:
-                    // 1. Windows Store app directories: We have a store app locator that handles this. The
+                    // 1. Microsoft Store app directories: We have a store app locator that handles this. The
                     //    python.exe available in these directories might not be python. It can be a store
-                    //    install shortcut that takes you to windows store.
+                    //    install shortcut that takes you to microsoft store.
                     //
                     // 2. Filter out pyenv shims: They are not actual python binaries, they are used to launch
                     //    the binaries specified in .python-version file in the cwd. We should not be reporting
                     //    those binaries as environments.
-                    !isWindowsStoreDir(dirname) && !isPyenvShimDir(dirname),
+                    !isMicrosoftStoreDir(dirname) && !isPyenvShimDir(dirname),
             )
             // Build a locator for each directory.
             .map((dirname) => getDirFilesLocator(dirname, PythonEnvKind.System, [PythonEnvSource.PathEnvVar]));

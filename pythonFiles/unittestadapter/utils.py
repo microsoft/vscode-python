@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import argparse
 import enum
 import inspect
 import os
@@ -28,6 +29,7 @@ class TestData(TypedDict):
 
 class TestItem(TestData):
     lineno: str
+    runID: str
 
 
 class TestNode(TestData):
@@ -190,6 +192,7 @@ def build_test_tree(
                 "lineno": lineno,
                 "type_": TestNodeTypeEnum.test,
                 "id_": file_path + "\\" + class_name + "\\" + function_name,
+                "runID": test_id,
             }  # concatenate class name and function test name
             current_node["children"].append(test_node)
 
@@ -197,3 +200,29 @@ def build_test_tree(
         root = None
 
     return root, errors
+
+
+def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
+    """Parse command-line arguments that should be forwarded to unittest to perform discovery.
+
+    Valid unittest arguments are: -v, -s, -p, -t and their long-form counterparts,
+    however we only care about the last three.
+
+    The returned tuple contains the following items
+    - start_directory: The directory where to start discovery, defaults to .
+    - pattern: The pattern to match test files, defaults to test*.py
+    - top_level_directory: The top-level directory of the project, defaults to None, and unittest will use start_directory behind the scenes.
+    """
+
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("--start-directory", "-s", default=".")
+    arg_parser.add_argument("--pattern", "-p", default="test*.py")
+    arg_parser.add_argument("--top-level-directory", "-t", default=None)
+
+    parsed_args, _ = arg_parser.parse_known_args(args)
+
+    return (
+        parsed_args.start_directory,
+        parsed_args.pattern,
+        parsed_args.top_level_directory,
+    )

@@ -19,7 +19,7 @@ import { createDeferred } from '../common/utils/async';
 import { PythonEnvCollectionChangedEvent } from './base/watcher';
 import { asyncFilter } from '../common/utils/arrayUtils';
 import { CondaEnvironmentInfo, isCondaEnvironment } from './common/environmentManagers/conda';
-import { isWindowsStoreEnvironment } from './common/environmentManagers/windowsStoreEnv';
+import { isMicrosoftStoreEnvironment } from './common/environmentManagers/microsoftStoreEnv';
 import { CondaService } from './common/environmentManagers/condaService';
 import { traceVerbose } from '../logging';
 
@@ -27,7 +27,7 @@ const convertedKinds = new Map(
     Object.entries({
         [PythonEnvKind.OtherGlobal]: EnvironmentType.Global,
         [PythonEnvKind.System]: EnvironmentType.System,
-        [PythonEnvKind.WindowsStore]: EnvironmentType.WindowsStore,
+        [PythonEnvKind.MicrosoftStore]: EnvironmentType.MicrosoftStore,
         [PythonEnvKind.Pyenv]: EnvironmentType.Pyenv,
         [PythonEnvKind.Conda]: EnvironmentType.Conda,
         [PythonEnvKind.VirtualEnv]: EnvironmentType.VirtualEnv,
@@ -199,10 +199,10 @@ class ComponentAdapter implements IComponentAdapter {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean> {
-        // Eventually we won't be calling 'isWindowsStoreInterpreter' in the component adapter, so we won't
-        // need to use 'isWindowsStoreEnvironment' directly here. This is just a temporary implementation.
-        return isWindowsStoreEnvironment(pythonPath);
+    public async isMicrosoftStoreInterpreter(pythonPath: string): Promise<boolean> {
+        // Eventually we won't be calling 'isMicrosoftStoreInterpreter' in the component adapter, so we won't
+        // need to use 'isMicrosoftStoreEnvironment' directly here. This is just a temporary implementation.
+        return isMicrosoftStoreEnvironment(pythonPath);
     }
 
     // Implements IInterpreterLocatorService

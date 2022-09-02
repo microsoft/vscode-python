@@ -8,7 +8,10 @@ import { PythonEnvKind } from '../../info';
 import { IPythonEnvsIterator, BasicEnvInfo } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
 import { PythonEnvStructure } from '../../../common/pythonBinariesWatcher';
-import { isStorePythonInstalled, getWindowsStoreAppsRoot } from '../../../common/environmentManagers/windowsStoreEnv';
+import {
+    isStorePythonInstalled,
+    getMicrosoftStoreAppsRoot,
+} from '../../../common/environmentManagers/microsoftStoreEnv';
 
 /**
  * This is a glob pattern which matches following file names:
@@ -29,13 +32,13 @@ const pythonExeGlob = 'python3.{[0-9],[0-9][0-9]}.exe';
  * @param {string} interpreterPath : Path to python interpreter.
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
-function isWindowsStorePythonExePattern(interpreterPath: string): boolean {
+function isMicrosoftStorePythonExePattern(interpreterPath: string): boolean {
     return minimatch(path.basename(interpreterPath), pythonExeGlob, { nocase: true });
 }
 
 /**
- * Gets paths to the Python executable under Windows Store apps.
- * @returns: Returns python*.exe for the windows store app root directory.
+ * Gets paths to the Python executable under Microsoft Store apps.
+ * @returns: Returns python*.exe for the microsoft store app root directory.
  *
  * Remarks: We don't need to find the path to the interpreter under the specific application
  * directory. Such as:
@@ -49,21 +52,21 @@ function isWindowsStorePythonExePattern(interpreterPath: string): boolean {
  * However, that directory is off limits to users. So no need to populate interpreters from
  * that location.
  */
-export async function getWindowsStorePythonExes(): Promise<string[]> {
+export async function getMicrosoftStorePythonExes(): Promise<string[]> {
     if (await isStorePythonInstalled()) {
-        const windowsAppsRoot = getWindowsStoreAppsRoot();
+        const windowsAppsRoot = getMicrosoftStoreAppsRoot();
 
         // Collect python*.exe directly under %LOCALAPPDATA%/Microsoft/WindowsApps
         const files = await fsapi.readdir(windowsAppsRoot);
         return files
             .map((filename: string) => path.join(windowsAppsRoot, filename))
-            .filter(isWindowsStorePythonExePattern);
+            .filter(isMicrosoftStorePythonExePattern);
     }
     return [];
 }
 
-export class WindowsStoreLocator extends FSWatchingLocator<BasicEnvInfo> {
-    private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
+export class MicrosoftStoreLocator extends FSWatchingLocator<BasicEnvInfo> {
+    private readonly kind: PythonEnvKind = PythonEnvKind.MicrosoftStore;
 
     constructor() {
         // We have to watch the directory instead of the executable here because
@@ -72,16 +75,16 @@ export class WindowsStoreLocator extends FSWatchingLocator<BasicEnvInfo> {
         // PythonSoftwareFoundation directory will trigger both for new install
         // and update case. Update is handled by deleting and recreating the
         // PythonSoftwareFoundation directory.
-        super(getWindowsStoreAppsRoot, async () => this.kind, {
+        super(getMicrosoftStoreAppsRoot, async () => this.kind, {
             baseGlob: pythonExeGlob,
-            searchLocation: getWindowsStoreAppsRoot(),
+            searchLocation: getMicrosoftStoreAppsRoot(),
             envStructure: PythonEnvStructure.Flat,
         });
     }
 
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const iterator = async function* (kind: PythonEnvKind) {
-            const exes = await getWindowsStorePythonExes();
+            const exes = await getMicrosoftStorePythonExes();
             yield* exes.map(async (executablePath: string) => ({
                 kind,
                 executablePath,

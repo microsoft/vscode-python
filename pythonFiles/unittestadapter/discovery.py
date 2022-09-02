@@ -17,7 +17,7 @@ sys.path.insert(0, PYTHON_FILES)
 from testing_tools import socket_manager
 
 # If I use from utils then there will be an import error in test_discovery.py.
-from unittestadapter.utils import TestNode, build_test_tree
+from unittestadapter.utils import TestNode, build_test_tree, parse_unittest_args
 
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
@@ -44,35 +44,8 @@ def parse_discovery_cli_args(args: List[str]) -> Tuple[int, Union[str, None]]:
     return int(parsed_args.port), parsed_args.uuid
 
 
-def parse_unittest_discovery_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
-    """Parse command-line arguments that should be forwarded to unittest to perform discovery.
-
-    Valid unittest arguments are: -v, -s, -p, -t and their long-form counterparts,
-    however we only care about the last three.
-
-    The returned tuple contains the following items
-    - start_directory: The directory where to start discovery, defaults to .
-    - pattern: The pattern to match test files, defaults to test*.py
-    - top_level_directory: The top-level directory of the project, defaults to None, and unittest will use start_directory behind the scenes.
-    """
-
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--start-directory", "-s", default=".")
-    arg_parser.add_argument("--pattern", "-p", default="test*.py")
-    arg_parser.add_argument("--top-level-directory", "-t", default=None)
-
-    parsed_args, _ = arg_parser.parse_known_args(args)
-
-    return (
-        parsed_args.start_directory,
-        parsed_args.pattern,
-        parsed_args.top_level_directory,
-    )
-
-
 class PayloadDict(TypedDict):
     cwd: str
-    uuid: Union[str, None]
     status: Literal["success", "error"]
     tests: NotRequired[TestNode]
     errors: NotRequired[List[str]]
@@ -112,7 +85,7 @@ def discover_tests(
     }
     """
     cwd = os.path.abspath(start_dir)
-    payload: PayloadDict = {"cwd": cwd, "status": "success", "uuid": uuid}
+    payload: PayloadDict = {"cwd": cwd, "status": "success"}
     tests = None
     errors: List[str] = []
 
@@ -140,7 +113,7 @@ if __name__ == "__main__":
     argv = sys.argv[1:]
     index = argv.index("--udiscovery")
 
-    start_dir, pattern, top_level_dir = parse_unittest_discovery_args(argv[index + 1 :])
+    start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
 
     # Perform test discovery.
     port, uuid = parse_discovery_cli_args(argv[:index])
@@ -154,6 +127,7 @@ if __name__ == "__main__":
 Host: localhost:{port}
 Content-Length: {len(data)}
 Content-Type: application/json
+Request-uuid: {uuid}
 
 {data}"""
         result = s.socket.sendall(request.encode("utf-8"))  # type: ignore

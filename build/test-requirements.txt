@@ -1,3 +1,6 @@
+# pin setoptconf to prevent issue with 'use_2to3'
+setoptconf==0.3.0
+
 # Install flake8 first, as both flake8 and autopep8 require pycodestyle,
 # but flake8 has a tighter pinning.
 flake8

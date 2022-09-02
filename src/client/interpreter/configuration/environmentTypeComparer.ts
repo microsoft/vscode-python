@@ -36,11 +36,17 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
      * The comparison guidelines are:
      * 1. Local environments first (same path as the workspace root);
      * 2. Global environments next (anything not local), with conda environments at a lower priority, and "base" being last;
-     * 3. Globally-installed interpreters (/usr/bin/python3, Windows Store).
+     * 3. Globally-installed interpreters (/usr/bin/python3, Microsoft Store).
      *
      * Always sort with newest version of Python first within each subgroup.
      */
     public compare(a: PythonEnvironment, b: PythonEnvironment): number {
+        if (isProblematicCondaEnvironment(a)) {
+            return 1;
+        }
+        if (isProblematicCondaEnvironment(b)) {
+            return -1;
+        }
         // Check environment location.
         const envLocationComparison = compareEnvironmentLocation(a, b, this.workspaceFolderPath);
         if (envLocationComparison !== 0) {
@@ -84,6 +90,9 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
         // because we would have to add a way to match environments to a workspace.
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
         const filteredInterpreters = interpreters.filter((i) => {
+            if (isProblematicCondaEnvironment(i)) {
+                return false;
+            }
             if (getEnvLocationHeuristic(i, workspaceUri?.folderUri.fsPath || '') === EnvLocationHeuristic.Local) {
                 return true;
             }
@@ -150,6 +159,10 @@ function isBaseCondaEnvironment(environment: PythonEnvironment): boolean {
         environment.envType === EnvironmentType.Conda &&
         (environment.envName === 'base' || environment.envName === 'miniconda')
     );
+}
+
+export function isProblematicCondaEnvironment(environment: PythonEnvironment): boolean {
+    return environment.envType === EnvironmentType.Conda && environment.path === 'python';
 }
 
 /**
@@ -223,7 +236,7 @@ function getPrioritizedEnvironmentType(): EnvironmentType[] {
         EnvironmentType.VirtualEnv,
         EnvironmentType.Conda,
         EnvironmentType.Pyenv,
-        EnvironmentType.WindowsStore,
+        EnvironmentType.MicrosoftStore,
         EnvironmentType.Global,
         EnvironmentType.System,
         EnvironmentType.Unknown,

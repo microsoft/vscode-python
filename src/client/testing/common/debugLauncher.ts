@@ -211,7 +211,8 @@ export class DebugLauncher implements ITestDebugLauncher {
     private getTestLauncherScript(testProvider: TestProvider) {
         switch (testProvider) {
             case 'unittest': {
-                return internalScripts.visualstudio_py_testlauncher;
+                return internalScripts.visualstudio_py_testlauncher; // old way unittest execution, debugger
+                // return internalScripts.execution_py_testlauncher; // this is the new way to run unittest execution, debugger
             }
             case 'pytest': {
                 return internalScripts.testlauncher;

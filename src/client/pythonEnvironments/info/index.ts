@@ -17,11 +17,12 @@ export enum EnvironmentType {
     // Simple virtual envs
     VirtualEnv = 'VirtualEnv',
     Venv = 'Venv',
+    Poetry = 'Poetry',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
     // Global
     Global = 'Global',
     System = 'System',
-    WindowsStore = 'WindowsStore',
+    MicrosoftStore = 'MicrosoftStore',
     Unknown = 'Unknown',
     // Pyenv
     Pyenv = 'Pyenv',
@@ -109,8 +110,8 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType): string
         case EnvironmentType.VirtualEnv: {
             return 'virtualenv';
         }
-        case EnvironmentType.WindowsStore: {
-            return 'windows store';
+        case EnvironmentType.MicrosoftStore: {
+            return 'microsoft store';
         }
         case EnvironmentType.Poetry: {
             return 'poetry';

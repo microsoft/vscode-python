@@ -22,7 +22,7 @@ import { GlobalVirtualEnvironmentLocator } from './base/locators/lowLevel/global
 import { PosixKnownPathsLocator } from './base/locators/lowLevel/posixKnownPathsLocator';
 import { PyenvLocator } from './base/locators/lowLevel/pyenvLocator';
 import { WindowsRegistryLocator } from './base/locators/lowLevel/windowsRegistryLocator';
-import { WindowsStoreLocator } from './base/locators/lowLevel/windowsStoreLocator';
+import { MicrosoftStoreLocator } from './base/locators/lowLevel/microsoftStoreLocator';
 import { getEnvironmentInfoService } from './base/info/environmentInfoService';
 import { registerNewDiscoveryForIOC } from './legacyIOC';
 import { PoetryLocator } from './base/locators/lowLevel/poetryLocator';
@@ -144,7 +144,7 @@ function createNonWorkspaceLocators(ext: ExtensionState): ILocator<BasicEnvInfo>
         locators.push(
             // Windows specific locators go here.
             new WindowsRegistryLocator(),
-            new WindowsStoreLocator(),
+            new MicrosoftStoreLocator(),
             new WindowsPathEnvVarLocator(),
         );
     } else {

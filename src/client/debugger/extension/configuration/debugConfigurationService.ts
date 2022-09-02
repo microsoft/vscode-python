@@ -65,7 +65,7 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
             // `"request": "test"` is now deprecated. But some users might have it in their
             // launch config. We get here if they triggered it using F5 or start with debugger.
             throw Error(
-                'This configuration can only be used by the test debugging commands. `"request": "test"` is deprecated use "purpose" instead.',
+                'This configuration can only be used by the test debugging commands. `"request": "test"` is deprecated, please keep as `"request": "launch"` and add `"purpose": ["debug-test"]` instead.',
             );
         } else {
             if (Object.keys(debugConfiguration).length === 0) {

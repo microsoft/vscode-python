@@ -7,6 +7,7 @@ import { Socket } from 'net';
 import { Request as RequestResult } from 'request';
 import {
     CancellationToken,
+    ConfigurationChangeEvent,
     ConfigurationTarget,
     DiagnosticSeverity,
     Disposable,
@@ -179,6 +180,7 @@ export interface ICurrentProcess {
 }
 
 export interface IPythonSettings {
+    readonly interpreter: IInterpreterSettings;
     readonly pythonPath: string;
     readonly venvPath: string;
     readonly venvFolders: string[];
@@ -195,7 +197,6 @@ export interface IPythonSettings {
     readonly envFile: string;
     readonly globalModuleInstallation: boolean;
     readonly pylanceLspNotebooksEnabled: boolean;
-    readonly onDidChange: Event<void>;
     readonly experiments: IExperiments;
     readonly languageServer: LanguageServerType;
     readonly languageServerIsDefault: boolean;
@@ -232,6 +233,9 @@ export interface Flake8CategorySeverity {
 export interface IMypyCategorySeverity {
     readonly error: DiagnosticSeverity;
     readonly note: DiagnosticSeverity;
+}
+export interface IInterpreterSettings {
+    infoVisibility: 'never' | 'onPythonRelated' | 'always';
 }
 
 export interface ILintingSettings {
@@ -308,6 +312,7 @@ export interface IAutoCompleteSettings {
 
 export const IConfigurationService = Symbol('IConfigurationService');
 export interface IConfigurationService {
+    readonly onDidChange: Event<ConfigurationChangeEvent | undefined>;
     getSettings(resource?: Uri): IPythonSettings;
     isTestExecution(): boolean;
     updateSetting(setting: string, value?: unknown, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;

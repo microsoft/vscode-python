@@ -38,7 +38,7 @@ virtualEnvKinds.forEach((k) => {
     resolvers.set(k, resolveSimpleEnv);
 });
 resolvers.set(PythonEnvKind.Conda, resolveCondaEnv);
-resolvers.set(PythonEnvKind.WindowsStore, resolveWindowsStoreEnv);
+resolvers.set(PythonEnvKind.MicrosoftStore, resolveMicrosoftStoreEnv);
 resolvers.set(PythonEnvKind.Pyenv, resolvePyenvEnv);
 
 export function registerResolver(
@@ -105,18 +105,16 @@ export async function resolveCompositeEnv(env: CompositeEnvInfo, useCache = fals
 
 function getSearchLocation(env: PythonEnvInfo): Uri | undefined {
     const folders = getWorkspaceFolders();
-    const isRootedEnv = folders.some((f) => isParentPath(env.executable.filename, f));
+    const isRootedEnv = folders.some((f) => isParentPath(env.executable.filename, f) || isParentPath(env.location, f));
     if (isRootedEnv) {
         // For environments inside roots, we need to set search location so they can be queried accordingly.
-        // Search location particularly for virtual environments is intended as the directory in which the
-        // environment was found in.
-        // For eg.the default search location for an env containing 'bin' or 'Scripts' directory is:
+        // In certain usecases environment directory can itself be a root, for eg. `python -m venv .`.
+        // So choose folder to environment path to search for this env.
         //
-        // searchLocation <--- Default search location directory
-        // |__ env
+        // |__ env <--- Default search location directory
         //    |__ bin or Scripts
         //        |__ python  <--- executable
-        return Uri.file(path.dirname(env.location));
+        return Uri.file(env.location);
     }
     return undefined;
 }
@@ -271,7 +269,7 @@ async function isBaseCondaPyenvEnvironment(executablePath: string) {
     return arePathsSame(path.dirname(location), pyenvVersionDir);
 }
 
-async function resolveWindowsStoreEnv(env: CompositeEnvInfo): Promise<PythonEnvInfo> {
+async function resolveMicrosoftStoreEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     const { executablePath } = env;
     return buildEnvInfo({
         kind: env.kind,

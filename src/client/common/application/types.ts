@@ -837,9 +837,10 @@ export interface IWorkspaceService {
      *
      * @param section A dot-separated identifier.
      * @param resource A resource for which the configuration is asked for
+     * @param languageSpecific Should the [python] language-specific settings be obtained?
      * @return The full configuration or a subset.
      */
-    getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration;
+    getConfiguration(section?: string, resource?: Uri, languageSpecific?: boolean): WorkspaceConfiguration;
 
     /**
      * Opens an untitled text document. The editor will prompt the user for a file

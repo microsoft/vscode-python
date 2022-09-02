@@ -4,13 +4,18 @@ on:
   issues:
     types: [opened, reopened]
 
+env:
+  # To update the list of labels, see `getLabels.js`.
+  REPO_LABELS: '["area-data science","area-debugging","area-diagnostics","area-editor-*","area-environments","area-formatting","area-intellisense","area-internal","area-linting","area-terminal","area-testing","author-verification-requested","bug","community ask","debt","dependencies","documentation","experimenting","feature-request","good first issue","help wanted","important","info-needed","invalid-testplan-item","investigating","iteration-candidate","iteration-plan","iteration-plan-draft","javascript","linux","macos","meta","needs community feedback","needs PR","needs proposal","needs spike","no-changelog","on-testplan","partner ask","regression","release-plan","reports-wanted","skip package*.json","skip tests","tensorboard","testplan-item","triage-needed","verification-found","verification-needed","verification-steps-needed","verified","windows"]'
+  TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25","eleanorjboyd"]'
+
 permissions:
   issues: write
 
 jobs:
   # From https://github.com/marketplace/actions/github-script#apply-a-label-to-an-issue.
   add-classify-label:
-    name: "Add 'triage-needed'"
+    name: "Add 'triage-needed' and remove unrecognizable labels & assignees"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v6
@@ -34,6 +39,31 @@ jobs:
                 issue_number: context.issue.number,
                 labels: ['triage-needed']
               })
+              const knownTriagers = ${{ env.TRIAGERS }}
+              const currentAssignees = await github.rest.issues
+                .get({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: context.issue.number,
+                })
+                .then((result) => result.data.assignees.map((a) => a.login));
+              const assigneesToRemove = currentAssignees.filter(a => !knownTriagers.includes(a));
+              github.rest.issues.removeAssignees({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                assignees: assigneesToRemove,
+              });
             } else {
               console.log('This issue already has a "needs __", "iteration-plan", "release-plan", or the "testplan-item" label, do not add the "triage-needed" label.')
+            }
+            const knownLabels = ${{ env.REPO_LABELS }}
+            for( const label of labels) {
+              if (!knownLabels.includes(label)) {
+                await github.rest.issues.deleteLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label,
+                })
+              }
             }

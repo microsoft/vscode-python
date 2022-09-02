@@ -51,7 +51,7 @@ export namespace Commands {
     export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
     export const PickLocalProcess = 'python.pickLocalProcess';
     export const GetSelectedInterpreterPath = 'python.interpreterPath';
-    export const ClearStorage = 'python.clearPersistentStorage';
+    export const ClearStorage = 'python.clearCacheAndReload';
     export const ClearWorkspaceInterpreter = 'python.clearWorkspaceInterpreter';
     export const LaunchTensorBoard = 'python.launchTensorBoard';
     export const RefreshTensorBoard = 'python.refreshTensorBoard';
@@ -77,6 +77,17 @@ export namespace Octicons {
     export const Warning = '$(warning)';
     export const Error = '$(error)';
     export const Lightbulb = '$(lightbulb)';
+}
+
+/**
+ * Look at https://code.visualstudio.com/api/references/icons-in-labels#icon-listing for ThemeIcon ids.
+ * Using a theme icon is preferred over a custom icon as it gives product theme authors the possibility
+ * to change the icons.
+ */
+export namespace ThemeIcons {
+    export const ClearAll = 'clear-all';
+    export const Refresh = 'refresh';
+    export const SpinningLoader = 'loading~spin';
 }
 
 export const DEFAULT_INTERPRETER_SETTING = 'python';

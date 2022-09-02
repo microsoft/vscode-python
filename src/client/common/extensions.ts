@@ -124,14 +124,14 @@ declare interface Promise<T> {
     /**
      * Catches task error and ignores them.
      */
-    ignoreErrors(): void;
+    ignoreErrors(): Promise<void>;
 }
 
 /**
  * Explicitly tells that promise should be run asynchonously.
  */
 Promise.prototype.ignoreErrors = function <T>(this: Promise<T>) {
-    this.catch(() => {});
+    return this.catch(() => {});
 };
 
 if (!String.prototype.format) {

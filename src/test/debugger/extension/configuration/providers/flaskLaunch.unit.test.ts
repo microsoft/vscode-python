@@ -62,9 +62,9 @@ suite('Debugging - Configuration Provider Flask', () => {
             module: 'flask',
             env: {
                 FLASK_APP: 'xyz.py',
-                FLASK_ENV: 'development',
+                FLASK_DEBUG: '1',
             },
-            args: ['run', '--no-debugger'],
+            args: ['run', '--no-debugger', '--no-reload'],
             jinja: true,
             justMyCode: true,
         };
@@ -87,9 +87,9 @@ suite('Debugging - Configuration Provider Flask', () => {
             module: 'flask',
             env: {
                 FLASK_APP: 'hello',
-                FLASK_ENV: 'development',
+                FLASK_DEBUG: '1',
             },
-            args: ['run', '--no-debugger'],
+            args: ['run', '--no-debugger', '--no-reload'],
             jinja: true,
             justMyCode: true,
         };
@@ -112,9 +112,9 @@ suite('Debugging - Configuration Provider Flask', () => {
             module: 'flask',
             env: {
                 FLASK_APP: 'app.py',
-                FLASK_ENV: 'development',
+                FLASK_DEBUG: '1',
             },
-            args: ['run', '--no-debugger'],
+            args: ['run', '--no-debugger', '--no-reload'],
             jinja: true,
             justMyCode: true,
         };

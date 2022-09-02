@@ -106,7 +106,7 @@ type PythonApiForJupyterExtension = {
         interpreter?: PythonEnvironment,
         allowExceptions?: boolean,
     ): Promise<NodeJS.ProcessEnv | undefined>;
-    isWindowsStoreInterpreter(pythonPath: string): Promise<boolean>;
+    isMicrosoftStoreInterpreter(pythonPath: string): Promise<boolean>;
     suggestionToQuickPickItem(suggestion: PythonEnvironment, workspaceUri?: Uri | undefined): IInterpreterQuickPickItem;
     getKnownSuggestions(resource: Resource): IInterpreterQuickPickItem[];
     /**
@@ -158,7 +158,20 @@ type PythonApiForJupyterExtension = {
         interpreter?: PythonEnvironment,
     ): Promise<string[] | undefined>;
 
+    /**
+     * Call to provide a function that the Python extension can call to request the Python
+     * path to use for a particular notebook.
+     * @param func : The function that Python should call when requesting the Python path.
+     */
     registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
+
+    /**
+     * Call to provide a function that the Python extension can call to request the notebook
+     * document URI related to a particular text document URI, or undefined if there is no
+     * associated notebook.
+     * @param func : The function that Python should call when requesting the notebook URI.
+     */
+    registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void;
 };
 
 type JupyterExtensionApi = {
@@ -185,6 +198,8 @@ export class JupyterExtensionIntegration {
     private jupyterExtension: Extension<JupyterExtensionApi> | undefined;
 
     private jupyterPythonPathFunction: ((uri: Uri) => Promise<string | undefined>) | undefined;
+
+    private getNotebookUriForTextDocumentUriFunction: ((textDocumentUri: Uri) => Uri | undefined) | undefined;
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
@@ -219,8 +234,8 @@ export class JupyterExtensionIntegration {
                 interpreter?: PythonEnvironment,
                 allowExceptions?: boolean,
             ) => this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions),
-            isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> =>
-                this.pyenvs.isWindowsStoreInterpreter(pythonPath),
+            isMicrosoftStoreInterpreter: async (pythonPath: string): Promise<boolean> =>
+                this.pyenvs.isMicrosoftStoreInterpreter(pythonPath),
             getSuggestions: async (resource: Resource): Promise<IInterpreterQuickPickItem[]> =>
                 this.interpreterSelector.getAllSuggestions(resource),
             getKnownSuggestions: (resource: Resource): IInterpreterQuickPickItem[] =>
@@ -281,6 +296,8 @@ export class JupyterExtensionIntegration {
                 this.envActivation.getEnvironmentActivationShellCommands(resource, interpreter),
             registerJupyterPythonPathFunction: (func: (uri: Uri) => Promise<string | undefined>) =>
                 this.registerJupyterPythonPathFunction(func),
+            registerGetNotebookUriForTextDocumentUriFunction: (func: (textDocumentUri: Uri) => Uri | undefined) =>
+                this.registerGetNotebookUriForTextDocumentUriFunction(func),
         });
         return undefined;
     }
@@ -333,5 +350,13 @@ export class JupyterExtensionIntegration {
 
     public getJupyterPythonPathFunction(): ((uri: Uri) => Promise<string | undefined>) | undefined {
         return this.jupyterPythonPathFunction;
+    }
+
+    public registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void {
+        this.getNotebookUriForTextDocumentUriFunction = func;
+    }
+
+    public getGetNotebookUriForTextDocumentUriFunction(): ((textDocumentUri: Uri) => Uri | undefined) | undefined {
+        return this.getNotebookUriForTextDocumentUriFunction;
     }
 }

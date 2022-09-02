@@ -168,10 +168,12 @@ def parse_item(
         )
         nodeid = "{}{}".format(parentid, parameterized)
         parents = [(parentid, item.originalname, kind)] + parents
+        name = parameterized[1:-1] or "<empty>"
     else:
         (nodeid, parents, fileid, testfunc, parameterized) = _parse_node_id(
             item.nodeid, kind
         )
+        name = item.name
 
     # Note: testfunc does not necessarily match item.function.__name__.
     # This can result from importing a test function from another module.
@@ -221,7 +223,7 @@ def parse_item(
 
     test = SingleTestInfo(
         id=nodeid,
-        name=item.name,
+        name=name,
         path=SingleTestPath(
             root=testroot,
             relfile=relfile,

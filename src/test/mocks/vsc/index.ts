@@ -17,6 +17,14 @@ export function escapeCodicons(text: string): string {
     return text.replace(escapeCodiconsRegex, (match, escaped) => (escaped ? match : `\\${match}`));
 }
 
+export class ThemeIcon {
+    static readonly File: ThemeIcon;
+
+    static readonly Folder: ThemeIcon;
+
+    constructor(public readonly id: string, public readonly color?: ThemeColor) {}
+}
+
 export class ThemeColor {
     constructor(public readonly id: string) {}
 }

@@ -6,28 +6,28 @@
 import { inject, injectable } from 'inversify';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
-import { QuickPick, QuickPickItem, QuickPickItemKind } from 'vscode';
+import { QuickPick, QuickPickItem, QuickPickItemKind, ThemeIcon } from 'vscode';
 import * as nls from 'vscode-nls';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
-import { Commands, Octicons } from '../../../../common/constants';
+import { Commands, Octicons, ThemeIcons } from '../../../../common/constants';
 import { isParentPath } from '../../../../common/platform/fs-paths';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
-import { getIcon } from '../../../../common/utils/icons';
 import { Common, InterpreterQuickPickList } from '../../../../common/utils/localize';
 import { noop } from '../../../../common/utils/misc';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
+    InputFlowAction,
     InputStep,
     IQuickPickParameters,
 } from '../../../../common/utils/multiStepInput';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
-import { REFRESH_BUTTON_ICON } from '../../../../debugger/extension/attachQuickPick/types';
 import { EnvironmentType } from '../../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { IInterpreterService, PythonEnvironmentsChangedEvent } from '../../../contracts';
+import { isProblematicCondaEnvironment } from '../../environmentTypeComparer';
 import {
     IInterpreterQuickPickItem,
     IInterpreterSelector,
@@ -73,6 +73,16 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     private readonly manualEntrySuggestion: ISpecialQuickPickItem = {
         label: `${Octicons.Add} ${InterpreterQuickPickList.enterPath.label}`,
         alwaysShow: true,
+    };
+
+    private readonly refreshButton = {
+        iconPath: new ThemeIcon(ThemeIcons.Refresh),
+        tooltip: InterpreterQuickPickList.refreshInterpreterList,
+    };
+
+    private readonly hardRefreshButton = {
+        iconPath: new ThemeIcon(ThemeIcons.ClearAll),
+        tooltip: InterpreterQuickPickList.clearAllAndRefreshInterpreterList,
     };
 
     private readonly noPythonInstalled: ISpecialQuickPickItem = {
@@ -125,11 +135,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         // If the list is refreshing, it's crucial to maintain sorting order at all
         // times so that the visible items do not change.
         const preserveOrderWhenFiltering = !!this.interpreterService.refreshPromise;
-        const suggestions = this.getItems(state.workspace);
-        // Discovery is no longer guranteed to be auto-triggered on extension load, so trigger it when
-        // user interacts with the interpreter picker but only once per session. Users can rely on the
-        // refresh button if they want to trigger it more than once.
-        this.interpreterService.triggerRefresh(undefined, { ifNotTriggerredAlready: true }).ignoreErrors();
+        const suggestions = this._getItems(state.workspace);
         state.path = undefined;
         const currentInterpreterPathDisplay = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
@@ -148,12 +154,30 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             matchOnDetail: true,
             matchOnDescription: true,
             title: InterpreterQuickPickList.browsePath.openButtonLabel,
-            customButtonSetup: {
-                button: {
-                    iconPath: getIcon(REFRESH_BUTTON_ICON),
-                    tooltip: InterpreterQuickPickList.refreshInterpreterList,
+            customButtonSetups: [
+                {
+                    button: this.hardRefreshButton,
+                    callback: (quickpickInput) => {
+                        this.refreshButtonCallback(quickpickInput, true);
+                    },
                 },
-                callback: () => this.interpreterService.triggerRefresh().ignoreErrors(),
+                {
+                    button: this.refreshButton,
+                    callback: (quickpickInput) => {
+                        this.refreshButtonCallback(quickpickInput, false);
+                    },
+                },
+            ],
+            initialize: () => {
+                // Note discovery is no longer guranteed to be auto-triggered on extension load, so trigger it when
+                // user interacts with the interpreter picker but only once per session. Users can rely on the
+                // refresh button if they want to trigger it more than once. However if no envs were found previously,
+                // always trigger a refresh.
+                if (this.interpreterService.getInterpreters().length === 0) {
+                    this.interpreterService.triggerRefresh().ignoreErrors();
+                } else {
+                    this.interpreterService.triggerRefresh(undefined, { ifNotTriggerredAlready: true }).ignoreErrors();
+                }
             },
             onChangeItem: {
                 event: this.interpreterService.onDidChangeInterpreters,
@@ -178,7 +202,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_SELECTED, undefined, { action: 'escape' });
         } else if (selection.label === this.manualEntrySuggestion.label) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_OR_FIND);
-            return this._enterOrBrowseInterpreterPath(input, state, suggestions);
+            return this._enterOrBrowseInterpreterPath.bind(this);
         } else if (selection.label === this.noPythonInstalled.label) {
             this.commandManager.executeCommand(Commands.InstallPython).then(noop, noop);
             this.wasNoPythonInstalledItemClicked = true;
@@ -191,7 +215,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         return undefined;
     }
 
-    private getItems(resource: Resource) {
+    public _getItems(resource: Resource): QuickPickType[] {
         const suggestions: QuickPickType[] = [this.manualEntrySuggestion];
         const defaultInterpreterPathSuggestion = this.getDefaultInterpreterPathSuggestion(resource);
         if (defaultInterpreterPathSuggestion) {
@@ -341,24 +365,26 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
 
     private finalizeItems(items: QuickPickType[], resource: Resource) {
         const interpreterSuggestions = this.interpreterSelector.getSuggestions(resource, true);
-        if (!this.interpreterService.refreshPromise) {
+        const r = this.interpreterService.refreshPromise;
+        if (!r) {
             if (interpreterSuggestions.length) {
                 this.setRecommendedItem(interpreterSuggestions, items, resource);
                 // Add warning label to certain environments
                 items.forEach((item, i) => {
-                    if (
-                        isInterpreterQuickPickItem(item) &&
-                        item.interpreter.path === 'python' &&
-                        item.interpreter.envType === EnvironmentType.Conda
-                    ) {
+                    if (isInterpreterQuickPickItem(item) && isProblematicCondaEnvironment(item.interpreter)) {
                         if (!items[i].label.includes(Octicons.Warning)) {
                             items[i].label = `${Octicons.Warning} ${items[i].label}`;
                         }
                     }
                 });
             } else {
-                items.push(this.noPythonInstalled);
-                if (this.wasNoPythonInstalledItemClicked) {
+                if (!items.some((i) => isSpecialQuickPickItem(i) && i.label === this.noPythonInstalled.label)) {
+                    items.push(this.noPythonInstalled);
+                }
+                if (
+                    this.wasNoPythonInstalledItemClicked &&
+                    !items.some((i) => isSpecialQuickPickItem(i) && i.label === this.tipToReloadWindow.label)
+                ) {
                     items.push(this.tipToReloadWindow);
                 }
             }
@@ -392,11 +418,25 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         }
     }
 
+    private refreshButtonCallback(input: QuickPick<QuickPickItem>, clearCache: boolean) {
+        input.buttons = [
+            {
+                iconPath: new ThemeIcon(ThemeIcons.SpinningLoader),
+                tooltip: InterpreterQuickPickList.refreshingInterpreterList,
+            },
+        ];
+        this.interpreterService
+            .triggerRefresh(undefined, { clearCache })
+            .finally(() => {
+                input.buttons = [this.hardRefreshButton, this.refreshButton];
+            })
+            .ignoreErrors();
+    }
+
     @captureTelemetry(EventName.SELECT_INTERPRETER_ENTER_BUTTON)
     public async _enterOrBrowseInterpreterPath(
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs,
-        suggestions: QuickPickType[],
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         const items: QuickPickItem[] = [
             {
@@ -415,7 +455,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             // User entered text in the filter box to enter path to python, store it
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'enter' });
             state.path = selection;
-            this.sendInterpreterEntryTelemetry(selection, state.workspace, suggestions);
+            this.sendInterpreterEntryTelemetry(selection, state.workspace);
         } else if (selection && selection.label === InterpreterQuickPickList.browsePath.label) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'browse' });
             const filtersKey = 'Executables';
@@ -429,9 +469,12 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             });
             if (uris && uris.length > 0) {
                 state.path = uris[0].fsPath;
-                this.sendInterpreterEntryTelemetry(state.path!, state.workspace, suggestions);
+                this.sendInterpreterEntryTelemetry(state.path!, state.workspace);
+            } else {
+                return Promise.reject(InputFlowAction.resume);
             }
         }
+        return Promise.resolve();
     }
 
     @captureTelemetry(EventName.SELECT_INTERPRETER)
@@ -462,7 +505,8 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
      * @param selection Intepreter path that was either entered manually or picked by browsing through the filesystem.
      */
     // eslint-disable-next-line class-methods-use-this
-    private sendInterpreterEntryTelemetry(selection: string, workspace: Resource, suggestions: QuickPickType[]): void {
+    private sendInterpreterEntryTelemetry(selection: string, workspace: Resource): void {
+        const suggestions = this._getItems(workspace);
         let interpreterPath = path.normalize(untildify(selection));
 
         if (!path.isAbsolute(interpreterPath)) {
@@ -533,7 +577,7 @@ function getGroup(item: IInterpreterQuickPickItem, workspacePath?: string) {
         case EnvironmentType.Global:
         case EnvironmentType.System:
         case EnvironmentType.Unknown:
-        case EnvironmentType.WindowsStore:
+        case EnvironmentType.MicrosoftStore:
             return EnvGroups.Global;
         default:
             return EnvGroups[item.interpreter.envType];

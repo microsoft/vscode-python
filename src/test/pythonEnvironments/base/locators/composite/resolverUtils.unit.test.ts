@@ -106,7 +106,7 @@ suite('Resolver Utils', () => {
         });
     });
 
-    suite('Windows store', () => {
+    suite('Microsoft store', () => {
         const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
         const testStoreAppRoot = path.join(testLocalAppData, 'Microsoft', 'WindowsApps');
 
@@ -152,7 +152,7 @@ suite('Resolver Utils', () => {
                 searchLocation: undefined,
                 name: '',
                 location: '',
-                kind: [PythonEnvKind.WindowsStore],
+                kind: [PythonEnvKind.MicrosoftStore],
                 distro: { org: 'Microsoft' },
                 source: [PythonEnvSource.PathEnvVar],
                 ...createExpectedInterpreterInfo(python38path),
@@ -161,7 +161,7 @@ suite('Resolver Utils', () => {
 
             const actual = await resolveEnv({
                 executablePath: python38path,
-                kind: PythonEnvKind.WindowsStore,
+                kind: PythonEnvKind.MicrosoftStore,
             });
 
             assertEnvEqual(actual, expected);
@@ -174,7 +174,7 @@ suite('Resolver Utils', () => {
                 searchLocation: undefined,
                 name: '',
                 location: '',
-                kind: [PythonEnvKind.WindowsStore],
+                kind: [PythonEnvKind.MicrosoftStore],
                 distro: { org: 'Microsoft' },
                 source: [PythonEnvSource.PathEnvVar],
                 ...createExpectedInterpreterInfo(python38path),
@@ -183,7 +183,7 @@ suite('Resolver Utils', () => {
 
             const actual = await resolveEnv({
                 executablePath: python38path,
-                kind: PythonEnvKind.WindowsStore,
+                kind: PythonEnvKind.MicrosoftStore,
             });
 
             assertEnvEqual(actual, expected);
@@ -336,7 +336,7 @@ suite('Resolver Utils', () => {
                 version,
                 arch: Architecture.Unknown,
                 distro: { org: '' },
-                searchLocation: Uri.file(path.dirname(location)),
+                searchLocation: Uri.file(location),
                 source: [],
             };
             setEnvDisplayString(info);

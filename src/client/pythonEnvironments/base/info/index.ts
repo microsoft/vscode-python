@@ -12,7 +12,7 @@ export enum PythonEnvKind {
     Unknown = 'unknown',
     // "global"
     System = 'global-system',
-    WindowsStore = 'global-windows-store',
+    MicrosoftStore = 'global-microsoft-store',
     Pyenv = 'global-pyenv',
     Poetry = 'poetry',
     Custom = 'global-custom',
@@ -50,7 +50,7 @@ export const virtualEnvKinds = [
 export const globallyInstalledEnvKinds = [
     PythonEnvKind.OtherGlobal,
     PythonEnvKind.Unknown,
-    PythonEnvKind.WindowsStore,
+    PythonEnvKind.MicrosoftStore,
     PythonEnvKind.System,
     PythonEnvKind.Custom,
 ];

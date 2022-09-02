@@ -150,9 +150,9 @@ suite('Environment sorting', () => {
             expected: 1,
         },
         {
-            title: 'Windows Store environment should not come first when there are global envs',
+            title: 'Microsoft Store environment should not come first when there are global envs',
             envA: {
-                envType: EnvironmentType.WindowsStore,
+                envType: EnvironmentType.MicrosoftStore,
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
             envB: {
@@ -233,6 +233,19 @@ suite('Environment sorting', () => {
             } as PythonEnvironment,
             expected: 1,
         },
+        {
+            title: 'Problematic environments should come last',
+            envA: {
+                envType: EnvironmentType.Conda,
+                envPath: path.join(workspacePath, '.venv'),
+                path: 'python',
+            } as PythonEnvironment,
+            envB: {
+                envType: EnvironmentType.System,
+                version: { major: 3, minor: 10, patch: 2 },
+            } as PythonEnvironment,
+            expected: 1,
+        },
     ];
 
     testcases.forEach(({ title, envA, envB, expected }) => {
@@ -297,7 +310,7 @@ suite('getEnvTypeHeuristic tests', () => {
 
     const globalInterpretersEnvTypes = [
         EnvironmentType.System,
-        EnvironmentType.WindowsStore,
+        EnvironmentType.MicrosoftStore,
         EnvironmentType.Global,
         EnvironmentType.Unknown,
         EnvironmentType.Pyenv,

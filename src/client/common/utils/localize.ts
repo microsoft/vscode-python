@@ -34,7 +34,7 @@ export namespace Diagnostics {
     );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',
-        'You need to select a Python interpreter before you start debugging.\n\nTip: click on "Select Python Interpreter" in the status bar.',
+        'You need to select a Python interpreter before you start debugging.\n\nTip: click on "Select Interpreter" in the status bar.',
     );
     export const invalidPythonPathInDebuggerLaunch = localize(
         'diagnostics.invalidPythonPathInDebuggerLaunch',
@@ -277,6 +277,10 @@ export namespace Interpreters {
         'Interpreters.selectInterpreterTip',
         'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar',
     );
+    export const installPythonTerminalMessage = localize(
+        'Interpreters.installPythonTerminalMessage',
+        '💡 Please try installing the python package using your package manager. Alternatively you can also download it from https://www.python.org/downloads',
+    );
 }
 
 export namespace InterpreterQuickPickList {
@@ -312,6 +316,14 @@ export namespace InterpreterQuickPickList {
     export const refreshInterpreterList = localize(
         'InterpreterQuickPickList.refreshInterpreterList',
         'Refresh Interpreter list',
+    );
+    export const clearAllAndRefreshInterpreterList = localize(
+        'InterpreterQuickPickList.clearAllAndRefreshInterpreterList',
+        'Clear all and Refresh Interpreter list',
+    );
+    export const refreshingInterpreterList = localize(
+        'InterpreterQuickPickList.refreshingInterpreterList',
+        'Refreshing Interpreter list...',
     );
 }
 
@@ -514,6 +526,11 @@ export namespace Testing {
     );
     export const errorUnittestDiscovery = localize('Testing.errorUnittestDiscovery', 'Unittest test discovery error');
     export const seePythonOutput = localize('Testing.seePythonOutput', '(see Output > Python)');
+    export const cancelUnittestExecution = localize(
+        'Testing.cancelUnittestExecution',
+        'Canceled unittest test execution',
+    );
+    export const errorUnittestExecution = localize('Testing.errorUnittestExecution', 'Unittest test execution error');
 }
 
 export namespace OutdatedDebugger {
