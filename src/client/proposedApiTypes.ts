@@ -234,7 +234,7 @@ export interface ActiveEnvironmentChangedParams {
     /**
      * Workspace folder the environment changed for.
      */
-    resource?: WorkspaceFolder;
+    resource: WorkspaceFolder | undefined;
 }
 
 export interface RefreshEnvironmentsOptions {

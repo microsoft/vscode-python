@@ -17,7 +17,6 @@ export enum EnvironmentType {
     // Simple virtual envs
     VirtualEnv = 'VirtualEnv',
     Venv = 'Venv',
-    Poetry = 'Poetry',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
     // Global
     Global = 'Global',

@@ -96,8 +96,13 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         invalidIndexes.forEach((index) => {
             const env = this.envs.splice(index, 1)[0];
             this.fire({ old: env, new: undefined });
+            const envPath = getEnvPath(env.executable.filename, env.location);
             reportInterpretersChanged([
-                { path: getEnvPath(env.executable.filename, env.location).path, type: 'remove' },
+                {
+                    pathID: envPath.path,
+                    type: 'remove',
+                    executablePath: envPath.pathType === 'envFolderPath' ? undefined : env.executable.filename,
+                },
             ]);
         });
     }
@@ -115,7 +120,14 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         if (!found) {
             this.envs.push(env);
             this.fire({ new: env });
-            reportInterpretersChanged([{ path: getEnvPath(env.executable.filename, env.location).path, type: 'add' }]);
+            const envPath = getEnvPath(env.executable.filename, env.location);
+            reportInterpretersChanged([
+                {
+                    pathID: envPath.path,
+                    type: 'add',
+                    executablePath: envPath.pathType === 'envFolderPath' ? undefined : env.executable.filename,
+                },
+            ]);
         }
     }
 
@@ -128,10 +140,12 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
                 this.envs[index] = newValue;
             }
             this.fire({ old: oldValue, new: newValue });
+            const envPath = getEnvPath(oldValue.executable.filename, oldValue.location);
             reportInterpretersChanged([
                 {
-                    path: getEnvPath(oldValue.executable.filename, oldValue.location).path,
+                    pathID: envPath.path,
                     type: newValue ? 'update' : 'remove',
+                    executablePath: envPath.pathType === 'envFolderPath' ? undefined : oldValue.executable.filename,
                 },
             ]);
         }
@@ -172,7 +186,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         this.envs.forEach((e) => {
             this.fire({ old: e, new: undefined });
         });
-        reportInterpretersChanged([{ path: undefined, type: 'clear-all' }]);
+        reportInterpretersChanged([{ type: 'clear-all' }]);
         this.envs = [];
         return Promise.resolve();
     }

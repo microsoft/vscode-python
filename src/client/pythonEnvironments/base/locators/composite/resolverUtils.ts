@@ -269,7 +269,7 @@ async function isBaseCondaPyenvEnvironment(executablePath: string) {
     return arePathsSame(path.dirname(location), pyenvVersionDir);
 }
 
-async function resolveMicrosoftStoreEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
+async function resolveMicrosoftStoreEnv(env: CompositeEnvInfo): Promise<PythonEnvInfo> {
     const { executablePath } = env;
     return buildEnvInfo({
         kind: env.kind,

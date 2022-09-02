@@ -11,7 +11,7 @@ import {
     Uri,
 } from 'vscode';
 import '../common/extensions';
-import { IApplicationShell, IDocumentManager } from '../common/application/types';
+import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -221,8 +221,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
             this._pythonPathSetting = pySettings.pythonPath;
             this.didChangeInterpreterEmitter.fire();
             reportActiveInterpreterChanged({
-                path: pySettings.pythonPath,
-                resource,
+                pathID: pySettings.pythonPath,
+                resource: this.serviceContainer.get<IWorkspaceService>(IWorkspaceService).getWorkspaceFolder(resource),
             });
             const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
             interpreterDisplay.refresh().catch((ex) => traceError('Python Extension: display.refresh', ex));
