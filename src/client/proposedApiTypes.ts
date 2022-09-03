@@ -124,7 +124,7 @@ export type StandardVersionInfo = BasicVersionInfo & {
 //     shellExec: Function;
 //     execObservable: Function;
 //     terminalExec: () => void;
-//     env?: { [key: string]: string | null | undefined };
+//     env?: { [key: string]: string | null | undefined }; // Should be specific to the current terminal??
 // };
 
 export interface EnvironmentDetails {
