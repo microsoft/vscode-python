@@ -255,7 +255,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 // comment below 229 to run the new way and uncomment above 212 ~ 227
                 // await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
 
-                await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+                // await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
                 // TODO: Use new test discovery mechanism
                 traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
