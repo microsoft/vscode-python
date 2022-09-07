@@ -1,0 +1,11 @@
+LICENSE
+MANIFEST.in
+README.rst
+pytest_vscode_integration.py
+setup.py
+pytest_vscode_integration.egg-info/PKG-INFO
+pytest_vscode_integration.egg-info/SOURCES.txt
+pytest_vscode_integration.egg-info/dependency_links.txt
+pytest_vscode_integration.egg-info/entry_points.txt
+pytest_vscode_integration.egg-info/requires.txt
+pytest_vscode_integration.egg-info/top_level.txt

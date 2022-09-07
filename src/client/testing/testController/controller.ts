@@ -144,7 +144,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             });
             return this.refreshTestData(undefined, { forceRefresh: true });
         };
+<<<<<<< HEAD
 
+=======
+        // this.pythonTestServer = new PythonTestServer(this.pythonExecFactory); // old way where debugLauncher did not have to be passed
+>>>>>>> 9cca1d959 (pytest is now running - unable to collect output)
         this.pythonTestServer = new PythonTestServer(this.pythonExecFactory, this.debugLauncher);
     }
 
@@ -161,7 +165,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             let testProvider: TestProvider;
             if (settings.testing.pytestEnabled) {
                 console.log('settings.testing.pytestEnabled = true');
-                discoveryAdapter = new PytestTestDiscoveryAdapter(this.pythonTestServer, { ...this.configSettings }); // what is the ... for
+                discoveryAdapter = new PytestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings); // what is the ... for
                 executionAdapter = new PytestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = PYTEST_PROVIDER;
             } else if (settings.testing.unittestEnabled) {
@@ -235,10 +239,21 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             if (settings.testing.pytestEnabled) {
                 traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
 
-                // pytest needs to be added in the new design
-
+                // can I move these out of the if statement
+                const workspace = this.workspaceService.getWorkspaceFolder(uri);
+                console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
+                const testAdapter =
+                    this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                testAdapter.discoverTests(
+                    this.testController,
+                    this.refreshCancellation.token,
+                    this.testAdapters.size > 1,
+                    this.workspaceService.workspaceFile?.fsPath,
+                );
                 // Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
+                // comment below 229 to run the new way and uncomment above 212 ~ 227
+                // await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
 
                 await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
@@ -322,6 +337,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 }),
             );
         }
+        console.log('HERE2');
+        this.testController.items.forEach((element) => console.log(element));
+
+        console.log(this.testController.items);
+        console.log('size', this.testController.items.size);
         return Promise.resolve();
     }
 
@@ -422,6 +442,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     }
 
                     if (!settings.testing.pytestEnabled && !settings.testing.unittestEnabled) {
+                        // ** this could be the logic I am looking for
                         unconfiguredWorkspaces.push(workspace);
                     }
                     return Promise.resolve();
