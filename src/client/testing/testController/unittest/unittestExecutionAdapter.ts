@@ -64,7 +64,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
 }
 
 function buildExecutionCommand(args: string[]): TestExecutionCommand {
-    const executionScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'execution.py');
+    const executionScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittest_adapter', 'unittest_execution.py');
 
     return {
         script: executionScript,

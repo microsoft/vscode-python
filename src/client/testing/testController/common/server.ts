@@ -71,6 +71,12 @@ export class PythonTestServer implements ITestServer, Disposable {
         return (this.server.address() as net.AddressInfo).port;
     }
 
+    public createUUID(options: TestCommandOptions): string {
+        const uuid = crypto.randomUUID();
+        this.uuids.set(uuid, options.cwd);
+        return uuid;
+    }
+
     public dispose(): void {
         this.server.close();
         this._onDataReceived.dispose();
@@ -80,15 +86,53 @@ export class PythonTestServer implements ITestServer, Disposable {
         return this._onDataReceived.event;
     }
 
-    async sendCommand(options: TestCommandOptions): Promise<void> {
-        const uuid = crypto.randomUUID();
+    async sendCommandPytest(options: TestCommandOptions, args: string[]): Promise<void> {
+        const uuid = this.createUUID(options);
         const spawnOptions: SpawnOptions = {
             token: options.token,
             cwd: options.cwd,
             throwOnStdErr: true,
         };
 
-        this.uuids.set(uuid, options.cwd);
+        // Create the Python environment in which to execute the command.
+        const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
+            allowEnvironmentFetchExceptions: false,
+            resource: options.workspaceFolder,
+        };
+        const execService = await this.executionFactory.createActivatedEnvironment(creationOptions);
+
+        try {
+            if (options.debugBool) {
+                const launchOptions: LaunchOptions = {
+                    cwd: options.cwd,
+                    args,
+                    token: options.token,
+                    testProvider: UNITTEST_PROVIDER,
+                };
+
+                await this.debugLauncher!.launchDebugger(launchOptions);
+            } else {
+                await execService.exec(args, spawnOptions);
+            }
+        } catch (ex) {
+            this.uuids.delete(uuid);
+            this._onDataReceived.fire({
+                cwd: options.cwd,
+                data: JSON.stringify({
+                    status: 'error',
+                    errors: [(ex as Error).message],
+                }),
+            });
+        }
+    }
+
+    async sendCommand(options: TestCommandOptions): Promise<void> {
+        const uuid = this.createUUID(options);
+        const spawnOptions: SpawnOptions = {
+            token: options.token,
+            cwd: options.cwd,
+            throwOnStdErr: true,
+        };
 
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {

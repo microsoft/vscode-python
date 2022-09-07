@@ -63,7 +63,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 }
 
 function buildDiscoveryCommand(args: string[]): TestDiscoveryCommand {
-    const discoveryScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'discovery.py');
+    const discoveryScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittest_adapter', 'unittest_discovery.py');
 
     return {
         script: discoveryScript,
