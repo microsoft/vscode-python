@@ -38,9 +38,9 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     public async discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
         if (!this.deferred) {
             const settings = this.configSettings.getSettings(uri);
-            const { unittestArgs } = settings.testing;
+            const { pytestArgs } = settings.testing;
 
-            const command = buildDiscoveryCommand(unittestArgs);
+            const command = buildDiscoveryCommand(pytestArgs);
 
             this.cwd = uri.fsPath;
 
@@ -62,7 +62,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 }
 
 function buildDiscoveryCommand(args: string[]): TestDiscoveryCommand {
-    const discoveryScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'discovery.py');
+    const discoveryScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pytest_adapter', 'pytest_discovery.py');
 
     return {
         script: discoveryScript,
