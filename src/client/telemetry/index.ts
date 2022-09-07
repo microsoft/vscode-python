@@ -1960,7 +1960,7 @@ export interface IEventNamePropertyMapping {
 				"ABExp.queriedFeature": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The experimental feature being queried" }
 			}
 	*/
-      /* __GDPR__
+    /* __GDPR__
 			"call-tas-error" : {
 				"owner": "luabud",
 				"comment": "Logs when calls to the experiment service fails",
