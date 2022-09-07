@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+<<<<<<< HEAD
 import enum
 import json
 import os
@@ -7,10 +8,13 @@ import sys
 from dbm.ndbm import library
 from typing import KeysView, List, Literal, Optional, Tuple, TypedDict, Union
 from unittest import TestCase
+=======
+>>>>>>> 5f80ae666 (pushing changes in order to rebase)
 
 import pytest
 
 
+<<<<<<< HEAD
 # Inherit from str so it's JSON serializable.
 class TestNodeTypeEnum(str, enum.Enum):
     class_ = "class"
@@ -228,3 +232,26 @@ Request-uuid: {testuuid}
 
 {data}"""
         result = s.socket.sendall(request.encode("utf-8"))  # type: ignore
+=======
+def pytest_addoption(parser):
+    group = parser.getgroup("vscode-integration")
+    group.addoption(
+        "--foo",
+        action="store",
+        dest="dest_foo",
+        default="2022",
+        help='Set the value for the fixture "bar".',
+    )
+
+    parser.addini("HELLO", "Dummy pytest.ini setting")
+
+
+@pytest.fixture
+def bar(request):
+    return request.config.option.dest_foo
+
+
+def pytest_runtest_setup(item):
+    # called for running each test in 'a' directory
+    print("AAAAA: setting up", item)
+>>>>>>> 5f80ae666 (pushing changes in order to rebase)
