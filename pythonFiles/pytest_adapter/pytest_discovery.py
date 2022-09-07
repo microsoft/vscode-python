@@ -11,6 +11,7 @@ import traceback
 from typing import List, Literal, Optional, Tuple, TypedDict, Union
 
 import pytest
+import pytest_vscode_integration
 
 sys.path.append(
     "/Users/eleanorboyd/.vscode/extensions/ms-python.python-2022.12.1/pythonFiles/lib/python"
@@ -23,11 +24,15 @@ debugpy.connect(5678)
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PYTHON_FILES)
 
+
 from pytest_utils import TestNode, parse_unittest_args
 from testing_tools import socket_manager
 
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
+
+
+# pytest_plugins = ("myapp.testsupport.myplugin",)
 
 from typing_extensions import NotRequired
 
@@ -98,8 +103,13 @@ def discover_tests(start_dir: str) -> PayloadDict:
     try:
         # test loading
         tests = ""
-        retcode = pytest.main(["--collect-only", "-q"])
-        print("dine")
+        # retcode = pytest.main(["--collect-only", "-q"])
+        # print("dine")
+        # sys.exit(pytest.main(["-qq"], plugins=[MyPlugin()]))
+        # python -
+        os.system("python3 -m pytest --collect-only")
+        print("HELLO")
+        os.system("python3 -m pytest --collect-only -p pytest-vscode-integration")
 
     except Exception:
         errors.append(traceback.format_exc())
@@ -112,6 +122,11 @@ def discover_tests(start_dir: str) -> PayloadDict:
         payload["errors"] = errors
 
     return payload
+
+
+class MyPlugin:
+    def pytest_sessionfinish(self):
+        print("*** test run reporting finishing")
 
 
 if __name__ == "__main__":
