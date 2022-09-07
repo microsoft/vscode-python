@@ -21,18 +21,16 @@ export interface IProposedExtensionAPI {
          */
         getActiveEnvironmentPath(resource?: Resource): Promise<EnvironmentPath | undefined>;
         /**
-         * Returns details for the given python executable. Details such as absolute python executable path,
-         * version, type (conda, pyenv, etc). Metadata such as `sysPrefix` can be found under
-         * metadata field.
+         * Returns details for the given environment path, or `undefined` if the env is invalid.
          * @param pathID : Full path to environment folder or python executable whose details you need.
-         * @param options : [optional]
-         *     * useCache : When true, cache is checked first for any data, returns even if there
-         *                  is partial data.
          */
-        getEnvironmentDetails(
-            pathID: UniquePathType | EnvironmentPath,
-            options?: EnvironmentDetailsOptions,
-        ): Promise<EnvironmentDetails | undefined>;
+        getEnvironmentDetails(pathID: UniquePathType | EnvironmentPath): Promise<EnvironmentDetails | undefined>;
+        /**
+         * Returns current in-memory details for the given environment path if any, even if there's partial data.
+         * Only returns if the final type and name of an environment is known.
+         * @param pathID : Full path to environment folder or python executable whose details you need.
+         */
+        getEnvironmentDetailsSync(pathID: UniquePathType | EnvironmentPath): EnvironmentDetails | undefined;
         /**
          * Sets the active environment path for the python extension for the resource. Configuration target
          * will always be the workspace folder.
@@ -44,9 +42,8 @@ export interface IProposedExtensionAPI {
         locator: {
             /**
              * Returns paths to environments that uniquely identifies an environment found by the extension
-             * at the time of calling. It returns the values currently in memory. This API will *not* trigger a refresh. If a refresh is going on it
-             * will *not* wait for the refresh to finish.  This will return what is known so far. To get
-             * complete list `await` on promise returned by `getRefreshPromise()`.
+             * at the time of calling. It returns the values currently in memory, which carries what is
+             * known so far. To get complete list `await` on promise returned by `getRefreshPromise()`.
              */
             getEnvironmentPaths(): EnvironmentPath[] | undefined;
             /**
@@ -55,23 +52,18 @@ export interface IProposedExtensionAPI {
              */
             onDidChangeEnvironments: Event<EnvironmentsChangedParams[]>;
             /**
-             * This API will re-trigger environment discovery. Extensions can wait on the returned
-             * promise to get the updated environment list. If there is a refresh already going on
-             * then it returns the promise for that refresh.
-             * @param options : [optional]
-             *     * clearCache : When true, this will clear the cache before environment refresh
-             *                    is triggered.
+             * This API will trigger environment discovery if not already triggered for the session. If
+             * there is a refresh already going on then it returns the promise for that refresh.
              */
-            refreshEnvironments(options?: RefreshEnvironmentsOptions): Promise<EnvironmentPath[] | undefined>;
+            refreshEnvironments(): Promise<void>;
             /**
              * Returns a promise for the ongoing refresh. Returns `undefined` if there are no active
              * refreshes going on.
              */
-            getRefreshPromise(options?: GetRefreshPromiseOptions): Promise<void> | undefined;
+            getRefreshPromise(): Promise<void> | undefined;
             /**
              * Tracks discovery progress for current list of known environments, i.e when it starts, finishes or any other relevant
-             * stage. Note the progress for a particular query is currently not tracked or reported, this only indicates progress of
-             * the entire collection.
+             * stage.
              */
             readonly onRefreshProgress: Event<ProgressNotificationEvent>;
         };
@@ -128,6 +120,7 @@ export type StandardVersionInfo = BasicVersionInfo & {
 // };
 
 export interface EnvironmentDetails {
+    pathID: UniquePathType;
     executable: {
         path: string;
         bitness?: Architecture;
@@ -151,29 +144,13 @@ export interface EnvironmentDetails {
         sysVersion?: string;
     };
     implementation?: {
-        // `sys.implementation`
         name: string;
         version: StandardVersionInfo;
     };
 }
 
-export interface EnvironmentDetailsOptions {
-    /**
-     * When true, cache is checked first for any data, returns even if there is partial data.
-     */
-    useCache: boolean;
-}
-
-export interface GetRefreshPromiseOptions {
-    /**
-     * Get refresh promise which resolves once the following stage has been reached for the list of known environments.
-     */
-    stage?: ProgressReportStage;
-}
-
 export enum ProgressReportStage {
     discoveryStarted = 'discoveryStarted',
-    allPathsDiscovered = 'allPathsDiscovered',
     discoveryFinished = 'discoveryFinished',
 }
 
@@ -203,31 +180,14 @@ export interface EnvironmentPath {
     executablePath: string | undefined;
 }
 
-export type EnvironmentsChangedParams =
-    | ({
-          /**
-           * * "add": New environment is added.
-           * * "remove": Existing environment in the list is removed.
-           * * "update": New information found about existing environment.
-           */
-          type: 'add' | 'remove' | 'update';
-      } & EnvironmentPath)
-    | {
-          /**
-           * * "clear-all": Remove all of the items in the list. (This is fired when a hard refresh is triggered)
-           */
-          type: 'clear-all';
-      }
-    | {
-          /**
-           * The location at which the environment got created.
-           */
-          location: string;
-          /**
-           * * "created": New environment is created in some location.
-           */
-          type: 'created';
-      };
+export type EnvironmentsChangedParams = {
+    /**
+     * * "add": New environment is added.
+     * * "remove": Existing environment in the list is removed.
+     * * "update": New information found about existing environment.
+     */
+    type: 'add' | 'remove' | 'update';
+} & EnvironmentPath;
 
 export interface ActiveEnvironmentChangedParams {
     pathID: UniquePathType;
@@ -235,15 +195,4 @@ export interface ActiveEnvironmentChangedParams {
      * Workspace folder the environment changed for.
      */
     resource: WorkspaceFolder | undefined;
-}
-
-export interface RefreshEnvironmentsOptions {
-    /**
-     * When `true`, this will clear the cache before environment refresh is triggered.
-     */
-    clearCache?: boolean;
-    /**
-     * Only trigger a refresh if it hasn't already been triggered for this session.
-     */
-    ifNotTriggerredAlready?: boolean;
 }
