@@ -50,21 +50,16 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             const relativePathToPytest = 'pythonFiles/pytest-vscode-integration';
             const fpath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
             // console.debug('1.2: ', fpath);
-            const cc = 'sys.path.append('.concat(fpath.toString(), ')'); // 1.2:  /Users/eleanorboyd/vscode-python/pythonFiles/pytest-vscode-integration
+            //const cc = 'sys.path.append('.concat(fpath.toString(), ')'); // 1.2:  /Users/eleanorboyd/vscode-python/pythonFiles/pytest-vscode-integration
             // console.debug('1.3: ', cc);
-            let command: TestDiscoveryCommand = buildDiscoveryCommand(cc, []);
+            let command: TestDiscoveryCommand = buildDiscoveryCommand('-m pytest --collect-only', []); // as a collection
             const options3: TestCommandOptions = {
                 workspaceFolder: uri,
-                command,
+                'python -m pytest --collect-only -p: ', // with the port, these args for plugin
                 cwd: fpath,
+                env: {"PYTHONPATH": fpath},
             };
             this.testServer.sendCommand(options3);
-
-            // const options2: TestCommandOptions = {
-            //     workspaceFolder: uri,
-            //     command3,
-            //     cwd: this.cwd,
-            // };
 
             this.deferred = createDeferred<DiscoveredTestPayload>();
             const prom = this.deferred.promise;
