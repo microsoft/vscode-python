@@ -30,7 +30,7 @@ export interface IProposedExtensionAPI {
          * Only returns if the final type and name of an environment is known.
          * @param pathID : Full path to environment folder or python executable whose details you need.
          */
-        getEnvironmentDetailsSync(pathID: UniquePathType | EnvironmentPath): EnvironmentDetails | undefined;
+        getEnvironmentDetailsSync(pathID: UniquePathType | EnvironmentPath): PartialEnvironmentDetails | undefined;
         /**
          * Sets the active environment path for the python extension for the resource. Configuration target
          * will always be the workspace folder.
@@ -45,17 +45,12 @@ export interface IProposedExtensionAPI {
              * at the time of calling. It returns the values currently in memory, which carries what is
              * known so far. To get complete list `await` on promise returned by `getRefreshPromise()`.
              */
-            getEnvironmentPaths(): EnvironmentPath[] | undefined;
+            getEnvironments(): UniquePathType[] | undefined;
             /**
              * This event is triggered when the known environment list changes, like when a environment
              * is found, existing environment is removed, or some details changed on an environment.
              */
-            onDidChangeEnvironments: Event<EnvironmentsChangedParams[]>;
-            /**
-             * This API will trigger environment discovery if not already triggered for the session. If
-             * there is a refresh already going on then it returns the promise for that refresh.
-             */
-            refreshEnvironments(): Promise<void>;
+            onDidChangeEnvironments: Event<EnvironmentsChangedParams>;
             /**
              * Returns a promise for the ongoing refresh. Returns `undefined` if there are no active
              * refreshes going on.
@@ -149,6 +144,36 @@ export interface EnvironmentDetails {
     };
 }
 
+export interface PartialEnvironmentDetails {
+    pathID: UniquePathType;
+    executable: {
+        path: string;
+        bitness?: Architecture;
+        sysPrefix?: string;
+    };
+    environment:
+        | {
+              type: EnvType;
+              name: string | undefined;
+              folderPath: string;
+              /**
+               * Any specific workspace folder this environment is created for.
+               * What if that workspace folder is not opened yet? We should still provide a workspace folder so it can be filtered out.
+               * WorkspaceFolder type won't work as it assumes the workspace is opened, hence using URI.
+               */
+              workspaceFolder?: Uri;
+              source: EnvSource[];
+          }
+        | undefined;
+    version: Partial<StandardVersionInfo> & {
+        sysVersion?: string;
+    };
+    implementation?: {
+        name: string;
+        version: Partial<StandardVersionInfo>;
+    };
+}
+
 export enum ProgressReportStage {
     discoveryStarted = 'discoveryStarted',
     discoveryFinished = 'discoveryFinished',
@@ -181,13 +206,14 @@ export interface EnvironmentPath {
 }
 
 export type EnvironmentsChangedParams = {
+    pathID: UniquePathType;
     /**
      * * "add": New environment is added.
      * * "remove": Existing environment in the list is removed.
      * * "update": New information found about existing environment.
      */
     type: 'add' | 'remove' | 'update';
-} & EnvironmentPath;
+};
 
 export interface ActiveEnvironmentChangedParams {
     pathID: UniquePathType;
