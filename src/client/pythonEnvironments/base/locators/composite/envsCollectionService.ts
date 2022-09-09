@@ -108,15 +108,12 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 // Do not trigger another refresh if a refresh has previously finished.
                 return Promise.resolve();
             }
-            refreshPromise = this.startRefresh(query, options);
+            refreshPromise = this.startRefresh(query);
         }
         return refreshPromise.then(() => this.sendTelemetry(query, stopWatch));
     }
 
-    private startRefresh(query: PythonLocatorQuery | undefined, options?: TriggerRefreshOptions): Promise<void> {
-        if (options?.clearCache) {
-            this.cache.clearCache();
-        }
+    private startRefresh(query: PythonLocatorQuery | undefined): Promise<void> {
         this.createProgressStates(query);
         const promise = this.addEnvsToCacheForQuery(query);
         return promise
@@ -176,7 +173,8 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             this.cache.addEnv(env);
         }
         await updatesDone.promise;
-        await this.cache.validateCache();
+        // If query for all envs is done, `seen` should contain the list of all envs.
+        await this.cache.validateCache(query === undefined ? seen : undefined);
         this.cache.flush().ignoreErrors();
     }
 

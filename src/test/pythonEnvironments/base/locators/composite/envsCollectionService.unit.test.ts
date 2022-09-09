@@ -375,49 +375,6 @@ suite('Python envs locator - Environments Collection', async () => {
         sinon.assert.callCount(reportInterpretersChangedStub, eventData.length);
     });
 
-    test('If `clearCache` option is set triggerRefresh() clears the cache before refreshing and fires expected events', async () => {
-        const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
-        const locatedEnvs = getLocatorEnvs();
-        const cachedEnvs = getCachedEnvs();
-        const parentLocator = new SimpleLocator(locatedEnvs, {
-            onUpdated: onUpdated.event,
-            after: async () => {
-                locatedEnvs.forEach((env, index) => {
-                    const update = cloneDeep(env);
-                    update.name = updatedName;
-                    onUpdated.fire({ index, update });
-                });
-                onUpdated.fire({ index: locatedEnvs.length - 1, update: undefined });
-                // It turns out the last env is invalid, ensure it does not appear in the final result.
-                onUpdated.fire({ stage: ProgressReportStage.discoveryFinished });
-            },
-        });
-        const cache = await createCollectionCache({
-            load: async () => cachedEnvs,
-            store: async (e) => {
-                storage = e;
-            },
-        });
-        collectionService = new EnvsCollectionService(cache, parentLocator);
-
-        const events: PythonEnvCollectionChangedEvent[] = [];
-        collectionService.onChanged((e) => {
-            events.push(e);
-        });
-
-        await collectionService.triggerRefresh(undefined, { clearCache: true });
-
-        let envs = cachedEnvs;
-        // Ensure when all the events are applied to the original list in sequence, the final list is as expected.
-        events.forEach((e) => {
-            envs = applyChangeEventToEnvList(envs, e);
-        });
-        const expected = getExpectedEnvs(true);
-        assertEnvsEqual(envs, expected);
-        const queriedEnvs = collectionService.getEnvs();
-        assertEnvsEqual(queriedEnvs, expected);
-    });
-
     test('Ensure progress stage updates are emitted correctly and refresh promises correct track promise for each stage', async () => {
         // Arrange
         const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();

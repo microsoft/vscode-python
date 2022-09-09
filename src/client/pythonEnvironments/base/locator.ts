@@ -195,10 +195,6 @@ export interface GetRefreshEnvironmentsOptions {
 
 export type TriggerRefreshOptions = {
     /**
-     * Trigger a fresh refresh.
-     */
-    clearCache?: boolean;
-    /**
      * Only trigger a refresh if it hasn't already been triggered for this session.
      */
     ifNotTriggerredAlready?: boolean;

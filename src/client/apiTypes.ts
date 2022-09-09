@@ -121,10 +121,6 @@ export interface ActiveEnvironmentChangedParams {
     resource?: Uri;
 }
 
-export interface RefreshEnvironmentsOptions {
-    clearCache?: boolean;
-}
-
 export interface IProposedExtensionAPI {
     environment: {
         /**
@@ -203,7 +199,7 @@ export interface IProposedExtensionAPI {
          *     * clearCache : When true, this will clear the cache before environment refresh
          *                    is triggered.
          */
-        refreshEnvironment(options?: RefreshEnvironmentsOptions): Promise<EnvPathType[] | undefined>;
+        refreshEnvironment(): Promise<EnvPathType[] | undefined>;
         /**
          * Tracks discovery progress for current list of known environments, i.e when it starts, finishes or any other relevant
          * stage. Note the progress for a particular query is currently not tracked or reported, this only indicates progress of

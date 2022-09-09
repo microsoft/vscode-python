@@ -52,13 +52,9 @@ export interface IEnvsCollectionCache {
     /**
      * Removes invalid envs from cache. Note this does not check for outdated info when
      * validating cache.
+     * @param latestListOfEnvs Carries list of latest envs for this workspace session if known.
      */
-    validateCache(): Promise<void>;
-
-    /**
-     * Clears the in-memory cache. This can be used for hard refresh.
-     */
-    clearCache(): Promise<void>;
+    validateCache(latestListOfEnvs?: PythonEnvInfo[]): Promise<void>;
 }
 
 export type PythonEnvLatestInfo = { hasLatestInfo?: boolean } & PythonEnvInfo;
@@ -79,15 +75,34 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         super();
     }
 
-    public async validateCache(): Promise<void> {
+    public async validateCache(latestListOfEnvs?: PythonEnvInfo[]): Promise<void> {
         /**
          * We do check if an env has updated as we already run discovery in background
          * which means env cache will have up-to-date envs eventually. This also means
-         * we avoid the cost of running lstat. So simply remove envs which no longer
-         * exist.
+         * we avoid the cost of running lstat. So simply remove envs which are no longer
+         * valid.
          */
         const areEnvsValid = await Promise.all(
-            this.envs.map((e) => (e.executable.filename === 'python' ? true : pathExists(e.executable.filename))),
+            this.envs.map(async (cachedEnv) => {
+                if (await pathExists(getEnvPath(cachedEnv.executable.filename, cachedEnv.location).path)) {
+                    if (latestListOfEnvs) {
+                        /**
+                         * Only consider a cached env to be valid if it's relevant. That means:
+                         * * It is either reported in the latest complete refresh for this session.
+                         * * Or it is relevant for some other workspace folder which is not opened currently.
+                         */
+                        if (cachedEnv.searchLocation) {
+                            return true;
+                        }
+                        if (latestListOfEnvs.some((env) => cachedEnv.id === env.id)) {
+                            return true;
+                        }
+                    } else {
+                        return true;
+                    }
+                }
+                return false;
+            }),
         );
         const invalidIndexes = areEnvsValid
             .map((isValid, index) => (isValid ? -1 : index))
@@ -194,6 +209,7 @@ async function validateInfo(env: PythonEnvInfo) {
 export async function createCollectionCache(storage: IPersistentStorage): Promise<PythonEnvInfoCache> {
     const cache = new PythonEnvInfoCache(storage);
     await cache.clearAndReloadFromStorage();
-    await cache.validateCache();
+    // Validate in background as to not block the creation of the API.
+    cache.validateCache().ignoreErrors();
     return cache;
 }

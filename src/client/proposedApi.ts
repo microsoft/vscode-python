@@ -8,7 +8,6 @@ import {
     EnvironmentDetailsOptions,
     EnvironmentsChangedParams,
     IProposedExtensionAPI,
-    RefreshEnvironmentsOptions,
 } from './apiTypes';
 import { arePathsSame } from './common/platform/fs-paths';
 import { IInterpreterPathService, Resource } from './common/types';
@@ -101,8 +100,8 @@ export function buildProposedApi(
             setActiveEnvironment(path: string, resource?: Resource): Promise<void> {
                 return interpreterPathService.update(resource, ConfigurationTarget.WorkspaceFolder, path);
             },
-            async refreshEnvironment(options?: RefreshEnvironmentsOptions) {
-                await discoveryApi.triggerRefresh(undefined, options ? { clearCache: options.clearCache } : undefined);
+            async refreshEnvironment() {
+                await discoveryApi.triggerRefresh();
                 const paths = discoveryApi.getEnvs().map((e) => getEnvPath(e.executable.filename, e.location));
                 return Promise.resolve(paths);
             },
