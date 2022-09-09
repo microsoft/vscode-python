@@ -54,8 +54,8 @@ suite('Python envs locator - Environments Collection', async () => {
         return envs;
     }
 
-    function createEnv(executable: string, searchLocation?: Uri, name?: string) {
-        return buildEnvInfo({ executable, searchLocation, name });
+    function createEnv(executable: string, searchLocation?: Uri, name?: string, location?: string) {
+        return buildEnvInfo({ executable, searchLocation, name, location });
     }
 
     function getLocatorEnvs() {
@@ -78,7 +78,7 @@ suite('Python envs locator - Environments Collection', async () => {
             path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project1', '.venv', 'Scripts', 'python.exe'),
             Uri.file(TEST_LAYOUT_ROOT),
         );
-        const envCached3 = createEnv('python');
+        const envCached3 = createEnv('python', undefined, undefined, path.join(TEST_LAYOUT_ROOT, 'conda1'));
         return [envCached1, envCached2, envCached3];
     }
 
@@ -373,6 +373,49 @@ suite('Python envs locator - Environments Collection', async () => {
             sinon.assert.calledWithExactly(reportInterpretersChangedStub, [d]);
         });
         sinon.assert.callCount(reportInterpretersChangedStub, eventData.length);
+    });
+
+    test('triggerRefresh() removes cached envs if not relevant to the run', async () => {
+        const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
+        const locatedEnvs = getLocatorEnvs();
+        const cachedEnvs = getCachedEnvs();
+        const parentLocator = new SimpleLocator(locatedEnvs, {
+            onUpdated: onUpdated.event,
+            after: async () => {
+                locatedEnvs.forEach((env, index) => {
+                    const update = cloneDeep(env);
+                    update.name = updatedName;
+                    onUpdated.fire({ index, update });
+                });
+                onUpdated.fire({ index: locatedEnvs.length - 1, update: undefined });
+                // It turns out the last env is invalid, ensure it does not appear in the final result.
+                onUpdated.fire({ stage: ProgressReportStage.discoveryFinished });
+            },
+        });
+        const cache = await createCollectionCache({
+            load: async () => cachedEnvs,
+            store: async (e) => {
+                storage = e;
+            },
+        });
+        collectionService = new EnvsCollectionService(cache, parentLocator);
+
+        const events: PythonEnvCollectionChangedEvent[] = [];
+        collectionService.onChanged((e) => {
+            events.push(e);
+        });
+
+        await collectionService.triggerRefresh();
+
+        let envs = cachedEnvs;
+        // Ensure when all the events are applied to the original list in sequence, the final list is as expected.
+        events.forEach((e) => {
+            envs = applyChangeEventToEnvList(envs, e);
+        });
+        const expected = getExpectedEnvs(true);
+        assertEnvsEqual(envs, expected);
+        const queriedEnvs = collectionService.getEnvs();
+        assertEnvsEqual(queriedEnvs, expected);
     });
 
     test('Ensure progress stage updates are emitted correctly and refresh promises correct track promise for each stage', async () => {

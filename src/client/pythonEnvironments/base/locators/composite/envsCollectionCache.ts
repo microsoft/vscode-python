@@ -84,7 +84,8 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
          */
         const areEnvsValid = await Promise.all(
             this.envs.map(async (cachedEnv) => {
-                if (await pathExists(getEnvPath(cachedEnv.executable.filename, cachedEnv.location).path)) {
+                const { path } = getEnvPath(cachedEnv.executable.filename, cachedEnv.location);
+                if (await pathExists(path)) {
                     if (latestListOfEnvs) {
                         /**
                          * Only consider a cached env to be valid if it's relevant. That means:
