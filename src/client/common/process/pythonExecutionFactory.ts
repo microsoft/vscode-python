@@ -92,6 +92,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     public async createActivatedEnvironment(
         options: ExecutionFactoryCreateWithEnvironmentOptions,
     ): Promise<IPythonExecutionService> {
+        console.log('made it here');
         const envVars = await this.activationHelper.getActivatedEnvironmentVariables(
             options.resource,
             options.interpreter,

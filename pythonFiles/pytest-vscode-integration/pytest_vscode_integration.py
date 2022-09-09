@@ -24,3 +24,23 @@ def bar(request):
 def pytest_runtest_setup(item):
     # called for running each test in 'a' directory
     print("AAAAA: setting up", item)
+
+
+def pytest_collection_finish(session):
+    print("ALERT!! in plugin  file file ")
+
+
+def pytest_collectstart(collector):
+    c = collector
+    print("collector", c)
+    print("ALERT!! in plugin collector start")
+
+
+# def pytest_addoption(parser, pluginmanager):
+#     print("parser xtra info", parser.extra_info)
+
+#     print("pluginmanager", pluginmanager)
+
+
+# def get_config(request):
+#     print("request,", request.config)

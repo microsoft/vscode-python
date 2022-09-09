@@ -144,11 +144,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             });
             return this.refreshTestData(undefined, { forceRefresh: true });
         };
-<<<<<<< HEAD
-
-=======
-        // this.pythonTestServer = new PythonTestServer(this.pythonExecFactory); // old way where debugLauncher did not have to be passed
->>>>>>> 9cca1d959 (pytest is now running - unable to collect output)
         this.pythonTestServer = new PythonTestServer(this.pythonExecFactory, this.debugLauncher);
     }
 
@@ -249,6 +244,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     this.refreshCancellation.token,
                     this.testAdapters.size > 1,
                     this.workspaceService.workspaceFile?.fsPath,
+                    this.pythonExecFactory,
                 );
                 // Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;

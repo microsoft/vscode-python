@@ -14,6 +14,7 @@ import {
     Uri,
     Location,
 } from 'vscode';
+import { IPythonExecutionFactory } from '../../common/process/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
 import { traceError } from '../../logging';
@@ -201,6 +202,7 @@ export class WorkspaceTestAdapter {
         token?: CancellationToken,
         isMultiroot?: boolean,
         workspaceFilePath?: string,
+        executionFactory?: IPythonExecutionFactory,
     ): Promise<void> {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: this.testProvider });
 
@@ -216,7 +218,11 @@ export class WorkspaceTestAdapter {
 
         let rawTestData;
         try {
-            rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri);
+            if (executionFactory !== undefined) {
+                rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
+            } else {
+                console.log('executionFactory is undefined');
+            }
 
             deferred.resolve();
         } catch (ex) {
