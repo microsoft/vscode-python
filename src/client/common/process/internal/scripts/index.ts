@@ -158,3 +158,8 @@ export function linterScript(): string {
     const script = path.join(SCRIPTS_DIR, 'linter.py');
     return script;
 }
+
+export function createVenvScript(): string {
+    const script = path.join(SCRIPTS_DIR, 'create_venv.py');
+    return script;
+}

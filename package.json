@@ -1542,6 +1542,12 @@
                 },
                 {
                     "category": "Python",
+                    "command": "python.createEnvironment",
+                    "title": "%python.command.python.createEnvironment.title%",
+                    "when": "!virtualWorkspace && shellExecutionSupported"
+                },
+                {
+                    "category": "Python",
                     "command": "python.createTerminal",
                     "title": "%python.command.python.createTerminal.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported"
