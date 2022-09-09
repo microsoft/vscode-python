@@ -85,7 +85,6 @@ export namespace Octicons {
  * to change the icons.
  */
 export namespace ThemeIcons {
-    export const ClearAll = 'clear-all';
     export const Refresh = 'refresh';
     export const SpinningLoader = 'loading~spin';
 }

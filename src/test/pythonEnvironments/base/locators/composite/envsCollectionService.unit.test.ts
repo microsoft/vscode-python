@@ -54,8 +54,8 @@ suite('Python envs locator - Environments Collection', async () => {
         return envs;
     }
 
-    function createEnv(executable: string, searchLocation?: Uri, name?: string) {
-        return buildEnvInfo({ executable, searchLocation, name });
+    function createEnv(executable: string, searchLocation?: Uri, name?: string, location?: string) {
+        return buildEnvInfo({ executable, searchLocation, name, location });
     }
 
     function getLocatorEnvs() {
@@ -72,14 +72,23 @@ suite('Python envs locator - Environments Collection', async () => {
     }
 
     function getValidCachedEnvs() {
+        const cachedEnvForWorkspace = createEnv(
+            path.join(TEST_LAYOUT_ROOT, 'workspace', 'folder1', 'win1', 'python.exe'),
+            Uri.file(path.join(TEST_LAYOUT_ROOT, 'workspace', 'folder1')),
+        );
         const fakeLocalAppDataPath = path.join(TEST_LAYOUT_ROOT, 'storeApps');
         const envCached1 = createEnv(path.join(fakeLocalAppDataPath, 'Microsoft', 'WindowsApps', 'python.exe'));
         const envCached2 = createEnv(
             path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project1', '.venv', 'Scripts', 'python.exe'),
             Uri.file(TEST_LAYOUT_ROOT),
         );
-        const envCached3 = createEnv('python');
-        return [envCached1, envCached2, envCached3];
+        const envCached3 = createEnv(
+            'python',
+            undefined,
+            undefined,
+            path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython', 'condaLackingPython'),
+        );
+        return [cachedEnvForWorkspace, envCached1, envCached2, envCached3];
     }
 
     function getCachedEnvs() {
@@ -87,10 +96,11 @@ suite('Python envs locator - Environments Collection', async () => {
         return [...getValidCachedEnvs(), envCached3];
     }
 
-    function getExpectedEnvs(doNotIncludeCached?: boolean) {
-        const fakeLocalAppDataPath = path.join(TEST_LAYOUT_ROOT, 'storeApps');
-        const envCached1 = createEnv(path.join(fakeLocalAppDataPath, 'Microsoft', 'WindowsApps', 'python.exe'));
-        const envCached2 = createEnv('python');
+    function getExpectedEnvs() {
+        const cachedEnvForWorkspace = createEnv(
+            path.join(TEST_LAYOUT_ROOT, 'workspace', 'folder1', 'win1', 'python.exe'),
+            Uri.file(path.join(TEST_LAYOUT_ROOT, 'workspace', 'folder1')),
+        );
         const env1 = createEnv(path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'), undefined, updatedName);
         const env2 = createEnv(
             path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project1', '.venv', 'Scripts', 'python.exe'),
@@ -102,13 +112,8 @@ suite('Python envs locator - Environments Collection', async () => {
             undefined,
             updatedName,
         );
-        if (doNotIncludeCached) {
-            return [env1, env2, env3].map((e: PythonEnvLatestInfo) => {
-                e.hasLatestInfo = true;
-                return e;
-            });
-        }
-        return [envCached1, envCached2, env1, env2, env3].map((e: PythonEnvLatestInfo) => {
+        // Do not include cached envs which were not yielded by the locator, unless it belongs to some workspace.
+        return [cachedEnvForWorkspace, env1, env2, env3].map((e: PythonEnvLatestInfo) => {
             e.hasLatestInfo = true;
             return e;
         });
@@ -143,99 +148,6 @@ suite('Python envs locator - Environments Collection', async () => {
             envs,
             getValidCachedEnvs().filter((e) => !e.searchLocation),
         );
-    });
-
-    test('triggerRefresh() refreshes the collection and storage with any new environments', async () => {
-        const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
-        const locatedEnvs = getLocatorEnvs();
-        const parentLocator = new SimpleLocator(locatedEnvs, {
-            onUpdated: onUpdated.event,
-            after: async () => {
-                locatedEnvs.forEach((env, index) => {
-                    const update = cloneDeep(env);
-                    update.name = updatedName;
-                    onUpdated.fire({ index, update });
-                });
-                onUpdated.fire({ index: locatedEnvs.length - 1, update: undefined });
-                // It turns out the last env is invalid, ensure it does not appear in the final result.
-                onUpdated.fire({ stage: ProgressReportStage.discoveryFinished });
-            },
-        });
-        const cache = await createCollectionCache({
-            load: async () => getCachedEnvs(),
-            store: async (e) => {
-                storage = e;
-            },
-        });
-        collectionService = new EnvsCollectionService(cache, parentLocator);
-
-        await collectionService.triggerRefresh();
-        const envs = collectionService.getEnvs();
-
-        const expected = getExpectedEnvs();
-        assertEnvsEqual(envs, expected);
-        assertEnvsEqual(storage, expected);
-
-        const eventData = [
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'doesNotExist'),
-                type: 'remove',
-            },
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
-                type: 'add',
-            },
-            {
-                path: path.join(
-                    TEST_LAYOUT_ROOT,
-                    'pyenv2',
-                    '.pyenv',
-                    'pyenv-win',
-                    'versions',
-                    '3.6.9',
-                    'bin',
-                    'python.exe',
-                ),
-                type: 'add',
-            },
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'virtualhome', '.venvs', 'win1', 'python.exe'),
-                type: 'add',
-            },
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
-                type: 'update',
-            },
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project1', '.venv', 'Scripts', 'python.exe'),
-                type: 'update',
-            },
-            {
-                path: path.join(
-                    TEST_LAYOUT_ROOT,
-                    'pyenv2',
-                    '.pyenv',
-                    'pyenv-win',
-                    'versions',
-                    '3.6.9',
-                    'bin',
-                    'python.exe',
-                ),
-                type: 'update',
-            },
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'virtualhome', '.venvs', 'win1', 'python.exe'),
-                type: 'update',
-            },
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'virtualhome', '.venvs', 'win1', 'python.exe'),
-                type: 'remove',
-            },
-        ];
-        eventData.forEach((d) => {
-            sinon.assert.calledWithExactly(reportInterpretersChangedStub, [d]);
-        });
-        sinon.assert.callCount(reportInterpretersChangedStub, eventData.length);
     });
 
     test('If `ifNotTriggerredAlready` option is set and a refresh for query is already triggered, triggerRefresh() does not trigger a refresh', async () => {
@@ -312,70 +224,9 @@ suite('Python envs locator - Environments Collection', async () => {
         });
         const expected = getExpectedEnvs();
         assertEnvsEqual(envs, expected);
-
-        const eventData = [
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'doesNotExist'),
-                type: 'remove',
-            },
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
-                type: 'add',
-            },
-            {
-                path: path.join(
-                    TEST_LAYOUT_ROOT,
-                    'pyenv2',
-                    '.pyenv',
-                    'pyenv-win',
-                    'versions',
-                    '3.6.9',
-                    'bin',
-                    'python.exe',
-                ),
-                type: 'add',
-            },
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'virtualhome', '.venvs', 'win1', 'python.exe'),
-                type: 'add',
-            },
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
-                type: 'update',
-            },
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project1', '.venv', 'Scripts', 'python.exe'),
-                type: 'update',
-            },
-            {
-                path: path.join(
-                    TEST_LAYOUT_ROOT,
-                    'pyenv2',
-                    '.pyenv',
-                    'pyenv-win',
-                    'versions',
-                    '3.6.9',
-                    'bin',
-                    'python.exe',
-                ),
-                type: 'update',
-            },
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'virtualhome', '.venvs', 'win1', 'python.exe'),
-                type: 'update',
-            },
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'virtualhome', '.venvs', 'win1', 'python.exe'),
-                type: 'remove',
-            },
-        ];
-        eventData.forEach((d) => {
-            sinon.assert.calledWithExactly(reportInterpretersChangedStub, [d]);
-        });
-        sinon.assert.callCount(reportInterpretersChangedStub, eventData.length);
     });
 
-    test('If `clearCache` option is set triggerRefresh() clears the cache before refreshing and fires expected events', async () => {
+    test('triggerRefresh() refreshes the collection with any new envs & removes cached envs if not relevant', async () => {
         const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
         const locatedEnvs = getLocatorEnvs();
         const cachedEnvs = getCachedEnvs();
@@ -405,17 +256,18 @@ suite('Python envs locator - Environments Collection', async () => {
             events.push(e);
         });
 
-        await collectionService.triggerRefresh(undefined, { clearCache: true });
+        await collectionService.triggerRefresh();
 
         let envs = cachedEnvs;
         // Ensure when all the events are applied to the original list in sequence, the final list is as expected.
         events.forEach((e) => {
             envs = applyChangeEventToEnvList(envs, e);
         });
-        const expected = getExpectedEnvs(true);
+        const expected = getExpectedEnvs();
         assertEnvsEqual(envs, expected);
         const queriedEnvs = collectionService.getEnvs();
         assertEnvsEqual(queriedEnvs, expected);
+        assertEnvsEqual(storage, expected);
     });
 
     test('Ensure progress stage updates are emitted correctly and refresh promises correct track promise for each stage', async () => {
@@ -500,49 +352,6 @@ suite('Python envs locator - Environments Collection', async () => {
             .ignoreErrors();
         refreshPromise = collectionService.getRefreshPromise({ stage: ProgressReportStage.allPathsDiscovered });
         expect(refreshPromise).to.equal(undefined, 'All paths discovered stage not applicable if a query is provided');
-    });
-
-    test('refreshPromise() correctly indicates the status of the refresh', async () => {
-        const parentLocator = new SimpleLocator(getLocatorEnvs());
-        const cache = await createCollectionCache({
-            load: async () => getCachedEnvs(),
-            store: async () => noop(),
-        });
-        collectionService = new EnvsCollectionService(cache, parentLocator);
-
-        await collectionService.triggerRefresh();
-
-        const eventData = [
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'doesNotExist'),
-                type: 'remove',
-            },
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
-                type: 'add',
-            },
-            {
-                path: path.join(
-                    TEST_LAYOUT_ROOT,
-                    'pyenv2',
-                    '.pyenv',
-                    'pyenv-win',
-                    'versions',
-                    '3.6.9',
-                    'bin',
-                    'python.exe',
-                ),
-                type: 'add',
-            },
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'virtualhome', '.venvs', 'win1', 'python.exe'),
-                type: 'add',
-            },
-        ];
-        eventData.forEach((d) => {
-            sinon.assert.calledWithExactly(reportInterpretersChangedStub, [d]);
-        });
-        sinon.assert.callCount(reportInterpretersChangedStub, eventData.length);
     });
 
     test('resolveEnv() uses cache if complete and up to date info is available', async () => {

@@ -12,7 +12,6 @@ import {
     IProposedExtensionAPI,
     EnvironmentDetailsOptions,
     EnvironmentDetails,
-    RefreshEnvironmentsOptions,
 } from './proposedApiTypes';
 import { PythonEnvInfo } from './pythonEnvironments/base/info';
 import { getEnvPath } from './pythonEnvironments/base/info/env';
@@ -101,8 +100,8 @@ export function buildProposedApi(
             setActiveEnvironment(path: string, resource?: Resource): Promise<void> {
                 return interpreterPathService.update(resource, ConfigurationTarget.WorkspaceFolder, path);
             },
-            async refreshEnvironment(options?: RefreshEnvironmentsOptions) {
-                await discoveryApi.triggerRefresh(undefined, options ? { clearCache: options.clearCache } : undefined);
+            async refreshEnvironment() {
+                await discoveryApi.triggerRefresh();
                 const paths = discoveryApi.getEnvs().map((e) => getEnvPath(e.executable.filename, e.location));
                 return Promise.resolve(paths);
             },

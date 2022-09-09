@@ -244,7 +244,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             traceLog('Conda envs without Python are known to not work well; fixing conda environment...');
             const promise = installer.install(Product.python, await this.getInterpreterDetails(pythonPath));
             shell.withProgress(progressOptions, () => promise);
-            promise.then(() => this.triggerRefresh(undefined, { clearCache: true }).ignoreErrors());
+            promise.then(() => this.triggerRefresh().ignoreErrors());
         }
     }
 }

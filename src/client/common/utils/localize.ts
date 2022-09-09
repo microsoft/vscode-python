@@ -317,10 +317,6 @@ export namespace InterpreterQuickPickList {
         'InterpreterQuickPickList.refreshInterpreterList',
         'Refresh Interpreter list',
     );
-    export const clearAllAndRefreshInterpreterList = localize(
-        'InterpreterQuickPickList.clearAllAndRefreshInterpreterList',
-        'Clear all and Refresh Interpreter list',
-    );
     export const refreshingInterpreterList = localize(
         'InterpreterQuickPickList.refreshingInterpreterList',
         'Refreshing Interpreter list...',

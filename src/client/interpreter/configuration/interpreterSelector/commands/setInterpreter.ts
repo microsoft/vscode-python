@@ -80,11 +80,6 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         tooltip: InterpreterQuickPickList.refreshInterpreterList,
     };
 
-    private readonly hardRefreshButton = {
-        iconPath: new ThemeIcon(ThemeIcons.ClearAll),
-        tooltip: InterpreterQuickPickList.clearAllAndRefreshInterpreterList,
-    };
-
     private readonly noPythonInstalled: ISpecialQuickPickItem = {
         label: `${Octicons.Error} ${InterpreterQuickPickList.noPythonInstalled}`,
         detail: InterpreterQuickPickList.clickForInstructions,
@@ -156,15 +151,9 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             title: InterpreterQuickPickList.browsePath.openButtonLabel,
             customButtonSetups: [
                 {
-                    button: this.hardRefreshButton,
-                    callback: (quickpickInput) => {
-                        this.refreshButtonCallback(quickpickInput, true);
-                    },
-                },
-                {
                     button: this.refreshButton,
                     callback: (quickpickInput) => {
-                        this.refreshButtonCallback(quickpickInput, false);
+                        this.refreshButtonCallback(quickpickInput);
                     },
                 },
             ],
@@ -418,7 +407,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         }
     }
 
-    private refreshButtonCallback(input: QuickPick<QuickPickItem>, clearCache: boolean) {
+    private refreshButtonCallback(input: QuickPick<QuickPickItem>) {
         input.buttons = [
             {
                 iconPath: new ThemeIcon(ThemeIcons.SpinningLoader),
@@ -426,9 +415,9 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             },
         ];
         this.interpreterService
-            .triggerRefresh(undefined, { clearCache })
+            .triggerRefresh()
             .finally(() => {
-                input.buttons = [this.hardRefreshButton, this.refreshButton];
+                input.buttons = [this.refreshButton];
             })
             .ignoreErrors();
     }

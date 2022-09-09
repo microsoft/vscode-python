@@ -16,7 +16,7 @@ import {
     WorkspaceFolder,
 } from 'vscode';
 import { cloneDeep } from 'lodash';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { anything, instance, mock, when, verify } from 'ts-mockito';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IPlatformService } from '../../../../client/common/platform/types';
@@ -80,6 +80,7 @@ suite('Set Interpreter Command', () => {
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         interpreterService = mock<IInterpreterService>();
         when(interpreterService.refreshPromise).thenReturn(undefined);
+        when(interpreterService.triggerRefresh()).thenResolve();
         when(interpreterService.triggerRefresh(anything(), anything())).thenResolve();
         workspace.setup((w) => w.rootPath).returns(() => 'rootPath');
 
@@ -568,17 +569,11 @@ suite('Set Interpreter Command', () => {
             expect(actualParameters).to.not.equal(undefined, 'Parameters not set');
             const refreshButtons = actualParameters!.customButtonSetups;
             expect(refreshButtons).to.not.equal(undefined, 'Callback not set');
+            expect(refreshButtons?.length).to.equal(1);
 
-            expect(refreshButtons?.length).to.equal(2);
-            let arg;
-            when(interpreterService.triggerRefresh(undefined, anything())).thenCall((_, _arg) => {
-                arg = _arg;
-                return Promise.resolve();
-            });
             await refreshButtons![0].callback!({} as QuickPick<QuickPickItem>); // Invoke callback, meaning that the refresh button is clicked.
-            expect(arg).to.deep.equal({ clearCache: true });
-            await refreshButtons![1].callback!({} as QuickPick<QuickPickItem>); // Invoke callback, meaning that the refresh button is clicked.
-            expect(arg).to.deep.equal({ clearCache: false });
+
+            verify(interpreterService.triggerRefresh()).once();
         });
 
         test('Events to update quickpick updates the quickpick accordingly', async () => {
