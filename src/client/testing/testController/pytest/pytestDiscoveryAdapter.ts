@@ -79,7 +79,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
         try {
             const s: ExecutionResult<string> = await execService.exec(
-                ['-m', 'pytest', '--collect-only', '--foo', 'FOOIn'].concat(pytestArgs),
+                ['-m', 'pytest', '--collect-only', '--port', '500'].concat(pytestArgs),
                 spawnOptions,
             );
             console.debug('outout', s.stdout);

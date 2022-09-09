@@ -5,25 +5,28 @@ import pytest
 def pytest_addoption(parser):
     group = parser.getgroup("vscode-integration")
     group.addoption(
-        "--foo",
+        "--port",
         action="store",
-        dest="dest_foo",
-        default="2022",
-        help='Set the value for the fixture "bar".',
+        dest="port_arg",
+        default="500",
+        help="Get the port value to send back data to.",
     )
 
-    parser.addini("HELLO", "Dummy pytest.ini setting")
+
+# parser.addini("HELLO", "Dummy pytest.ini setting")
 
 
-@pytest.fixture
-def bar(request):
-    return request.config.option.dest_foo
+# @pytest.fixture
+# def bar(request):
+#     return request.config.option.dest_foo
 
 
 def pytest_configure(config):
-    print("ALERT!! in plugin configure", config)
-    print("args", config.args)
-    print("options T", type(config.option))
+    # print("ALERT!! in plugin configure", config)
+    # print("args", config.args)
+    inputArgs = vars(config.option)
+    port = inputArgs["port_arg"]
+    print("portValue", port)
 
 
 #     # called for running each test in 'a' directory
@@ -31,7 +34,16 @@ def pytest_configure(config):
 
 
 def pytest_collection_finish(session):
-    print("ALERT!! in plugin  file file ")
+    print("end collection")
+    testsList = []
+    for item in session.items:
+        parentCur = item.parent
+        path = str(item.name)
+        while parentCur != session:
+            path = str(parentCur.name) + "::" + path
+            parentCur = parentCur.parent
+        testsList.append(path)
+    print("final tests collected", testsList)
 
 
 # def pytest_collectstart(collector):
@@ -46,5 +58,5 @@ def pytest_collection_finish(session):
 #     print("pluginmanager", pluginmanager)
 
 
-def get_config(request):
-    print("ABCD request,", request.config)
+# def get_config(request):
+#     print("ABCD request,", request.config)
