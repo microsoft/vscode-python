@@ -210,7 +210,6 @@ async function validateInfo(env: PythonEnvInfo) {
 export async function createCollectionCache(storage: IPersistentStorage): Promise<PythonEnvInfoCache> {
     const cache = new PythonEnvInfoCache(storage);
     await cache.clearAndReloadFromStorage();
-    // Validate in background as to not block the creation of the API.
-    cache.validateCache().ignoreErrors();
+    await cache.validateCache();
     return cache;
 }
