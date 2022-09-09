@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Event } from 'vscode';
+import { isTestExecution } from '../../../../common/constants';
 import { traceInfo } from '../../../../logging';
 import { reportInterpretersChanged } from '../../../../proposedApi';
 import { arePathsSame, getFileInfo, pathExists } from '../../../common/externalDependencies';
@@ -210,6 +211,15 @@ async function validateInfo(env: PythonEnvInfo) {
 export async function createCollectionCache(storage: IPersistentStorage): Promise<PythonEnvInfoCache> {
     const cache = new PythonEnvInfoCache(storage);
     await cache.clearAndReloadFromStorage();
-    await cache.validateCache();
+    await validateCache(cache);
     return cache;
+}
+
+async function validateCache(cache: PythonEnvInfoCache) {
+    if (isTestExecution()) {
+        // For purposes for test execution, block on validation so that we can determinally know when it finishes.
+        return cache.validateCache();
+    }
+    // Validate in background so it doesn't block on returning the API object.
+    return cache.validateCache().ignoreErrors();
 }
