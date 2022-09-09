@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import pytest
 
 
@@ -21,19 +20,24 @@ def bar(request):
     return request.config.option.dest_foo
 
 
-def pytest_runtest_setup(item):
-    # called for running each test in 'a' directory
-    print("AAAAA: setting up", item)
+def pytest_configure(config):
+    print("ALERT!! in plugin configure", config)
+    print("args", config.args)
+    print("options T", type(config.option))
+
+
+#     # called for running each test in 'a' directory
+#     print("AAAAA: setting up", item)
 
 
 def pytest_collection_finish(session):
     print("ALERT!! in plugin  file file ")
 
 
-def pytest_collectstart(collector):
-    c = collector
-    print("collector", c)
-    print("ALERT!! in plugin collector start")
+# def pytest_collectstart(collector):
+#     c = collector
+#     print("collector", c)
+#     print("ALERT!! in plugin collector start")
 
 
 # def pytest_addoption(parser, pluginmanager):
@@ -42,5 +46,5 @@ def pytest_collectstart(collector):
 #     print("pluginmanager", pluginmanager)
 
 
-# def get_config(request):
-#     print("request,", request.config)
+def get_config(request):
+    print("ABCD request,", request.config)
