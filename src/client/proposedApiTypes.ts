@@ -6,63 +6,73 @@ import { Event, Uri, WorkspaceFolder } from 'vscode';
 // https://github.com/microsoft/vscode-python/wiki/Proposed-Environment-APIs
 
 export interface IProposedExtensionAPI {
-    environment: {
-        /**
-         * This event is triggered when the active environment changes.
-         */
-        onDidChangeActiveEnvironment: Event<ActiveEnvironmentChangedParams>;
-        /**
-         * Returns the path to the python binary selected by the user or as in the settings.
-         * This is just the path to the python binary, this does not provide activation or any
-         * other activation command. The `resource` if provided will be used to determine the
-         * python binary in a multi-root scenario. If resource is `undefined` then the API
-         * returns what ever is set for the workspace.
-         * @param resource : Uri of a file or workspace
-         */
-        getActiveEnvironmentPath(resource?: Resource): Promise<EnvironmentPath | undefined>;
-        /**
-         * Returns details for the given environment path, or `undefined` if the env is invalid.
-         * @param pathID : Full path to environment folder or python executable whose details you need.
-         */
-        getEnvironmentDetails(pathID: UniquePathType | EnvironmentPath): Promise<EnvironmentDetails | undefined>;
-        /**
-         * Returns current in-memory details for the given environment path if any, even if there's partial data.
-         * Only returns if the final type and name of an environment is known.
-         * @param pathID : Full path to environment folder or python executable whose details you need.
-         */
-        getEnvironmentDetailsSync(pathID: UniquePathType | EnvironmentPath): PartialEnvironmentDetails | undefined;
-        /**
-         * Sets the active environment path for the python extension for the resource. Configuration target
-         * will always be the workspace folder.
-         * @param pathID : Full path to environment folder or python executable to set.
-         * @param resource : [optional] Uri of a file ro workspace to scope to a particular workspace
-         *                   folder.
-         */
-        setActiveEnvironment(pathID: UniquePathType | EnvironmentPath, resource?: Resource): Promise<void>;
-        locator: {
-            /**
-             * Returns paths to environments that uniquely identifies an environment found by the extension
-             * at the time of calling. It returns the values currently in memory, which carries what is
-             * known so far. To get complete list `await` on promise returned by `getRefreshPromise()`.
-             */
-            getEnvironments(): UniquePathType[] | undefined;
-            /**
-             * This event is triggered when the known environment list changes, like when a environment
-             * is found, existing environment is removed, or some details changed on an environment.
-             */
-            onDidChangeEnvironments: Event<EnvironmentsChangedParams>;
-            /**
-             * Returns a promise for the ongoing refresh. Returns `undefined` if there are no active
-             * refreshes going on.
-             */
-            getRefreshPromise(): Promise<void> | undefined;
-            /**
-             * Tracks discovery progress for current list of known environments, i.e when it starts, finishes or any other relevant
-             * stage.
-             */
-            readonly onRefreshProgress: Event<ProgressNotificationEvent>;
-        };
-    };
+    environment: IEnvironmentAPI;
+}
+
+interface IEnvironmentAPI {
+    /**
+     * This event is triggered when the active environment changes.
+     */
+    onDidChangeActiveEnvironment: Event<ActiveEnvironmentChangedParams>;
+    /**
+     * Returns the environment selected by the user or as in the settings. The `resource` if provided will be used to determine the
+     * python binary in a multi-root scenario. If resource is `undefined` then the API
+     * returns what ever is set for the workspace.
+     *
+     * @param resource : Uri of a file or workspace
+     */
+    getActiveEnvironment(resource?: Resource): Promise<ResolvedEnvironment | undefined>;
+    /**
+     * Returns details for the given environment, or `undefined` if the env is invalid.
+     * @param environment : Environment whose details you need. Can also pass the full path to environment folder or python executable for the environment.
+     */
+    resolveEnvironment(environment: Environment | UniquePathType): Promise<ResolvedEnvironment | undefined>;
+    /**
+     * Sets the active environment path for the python extension for the resource. Configuration target
+     * will always be the workspace folder.
+     * @param environment : Full path to environment folder or python executable for the environment. Can also pass the environment itself.
+     * @param resource : [optional] Uri of a file ro workspace to scope to a particular workspace
+     *                   folder.
+     */
+    setActiveEnvironment(environment: Environment | UniquePathType, resource?: Resource): Promise<void>;
+    /**
+     * Carries the API necessary for locating environments.
+     */
+    locator: IEnvironmentLocatorAPI;
+}
+
+interface IEnvironmentLocatorAPI {
+    /**
+     * Carries environments found by the extension at the time of fetching the property. To get complete list
+     * `await` on promise returned by `getRefreshPromise()`.
+     *
+     * Only returns an environment if the final type, name and environment path is known.
+     */
+    environments: Environment[] | undefined;
+    /**
+     * This event is triggered when the known environment list changes, like when a environment
+     * is found, existing environment is removed, or some details changed on an environment.
+     */
+    onDidChangeEnvironments: Event<EnvironmentsChangedParams>;
+    /**
+     * Returns a promise for the ongoing refresh. Returns `undefined` if there are no active
+     * refreshes going on.
+     */
+    getRefreshPromise(): Promise<void> | undefined;
+    /**
+     * Tracks discovery progress for current list of known environments, i.e when it starts, finishes or any other relevant
+     * stage.
+     */
+    readonly onRefreshProgress: Event<ProgressNotificationEvent>;
+    /**
+     * This API will re-trigger environment discovery. If there is a refresh already going on
+     * then it returns the promise for that refresh.
+     *
+     * Note this can be expensive so it's best to only use it if user manually triggers it. For
+     * internal automatic triggers consider using {@link RefreshOptions.bestEffortRefresh}.
+     * @param options Additonal options for refresh.
+     */
+    refreshEnvironment(options?: RefreshOptions): Promise<void>;
 }
 
 export enum Architecture {
@@ -105,16 +115,7 @@ export type StandardVersionInfo = BasicVersionInfo & {
     release?: PythonVersionRelease;
 };
 
-// To be added later:
-// run: {
-//     exec: Function;
-//     shellExec: Function;
-//     execObservable: Function;
-//     terminalExec: () => void;
-//     env?: { [key: string]: string | null | undefined };
-// };
-
-export interface EnvironmentDetails {
+export interface ResolvedEnvironment {
     pathID: UniquePathType;
     executable: {
         path: string;
@@ -124,14 +125,14 @@ export interface EnvironmentDetails {
     environment:
         | {
               type: EnvType;
-              name?: string;
+              name: string | undefined;
               folderPath: string;
               /**
                * Any specific workspace folder this environment is created for.
                * What if that workspace folder is not opened yet? We should still provide a workspace folder so it can be filtered out.
                * WorkspaceFolder type won't work as it assumes the workspace is opened, hence using URI.
                */
-              workspaceFolder?: Uri;
+              workspaceFolder: Uri | undefined;
               source: EnvSource[];
           }
         | undefined;
@@ -144,10 +145,10 @@ export interface EnvironmentDetails {
     };
 }
 
-export interface PartialEnvironmentDetails {
+export interface Environment {
     pathID: UniquePathType;
     executable: {
-        path: string;
+        path: string | undefined;
         bitness?: Architecture;
         sysPrefix?: string;
     };
@@ -161,7 +162,7 @@ export interface PartialEnvironmentDetails {
                * What if that workspace folder is not opened yet? We should still provide a workspace folder so it can be filtered out.
                * WorkspaceFolder type won't work as it assumes the workspace is opened, hence using URI.
                */
-              workspaceFolder?: Uri;
+              workspaceFolder: Uri | undefined;
               source: EnvSource[];
           }
         | undefined;
@@ -174,13 +175,8 @@ export interface PartialEnvironmentDetails {
     };
 }
 
-export enum ProgressReportStage {
-    discoveryStarted = 'discoveryStarted',
-    discoveryFinished = 'discoveryFinished',
-}
-
 export type ProgressNotificationEvent = {
-    stage: ProgressReportStage;
+    stage: 'started' | 'finished';
 };
 
 /**
@@ -206,7 +202,7 @@ export interface EnvironmentPath {
 }
 
 export type EnvironmentsChangedParams = {
-    pathID: UniquePathType;
+    env: Environment;
     /**
      * * "add": New environment is added.
      * * "remove": Existing environment in the list is removed.
@@ -222,3 +218,13 @@ export interface ActiveEnvironmentChangedParams {
      */
     resource: WorkspaceFolder | undefined;
 }
+
+export type RefreshOptions = {
+    /**
+     * Useful when triggering a refresh automatically based on internal code. This currently:
+     * * Only starts a refresh if it hasn't already been triggered for this session.
+     * * This option can later also be used to support refresh for only new environments, where
+     * possible, instead of triggering a full blown refresh.
+     */
+    bestEffortRefresh?: boolean;
+};
