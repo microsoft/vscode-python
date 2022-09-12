@@ -87,12 +87,6 @@ export type KnownEnvSources = 'Conda' | 'Pipenv' | 'Poetry' | 'VirtualEnv' | 'Ve
 export type EnvType = KnownEnvTypes | string;
 export type KnownEnvTypes = 'VirtualEnv' | 'Conda' | 'Unknown';
 
-export type BasicVersionInfo = {
-    major: number;
-    minor: number;
-    micro: number;
-};
-
 /**
  * The possible Python release levels.
  */
@@ -111,68 +105,49 @@ export type PythonVersionRelease = {
     serial: number;
 };
 
-export type StandardVersionInfo = BasicVersionInfo & {
+export type StandardVersionInfo = {
+    major: number;
+    minor: number;
+    micro: number;
     release?: PythonVersionRelease;
 };
 
+type ResolvedEnvironmentInfo = {
+    type: EnvType;
+    name: string | undefined;
+    folderPath: string;
+    /**
+     * Any specific workspace folder this environment is created for.
+     * What if that workspace folder is not opened yet? We should still provide a workspace folder so it can be filtered out.
+     * WorkspaceFolder type won't work as it assumes the workspace is opened, hence using URI.
+     */
+    workspaceFolder: Uri | undefined;
+    source: EnvSource[];
+};
 export interface ResolvedEnvironment {
     pathID: UniquePathType;
     executable: {
         path: string;
-        bitness?: Architecture;
+        bitness: Architecture;
         sysPrefix: string;
     };
-    environment:
-        | {
-              type: EnvType;
-              name: string | undefined;
-              folderPath: string;
-              /**
-               * Any specific workspace folder this environment is created for.
-               * What if that workspace folder is not opened yet? We should still provide a workspace folder so it can be filtered out.
-               * WorkspaceFolder type won't work as it assumes the workspace is opened, hence using URI.
-               */
-              workspaceFolder: Uri | undefined;
-              source: EnvSource[];
-          }
-        | undefined;
+    environment: ResolvedEnvironmentInfo | undefined;
     version: StandardVersionInfo & {
-        sysVersion?: string;
-    };
-    implementation?: {
-        name: string;
-        version: StandardVersionInfo;
+        sysVersion: string;
     };
 }
 
+type MakeOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>;
+type EnvironmentInfo = MakeOptional<ResolvedEnvironmentInfo, 'workspaceFolder'>;
+type ExecutableInfo = MakeOptional<ResolvedEnvironment['executable'], 'sysPrefix'> &
+    MakeOptional<ResolvedEnvironment['executable'], 'bitness'>;
+type PythonVersionInfo = Partial<ResolvedEnvironment['version']>;
+
 export interface Environment {
     pathID: UniquePathType;
-    executable: {
-        path: string | undefined;
-        bitness?: Architecture;
-        sysPrefix?: string;
-    };
-    environment:
-        | {
-              type: EnvType;
-              name: string | undefined;
-              folderPath: string;
-              /**
-               * Any specific workspace folder this environment is created for.
-               * What if that workspace folder is not opened yet? We should still provide a workspace folder so it can be filtered out.
-               * WorkspaceFolder type won't work as it assumes the workspace is opened, hence using URI.
-               */
-              workspaceFolder: Uri | undefined;
-              source: EnvSource[];
-          }
-        | undefined;
-    version: Partial<StandardVersionInfo> & {
-        sysVersion?: string;
-    };
-    implementation?: {
-        name: string;
-        version: Partial<StandardVersionInfo>;
-    };
+    executable: ExecutableInfo;
+    environment: EnvironmentInfo | undefined;
+    version: PythonVersionInfo;
 }
 
 export type ProgressNotificationEvent = {
@@ -221,9 +196,11 @@ export interface ActiveEnvironmentChangedParams {
 
 export type RefreshOptions = {
     /**
-     * Useful when triggering a refresh automatically based on internal code. This currently:
-     * * Only starts a refresh if it hasn't already been triggered for this session.
-     * * This option can later also be used to support refresh for only new environments, where
+     * Optimized refresh which tries its best to keep environments upto date. Useful when
+     * triggering a refresh automatically based on internal code.
+     *
+     * This currently only starts a refresh if it hasn't already been triggered for this session.
+     * It can later also be amended to support refresh for only new environments, where
      * possible, instead of triggering a full blown refresh.
      */
     bestEffortRefresh?: boolean;
