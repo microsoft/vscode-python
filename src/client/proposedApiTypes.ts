@@ -69,7 +69,7 @@ interface IEnvironmentLocatorAPI {
      * returns the promise for that refresh.
      *
      * Note this can be expensive so it's best to only use it if user manually triggers it. For
-     * internal automatic triggers consider using {@link RefreshOptions.bestEffortRefresh}.
+     * internal automatic triggers consider using {@link RefreshOptions.ifNotRefreshedAlready}.
      * @param options Additonal options for refresh.
      * @param token A cancellation token that indicates a refresh is no longer needed.
      */
@@ -155,14 +155,12 @@ export interface ActiveEnvironmentChangedParams {
 
 export type RefreshOptions = {
     /**
-     * Faster refresh which tries its best to keep environments upto date. Useful when
-     * triggering a refresh automatically based on internal code.
+     * Only trigger a refresh if not triggered already for this session. Useful for making sure env
+     * list is up-to-date when extension starts up.
      *
-     * This currently only starts a refresh if it hasn't already been triggered for this session.
-     * It can later also be amended/updated to support refresh for only new environments, where
-     * possible, instead of triggering a full blown refresh.
+     * After that users can use extension specific UI to refresh environments when needed.
      */
-    bestEffortRefresh: boolean | undefined;
+    ifNotRefreshedAlready: boolean | undefined;
 };
 
 export type EnvSource = KnownEnvSources | string;
