@@ -106,18 +106,18 @@ export type PythonVersionRelease = {
 };
 
 export type StandardVersionInfo = {
-    major: number;
-    minor: number;
-    micro: number;
-    release?: PythonVersionRelease;
+    major: number | undefined;
+    minor: number | undefined;
+    micro: number | undefined;
+    release: PythonVersionRelease | undefined;
 };
 
 export interface Environment {
     pathID: UniquePathType;
     executable: {
         path: string | undefined;
-        bitness?: Architecture;
-        sysPrefix?: string;
+        bitness: Architecture | undefined;
+        sysPrefix: string | undefined;
     };
     environment:
         | {
@@ -133,16 +133,19 @@ export interface Environment {
               source: EnvSource[];
           }
         | undefined;
-    version: Partial<StandardVersionInfo> & {
-        sysVersion?: string;
+    version: StandardVersionInfo & {
+        sysVersion: string | undefined;
     };
 }
 
-type MakeRequired<Type, Key extends keyof Type> = Omit<Type, Key> & Required<Pick<Type, Key>>;
-type ExecutableInfo = MakeRequired<Environment['executable'], 'sysPrefix'> &
-    MakeRequired<Environment['executable'], 'bitness'>;
-type EnvironmentInfo = MakeRequired<Partial<Environment>, 'environment'>['environment'];
-export type PythonVersionInfo = Required<Environment['version']>;
+type MakeNonNullable<Type, Key extends keyof Type> = Omit<Type, Key> & NonNullable<Pick<Type, Key>>;
+type MakeAllPropertiesNonNullable<T> = {
+    [P in keyof T]: NonNullable<T[P]>;
+};
+type ExecutableInfo = MakeNonNullable<Environment['executable'], 'sysPrefix'> &
+    MakeNonNullable<Environment['executable'], 'bitness'>;
+type EnvironmentInfo = NonNullable<Pick<Environment, 'environment'>['environment']>;
+export type PythonVersionInfo = MakeAllPropertiesNonNullable<Environment['version']>;
 
 /**
  * Derived form of {@link Environment} with complete information.
