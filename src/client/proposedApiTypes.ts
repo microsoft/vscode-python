@@ -48,7 +48,7 @@ interface IEnvironmentLocatorAPI {
      *
      * Only returns an environment if the final type, name and environment path is known.
      */
-    environments: Environment[] | undefined;
+    environments: readonly Environment[] | undefined;
     /**
      * This event is triggered when the known environment list changes, like when a environment
      * is found, existing environment is removed, or some details changed on an environment.
@@ -112,38 +112,42 @@ export type StandardVersionInfo = {
     release?: PythonVersionRelease;
 };
 
-type ResolvedEnvironmentInfo = {
-    type: EnvType;
-    name: string | undefined;
-    folderPath: string;
-    /**
-     * Any specific workspace folder this environment is created for.
-     * What if that workspace folder is not opened yet? We should still provide a workspace folder so it can be filtered out.
-     * WorkspaceFolder type won't work as it assumes the workspace is opened, hence using URI.
-     */
-    workspaceFolder: Uri | undefined;
-    source: EnvSource[];
-};
-export interface ResolvedEnvironment {
+export interface Environment {
     pathID: UniquePathType;
     executable: {
-        path: string;
-        bitness: Architecture;
-        sysPrefix: string;
+        path: string | undefined;
+        bitness?: Architecture;
+        sysPrefix?: string;
     };
-    environment: ResolvedEnvironmentInfo | undefined;
-    version: StandardVersionInfo & {
-        sysVersion: string;
+    environment:
+        | {
+              type: EnvType;
+              name: string | undefined;
+              folderPath: string;
+              /**
+               * Any specific workspace folder this environment is created for.
+               * What if that workspace folder is not opened yet? We should still provide a workspace folder so it can be filtered out.
+               * WorkspaceFolder type won't work as it assumes the workspace is opened, hence using URI.
+               */
+              workspaceFolder: Uri | undefined;
+              source: EnvSource[];
+          }
+        | undefined;
+    version: Partial<StandardVersionInfo> & {
+        sysVersion?: string;
     };
 }
 
-type MakeOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>;
-type EnvironmentInfo = MakeOptional<ResolvedEnvironmentInfo, 'workspaceFolder'>;
-type ExecutableInfo = MakeOptional<ResolvedEnvironment['executable'], 'sysPrefix'> &
-    MakeOptional<ResolvedEnvironment['executable'], 'bitness'>;
-type PythonVersionInfo = Partial<ResolvedEnvironment['version']>;
+type MakeRequired<Type, Key extends keyof Type> = Omit<Type, Key> & Required<Pick<Type, Key>>;
+type ExecutableInfo = MakeRequired<Environment['executable'], 'sysPrefix'> &
+    MakeRequired<Environment['executable'], 'bitness'>;
+type EnvironmentInfo = MakeRequired<Partial<Environment>, 'environment'>['environment'];
+export type PythonVersionInfo = Required<Environment['version']>;
 
-export interface Environment {
+/**
+ * Derived form of {@link Environment} with complete information.
+ */
+export interface ResolvedEnvironment {
     pathID: UniquePathType;
     executable: ExecutableInfo;
     environment: EnvironmentInfo | undefined;
