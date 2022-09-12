@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Event, Uri, WorkspaceFolder } from 'vscode';
+import { CancellationToken, Event, Uri, WorkspaceFolder } from 'vscode';
 
 // https://github.com/microsoft/vscode-python/wiki/Proposed-Environment-APIs
 
@@ -65,52 +65,16 @@ interface IEnvironmentLocatorAPI {
      */
     readonly onRefreshProgress: Event<ProgressNotificationEvent>;
     /**
-     * This API will re-trigger environment discovery. If there is a refresh already going on
-     * then it returns the promise for that refresh.
+     * This API will re-trigger environment discovery. If there is a refresh already going on then it
+     * returns the promise for that refresh.
      *
      * Note this can be expensive so it's best to only use it if user manually triggers it. For
      * internal automatic triggers consider using {@link RefreshOptions.bestEffortRefresh}.
      * @param options Additonal options for refresh.
+     * @param token A cancellation token that indicates a refresh is no longer needed.
      */
-    refreshEnvironment(options?: RefreshOptions): Promise<void>;
+    refreshEnvironment(options: RefreshOptions, token?: CancellationToken): Promise<void>;
 }
-
-export enum Architecture {
-    Unknown = 1,
-    x86 = 2,
-    x64 = 3,
-}
-
-export type EnvSource = KnownEnvSources | string;
-export type KnownEnvSources = 'Conda' | 'Pipenv' | 'Poetry' | 'VirtualEnv' | 'Venv' | 'VirtualEnvWrapper' | 'Pyenv';
-
-export type EnvType = KnownEnvTypes | string;
-export type KnownEnvTypes = 'VirtualEnv' | 'Conda' | 'Unknown';
-
-/**
- * The possible Python release levels.
- */
-export enum PythonReleaseLevel {
-    Alpha = 'alpha',
-    Beta = 'beta',
-    Candidate = 'candidate',
-    Final = 'final',
-}
-
-/**
- * Release information for a Python version.
- */
-export type PythonVersionRelease = {
-    level: PythonReleaseLevel;
-    serial: number;
-};
-
-export type StandardVersionInfo = {
-    major: number | undefined;
-    minor: number | undefined;
-    micro: number | undefined;
-    release: PythonVersionRelease | undefined;
-};
 
 export interface Environment {
     pathID: UniquePathType;
@@ -126,8 +90,6 @@ export interface Environment {
               folderPath: string;
               /**
                * Any specific workspace folder this environment is created for.
-               * What if that workspace folder is not opened yet? We should still provide a workspace folder so it can be filtered out.
-               * WorkspaceFolder type won't work as it assumes the workspace is opened, hence using URI.
                */
               workspaceFolder: Uri | undefined;
               source: EnvSource[];
@@ -173,16 +135,6 @@ export type Resource = Uri | WorkspaceFolder;
  */
 export type UniquePathType = string;
 
-export interface EnvironmentPath {
-    pathID: UniquePathType;
-    /**
-     * Path to python executable that uniquely identifies an environment.
-     * Carries `undefined` if an executable cannot uniquely identify an
-     * environment or does not exist within the env.
-     */
-    executablePath: string | undefined;
-}
-
 export type EnvironmentsChangedParams = {
     env: Environment;
     /**
@@ -203,12 +155,49 @@ export interface ActiveEnvironmentChangedParams {
 
 export type RefreshOptions = {
     /**
-     * Optimized refresh which tries its best to keep environments upto date. Useful when
+     * Faster refresh which tries its best to keep environments upto date. Useful when
      * triggering a refresh automatically based on internal code.
      *
      * This currently only starts a refresh if it hasn't already been triggered for this session.
-     * It can later also be amended to support refresh for only new environments, where
+     * It can later also be amended/updated to support refresh for only new environments, where
      * possible, instead of triggering a full blown refresh.
      */
-    bestEffortRefresh?: boolean;
+    bestEffortRefresh: boolean | undefined;
+};
+
+export type EnvSource = KnownEnvSources | string;
+export type KnownEnvSources = 'Conda' | 'Pipenv' | 'Poetry' | 'VirtualEnv' | 'Venv' | 'VirtualEnvWrapper' | 'Pyenv';
+
+export type EnvType = KnownEnvTypes | string;
+export type KnownEnvTypes = 'VirtualEnv' | 'Conda' | 'Unknown';
+
+export enum Architecture {
+    Unknown = 1,
+    x86 = 2,
+    x64 = 3,
+}
+
+/**
+ * The possible Python release levels.
+ */
+export enum PythonReleaseLevel {
+    Alpha = 'alpha',
+    Beta = 'beta',
+    Candidate = 'candidate',
+    Final = 'final',
+}
+
+/**
+ * Release information for a Python version.
+ */
+export type PythonVersionRelease = {
+    level: PythonReleaseLevel;
+    serial: number;
+};
+
+export type StandardVersionInfo = {
+    major: number | undefined;
+    minor: number | undefined;
+    micro: number | undefined;
+    release: PythonVersionRelease | undefined;
 };
