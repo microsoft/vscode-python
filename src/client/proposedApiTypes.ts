@@ -44,7 +44,7 @@ interface IEnvironmentAPI {
 interface IEnvironmentLocatorAPI {
     /**
      * Carries environments found by the extension at the time of fetching the property. To get complete list
-     * `await` on promise returned by `getRefreshPromise()`.
+     * `await` on promise returned by {@link waitOnRefresh()}.
      *
      * Only returns an environment if the final type, name and environment path is known.
      */
@@ -58,7 +58,7 @@ interface IEnvironmentLocatorAPI {
      * Returns a promise for the ongoing refresh. Returns `undefined` if there are no active
      * refreshes going on.
      */
-    getRefreshPromise(): Promise<void> | undefined;
+    waitOnRefresh(): Promise<void> | undefined;
     /**
      * Tracks discovery progress for current list of known environments, i.e when it starts, finishes or any other relevant
      * stage.
