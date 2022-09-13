@@ -150,7 +150,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             items: suggestions,
             sortByLabel: !preserveOrderWhenFiltering,
             keepScrollPosition: true,
-            activeItem: await this.getActiveItem(state.workspace, suggestions),
+            activeItem: this.getActiveItem(state.workspace, suggestions), // Use a promise here to ensure quickpick is initialized synchronously.
             matchOnDetail: true,
             matchOnDescription: true,
             title: InterpreterQuickPickList.browsePath.openButtonLabel,

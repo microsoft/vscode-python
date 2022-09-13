@@ -46,7 +46,7 @@ export interface IQuickPickParameters<T extends QuickPickItem, E = any> {
     totalSteps?: number;
     canGoBack?: boolean;
     items: T[];
-    activeItem?: T;
+    activeItem?: T | Promise<T>;
     placeholder: string;
     customButtonSetups?: QuickInputButtonSetup[];
     matchOnDescription?: boolean;
@@ -127,29 +127,45 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         initialize,
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>> {
         const disposables: Disposable[] = [];
+        const input = this.shell.createQuickPick<T>();
+        input.title = title;
+        input.step = step;
+        input.sortByLabel = sortByLabel || false;
+        input.totalSteps = totalSteps;
+        input.placeholder = placeholder;
+        input.ignoreFocusOut = true;
+        input.items = items;
+        input.matchOnDescription = matchOnDescription || false;
+        input.matchOnDetail = matchOnDetail || false;
+        input.buttons = this.steps.length > 1 ? [QuickInputButtons.Back] : [];
+        if (customButtonSetups) {
+            for (const customButtonSetup of customButtonSetups) {
+                input.buttons = [...input.buttons, customButtonSetup.button];
+            }
+        }
+        if (this.current) {
+            this.current.dispose();
+        }
+        this.current = input;
+        if (onChangeItem) {
+            disposables.push(onChangeItem.event((e) => onChangeItem.callback(e, input)));
+        }
+        // Quickpick should be initialized synchronously and on changed item handlers are registered synchronously.
+        if (initialize) {
+            initialize();
+        }
+        if (activeItem) {
+            input.activeItems = [await activeItem];
+        } else {
+            input.activeItems = [];
+        }
+        this.current.show();
+        // Keep scroll position is only meant to keep scroll position when updating items,
+        // so do it after initialization. This ensures quickpick starts with the active
+        // item in focus when this is true, instead of having scroll position at top.
+        input.keepScrollPosition = keepScrollPosition;
         try {
             return await new Promise<MultiStepInputQuickPicResponseType<T, P>>((resolve, reject) => {
-                const input = this.shell.createQuickPick<T>();
-                input.title = title;
-                input.step = step;
-                input.sortByLabel = sortByLabel || false;
-                input.totalSteps = totalSteps;
-                input.placeholder = placeholder;
-                input.ignoreFocusOut = true;
-                input.items = items;
-                input.matchOnDescription = matchOnDescription || false;
-                input.matchOnDetail = matchOnDetail || false;
-                if (activeItem) {
-                    input.activeItems = [activeItem];
-                } else {
-                    input.activeItems = [];
-                }
-                input.buttons = this.steps.length > 1 ? [QuickInputButtons.Back] : [];
-                if (customButtonSetups) {
-                    for (const customButtonSetup of customButtonSetups) {
-                        input.buttons = [...input.buttons, customButtonSetup.button];
-                    }
-                }
                 disposables.push(
                     input.onDidTriggerButton(async (item) => {
                         if (item === QuickInputButtons.Back) {
@@ -176,21 +192,6 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                         }),
                     );
                 }
-                if (this.current) {
-                    this.current.dispose();
-                }
-                this.current = input;
-                if (onChangeItem) {
-                    disposables.push(onChangeItem.event((e) => onChangeItem.callback(e, input)));
-                }
-                this.current.show();
-                if (initialize) {
-                    initialize();
-                }
-                // Keep scroll position is only meant to keep scroll position when updating items,
-                // so do it after initialization. This ensures quickpick starts with the active
-                // item in focus when this is true, instead of having scroll position at top.
-                input.keepScrollPosition = keepScrollPosition;
             });
         } finally {
             disposables.forEach((d) => d.dispose());
