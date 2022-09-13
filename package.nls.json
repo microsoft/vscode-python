@@ -19,7 +19,7 @@
     "python.command.python.enableLinting.title": "Enable/Disable Linting",
     "python.command.python.runLinting.title": "Run Linting",
     "python.command.python.enableSourceMapSupport.title": "Enable Source Map Support For Extension Debugging",
-    "python.command.python.clearCacheAndReload.title": "Clear Internal Cache and Reload Window",
+    "python.command.python.clearCacheAndReload.title": "Clear Cache and Reload Window",
     "python.command.python.analysis.restartLanguageServer.title": "Restart Language Server",
     "python.command.python.launchTensorBoard.title": "Launch TensorBoard",
     "python.command.python.refreshTensorBoard.title": "Refresh TensorBoard",
