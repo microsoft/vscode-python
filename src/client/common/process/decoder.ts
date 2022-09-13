@@ -8,3 +8,8 @@ export function decodeBuffer(buffers: Buffer[], encoding: string = DEFAULT_ENCOD
     encoding = iconv.encodingExists(encoding) ? encoding : DEFAULT_ENCODING;
     return iconv.decode(Buffer.concat(buffers), encoding);
 }
+
+export function bufferDecode(buffers: Buffer[], encoding: string = DEFAULT_ENCODING): string {
+    encoding = iconv.encodingExists(encoding) ? encoding : DEFAULT_ENCODING;
+    return iconv.decode(Buffer.concat(buffers), encoding);
+}

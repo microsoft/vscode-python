@@ -3,9 +3,11 @@
 
 import { Disposable } from 'vscode';
 import { Commands } from '../../common/constants';
-import { Disposables } from '../../common/utils/resourceLifecycle';
+import { IDisposableRegistry } from '../../common/types';
 import { registerCommand } from '../../common/vscodeApis/commandApis';
+import { IDiscoveryAPI } from '../base/locator';
 import { handleCreateEnvironmentCommand } from './createEnvQuickPick';
+import { VenvCreationProvider } from './provider/venvCreationProvider';
 import { CreateEnvironmentProvider } from './types';
 
 class CreateEnvironmentProviders {
@@ -41,11 +43,12 @@ export function getCreateEnvironmentProviders(): readonly CreateEnvironmentProvi
     return _createEnvironmentProviders.getAll();
 }
 
-export function registerCreateEnvironmentFeatures(disposables: Disposables): void {
+export function registerCreateEnvironmentFeatures(disposables: IDisposableRegistry, discoveryApi: IDiscoveryAPI): void {
     disposables.push(
         registerCommand(Commands.Create_Environment, async () => {
             const providers = _createEnvironmentProviders.getAll();
             await handleCreateEnvironmentCommand(providers);
         }),
     );
+    disposables.push(registerCreateEnvironmentProvider(new VenvCreationProvider(discoveryApi)));
 }

@@ -35,7 +35,7 @@ import { IApplicationShell, IWorkspaceService } from './common/application/types
 import { IDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
-import { activateComponents } from './extensionActivation';
+import { activateComponents, activateFeatures } from './extensionActivation';
 import { initializeStandard, initializeComponents, initializeGlobals } from './extensionInit';
 import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
@@ -128,6 +128,8 @@ async function activateUnsafe(
 
     // Then we finish activating.
     const componentsActivated = await activateComponents(ext, components);
+    activateFeatures(ext, components);
+
     const nonBlocking = componentsActivated.map((r) => r.fullyReady);
     const activationPromise = (async () => {
         await Promise.all(nonBlocking);

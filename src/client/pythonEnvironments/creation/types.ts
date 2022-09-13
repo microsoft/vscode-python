@@ -6,12 +6,9 @@ export interface CreateEnvironmentOptions {
     ignoreSourceControl?: boolean;
 }
 
-export interface CreateEnvironmentResult {
-    interpreterPath: string;
-}
-
 export interface CreateEnvironmentProvider {
-    createEnvironment(options?: CreateEnvironmentOptions): Promise<CreateEnvironmentResult>;
+    createEnvironment(options?: CreateEnvironmentOptions): Promise<void>;
     name: string;
     description: string;
+    id: string;
 }

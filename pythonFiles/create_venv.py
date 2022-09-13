@@ -8,6 +8,7 @@ import pathlib
 import subprocess
 import sys
 from typing import Sequence
+from webbrowser import get
 
 VENV_NAME = ".venv"
 CWD = pathlib.PurePath(os.getcwd())
@@ -61,17 +62,18 @@ def run_process(args: Sequence[str], error_message: str) -> None:
     except subprocess.CalledProcessError:
         raise VenvError(error_message)
 
+def get_venv_path(name:str) -> str:
+    if sys.platform == "win32":
+        return os.fspath(CWD / name / "Scripts" / "python.exe")
+    else:
+        return os.fspath(CWD / name / "bin" / "python")
 
-def install_packages(name: str) -> None:
+def install_packages(venv_path: str) -> None:
     if not is_installed("pip"):
         raise VenvError("CREATE_VENV.PIP_NOT_FOUND")
 
     requirements = os.fspath(CWD / "requirements.txt")
     pyproject = os.fspath(CWD / "pyproject.toml")
-    if sys.platform == "win32":
-        venv_path = os.fspath(CWD / name / "Scripts" / "python.exe")
-    else:
-        venv_path = os.fspath(CWD / name / "bin" / "python")
 
     run_process(
         [venv_path, "-m", "pip", "install", "--upgrade", "pip"],
@@ -111,9 +113,10 @@ def main(argv: Sequence[str] = None) -> None:
             )
             if args.git_ignore:
                 add_gitignore(args.name)
-
+        venv_path = get_venv_path(args.name)
+        print(f"CREATE_VENV: {venv_path}")
         if args.install:
-            install_packages(args.name)
+            install_packages(venv_path)
     else:
         raise VenvError("CREATE_VENV.VENV_NOT_FOUND")
 
