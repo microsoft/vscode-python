@@ -84,6 +84,7 @@ export abstract class FSWatchingLocator<I = PythonEnvInfo> extends LazyResourceB
         private readonly watcherKind: FSWatcherKind = FSWatcherKind.Global,
     ) {
         super();
+        this.activate().ignoreErrors();
     }
 
     protected async initWatchers(): Promise<void> {
