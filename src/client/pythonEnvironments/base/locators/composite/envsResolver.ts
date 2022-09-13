@@ -5,7 +5,7 @@ import { cloneDeep } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { identifyEnvironment } from '../../../common/environmentIdentifier';
 import { IEnvironmentInfoService } from '../../info/environmentInfoService';
-import { PythonEnvInfo } from '../../info';
+import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { getEnvPath, setEnvDisplayString } from '../../info/env';
 import { InterpreterInformation } from '../../info/interpreter';
 import {
@@ -63,6 +63,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
         iterator: IPythonEnvsIterator<BasicEnvInfo>,
         didUpdate: EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>,
     ): IPythonEnvsIterator {
+        const environmentKinds = new Map<string, PythonEnvKind>();
         const state = {
             done: false,
             pending: 0,
@@ -86,6 +87,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
                     );
                 } else if (seen[event.index] !== undefined) {
                     const old = seen[event.index];
+                    await setKind(event.update, environmentKinds);
                     seen[event.index] = await resolveBasicEnv(event.update, true);
                     didUpdate.fire({ old, index: event.index, update: seen[event.index] });
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
@@ -103,6 +105,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
         let result = await iterator.next();
         while (!result.done) {
             // Use cache from the current refresh where possible.
+            await setKind(result.value, environmentKinds);
             const currEnv = await resolveBasicEnv(result.value, true);
             seen.push(currEnv);
             yield currEnv;
@@ -137,6 +140,16 @@ export class PythonEnvsResolver implements IResolvingLocator {
         state.pending -= 1;
         checkIfFinishedAndNotify(state, didUpdate);
     }
+}
+
+async function setKind(env: BasicEnvInfo, environmentKinds: Map<string, PythonEnvKind>) {
+    const { path } = getEnvPath(env.executablePath, env.envPath);
+    let kind = environmentKinds.get(path);
+    if (!kind) {
+        kind = await identifyEnvironment(path);
+        environmentKinds.set(path, kind);
+    }
+    env.kind = kind;
 }
 
 /**

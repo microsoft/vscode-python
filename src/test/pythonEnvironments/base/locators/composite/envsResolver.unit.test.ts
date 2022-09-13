@@ -193,16 +193,16 @@ suite('Python envs locator - Environments Resolver', () => {
         test('Updates to environments from the incoming iterator are applied properly', async () => {
             // Arrange
             const env = createBasicEnv(
-                PythonEnvKind.Venv,
+                PythonEnvKind.Unknown,
                 path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
             );
             const updatedEnv = createBasicEnv(
-                PythonEnvKind.Poetry,
+                PythonEnvKind.VirtualEnv, // Ensure this type is discarded.
                 path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
             );
             const resolvedUpdatedEnvReturnedByBasicResolver = createExpectedResolvedEnvInfo(
                 path.join(testVirtualHomeDir, '.venvs', 'win1', 'python.exe'),
-                PythonEnvKind.Poetry,
+                PythonEnvKind.Venv,
                 undefined,
                 'win1',
                 path.join(testVirtualHomeDir, '.venvs', 'win1'),
@@ -225,7 +225,7 @@ suite('Python envs locator - Environments Resolver', () => {
 
             // Assert
             assertEnvsEqual(envs, [
-                createExpectedEnvInfo(resolvedUpdatedEnvReturnedByBasicResolver, "Python 3.8.3 ('win1': poetry)"),
+                createExpectedEnvInfo(resolvedUpdatedEnvReturnedByBasicResolver, "Python 3.8.3 ('win1': venv)"),
             ]);
             didUpdate.dispose();
         });
