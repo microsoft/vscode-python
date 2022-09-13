@@ -273,6 +273,11 @@
             },
             {
                 "category": "Python",
+                "command": "python.createEnvironment",
+                "title": "%python.command.python.createEnvironment.title%"
+            },
+            {
+                "category": "Python",
                 "command": "python.enableLinting",
                 "title": "%python.command.python.enableLinting.title%"
             },

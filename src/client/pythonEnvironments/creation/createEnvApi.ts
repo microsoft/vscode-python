@@ -51,4 +51,12 @@ export function registerCreateEnvironmentFeatures(disposables: IDisposableRegist
         }),
     );
     disposables.push(registerCreateEnvironmentProvider(new VenvCreationProvider(discoveryApi)));
+    disposables.push(
+        registerCreateEnvironmentProvider({
+            name: 'Conda',
+            id: 'conda',
+            description: 'conda environments',
+            createEnvironment: () => Promise.resolve(),
+        }),
+    );
 }

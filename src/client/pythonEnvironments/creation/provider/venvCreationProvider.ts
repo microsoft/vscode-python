@@ -4,10 +4,12 @@
 import { CancellationToken } from 'vscode';
 import * as nls from 'vscode-nls';
 import { PVSC_EXTENSION_ID } from '../../../common/constants';
+import { bufferDecode } from '../../../common/process/decoder';
 import { createVenvScript } from '../../../common/process/internal/scripts';
 import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
 import { traceError, traceLog } from '../../../logging';
+import { PythonEnvKind } from '../../base/info';
 import { IDiscoveryAPI } from '../../base/locator';
 import { CreateEnvironmentOptions, CreateEnvironmentProvider } from '../types';
 import { getVenvWorkspaceFolder } from './venvWorkspaceSelection';
@@ -46,15 +48,25 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
             return;
         }
 
-        const interpreters = this.discoveryApi.getEnvs();
+        const interpreters = this.discoveryApi.getEnvs({
+            kinds: [PythonEnvKind.MicrosoftStore, PythonEnvKind.OtherGlobal],
+        });
         if (interpreters.length > 0) {
             const args = generateCommandArgs(options);
             const command = interpreters[0].executable.filename;
             traceLog('Running Env creation script: ', [command, ...args]);
-            const { out, dispose } = execObservable(command, args, {
-                mergeStdOutErr: true,
-                token,
-            });
+            const { out, dispose } = execObservable(
+                command,
+                args,
+                {
+                    mergeStdOutErr: true,
+                    token,
+                    cwd: workspace.uri.fsPath,
+                },
+                {
+                    decode: bufferDecode,
+                },
+            );
 
             let output = '';
             out.subscribe(

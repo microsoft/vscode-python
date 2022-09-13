@@ -38,6 +38,7 @@ import { createBasicEnv, getEnvs, getEnvsWithUpdates, SimpleLocator } from '../.
 import { getOSType, OSType } from '../../../../common';
 import { CondaInfo } from '../../../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { createDeferred } from '../../../../../client/common/utils/async';
+import * as workspaceApis from '../../../../../client/common/vscodeApis/workspaceApis';
 
 suite('Python envs locator - Environments Resolver', () => {
     let envInfoService: IEnvironmentInfoService;
@@ -115,7 +116,7 @@ suite('Python envs locator - Environments Resolver', () => {
                     });
                 }),
             );
-            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([testVirtualHomeDir]);
+            sinon.stub(workspaceApis, 'getWorkspaceFolderPaths').returns([testVirtualHomeDir]);
         });
 
         teardown(() => {
@@ -349,7 +350,7 @@ suite('Python envs locator - Environments Resolver', () => {
                     });
                 }),
             );
-            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([testVirtualHomeDir]);
+            sinon.stub(workspaceApis, 'getWorkspaceFolderPaths').returns([testVirtualHomeDir]);
         });
 
         teardown(() => {

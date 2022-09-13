@@ -6,4 +6,8 @@ import { CreateEnvironmentProvider } from './types';
 
 export async function createEnvironment(provider: CreateEnvironmentProvider): Promise<void> {
     traceLog(`Creating environment using: ${provider.name}`);
+    await provider.createEnvironment({
+        ignoreSourceControl: true,
+        installPackages: true,
+    });
 }

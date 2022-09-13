@@ -26,12 +26,13 @@ import {
     CondaInfo,
 } from '../../../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { resolveBasicEnv } from '../../../../../client/pythonEnvironments/base/locators/composite/resolverUtils';
+import * as workspaceApis from '../../../../../client/common/vscodeApis/workspaceApis';
 
 suite('Resolver Utils', () => {
     let getWorkspaceFolders: sinon.SinonStub;
     setup(() => {
         sinon.stub(externalDependencies, 'getPythonSetting').withArgs('condaPath').returns('conda');
-        getWorkspaceFolders = sinon.stub(externalDependencies, 'getWorkspaceFolders');
+        getWorkspaceFolders = sinon.stub(workspaceApis, 'getWorkspaceFolderPaths');
         getWorkspaceFolders.returns([]);
     });
 
