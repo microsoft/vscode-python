@@ -69,6 +69,8 @@ export namespace EnvGroups {
     export const Recommended = Common.recommended;
 }
 
+export const SET_INTERPRETER_ID = 'SET_INTERPRETER_ID';
+
 @injectable()
 export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implements IInterpreterQuickPick {
     private readonly manualEntrySuggestion: ISpecialQuickPickItem = {
