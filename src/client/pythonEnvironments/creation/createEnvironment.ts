@@ -14,14 +14,14 @@ export async function createEnvironment(provider: CreateEnvironmentProvider): Pr
     withProgress(
         {
             location: ProgressLocation.Notification,
-            title: localize('python.createEnv.status.title', 'Creating virtual environment.'),
+            title: localize('python.createEnv.status.title', 'Creating virtual environment'),
             cancellable: true,
         },
         async (progress: CreateEnvironmentProgress, token: CancellationToken) => {
-            progress.report({
-                message: localize('python.createEnv.status.start', 'Creating virtual environment...'),
-            });
             let hasError = false;
+            progress.report({
+                message: localize('python.createEnv.status.starting', 'Starting...'),
+            });
             try {
                 await provider.createEnvironment(
                     {
@@ -35,12 +35,12 @@ export async function createEnvironment(provider: CreateEnvironmentProvider): Pr
                 traceError(ex);
                 hasError = true;
                 progress.report({
-                    message: localize('python.createEnv.status.error', 'Error while virtual environment.'),
+                    message: localize('python.createEnv.status.error', 'Error'),
                 });
             } finally {
                 if (!hasError) {
                     progress.report({
-                        message: localize('python.createEnv.status.done', 'Create environment completed.'),
+                        message: localize('python.createEnv.status.done', 'Completed'),
                     });
                 }
             }

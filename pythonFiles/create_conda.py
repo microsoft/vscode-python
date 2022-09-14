@@ -71,7 +71,7 @@ def get_conda_env_path(name: str) -> str:
 def install_packages(env_path: str) -> None:
     yml = os.fspath(CWD / "environment.yml")
     if file_exists(yml):
-        print(f"Installing: {yml}")
+        print(f"CONDA_INSTALLING_YML: {yml}")
         run_process(
             [
                 sys.executable,
@@ -119,7 +119,8 @@ def main(argv: Sequence[str] = None) -> None:
             add_gitignore(args.name)
 
     env_path = get_conda_env_path(args.name)
-    print(f"CREATE_CONDA: {env_path}")
+    print(f"CREATED_CONDA_ENV: {env_path}")
+
     if args.install:
         install_packages(env_path)
 

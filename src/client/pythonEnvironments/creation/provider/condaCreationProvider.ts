@@ -49,6 +49,7 @@ async function createCondaEnv(
     workspace: WorkspaceFolder,
     command: string,
     args: string[],
+    progress?: CreateEnvironmentProgress,
     token?: CancellationToken,
 ): Promise<string> {
     const deferred = createDeferred<string>();
@@ -80,11 +81,19 @@ async function createCondaEnv(
         },
     );
 
-    let output = '';
     out.subscribe(
         (value) => {
-            traceLog(value.out);
-            output = output.concat(value.out);
+            const output = value.out.splitLines().join('\r\n');
+            traceLog(output);
+            if (output.includes('CREATED_CONDA_ENV:')) {
+                progress?.report({
+                    message: localize('python.createEnv.conda.created', 'Environment created...'),
+                });
+            } else if (output.includes('CONDA_INSTALLING_YML:')) {
+                progress?.report({
+                    message: localize('python.createEnv.conda.installingPackages', 'Installing packages...'),
+                });
+            }
         },
         (error) => {
             traceError('Error while running conda env creation script: ', error);
@@ -110,22 +119,21 @@ function getExecutableCommand(condaPath: string): string {
 export class CondaCreationProvider implements CreateEnvironmentProvider {
     public async createEnvironment(
         options?: CreateEnvironmentOptions,
-        _progress?: CreateEnvironmentProgress,
+        progress?: CreateEnvironmentProgress,
         token?: CancellationToken,
     ): Promise<void> {
+        progress?.report({
+            message: localize('python.createEnv.conda.workspace', 'Waiting on workspace selection...'),
+        });
         const workspace = await getVenvWorkspaceFolder();
         if (workspace === undefined) {
             traceError('Workspace was not selected or found for creating virtual env.');
             return;
         }
 
-        const conda = await Conda.getConda();
-
-        if (!conda) {
-            traceError('Conda executable was not found.');
-            return;
-        }
-
+        progress?.report({
+            message: localize('python.createEnv.conda.selectPython', 'Waiting on Python version selection...'),
+        });
         const items: QuickPickItem[] = ['3.8', '3.9', '3.10'].map((v) => ({
             label: `Python`,
             description: v,
@@ -137,8 +145,20 @@ export class CondaCreationProvider implements CreateEnvironmentProvider {
             ),
         });
         if (version) {
+            progress?.report({
+                message: localize('python.createEnv.conda.findConda', 'Searching for conda (base)...'),
+            });
+            const conda = await Conda.getConda();
+
+            if (!conda) {
+                traceError('Conda executable was not found.');
+                return;
+            }
+            progress?.report({
+                message: localize('python.createEnv.conda.runCreate', 'Running conda create...'),
+            });
             const args = generateCommandArgs(version.description, options);
-            await createCondaEnv(workspace, getExecutableCommand(conda.command), args, token);
+            await createCondaEnv(workspace, getExecutableCommand(conda.command), args, progress, token);
         }
     }
 

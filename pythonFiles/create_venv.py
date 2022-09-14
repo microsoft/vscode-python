@@ -81,11 +81,13 @@ def install_packages(venv_path: str) -> None:
     )
 
     if file_exists(requirements):
+        print(f"VENV_INSTALLING_REQUIREMENTS: {requirements}")
         run_process(
             [venv_path, "-m", "pip", "install", "-r", requirements],
             "CREATE_VENV.PIP_FAILED_INSTALL_REQUIREMENTS",
         )
     elif file_exists(pyproject):
+        print(f"VENV_INSTALLING_PYPROJECT: {pyproject}")
         run_process(
             [venv_path, "-m", "pip", "install", "-e", ".[extras]"],
             "CREATE_VENV.PIP_FAILED_INSTALL_PYPROJECT",
@@ -114,7 +116,7 @@ def main(argv: Sequence[str] = None) -> None:
             if args.git_ignore:
                 add_gitignore(args.name)
         venv_path = get_venv_path(args.name)
-        print(f"CREATE_VENV: {venv_path}")
+        print(f"CREATED_VENV: {venv_path}")
         if args.install:
             install_packages(venv_path)
     else:

@@ -42,8 +42,12 @@ async function createVenv(
     workspace: WorkspaceFolder,
     command: string,
     args: string[],
+    progress?: CreateEnvironmentProgress,
     token?: CancellationToken,
 ): Promise<string> {
+    progress?.report({
+        message: localize('python.createEnv.venv.runCreate', 'Creating venv...'),
+    });
     const deferred = createDeferred<string>();
     traceLog('Running Env creation script: ', [command, ...args]);
     const { out, dispose } = execObservable(
@@ -59,11 +63,22 @@ async function createVenv(
         },
     );
 
-    let output = '';
     out.subscribe(
         (value) => {
-            traceLog(value.out);
-            output = output.concat(value.out);
+            const output = value.out.splitLines().join('\r\n');
+            traceLog(output);
+            if (output.includes('CREATED_VENV:')) {
+                progress?.report({
+                    message: localize('python.createEnv.venv.created', 'Environment created...'),
+                });
+            } else if (
+                output.includes('VENV_INSTALLING_REQUIREMENTS:') ||
+                output.includes('VENV_INSTALLING_PYPROJECT:')
+            ) {
+                progress?.report({
+                    message: localize('python.createEnv.venv.installingPackages', 'Installing packages...'),
+                });
+            }
         },
         (error) => {
             traceError('Error while running venv creation script: ', error);
@@ -84,22 +99,28 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
 
     public async createEnvironment(
         options?: CreateEnvironmentOptions,
-        _progress?: CreateEnvironmentProgress,
+        progress?: CreateEnvironmentProgress,
         token?: CancellationToken,
     ): Promise<void> {
+        progress?.report({
+            message: localize('python.createEnv.venv.workspace', 'Waiting on workspace selection...'),
+        });
         const workspace = await getVenvWorkspaceFolder();
         if (workspace === undefined) {
             traceError('Workspace was not selected or found for creating virtual env.');
             return;
         }
 
+        progress?.report({
+            message: localize('python.createEnv.venv.selectPython', 'Waiting on Python selection...'),
+        });
         const interpreters = this.discoveryApi.getEnvs({
             kinds: [PythonEnvKind.MicrosoftStore, PythonEnvKind.OtherGlobal],
         });
         const args = generateCommandArgs(options);
         let environment: string;
         if (interpreters.length === 1) {
-            environment = await createVenv(workspace, interpreters[0].executable.filename, args, token);
+            environment = await createVenv(workspace, interpreters[0].executable.filename, args, progress, token);
             traceLog(`Environment Created: ${environment}`);
         } else if (interpreters.length > 1) {
             const items: QuickPickItem[] = interpreters.map((i) => ({
@@ -116,7 +137,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                 matchOnDescription: true,
             });
             if (selected && selected.detail) {
-                environment = await createVenv(workspace, selected.detail, args, token);
+                environment = await createVenv(workspace, selected.detail, args, progress, token);
                 traceLog(`Environment Created: ${environment}`);
             }
         } else {
