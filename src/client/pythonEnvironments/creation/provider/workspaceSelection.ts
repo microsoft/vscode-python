@@ -10,8 +10,11 @@ import { getWorkspaceFolders } from '../../../common/vscodeApis/workspaceApis';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-function hasVenv(workspace: WorkspaceFolder): Promise<boolean> {
-    return fsapi.pathExists(path.join(workspace.uri.fsPath, '.venv'));
+function hasVirtualEnv(workspace: WorkspaceFolder): Promise<boolean> {
+    return Promise.race([
+        fsapi.pathExists(path.join(workspace.uri.fsPath, '.venv')),
+        fsapi.pathExists(path.join(workspace.uri.fsPath, '.conda')),
+    ]);
 }
 
 async function getWorkspacesForQuickPick(workspaces: readonly WorkspaceFolder[]): Promise<QuickPickItem[]> {
@@ -20,7 +23,7 @@ async function getWorkspacesForQuickPick(workspaces: readonly WorkspaceFolder[])
         items.push({
             label: workspace.name,
             detail: workspace.uri.fsPath,
-            description: (await hasVenv(workspace))
+            description: (await hasVirtualEnv(workspace))
                 ? localize('python.venv.hasVenv', 'Workspace folder contains a virtual environment.')
                 : undefined,
         });
@@ -40,7 +43,7 @@ export async function getVenvWorkspaceFolder(): Promise<WorkspaceFolder | undefi
     }
 
     if (workspaces.length === 1) {
-        if (await hasVenv(workspaces[0])) {
+        if (await hasVirtualEnv(workspaces[0])) {
             await showErrorMessage(localize('python.venv.hasVenv', '".venv" already exists for this workspace.'));
             return undefined;
         }

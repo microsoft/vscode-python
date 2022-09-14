@@ -7,6 +7,7 @@ import { IDisposableRegistry } from '../../common/types';
 import { registerCommand } from '../../common/vscodeApis/commandApis';
 import { IDiscoveryAPI } from '../base/locator';
 import { handleCreateEnvironmentCommand } from './createEnvQuickPick';
+import { CondaCreationProvider } from './provider/condaCreationProvider';
 import { VenvCreationProvider } from './provider/venvCreationProvider';
 import { CreateEnvironmentProvider } from './types';
 
@@ -51,12 +52,5 @@ export function registerCreateEnvironmentFeatures(disposables: IDisposableRegist
         }),
     );
     disposables.push(registerCreateEnvironmentProvider(new VenvCreationProvider(discoveryApi)));
-    disposables.push(
-        registerCreateEnvironmentProvider({
-            name: 'Conda',
-            id: 'conda',
-            description: 'conda environments',
-            createEnvironment: () => Promise.resolve(),
-        }),
-    );
+    disposables.push(registerCreateEnvironmentProvider(new CondaCreationProvider()));
 }
