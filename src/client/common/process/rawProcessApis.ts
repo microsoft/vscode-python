@@ -8,16 +8,9 @@ import { IDisposable } from '../types';
 import { createDeferred } from '../utils/async';
 import { EnvironmentVariables } from '../variables/types';
 import { DEFAULT_ENCODING } from './constants';
-import {
-    ExecutionResult,
-    IBufferDecoder,
-    ObservableExecutionResult,
-    Output,
-    ShellOptions,
-    SpawnOptions,
-    StdErrError,
-} from './types';
+import { ExecutionResult, ObservableExecutionResult, Output, ShellOptions, SpawnOptions, StdErrError } from './types';
 import { noop } from '../utils/misc';
+import { decodeBuffer } from './decoder';
 
 function getDefaultOptions<T extends ShellOptions | SpawnOptions>(options: T, defaultEnv?: EnvironmentVariables): T {
     const defaultOptions = { ...options };
@@ -90,7 +83,6 @@ export function plainExec(
     file: string,
     args: string[],
     options: SpawnOptions = {},
-    decoder?: IBufferDecoder,
     defaultEnv?: EnvironmentVariables,
     disposables?: Set<IDisposable>,
 ): Promise<ExecutionResult<string>> {
@@ -141,11 +133,11 @@ export function plainExec(
             return;
         }
         const stderr: string | undefined =
-            stderrBuffers.length === 0 ? undefined : decoder?.decode(stderrBuffers, encoding);
+            stderrBuffers.length === 0 ? undefined : decodeBuffer(stderrBuffers, encoding);
         if (stderr && stderr.length > 0 && options.throwOnStdErr) {
             deferred.reject(new StdErrError(stderr));
         } else {
-            let stdout = decoder ? decoder.decode(stdoutBuffers, encoding) : '';
+            let stdout = decodeBuffer(stdoutBuffers, encoding);
             stdout = filterOutputUsingCondaRunMarkers(stdout);
             deferred.resolve({ stdout, stderr });
         }
@@ -177,7 +169,6 @@ export function execObservable(
     file: string,
     args: string[],
     options: SpawnOptions = {},
-    decoder?: IBufferDecoder,
     defaultEnv?: EnvironmentVariables,
     disposables?: Set<IDisposable>,
 ): ObservableExecutionResult<string> {
@@ -220,7 +211,7 @@ export function execObservable(
         }
 
         const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
-            let out = decoder ? decoder.decode([data], encoding) : '';
+            let out = decodeBuffer([data], encoding);
             if (source === 'stderr' && options.throwOnStdErr) {
                 subscriber.error(new StdErrError(out));
             } else {

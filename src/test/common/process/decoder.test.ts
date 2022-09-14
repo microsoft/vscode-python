@@ -3,7 +3,7 @@
 
 import { expect } from 'chai';
 import { encode, encodingExists } from 'iconv-lite';
-import { BufferDecoder } from '../../../client/common/process/decoder';
+import { decodeBuffer } from '../../../client/common/process/decoder';
 import { initialize } from './../../initialize';
 
 suite('Decoder', () => {
@@ -13,8 +13,7 @@ suite('Decoder', () => {
     test('Test decoding utf8 strings', () => {
         const value = 'Sample input string Сделать это';
         const buffer = encode(value, 'utf8');
-        const decoder = new BufferDecoder();
-        const decodedValue = decoder.decode([buffer]);
+        const decodedValue = decodeBuffer([buffer]);
         expect(decodedValue).equal(value, 'Decoded string is incorrect');
     });
 
@@ -24,11 +23,10 @@ suite('Decoder', () => {
         }
         const value = 'Sample input string Сделать это';
         const buffer = encode(value, 'cp866');
-        const decoder = new BufferDecoder();
-        let decodedValue = decoder.decode([buffer]);
+        let decodedValue = decodeBuffer([buffer]);
         expect(decodedValue).not.equal(value, 'Decoded string is the same');
 
-        decodedValue = decoder.decode([buffer], 'cp866');
+        decodedValue = decodeBuffer([buffer], 'cp866');
         expect(decodedValue).equal(value, 'Decoded string is incorrect');
     });
 });

@@ -5,11 +5,10 @@ import { expect } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, Uri } from 'vscode';
 
-import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { ProcessService } from '../../../client/common/process/proc';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
-import { IBufferDecoder, IProcessLogger } from '../../../client/common/process/types';
+import { IProcessLogger } from '../../../client/common/process/types';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
@@ -17,13 +16,11 @@ import { IEnvironmentVariablesProvider } from '../../../client/common/variables/
 suite('Process - ProcessServiceFactory', () => {
     let factory: ProcessServiceFactory;
     let envVariablesProvider: IEnvironmentVariablesProvider;
-    let bufferDecoder: IBufferDecoder;
     let processLogger: IProcessLogger;
     let processService: ProcessService;
     let disposableRegistry: IDisposableRegistry;
 
     setup(() => {
-        bufferDecoder = mock(BufferDecoder);
         envVariablesProvider = mock(EnvironmentVariablesProvider);
         processLogger = mock(ProcessLogger);
         when(processLogger.logProcess('', [], {})).thenReturn();
@@ -37,7 +34,6 @@ suite('Process - ProcessServiceFactory', () => {
         factory = new ProcessServiceFactory(
             instance(envVariablesProvider),
             instance(processLogger),
-            instance(bufferDecoder),
             disposableRegistry,
         );
     });

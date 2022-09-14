@@ -12,7 +12,6 @@ import { Position, Range, Selection, TextDocument, TextEditor, TextLine, Uri } f
 import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import '../../../client/common/extensions';
-import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import {
     IProcessService,
@@ -106,7 +105,7 @@ suite('Terminal - Code Execution Helper', () => {
     });
 
     async function ensureCodeIsNormalized(source: string, expectedSource: string) {
-        const actualProcessService = new ProcessService(new BufferDecoder());
+        const actualProcessService = new ProcessService();
         processService
             .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((file, args, options) =>

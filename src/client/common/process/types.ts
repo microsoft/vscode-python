@@ -8,11 +8,6 @@ import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation, PythonEnvironment } from '../../pythonEnvironments/info';
 import { ExecutionInfo, IDisposable } from '../types';
 
-export const IBufferDecoder = Symbol('IBufferDecoder');
-export interface IBufferDecoder {
-    decode(buffers: Buffer[], encoding: string): string;
-}
-
 export type Output<T extends string | Buffer> = {
     source: 'stdout' | 'stderr';
     out: T;

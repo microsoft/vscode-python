@@ -13,12 +13,10 @@ import { Uri } from 'vscode';
 
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import {
-    IBufferDecoder,
     IProcessLogger,
     IProcessService,
     IProcessServiceFactory,
@@ -75,7 +73,6 @@ suite('Process - PythonExecutionFactory', () => {
         suite(title(resource, interpreter), () => {
             let factory: PythonExecutionFactory;
             let activationHelper: IEnvironmentActivationService;
-            let bufferDecoder: IBufferDecoder;
             let processFactory: IProcessServiceFactory;
             let configService: IConfigurationService;
             let processLogger: IProcessLogger;
@@ -89,7 +86,6 @@ suite('Process - PythonExecutionFactory', () => {
             setup(() => {
                 sinon.stub(Conda, 'getConda').resolves(new Conda('conda'));
                 sinon.stub(Conda.prototype, 'getInterpreterPathForEnvironment').resolves(pythonPath);
-                bufferDecoder = mock(BufferDecoder);
                 activationHelper = mock(EnvironmentActivationService);
                 processFactory = mock(ProcessServiceFactory);
                 configService = mock(ConfigurationService);
@@ -135,7 +131,6 @@ suite('Process - PythonExecutionFactory', () => {
                     instance(activationHelper),
                     instance(processFactory),
                     instance(configService),
-                    instance(bufferDecoder),
                     instance(pyenvs),
                     instance(autoSelection),
                     instance(interpreterPathExpHelper),

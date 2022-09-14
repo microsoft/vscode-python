@@ -15,7 +15,6 @@ import { createPythonProcessService } from './pythonProcess';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     ExecutionFactoryCreationOptions,
-    IBufferDecoder,
     IProcessLogger,
     IProcessService,
     IProcessServiceFactory,
@@ -40,7 +39,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
         @inject(IInterpreterPathService) private readonly interpreterPathExpHelper: IInterpreterPathService,
@@ -110,7 +108,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const pythonPath = options.interpreter
             ? options.interpreter.path
             : this.configService.getSettings(options.resource).pythonPath;
-        const processService: IProcessService = new ProcessService(this.decoder, { ...envVars });
+        const processService: IProcessService = new ProcessService({ ...envVars });
         processService.on('exec', this.logger.logProcess.bind(this.logger));
         this.disposables.push(processService);
 

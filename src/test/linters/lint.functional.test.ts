@@ -16,12 +16,10 @@ import { Product } from '../../client/common/installer/productInstaller';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { PlatformService } from '../../client/common/platform/platformService';
 import { IFileSystem } from '../../client/common/platform/types';
-import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
 import { PythonToolExecutionService } from '../../client/common/process/pythonToolService';
 import {
-    IBufferDecoder,
     IProcessLogger,
     IPythonExecutionFactory,
     IPythonToolExecutionService,
@@ -694,11 +692,6 @@ class TestFixture extends BaseTestFixture {
             TypeMoq.MockBehavior.Strict,
         );
 
-        const decoder = new BufferDecoder();
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IBufferDecoder), TypeMoq.It.isAny()))
-            .returns(() => decoder);
-
         const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>(undefined, TypeMoq.MockBehavior.Strict);
         interpreterService.setup((i) => i.hasInterpreters()).returns(() => Promise.resolve(true));
         serviceContainer
@@ -717,7 +710,6 @@ class TestFixture extends BaseTestFixture {
         const procServiceFactory = new ProcessServiceFactory(
             envVarsService.object,
             processLogger.object,
-            decoder,
             disposableRegistry,
         );
         const pyenvs: IComponentAdapter = mock<IComponentAdapter>();
@@ -731,7 +723,6 @@ class TestFixture extends BaseTestFixture {
             envActivationService.object,
             procServiceFactory,
             configService,
-            decoder,
             instance(pyenvs),
             instance(autoSelection),
             instance(interpreterPathExpHelper),

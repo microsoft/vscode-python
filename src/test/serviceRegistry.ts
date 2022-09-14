@@ -13,13 +13,11 @@ import { PlatformService } from '../client/common/platform/platformService';
 import { RegistryImplementation } from '../client/common/platform/registry';
 import { registerTypes as platformRegisterTypes } from '../client/common/platform/serviceRegistry';
 import { IFileSystem, IPlatformService, IRegistry } from '../client/common/platform/types';
-import { BufferDecoder } from '../client/common/process/decoder';
 import { ProcessService } from '../client/common/process/proc';
 import { PythonExecutionFactory } from '../client/common/process/pythonExecutionFactory';
 import { PythonToolExecutionService } from '../client/common/process/pythonToolService';
 import { registerTypes as processRegisterTypes } from '../client/common/process/serviceRegistry';
 import {
-    IBufferDecoder,
     IProcessServiceFactory,
     IPythonExecutionFactory,
     IPythonToolExecutionService,
@@ -169,11 +167,10 @@ export class IocContainer {
     }
 
     public registerMockProcessTypes(): void {
-        this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
         const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const processService = new MockProcessService(new ProcessService(new BufferDecoder(), process.env as any));
+        const processService = new MockProcessService(new ProcessService(process.env as any));
         processServiceFactory.setup((f) => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService));
         this.serviceManager.addSingletonInstance<IProcessServiceFactory>(
             IProcessServiceFactory,

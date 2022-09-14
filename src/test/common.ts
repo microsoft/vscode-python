@@ -303,10 +303,9 @@ export function correctPathForOsType(pathToCorrect: string, os?: OSType): string
  * @return `SemVer` version of the Python interpreter, or `undefined` if an error occurs.
  */
 export async function getPythonSemVer(procService?: IProcessService): Promise<SemVer | undefined> {
-    const decoder = await import('../client/common/process/decoder');
     const proc = await import('../client/common/process/proc');
 
-    const pythonProcRunner = procService ? procService : new proc.ProcessService(new decoder.BufferDecoder());
+    const pythonProcRunner = procService ? procService : new proc.ProcessService();
     const pyVerArgs = ['-c', 'import sys;print("{0}.{1}.{2}".format(*sys.version_info[:3]))'];
 
     return pythonProcRunner
