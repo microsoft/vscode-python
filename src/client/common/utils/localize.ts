@@ -549,3 +549,10 @@ export namespace SwitchToDefaultLS {
         "The Microsoft Python Language Server has reached end of life. Your language server has been set to the default for Python in VS Code, Pylance.\n\nIf you'd like to change your language server, you can learn about how to do so [here](https://devblogs.microsoft.com/python/python-in-visual-studio-code-may-2021-release/#configuring-your-language-server).\n\nRead Pylance's license [here](https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license).",
     );
 }
+
+export namespace CreateEnv {
+    export const statusTitle = localize('createEnv.statusTitle', 'Creating virtual environment');
+    export const statusStarting = localize('createEnv.statusStarting', 'Starting...');
+    export const statusError = localize('createEnv.statusError', 'Error.');
+    export const statusDone = localize('createEnv.statusDone', 'Done.');
+}

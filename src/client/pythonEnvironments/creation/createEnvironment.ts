@@ -1,46 +1,43 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License
 
-import * as nls from 'vscode-nls';
 import { CancellationToken, ProgressLocation } from 'vscode';
 import { withProgress } from '../../common/vscodeApis/windowApis';
 import { traceError, traceLog } from '../../logging';
-import { CreateEnvironmentProgress, CreateEnvironmentProvider } from './types';
+import { CreateEnvironmentOptions, CreateEnvironmentProgress, CreateEnvironmentProvider } from './types';
+import { CreateEnv } from '../../common/utils/localize';
 
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-
-export async function createEnvironment(provider: CreateEnvironmentProvider): Promise<void> {
+export async function createEnvironment(
+    provider: CreateEnvironmentProvider,
+    options: CreateEnvironmentOptions = {
+        ignoreSourceControl: true,
+        installPackages: true,
+    },
+): Promise<void> {
     traceLog(`Creating environment using: ${provider.name}`);
-    withProgress(
+    await withProgress(
         {
             location: ProgressLocation.Notification,
-            title: localize('python.createEnv.status.title', 'Creating virtual environment'),
+            title: CreateEnv.statusTitle,
             cancellable: true,
         },
         async (progress: CreateEnvironmentProgress, token: CancellationToken) => {
             let hasError = false;
             progress.report({
-                message: localize('python.createEnv.status.starting', 'Starting...'),
+                message: CreateEnv.statusStarting,
             });
             try {
-                await provider.createEnvironment(
-                    {
-                        ignoreSourceControl: true,
-                        installPackages: true,
-                    },
-                    progress,
-                    token,
-                );
+                await provider.createEnvironment(options, progress, token);
             } catch (ex) {
                 traceError(ex);
                 hasError = true;
                 progress.report({
-                    message: localize('python.createEnv.status.error', 'Error'),
+                    message: CreateEnv.statusError,
                 });
             } finally {
                 if (!hasError) {
                     progress.report({
-                        message: localize('python.createEnv.status.done', 'Completed'),
+                        message: CreateEnv.statusDone,
                     });
                 }
             }

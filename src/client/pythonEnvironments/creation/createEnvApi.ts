@@ -9,7 +9,7 @@ import { IDiscoveryAPI } from '../base/locator';
 import { handleCreateEnvironmentCommand } from './createEnvQuickPick';
 import { CondaCreationProvider } from './provider/condaCreationProvider';
 import { VenvCreationProvider } from './provider/venvCreationProvider';
-import { CreateEnvironmentProvider } from './types';
+import { CreateEnvironmentOptions, CreateEnvironmentProvider } from './types';
 
 class CreateEnvironmentProviders {
     private _createEnvProviders: CreateEnvironmentProvider[] = [];
@@ -40,15 +40,11 @@ export function registerCreateEnvironmentProvider(provider: CreateEnvironmentPro
     });
 }
 
-export function getCreateEnvironmentProviders(): readonly CreateEnvironmentProvider[] {
-    return _createEnvironmentProviders.getAll();
-}
-
 export function registerCreateEnvironmentFeatures(disposables: IDisposableRegistry, discoveryApi: IDiscoveryAPI): void {
     disposables.push(
-        registerCommand(Commands.Create_Environment, async () => {
+        registerCommand(Commands.Create_Environment, async (options?: CreateEnvironmentOptions) => {
             const providers = _createEnvironmentProviders.getAll();
-            await handleCreateEnvironmentCommand(providers);
+            await handleCreateEnvironmentCommand(providers, options);
         }),
     );
     disposables.push(registerCreateEnvironmentProvider(new VenvCreationProvider(discoveryApi)));

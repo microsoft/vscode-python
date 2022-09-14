@@ -6,7 +6,7 @@ import { QuickPickItem } from 'vscode';
 import { showQuickPick } from '../../common/vscodeApis/windowApis';
 import { traceError } from '../../logging';
 import { createEnvironment } from './createEnvironment';
-import { CreateEnvironmentProvider } from './types';
+import { CreateEnvironmentOptions, CreateEnvironmentProvider } from './types';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
@@ -37,13 +37,16 @@ async function showCreateEnvironmentQuickPick(
     return undefined;
 }
 
-export async function handleCreateEnvironmentCommand(providers: readonly CreateEnvironmentProvider[]): Promise<void> {
+export async function handleCreateEnvironmentCommand(
+    providers: readonly CreateEnvironmentProvider[],
+    options?: CreateEnvironmentOptions,
+): Promise<void> {
     if (providers.length === 1) {
-        await createEnvironment(providers[0]);
+        await createEnvironment(providers[0], options);
     } else if (providers.length > 1) {
         const provider = await showCreateEnvironmentQuickPick(providers);
         if (provider) {
-            await createEnvironment(provider);
+            await createEnvironment(provider, options);
         }
     } else {
         traceError('No Environment Creation providers were registered.');
