@@ -27,9 +27,9 @@ function generateCommandArgs(
         '-m',
         'conda',
         'create',
-        '-yes',
-        '-prefix',
-        path.join(workspace.uri.fsPath, '.conda'),
+        '--yes',
+        '--prefix',
+        path.join(workspace.uri.fsPath, '.venv'),
         version ? `python=${version}` : 'python',
     ];
 }
