@@ -14,7 +14,7 @@ import { EnvironmentTypeComparer } from './configuration/environmentTypeComparer
 import { InstallPythonCommand } from './configuration/interpreterSelector/commands/installPython';
 import { InstallPythonViaTerminal } from './configuration/interpreterSelector/commands/installPython/installPythonViaTerminal';
 import { ResetInterpreterCommand } from './configuration/interpreterSelector/commands/resetInterpreter';
-import { SetInterpreterCommand, SET_INTERPRETER_ID } from './configuration/interpreterSelector/commands/setInterpreter';
+import { SetInterpreterCommand } from './configuration/interpreterSelector/commands/setInterpreter';
 import { SetShebangInterpreterCommand } from './configuration/interpreterSelector/commands/setShebangInterpreter';
 import { InterpreterSelector } from './configuration/interpreterSelector/interpreterSelector';
 import { PythonPathUpdaterService } from './configuration/pythonPathUpdaterService';
@@ -66,8 +66,8 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         SetInterpreterCommand,
-        SET_INTERPRETER_ID,
     );
+    serviceManager.addSingleton(IInterpreterQuickPick, SetInterpreterCommand);
 
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, VirtualEnvironmentPrompt);
 
