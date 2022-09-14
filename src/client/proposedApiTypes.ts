@@ -113,11 +113,11 @@ export interface Environment {
                */
               path: string;
               /**
-               * Any specific workspace folder this environment is created for.
+               * Path to any specific workspace folder this environment is created for.
                */
               workspaceFolderPath: string | undefined;
               /**
-               * Tools/Plugins which created the environment or where it came from.
+               * Tools/plugins which created the environment or where it came from.
                * First value corresponds to the primary source, which never changes over time.
                */
               source: EnvSource[];
