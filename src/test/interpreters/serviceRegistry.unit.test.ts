@@ -24,6 +24,7 @@ import { PythonPathUpdaterService } from '../../client/interpreter/configuration
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
 import {
     IInterpreterComparer,
+    IInterpreterQuickPick,
     IInterpreterSelector,
     IPythonPathUpdaterServiceFactory,
     IPythonPathUpdaterServiceManager,
@@ -53,6 +54,7 @@ suite('Interpreters - Service Registry', () => {
             [IExtensionSingleActivationService, InstallPythonCommand],
             [IExtensionSingleActivationService, InstallPythonViaTerminal],
             [IExtensionSingleActivationService, SetInterpreterCommand],
+            [IInterpreterQuickPick, SetInterpreterCommand],
             [IExtensionSingleActivationService, ResetInterpreterCommand],
             [IExtensionSingleActivationService, SetShebangInterpreterCommand],
 
@@ -63,7 +65,6 @@ suite('Interpreters - Service Registry', () => {
 
             [IPythonPathUpdaterServiceFactory, PythonPathUpdaterServiceFactory],
             [IPythonPathUpdaterServiceManager, PythonPathUpdaterService],
-
             [IInterpreterSelector, InterpreterSelector],
             [IShebangCodeLensProvider, ShebangCodeLensProvider],
             [IInterpreterHelper, InterpreterHelper],

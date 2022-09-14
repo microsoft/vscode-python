@@ -63,10 +63,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
         IExtensionSingleActivationService,
         SetShebangInterpreterCommand,
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        SetInterpreterCommand,
-    );
     serviceManager.addSingleton(IInterpreterQuickPick, SetInterpreterCommand);
 
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, VirtualEnvironmentPrompt);
