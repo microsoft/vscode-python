@@ -320,7 +320,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         const areItemsGrouped = items.find((item) => isSeparatorItem(item));
         const env = event.old ?? event.new;
         if (filter && event.new && !filter(event.new)) {
-            event.new = undefined; // Ignore events not related to relevant envs.
+            event.new = undefined; // Remove envs we're not looking for from the list.
         }
         let envIndex = -1;
         if (env) {
