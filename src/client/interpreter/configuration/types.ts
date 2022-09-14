@@ -65,3 +65,11 @@ export interface IInterpreterComparer {
     compare(a: PythonEnvironment, b: PythonEnvironment): number;
     getRecommended(interpreters: PythonEnvironment[], resource: Resource): PythonEnvironment | undefined;
 }
+
+export const IInterpreterQuickPick = Symbol('IInterpreterQuickPick');
+export interface IInterpreterQuickPick {
+    getInterpreterViaQuickPick(
+        workspace: Resource,
+        filter?: (i: PythonEnvironment) => boolean,
+    ): Promise<string | undefined>;
+}
