@@ -4,7 +4,6 @@
 import { CancellationToken, QuickPickItem, WorkspaceFolder } from 'vscode';
 import * as nls from 'vscode-nls';
 import { PVSC_EXTENSION_ID } from '../../../common/constants';
-import { bufferDecode } from '../../../common/process/decoder';
 import { createVenvScript } from '../../../common/process/internal/scripts';
 import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
@@ -50,18 +49,11 @@ async function createVenv(
     });
     const deferred = createDeferred<string>();
     traceLog('Running Env creation script: ', [command, ...args]);
-    const { out, dispose } = execObservable(
-        command,
-        args,
-        {
-            mergeStdOutErr: true,
-            token,
-            cwd: workspace.uri.fsPath,
-        },
-        {
-            decode: bufferDecode,
-        },
-    );
+    const { out, dispose } = execObservable(command, args, {
+        mergeStdOutErr: true,
+        token,
+        cwd: workspace.uri.fsPath,
+    });
 
     out.subscribe(
         (value) => {

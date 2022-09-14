@@ -13,7 +13,6 @@ import { CreateEnvironmentOptions, CreateEnvironmentProgress, CreateEnvironmentP
 import { getVenvWorkspaceFolder } from './workspaceSelection';
 import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
-import { bufferDecode } from '../../../common/process/decoder';
 import { getEnvironmentVariable, getOSType, OSType } from '../../../common/utils/platform';
 import { createCondaScript } from '../../../common/process/internal/scripts';
 
@@ -65,21 +64,14 @@ async function createCondaEnv(
         pathEnv = `${libPath}${path.delimiter}${pathEnv}`;
     }
     traceLog('Running Env creation script: ', [command, ...args]);
-    const { out, dispose } = execObservable(
-        command,
-        args,
-        {
-            mergeStdOutErr: true,
-            token,
-            cwd: workspace.uri.fsPath,
-            env: {
-                PATH: pathEnv,
-            },
+    const { out, dispose } = execObservable(command, args, {
+        mergeStdOutErr: true,
+        token,
+        cwd: workspace.uri.fsPath,
+        env: {
+            PATH: pathEnv,
         },
-        {
-            decode: bufferDecode,
-        },
-    );
+    });
 
     out.subscribe(
         (value) => {
