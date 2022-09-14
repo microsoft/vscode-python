@@ -9,32 +9,43 @@ import { PVSC_EXTENSION_ID } from '../../../common/constants';
 import { showQuickPick } from '../../../common/vscodeApis/windowApis';
 import { traceError, traceLog } from '../../../logging';
 import { Conda } from '../../common/environmentManagers/conda';
-import { CreateEnvironmentOptions, CreateEnvironmentProvider } from '../types';
+import { CreateEnvironmentOptions, CreateEnvironmentProgress, CreateEnvironmentProvider } from '../types';
 import { getVenvWorkspaceFolder } from './workspaceSelection';
 import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
 import { bufferDecode } from '../../../common/process/decoder';
 import { getEnvironmentVariable, getOSType, OSType } from '../../../common/utils/platform';
+import { createCondaScript } from '../../../common/process/internal/scripts';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-function generateCommandArgs(
-    workspace: WorkspaceFolder,
-    version?: string,
-    _options?: CreateEnvironmentOptions,
-): string[] {
-    return [
-        '-m',
-        'conda',
-        'create',
-        '--yes',
-        '--prefix',
-        path.join(workspace.uri.fsPath, '.venv'),
-        version ? `python=${version}` : 'python',
-    ];
+function generateCommandArgs(version?: string, options?: CreateEnvironmentOptions): string[] {
+    let addGitIgnore = true;
+    let installPackages = true;
+    if (options) {
+        addGitIgnore = options?.ignoreSourceControl !== undefined ? options.ignoreSourceControl : true;
+        installPackages = options?.installPackages !== undefined ? options.installPackages : true;
+    }
+
+    const command: string[] = [createCondaScript()];
+
+    if (addGitIgnore) {
+        command.push('--git-ignore');
+    }
+
+    if (installPackages) {
+        command.push('--install');
+    }
+
+    if (version) {
+        command.push('--python');
+        command.push(version);
+    }
+
+    return command;
 }
 
-async function createVenv(
+async function createCondaEnv(
     workspace: WorkspaceFolder,
     command: string,
     args: string[],
@@ -76,7 +87,7 @@ async function createVenv(
             output = output.concat(value.out);
         },
         (error) => {
-            traceError('Error while running venv creation script: ', error);
+            traceError('Error while running conda env creation script: ', error);
             deferred.reject(error);
         },
         () => {
@@ -97,7 +108,11 @@ function getExecutableCommand(condaPath: string): string {
 }
 
 export class CondaCreationProvider implements CreateEnvironmentProvider {
-    public async createEnvironment(options?: CreateEnvironmentOptions, token?: CancellationToken): Promise<void> {
+    public async createEnvironment(
+        options?: CreateEnvironmentOptions,
+        _progress?: CreateEnvironmentProgress,
+        token?: CancellationToken,
+    ): Promise<void> {
         const workspace = await getVenvWorkspaceFolder();
         if (workspace === undefined) {
             traceError('Workspace was not selected or found for creating virtual env.');
@@ -122,8 +137,8 @@ export class CondaCreationProvider implements CreateEnvironmentProvider {
             ),
         });
         if (version) {
-            const args = generateCommandArgs(workspace, version.description, options);
-            await createVenv(workspace, getExecutableCommand(conda.command), args, token);
+            const args = generateCommandArgs(version.description, options);
+            await createCondaEnv(workspace, getExecutableCommand(conda.command), args, token);
         }
     }
 
@@ -131,7 +146,7 @@ export class CondaCreationProvider implements CreateEnvironmentProvider {
 
     description: string = localize(
         'python.conda.description',
-        'Creates a `.conda` virtual environment using `conda` in the current workspace.',
+        'Creates a `.conda` virtual environment, using `conda`, in the current workspace.',
     );
 
     id = `${PVSC_EXTENSION_ID}:conda`;

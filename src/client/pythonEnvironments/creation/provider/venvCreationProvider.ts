@@ -12,7 +12,7 @@ import { showQuickPick } from '../../../common/vscodeApis/windowApis';
 import { traceError, traceLog } from '../../../logging';
 import { PythonEnvKind } from '../../base/info';
 import { IDiscoveryAPI } from '../../base/locator';
-import { CreateEnvironmentOptions, CreateEnvironmentProvider } from '../types';
+import { CreateEnvironmentOptions, CreateEnvironmentProgress, CreateEnvironmentProvider } from '../types';
 import { getVenvWorkspaceFolder } from './workspaceSelection';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
@@ -82,7 +82,11 @@ async function createVenv(
 export class VenvCreationProvider implements CreateEnvironmentProvider {
     constructor(private readonly discoveryApi: IDiscoveryAPI) {}
 
-    public async createEnvironment(options?: CreateEnvironmentOptions, token?: CancellationToken): Promise<void> {
+    public async createEnvironment(
+        options?: CreateEnvironmentOptions,
+        _progress?: CreateEnvironmentProgress,
+        token?: CancellationToken,
+    ): Promise<void> {
         const workspace = await getVenvWorkspaceFolder();
         if (workspace === undefined) {
             traceError('Workspace was not selected or found for creating virtual env.');
