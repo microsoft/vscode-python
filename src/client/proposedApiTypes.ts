@@ -42,8 +42,7 @@ interface IEnvironmentAPI {
 
 interface IEnvironmentLocatorAPI {
     /**
-     * Carries environments found by the extension at the time of fetching the property. Note a refresh might be going on
-     * so this may not be the complete list. To get complete list `await` on promise returned by {@link waitForRefresh()}.
+     * Carries environments found by the extension at the time of fetching the property. Note a refresh might be going on so this may not be the complete list. To wait on complete list use {@link refreshState()} and {@link onDidChangeRefreshState}.
      */
     environments: readonly Environment[] | undefined;
     /**
@@ -52,15 +51,14 @@ interface IEnvironmentLocatorAPI {
      */
     onDidChangeEnvironments: Event<EnvironmentsChangedParams>;
     /**
-     * Returns a promise for the ongoing refresh. Returns `undefined` if there are no active
-     * refreshes going on.
+     * Returns the last known refresh state, i.e whether it started, finished, or any other relevant state.
      */
-    waitForRefresh(): Promise<void> | undefined;
+    refreshState: RefreshState;
     /**
-     * Tracks discovery progress for current list of known environments, i.e when it starts, finishes or any other relevant
-     * stage.
+     * Tracks refresh progress for current list of known environments, i.e when it starts, finishes or any other relevant
+     * state.
      */
-    readonly onRefreshProgress: Event<ProgressNotificationEvent>;
+    readonly onDidChangeRefreshState: Event<RefreshState>;
     /**
      * This API will re-trigger environment discovery. If there is a refresh already going on then it
      * returns the promise for that refresh.
@@ -153,13 +151,26 @@ export interface ResolvedEnvironment {
     version: PythonVersionInfo;
 }
 
-export type ProgressNotificationEvent = {
-    /**
-     * * started: Fires when a refresh is started.
-     * * finished: Fires when a refresh is over.
-     */
-    stage: 'started' | 'finished';
+export type RefreshState = {
+    state: RefreshStateValues;
 };
+
+/**
+ * Value of the enum indicates which states comes before when a refresh takes place.
+ */
+export enum RefreshStateValues {
+    /**
+     * When a refresh is started.
+     */
+    started = 0,
+
+    // ...there can be more intimidatory states
+
+    /**
+     * When a refresh is over.
+     */
+    finished = 1,
+}
 
 /**
  * Uri of a file inside a workspace or workspace folder itself.

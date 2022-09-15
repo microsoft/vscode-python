@@ -11,11 +11,12 @@ import {
     EnvironmentsChangedParams,
     IProposedExtensionAPI,
     ResolvedEnvironment,
-    ProgressNotificationEvent,
     UniquePathType,
     PythonVersionInfo,
     RefreshOptions,
     Resource,
+    RefreshStateValues,
+    RefreshState,
 } from './proposedApiTypes';
 import { PythonEnvInfo, PythonEnvKind, virtualEnvKinds } from './pythonEnvironments/base/info';
 import { getEnvPath } from './pythonEnvironments/base/info/env';
@@ -25,7 +26,7 @@ const onDidActiveInterpreterChangedEvent = new EventEmitter<ActiveEnvironmentCha
 export function reportActiveInterpreterChanged(e: ActiveEnvironmentChangedParams): void {
     onDidActiveInterpreterChangedEvent.fire(e);
 }
-const onProgress = new EventEmitter<ProgressNotificationEvent>();
+const onProgress = new EventEmitter<RefreshState>();
 const onEnvironmentsChanged = new EventEmitter<EnvironmentsChangedParams>();
 const environmentsReference = new Map<UniquePathType, EnvironmentReference>();
 
@@ -74,10 +75,10 @@ export function buildProposedApi(
     disposables.push(
         discoveryApi.onProgress((e) => {
             if (e.stage === ProgressReportStage.discoveryStarted) {
-                onProgress.fire({ stage: 'started' });
+                onProgress.fire({ state: RefreshStateValues.started });
             }
             if (e.stage === ProgressReportStage.discoveryFinished) {
-                onProgress.fire({ stage: 'finished' });
+                onProgress.fire({ state: RefreshStateValues.finished });
             }
         }),
         discoveryApi.onChanged((e) => {
@@ -112,11 +113,18 @@ export function buildProposedApi(
                 get environments(): Environment[] {
                     return discoveryApi.getEnvs().map((e) => convertEnvInfoAndGetReference(e));
                 },
-                get onRefreshProgress() {
+                get onDidChangeRefreshState() {
                     return onProgress.event;
                 },
-                waitForRefresh(): Promise<void> | undefined {
-                    return discoveryApi.getRefreshPromise();
+                get refreshState(): RefreshState {
+                    switch (discoveryApi.refreshState) {
+                        case ProgressReportStage.discoveryStarted:
+                            return { state: RefreshStateValues.started };
+                        case ProgressReportStage.discoveryFinished:
+                            return { state: RefreshStateValues.finished };
+                        default:
+                            return { state: RefreshStateValues.started };
+                    }
                 },
                 async refreshEnvironments(options: RefreshOptions) {
                     await discoveryApi.triggerRefresh(undefined, {

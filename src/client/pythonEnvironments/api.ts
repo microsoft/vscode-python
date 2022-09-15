@@ -6,6 +6,7 @@ import {
     GetRefreshEnvironmentsOptions,
     IDiscoveryAPI,
     ProgressNotificationEvent,
+    ProgressReportStage,
     PythonLocatorQuery,
     TriggerRefreshOptions,
 } from './base/locator';
@@ -31,6 +32,10 @@ class PythonEnvironments implements IDiscoveryAPI {
 
     public get onProgress(): Event<ProgressNotificationEvent> {
         return this.locator.onProgress;
+    }
+
+    public get refreshState(): ProgressReportStage {
+        return this.locator.refreshState;
     }
 
     public getRefreshPromise(options?: GetRefreshEnvironmentsOptions) {

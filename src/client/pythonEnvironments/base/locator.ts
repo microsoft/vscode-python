@@ -201,6 +201,7 @@ export type TriggerRefreshOptions = {
 };
 
 export interface IDiscoveryAPI {
+    readonly refreshState: ProgressReportStage;
     /**
      * Tracks discovery progress for current list of known environments, i.e when it starts, finishes or any other relevant
      * stage. Note the progress for a particular query is currently not tracked or reported, this only indicates progress of

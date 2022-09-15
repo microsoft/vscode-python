@@ -43,6 +43,8 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     private readonly progress = new EventEmitter<ProgressNotificationEvent>();
 
+    public refreshState = ProgressReportStage.discoveryFinished;
+
     public get onProgress(): Event<ProgressNotificationEvent> {
         return this.progress.event;
     }
@@ -70,6 +72,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             this.fire(e);
         });
         this.onProgress((event) => {
+            this.refreshState = event.stage;
             // Resolve progress promise indicating the stage has been reached.
             this.progressPromises.get(event.stage)?.resolve();
             this.progressPromises.delete(event.stage);
