@@ -70,32 +70,69 @@ interface IEnvironmentLocatorAPI {
      *
      * Note this can be expensive so it's best to only use it if user manually triggers it. For
      * internal automatic triggers consider using {@link RefreshOptions.ifNotRefreshedAlready}.
-     * @param options Additonal options for refresh.
+     * @param options Additional options for refresh.
      * @param token A cancellation token that indicates a refresh is no longer needed.
      */
     refreshEnvironment(options: RefreshOptions, token?: CancellationToken): Promise<void>;
 }
 
+/**
+ * Details about the environment. Note the type, name and environment path is known.
+ */
 export interface Environment {
     pathID: UniquePathType;
+    /**
+     * Carries details about python executable.
+     */
     executable: {
+        /**
+         * Path to the python interpreter/executable. Carries `undefined` in case an executable does not belong to the environment.
+         */
         path: string | undefined;
+        /**
+         * Bitness if known at this moment.
+         */
         bitness: Architecture | undefined;
+        /**
+         * Value of `sys.prefix` in sys module if known at this moment.
+         */
         sysPrefix: string | undefined;
     };
+    /**
+     * Carries details if it is an environment, otherwise `undefined` in case of global interpreters or something else.
+     */
     environment:
         | {
+              /**
+               * Type of the environment. This never changes over time.
+               */
               type: EnvType;
+              /**
+               * Name to the environment if any.
+               */
               name: string | undefined;
+              /**
+               * Path to the environment folder.
+               */
               folderPath: string;
               /**
                * Any specific workspace folder this environment is created for.
                */
               workspaceFolder: Uri | undefined;
+              /**
+               * Tools/Plugins which created the environment or where it came from in the order.
+               * First value corresponds to the primary source, which never changes over time.
+               */
               source: EnvSource[];
           }
         | undefined;
+    /**
+     * Carries Python version information.
+     */
     version: StandardVersionInfo & {
+        /**
+         * Value of `sys.version` in sys module if known at this moment.
+         */
         sysVersion: string | undefined;
     };
 }
@@ -120,6 +157,10 @@ export interface ResolvedEnvironment {
 }
 
 export type ProgressNotificationEvent = {
+    /**
+     * * started: Fires when a refresh is started.
+     * * finished: Fires when a refresh is over.
+     */
     stage: 'started' | 'finished';
 };
 
