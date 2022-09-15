@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationTarget, EventEmitter } from 'vscode';
+import { ConfigurationTarget, EventEmitter, Uri } from 'vscode';
 import { IDisposableRegistry, IInterpreterPathService } from './common/types';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
@@ -96,7 +96,7 @@ export function buildProposedApi(
     );
     const proposed: IProposedExtensionAPI = {
         environment: {
-            async getActiveEnvironment(resource?: Resource) {
+            async fetchActiveEnvironment(resource?: Resource) {
                 resource = resource && 'uri' in resource ? resource.uri : resource;
                 const env = await interpreterService.getActiveInterpreter(resource);
                 if (!env) {
@@ -127,7 +127,7 @@ export function buildProposedApi(
                     return onEnvironmentsChanged.event;
                 },
             },
-            setActiveEnvironment(env: string | Environment, resource?: Resource): Promise<void> {
+            updateActiveEnvironment(env: string | Environment, resource?: Resource): Promise<void> {
                 const path = typeof env !== 'string' ? env.pathID : env;
                 resource = resource && 'uri' in resource ? resource.uri : resource;
                 return interpreterPathService.update(resource, ConfigurationTarget.WorkspaceFolder, path);
@@ -151,7 +151,7 @@ function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment {
     return {
         pathID: getEnvPath(env.executable.filename, env.location).path,
         executable: {
-            path: env.executable.filename,
+            uri: Uri.file(env.executable.filename),
             bitness: env.arch,
             sysPrefix: env.executable.sysPrefix,
         },
@@ -159,8 +159,8 @@ function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment {
             ? {
                   type: env.kind === PythonEnvKind.Conda ? 'Conda' : 'VirtualEnv',
                   name: env.name,
-                  path: env.location,
-                  workspaceFolderPath: env.searchLocation?.fsPath,
+                  folderUri: Uri.file(env.location),
+                  workspaceFolder: env.searchLocation,
                   source: [env.kind],
               }
             : undefined,
@@ -173,8 +173,8 @@ function convertEnvInfoAndGetReference(env: PythonEnvInfo): Environment {
     if (convertedEnv.executable.sysPrefix === '') {
         convertedEnv.executable.sysPrefix = undefined;
     }
-    if (convertedEnv.executable.path === 'python') {
-        convertedEnv.executable.path = undefined;
+    if (convertedEnv.executable.uri?.fsPath === 'python') {
+        convertedEnv.executable.uri = undefined;
     }
     if (convertedEnv.environment?.name === '') {
         convertedEnv.environment.name = undefined;

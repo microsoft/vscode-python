@@ -21,19 +21,19 @@ interface IEnvironmentAPI {
      *
      * @param resource : Uri of a file or workspace folder.
      */
-    getActiveEnvironment(resource?: Resource): Promise<ResolvedEnvironment | undefined>;
-    /**
-     * Returns details for the given environment, or `undefined` if the env is invalid.
-     * @param environment : Environment whose details you need. Can also pass the full path to environment folder or python executable for the environment.
-     */
-    resolveEnvironment(environment: Environment | UniquePathType): Promise<ResolvedEnvironment | undefined>;
+    fetchActiveEnvironment(resource?: Resource): Promise<ResolvedEnvironment | undefined>;
     /**
      * Sets the active environment path for the python extension for the resource. Configuration target
      * will always be the workspace folder.
      * @param environment : Full path to environment folder or python executable for the environment. Can also pass the environment itself.
      * @param resource : [optional] File or workspace to scope to a particular workspace folder.
      */
-    setActiveEnvironment(environment: Environment | UniquePathType, resource?: Resource): Promise<void>;
+    updateActiveEnvironment(environment: Environment | UniquePathType, resource?: Resource): Promise<void>;
+    /**
+     * Returns details for the given environment, or `undefined` if the env is invalid.
+     * @param environment : Environment whose details you need. Can also pass the full path to environment folder or python executable for the environment.
+     */
+    resolveEnvironment(environment: Environment | UniquePathType): Promise<ResolvedEnvironment | undefined>;
     /**
      * Carries the API necessary for locating environments.
      */
@@ -42,8 +42,8 @@ interface IEnvironmentAPI {
 
 interface IEnvironmentLocatorAPI {
     /**
-     * Carries environments found by the extension at the time of fetching the property. To get complete list
-     * `await` on promise returned by {@link waitForRefresh()}.
+     * Carries environments found by the extension at the time of fetching the property. Note a refresh might be going on
+     * so this may not be the complete list. To get complete list `await` on promise returned by {@link waitForRefresh()}.
      */
     environments: readonly Environment[] | undefined;
     /**
@@ -74,7 +74,7 @@ interface IEnvironmentLocatorAPI {
 }
 
 /**
- * Details about the environment. Note the environment path, type and name never changes over time.
+ * Details about the environment. Note the environment folder, type and name never changes over time.
  */
 export interface Environment {
     pathID: UniquePathType;
@@ -83,9 +83,9 @@ export interface Environment {
      */
     executable: {
         /**
-         * Path to the python interpreter/executable. Carries `undefined` in case an executable does not belong to the environment.
+         * Uri of the python interpreter/executable. Carries `undefined` in case an executable does not belong to the environment.
          */
-        path: string | undefined;
+        uri: Uri | undefined;
         /**
          * Bitness if known at this moment.
          */
@@ -109,13 +109,13 @@ export interface Environment {
                */
               name: string | undefined;
               /**
-               * Path to the environment folder.
+               * Uri of the environment folder.
                */
-              path: string;
+              folderUri: Uri;
               /**
-               * Path to any specific workspace folder this environment is created for.
+               * Any specific workspace folder this environment is created for.
                */
-              workspaceFolderPath: string | undefined;
+              workspaceFolder: Uri | undefined;
               /**
                * Tools/plugins which created the environment or where it came from.
                * First value corresponds to the primary source, which never changes over time.
