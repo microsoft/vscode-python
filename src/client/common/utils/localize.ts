@@ -570,4 +570,9 @@ export namespace CreateEnv {
         'createEnv.workspaceQuickPick.title',
         'Select a workspace to create virtual environment.',
     );
+
+    export const providersQuickPickTitle = localize(
+        'createEnv.providersQuickPick.title',
+        'Select a virtual environment type.',
+    );
 }

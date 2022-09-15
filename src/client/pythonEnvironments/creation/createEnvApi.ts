@@ -42,10 +42,13 @@ export function registerCreateEnvironmentProvider(provider: CreateEnvironmentPro
 
 export function registerCreateEnvironmentFeatures(disposables: IDisposableRegistry, discoveryApi: IDiscoveryAPI): void {
     disposables.push(
-        registerCommand(Commands.Create_Environment, async (options?: CreateEnvironmentOptions) => {
-            const providers = _createEnvironmentProviders.getAll();
-            await handleCreateEnvironmentCommand(providers, options);
-        }),
+        registerCommand(
+            Commands.Create_Environment,
+            (options?: CreateEnvironmentOptions): Promise<string | undefined> => {
+                const providers = _createEnvironmentProviders.getAll();
+                return handleCreateEnvironmentCommand(providers, options);
+            },
+        ),
     );
     disposables.push(registerCreateEnvironmentProvider(new VenvCreationProvider(discoveryApi)));
     disposables.push(registerCreateEnvironmentProvider(condaCreationProvider()));
