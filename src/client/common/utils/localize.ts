@@ -595,4 +595,28 @@ export namespace CreateEnv {
         );
         export const providerName = 'venv';
     }
+
+    export namespace Conda {
+        export const created = localize('createEnv.conda.created', 'Environment created...');
+        export const installingPackages = localize('createEnv.conda.installingPackages', 'Installing packages...');
+        export const waitingForWorkspace = localize(
+            'createEnv.conda.waitingForWorkspace',
+            'Waiting on workspace selection...',
+        );
+        export const waitingForPython = localize(
+            'createEnv.conda.waitingForPython',
+            'Waiting on Python version selection...',
+        );
+        export const selectPythonQuickPickTitle = localize(
+            'createEnv.conda.pythonSelection.title',
+            'Please select the version of Python to install in the environment.',
+        );
+        export const searching = localize('createEnv.conda.searching', 'Searching for conda (base)...');
+        export const creating = localize('createEnv.venv.creating', 'Running conda create...');
+        export const providerDescription = localize(
+            'createEnv.conda.description',
+            'Creates a `.conda` virtual environment, using `conda`, in the current workspace.',
+        );
+        export const providerName = 'conda';
+    }
 }

@@ -3,7 +3,6 @@
 /* eslint-disable class-methods-use-this */
 
 import { CancellationToken, QuickPickItem, WorkspaceFolder } from 'vscode';
-import * as nls from 'vscode-nls';
 import * as path from 'path';
 import { PVSC_EXTENSION_ID } from '../../../common/constants';
 import { showQuickPick } from '../../../common/vscodeApis/windowApis';
@@ -15,8 +14,7 @@ import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
 import { getEnvironmentVariable, getOSType, OSType } from '../../../common/utils/platform';
 import { createCondaScript } from '../../../common/process/internal/scripts';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+import { CreateEnv } from '../../../common/utils/localize';
 
 const CONDA_ENV_CREATED_MARKER = 'CREATED_CONDA_ENV:';
 const CONDA_INSTALLING_YML = 'CONDA_INSTALLING_YML:';
@@ -83,7 +81,7 @@ async function createCondaEnv(
             traceLog(output);
             if (output.includes(CONDA_ENV_CREATED_MARKER)) {
                 progress?.report({
-                    message: localize('python.createEnv.conda.created', 'Environment created...'),
+                    message: CreateEnv.Conda.created,
                 });
                 try {
                     const envPath = output
@@ -98,7 +96,7 @@ async function createCondaEnv(
                 }
             } else if (output.includes(CONDA_INSTALLING_YML)) {
                 progress?.report({
-                    message: localize('python.createEnv.conda.installingPackages', 'Installing packages...'),
+                    message: CreateEnv.Conda.installingPackages,
                 });
             }
         },
@@ -129,7 +127,7 @@ async function createEnvironment(
     token?: CancellationToken,
 ): Promise<string | undefined> {
     progress?.report({
-        message: localize('python.createEnv.conda.workspace', 'Waiting on workspace selection...'),
+        message: CreateEnv.Conda.waitingForWorkspace,
     });
     const workspace = (await pickWorkspaceFolder()) as WorkspaceFolder | undefined;
     if (workspace === undefined) {
@@ -138,21 +136,18 @@ async function createEnvironment(
     }
 
     progress?.report({
-        message: localize('python.createEnv.conda.selectPython', 'Waiting on Python version selection...'),
+        message: CreateEnv.Conda.waitingForPython,
     });
     const items: QuickPickItem[] = ['3.7', '3.8', '3.9', '3.10'].map((v) => ({
         label: `Python`,
         description: v,
     }));
     const version = await showQuickPick(items, {
-        title: localize(
-            'python.createConda.pythonSelection.title',
-            'Please select the version of python to install in the environment.',
-        ),
+        title: CreateEnv.Conda.selectPythonQuickPickTitle,
     });
     if (version) {
         progress?.report({
-            message: localize('python.createEnv.conda.findConda', 'Searching for conda (base)...'),
+            message: CreateEnv.Conda.searching,
         });
         const conda = await Conda.getConda();
 
@@ -161,7 +156,7 @@ async function createEnvironment(
             return undefined;
         }
         progress?.report({
-            message: localize('python.createEnv.conda.runCreate', 'Running conda create...'),
+            message: CreateEnv.Conda.creating,
         });
         const args = generateCommandArgs(version.description, options);
         return createCondaEnv(workspace, getExecutableCommand(conda.command), args, progress, token);
@@ -172,12 +167,9 @@ async function createEnvironment(
 export function condaCreationProvider(): CreateEnvironmentProvider {
     return {
         createEnvironment,
-        name: 'conda',
+        name: CreateEnv.Conda.providerName,
 
-        description: localize(
-            'python.conda.description',
-            'Creates a `.conda` virtual environment, using `conda`, in the current workspace.',
-        ),
+        description: CreateEnv.Conda.providerDescription,
 
         id: `${PVSC_EXTENSION_ID}:conda`,
     };
