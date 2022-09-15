@@ -115,10 +115,10 @@ export function buildProposedApi(
                 get onRefreshProgress() {
                     return onProgress.event;
                 },
-                waitOnRefresh(): Promise<void> | undefined {
+                waitForRefresh(): Promise<void> | undefined {
                     return discoveryApi.getRefreshPromise();
                 },
-                async refreshEnvironment(options: RefreshOptions) {
+                async refreshEnvironments(options: RefreshOptions) {
                     await discoveryApi.triggerRefresh(undefined, {
                         ifNotTriggerredAlready: options.ifNotRefreshedAlready,
                     });
