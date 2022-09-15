@@ -11,7 +11,7 @@ export interface IProposedExtensionAPI {
 
 interface IEnvironmentAPI {
     /**
-     * Carries the API to tracks the selected environment by the user for a workspace.
+     * Carries the API to track the selected environment by the user for a workspace.
      */
     activeEnvironment: IActiveEnvironmentAPI;
     /**
@@ -61,7 +61,7 @@ interface IEnvironmentLocatorAPI {
      */
     onDidChangeEnvironments: Event<EnvironmentsChangedParams>;
     /**
-     * Returns the last known refresh state, i.e whether it started, finished, or any other relevant state.
+     * Returns the last known state in the refresh, i.e whether it started, finished, or any other relevant state.
      */
     refreshState: RefreshState;
     /**

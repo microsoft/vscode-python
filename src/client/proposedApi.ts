@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -30,10 +31,10 @@ const onProgress = new EventEmitter<RefreshState>();
 const onEnvironmentsChanged = new EventEmitter<EnvironmentsChangedParams>();
 const environmentsReference = new Map<UniquePathType, EnvironmentReference>();
 
-class EnvironmentReference implements Environment {
+export class EnvironmentReference implements Environment {
     readonly pathID: string;
 
-    constructor(private internal: Environment) {
+    constructor(public internal: Environment) {
         this.pathID = internal.pathID;
     }
 
@@ -156,7 +157,7 @@ async function resolveEnvironment(path: string, discoveryApi: IDiscoveryAPI): Pr
     return getEnvReference(convertCompleteEnvInfo(env)) as ResolvedEnvironment;
 }
 
-function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment {
+export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment {
     const version = { ...env.version, sysVersion: env.version.sysVersion };
     return {
         pathID: getEnvPath(env.executable.filename, env.location).path,
