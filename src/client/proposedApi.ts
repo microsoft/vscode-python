@@ -15,7 +15,7 @@ import {
     PythonVersionInfo,
     RefreshOptions,
     Resource,
-    RefreshStateValues,
+    RefreshStateValue,
     RefreshState,
 } from './proposedApiTypes';
 import { PythonEnvInfo, PythonEnvKind, virtualEnvKinds } from './pythonEnvironments/base/info';
@@ -75,10 +75,10 @@ export function buildProposedApi(
     disposables.push(
         discoveryApi.onProgress((e) => {
             if (e.stage === ProgressReportStage.discoveryStarted) {
-                onProgress.fire({ state: RefreshStateValues.started });
+                onProgress.fire({ state: RefreshStateValue.started });
             }
             if (e.stage === ProgressReportStage.discoveryFinished) {
-                onProgress.fire({ state: RefreshStateValues.finished });
+                onProgress.fire({ state: RefreshStateValue.finished });
             }
         }),
         discoveryApi.onChanged((e) => {
@@ -97,13 +97,21 @@ export function buildProposedApi(
     );
     const proposed: IProposedExtensionAPI = {
         environment: {
-            async fetchActiveEnvironment(resource?: Resource) {
-                resource = resource && 'uri' in resource ? resource.uri : resource;
-                const env = await interpreterService.getActiveInterpreter(resource);
-                if (!env) {
-                    return undefined;
-                }
-                return resolveEnvironment(getEnvPath(env.path, env.envPath).path, discoveryApi);
+            activeEnvironment: {
+                async fetch(resource?: Resource) {
+                    resource = resource && 'uri' in resource ? resource.uri : resource;
+                    const env = await interpreterService.getActiveInterpreter(resource);
+                    if (!env) {
+                        return undefined;
+                    }
+                    return resolveEnvironment(getEnvPath(env.path, env.envPath).path, discoveryApi);
+                },
+                update(env: string | Environment, resource?: Resource): Promise<void> {
+                    const path = typeof env !== 'string' ? env.pathID : env;
+                    resource = resource && 'uri' in resource ? resource.uri : resource;
+                    return interpreterPathService.update(resource, ConfigurationTarget.WorkspaceFolder, path);
+                },
+                onDidChange: onDidActiveInterpreterChangedEvent.event,
             },
             resolveEnvironment: (env: string | Environment) => {
                 const path = typeof env !== 'string' ? env.pathID : env;
@@ -119,11 +127,11 @@ export function buildProposedApi(
                 get refreshState(): RefreshState {
                     switch (discoveryApi.refreshState) {
                         case ProgressReportStage.discoveryStarted:
-                            return { state: RefreshStateValues.started };
+                            return { state: RefreshStateValue.started };
                         case ProgressReportStage.discoveryFinished:
-                            return { state: RefreshStateValues.finished };
+                            return { state: RefreshStateValue.finished };
                         default:
-                            return { state: RefreshStateValues.started };
+                            return { state: RefreshStateValue.started };
                     }
                 },
                 async refreshEnvironments(options: RefreshOptions) {
@@ -135,12 +143,6 @@ export function buildProposedApi(
                     return onEnvironmentsChanged.event;
                 },
             },
-            updateActiveEnvironment(env: string | Environment, resource?: Resource): Promise<void> {
-                const path = typeof env !== 'string' ? env.pathID : env;
-                resource = resource && 'uri' in resource ? resource.uri : resource;
-                return interpreterPathService.update(resource, ConfigurationTarget.WorkspaceFolder, path);
-            },
-            onDidChangeActiveEnvironment: onDidActiveInterpreterChangedEvent.event,
         },
     };
     return proposed;
