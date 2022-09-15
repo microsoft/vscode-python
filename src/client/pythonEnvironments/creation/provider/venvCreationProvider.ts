@@ -2,19 +2,17 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, QuickPickItem, WorkspaceFolder } from 'vscode';
-import * as nls from 'vscode-nls';
 import { PVSC_EXTENSION_ID } from '../../../common/constants';
 import { createVenvScript } from '../../../common/process/internal/scripts';
 import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
+import { CreateEnv } from '../../../common/utils/localize';
 import { showQuickPick } from '../../../common/vscodeApis/windowApis';
 import { traceError, traceLog } from '../../../logging';
 import { PythonEnvKind } from '../../base/info';
 import { IDiscoveryAPI } from '../../base/locator';
 import { CreateEnvironmentOptions, CreateEnvironmentProgress, CreateEnvironmentProvider } from '../types';
 import { pickWorkspaceFolder } from './workspaceSelection';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const VENV_CREATED_MARKER = 'CREATED_VENV:';
 const INSTALLING_REQUIREMENTS = 'VENV_INSTALLING_REQUIREMENTS:';
@@ -49,7 +47,7 @@ async function createVenv(
     token?: CancellationToken,
 ): Promise<string | undefined> {
     progress?.report({
-        message: localize('python.createEnv.venv.runCreate', 'Creating venv...'),
+        message: CreateEnv.Venv.creating,
     });
     const deferred = createDeferred<string | undefined>();
     traceLog('Running Env creation script: ', [command, ...args]);
@@ -66,7 +64,7 @@ async function createVenv(
             traceLog(output);
             if (output.includes(VENV_CREATED_MARKER)) {
                 progress?.report({
-                    message: localize('python.createEnv.venv.created', 'Environment created...'),
+                    message: CreateEnv.Venv.created,
                 });
                 try {
                     const envPath = output
@@ -81,7 +79,7 @@ async function createVenv(
                 }
             } else if (output.includes(INSTALLING_REQUIREMENTS) || output.includes(INSTALLING_PYPROJECT)) {
                 progress?.report({
-                    message: localize('python.createEnv.venv.installingPackages', 'Installing packages...'),
+                    message: CreateEnv.Venv.installingPackages,
                 });
             }
         },
@@ -108,7 +106,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
         token?: CancellationToken,
     ): Promise<string | undefined> {
         progress?.report({
-            message: localize('python.createEnv.venv.workspace', 'Waiting on workspace selection...'),
+            message: CreateEnv.Venv.waitingForWorkspace,
         });
 
         const workspace = (await pickWorkspaceFolder()) as WorkspaceFolder | undefined;
@@ -118,7 +116,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
         }
 
         progress?.report({
-            message: localize('python.createEnv.venv.selectPython', 'Waiting on Python selection...'),
+            message: CreateEnv.Venv.waitingForPython,
         });
         const interpreters = this.discoveryApi.getEnvs({
             kinds: [PythonEnvKind.MicrosoftStore, PythonEnvKind.OtherGlobal],
@@ -135,10 +133,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                 description: i.distro.defaultDisplayName,
             }));
             const selected = await showQuickPick(items, {
-                title: localize(
-                    'python.createEnv.basePython.title',
-                    'Select a python to use for environment creation.',
-                ),
+                title: CreateEnv.Venv.selectPythonQuickPickTitle,
                 matchOnDetail: true,
                 matchOnDescription: true,
             });
@@ -151,12 +146,9 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
         return undefined;
     }
 
-    name = 'venv';
+    name = CreateEnv.Venv.providerName;
 
-    description: string = localize(
-        'python.venv.description',
-        'Creates a `.venv` virtual environment using `venv` in the current workspace.',
-    );
+    description: string = CreateEnv.Venv.providerDescription;
 
     id = `${PVSC_EXTENSION_ID}:venv`;
 }

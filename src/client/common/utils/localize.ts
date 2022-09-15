@@ -575,4 +575,24 @@ export namespace CreateEnv {
         'createEnv.providersQuickPick.title',
         'Select a virtual environment type.',
     );
+
+    export namespace Venv {
+        export const creating = localize('createEnv.venv.creating', 'Creating venv...');
+        export const created = localize('createEnv.venv.created', 'Environment created...');
+        export const installingPackages = localize('createEnv.venv.installingPackages', 'Installing packages...');
+        export const waitingForPython = localize('createEnv.venv.waitingForPython', 'Waiting on Python selection...');
+        export const waitingForWorkspace = localize(
+            'createEnv.venv.waitingForWorkspace',
+            'Waiting on workspace selection...',
+        );
+        export const selectPythonQuickPickTitle = localize(
+            'createEnv.venv.basePython.title',
+            'Select a python to use for environment creation.',
+        );
+        export const providerDescription = localize(
+            'createEnv.venv.description',
+            'Creates a `.venv` virtual environment using `venv` in the current workspace.',
+        );
+        export const providerName = 'venv';
+    }
 }
