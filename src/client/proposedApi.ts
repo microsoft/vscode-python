@@ -2,49 +2,66 @@
 // Licensed under the MIT License.
 
 import { ConfigurationTarget, EventEmitter } from 'vscode';
-import {
-    ActiveEnvironmentChangedParams,
-    EnvironmentDetails,
-    EnvironmentDetailsOptions,
-    EnvironmentsChangedParams,
-    IProposedExtensionAPI,
-} from './apiTypes';
-import { arePathsSame } from './common/platform/fs-paths';
-import { IInterpreterPathService, Resource } from './common/types';
+import { IDisposableRegistry, IInterpreterPathService } from './common/types';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
-import { PythonEnvInfo } from './pythonEnvironments/base/info';
+import {
+    ActiveEnvironmentChangedParams,
+    Environment,
+    EnvironmentsChangedParams,
+    IProposedExtensionAPI,
+    ResolvedEnvironment,
+    ProgressNotificationEvent,
+    UniquePathType,
+    PythonVersionInfo,
+    RefreshOptions,
+    Resource,
+} from './proposedApiTypes';
+import { PythonEnvInfo, PythonEnvKind, virtualEnvKinds } from './pythonEnvironments/base/info';
 import { getEnvPath } from './pythonEnvironments/base/info/env';
-import { GetRefreshEnvironmentsOptions, IDiscoveryAPI } from './pythonEnvironments/base/locator';
-
-const onDidInterpretersChangedEvent = new EventEmitter<EnvironmentsChangedParams[]>();
-export function reportInterpretersChanged(e: EnvironmentsChangedParams[]): void {
-    onDidInterpretersChangedEvent.fire(e);
-}
+import { IDiscoveryAPI, ProgressReportStage } from './pythonEnvironments/base/locator';
 
 const onDidActiveInterpreterChangedEvent = new EventEmitter<ActiveEnvironmentChangedParams>();
 export function reportActiveInterpreterChanged(e: ActiveEnvironmentChangedParams): void {
     onDidActiveInterpreterChangedEvent.fire(e);
 }
+const onProgress = new EventEmitter<ProgressNotificationEvent>();
+const onEnvironmentsChanged = new EventEmitter<EnvironmentsChangedParams>();
+const environmentsReference = new Map<UniquePathType, EnvironmentReference>();
 
-function getVersionString(env: PythonEnvInfo): string[] {
-    const ver = [`${env.version.major}`, `${env.version.minor}`, `${env.version.micro}`];
-    if (env.version.release) {
-        ver.push(`${env.version.release}`);
-        if (env.version.sysVersion) {
-            ver.push(`${env.version.release}`);
-        }
+class EnvironmentReference implements Environment {
+    readonly pathID: string;
+
+    constructor(private internal: Environment) {
+        this.pathID = internal.pathID;
     }
-    return ver;
+
+    get executable() {
+        return this.internal.executable;
+    }
+
+    get environment() {
+        return this.internal.environment;
+    }
+
+    get version() {
+        return this.internal.version;
+    }
+
+    updateEnv(newInternal: Environment) {
+        this.internal = newInternal;
+    }
 }
 
-/**
- * Returns whether the path provided matches the environment.
- * @param path Path to environment folder or path to interpreter that uniquely identifies an environment.
- * @param env Environment to match with.
- */
-function isEnvSame(path: string, env: PythonEnvInfo) {
-    return arePathsSame(path, env.location) || arePathsSame(path, env.executable.filename);
+function getEnvReference(e: Environment) {
+    let envClass = environmentsReference.get(e.pathID);
+    if (!envClass) {
+        envClass = new EnvironmentReference(e);
+    } else {
+        envClass.updateEnv(e);
+    }
+    environmentsReference.set(e.pathID, envClass);
+    return envClass;
 }
 
 export function buildProposedApi(
@@ -53,66 +70,123 @@ export function buildProposedApi(
 ): IProposedExtensionAPI {
     const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-
+    const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+    disposables.push(
+        discoveryApi.onProgress((e) => {
+            if (e.stage === ProgressReportStage.discoveryStarted) {
+                onProgress.fire({ stage: 'started' });
+            }
+            if (e.stage === ProgressReportStage.discoveryFinished) {
+                onProgress.fire({ stage: 'finished' });
+            }
+        }),
+        discoveryApi.onChanged((e) => {
+            if (e.old) {
+                if (e.new) {
+                    onEnvironmentsChanged.fire({ type: 'update', env: convertEnvInfoAndGetReference(e.new) });
+                } else {
+                    onEnvironmentsChanged.fire({ type: 'remove', env: convertEnvInfoAndGetReference(e.old) });
+                }
+            } else if (e.new) {
+                onEnvironmentsChanged.fire({ type: 'add', env: convertEnvInfoAndGetReference(e.new) });
+            }
+        }),
+        onProgress,
+        onEnvironmentsChanged,
+    );
     const proposed: IProposedExtensionAPI = {
         environment: {
-            async getExecutionDetails(resource?: Resource) {
-                const env = await interpreterService.getActiveInterpreter(resource);
-                return env ? { execCommand: [env.path] } : { execCommand: undefined };
-            },
-            async getActiveEnvironmentPath(resource?: Resource) {
+            async getActiveEnvironment(resource?: Resource) {
+                resource = resource && 'uri' in resource ? resource.uri : resource;
                 const env = await interpreterService.getActiveInterpreter(resource);
                 if (!env) {
                     return undefined;
                 }
-                return getEnvPath(env.path, env.envPath);
+                return resolveEnvironment(getEnvPath(env.path, env.envPath).path, discoveryApi);
             },
-            async getEnvironmentDetails(
-                path: string,
-                options?: EnvironmentDetailsOptions,
-            ): Promise<EnvironmentDetails | undefined> {
-                let env: PythonEnvInfo | undefined;
-                if (options?.useCache) {
-                    env = discoveryApi.getEnvs().find((v) => isEnvSame(path, v));
-                }
-                if (!env) {
-                    env = await discoveryApi.resolveEnv(path);
-                    if (!env) {
-                        return undefined;
-                    }
-                }
-                return {
-                    interpreterPath: env.executable.filename,
-                    envFolderPath: env.location.length ? env.location : undefined,
-                    version: getVersionString(env),
-                    environmentType: [env.kind],
-                    metadata: {
-                        sysPrefix: env.executable.sysPrefix,
-                        bitness: env.arch,
-                        project: env.searchLocation,
-                    },
-                };
+            resolveEnvironment: (env: string | Environment) => {
+                const path = typeof env !== 'string' ? env.pathID : env;
+                return resolveEnvironment(path, discoveryApi);
             },
-            getEnvironmentPaths() {
-                const paths = discoveryApi.getEnvs().map((e) => getEnvPath(e.executable.filename, e.location));
-                return Promise.resolve(paths);
+            locator: {
+                get environments(): Environment[] {
+                    return discoveryApi.getEnvs().map((e) => convertEnvInfoAndGetReference(e));
+                },
+                get onRefreshProgress() {
+                    return onProgress.event;
+                },
+                waitOnRefresh(): Promise<void> | undefined {
+                    return discoveryApi.getRefreshPromise();
+                },
+                async refreshEnvironment(options: RefreshOptions) {
+                    await discoveryApi.triggerRefresh(undefined, {
+                        ifNotTriggerredAlready: options.ifNotRefreshedAlready,
+                    });
+                },
+                get onDidChangeEnvironments() {
+                    return onEnvironmentsChanged.event;
+                },
             },
-            setActiveEnvironment(path: string, resource?: Resource): Promise<void> {
+            setActiveEnvironment(env: string | Environment, resource?: Resource): Promise<void> {
+                const path = typeof env !== 'string' ? env.pathID : env;
+                resource = resource && 'uri' in resource ? resource.uri : resource;
                 return interpreterPathService.update(resource, ConfigurationTarget.WorkspaceFolder, path);
             },
-            async refreshEnvironment() {
-                await discoveryApi.triggerRefresh();
-                const paths = discoveryApi.getEnvs().map((e) => getEnvPath(e.executable.filename, e.location));
-                return Promise.resolve(paths);
-            },
-            getRefreshPromise(options?: GetRefreshEnvironmentsOptions): Promise<void> | undefined {
-                return discoveryApi.getRefreshPromise(options);
-            },
-            onDidChangeExecutionDetails: interpreterService.onDidChangeInterpreterConfiguration,
-            onDidEnvironmentsChanged: onDidInterpretersChangedEvent.event,
-            onDidActiveEnvironmentChanged: onDidActiveInterpreterChangedEvent.event,
-            onRefreshProgress: discoveryApi.onProgress,
+            onDidChangeActiveEnvironment: onDidActiveInterpreterChangedEvent.event,
         },
     };
     return proposed;
+}
+
+async function resolveEnvironment(path: string, discoveryApi: IDiscoveryAPI): Promise<ResolvedEnvironment | undefined> {
+    const env = await discoveryApi.resolveEnv(path);
+    if (!env) {
+        return undefined;
+    }
+    return getEnvReference(convertCompleteEnvInfo(env)) as ResolvedEnvironment;
+}
+
+function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment {
+    const version = { ...env.version, sysVersion: env.version.sysVersion };
+    return {
+        pathID: getEnvPath(env.executable.filename, env.location).path,
+        executable: {
+            path: env.executable.filename,
+            bitness: env.arch,
+            sysPrefix: env.executable.sysPrefix,
+        },
+        environment: virtualEnvKinds.includes(env.kind)
+            ? {
+                  type: env.kind === PythonEnvKind.Conda ? 'Conda' : 'VirtualEnv',
+                  name: env.name,
+                  folderPath: env.location,
+                  workspaceFolder: env.searchLocation,
+                  source: [env.kind],
+              }
+            : undefined,
+        version: version as PythonVersionInfo,
+    };
+}
+
+function convertEnvInfoAndGetReference(env: PythonEnvInfo): Environment {
+    const convertedEnv = convertCompleteEnvInfo(env) as Environment;
+    if (convertedEnv.executable.sysPrefix === '') {
+        convertedEnv.executable.sysPrefix = undefined;
+    }
+    if (convertedEnv.executable.path === 'python') {
+        convertedEnv.executable.path = undefined;
+    }
+    if (convertedEnv.environment?.name === '') {
+        convertedEnv.environment.name = undefined;
+    }
+    if (convertedEnv.version.major === -1) {
+        convertedEnv.version.major = undefined;
+    }
+    if (convertedEnv.version.micro === -1) {
+        convertedEnv.version.micro = undefined;
+    }
+    if (convertedEnv.version.minor === -1) {
+        convertedEnv.version.minor = undefined;
+    }
+    return getEnvReference(convertedEnv);
 }

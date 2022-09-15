@@ -4,7 +4,6 @@
 import { Event } from 'vscode';
 import { isTestExecution } from '../../../../common/constants';
 import { traceInfo } from '../../../../logging';
-import { reportInterpretersChanged } from '../../../../proposedApi';
 import { arePathsSame, getFileInfo, pathExists } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
 import { areSameEnv, getEnvPath } from '../../info/env';
@@ -113,9 +112,6 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         invalidIndexes.forEach((index) => {
             const env = this.envs.splice(index, 1)[0];
             this.fire({ old: env, new: undefined });
-            reportInterpretersChanged([
-                { path: getEnvPath(env.executable.filename, env.location).path, type: 'remove' },
-            ]);
         });
     }
 
@@ -132,7 +128,6 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         if (!found) {
             this.envs.push(env);
             this.fire({ new: env });
-            reportInterpretersChanged([{ path: getEnvPath(env.executable.filename, env.location).path, type: 'add' }]);
         }
     }
 
@@ -145,12 +140,6 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
                 this.envs[index] = newValue;
             }
             this.fire({ old: oldValue, new: newValue });
-            reportInterpretersChanged([
-                {
-                    path: getEnvPath(oldValue.executable.filename, oldValue.location).path,
-                    type: newValue ? 'update' : 'remove',
-                },
-            ]);
         }
     }
 
@@ -189,7 +178,6 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         this.envs.forEach((e) => {
             this.fire({ old: e, new: undefined });
         });
-        reportInterpretersChanged([{ path: undefined, type: 'clear-all' }]);
         this.envs = [];
         return Promise.resolve();
     }

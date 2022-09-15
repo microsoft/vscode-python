@@ -8,7 +8,6 @@ import * as sinon from 'sinon';
 import { EventEmitter, Uri } from 'vscode';
 import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, createDeferredFromPromise, sleep } from '../../../../../client/common/utils/async';
-import * as proposedApi from '../../../../../client/proposedApi';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
 import { buildEnvInfo } from '../../../../../client/pythonEnvironments/base/info/env';
 import {
@@ -31,7 +30,6 @@ import { assertEnvEqual, assertEnvsEqual } from '../envTestUtils';
 suite('Python envs locator - Environments Collection', async () => {
     let collectionService: EnvsCollectionService;
     let storage: PythonEnvInfo[];
-    let reportInterpretersChangedStub: sinon.SinonStub;
 
     const updatedName = 'updatedName';
 
@@ -129,7 +127,6 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         collectionService = new EnvsCollectionService(cache, parentLocator);
-        reportInterpretersChangedStub = sinon.stub(proposedApi, 'reportInterpretersChanged');
     });
 
     teardown(() => {
@@ -377,7 +374,6 @@ suite('Python envs locator - Environments Collection', async () => {
         collectionService = new EnvsCollectionService(cache, parentLocator);
         const resolved = await collectionService.resolveEnv(env.executable.filename);
         assertEnvEqual(resolved, env);
-        sinon.assert.calledOnce(reportInterpretersChangedStub);
     });
 
     test('resolveEnv() uses underlying locator if cache does not have up to date info for env', async () => {
@@ -406,7 +402,6 @@ suite('Python envs locator - Environments Collection', async () => {
         collectionService = new EnvsCollectionService(cache, parentLocator);
         const resolved = await collectionService.resolveEnv(env.executable.filename);
         assertEnvEqual(resolved, resolvedViaLocator);
-        sinon.assert.calledOnce(reportInterpretersChangedStub);
     });
 
     test('resolveEnv() uses underlying locator if cache does not have complete info for env', async () => {
@@ -429,22 +424,6 @@ suite('Python envs locator - Environments Collection', async () => {
         collectionService = new EnvsCollectionService(cache, parentLocator);
         const resolved = await collectionService.resolveEnv(env.executable.filename);
         assertEnvEqual(resolved, resolvedViaLocator);
-
-        const eventData = [
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'doesNotExist'),
-                type: 'remove',
-            },
-
-            {
-                path: 'Resolved via locator',
-                type: 'add',
-            },
-        ];
-        eventData.forEach((d) => {
-            sinon.assert.calledWithExactly(reportInterpretersChangedStub, [d]);
-        });
-        sinon.assert.callCount(reportInterpretersChangedStub, eventData.length);
     });
 
     test('resolveEnv() adds env to cache after resolving using downstream locator', async () => {
@@ -468,9 +447,6 @@ suite('Python envs locator - Environments Collection', async () => {
         const envs = collectionService.getEnvs();
         expect(resolved?.hasLatestInfo).to.equal(true);
         assertEnvsEqual(envs, [resolved]);
-        sinon.assert.calledOnceWithExactly(reportInterpretersChangedStub, [
-            { path: resolved?.executable.filename, type: 'add' },
-        ]);
     });
 
     test('Ensure events from downstream locators do not trigger new refreshes if a refresh is already scheduled', async () => {
@@ -523,7 +499,5 @@ suite('Python envs locator - Environments Collection', async () => {
             events.sort((a, b) => (a.type && b.type ? a.type?.localeCompare(b.type) : 0)),
             downstreamEvents.sort((a, b) => (a.type && b.type ? a.type?.localeCompare(b.type) : 0)),
         );
-
-        sinon.assert.notCalled(reportInterpretersChangedStub);
     });
 });
