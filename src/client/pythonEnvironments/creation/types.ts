@@ -15,7 +15,7 @@ export interface CreateEnvironmentProvider {
         options?: CreateEnvironmentOptions,
         progress?: CreateEnvironmentProgress,
         token?: CancellationToken,
-    ): Promise<void>;
+    ): Promise<string | undefined>;
     name: string;
     description: string;
     id: string;

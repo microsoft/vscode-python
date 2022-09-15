@@ -13,8 +13,8 @@ export async function createEnvironment(
         ignoreSourceControl: true,
         installPackages: true,
     },
-): Promise<void> {
-    await withProgress(
+): Promise<string | undefined> {
+    return withProgress(
         {
             location: ProgressLocation.Notification,
             title: CreateEnv.statusTitle,
@@ -26,13 +26,15 @@ export async function createEnvironment(
                 message: CreateEnv.statusStarting,
             });
             try {
-                await provider.createEnvironment(options, progress, token);
+                const result = await provider.createEnvironment(options, progress, token);
+                return result;
             } catch (ex) {
                 traceError(ex);
                 hasError = true;
                 progress.report({
                     message: CreateEnv.statusError,
                 });
+                throw ex;
             } finally {
                 if (!hasError) {
                     progress.report({
@@ -40,6 +42,7 @@ export async function createEnvironment(
                     });
                 }
             }
+            return undefined;
         },
     );
 }

@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { assert } from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
+import { assert, use as chaiUse } from 'chai';
 import { ProgressLocation, ProgressOptions } from 'vscode';
 import { CreateEnv } from '../../../client/common/utils/localize';
 import * as windowApis from '../../../client/common/vscodeApis/windowApis';
@@ -12,6 +13,8 @@ import {
     CreateEnvironmentProgress,
     CreateEnvironmentProvider,
 } from '../../../client/pythonEnvironments/creation/types';
+
+chaiUse(chaiAsPromised);
 
 suite('Create Environments Tests', () => {
     let withProgressStub: sinon.SinonStub;
@@ -40,7 +43,7 @@ suite('Create Environments Tests', () => {
         const provider = typemoq.Mock.ofType<CreateEnvironmentProvider>();
         provider
             .setup((p) => p.createEnvironment(typemoq.It.isAny(), progressMock.object, undefined))
-            .returns(() => Promise.resolve());
+            .returns(() => Promise.resolve(undefined));
         progressMock.setup((p) => p.report({ message: CreateEnv.statusStarting })).verifiable(typemoq.Times.once());
         progressMock.setup((p) => p.report({ message: CreateEnv.statusDone })).verifiable(typemoq.Times.once());
         progressMock.setup((p) => p.report({ message: CreateEnv.statusError })).verifiable(typemoq.Times.never());
@@ -58,7 +61,8 @@ suite('Create Environments Tests', () => {
         progressMock.setup((p) => p.report({ message: CreateEnv.statusStarting })).verifiable(typemoq.Times.once());
         progressMock.setup((p) => p.report({ message: CreateEnv.statusDone })).verifiable(typemoq.Times.never());
         progressMock.setup((p) => p.report({ message: CreateEnv.statusError })).verifiable(typemoq.Times.once());
-        await createEnvironment(provider.object);
+
+        await assert.isRejected(createEnvironment(provider.object));
 
         progressMock.verifyAll();
         provider.verifyAll();

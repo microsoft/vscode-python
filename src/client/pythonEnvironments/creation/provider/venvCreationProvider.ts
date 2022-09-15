@@ -16,6 +16,10 @@ import { pickWorkspaceFolder } from './workspaceSelection';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
+const VENV_CREATED_MARKER = 'CREATED_VENV:';
+const INSTALLING_REQUIREMENTS = 'VENV_INSTALLING_REQUIREMENTS:';
+const INSTALLING_PYPROJECT = 'VENV_INSTALLING_PYPROJECT:';
+
 function generateCommandArgs(options?: CreateEnvironmentOptions): string[] {
     let addGitIgnore = true;
     let installPackages = true;
@@ -43,11 +47,11 @@ async function createVenv(
     args: string[],
     progress?: CreateEnvironmentProgress,
     token?: CancellationToken,
-): Promise<void> {
+): Promise<string | undefined> {
     progress?.report({
         message: localize('python.createEnv.venv.runCreate', 'Creating venv...'),
     });
-    const deferred = createDeferred();
+    const deferred = createDeferred<string | undefined>();
     traceLog('Running Env creation script: ', [command, ...args]);
     const { out, dispose } = execObservable(command, args, {
         mergeStdOutErr: true,
@@ -55,18 +59,27 @@ async function createVenv(
         cwd: workspace.uri.fsPath,
     });
 
+    let venvPath: string | undefined;
     out.subscribe(
         (value) => {
-            const output = value.out.splitLines().join('\r\n');
+            const output = value.out.split(/\r?\n/g).join('\r\n');
             traceLog(output);
-            if (output.includes('CREATED_VENV:')) {
+            if (output.includes(VENV_CREATED_MARKER)) {
                 progress?.report({
                     message: localize('python.createEnv.venv.created', 'Environment created...'),
                 });
-            } else if (
-                output.includes('VENV_INSTALLING_REQUIREMENTS:') ||
-                output.includes('VENV_INSTALLING_PYPROJECT:')
-            ) {
+                try {
+                    const envPath = output
+                        .split(/\r?\n/g)
+                        .map((s) => s.trim())
+                        .filter((s) => s.startsWith(VENV_CREATED_MARKER))[0];
+                    venvPath = envPath.substring(VENV_CREATED_MARKER.length);
+                } catch (ex) {
+                    traceError('Parsing out environment path failed.');
+                } finally {
+                    venvPath = undefined;
+                }
+            } else if (output.includes(INSTALLING_REQUIREMENTS) || output.includes(INSTALLING_PYPROJECT)) {
                 progress?.report({
                     message: localize('python.createEnv.venv.installingPackages', 'Installing packages...'),
                 });
@@ -79,7 +92,7 @@ async function createVenv(
         () => {
             dispose();
             if (!deferred.rejected) {
-                deferred.resolve();
+                deferred.resolve(venvPath);
             }
         },
     );
@@ -93,14 +106,15 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
         options?: CreateEnvironmentOptions,
         progress?: CreateEnvironmentProgress,
         token?: CancellationToken,
-    ): Promise<void> {
+    ): Promise<string | undefined> {
         progress?.report({
             message: localize('python.createEnv.venv.workspace', 'Waiting on workspace selection...'),
         });
+
         const workspace = (await pickWorkspaceFolder()) as WorkspaceFolder | undefined;
         if (workspace === undefined) {
             traceError('Workspace was not selected or found for creating virtual env.');
-            return;
+            return undefined;
         }
 
         progress?.report({
@@ -112,8 +126,9 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
 
         const args = generateCommandArgs(options);
         if (interpreters.length === 1) {
-            await createVenv(workspace, interpreters[0].executable.filename, args, progress, token);
-        } else if (interpreters.length > 1) {
+            return createVenv(workspace, interpreters[0].executable.filename, args, progress, token);
+        }
+        if (interpreters.length > 1) {
             const items: QuickPickItem[] = interpreters.map((i) => ({
                 label: `Python ${i.version.major}.${i.version.minor}.${i.version.micro}`,
                 detail: i.executable.filename,
@@ -128,11 +143,12 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                 matchOnDescription: true,
             });
             if (selected && selected.detail) {
-                await createVenv(workspace, selected.detail, args, progress, token);
+                return createVenv(workspace, selected.detail, args, progress, token);
             }
         } else {
             traceError('No Python found to create venv.');
         }
+        return undefined;
     }
 
     name = 'venv';

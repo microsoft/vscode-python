@@ -119,7 +119,7 @@ def main(argv: Sequence[str] = None) -> None:
             add_gitignore(args.name)
 
     env_path = get_conda_env_path(args.name)
-    print(f"CREATED_CONDA_ENV: {env_path}")
+    print(f"CREATED_CONDA_ENV:{env_path}")
 
     if args.install:
         install_packages(env_path)

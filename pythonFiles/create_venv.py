@@ -116,7 +116,7 @@ def main(argv: Sequence[str] = None) -> None:
             if args.git_ignore:
                 add_gitignore(args.name)
         venv_path = get_venv_path(args.name)
-        print(f"CREATED_VENV: {venv_path}")
+        print(f"CREATED_VENV:{venv_path}")
         if args.install:
             install_packages(venv_path)
     else:

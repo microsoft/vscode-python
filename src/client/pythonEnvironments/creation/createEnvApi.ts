@@ -7,7 +7,7 @@ import { IDisposableRegistry } from '../../common/types';
 import { registerCommand } from '../../common/vscodeApis/commandApis';
 import { IDiscoveryAPI } from '../base/locator';
 import { handleCreateEnvironmentCommand } from './createEnvQuickPick';
-import { CondaCreationProvider } from './provider/condaCreationProvider';
+import { condaCreationProvider } from './provider/condaCreationProvider';
 import { VenvCreationProvider } from './provider/venvCreationProvider';
 import { CreateEnvironmentOptions, CreateEnvironmentProvider } from './types';
 
@@ -48,5 +48,5 @@ export function registerCreateEnvironmentFeatures(disposables: IDisposableRegist
         }),
     );
     disposables.push(registerCreateEnvironmentProvider(new VenvCreationProvider(discoveryApi)));
-    disposables.push(registerCreateEnvironmentProvider(new CondaCreationProvider()));
+    disposables.push(registerCreateEnvironmentProvider(condaCreationProvider()));
 }
