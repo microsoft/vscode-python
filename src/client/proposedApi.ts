@@ -159,8 +159,8 @@ function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment {
             ? {
                   type: env.kind === PythonEnvKind.Conda ? 'Conda' : 'VirtualEnv',
                   name: env.name,
-                  folderPath: env.location,
-                  workspaceFolder: env.searchLocation,
+                  path: env.location,
+                  workspaceFolderPath: env.searchLocation?.fsPath,
                   source: [env.kind],
               }
             : undefined,

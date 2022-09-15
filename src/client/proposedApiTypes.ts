@@ -19,7 +19,7 @@ interface IEnvironmentAPI {
      * python binary in a multi-root scenario. If resource is `undefined` then the API
      * returns what ever is set for the workspace.
      *
-     * @param resource : Uri of a file or workspace
+     * @param resource : Uri of a file or workspace folder.
      */
     getActiveEnvironment(resource?: Resource): Promise<ResolvedEnvironment | undefined>;
     /**
@@ -31,8 +31,7 @@ interface IEnvironmentAPI {
      * Sets the active environment path for the python extension for the resource. Configuration target
      * will always be the workspace folder.
      * @param environment : Full path to environment folder or python executable for the environment. Can also pass the environment itself.
-     * @param resource : [optional] Uri of a file ro workspace to scope to a particular workspace
-     *                   folder.
+     * @param resource : [optional] File or workspace to scope to a particular workspace folder.
      */
     setActiveEnvironment(environment: Environment | UniquePathType, resource?: Resource): Promise<void>;
     /**
@@ -45,8 +44,6 @@ interface IEnvironmentLocatorAPI {
     /**
      * Carries environments found by the extension at the time of fetching the property. To get complete list
      * `await` on promise returned by {@link waitOnRefresh()}.
-     *
-     * Only returns an environment if the final type, name and environment path is known.
      */
     environments: readonly Environment[] | undefined;
     /**
@@ -77,7 +74,7 @@ interface IEnvironmentLocatorAPI {
 }
 
 /**
- * Details about the environment. Note the type, name and environment path is known.
+ * Details about the environment. Note the environment path, type and name never changes over time.
  */
 export interface Environment {
     pathID: UniquePathType;
@@ -99,12 +96,12 @@ export interface Environment {
         sysPrefix: string | undefined;
     };
     /**
-     * Carries details if it is an environment, otherwise `undefined` in case of global interpreters or something else.
+     * Carries details if it is an environment, otherwise `undefined` in case of global interpreters and others.
      */
     environment:
         | {
               /**
-               * Type of the environment. This never changes over time.
+               * Type of the environment.
                */
               type: EnvType;
               /**
@@ -114,20 +111,20 @@ export interface Environment {
               /**
                * Path to the environment folder.
                */
-              folderPath: string;
+              path: string;
               /**
                * Any specific workspace folder this environment is created for.
                */
-              workspaceFolder: Uri | undefined;
+              workspaceFolderPath: string | undefined;
               /**
-               * Tools/Plugins which created the environment or where it came from in the order.
+               * Tools/Plugins which created the environment or where it came from.
                * First value corresponds to the primary source, which never changes over time.
                */
               source: EnvSource[];
           }
         | undefined;
     /**
-     * Carries Python version information.
+     * Carries Python version information known at this moment.
      */
     version: StandardVersionInfo & {
         /**
