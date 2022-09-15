@@ -12,7 +12,7 @@ import { traceError, traceLog } from '../../../logging';
 import { PythonEnvKind } from '../../base/info';
 import { IDiscoveryAPI } from '../../base/locator';
 import { CreateEnvironmentOptions, CreateEnvironmentProgress, CreateEnvironmentProvider } from '../types';
-import { getVenvWorkspaceFolder } from './workspaceSelection';
+import { pickWorkspaceFolder } from './workspaceSelection';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
@@ -43,11 +43,11 @@ async function createVenv(
     args: string[],
     progress?: CreateEnvironmentProgress,
     token?: CancellationToken,
-): Promise<string> {
+): Promise<void> {
     progress?.report({
         message: localize('python.createEnv.venv.runCreate', 'Creating venv...'),
     });
-    const deferred = createDeferred<string>();
+    const deferred = createDeferred();
     traceLog('Running Env creation script: ', [command, ...args]);
     const { out, dispose } = execObservable(command, args, {
         mergeStdOutErr: true,
@@ -79,7 +79,7 @@ async function createVenv(
         () => {
             dispose();
             if (!deferred.rejected) {
-                deferred.resolve('');
+                deferred.resolve();
             }
         },
     );
@@ -97,7 +97,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
         progress?.report({
             message: localize('python.createEnv.venv.workspace', 'Waiting on workspace selection...'),
         });
-        const workspace = await getVenvWorkspaceFolder();
+        const workspace = (await pickWorkspaceFolder()) as WorkspaceFolder | undefined;
         if (workspace === undefined) {
             traceError('Workspace was not selected or found for creating virtual env.');
             return;
@@ -109,11 +109,10 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
         const interpreters = this.discoveryApi.getEnvs({
             kinds: [PythonEnvKind.MicrosoftStore, PythonEnvKind.OtherGlobal],
         });
+
         const args = generateCommandArgs(options);
-        let environment: string;
         if (interpreters.length === 1) {
-            environment = await createVenv(workspace, interpreters[0].executable.filename, args, progress, token);
-            traceLog(`Environment Created: ${environment}`);
+            await createVenv(workspace, interpreters[0].executable.filename, args, progress, token);
         } else if (interpreters.length > 1) {
             const items: QuickPickItem[] = interpreters.map((i) => ({
                 label: `Python ${i.version.major}.${i.version.minor}.${i.version.micro}`,
@@ -129,11 +128,10 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                 matchOnDescription: true,
             });
             if (selected && selected.detail) {
-                environment = await createVenv(workspace, selected.detail, args, progress, token);
-                traceLog(`Environment Created: ${environment}`);
+                await createVenv(workspace, selected.detail, args, progress, token);
             }
         } else {
-            traceError('Please install python.');
+            traceError('No Python found to create venv.');
         }
     }
 

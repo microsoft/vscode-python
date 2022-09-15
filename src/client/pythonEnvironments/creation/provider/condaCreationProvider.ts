@@ -10,7 +10,7 @@ import { showQuickPick } from '../../../common/vscodeApis/windowApis';
 import { traceError, traceLog } from '../../../logging';
 import { Conda } from '../../common/environmentManagers/conda';
 import { CreateEnvironmentOptions, CreateEnvironmentProgress, CreateEnvironmentProvider } from '../types';
-import { getVenvWorkspaceFolder } from './workspaceSelection';
+import { pickWorkspaceFolder } from './workspaceSelection';
 import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
 import { getEnvironmentVariable, getOSType, OSType } from '../../../common/utils/platform';
@@ -117,7 +117,7 @@ export class CondaCreationProvider implements CreateEnvironmentProvider {
         progress?.report({
             message: localize('python.createEnv.conda.workspace', 'Waiting on workspace selection...'),
         });
-        const workspace = await getVenvWorkspaceFolder();
+        const workspace = (await pickWorkspaceFolder()) as WorkspaceFolder | undefined;
         if (workspace === undefined) {
             traceError('Workspace was not selected or found for creating virtual env.');
             return;

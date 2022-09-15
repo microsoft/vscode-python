@@ -3,7 +3,7 @@
 
 import { CancellationToken, ProgressLocation } from 'vscode';
 import { withProgress } from '../../common/vscodeApis/windowApis';
-import { traceError, traceLog } from '../../logging';
+import { traceError } from '../../logging';
 import { CreateEnvironmentOptions, CreateEnvironmentProgress, CreateEnvironmentProvider } from './types';
 import { CreateEnv } from '../../common/utils/localize';
 
@@ -14,7 +14,6 @@ export async function createEnvironment(
         installPackages: true,
     },
 ): Promise<void> {
-    traceLog(`Creating environment using: ${provider.name}`);
     await withProgress(
         {
             location: ProgressLocation.Notification,

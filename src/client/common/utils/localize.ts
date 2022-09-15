@@ -555,4 +555,19 @@ export namespace CreateEnv {
     export const statusStarting = localize('createEnv.statusStarting', 'Starting...');
     export const statusError = localize('createEnv.statusError', 'Error.');
     export const statusDone = localize('createEnv.statusDone', 'Done.');
+
+    export const hasVirtualEnv = localize(
+        'createEnv.hasVirtualEnv',
+        'Workspace folder contains a virtual environment.',
+    );
+
+    export const noWorkspace = localize(
+        'createEnv.noWorkspace',
+        'Please open a directory when creating an environment using venv.',
+    );
+
+    export const pickWorkspaceTitle = localize(
+        'createEnv.workspaceQuickPick.title',
+        'Select a workspace to create virtual environment.',
+    );
 }
