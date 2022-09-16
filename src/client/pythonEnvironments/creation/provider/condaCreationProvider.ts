@@ -1,21 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-/* eslint-disable class-methods-use-this */
 
-import { CancellationToken, QuickPickItem, Uri, WorkspaceFolder } from 'vscode';
+import { CancellationToken, WorkspaceFolder } from 'vscode';
 import * as path from 'path';
 import { PVSC_EXTENSION_ID } from '../../../common/constants';
-import { showErrorMessage, showQuickPick } from '../../../common/vscodeApis/windowApis';
 import { traceError, traceLog } from '../../../logging';
-import { Conda } from '../../common/environmentManagers/conda';
 import { CreateEnvironmentOptions, CreateEnvironmentProgress, CreateEnvironmentProvider } from '../types';
 import { pickWorkspaceFolder } from '../common/workspaceSelection';
 import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
 import { getEnvironmentVariable, getOSType, OSType } from '../../../common/utils/platform';
 import { createCondaScript } from '../../../common/process/internal/scripts';
-import { Common, CreateEnv } from '../../../common/utils/localize';
-import { executeCommand } from '../../../common/vscodeApis/commandApis';
+import { CreateEnv } from '../../../common/utils/localize';
+import { getConda, pickPythonVersion } from './condaUtils';
 
 const CONDA_ENV_CREATED_MARKER = 'CREATED_CONDA_ENV:';
 const CONDA_INSTALLING_YML = 'CONDA_INSTALLING_YML:';
@@ -122,42 +119,15 @@ function getExecutableCommand(condaPath: string): string {
     return path.join(path.dirname(condaPath), 'python');
 }
 
-async function getConda(progress?: CreateEnvironmentProgress): Promise<Conda | undefined> {
-    progress?.report({
-        message: CreateEnv.Conda.searching,
-    });
-    const conda = await Conda.getConda();
-
-    if (!conda) {
-        const response = await showErrorMessage(CreateEnv.Conda.condaMissing, Common.learnMore);
-        if (response === Common.learnMore) {
-            await executeCommand('vscode.open', Uri.parse('https://docs.anaconda.com/anaconda/install/'));
-        }
-        return undefined;
-    }
-    return conda;
-}
-
-async function pickPythonVersion(progress?: CreateEnvironmentProgress): Promise<string | undefined> {
-    progress?.report({
-        message: CreateEnv.Conda.waitingForPython,
-    });
-    const items: QuickPickItem[] = ['3.7', '3.8', '3.9', '3.10'].map((v) => ({
-        label: `Python`,
-        description: v,
-    }));
-    const version = await showQuickPick(items, {
-        title: CreateEnv.Conda.selectPythonQuickPickTitle,
-    });
-    return version?.description;
-}
-
 async function createEnvironment(
     options?: CreateEnvironmentOptions,
     progress?: CreateEnvironmentProgress,
     token?: CancellationToken,
 ): Promise<string | undefined> {
-    const conda = await getConda(progress);
+    progress?.report({
+        message: CreateEnv.Conda.searching,
+    });
+    const conda = await getConda();
     if (!conda) {
         return undefined;
     }
@@ -171,7 +141,10 @@ async function createEnvironment(
         return undefined;
     }
 
-    const version = await pickPythonVersion(progress);
+    progress?.report({
+        message: CreateEnv.Conda.waitingForPython,
+    });
+    const version = await pickPythonVersion();
     if (!version) {
         traceError('Conda environments for use with python extension require Python.');
         return undefined;
@@ -181,7 +154,7 @@ async function createEnvironment(
         message: CreateEnv.Conda.creating,
     });
     const args = generateCommandArgs(version, options);
-    return createCondaEnv(workspace, getExecutableCommand(conda.command), args, progress, token);
+    return createCondaEnv(workspace, getExecutableCommand(conda), args, progress, token);
 }
 
 export function condaCreationProvider(): CreateEnvironmentProvider {
