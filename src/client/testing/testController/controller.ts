@@ -264,6 +264,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     this.refreshCancellation.token,
                     this.testAdapters.size > 1,
                     this.workspaceService.workspaceFile?.fsPath,
+                    this.pythonExecFactory,
                 );
                 // Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;

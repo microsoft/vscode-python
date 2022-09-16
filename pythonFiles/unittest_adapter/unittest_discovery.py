@@ -14,9 +14,9 @@ from typing import List, Literal, Optional, Tuple, TypedDict, Union
 sys.path.append(
     "/Users/eleanorboyd/.vscode/extensions/ms-python.python-2022.12.1/pythonFiles/lib/python"
 )  #
-import debugpy
+# import debugpy
 
-debugpy.connect(5678)
+# debugpy.connect(5678)
 
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
