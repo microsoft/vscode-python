@@ -62,6 +62,7 @@ import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { WorkspaceService } from './common/application/workspace';
 import { DynamicPythonDebugConfigurationService } from './debugger/extension/configuration/dynamicdebugConfigurationService';
 import { registerCreateEnvironmentFeatures } from './pythonEnvironments/creation/createEnvApi';
+import { IInterpreterQuickPick } from './interpreter/configuration/types';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -97,7 +98,10 @@ export async function activateComponents(
 }
 
 export function activateFeatures(ext: ExtensionState, components: Components): void {
-    registerCreateEnvironmentFeatures(ext.disposables, components.pythonEnvs);
+    const interpreterQuickPick: IInterpreterQuickPick = ext.legacyIOC.serviceContainer.get<IInterpreterQuickPick>(
+        IInterpreterQuickPick,
+    );
+    registerCreateEnvironmentFeatures(ext.disposables, components.pythonEnvs, interpreterQuickPick);
 }
 
 /// //////////////////////////

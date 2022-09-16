@@ -5,6 +5,7 @@ import { Disposable } from 'vscode';
 import { Commands } from '../../common/constants';
 import { IDisposableRegistry } from '../../common/types';
 import { registerCommand } from '../../common/vscodeApis/commandApis';
+import { IInterpreterQuickPick } from '../../interpreter/configuration/types';
 import { IDiscoveryAPI } from '../base/locator';
 import { handleCreateEnvironmentCommand } from './createEnvQuickPick';
 import { condaCreationProvider } from './provider/condaCreationProvider';
@@ -40,7 +41,11 @@ export function registerCreateEnvironmentProvider(provider: CreateEnvironmentPro
     });
 }
 
-export function registerCreateEnvironmentFeatures(disposables: IDisposableRegistry, discoveryApi: IDiscoveryAPI): void {
+export function registerCreateEnvironmentFeatures(
+    disposables: IDisposableRegistry,
+    discoveryApi: IDiscoveryAPI,
+    interpreterQuickPick: IInterpreterQuickPick,
+): void {
     disposables.push(
         registerCommand(
             Commands.Create_Environment,
@@ -50,6 +55,6 @@ export function registerCreateEnvironmentFeatures(disposables: IDisposableRegist
             },
         ),
     );
-    disposables.push(registerCreateEnvironmentProvider(new VenvCreationProvider(discoveryApi)));
+    disposables.push(registerCreateEnvironmentProvider(new VenvCreationProvider(discoveryApi, interpreterQuickPick)));
     disposables.push(registerCreateEnvironmentProvider(condaCreationProvider()));
 }

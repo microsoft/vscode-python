@@ -1,18 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, QuickPickItem, WorkspaceFolder } from 'vscode';
+import { CancellationToken, WorkspaceFolder } from 'vscode';
 import { PVSC_EXTENSION_ID } from '../../../common/constants';
 import { createVenvScript } from '../../../common/process/internal/scripts';
 import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
 import { CreateEnv } from '../../../common/utils/localize';
-import { showQuickPick } from '../../../common/vscodeApis/windowApis';
 import { traceError, traceLog } from '../../../logging';
 import { PythonEnvKind } from '../../base/info';
 import { IDiscoveryAPI } from '../../base/locator';
 import { CreateEnvironmentOptions, CreateEnvironmentProgress, CreateEnvironmentProvider } from '../types';
 import { pickWorkspaceFolder } from '../common/workspaceSelection';
+import { IInterpreterQuickPick } from '../../../interpreter/configuration/types';
+import { EnvironmentType, PythonEnvironment } from '../../info';
 
 const VENV_CREATED_MARKER = 'CREATED_VENV:';
 const INSTALLING_REQUIREMENTS = 'VENV_INSTALLING_REQUIREMENTS:';
@@ -98,7 +99,10 @@ async function createVenv(
 }
 
 export class VenvCreationProvider implements CreateEnvironmentProvider {
-    constructor(private readonly discoveryApi: IDiscoveryAPI) {}
+    constructor(
+        private readonly discoveryApi: IDiscoveryAPI,
+        private readonly interpreterQuickPick: IInterpreterQuickPick,
+    ) {}
 
     public async createEnvironment(
         options?: CreateEnvironmentOptions,
@@ -111,7 +115,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
 
         const workspace = (await pickWorkspaceFolder()) as WorkspaceFolder | undefined;
         if (workspace === undefined) {
-            traceError('Workspace was not selected or found for creating virtual env.');
+            traceError('Workspace was not selected or found for creating virtual environment.');
             return undefined;
         }
 
@@ -126,23 +130,18 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
         if (interpreters.length === 1) {
             return createVenv(workspace, interpreters[0].executable.filename, args, progress, token);
         }
-        if (interpreters.length > 1) {
-            const items: QuickPickItem[] = interpreters.map((i) => ({
-                label: `Python ${i.version.major}.${i.version.minor}.${i.version.micro}`,
-                detail: i.executable.filename,
-                description: i.distro.defaultDisplayName,
-            }));
-            const selected = await showQuickPick(items, {
-                title: CreateEnv.Venv.selectPythonQuickPickTitle,
-                matchOnDetail: true,
-                matchOnDescription: true,
-            });
-            if (selected && selected.detail) {
-                return createVenv(workspace, selected.detail, args, progress, token);
-            }
-        } else {
-            traceError('No Python found to create venv.');
+
+        const interpreter = await this.interpreterQuickPick.getInterpreterViaQuickPick(
+            workspace.uri,
+            (i: PythonEnvironment) =>
+                [EnvironmentType.System, EnvironmentType.MicrosoftStore, EnvironmentType.Global].includes(i.envType),
+        );
+
+        if (interpreter) {
+            return createVenv(workspace, interpreter, args, progress, token);
         }
+
+        traceError('Virtual env creation requires an interpreter.');
         return undefined;
     }
 

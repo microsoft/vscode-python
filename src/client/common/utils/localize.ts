@@ -597,6 +597,10 @@ export namespace CreateEnv {
     }
 
     export namespace Conda {
+        export const condaMissing = localize(
+            'createEnv.conda.missing',
+            'Please install `conda` to create conda environments.',
+        );
         export const created = localize('createEnv.conda.created', 'Environment created...');
         export const installingPackages = localize('createEnv.conda.installingPackages', 'Installing packages...');
         export const waitingForWorkspace = localize(

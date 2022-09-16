@@ -9,3 +9,7 @@ import { commands, Disposable } from 'vscode';
 export function registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any): Disposable {
     return commands.registerCommand(command, callback, thisArg);
 }
+
+export function executeCommand<T = unknown>(command: string, ...rest: any[]): Thenable<T> {
+    return commands.executeCommand(command, ...rest);
+}

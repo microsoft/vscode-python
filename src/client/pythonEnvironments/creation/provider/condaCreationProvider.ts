@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 /* eslint-disable class-methods-use-this */
 
-import { CancellationToken, QuickPickItem, WorkspaceFolder } from 'vscode';
+import { CancellationToken, QuickPickItem, Uri, WorkspaceFolder } from 'vscode';
 import * as path from 'path';
 import { PVSC_EXTENSION_ID } from '../../../common/constants';
-import { showQuickPick } from '../../../common/vscodeApis/windowApis';
+import { showErrorMessage, showQuickPick } from '../../../common/vscodeApis/windowApis';
 import { traceError, traceLog } from '../../../logging';
 import { Conda } from '../../common/environmentManagers/conda';
 import { CreateEnvironmentOptions, CreateEnvironmentProgress, CreateEnvironmentProvider } from '../types';
@@ -14,7 +14,8 @@ import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
 import { getEnvironmentVariable, getOSType, OSType } from '../../../common/utils/platform';
 import { createCondaScript } from '../../../common/process/internal/scripts';
-import { CreateEnv } from '../../../common/utils/localize';
+import { Common, CreateEnv } from '../../../common/utils/localize';
+import { executeCommand } from '../../../common/vscodeApis/commandApis';
 
 const CONDA_ENV_CREATED_MARKER = 'CREATED_CONDA_ENV:';
 const CONDA_INSTALLING_YML = 'CONDA_INSTALLING_YML:';
@@ -121,20 +122,23 @@ function getExecutableCommand(condaPath: string): string {
     return path.join(path.dirname(condaPath), 'python');
 }
 
-async function createEnvironment(
-    options?: CreateEnvironmentOptions,
-    progress?: CreateEnvironmentProgress,
-    token?: CancellationToken,
-): Promise<string | undefined> {
+async function getConda(progress?: CreateEnvironmentProgress): Promise<Conda | undefined> {
     progress?.report({
-        message: CreateEnv.Conda.waitingForWorkspace,
+        message: CreateEnv.Conda.searching,
     });
-    const workspace = (await pickWorkspaceFolder()) as WorkspaceFolder | undefined;
-    if (workspace === undefined) {
-        traceError('Workspace was not selected or found for creating virtual env.');
+    const conda = await Conda.getConda();
+
+    if (!conda) {
+        const response = await showErrorMessage(CreateEnv.Conda.condaMissing, Common.learnMore);
+        if (response === Common.learnMore) {
+            await executeCommand('vscode.open', Uri.parse('https://docs.anaconda.com/anaconda/install/'));
+        }
         return undefined;
     }
+    return conda;
+}
 
+async function pickPythonVersion(progress?: CreateEnvironmentProgress): Promise<string | undefined> {
     progress?.report({
         message: CreateEnv.Conda.waitingForPython,
     });
@@ -145,23 +149,39 @@ async function createEnvironment(
     const version = await showQuickPick(items, {
         title: CreateEnv.Conda.selectPythonQuickPickTitle,
     });
-    if (version) {
-        progress?.report({
-            message: CreateEnv.Conda.searching,
-        });
-        const conda = await Conda.getConda();
+    return version?.description;
+}
 
-        if (!conda) {
-            traceError('Conda executable was not found.');
-            return undefined;
-        }
-        progress?.report({
-            message: CreateEnv.Conda.creating,
-        });
-        const args = generateCommandArgs(version.description, options);
-        return createCondaEnv(workspace, getExecutableCommand(conda.command), args, progress, token);
+async function createEnvironment(
+    options?: CreateEnvironmentOptions,
+    progress?: CreateEnvironmentProgress,
+    token?: CancellationToken,
+): Promise<string | undefined> {
+    const conda = await getConda(progress);
+    if (!conda) {
+        return undefined;
     }
-    return undefined;
+
+    progress?.report({
+        message: CreateEnv.Conda.waitingForWorkspace,
+    });
+    const workspace = (await pickWorkspaceFolder()) as WorkspaceFolder | undefined;
+    if (!workspace) {
+        traceError('Workspace was not selected or found for creating virtual env.');
+        return undefined;
+    }
+
+    const version = await pickPythonVersion(progress);
+    if (!version) {
+        traceError('Conda environments for use with python extension require Python.');
+        return undefined;
+    }
+
+    progress?.report({
+        message: CreateEnv.Conda.creating,
+    });
+    const args = generateCommandArgs(version, options);
+    return createCondaEnv(workspace, getExecutableCommand(conda.command), args, progress, token);
 }
 
 export function condaCreationProvider(): CreateEnvironmentProvider {
