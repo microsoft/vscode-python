@@ -1964,7 +1964,7 @@ export interface IEventNamePropertyMapping {
 			"call-tas-error" : {
 				"owner": "luabud",
 				"comment": "Logs when calls to the experiment service fails",
-				"ABExp.queriedFeature": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth"}
+				"errortype": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "comment": "Type of error when calling TAS (ServerError, NoResponse, etc.)"}
 			}
 	*/
 }
