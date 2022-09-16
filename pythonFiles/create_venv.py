@@ -62,11 +62,13 @@ def run_process(args: Sequence[str], error_message: str) -> None:
     except subprocess.CalledProcessError:
         raise VenvError(error_message)
 
-def get_venv_path(name:str) -> str:
+
+def get_venv_path(name: str) -> str:
     if sys.platform == "win32":
         return os.fspath(CWD / name / "Scripts" / "python.exe")
     else:
         return os.fspath(CWD / name / "bin" / "python")
+
 
 def install_packages(venv_path: str) -> None:
     if not is_installed("pip"):
