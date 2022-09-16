@@ -21,8 +21,8 @@ import {
 import { PythonEnvironment } from '../client/pythonEnvironments/info';
 import { buildEnvInfo } from '../client/pythonEnvironments/base/info/env';
 import {
-    ActiveEnvironmentChangedParams,
-    IProposedExtensionAPI,
+    ActiveEnvironmentChangeEvent,
+    ProposedExtensionAPI,
     RefreshState,
     RefreshStateValue,
 } from '../client/proposedApiTypes';
@@ -36,7 +36,7 @@ suite('Proposed Extension API', () => {
     let onDidExecutionEvent: Event<Uri | undefined>;
     let onDidChangeRefreshState: EventEmitter<ProgressNotificationEvent>;
 
-    let proposed: IProposedExtensionAPI;
+    let proposed: ProposedExtensionAPI;
 
     setup(() => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
@@ -73,7 +73,7 @@ suite('Proposed Extension API', () => {
     });
 
     test('Provide an event to track when active environment details change', async () => {
-        const events: ActiveEnvironmentChangedParams[] = [];
+        const events: ActiveEnvironmentChangeEvent[] = [];
         proposed.environment.activeEnvironment.onDidChange((e) => {
             events.push(e);
         });

@@ -46,7 +46,7 @@ import { IExtensionApi } from './apiTypes';
 import { buildProposedApi } from './proposedApi';
 import { WorkspaceService } from './common/application/workspace';
 import { disposeAll } from './common/utils/resourceLifecycle';
-import { IProposedExtensionAPI } from './proposedApiTypes';
+import { ProposedExtensionAPI } from './proposedApiTypes';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -104,7 +104,7 @@ async function activateUnsafe(
     context: IExtensionContext,
     startupStopWatch: StopWatch,
     startupDurations: IStartupDurations,
-): Promise<[IExtensionApi & IProposedExtensionAPI, Promise<void>, IServiceContainer]> {
+): Promise<[IExtensionApi & ProposedExtensionAPI, Promise<void>, IServiceContainer]> {
     // Add anything that we got from initializing logs to dispose.
     context.subscriptions.push(...logDispose);
 

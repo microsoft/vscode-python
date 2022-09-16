@@ -8,10 +8,10 @@ import { Architecture } from './common/utils/platform';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
 import {
-    ActiveEnvironmentChangedParams,
+    ActiveEnvironmentChangeEvent,
     Environment,
-    EnvironmentsChangedParams,
-    IProposedExtensionAPI,
+    EnvironmentsChangedEvent,
+    ProposedExtensionAPI,
     ResolvedEnvironment,
     UniquePath,
     PythonVersionInfo,
@@ -24,12 +24,12 @@ import { PythonEnvInfo, PythonEnvKind, virtualEnvKinds } from './pythonEnvironme
 import { getEnvPath } from './pythonEnvironments/base/info/env';
 import { IDiscoveryAPI, ProgressReportStage } from './pythonEnvironments/base/locator';
 
-const onDidActiveInterpreterChangedEvent = new EventEmitter<ActiveEnvironmentChangedParams>();
-export function reportActiveInterpreterChanged(e: ActiveEnvironmentChangedParams): void {
+const onDidActiveInterpreterChangedEvent = new EventEmitter<ActiveEnvironmentChangeEvent>();
+export function reportActiveInterpreterChanged(e: ActiveEnvironmentChangeEvent): void {
     onDidActiveInterpreterChangedEvent.fire(e);
 }
 const onProgress = new EventEmitter<RefreshState>();
-const onEnvironmentsChanged = new EventEmitter<EnvironmentsChangedParams>();
+const onEnvironmentsChanged = new EventEmitter<EnvironmentsChangedEvent>();
 const environmentsReference = new Map<UniquePath, EnvironmentReference>();
 
 export class EnvironmentReference implements Environment {
@@ -70,7 +70,7 @@ function getEnvReference(e: Environment) {
 export function buildProposedApi(
     discoveryApi: IDiscoveryAPI,
     serviceContainer: IServiceContainer,
-): IProposedExtensionAPI {
+): ProposedExtensionAPI {
     const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
@@ -97,7 +97,7 @@ export function buildProposedApi(
         onProgress,
         onEnvironmentsChanged,
     );
-    const proposed: IProposedExtensionAPI = {
+    const proposed: ProposedExtensionAPI = {
         environment: {
             activeEnvironment: {
                 async fetch(resource?: Resource) {

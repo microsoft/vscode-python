@@ -5,19 +5,19 @@ import { CancellationToken, Event, Uri, WorkspaceFolder } from 'vscode';
 
 // https://github.com/microsoft/vscode-python/wiki/Proposed-Environment-APIs
 
-export interface IProposedExtensionAPI {
-    environment: IEnvironmentAPI;
+export interface ProposedExtensionAPI {
+    environment: EnvironmentAPI;
 }
 
-interface IEnvironmentAPI {
+interface EnvironmentAPI {
     /**
      * Carries the API to track the selected environment by the user for a workspace.
      */
-    activeEnvironment: IActiveEnvironmentAPI;
+    activeEnvironment: ActiveEnvironmentAPI;
     /**
      * Carries the API necessary for locating environments.
      */
-    locator: IEnvironmentLocatorAPI;
+    locator: EnvironmentLocatorAPI;
     /**
      * Returns details for the given environment, or `undefined` if the env is invalid.
      * @param environment : Environment whose details you need. Can also pass the full path to environment folder
@@ -26,7 +26,7 @@ interface IEnvironmentAPI {
     resolveEnvironment(environment: Environment | UniquePath): Promise<ResolvedEnvironment | undefined>;
 }
 
-interface IActiveEnvironmentAPI {
+interface ActiveEnvironmentAPI {
     /**
      * Returns the environment selected. Uses the cache by default, otherwise fetches full information about the
      * environment.
@@ -45,10 +45,10 @@ interface IActiveEnvironmentAPI {
     /**
      * This event is triggered when the active environment changes.
      */
-    onDidChange: Event<ActiveEnvironmentChangedParams>;
+    onDidChange: Event<ActiveEnvironmentChangeEvent>;
 }
 
-interface IEnvironmentLocatorAPI {
+interface EnvironmentLocatorAPI {
     /**
      * Carries environments found by the extension at the time of fetching the property. Note a refresh might be
      * going on so this may not be the complete list. To wait on complete list use {@link refreshState()} and
@@ -59,14 +59,14 @@ interface IEnvironmentLocatorAPI {
      * This event is triggered when the known environment list changes, like when a environment
      * is found, existing environment is removed, or some details changed on an environment.
      */
-    onDidChangeEnvironments: Event<EnvironmentsChangedParams>;
+    onDidChangeEnvironments: Event<EnvironmentsChangedEvent>;
     /**
-     * Returns the last known state in the refresh, i.e whether it started, finished, or any other relevant state.
+     * Carries the current state in the refresh, i.e whether it started, finished, or any other relevant state.
      */
     refreshState: RefreshState;
     /**
-     * Tracks refresh progress for current list of known environments, i.e when it starts, finishes or any other
-     * relevant state.
+     * Fires when a refresh state has been reached, i.e when it starts, finishes or any other relevant state.
+     * Tracks refresh progress for current list of known environments.
      */
     readonly onDidChangeRefreshState: Event<RefreshState>;
     /**
@@ -115,7 +115,7 @@ export type Environment = {
               /**
                * Type of the environment.
                */
-              type: EnvType;
+              type: EnvironmentType;
               /**
                * Name to the environment if any.
                */
@@ -132,7 +132,7 @@ export type Environment = {
                * Tools/plugins which created the environment or where it came from. First value in array corresponds
                * to the primary source, which never changes over time.
                */
-              source: EnvSource[];
+              source: EnvironmentSource[];
           }
         | undefined;
     /**
@@ -146,23 +146,43 @@ export type Environment = {
     };
 };
 
+/**
+ * A new form of object `T` where no property can have the value of `undefined`.
+ */
 type MakeAllPropertiesNonNullable<T> = {
     [P in keyof T]: NonNullable<T[P]>;
 };
-type MakeNonNullable<Type, Key extends keyof Type> = Omit<Type, Key> & MakeAllPropertiesNonNullable<Pick<Type, Key>>;
-type ExecutableInfo = MakeNonNullable<Environment['executable'], 'sysPrefix'> &
-    MakeNonNullable<Environment['executable'], 'bitness'>;
+/**
+ * A new form of object `Type` where a property represented by `Key` cannot be `undefined`.
+ */
+type MakePropertyNonNullable<Type, Key extends keyof Type> = Omit<Type, Key> &
+    MakeAllPropertiesNonNullable<Pick<Type, Key>>;
 
-type EnvironmentInfo = NonNullable<Pick<Environment, 'environment'>['environment']>;
+type ExecutableInfo = MakePropertyNonNullable<Environment['executable'], 'sysPrefix'> &
+    MakePropertyNonNullable<Environment['executable'], 'bitness'>;
 export type PythonVersionInfo = MakeAllPropertiesNonNullable<Environment['version']>;
 
 /**
- * Derived form of {@link Environment} with complete information, which means certain properties can no longer be `undefined`.
+ * Derived form of {@link Environment} where certain properties can no longer be `undefined`. Meant to represent an
+ * {@link Environment} with complete information.
  */
 export interface ResolvedEnvironment {
+    /**
+     * See {@link UniquePath} for description.
+     */
     pathID: UniquePath;
+    /**
+     * New form of {@link Environment.executable} object where properties `sysPrefix` and `bitness` cannot be
+     * `undefined`.
+     */
     executable: ExecutableInfo;
-    environment: EnvironmentInfo | undefined;
+    /**
+     * See {@link Environment.environment} for description.
+     */
+    environment: Environment['environment'];
+    /**
+     * New form of {@link Environment.version} object where no properties can be `undefined`.
+     */
     version: PythonVersionInfo;
 }
 
@@ -171,7 +191,7 @@ export type RefreshState = {
 };
 
 /**
- * Value of the enum indicates which states comes before when a refresh takes place.
+ * Contains state values in the order they finish during a refresh cycle.
  */
 export enum RefreshStateValue {
     /**
@@ -199,7 +219,7 @@ export type Resource = Uri | WorkspaceFolder;
  */
 export type UniquePath = string;
 
-export type EnvironmentsChangedParams = {
+export type EnvironmentsChangedEvent = {
     env: Environment;
     /**
      * * "add": New environment is added.
@@ -209,7 +229,7 @@ export type EnvironmentsChangedParams = {
     type: 'add' | 'remove' | 'update';
 };
 
-export type ActiveEnvironmentChangedParams = {
+export type ActiveEnvironmentChangeEvent = {
     /**
      * See {@link UniquePath} for description.
      */
@@ -231,28 +251,36 @@ export type RefreshOptions = {
 };
 
 /**
- * Tool/plugin where the environment came from. It could be {@link KnownEnvSources} or custom string which was
- * contributed.
+ * Tool/plugin where the environment came from. It can be {@link KnownEnvironmentSources} or custom string which
+ * was contributed.
  */
-export type EnvSource = KnownEnvSources | string;
+export type EnvironmentSource = KnownEnvironmentSources | string;
 /**
  * Tools or plugins the Python extension is aware of.
  */
-export type KnownEnvSources = 'Conda' | 'Pipenv' | 'Poetry' | 'VirtualEnv' | 'Venv' | 'VirtualEnvWrapper' | 'Pyenv';
+export type KnownEnvironmentSources =
+    | 'Conda'
+    | 'Pipenv'
+    | 'Poetry'
+    | 'VirtualEnv'
+    | 'Venv'
+    | 'VirtualEnvWrapper'
+    | 'Pyenv';
 
 /**
- * Type of the environment. It could be {@link KnownEnvTypes} or custom string which was contributed.
+ * Type of the environment. It can be {@link KnownEnvironmentTypes} or custom string which was contributed.
  */
-export type EnvType = KnownEnvTypes | string;
+export type EnvironmentType = KnownEnvironmentTypes | string;
 /**
  * Environment types the Python extension is aware of.
  */
-export type KnownEnvTypes = 'VirtualEnv' | 'Conda' | 'Unknown';
+export type KnownEnvironmentTypes = 'VirtualEnv' | 'Conda' | 'Unknown';
 
 /**
  * Carries bitness for an environment.
  */
 export type Architecture = 'x86' | 'x64' | 'Unknown';
+
 /**
  * The possible Python release levels.
  */
