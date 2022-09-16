@@ -1,5 +1,5 @@
 import { SemVer } from 'semver';
-import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, Event, Uri } from 'vscode';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { Resource } from '../common/types';
 import { PythonEnvSource } from '../pythonEnvironments/base/info';
