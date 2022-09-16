@@ -21,11 +21,6 @@ export interface IDebugConfigurationService extends DebugConfigurationProvider {
 export const IDynamicDebugConfigurationService = Symbol('IDynamicDebugConfigurationService');
 export interface IDynamicDebugConfigurationService extends DebugConfigurationProvider {}
 
-export const IDebuggerBanner = Symbol('IDebuggerBanner');
-export interface IDebuggerBanner {
-    initialize(): void;
-}
-
 export type DebugConfigurationState = {
     config: Partial<DebugConfigurationArguments>;
     folder?: WorkspaceFolder;
