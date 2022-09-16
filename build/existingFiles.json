@@ -170,7 +170,6 @@
     "src/client/interpreter/configuration/types.ts",
     "src/client/interpreter/contracts.ts",
     "src/client/interpreter/display/index.ts",
-    "src/client/interpreter/display/shebangCodeLensProvider.ts",
     "src/client/interpreter/helpers.ts",
     "src/client/interpreter/interpreterService.ts",
     "src/client/interpreter/interpreterVersion.ts",

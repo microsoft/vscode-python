@@ -158,7 +158,6 @@ src/client/interpreter/configuration/services/workspaceFolderUpdaterService.ts
 src/client/interpreter/helpers.ts
 src/client/interpreter/virtualEnvs/condaInheritEnvPrompt.ts
 src/client/interpreter/activation/service.ts
-src/client/interpreter/display/shebangCodeLensProvider.ts
 src/client/interpreter/display/index.ts
 
 src/client/api.ts

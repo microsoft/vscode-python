@@ -100,11 +100,6 @@ export interface IInterpreterDisplay {
     registerVisibilityFilter(filter: IInterpreterStatusbarVisibilityFilter): void;
 }
 
-export const IShebangCodeLensProvider = Symbol('IShebangCodeLensProvider');
-export interface IShebangCodeLensProvider extends CodeLensProvider {
-    detectShebang(document: TextDocument, resolveShebangAsInterpreter?: boolean): Promise<string | undefined>;
-}
-
 export const IInterpreterHelper = Symbol('IInterpreterHelper');
 export interface IInterpreterHelper {
     getActiveWorkspaceUri(resource: Resource): WorkspacePythonPath | undefined;
