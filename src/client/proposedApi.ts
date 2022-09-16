@@ -4,6 +4,7 @@
 
 import { ConfigurationTarget, EventEmitter, Uri } from 'vscode';
 import { IDisposableRegistry, IInterpreterPathService } from './common/types';
+import { Architecture } from './common/utils/platform';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
 import {
@@ -12,7 +13,7 @@ import {
     EnvironmentsChangedParams,
     IProposedExtensionAPI,
     ResolvedEnvironment,
-    UniquePathType,
+    UniquePath,
     PythonVersionInfo,
     RefreshOptions,
     Resource,
@@ -29,7 +30,7 @@ export function reportActiveInterpreterChanged(e: ActiveEnvironmentChangedParams
 }
 const onProgress = new EventEmitter<RefreshState>();
 const onEnvironmentsChanged = new EventEmitter<EnvironmentsChangedParams>();
-const environmentsReference = new Map<UniquePathType, EnvironmentReference>();
+const environmentsReference = new Map<UniquePath, EnvironmentReference>();
 
 export class EnvironmentReference implements Environment {
     readonly pathID: string;
@@ -76,10 +77,10 @@ export function buildProposedApi(
     disposables.push(
         discoveryApi.onProgress((e) => {
             if (e.stage === ProgressReportStage.discoveryStarted) {
-                onProgress.fire({ state: RefreshStateValue.started });
+                onProgress.fire({ stateValue: RefreshStateValue.started });
             }
             if (e.stage === ProgressReportStage.discoveryFinished) {
-                onProgress.fire({ state: RefreshStateValue.finished });
+                onProgress.fire({ stateValue: RefreshStateValue.finished });
             }
         }),
         discoveryApi.onChanged((e) => {
@@ -128,11 +129,11 @@ export function buildProposedApi(
                 get refreshState(): RefreshState {
                     switch (discoveryApi.refreshState) {
                         case ProgressReportStage.discoveryStarted:
-                            return { state: RefreshStateValue.started };
+                            return { stateValue: RefreshStateValue.started };
                         case ProgressReportStage.discoveryFinished:
-                            return { state: RefreshStateValue.finished };
+                            return { stateValue: RefreshStateValue.finished };
                         default:
-                            return { state: RefreshStateValue.started };
+                            return { stateValue: RefreshStateValue.started };
                     }
                 },
                 async refreshEnvironments(options: RefreshOptions) {
@@ -159,11 +160,11 @@ async function resolveEnvironment(path: string, discoveryApi: IDiscoveryAPI): Pr
 
 export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment {
     const version = { ...env.version, sysVersion: env.version.sysVersion };
-    return {
+    const resolvedEnv: ResolvedEnvironment = {
         pathID: getEnvPath(env.executable.filename, env.location).path,
         executable: {
             uri: Uri.file(env.executable.filename),
-            bitness: env.arch,
+            bitness: convertArch(env.arch),
             sysPrefix: env.executable.sysPrefix,
         },
         environment: virtualEnvKinds.includes(env.kind)
@@ -177,6 +178,7 @@ export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment 
             : undefined,
         version: version as PythonVersionInfo,
     };
+    return resolvedEnv;
 }
 
 function convertEnvInfoAndGetReference(env: PythonEnvInfo): Environment {
@@ -200,4 +202,15 @@ function convertEnvInfoAndGetReference(env: PythonEnvInfo): Environment {
         convertedEnv.version.minor = undefined;
     }
     return getEnvReference(convertedEnv);
+}
+
+function convertArch(arch: Architecture) {
+    switch (arch) {
+        case Architecture.x64:
+            return 'x64';
+        case Architecture.x86:
+            return 'x86';
+        default:
+            return 'Unknown';
+    }
 }

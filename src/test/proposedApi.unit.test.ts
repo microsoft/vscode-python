@@ -66,7 +66,10 @@ suite('Proposed Extension API', () => {
         onDidChangeRefreshState.fire({ stage: ProgressReportStage.discoveryFinished });
         await sleep(1);
 
-        assert.deepEqual(events, [{ state: RefreshStateValue.started }, { state: RefreshStateValue.finished }]);
+        assert.deepEqual(events, [
+            { stateValue: RefreshStateValue.started },
+            { stateValue: RefreshStateValue.finished },
+        ]);
     });
 
     test('Provide an event to track when active environment details change', async () => {

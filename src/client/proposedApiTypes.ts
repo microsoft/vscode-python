@@ -23,19 +23,15 @@ interface IEnvironmentAPI {
      * @param environment : Environment whose details you need. Can also pass the full path to environment folder
      * or python executable for the environment.
      */
-    resolveEnvironment(environment: Environment | UniquePathType): Promise<ResolvedEnvironment | undefined>;
+    resolveEnvironment(environment: Environment | UniquePath): Promise<ResolvedEnvironment | undefined>;
 }
 
 interface IActiveEnvironmentAPI {
     /**
-     * This event is triggered when the active environment changes.
-     */
-    onDidChange: Event<ActiveEnvironmentChangedParams>;
-    /**
-     * Returns the environment selected. The `resource` if provided will be used to determine the python binary in
-     * a multi-root scenario. If resource is `undefined` then the API returns what ever is set for the workspace.
-     * Uses the cache by default, otherwise fetches full information about the environment.
-     * @param resource : Uri of a file or workspace folder.
+     * Returns the environment selected. Uses the cache by default, otherwise fetches full information about the
+     * environment.
+     * @param resource : Uri of a file or workspace folder. This is used to determine the env in a multi-root
+     * scenario. If `undefined`, then the API returns what ever is set for the workspace.
      */
     fetch(resource?: Resource): Promise<ResolvedEnvironment | undefined>;
     /**
@@ -45,7 +41,11 @@ interface IActiveEnvironmentAPI {
      * the environment itself.
      * @param resource : [optional] File or workspace to scope to a particular workspace folder.
      */
-    update(environment: Environment | UniquePathType, resource?: Resource): Promise<void>;
+    update(environment: Environment | UniquePath, resource?: Resource): Promise<void>;
+    /**
+     * This event is triggered when the active environment changes.
+     */
+    onDidChange: Event<ActiveEnvironmentChangedParams>;
 }
 
 interface IEnvironmentLocatorAPI {
@@ -84,8 +84,11 @@ interface IEnvironmentLocatorAPI {
 /**
  * Details about the environment. Note the environment folder, type and name never changes over time.
  */
-export interface Environment {
-    pathID: UniquePathType;
+export type Environment = {
+    /**
+     * See {@link UniquePath} for description.
+     */
+    pathID: UniquePath;
     /**
      * Carries details about python executable.
      */
@@ -141,29 +144,30 @@ export interface Environment {
          */
         sysVersion: string | undefined;
     };
-}
+};
 
-type MakeNonNullable<Type, Key extends keyof Type> = Omit<Type, Key> & NonNullable<Pick<Type, Key>>;
 type MakeAllPropertiesNonNullable<T> = {
     [P in keyof T]: NonNullable<T[P]>;
 };
+type MakeNonNullable<Type, Key extends keyof Type> = Omit<Type, Key> & MakeAllPropertiesNonNullable<Pick<Type, Key>>;
 type ExecutableInfo = MakeNonNullable<Environment['executable'], 'sysPrefix'> &
     MakeNonNullable<Environment['executable'], 'bitness'>;
+
 type EnvironmentInfo = NonNullable<Pick<Environment, 'environment'>['environment']>;
 export type PythonVersionInfo = MakeAllPropertiesNonNullable<Environment['version']>;
 
 /**
- * Derived form of {@link Environment} with complete information.
+ * Derived form of {@link Environment} with complete information, which means certain properties can no longer be `undefined`.
  */
 export interface ResolvedEnvironment {
-    pathID: UniquePathType;
+    pathID: UniquePath;
     executable: ExecutableInfo;
     environment: EnvironmentInfo | undefined;
     version: PythonVersionInfo;
 }
 
 export type RefreshState = {
-    state: RefreshStateValue;
+    stateValue: RefreshStateValue;
 };
 
 /**
@@ -193,7 +197,7 @@ export type Resource = Uri | WorkspaceFolder;
  * lacking a python executable are identified by environment folder paths, whereas other envs can be identified
  * using python executable path.
  */
-export type UniquePathType = string;
+export type UniquePath = string;
 
 export type EnvironmentsChangedParams = {
     env: Environment;
@@ -205,13 +209,16 @@ export type EnvironmentsChangedParams = {
     type: 'add' | 'remove' | 'update';
 };
 
-export interface ActiveEnvironmentChangedParams {
-    pathID: UniquePathType;
+export type ActiveEnvironmentChangedParams = {
+    /**
+     * See {@link UniquePath} for description.
+     */
+    pathID: UniquePath;
     /**
      * Workspace folder the environment changed for.
      */
     resource: WorkspaceFolder | undefined;
-}
+};
 
 export type RefreshOptions = {
     /**
@@ -223,27 +230,33 @@ export type RefreshOptions = {
     ifNotRefreshedAlready: boolean | undefined;
 };
 
+/**
+ * Tool/plugin where the environment came from. It could be {@link KnownEnvSources} or custom string which was
+ * contributed.
+ */
 export type EnvSource = KnownEnvSources | string;
+/**
+ * Tools or plugins the Python extension is aware of.
+ */
 export type KnownEnvSources = 'Conda' | 'Pipenv' | 'Poetry' | 'VirtualEnv' | 'Venv' | 'VirtualEnvWrapper' | 'Pyenv';
 
+/**
+ * Type of the environment. It could be {@link KnownEnvTypes} or custom string which was contributed.
+ */
 export type EnvType = KnownEnvTypes | string;
+/**
+ * Environment types the Python extension is aware of.
+ */
 export type KnownEnvTypes = 'VirtualEnv' | 'Conda' | 'Unknown';
 
-export enum Architecture {
-    Unknown = 1,
-    x86 = 2,
-    x64 = 3,
-}
-
+/**
+ * Carries bitness for an environment.
+ */
+export type Architecture = 'x86' | 'x64' | 'Unknown';
 /**
  * The possible Python release levels.
  */
-export enum PythonReleaseLevel {
-    Alpha = 'alpha',
-    Beta = 'beta',
-    Candidate = 'candidate',
-    Final = 'final',
-}
+export type PythonReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final';
 
 /**
  * Release information for a Python version.
