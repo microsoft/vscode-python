@@ -6,7 +6,7 @@ import os
 import pathlib
 import subprocess
 import sys
-from typing import Sequence
+from typing import Optional, Sequence, Union
 from webbrowser import get
 
 CONDA_ENV_NAME = ".conda"
@@ -48,11 +48,11 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def file_exists(path: pathlib.PurePath) -> bool:
+def file_exists(path: Union[str, pathlib.PurePath]) -> bool:
     return os.path.exists(path)
 
 
-def conda_env_exists(name: str) -> bool:
+def conda_env_exists(name: Union[str, pathlib.PurePath]) -> bool:
     return os.path.exists(CWD / name)
 
 
@@ -96,7 +96,7 @@ def add_gitignore(name: str) -> None:
             f.write("*")
 
 
-def main(argv: Sequence[str] = None) -> None:
+def main(argv: Optional[Sequence[str]] = None) -> None:
     if argv is None:
         argv = []
     args = parse_args(argv)
