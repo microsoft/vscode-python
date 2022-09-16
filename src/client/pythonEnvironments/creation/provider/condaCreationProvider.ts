@@ -9,7 +9,7 @@ import { showQuickPick } from '../../../common/vscodeApis/windowApis';
 import { traceError, traceLog } from '../../../logging';
 import { Conda } from '../../common/environmentManagers/conda';
 import { CreateEnvironmentOptions, CreateEnvironmentProgress, CreateEnvironmentProvider } from '../types';
-import { pickWorkspaceFolder } from './workspaceSelection';
+import { pickWorkspaceFolder } from '../common/workspaceSelection';
 import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
 import { getEnvironmentVariable, getOSType, OSType } from '../../../common/utils/platform';

@@ -12,7 +12,7 @@ import { traceError, traceLog } from '../../../logging';
 import { PythonEnvKind } from '../../base/info';
 import { IDiscoveryAPI } from '../../base/locator';
 import { CreateEnvironmentOptions, CreateEnvironmentProgress, CreateEnvironmentProvider } from '../types';
-import { pickWorkspaceFolder } from './workspaceSelection';
+import { pickWorkspaceFolder } from '../common/workspaceSelection';
 
 const VENV_CREATED_MARKER = 'CREATED_VENV:';
 const INSTALLING_REQUIREMENTS = 'VENV_INSTALLING_REQUIREMENTS:';
