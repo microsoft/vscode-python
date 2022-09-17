@@ -2,13 +2,22 @@
 // Licensed under the MIT License.
 import '../../../../common/extensions';
 import { PythonEnvKind } from '../../info';
-import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../locator';
-import { Conda } from '../../../common/environmentManagers/conda';
+import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
+import { Conda, getCondaEnvironmentsTxt } from '../../../common/environmentManagers/conda';
 import { traceError, traceVerbose } from '../../../../logging';
+import { FSWatchingLocator } from './fsWatchingLocator';
 
-export class CondaEnvironmentLocator extends Locator<BasicEnvInfo> {
+export class CondaEnvironmentLocator extends FSWatchingLocator<BasicEnvInfo> {
+    public constructor() {
+        super(
+            () => getCondaEnvironmentsTxt(),
+            async () => PythonEnvKind.Conda,
+            { isFile: true },
+        );
+    }
+
     // eslint-disable-next-line class-methods-use-this
-    public async *iterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
+    public async *doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const conda = await Conda.getConda();
         if (conda === undefined) {
             traceVerbose(`Couldn't locate the conda binary.`);

@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
+import { FileChangeType, watchLocationForPattern } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
 import { traceError, traceVerbose } from '../../../../logging';
 import { getEnvironmentDirFromPath } from '../../../common/commonUtils';
@@ -47,6 +47,33 @@ function checkDirWatchable(dirname: string): DirUnwatchableReason {
     return undefined;
 }
 
+type LocationWatchOptions = {
+    /**
+     * Glob which represents basename of the executable or directory to watch.
+     */
+    baseGlob?: string;
+    /**
+     * Time to wait before handling an environment-created event.
+     */
+    delayOnCreated?: number; // milliseconds
+    /**
+     * Location affected by the event. If not provided, a default search location is used.
+     */
+    searchLocation?: string;
+    /**
+     * The Python env structure to watch.
+     */
+    envStructure?: PythonEnvStructure;
+};
+
+type FileWatchOptions = {
+    /**
+     * If the provided root is a file instead. In this case the file is directly watched instead for
+     * looking for python binaries inside a root.
+     */
+    isFile: boolean;
+};
+
 /**
  * The base for Python envs locators who watch the file system.
  * Most low-level locators should be using this.
@@ -63,24 +90,7 @@ export abstract class FSWatchingLocator<I = PythonEnvInfo> extends LazyResourceB
          * Returns the kind of environment specific to locator given the path to executable.
          */
         private readonly getKind: (executable: string) => Promise<PythonEnvKind>,
-        private readonly opts: {
-            /**
-             * Glob which represents basename of the executable or directory to watch.
-             */
-            baseGlob?: string;
-            /**
-             * Time to wait before handling an environment-created event.
-             */
-            delayOnCreated?: number; // milliseconds
-            /**
-             * Location affected by the event. If not provided, a default search location is used.
-             */
-            searchLocation?: string;
-            /**
-             * The Python env structure to watch.
-             */
-            envStructure?: PythonEnvStructure;
-        } = {},
+        private readonly creationOptions: LocationWatchOptions | FileWatchOptions = {},
         private readonly watcherKind: FSWatcherKind = FSWatcherKind.Global,
     ) {
         super();
@@ -89,8 +99,8 @@ export abstract class FSWatchingLocator<I = PythonEnvInfo> extends LazyResourceB
 
     protected async initWatchers(): Promise<void> {
         // Enable all workspace watchers.
-        if (this.watcherKind === FSWatcherKind.Global) {
-            // Do not allow global watchers for now
+        if (this.watcherKind === FSWatcherKind.Global && !isWatchingAFile(this.creationOptions)) {
+            // Do not allow global location watchers for now.
             return;
         }
 
@@ -102,6 +112,9 @@ export abstract class FSWatchingLocator<I = PythonEnvInfo> extends LazyResourceB
             roots = [roots];
         }
         const promises = roots.map(async (root) => {
+            if (isWatchingAFile(this.creationOptions)) {
+                return root;
+            }
             // Note that we only check the root dir.  Any directories
             // that might be watched due to a glob are not checked.
             const unwatchable = await checkDirWatchable(root);
@@ -116,12 +129,23 @@ export abstract class FSWatchingLocator<I = PythonEnvInfo> extends LazyResourceB
     }
 
     private startWatchers(root: string): void {
+        const opts = this.creationOptions;
+        if (isWatchingAFile(opts)) {
+            traceVerbose('Start watching file for changes', root);
+            this.disposables.push(
+                watchLocationForPattern(path.dirname(root), path.basename(root), () => {
+                    traceVerbose('Detected change in file: ', root, 'initiating a refresh');
+                    this.emitter.fire({});
+                }),
+            );
+            return;
+        }
         const callback = async (type: FileChangeType, executable: string) => {
             if (type === FileChangeType.Created) {
-                if (this.opts.delayOnCreated !== undefined) {
+                if (opts.delayOnCreated !== undefined) {
                     // Note detecting kind of env depends on the file structure around the
                     // executable, so we need to wait before attempting to detect it.
-                    await sleep(this.opts.delayOnCreated);
+                    await sleep(opts.delayOnCreated);
                 }
             }
             // Fetching kind after deletion normally fails because the file structure around the
@@ -135,20 +159,22 @@ export abstract class FSWatchingLocator<I = PythonEnvInfo> extends LazyResourceB
             // |__ env
             //    |__ bin or Scripts
             //        |__ python  <--- executable
-            const searchLocation = Uri.file(
-                this.opts.searchLocation ?? path.dirname(getEnvironmentDirFromPath(executable)),
-            );
+            const searchLocation = Uri.file(opts.searchLocation ?? path.dirname(getEnvironmentDirFromPath(executable)));
             traceVerbose('Fired event ', JSON.stringify({ type, kind, searchLocation }), 'from locator');
             this.emitter.fire({ type, kind, searchLocation });
         };
 
         const globs = resolvePythonExeGlobs(
-            this.opts.baseGlob,
+            opts.baseGlob,
             // The structure determines which globs are returned.
-            this.opts.envStructure,
+            opts.envStructure,
         );
         traceVerbose('Start watching root', root, 'for globs', JSON.stringify(globs));
         const watchers = globs.map((g) => watchLocationForPythonBinaries(root, callback, g));
         this.disposables.push(...watchers);
     }
+}
+
+function isWatchingAFile(options: LocationWatchOptions | FileWatchOptions): options is FileWatchOptions {
+    return 'isFile' in options && options.isFile;
 }
