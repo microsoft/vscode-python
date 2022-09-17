@@ -80,10 +80,6 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
 }
 @injectable()
 class ComponentAdapter implements IComponentAdapter {
-    private readonly refreshing = new vscode.EventEmitter<void>();
-
-    private readonly refreshed = new vscode.EventEmitter<void>();
-
     private readonly changed = new vscode.EventEmitter<PythonEnvironmentsChangedEvent>();
 
     constructor(
@@ -133,15 +129,6 @@ class ComponentAdapter implements IComponentAdapter {
                 callback();
             }
         });
-    }
-
-    // Implements IInterpreterLocatorProgressHandler
-    public get onRefreshing(): vscode.Event<void> {
-        return this.refreshing.event;
-    }
-
-    public get onRefreshed(): vscode.Event<void> {
-        return this.refreshed.event;
     }
 
     // Implements IInterpreterHelper
@@ -231,9 +218,6 @@ class ComponentAdapter implements IComponentAdapter {
     }
 
     public getInterpreters(resource?: vscode.Uri, source?: PythonEnvSource[]): PythonEnvironment[] {
-        // Notify locators are locating.
-        this.refreshing.fire();
-
         const query: PythonLocatorQuery = {};
         let roots: vscode.Uri[] = [];
         let wsFolder: vscode.WorkspaceFolder | undefined;
@@ -262,12 +246,7 @@ class ComponentAdapter implements IComponentAdapter {
             envs = envs.filter((env) => intersection(source, env.source).length > 0);
         }
 
-        const legacyEnvs = envs.map(convertEnvInfo);
-
-        // Notify all locators have completed locating. Note it's crucial to notify this even when getInterpretersViaAPI
-        // fails, to ensure "Python extension loading..." text disappears.
-        this.refreshed.fire();
-        return legacyEnvs;
+        return envs.map(convertEnvInfo);
     }
 
     public async getWorkspaceVirtualEnvInterpreters(
