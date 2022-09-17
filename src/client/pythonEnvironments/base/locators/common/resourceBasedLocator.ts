@@ -4,7 +4,6 @@
 import { IDisposable } from '../../../../common/types';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { Disposables } from '../../../../common/utils/resourceLifecycle';
-import { traceError } from '../../../../logging';
 import { PythonEnvInfo } from '../../info';
 import { IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator';
 
@@ -29,22 +28,15 @@ export abstract class LazyResourceBasedLocator<I = PythonEnvInfo> extends Locato
 
     private watchersReady?: Deferred<void>;
 
-    /**
-     * This can be used to initialize resources when subclasses are created.
-     */
-    protected async activate(): Promise<void> {
-        await this.ensureResourcesReady();
-        // There is not need to wait for the watchers to get started.
-        this.ensureWatchersReady().ignoreErrors();
-    }
-
     public async dispose(): Promise<void> {
         await this.disposables.dispose();
     }
 
     public async *iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<I> {
-        await this.activate();
+        await this.ensureResourcesReady();
         yield* this.doIterEnvs(query);
+        // There is not need to wait for the watchers to get started.
+        this.ensureWatchersReady().ignoreErrors();
     }
 
     /**
@@ -95,10 +87,7 @@ export abstract class LazyResourceBasedLocator<I = PythonEnvInfo> extends Locato
             return;
         }
         this.resourcesReady = createDeferred<void>();
-        await this.initResources().catch((ex) => {
-            traceError(ex);
-            this.resourcesReady?.reject(ex);
-        });
+        await this.initResources();
         this.resourcesReady.resolve();
     }
 
@@ -108,10 +97,7 @@ export abstract class LazyResourceBasedLocator<I = PythonEnvInfo> extends Locato
             return;
         }
         this.watchersReady = createDeferred<void>();
-        await this.initWatchers().catch((ex) => {
-            traceError(ex);
-            this.watchersReady?.reject(ex);
-        });
+        await this.initWatchers();
         this.watchersReady.resolve();
     }
 }

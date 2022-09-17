@@ -59,7 +59,6 @@ export class WorkspaceLocators<I = PythonEnvInfo> extends LazyResourceBasedLocat
 
     constructor(private readonly watchRoots: WatchRootsFunc, private readonly factories: WorkspaceLocatorFactory<I>[]) {
         super();
-        this.activate().ignoreErrors();
     }
 
     public async dispose(): Promise<void> {
