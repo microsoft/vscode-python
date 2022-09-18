@@ -165,10 +165,7 @@ export async function getCondaEnvironmentsTxt(): Promise<string[]> {
         return [];
     }
     const environmentsTxt = path.join(homeDir, '.conda', 'environments.txt');
-    if (await pathExists(environmentsTxt)) {
-        return [environmentsTxt];
-    }
-    return [];
+    return [environmentsTxt];
 }
 
 /**
