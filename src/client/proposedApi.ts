@@ -20,8 +20,9 @@ import {
     RefreshStateValue,
     RefreshState,
     EnvironmentType,
+    EnvironmentSource,
 } from './proposedApiTypes';
-import { PythonEnvInfo, PythonEnvKind, PythonEnvType, virtualEnvKinds } from './pythonEnvironments/base/info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from './pythonEnvironments/base/info';
 import { getEnvPath } from './pythonEnvironments/base/info/env';
 import { IDiscoveryAPI, ProgressReportStage } from './pythonEnvironments/base/locator';
 
@@ -174,7 +175,7 @@ export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment 
                   name: env.name,
                   folderUri: Uri.file(env.location),
                   workspaceFolder: env.searchLocation,
-                  source: [env.kind],
+                  source: [convertKind(env.kind)],
               }
             : undefined,
         version: version as PythonVersionInfo,
@@ -190,6 +191,27 @@ function convertEnvType(envType: PythonEnvType): EnvironmentType {
         return 'VirtualEnv';
     }
     return 'Unknown';
+}
+
+function convertKind(kind: PythonEnvKind): EnvironmentSource {
+    switch (kind) {
+        case PythonEnvKind.Venv:
+            return 'Venv';
+        case PythonEnvKind.Pipenv:
+            return 'Pipenv';
+        case PythonEnvKind.Poetry:
+            return 'Poetry';
+        case PythonEnvKind.VirtualEnvWrapper:
+            return 'VirtualEnvWrapper';
+        case PythonEnvKind.VirtualEnv:
+            return 'VirtualEnv';
+        case PythonEnvKind.Conda:
+            return 'Conda';
+        case PythonEnvKind.Pyenv:
+            return 'Pyenv';
+        default:
+            return 'Unknown';
+    }
 }
 
 function convertEnvInfoAndGetReference(env: PythonEnvInfo): Environment {

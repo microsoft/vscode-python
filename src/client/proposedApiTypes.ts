@@ -254,7 +254,7 @@ export type RefreshOptions = {
  * Tool/plugin where the environment came from. It can be {@link KnownEnvironmentSources} or custom string which
  * was contributed.
  */
-export type EnvironmentSource = KnownEnvironmentSources | string;
+export type EnvironmentSource = KnownEnvironmentSources;
 /**
  * Tools or plugins the Python extension is aware of.
  */
@@ -265,7 +265,8 @@ export type KnownEnvironmentSources =
     | 'VirtualEnv'
     | 'Venv'
     | 'VirtualEnvWrapper'
-    | 'Pyenv';
+    | 'Pyenv'
+    | 'Unknown';
 
 /**
  * Type of the environment. It can be {@link KnownEnvironmentTypes} or custom string which was contributed.
