@@ -26,6 +26,11 @@ export enum PythonEnvKind {
     OtherVirtual = 'virt-other',
 }
 
+export enum PythonEnvType {
+    Conda = 'Conda',
+    Virtual = 'Virtual',
+}
+
 export interface EnvPathType {
     /**
      * Path to environment folder or path to interpreter that uniquely identifies an environment.
@@ -105,6 +110,7 @@ export enum PythonEnvSource {
 type PythonEnvBaseInfo = {
     id?: string;
     kind: PythonEnvKind;
+    type?: PythonEnvType;
     executable: PythonExecutableInfo;
     // One of (name, location) must be non-empty.
     name: string;

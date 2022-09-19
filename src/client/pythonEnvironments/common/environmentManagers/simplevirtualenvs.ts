@@ -31,6 +31,15 @@ function getPyvenvConfigPathsFrom(interpreterPath: string): string[] {
 }
 
 /**
+ * Checks if the given interpreter is a virtual environment.
+ * @param {string} interpreterPath: Absolute path to the python interpreter.
+ * @returns {boolean} : Returns true if the interpreter belongs to a venv environment.
+ */
+export async function isVirtualEnvironment(interpreterPath: string): Promise<boolean> {
+    return isVenvEnvironment(interpreterPath);
+}
+
+/**
  * Checks if the given interpreter belongs to a venv based environment.
  * @param {string} interpreterPath: Absolute path to the python interpreter.
  * @returns {boolean} : Returns true if the interpreter belongs to a venv environment.

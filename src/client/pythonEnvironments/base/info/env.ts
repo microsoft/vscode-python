@@ -16,6 +16,7 @@ import {
     PythonEnvInfo,
     PythonEnvKind,
     PythonEnvSource,
+    PythonEnvType,
     PythonReleaseLevel,
     PythonVersion,
     virtualEnvKinds,
@@ -40,6 +41,7 @@ export function buildEnvInfo(init?: {
     display?: string;
     sysPrefix?: string;
     searchLocation?: Uri;
+    type?: PythonEnvType;
 }): PythonEnvInfo {
     const env: PythonEnvInfo = {
         name: init?.name ?? '',
@@ -103,6 +105,7 @@ function updateEnv(
         location?: string;
         version?: PythonVersion;
         searchLocation?: Uri;
+        type?: PythonEnvType;
     },
 ): void {
     if (updates.kind !== undefined) {
@@ -119,6 +122,9 @@ function updateEnv(
     }
     if (updates.searchLocation !== undefined) {
         env.searchLocation = updates.searchLocation;
+    }
+    if (updates.type !== undefined) {
+        env.type = updates.type;
     }
 }
 
