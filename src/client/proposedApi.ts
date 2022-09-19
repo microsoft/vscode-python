@@ -19,8 +19,9 @@ import {
     Resource,
     RefreshStateValue,
     RefreshState,
+    EnvironmentType,
 } from './proposedApiTypes';
-import { PythonEnvInfo, PythonEnvKind, virtualEnvKinds } from './pythonEnvironments/base/info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvType, virtualEnvKinds } from './pythonEnvironments/base/info';
 import { getEnvPath } from './pythonEnvironments/base/info/env';
 import { IDiscoveryAPI, ProgressReportStage } from './pythonEnvironments/base/locator';
 
@@ -167,9 +168,9 @@ export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment 
             bitness: convertArch(env.arch),
             sysPrefix: env.executable.sysPrefix,
         },
-        environment: virtualEnvKinds.includes(env.kind)
+        environment: env.type
             ? {
-                  type: env.kind === PythonEnvKind.Conda ? 'Conda' : 'VirtualEnv',
+                  type: convertEnvType(env.type),
                   name: env.name,
                   folderUri: Uri.file(env.location),
                   workspaceFolder: env.searchLocation,
@@ -179,6 +180,16 @@ export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment 
         version: version as PythonVersionInfo,
     };
     return resolvedEnv;
+}
+
+function convertEnvType(envType: PythonEnvType): EnvironmentType {
+    if (envType === PythonEnvType.Conda) {
+        return 'Conda';
+    }
+    if (envType === PythonEnvType.Virtual) {
+        return 'VirtualEnv';
+    }
+    return 'Unknown';
 }
 
 function convertEnvInfoAndGetReference(env: PythonEnvInfo): Environment {
