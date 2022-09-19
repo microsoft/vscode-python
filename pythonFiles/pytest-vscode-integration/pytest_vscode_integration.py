@@ -58,10 +58,9 @@ DEFAULT_PORT = "45454"
 
 
 def pytest_collection_finish(session):
-    print("in config in files")
+    print("pytest collection finish")
     session.results = dict()
-    print(session.items)
-    print("SP", session.path)
+    # print("SP", session.path)
     parent_list = []
     folder_list = {}
     for item in session.items:
@@ -88,9 +87,10 @@ def pytest_collection_finish(session):
         else:
             f = folder_list.get(pid)
             f.get("children").append(i)  # type: ignore
+    sendPost()
 
-    print("PL", parent_list)
-    print("FL", folder_list)
+    # print("PL", parent_list)
+    # print("FL", folder_list)
     # print("end collection")
     # testsList = []
     # buildTestTree(session)
@@ -208,69 +208,11 @@ def createSessionTestNode(session) -> TestNode:
     }
 
 
-def createClassTestNode(class_module_name, class_module_path) -> TestNode:
-    return {
-        "name": class_module_name,
-        "path": str(class_module_path),
-        "type_": TestNodeTypeEnum.class_,
-        "children": [],
-        "id_": str(class_module_path),
-    }
-
-
-def createFileTestNode(file_module) -> TestNode:
-    return {
-        "name": str(file_module.fspath.basename),
-        "path": str(file_module.fspath),
-        "type_": TestNodeTypeEnum.file,
-        "id_": str(file_module.fspath),
-        "children": [],
-    }
-
-
-def createFolderTestNode(folderName, path_iterator) -> TestNode:
-    return {
-        "name": folderName,
-        "path": str(path_iterator),
-        "type_": TestNodeTypeEnum.folder,  # check if this is a file or a folder
-        "id_": str(path_iterator),
-        "children": [],
-    }
-
-
-def accessOrCreateGeneral(test_node_name, test_node_dict, test_node_path) -> TestNode:
-    if test_node_name in test_node_dict.keys():  # exists in the dictionary
-        return test_node_dict[test_node_name]
-    else:
-        # create new
-        temp = createFolderTestNode(test_node_name, test_node_path)
-        test_node_dict[test_node_name] = temp
-        return temp
-
-
-# def accessOrCreateClass(class_module, testNode_class_dict) -> TestNode:
-#     if class_module.name in testNode_class_dict.keys():  # exists in the dictionary
-#         return testNode_class_dict[class_module.name]
-#     else:
-#         # create new
-#         temp = createClassTestNode(class_module.name, class_module.fspath)
-#         testNode_class_dict[class_module.name] = temp
-#         return temp
-
-
-class PayloadDict(TypedDict):
-    cwd: str
-    status: Literal["success", "error"]
-    tests: NotRequired[TestNode]
-    errors: NotRequired[List[str]]
-
-
-def sendPost(cwd, tests):
-    payload: PayloadDict = {"cwd": cwd, "status": "success", "tests": tests}
+def sendPost():
+    payload: dict = {"status": "success"}
     testPort = os.getenv("TEST_PORT", 45454)
-    testuuid = os.getenv("TEST_UUID")
     addr = ("localhost", int(testPort))
-    print("sending post", addr, cwd)
+    print("sending post", addr)
     # socket_manager.send_post("Hello from pytest")  # type: ignore
     with socket_manager.SocketManager(addr) as s:
         data = json.dumps(payload)
@@ -278,7 +220,9 @@ def sendPost(cwd, tests):
 Host: localhost:{testPort}
 Content-Length: {len(data)}
 Content-Type: application/json
-Request-uuid: {testuuid}
+Request-uuid: {12312432423}
 
 {data}"""
         result = s.socket.sendall(request.encode("utf-8"))  # type: ignore
+        # request = json.dumps(payload)
+        # result = s.socket.sendall(request.encode("utf-8"))  # type: ignore

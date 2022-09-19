@@ -151,6 +151,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         traceVerbose('Waiting for test server to start...');
         await this.pythonTestServer.serverReady();
         traceVerbose('Test server started.');
+        console.debug('Test server started');
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
         workspaces.forEach((workspace) => {
             const settings = this.configSettings.getSettings(workspace.uri);
