@@ -120,11 +120,6 @@ export type Environment = {
                * Any specific workspace folder this environment is created for.
                */
               workspaceFolder: Uri | undefined;
-              /**
-               * Tools/plugins which created the environment or where it came from. First value in array corresponds
-               * to the primary source, which never changes over time.
-               */
-              source: EnvironmentSource[];
           }
         | undefined;
     /**
@@ -136,6 +131,11 @@ export type Environment = {
          */
         sysVersion: string | undefined;
     };
+    /**
+     * Tools/plugins which created the environment or where it came from. First value in array corresponds
+     * to the primary tool responsible for the environment, which never changes over time.
+     */
+    tools: EnvironmentTools[] | undefined;
 };
 
 /**
@@ -176,6 +176,10 @@ export interface ResolvedEnvironment {
      * New form of {@link Environment.version} object where no properties can be `undefined`.
      */
     version: PythonVersionInfo;
+    /**
+     * See {@link Environment.tools} for description.
+     */
+    tools: EnvironmentTools[] | undefined;
 }
 
 export type RefreshState = {
@@ -241,14 +245,14 @@ export type RefreshOptions = {
 };
 
 /**
- * Tool/plugin where the environment came from. It can be {@link KnownEnvironmentSources} or custom string which
+ * Tool/plugin where the environment came from. It can be {@link KnownEnvironmentTools} or custom string which
  * was contributed.
  */
-export type EnvironmentSource = KnownEnvironmentSources;
+export type EnvironmentTools = KnownEnvironmentTools | string;
 /**
  * Tools or plugins the Python extension is aware of.
  */
-export type KnownEnvironmentSources =
+export type KnownEnvironmentTools =
     | 'Conda'
     | 'Pipenv'
     | 'Poetry'

@@ -20,7 +20,7 @@ import {
     RefreshStateValue,
     RefreshState,
     EnvironmentType,
-    EnvironmentSource,
+    EnvironmentTools,
 } from './proposedApiTypes';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from './pythonEnvironments/base/info';
 import { getEnvPath } from './pythonEnvironments/base/info/env';
@@ -51,6 +51,10 @@ export class EnvironmentReference implements Environment {
 
     get version() {
         return this.internal.version;
+    }
+
+    get tools() {
+        return this.internal.tools;
     }
 
     updateEnv(newInternal: Environment) {
@@ -166,6 +170,10 @@ async function resolveEnvironment(path: string, discoveryApi: IDiscoveryAPI): Pr
 
 export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment {
     const version = { ...env.version, sysVersion: env.version.sysVersion };
+    let tool = convertKind(env.kind);
+    if (env.type && !tool) {
+        tool = 'Unknown';
+    }
     const resolvedEnv: ResolvedEnvironment = {
         pathID: getEnvPath(env.executable.filename, env.location).path,
         executable: {
@@ -179,10 +187,10 @@ export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment 
                   name: env.name,
                   folderUri: Uri.file(env.location),
                   workspaceFolder: env.searchLocation,
-                  source: [convertKind(env.kind)],
               }
             : undefined,
         version: version as PythonVersionInfo,
+        tools: tool ? [tool] : undefined,
     };
     return resolvedEnv;
 }
@@ -197,7 +205,7 @@ function convertEnvType(envType: PythonEnvType): EnvironmentType {
     return 'Unknown';
 }
 
-function convertKind(kind: PythonEnvKind): EnvironmentSource {
+function convertKind(kind: PythonEnvKind): EnvironmentTools | undefined {
     switch (kind) {
         case PythonEnvKind.Venv:
             return 'Venv';
@@ -214,7 +222,7 @@ function convertKind(kind: PythonEnvKind): EnvironmentSource {
         case PythonEnvKind.Pyenv:
             return 'Pyenv';
         default:
-            return 'Unknown';
+            return undefined;
     }
 }
 

@@ -20,13 +20,13 @@ import {
 } from '../client/pythonEnvironments/base/locator';
 import { PythonEnvironment } from '../client/pythonEnvironments/info';
 import { buildEnvInfo } from '../client/pythonEnvironments/base/info/env';
+import { sleep } from './core';
 import {
-    ActiveEnvironmentChangeEvent,
     ProposedExtensionAPI,
     RefreshState,
     RefreshStateValue,
+    ActiveEnvironmentChangeEvent,
 } from '../client/proposedApiTypes';
-import { sleep } from './core';
 
 suite('Proposed Extension API', () => {
     let serviceContainer: typemoq.IMock<IServiceContainer>;
