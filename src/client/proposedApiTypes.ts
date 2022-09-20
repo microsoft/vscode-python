@@ -28,22 +28,22 @@ interface EnvironmentAPI {
     /**
      * This event is triggered when the active environment changes.
      */
-    onDidChangeActiveEnvironment: Event<ActiveEnvironmentChangeEvent>;
+    readonly onDidChangeActiveEnvironment: Event<ActiveEnvironmentChangeEvent>;
     /**
      * Carries environments found by the extension at the time of fetching the property. Note a refresh might be
      * going on so this may not be the complete list. To wait on complete list use {@link refreshState()} and
      * {@link onDidChangeRefreshState}.
      */
-    environments: readonly Environment[] | undefined;
+    readonly environments: Environment[] | undefined;
     /**
      * This event is triggered when the known environment list changes, like when a environment
      * is found, existing environment is removed, or some details changed on an environment.
      */
-    onDidChangeEnvironments: Event<EnvironmentsChangedEvent>;
+    readonly onDidChangeEnvironments: Event<EnvironmentsChangedEvent>;
     /**
      * Carries the current state in the refresh, i.e whether it started, finished, or any other relevant state.
      */
-    refreshState: RefreshState;
+    readonly refreshState: RefreshState;
     /**
      * Fires when a refresh state has been reached, i.e when it starts, finishes or any other relevant state.
      * Tracks refresh progress for current list of known environments.
@@ -68,10 +68,39 @@ interface EnvironmentAPI {
      */
     resolveEnvironment(environment: Environment | UniquePath): Promise<ResolvedEnvironment | undefined>;
     /**
-     * @deprecated Use {@link fetchActiveEnvironment} instead.
+     * @deprecated Use {@link fetchActiveEnvironment} instead. This will soon be removed.
      */
     getActiveEnvironmentPath(resource?: Resource): Promise<EnvPathType | undefined>;
 }
+
+export type RefreshState = {
+    stateValue: RefreshStateValue;
+};
+
+/**
+ * Contains state values in the order they finish during a refresh cycle.
+ */
+export enum RefreshStateValue {
+    /**
+     * When a refresh is started.
+     */
+    started = 0,
+
+    // ...there can be more intimidatory states
+
+    /**
+     * When a refresh is over.
+     */
+    finished = 1,
+}
+
+export type RefreshOptions = {
+    /**
+     * Force trigger a refresh regardless of whether a refresh was already triggered. Note this can be expensive so
+     * it's best to only use it if user manually triggers a refresh.
+     */
+    forceRefresh?: boolean;
+};
 
 /**
  * Details about the environment. Note the environment folder, type and name never changes over time.
@@ -182,39 +211,6 @@ export interface ResolvedEnvironment {
     tools: EnvironmentTools[] | undefined;
 }
 
-export type RefreshState = {
-    stateValue: RefreshStateValue;
-};
-
-/**
- * Contains state values in the order they finish during a refresh cycle.
- */
-export enum RefreshStateValue {
-    /**
-     * When a refresh is started.
-     */
-    started = 0,
-
-    // ...there can be more intimidatory states
-
-    /**
-     * When a refresh is over.
-     */
-    finished = 1,
-}
-
-/**
- * Uri of a file inside a workspace or workspace folder itself.
- */
-export type Resource = Uri | WorkspaceFolder;
-
-/**
- * Path to environment folder or path to python executable that uniquely identifies an environment. Environments
- * lacking a python executable are identified by environment folder paths, whereas other envs can be identified
- * using python executable path.
- */
-export type UniquePath = string;
-
 export type EnvironmentsChangedEvent = {
     env: Environment;
     /**
@@ -236,13 +232,17 @@ export type ActiveEnvironmentChangeEvent = {
     resource: WorkspaceFolder | undefined;
 };
 
-export type RefreshOptions = {
-    /**
-     * Force trigger a refresh regardless of whether a refresh was already triggered. Note this can be expensive so
-     * it's best to only use it if user manually triggers a refresh.
-     */
-    forceRefresh?: boolean;
-};
+/**
+ * Uri of a file inside a workspace or workspace folder itself.
+ */
+export type Resource = Uri | WorkspaceFolder;
+
+/**
+ * Path to environment folder or path to python executable that uniquely identifies an environment. Environments
+ * lacking a python executable are identified by environment folder paths, whereas other envs can be identified
+ * using python executable path.
+ */
+export type UniquePath = string;
 
 /**
  * Tool/plugin where the environment came from. It can be {@link KnownEnvironmentTools} or custom string which
