@@ -67,6 +67,10 @@ interface EnvironmentAPI {
      * or python executable for the environment.
      */
     resolveEnvironment(environment: Environment | UniquePath): Promise<ResolvedEnvironment | undefined>;
+    /**
+     * @deprecated Use {@link fetchActiveEnvironment} instead.
+     */
+    getActiveEnvironmentPath(resource?: Resource): Promise<EnvPathType | undefined>;
 }
 
 /**
@@ -287,3 +291,11 @@ export type StandardVersionInfo = {
     micro: number | undefined;
     release: PythonVersionRelease | undefined;
 };
+
+/**
+ * @deprecated: Will be removed soon.
+ */
+interface EnvPathType {
+    path: string;
+    pathType: 'envFolderPath' | 'interpreterPath';
+}

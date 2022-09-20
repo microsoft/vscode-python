@@ -143,6 +143,14 @@ export function buildProposedApi(
             get onDidChangeEnvironments() {
                 return onEnvironmentsChanged.event;
             },
+            async getActiveEnvironmentPath(resource?: Resource) {
+                resource = resource && 'uri' in resource ? resource.uri : resource;
+                const env = await interpreterService.getActiveInterpreter(resource);
+                if (!env) {
+                    return undefined;
+                }
+                return getEnvPath(env.path, env.envPath);
+            },
         },
     };
     return proposed;
