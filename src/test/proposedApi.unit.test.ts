@@ -380,16 +380,18 @@ suite('Proposed Extension API', () => {
         discoverAPI.verifyAll();
     });
 
-    // test('Verify refreshState are converted and passed along appropriately', () => {
-    //     const expected = Promise.resolve();
-    //     discoverAPI
-    //         .setup((d) => d.getRefreshPromise(typemoq.It.isValue({ stage: ProgressReportStage.allPathsDiscovered })))
-    //         .returns(() => expected);
-    //     const actual = proposed.environment.getRefreshPromise({ stage: ProgressReportStage.allPathsDiscovered });
-
-    //     // We are comparing instances here, they should be the same instance.
-    //     // So '==' is ok here.
-    //     // eslint-disable-next-line eqeqeq
-    //     expect(actual == expected).is.equal(true);
-    // });
+    test('Verify refreshStates are passed along appropriately', () => {
+        discoverAPI.setup((d) => d.refreshState).returns(() => ProgressReportStage.discoveryStarted);
+        assert.deepEqual(proposed.environment.refreshState, {
+            stateValue: RefreshStateValue.started,
+        });
+        discoverAPI.setup((d) => d.refreshState).returns(() => ProgressReportStage.allPathsDiscovered);
+        assert.deepEqual(proposed.environment.refreshState, {
+            stateValue: RefreshStateValue.started,
+        });
+        discoverAPI.setup((d) => d.refreshState).returns(() => ProgressReportStage.discoveryFinished);
+        assert.deepEqual(proposed.environment.refreshState, {
+            stateValue: RefreshStateValue.finished,
+        });
+    });
 });
