@@ -4,12 +4,14 @@
 import * as typemoq from 'typemoq';
 import { assert, expect } from 'chai';
 import { Uri, Event, EventEmitter, ConfigurationTarget, WorkspaceFolder } from 'vscode';
+import { cloneDeep } from 'lodash';
 import { IDisposableRegistry, IInterpreterPathService } from '../client/common/types';
 import { IInterpreterService } from '../client/interpreter/contracts';
 import { IServiceContainer } from '../client/ioc/types';
 import {
     buildProposedApi,
     convertCompleteEnvInfo,
+    convertEnvInfo,
     EnvironmentReference,
     reportActiveInterpreterChanged,
 } from '../client/proposedApi';
@@ -26,9 +28,11 @@ import {
     RefreshState,
     RefreshStateValue,
     ActiveEnvironmentChangeEvent,
+    EnvironmentsChangedEvent,
 } from '../client/proposedApiTypes';
 import { PythonEnvKind, PythonEnvSource } from '../client/pythonEnvironments/base/info';
 import { Architecture } from '../client/common/utils/platform';
+import { PythonEnvCollectionChangedEvent } from '../client/pythonEnvironments/base/watcher';
 
 suite('Proposed Extension API', () => {
     let serviceContainer: typemoq.IMock<IServiceContainer>;
@@ -37,6 +41,7 @@ suite('Proposed Extension API', () => {
     let interpreterService: typemoq.IMock<IInterpreterService>;
     let onDidExecutionEvent: Event<Uri | undefined>;
     let onDidChangeRefreshState: EventEmitter<ProgressNotificationEvent>;
+    let onDidChangeEnvironments: EventEmitter<PythonEnvCollectionChangedEvent>;
 
     let proposed: ProposedExtensionAPI;
 
@@ -47,6 +52,7 @@ suite('Proposed Extension API', () => {
         interpreterService = typemoq.Mock.ofType<IInterpreterService>();
         onDidExecutionEvent = typemoq.Mock.ofType<Event<Uri | undefined>>().object;
         onDidChangeRefreshState = new EventEmitter();
+        onDidChangeEnvironments = new EventEmitter();
         interpreterService.setup((i) => i.onDidChangeInterpreterConfiguration).returns(() => onDidExecutionEvent);
 
         serviceContainer.setup((s) => s.get(IInterpreterPathService)).returns(() => interpreterPathService.object);
@@ -54,11 +60,12 @@ suite('Proposed Extension API', () => {
         serviceContainer.setup((s) => s.get(IDisposableRegistry)).returns(() => []);
 
         discoverAPI.setup((d) => d.onProgress).returns(() => onDidChangeRefreshState.event);
+        discoverAPI.setup((d) => d.onChanged).returns(() => onDidChangeEnvironments.event);
 
         proposed = buildProposedApi(discoverAPI.object, serviceContainer.object);
     });
 
-    test('Provides a event for tracking refresh progress', async () => {
+    test('Provides an event for tracking refresh progress', async () => {
         const events: RefreshState[] = [];
         proposed.environment.onDidChangeRefreshState((e) => {
             events.push(e);
@@ -199,8 +206,8 @@ suite('Proposed Extension API', () => {
                 },
                 version: {
                     major: 3,
-                    minor: 10,
-                    micro: 0,
+                    minor: -1,
+                    micro: -1,
                 },
                 kind: PythonEnvKind.Venv,
                 arch: Architecture.x64,
@@ -217,8 +224,98 @@ suite('Proposed Extension API', () => {
         const actualEnvs = actual?.map((a) => (a as EnvironmentReference).internal);
         assert.deepEqual(
             actualEnvs?.sort((a, b) => a.pathID.localeCompare(b.pathID)),
-            envs.map((e) => convertCompleteEnvInfo(e)).sort((a, b) => a.pathID.localeCompare(b.pathID)),
+            envs.map((e) => convertEnvInfo(e)).sort((a, b) => a.pathID.localeCompare(b.pathID)),
         );
+    });
+
+    test('Provide an event to track when list of environments change', async () => {
+        let events: EnvironmentsChangedEvent[] = [];
+        let eventValues: EnvironmentsChangedEvent[] = [];
+        let expectedEvents: EnvironmentsChangedEvent[] = [];
+        proposed.environment.onDidChangeEnvironments((e) => {
+            events.push(e);
+        });
+        const envs = [
+            buildEnvInfo({
+                executable: 'pythonPath',
+                kind: PythonEnvKind.System,
+                sysPrefix: 'prefix/path',
+                searchLocation: Uri.file('path/to/project'),
+            }),
+            {
+                executable: {
+                    filename: 'this/is/a/test/python/path1',
+                    ctime: 1,
+                    mtime: 2,
+                    sysPrefix: 'prefix/path',
+                },
+                version: {
+                    major: 3,
+                    minor: 9,
+                    micro: 0,
+                },
+                kind: PythonEnvKind.System,
+                arch: Architecture.x64,
+                name: '',
+                location: '',
+                source: [PythonEnvSource.PathEnvVar],
+                distro: {
+                    org: '',
+                },
+            },
+            {
+                executable: {
+                    filename: 'this/is/a/test/python/path2',
+                    ctime: 1,
+                    mtime: 2,
+                    sysPrefix: 'prefix/path',
+                },
+                version: {
+                    major: 3,
+                    minor: 10,
+                    micro: 0,
+                },
+                kind: PythonEnvKind.Venv,
+                arch: Architecture.x64,
+                name: '',
+                location: '',
+                source: [PythonEnvSource.PathEnvVar],
+                distro: {
+                    org: '',
+                },
+            },
+        ];
+
+        // Now fire and verify events. Note the event value holds the reference to an environment, so may itself
+        // change when the environment is altered. So it's important to verify them as soon as they're received.
+
+        // Add events
+        onDidChangeEnvironments.fire({ old: undefined, new: envs[0] });
+        expectedEvents.push({ env: convertEnvInfo(envs[0]), type: 'add' });
+        onDidChangeEnvironments.fire({ old: undefined, new: envs[1] });
+        expectedEvents.push({ env: convertEnvInfo(envs[1]), type: 'add' });
+        onDidChangeEnvironments.fire({ old: undefined, new: envs[2] });
+        expectedEvents.push({ env: convertEnvInfo(envs[2]), type: 'add' });
+        eventValues = events.map((e) => ({ env: (e.env as EnvironmentReference).internal, type: e.type }));
+        assert.deepEqual(eventValues, expectedEvents);
+
+        // Update events
+        events = [];
+        expectedEvents = [];
+        const updatedEnv = cloneDeep(envs[0]);
+        updatedEnv.arch = Architecture.x86;
+        onDidChangeEnvironments.fire({ old: envs[0], new: updatedEnv });
+        expectedEvents.push({ env: convertEnvInfo(updatedEnv), type: 'update' });
+        eventValues = events.map((e) => ({ env: (e.env as EnvironmentReference).internal, type: e.type }));
+        assert.deepEqual(eventValues, expectedEvents);
+
+        // Remove events
+        events = [];
+        expectedEvents = [];
+        onDidChangeEnvironments.fire({ old: envs[2], new: undefined });
+        expectedEvents.push({ env: convertEnvInfo(envs[2]), type: 'remove' });
+        eventValues = events.map((e) => ({ env: (e.env as EnvironmentReference).internal, type: e.type }));
+        assert.deepEqual(eventValues, expectedEvents);
     });
 
     test('updateActiveEnvironment: no resource', async () => {
@@ -283,7 +380,7 @@ suite('Proposed Extension API', () => {
         discoverAPI.verifyAll();
     });
 
-    // test('getRefreshPromise: common scenario', () => {
+    // test('Verify refreshState are converted and passed along appropriately', () => {
     //     const expected = Promise.resolve();
     //     discoverAPI
     //         .setup((d) => d.getRefreshPromise(typemoq.It.isValue({ stage: ProgressReportStage.allPathsDiscovered })))

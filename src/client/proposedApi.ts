@@ -226,7 +226,7 @@ function convertKind(kind: PythonEnvKind): EnvironmentTools | undefined {
     }
 }
 
-function convertEnvInfoAndGetReference(env: PythonEnvInfo): Environment {
+export function convertEnvInfo(env: PythonEnvInfo): Environment {
     const convertedEnv = convertCompleteEnvInfo(env) as Environment;
     if (convertedEnv.executable.sysPrefix === '') {
         convertedEnv.executable.sysPrefix = undefined;
@@ -246,7 +246,11 @@ function convertEnvInfoAndGetReference(env: PythonEnvInfo): Environment {
     if (convertedEnv.version.minor === -1) {
         convertedEnv.version.minor = undefined;
     }
-    return getEnvReference(convertedEnv);
+    return convertedEnv;
+}
+
+function convertEnvInfoAndGetReference(env: PythonEnvInfo): Environment {
+    return getEnvReference(convertEnvInfo(env));
 }
 
 function convertArch(arch: Architecture) {
