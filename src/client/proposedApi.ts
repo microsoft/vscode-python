@@ -139,9 +139,9 @@ export function buildProposedApi(
                         return { stateValue: RefreshStateValue.started };
                 }
             },
-            async refreshEnvironments(options: RefreshOptions) {
+            async refreshEnvironments(options?: RefreshOptions) {
                 await discoveryApi.triggerRefresh(undefined, {
-                    ifNotTriggerredAlready: !options.forceRefresh,
+                    ifNotTriggerredAlready: !options?.forceRefresh,
                 });
             },
             get onDidChangeEnvironments() {

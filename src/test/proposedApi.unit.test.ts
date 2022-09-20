@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import * as typemoq from 'typemoq';
-import { assert } from 'chai';
-import { Uri, Event, EventEmitter } from 'vscode';
+import { assert, expect } from 'chai';
+import { Uri, Event, EventEmitter, ConfigurationTarget, WorkspaceFolder } from 'vscode';
 import { IDisposableRegistry, IInterpreterPathService } from '../client/common/types';
 import { IInterpreterService } from '../client/interpreter/contracts';
 import { IServiceContainer } from '../client/ioc/types';
@@ -27,6 +27,8 @@ import {
     RefreshStateValue,
     ActiveEnvironmentChangeEvent,
 } from '../client/proposedApiTypes';
+import { PythonEnvKind, PythonEnvSource } from '../client/pythonEnvironments/base/info';
+import { Architecture } from '../client/common/utils/platform';
 
 suite('Proposed Extension API', () => {
     let serviceContainer: typemoq.IMock<IServiceContainer>;
@@ -93,315 +95,193 @@ suite('Proposed Extension API', () => {
         assert.deepEqual((actual as EnvironmentReference).internal, convertCompleteEnvInfo(env));
     });
 
-    // test('getActiveInterpreterPath: With resource', async () => {
-    //     const resource = Uri.file(__filename);
-    //     const pythonPath = 'this/is/a/test/path';
-    //     interpreterService
-    //         .setup((c) => c.getActiveInterpreter(resource))
-    //         .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
-    //     const actual = await proposed.environment.getActiveEnvironmentPath(resource);
-    //     assert.deepEqual(actual, { path: pythonPath, pathType: 'interpreterPath' });
-    // });
+    test('getActiveInterpreterPath: With resource', async () => {
+        const pythonPath = 'this/is/a/test/path';
+        const resource = Uri.file(__filename);
+        interpreterService
+            .setup((c) => c.getActiveInterpreter(resource))
+            .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+        const env = buildEnvInfo({ executable: pythonPath });
+        discoverAPI.setup((d) => d.resolveEnv(pythonPath)).returns(() => Promise.resolve(env));
+        const actual = await proposed.environment.fetchActiveEnvironment(resource);
+        assert.deepEqual((actual as EnvironmentReference).internal, convertCompleteEnvInfo(env));
+    });
 
-    // test('getInterpreterDetails: no discovered python', async () => {
-    //     discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
-    //     discoverAPI.setup((p) => p.resolveEnv(typemoq.It.isAny())).returns(() => Promise.resolve(undefined));
+    test('resolveEnvironment: invalid environment (when passed as string)', async () => {
+        const pythonPath = 'this/is/a/test/path';
+        discoverAPI.setup((p) => p.resolveEnv(pythonPath)).returns(() => Promise.resolve(undefined));
 
-    //     const pythonPath = 'this/is/a/test/path (without cache)';
-    //     const actual = await proposed.environment.getEnvironmentDetails(pythonPath);
-    //     expect(actual).to.be.equal(undefined);
-    // });
+        const actual = await proposed.environment.resolveEnvironment(pythonPath);
+        expect(actual).to.be.equal(undefined);
+    });
 
-    // test('getInterpreterDetails: no discovered python (with cache)', async () => {
-    //     discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
-    //     discoverAPI.setup((p) => p.resolveEnv(typemoq.It.isAny())).returns(() => Promise.resolve(undefined));
+    test('resolveEnvironment: valid environment (when passed as string)', async () => {
+        const pythonPath = 'this/is/a/test/path';
+        const env = buildEnvInfo({
+            executable: pythonPath,
+            version: {
+                major: 3,
+                minor: 9,
+                micro: 0,
+            },
+            kind: PythonEnvKind.System,
+            arch: Architecture.x64,
+            sysPrefix: 'prefix/path',
+            searchLocation: Uri.file('path/to/project'),
+        });
+        discoverAPI.setup((p) => p.resolveEnv(pythonPath)).returns(() => Promise.resolve(env));
 
-    //     const pythonPath = 'this/is/a/test/path';
-    //     const actual = await proposed.environment.getEnvironmentDetails(pythonPath, { useCache: true });
-    //     expect(actual).to.be.equal(undefined);
-    // });
+        const actual = await proposed.environment.resolveEnvironment(pythonPath);
+        assert.deepEqual((actual as EnvironmentReference).internal, convertCompleteEnvInfo(env));
+    });
 
-    // test('getInterpreterDetails: without cache', async () => {
-    //     const pythonPath = 'this/is/a/test/path';
+    test('resolveEnvironment: valid environment (when passed as environment)', async () => {
+        const pythonPath = 'this/is/a/test/path';
+        const env = buildEnvInfo({
+            executable: pythonPath,
+            version: {
+                major: 3,
+                minor: 9,
+                micro: 0,
+            },
+            kind: PythonEnvKind.System,
+            arch: Architecture.x64,
+            sysPrefix: 'prefix/path',
+            searchLocation: Uri.file('path/to/project'),
+        });
+        const partialEnv = buildEnvInfo({
+            executable: pythonPath,
+            kind: PythonEnvKind.System,
+            sysPrefix: 'prefix/path',
+            searchLocation: Uri.file('path/to/project'),
+        });
+        discoverAPI.setup((p) => p.resolveEnv(pythonPath)).returns(() => Promise.resolve(env));
 
-    //     const expected: EnvironmentDetails = {
-    //         interpreterPath: pythonPath,
-    //         version: ['3', '9', '0'],
-    //         environmentType: [PythonEnvKind.System],
-    //         metadata: {
-    //             sysPrefix: 'prefix/path',
-    //             bitness: Architecture.x64,
-    //             project: Uri.file('path/to/project'),
-    //         },
-    //         envFolderPath: undefined,
-    //     };
+        const actual = await proposed.environment.resolveEnvironment(convertCompleteEnvInfo(partialEnv));
+        assert.deepEqual((actual as EnvironmentReference).internal, convertCompleteEnvInfo(env));
+    });
 
-    //     discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
-    //     discoverAPI
-    //         .setup((p) => p.resolveEnv(pythonPath))
-    //         .returns(() =>
-    //             Promise.resolve(
-    //                 buildEnvInfo({
-    //                     executable: pythonPath,
-    //                     version: {
-    //                         major: 3,
-    //                         minor: 9,
-    //                         micro: 0,
-    //                     },
-    //                     kind: PythonEnvKind.System,
-    //                     arch: Architecture.x64,
-    //                     sysPrefix: 'prefix/path',
-    //                     searchLocation: Uri.file('path/to/project'),
-    //                 }),
-    //             ),
-    //         );
+    test('environments: no pythons found', () => {
+        discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
+        const actual = proposed.environment.environments;
+        expect(actual).to.be.deep.equal([]);
+    });
 
-    //     const actual = await proposed.environment.getEnvironmentDetails(pythonPath, { useCache: false });
-    //     expect(actual).to.be.deep.equal(expected);
-    // });
+    test('environments: python found', async () => {
+        const envs = [
+            {
+                executable: {
+                    filename: 'this/is/a/test/python/path1',
+                    ctime: 1,
+                    mtime: 2,
+                    sysPrefix: 'prefix/path',
+                },
+                version: {
+                    major: 3,
+                    minor: 9,
+                    micro: 0,
+                },
+                kind: PythonEnvKind.System,
+                arch: Architecture.x64,
+                name: '',
+                location: '',
+                source: [PythonEnvSource.PathEnvVar],
+                distro: {
+                    org: '',
+                },
+            },
+            {
+                executable: {
+                    filename: 'this/is/a/test/python/path2',
+                    ctime: 1,
+                    mtime: 2,
+                    sysPrefix: 'prefix/path',
+                },
+                version: {
+                    major: 3,
+                    minor: 10,
+                    micro: 0,
+                },
+                kind: PythonEnvKind.Venv,
+                arch: Architecture.x64,
+                name: '',
+                location: '',
+                source: [PythonEnvSource.PathEnvVar],
+                distro: {
+                    org: '',
+                },
+            },
+        ];
+        discoverAPI.setup((d) => d.getEnvs()).returns(() => envs);
+        const actual = proposed.environment.environments;
+        const actualEnvs = actual?.map((a) => (a as EnvironmentReference).internal);
+        assert.deepEqual(
+            actualEnvs?.sort((a, b) => a.pathID.localeCompare(b.pathID)),
+            envs.map((e) => convertCompleteEnvInfo(e)).sort((a, b) => a.pathID.localeCompare(b.pathID)),
+        );
+    });
 
-    // test('getInterpreterDetails: from cache', async () => {
-    //     const pythonPath = 'this/is/a/test/path';
+    test('updateActiveEnvironment: no resource', async () => {
+        interpreterPathService
+            .setup((i) => i.update(undefined, ConfigurationTarget.WorkspaceFolder, 'this/is/a/test/python/path'))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
 
-    //     const expected: EnvironmentDetails = {
-    //         interpreterPath: pythonPath,
-    //         version: ['3', '9', '0'],
-    //         environmentType: [PythonEnvKind.System],
-    //         metadata: {
-    //             sysPrefix: 'prefix/path',
-    //             bitness: Architecture.x64,
-    //             project: undefined,
-    //         },
-    //         envFolderPath: undefined,
-    //     };
+        await proposed.environment.updateActiveEnvironment('this/is/a/test/python/path');
 
-    //     discoverAPI
-    //         .setup((d) => d.getEnvs())
-    //         .returns(() => [
-    //             {
-    //                 executable: {
-    //                     filename: pythonPath,
-    //                     ctime: 1,
-    //                     mtime: 2,
-    //                     sysPrefix: 'prefix/path',
-    //                 },
-    //                 version: {
-    //                     major: 3,
-    //                     minor: 9,
-    //                     micro: 0,
-    //                 },
-    //                 kind: PythonEnvKind.System,
-    //                 arch: Architecture.x64,
-    //                 name: '',
-    //                 location: '',
-    //                 source: [PythonEnvSource.PathEnvVar],
-    //                 distro: {
-    //                     org: '',
-    //                 },
-    //             },
-    //         ]);
-    //     discoverAPI
-    //         .setup((p) => p.resolveEnv(pythonPath))
-    //         .returns(() =>
-    //             Promise.resolve(
-    //                 buildEnvInfo({
-    //                     executable: pythonPath,
-    //                     version: {
-    //                         major: 3,
-    //                         minor: 9,
-    //                         micro: 0,
-    //                     },
-    //                     kind: PythonEnvKind.System,
-    //                     arch: Architecture.x64,
-    //                     sysPrefix: 'prefix/path',
-    //                 }),
-    //             ),
-    //         );
+        interpreterPathService.verifyAll();
+    });
 
-    //     const actual = await proposed.environment.getEnvironmentDetails(pythonPath, { useCache: true });
-    //     expect(actual).to.be.deep.equal(expected);
-    // });
+    test('setActiveInterpreter: with uri', async () => {
+        const uri = Uri.parse('a');
+        interpreterPathService
+            .setup((i) => i.update(uri, ConfigurationTarget.WorkspaceFolder, 'this/is/a/test/python/path'))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
 
-    // test('getInterpreterDetails: cache miss', async () => {
-    //     const pythonPath = 'this/is/a/test/path';
+        await proposed.environment.updateActiveEnvironment('this/is/a/test/python/path', uri);
 
-    //     const expected: EnvironmentDetails = {
-    //         interpreterPath: pythonPath,
-    //         version: ['3', '9', '0'],
-    //         environmentType: [PythonEnvKind.System],
-    //         metadata: {
-    //             sysPrefix: 'prefix/path',
-    //             bitness: Architecture.x64,
-    //             project: undefined,
-    //         },
-    //         envFolderPath: undefined,
-    //     };
+        interpreterPathService.verifyAll();
+    });
 
-    //     // Force this API to return empty to cause a cache miss.
-    //     discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
-    //     discoverAPI
-    //         .setup((p) => p.resolveEnv(pythonPath))
-    //         .returns(() =>
-    //             Promise.resolve(
-    //                 buildEnvInfo({
-    //                     executable: pythonPath,
-    //                     version: {
-    //                         major: 3,
-    //                         minor: 9,
-    //                         micro: 0,
-    //                     },
-    //                     kind: PythonEnvKind.System,
-    //                     arch: Architecture.x64,
-    //                     sysPrefix: 'prefix/path',
-    //                 }),
-    //             ),
-    //         );
+    test('setActiveInterpreter: with workspace folder', async () => {
+        const uri = Uri.parse('a');
+        interpreterPathService
+            .setup((i) => i.update(uri, ConfigurationTarget.WorkspaceFolder, 'this/is/a/test/python/path'))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+        const workspace: WorkspaceFolder = {
+            uri,
+            name: '',
+            index: 0,
+        };
 
-    //     const actual = await proposed.environment.getEnvironmentDetails(pythonPath, { useCache: true });
-    //     expect(actual).to.be.deep.equal(expected);
-    // });
+        await proposed.environment.updateActiveEnvironment('this/is/a/test/python/path', workspace);
 
-    // test('getInterpreterPaths: no pythons found', async () => {
-    //     discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
-    //     const actual = await proposed.environment.getEnvironmentPaths();
-    //     expect(actual).to.be.deep.equal([]);
-    // });
+        interpreterPathService.verifyAll();
+    });
 
-    // test('getInterpreterPaths: python found', async () => {
-    //     discoverAPI
-    //         .setup((d) => d.getEnvs())
-    //         .returns(() => [
-    //             {
-    //                 executable: {
-    //                     filename: 'this/is/a/test/python/path1',
-    //                     ctime: 1,
-    //                     mtime: 2,
-    //                     sysPrefix: 'prefix/path',
-    //                 },
-    //                 version: {
-    //                     major: 3,
-    //                     minor: 9,
-    //                     micro: 0,
-    //                 },
-    //                 kind: PythonEnvKind.System,
-    //                 arch: Architecture.x64,
-    //                 name: '',
-    //                 location: '',
-    //                 source: [PythonEnvSource.PathEnvVar],
-    //                 distro: {
-    //                     org: '',
-    //                 },
-    //             },
-    //             {
-    //                 executable: {
-    //                     filename: 'this/is/a/test/python/path2',
-    //                     ctime: 1,
-    //                     mtime: 2,
-    //                     sysPrefix: 'prefix/path',
-    //                 },
-    //                 version: {
-    //                     major: 3,
-    //                     minor: 10,
-    //                     micro: 0,
-    //                 },
-    //                 kind: PythonEnvKind.Venv,
-    //                 arch: Architecture.x64,
-    //                 name: '',
-    //                 location: '',
-    //                 source: [PythonEnvSource.PathEnvVar],
-    //                 distro: {
-    //                     org: '',
-    //                 },
-    //             },
-    //         ]);
-    //     const actual = await proposed.environment.getEnvironmentPaths();
-    //     expect(actual?.map((a) => a.path)).to.be.deep.equal([
-    //         'this/is/a/test/python/path1',
-    //         'this/is/a/test/python/path2',
-    //     ]);
-    // });
+    test('refreshInterpreters: default', async () => {
+        discoverAPI
+            .setup((d) => d.triggerRefresh(undefined, typemoq.It.isValue({ ifNotTriggerredAlready: true })))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
 
-    // test('setActiveInterpreter: no resource', async () => {
-    //     interpreterPathService
-    //         .setup((i) => i.update(undefined, ConfigurationTarget.WorkspaceFolder, 'this/is/a/test/python/path'))
-    //         .returns(() => Promise.resolve())
-    //         .verifiable(typemoq.Times.once());
+        await proposed.environment.refreshEnvironments();
 
-    //     await proposed.environment.setActiveEnvironment('this/is/a/test/python/path');
+        discoverAPI.verifyAll();
+    });
 
-    //     interpreterPathService.verifyAll();
-    // });
-    // test('setActiveInterpreter: with resource', async () => {
-    //     const resource = Uri.parse('a');
-    //     interpreterPathService
-    //         .setup((i) => i.update(resource, ConfigurationTarget.WorkspaceFolder, 'this/is/a/test/python/path'))
-    //         .returns(() => Promise.resolve())
-    //         .verifiable(typemoq.Times.once());
+    test('refreshInterpreters: when forcing a refresh', async () => {
+        discoverAPI
+            .setup((d) => d.triggerRefresh(undefined, typemoq.It.isValue({ ifNotTriggerredAlready: false })))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
 
-    //     await proposed.environment.setActiveEnvironment('this/is/a/test/python/path', resource);
+        await proposed.environment.refreshEnvironments({ forceRefresh: true });
 
-    //     interpreterPathService.verifyAll();
-    // });
-
-    // test('refreshInterpreters: common scenario', async () => {
-    //     discoverAPI
-    //         .setup((d) => d.triggerRefresh(undefined, undefined))
-    //         .returns(() => Promise.resolve())
-    //         .verifiable(typemoq.Times.once());
-    //     discoverAPI
-    //         .setup((d) => d.getEnvs())
-    //         .returns(() => [
-    //             {
-    //                 executable: {
-    //                     filename: 'this/is/a/test/python/path1',
-    //                     ctime: 1,
-    //                     mtime: 2,
-    //                     sysPrefix: 'prefix/path',
-    //                 },
-    //                 version: {
-    //                     major: 3,
-    //                     minor: 9,
-    //                     micro: 0,
-    //                 },
-    //                 kind: PythonEnvKind.System,
-    //                 arch: Architecture.x64,
-    //                 name: '',
-    //                 location: 'this/is/a/test/python/path1/folder',
-    //                 source: [PythonEnvSource.PathEnvVar],
-    //                 distro: {
-    //                     org: '',
-    //                 },
-    //             },
-    //             {
-    //                 executable: {
-    //                     filename: 'this/is/a/test/python/path2',
-    //                     ctime: 1,
-    //                     mtime: 2,
-    //                     sysPrefix: 'prefix/path',
-    //                 },
-    //                 version: {
-    //                     major: 3,
-    //                     minor: 10,
-    //                     micro: 0,
-    //                 },
-    //                 kind: PythonEnvKind.Venv,
-    //                 arch: Architecture.x64,
-    //                 name: '',
-    //                 location: '',
-    //                 source: [PythonEnvSource.PathEnvVar],
-    //                 distro: {
-    //                     org: '',
-    //                 },
-    //             },
-    //         ]);
-
-    //     const actual = await proposed.environment.refreshEnvironment();
-    //     expect(actual).to.be.deep.equal([
-    //         { path: 'this/is/a/test/python/path1/folder', pathType: 'envFolderPath' },
-    //         { path: 'this/is/a/test/python/path2', pathType: 'interpreterPath' },
-    //     ]);
-    //     discoverAPI.verifyAll();
-    // });
+        discoverAPI.verifyAll();
+    });
 
     // test('getRefreshPromise: common scenario', () => {
     //     const expected = Promise.resolve();
