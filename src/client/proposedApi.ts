@@ -137,7 +137,7 @@ export function buildProposedApi(
             },
             async refreshEnvironments(options: RefreshOptions) {
                 await discoveryApi.triggerRefresh(undefined, {
-                    ifNotTriggerredAlready: options.ifNotRefreshedAlready,
+                    ifNotTriggerredAlready: !options.forceRefresh,
                 });
             },
             get onDidChangeEnvironments() {

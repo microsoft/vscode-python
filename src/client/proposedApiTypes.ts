@@ -50,15 +50,17 @@ interface EnvironmentAPI {
      */
     readonly onDidChangeRefreshState: Event<RefreshState>;
     /**
-     * This API will re-trigger environment discovery. If there is a refresh already going on then it returns the
-     * promise for that refresh.
+     * This API will trigger environment discovery, but only if it has not already happened in this VSCode session.
+     * Useful for making sure env list is up-to-date when the caller needs it for the first time.
      *
-     * Note this can be expensive so it's best to only use it if user manually triggers it. For internal automatic
-     * triggers consider using {@link RefreshOptions.ifNotRefreshedAlready}.
+     * To force trigger a refresh regardless of whether a refresh was already triggered, see option
+     * {@link RefreshOptions.forceRefresh}.
+     *
+     * Note that if there is a refresh already going on then this returns the promise for that refresh.
      * @param options Additional options for refresh.
      * @param token A cancellation token that indicates a refresh is no longer needed.
      */
-    refreshEnvironments(options: RefreshOptions, token?: CancellationToken): Promise<void>;
+    refreshEnvironments(options?: RefreshOptions, token?: CancellationToken): Promise<void>;
     /**
      * Returns details for the given environment, or `undefined` if the env is invalid.
      * @param environment : Environment whose details you need. Can also pass the full path to environment folder
@@ -228,12 +230,10 @@ export type ActiveEnvironmentChangeEvent = {
 
 export type RefreshOptions = {
     /**
-     * Only trigger a refresh if not triggered already for this session. Useful for making sure env list is
-     * up-to-date when extension starts up.
-     *
-     * After that users can use extension specific UI to refresh environments when needed.
+     * Force trigger a refresh regardless of whether a refresh was already triggered. Note this can be expensive so
+     * it's best to only use it if user manually triggers a refresh.
      */
-    ifNotRefreshedAlready: boolean | undefined;
+    forceRefresh?: boolean;
 };
 
 /**
