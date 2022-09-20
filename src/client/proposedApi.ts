@@ -101,51 +101,47 @@ export function buildProposedApi(
     );
     const proposed: ProposedExtensionAPI = {
         environment: {
-            activeEnvironment: {
-                async fetch(resource?: Resource) {
-                    resource = resource && 'uri' in resource ? resource.uri : resource;
-                    const env = await interpreterService.getActiveInterpreter(resource);
-                    if (!env) {
-                        return undefined;
-                    }
-                    return resolveEnvironment(getEnvPath(env.path, env.envPath).path, discoveryApi);
-                },
-                update(env: string | Environment, resource?: Resource): Promise<void> {
-                    const path = typeof env !== 'string' ? env.pathID : env;
-                    resource = resource && 'uri' in resource ? resource.uri : resource;
-                    return interpreterPathService.update(resource, ConfigurationTarget.WorkspaceFolder, path);
-                },
-                onDidChange: onDidActiveInterpreterChangedEvent.event,
+            async fetchActiveEnvironment(resource?: Resource) {
+                resource = resource && 'uri' in resource ? resource.uri : resource;
+                const env = await interpreterService.getActiveInterpreter(resource);
+                if (!env) {
+                    return undefined;
+                }
+                return resolveEnvironment(getEnvPath(env.path, env.envPath).path, discoveryApi);
             },
+            updateActiveEnvironment(env: string | Environment, resource?: Resource): Promise<void> {
+                const path = typeof env !== 'string' ? env.pathID : env;
+                resource = resource && 'uri' in resource ? resource.uri : resource;
+                return interpreterPathService.update(resource, ConfigurationTarget.WorkspaceFolder, path);
+            },
+            onDidChangeActiveEnvironment: onDidActiveInterpreterChangedEvent.event,
             resolveEnvironment: (env: string | Environment) => {
                 const path = typeof env !== 'string' ? env.pathID : env;
                 return resolveEnvironment(path, discoveryApi);
             },
-            locator: {
-                get environments(): Environment[] {
-                    return discoveryApi.getEnvs().map((e) => convertEnvInfoAndGetReference(e));
-                },
-                get onDidChangeRefreshState() {
-                    return onProgress.event;
-                },
-                get refreshState(): RefreshState {
-                    switch (discoveryApi.refreshState) {
-                        case ProgressReportStage.discoveryStarted:
-                            return { stateValue: RefreshStateValue.started };
-                        case ProgressReportStage.discoveryFinished:
-                            return { stateValue: RefreshStateValue.finished };
-                        default:
-                            return { stateValue: RefreshStateValue.started };
-                    }
-                },
-                async refreshEnvironments(options: RefreshOptions) {
-                    await discoveryApi.triggerRefresh(undefined, {
-                        ifNotTriggerredAlready: options.ifNotRefreshedAlready,
-                    });
-                },
-                get onDidChangeEnvironments() {
-                    return onEnvironmentsChanged.event;
-                },
+            get environments(): Environment[] {
+                return discoveryApi.getEnvs().map((e) => convertEnvInfoAndGetReference(e));
+            },
+            get onDidChangeRefreshState() {
+                return onProgress.event;
+            },
+            get refreshState(): RefreshState {
+                switch (discoveryApi.refreshState) {
+                    case ProgressReportStage.discoveryStarted:
+                        return { stateValue: RefreshStateValue.started };
+                    case ProgressReportStage.discoveryFinished:
+                        return { stateValue: RefreshStateValue.finished };
+                    default:
+                        return { stateValue: RefreshStateValue.started };
+                }
+            },
+            async refreshEnvironments(options: RefreshOptions) {
+                await discoveryApi.triggerRefresh(undefined, {
+                    ifNotTriggerredAlready: options.ifNotRefreshedAlready,
+                });
+            },
+            get onDidChangeEnvironments() {
+                return onEnvironmentsChanged.event;
             },
         },
     };

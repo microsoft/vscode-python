@@ -11,29 +11,12 @@ export interface ProposedExtensionAPI {
 
 interface EnvironmentAPI {
     /**
-     * Carries the API to track the selected environment by the user for a workspace.
-     */
-    activeEnvironment: ActiveEnvironmentAPI;
-    /**
-     * Carries the API necessary for locating environments.
-     */
-    locator: EnvironmentLocatorAPI;
-    /**
-     * Returns details for the given environment, or `undefined` if the env is invalid.
-     * @param environment : Environment whose details you need. Can also pass the full path to environment folder
-     * or python executable for the environment.
-     */
-    resolveEnvironment(environment: Environment | UniquePath): Promise<ResolvedEnvironment | undefined>;
-}
-
-interface ActiveEnvironmentAPI {
-    /**
      * Returns the environment selected. Uses the cache by default, otherwise fetches full information about the
      * environment.
      * @param resource : Uri of a file or workspace folder. This is used to determine the env in a multi-root
      * scenario. If `undefined`, then the API returns what ever is set for the workspace.
      */
-    fetch(resource?: Resource): Promise<ResolvedEnvironment | undefined>;
+    fetchActiveEnvironment(resource?: Resource): Promise<ResolvedEnvironment | undefined>;
     /**
      * Sets the active environment path for the python extension for the resource. Configuration target will always
      * be the workspace folder.
@@ -41,14 +24,11 @@ interface ActiveEnvironmentAPI {
      * the environment itself.
      * @param resource : [optional] File or workspace to scope to a particular workspace folder.
      */
-    update(environment: Environment | UniquePath, resource?: Resource): Promise<void>;
+    updateActiveEnvironment(environment: Environment | UniquePath, resource?: Resource): Promise<void>;
     /**
      * This event is triggered when the active environment changes.
      */
-    onDidChange: Event<ActiveEnvironmentChangeEvent>;
-}
-
-interface EnvironmentLocatorAPI {
+    onDidChangeActiveEnvironment: Event<ActiveEnvironmentChangeEvent>;
     /**
      * Carries environments found by the extension at the time of fetching the property. Note a refresh might be
      * going on so this may not be the complete list. To wait on complete list use {@link refreshState()} and
@@ -79,6 +59,12 @@ interface EnvironmentLocatorAPI {
      * @param token A cancellation token that indicates a refresh is no longer needed.
      */
     refreshEnvironments(options: RefreshOptions, token?: CancellationToken): Promise<void>;
+    /**
+     * Returns details for the given environment, or `undefined` if the env is invalid.
+     * @param environment : Environment whose details you need. Can also pass the full path to environment folder
+     * or python executable for the environment.
+     */
+    resolveEnvironment(environment: Environment | UniquePath): Promise<ResolvedEnvironment | undefined>;
 }
 
 /**

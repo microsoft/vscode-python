@@ -58,7 +58,7 @@ suite('Proposed Extension API', () => {
 
     test('Provides a event for tracking refresh progress', async () => {
         const events: RefreshState[] = [];
-        proposed.environment.locator.onDidChangeRefreshState((e) => {
+        proposed.environment.onDidChangeRefreshState((e) => {
             events.push(e);
         });
         onDidChangeRefreshState.fire({ stage: ProgressReportStage.discoveryStarted });
@@ -74,7 +74,7 @@ suite('Proposed Extension API', () => {
 
     test('Provide an event to track when active environment details change', async () => {
         const events: ActiveEnvironmentChangeEvent[] = [];
-        proposed.environment.activeEnvironment.onDidChange((e) => {
+        proposed.environment.onDidChangeActiveEnvironment((e) => {
             events.push(e);
         });
         reportActiveInterpreterChanged({ pathID: 'path/to/environment', resource: undefined });
@@ -89,7 +89,7 @@ suite('Proposed Extension API', () => {
             .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
         const env = buildEnvInfo({ executable: pythonPath });
         discoverAPI.setup((d) => d.resolveEnv(pythonPath)).returns(() => Promise.resolve(env));
-        const actual = await proposed.environment.activeEnvironment.fetch();
+        const actual = await proposed.environment.fetchActiveEnvironment();
         assert.deepEqual((actual as EnvironmentReference).internal, convertCompleteEnvInfo(env));
     });
 
