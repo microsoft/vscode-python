@@ -15,9 +15,13 @@ import { pickWorkspaceFolder } from '../common/workspaceSelection';
 import { IInterpreterQuickPick } from '../../../interpreter/configuration/types';
 import { EnvironmentType, PythonEnvironment } from '../../info';
 
-const VENV_CREATED_MARKER = 'CREATED_VENV:';
-const INSTALLING_REQUIREMENTS = 'VENV_INSTALLING_REQUIREMENTS:';
-const INSTALLING_PYPROJECT = 'VENV_INSTALLING_PYPROJECT:';
+export const VENV_CREATED_MARKER = 'CREATED_VENV:';
+export const INSTALLING_REQUIREMENTS = 'VENV_INSTALLING_REQUIREMENTS:';
+export const INSTALLING_PYPROJECT = 'VENV_INSTALLING_PYPROJECT:';
+export const PIP_NOT_INSTALLED_MARKER = 'CREATE_VENV.PIP_NOT_FOUND';
+export const VENV_NOT_INSTALLED_MARKER = 'CREATE_VENV.VENV_NOT_FOUND';
+export const INSTALL_REQUIREMENTS_FAILED_MARKER = 'CREATE_VENV.PIP_FAILED_INSTALL_REQUIREMENTS';
+export const INSTALL_PYPROJECT_FAILED_MARKER = 'CREATE_VENV.PIP_FAILED_INSTALL_PYPROJECT';
 
 function generateCommandArgs(options?: CreateEnvironmentOptions): string[] {
     let addGitIgnore = true;
@@ -75,7 +79,6 @@ async function createVenv(
                     venvPath = envPath.substring(VENV_CREATED_MARKER.length);
                 } catch (ex) {
                     traceError('Parsing out environment path failed.');
-                } finally {
                     venvPath = undefined;
                 }
             } else if (output.includes(INSTALLING_REQUIREMENTS) || output.includes(INSTALLING_PYPROJECT)) {
