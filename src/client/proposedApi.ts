@@ -34,7 +34,7 @@ type ActiveEnvironmentChangeEvent = {
 
 const onDidActiveInterpreterChangedEvent = new EventEmitter<ActiveEnvironmentIdChangeEvent>();
 export function reportActiveInterpreterChanged(e: ActiveEnvironmentChangeEvent): void {
-    onDidActiveInterpreterChangedEvent.fire({ id: normCasePath(e.path), path: e.path, resource: e.resource });
+    onDidActiveInterpreterChangedEvent.fire({ id: getEnvID(e.path), path: e.path, resource: e.resource });
 }
 const onEnvironmentsChanged = new EventEmitter<EnvironmentsChangedEvent>();
 const environmentsReference = new Map<string, EnvironmentReference>();
@@ -109,7 +109,7 @@ export function buildProposedApi(
             getActiveEnvironmentId(resource?: Resource) {
                 resource = resource && 'uri' in resource ? resource.uri : resource;
                 const path = configService.getSettings(resource).pythonPath;
-                const id = path === 'python' ? 'DEFAULT_PYTHON' : normCasePath(path);
+                const id = path === 'python' ? 'DEFAULT_PYTHON' : getEnvID(path);
                 return { id, path };
             },
             updateActiveEnvironmentId(env: Environment | EnvironmentId | string, resource?: Resource): Promise<void> {
