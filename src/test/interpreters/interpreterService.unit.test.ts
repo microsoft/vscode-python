@@ -260,7 +260,6 @@ suite('Interpreters service', () => {
         await service._onConfigChanged(resource);
         interpreterDisplay.verifyAll();
         sinon.assert.calledOnceWithExactly(reportActiveInterpreterChangedStub, {
-            id: 'current path',
             path: 'current path',
             resource: workspaceFolder,
         });
@@ -281,7 +280,6 @@ suite('Interpreters service', () => {
         await service._onConfigChanged(resource);
         interpreterDisplay.verifyAll();
         sinon.assert.calledOnceWithExactly(reportActiveInterpreterChangedStub, {
-            id: 'current path',
             path: 'current path',
             resource: workspaceFolder,
         });

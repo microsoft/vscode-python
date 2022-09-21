@@ -15,7 +15,7 @@ interface EnvironmentAPI {
      * @param resource : Uri of a file or workspace folder. This is used to determine the env in a multi-root
      * scenario. If `undefined`, then the API returns what ever is set for the workspace.
      */
-    getActiveEnvironmentSetting(resource?: Resource): ActiveEnvironmentSetting;
+    getActiveEnvironmentId(resource?: Resource): EnvironmentId;
     /**
      * Sets the active environment path for the python extension for the resource. Configuration target will always
      * be the workspace folder.
@@ -23,31 +23,21 @@ interface EnvironmentAPI {
      * the environment itself.
      * @param resource : [optional] File or workspace to scope to a particular workspace folder.
      */
-    updateActiveEnvironmentSetting(environment: Environment | string, resource?: Resource): Promise<void>;
+    updateActiveEnvironmentId(environment: Environment | EnvironmentId | string, resource?: Resource): Promise<void>;
     /**
      * This event is triggered when the active environment setting changes.
      */
-    readonly onDidChangeActiveEnvironmentSetting: Event<ActiveEnvironmentSettingChangeEvent>;
+    readonly onDidChangeActiveEnvironmentId: Event<ActiveEnvironmentIdChangeEvent>;
     /**
      * Carries environments found by the extension at the time of fetching the property. Note a refresh might be
-     * going on so this may not be the complete list. To wait on complete list use {@link refreshState()} and
-     * {@link onDidChangeRefreshState}.
+     * going on so this may not be the complete list.
      */
-    readonly environments: Environment[] | undefined;
+    readonly environments: Environment[];
     /**
      * This event is triggered when the known environment list changes, like when a environment
      * is found, existing environment is removed, or some details changed on an environment.
      */
     readonly onDidChangeEnvironments: Event<EnvironmentsChangedEvent>;
-    /**
-     * Carries the current state in the refresh, i.e whether it started, finished, or any other relevant state.
-     */
-    readonly refreshState: RefreshState;
-    /**
-     * Fires when a refresh state has been reached, i.e when it starts, finishes or any other relevant state.
-     * Tracks refresh progress for current list of known environments.
-     */
-    readonly onDidChangeRefreshState: Event<RefreshState>;
     /**
      * This API will trigger environment discovery, but only if it has not already happened in this VSCode session.
      * Useful for making sure env list is up-to-date when the caller needs it for the first time.
@@ -65,32 +55,11 @@ interface EnvironmentAPI {
      * @param environment : Full path to environment folder or python executable for the environment. Can also pass
      * the environment id or the environment itself.
      */
-    resolveEnvironment(environment: Environment | string): Promise<ResolvedEnvironment | undefined>;
+    resolveEnvironment(environment: Environment | EnvironmentId | string): Promise<ResolvedEnvironment | undefined>;
     /**
-     * @deprecated Use {@link getActiveEnvironmentSetting} instead. This will soon be removed.
+     * @deprecated Use {@link getActiveEnvironmentId} instead. This will soon be removed.
      */
     getActiveEnvironmentPath(resource?: Resource): Promise<EnvPathType | undefined>;
-}
-
-export type RefreshState = {
-    stateValue: RefreshStateValue;
-};
-
-/**
- * Contains state values in the order they finish during a refresh cycle.
- */
-export enum RefreshStateValue {
-    /**
-     * When a refresh is started.
-     */
-    started = 0,
-
-    // ...there can be more intimidatory states
-
-    /**
-     * When a refresh is over.
-     */
-    finished = 1,
 }
 
 export type RefreshOptions = {
@@ -104,11 +73,7 @@ export type RefreshOptions = {
 /**
  * Details about the environment. Note the environment folder, type and name never changes over time.
  */
-export type Environment = {
-    /**
-     * The unique ID of the environment.
-     */
-    id: string;
+export type Environment = EnvironmentId & {
     /**
      * Carries details about python executable.
      */
@@ -153,7 +118,7 @@ export type Environment = {
     /**
      * Carries Python version information known at this moment.
      */
-    version: StandardVersionInfo & {
+    version: VersionInfo & {
         /**
          * Value of `sys.version` in sys module if known at this moment.
          */
@@ -162,53 +127,46 @@ export type Environment = {
     /**
      * Tools/plugins which created the environment or where it came from. First value in array corresponds
      * to the primary tool which manages the environment, which never changes over time.
+     *
+     * Array is empty if no tool is responsible for creating/managing the environment. Usually the case for
+     * global interpreters.
      */
-    tools: EnvironmentTools[] | undefined;
+    tools: EnvironmentTools[];
 };
-
-/**
- * A new form of object `T` where no property can have the value of `undefined`.
- */
-type MakeAllPropertiesNonNullable<T> = {
-    [P in keyof T]: NonNullable<T[P]>;
-};
-/**
- * A new form of object `Type` where a specific property `Key` cannot be `undefined`.
- */
-type MakePropertyNonNullable<Type, Key extends keyof Type> = Omit<Type, Key> &
-    MakeAllPropertiesNonNullable<Pick<Type, Key>>;
-
-type ExecutableInfo = MakePropertyNonNullable<Environment['executable'], 'sysPrefix'> &
-    MakePropertyNonNullable<Environment['executable'], 'bitness'>;
-export type PythonVersionInfo = MakeAllPropertiesNonNullable<Environment['version']>;
 
 /**
  * Derived form of {@link Environment} where certain properties can no longer be `undefined`. Meant to represent an
  * {@link Environment} with complete information.
  */
-export interface ResolvedEnvironment {
+export type ResolvedEnvironment = Environment & {
     /**
-     * The unique ID of the environment.
+     * Carries complete details about python executable.
      */
-    id: string;
+    executable: {
+        /**
+         * Uri of the python interpreter/executable. Carries `undefined` in case an executable does not belong to
+         * the environment.
+         */
+        uri: Uri | undefined;
+        /**
+         * Bitness of the environment.
+         */
+        bitness: Architecture;
+        /**
+         * Value of `sys.prefix` in sys module.
+         */
+        sysPrefix: string;
+    };
     /**
-     * New form of {@link Environment.executable} object where properties `sysPrefix` and `bitness` cannot be
-     * `undefined`.
+     * Carries complete Python version information.
      */
-    executable: ExecutableInfo;
-    /**
-     * See {@link Environment.environment} for description.
-     */
-    environment: Environment['environment'];
-    /**
-     * New form of {@link Environment.version} object where no properties can be `undefined`.
-     */
-    version: PythonVersionInfo;
-    /**
-     * See {@link Environment.tools} for description.
-     */
-    tools: EnvironmentTools[] | undefined;
-}
+    version: ResolvedVersionInfo & {
+        /**
+         * Value of `sys.version` in sys module if known at this moment.
+         */
+        sysVersion: string;
+    };
+};
 
 export type EnvironmentsChangedEvent = {
     env: Environment;
@@ -220,7 +178,7 @@ export type EnvironmentsChangedEvent = {
     type: 'add' | 'remove' | 'update';
 };
 
-export type ActiveEnvironmentSettingChangeEvent = ActiveEnvironmentSetting & {
+export type ActiveEnvironmentIdChangeEvent = EnvironmentId & {
     /**
      * Workspace folder the environment changed for.
      */
@@ -232,7 +190,7 @@ export type ActiveEnvironmentSettingChangeEvent = ActiveEnvironmentSetting & {
  */
 export type Resource = Uri | WorkspaceFolder;
 
-export type ActiveEnvironmentSetting = {
+export type EnvironmentId = {
     /**
      * The ID of the environment.
      */
@@ -290,11 +248,18 @@ export type PythonVersionRelease = {
     serial: number;
 };
 
-export type StandardVersionInfo = {
+export type VersionInfo = {
     major: number | undefined;
     minor: number | undefined;
     micro: number | undefined;
     release: PythonVersionRelease | undefined;
+};
+
+export type ResolvedVersionInfo = {
+    major: number;
+    minor: number;
+    micro: number;
+    release: PythonVersionRelease;
 };
 
 /**
