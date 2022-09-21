@@ -221,7 +221,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
             this._pythonPathSetting = pySettings.pythonPath;
             this.didChangeInterpreterEmitter.fire();
             reportActiveInterpreterChanged({
-                pathID: pySettings.pythonPath,
+                id: pySettings.pythonPath,
+                path: pySettings.pythonPath,
                 resource: this.serviceContainer.get<IWorkspaceService>(IWorkspaceService).getWorkspaceFolder(resource),
             });
             const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);

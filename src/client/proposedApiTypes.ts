@@ -11,12 +11,11 @@ export interface ProposedExtensionAPI {
 
 interface EnvironmentAPI {
     /**
-     * Returns the environment selected. Uses the cache by default, otherwise fetches full information about the
-     * environment.
+     * Returns the environment configured by user in settings.
      * @param resource : Uri of a file or workspace folder. This is used to determine the env in a multi-root
      * scenario. If `undefined`, then the API returns what ever is set for the workspace.
      */
-    fetchActiveEnvironment(resource?: Resource): Promise<ResolvedEnvironment | undefined>;
+    getActiveEnvironmentSetting(resource?: Resource): ActiveEnvironmentSetting;
     /**
      * Sets the active environment path for the python extension for the resource. Configuration target will always
      * be the workspace folder.
@@ -24,11 +23,11 @@ interface EnvironmentAPI {
      * the environment itself.
      * @param resource : [optional] File or workspace to scope to a particular workspace folder.
      */
-    updateActiveEnvironment(environment: Environment | UniquePath, resource?: Resource): Promise<void>;
+    updateActiveEnvironmentSetting(environment: Environment | string, resource?: Resource): Promise<void>;
     /**
-     * This event is triggered when the active environment changes.
+     * This event is triggered when the active environment setting changes.
      */
-    readonly onDidChangeActiveEnvironment: Event<ActiveEnvironmentChangeEvent>;
+    readonly onDidChangeActiveEnvironmentSetting: Event<ActiveEnvironmentSettingChangeEvent>;
     /**
      * Carries environments found by the extension at the time of fetching the property. Note a refresh might be
      * going on so this may not be the complete list. To wait on complete list use {@link refreshState()} and
@@ -63,12 +62,12 @@ interface EnvironmentAPI {
     refreshEnvironments(options?: RefreshOptions, token?: CancellationToken): Promise<void>;
     /**
      * Returns details for the given environment, or `undefined` if the env is invalid.
-     * @param environment : Environment whose details you need. Can also pass the full path to environment folder
-     * or python executable for the environment.
+     * @param environment : Full path to environment folder or python executable for the environment. Can also pass
+     * the environment id or the environment itself.
      */
-    resolveEnvironment(environment: Environment | UniquePath): Promise<ResolvedEnvironment | undefined>;
+    resolveEnvironment(environment: Environment | string): Promise<ResolvedEnvironment | undefined>;
     /**
-     * @deprecated Use {@link fetchActiveEnvironment} instead. This will soon be removed.
+     * @deprecated Use {@link getActiveEnvironmentSetting} instead. This will soon be removed.
      */
     getActiveEnvironmentPath(resource?: Resource): Promise<EnvPathType | undefined>;
 }
@@ -107,9 +106,9 @@ export type RefreshOptions = {
  */
 export type Environment = {
     /**
-     * See {@link UniquePath} for description.
+     * The unique ID of the environment.
      */
-    pathID: UniquePath;
+    id: string;
     /**
      * Carries details about python executable.
      */
@@ -162,7 +161,7 @@ export type Environment = {
     };
     /**
      * Tools/plugins which created the environment or where it came from. First value in array corresponds
-     * to the primary tool responsible for the environment, which never changes over time.
+     * to the primary tool which manages the environment, which never changes over time.
      */
     tools: EnvironmentTools[] | undefined;
 };
@@ -174,7 +173,7 @@ type MakeAllPropertiesNonNullable<T> = {
     [P in keyof T]: NonNullable<T[P]>;
 };
 /**
- * A new form of object `Type` where a property represented by `Key` cannot be `undefined`.
+ * A new form of object `Type` where a specific property `Key` cannot be `undefined`.
  */
 type MakePropertyNonNullable<Type, Key extends keyof Type> = Omit<Type, Key> &
     MakeAllPropertiesNonNullable<Pick<Type, Key>>;
@@ -189,9 +188,9 @@ export type PythonVersionInfo = MakeAllPropertiesNonNullable<Environment['versio
  */
 export interface ResolvedEnvironment {
     /**
-     * See {@link UniquePath} for description.
+     * The unique ID of the environment.
      */
-    pathID: UniquePath;
+    id: string;
     /**
      * New form of {@link Environment.executable} object where properties `sysPrefix` and `bitness` cannot be
      * `undefined`.
@@ -221,11 +220,7 @@ export type EnvironmentsChangedEvent = {
     type: 'add' | 'remove' | 'update';
 };
 
-export type ActiveEnvironmentChangeEvent = {
-    /**
-     * See {@link UniquePath} for description.
-     */
-    pathID: UniquePath;
+export type ActiveEnvironmentSettingChangeEvent = ActiveEnvironmentSetting & {
     /**
      * Workspace folder the environment changed for.
      */
@@ -237,12 +232,18 @@ export type ActiveEnvironmentChangeEvent = {
  */
 export type Resource = Uri | WorkspaceFolder;
 
-/**
- * Path to environment folder or path to python executable that uniquely identifies an environment. Environments
- * lacking a python executable are identified by environment folder paths, whereas other envs can be identified
- * using python executable path.
- */
-export type UniquePath = string;
+export type ActiveEnvironmentSetting = {
+    /**
+     * The ID of the environment.
+     */
+    id: string;
+    /**
+     * Path to environment folder or path to python executable that uniquely identifies an environment. Environments
+     * lacking a python executable are identified by environment folder paths, whereas other envs can be identified
+     * using python executable path.
+     */
+    path: string;
+};
 
 /**
  * Tool/plugin where the environment came from. It can be {@link KnownEnvironmentTools} or custom string which

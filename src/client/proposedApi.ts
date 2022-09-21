@@ -3,17 +3,17 @@
 // Licensed under the MIT License.
 
 import { ConfigurationTarget, EventEmitter, Uri } from 'vscode';
-import { IDisposableRegistry, IInterpreterPathService } from './common/types';
+import * as pathUtils from 'path';
+import { IConfigurationService, IDisposableRegistry, IInterpreterPathService } from './common/types';
 import { Architecture } from './common/utils/platform';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
 import {
-    ActiveEnvironmentChangeEvent,
+    ActiveEnvironmentSettingChangeEvent,
     Environment,
     EnvironmentsChangedEvent,
     ProposedExtensionAPI,
     ResolvedEnvironment,
-    UniquePath,
     PythonVersionInfo,
     RefreshOptions,
     Resource,
@@ -25,20 +25,22 @@ import {
 import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from './pythonEnvironments/base/info';
 import { getEnvPath } from './pythonEnvironments/base/info/env';
 import { IDiscoveryAPI, ProgressReportStage } from './pythonEnvironments/base/locator';
+import { IPythonExecutionFactory } from './common/process/types';
+import { traceError } from './logging';
 
-const onDidActiveInterpreterChangedEvent = new EventEmitter<ActiveEnvironmentChangeEvent>();
-export function reportActiveInterpreterChanged(e: ActiveEnvironmentChangeEvent): void {
+const onDidActiveInterpreterChangedEvent = new EventEmitter<ActiveEnvironmentSettingChangeEvent>();
+export function reportActiveInterpreterChanged(e: ActiveEnvironmentSettingChangeEvent): void {
     onDidActiveInterpreterChangedEvent.fire(e);
 }
 const onProgress = new EventEmitter<RefreshState>();
 const onEnvironmentsChanged = new EventEmitter<EnvironmentsChangedEvent>();
-const environmentsReference = new Map<UniquePath, EnvironmentReference>();
+const environmentsReference = new Map<string, EnvironmentReference>();
 
 export class EnvironmentReference implements Environment {
-    readonly pathID: string;
+    readonly id: string;
 
     constructor(public internal: Environment) {
-        this.pathID = internal.pathID;
+        this.id = internal.id;
     }
 
     get executable() {
@@ -63,13 +65,13 @@ export class EnvironmentReference implements Environment {
 }
 
 function getEnvReference(e: Environment) {
-    let envClass = environmentsReference.get(e.pathID);
+    let envClass = environmentsReference.get(e.id);
     if (!envClass) {
         envClass = new EnvironmentReference(e);
     } else {
         envClass.updateEnv(e);
     }
-    environmentsReference.set(e.pathID, envClass);
+    environmentsReference.set(e.id, envClass);
     return envClass;
 }
 
@@ -79,6 +81,7 @@ export function buildProposedApi(
 ): ProposedExtensionAPI {
     const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+    const configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
     disposables.push(
         discoveryApi.onProgress((e) => {
@@ -105,22 +108,42 @@ export function buildProposedApi(
     );
     const proposed: ProposedExtensionAPI = {
         environment: {
-            async fetchActiveEnvironment(resource?: Resource) {
+            getActiveEnvironmentSetting(resource?: Resource) {
                 resource = resource && 'uri' in resource ? resource.uri : resource;
-                const env = await interpreterService.getActiveInterpreter(resource);
-                if (!env) {
-                    return undefined;
-                }
-                return resolveEnvironment(getEnvPath(env.path, env.envPath).path, discoveryApi);
+                const path = configService.getSettings(resource).pythonPath;
+                const id = path === 'python' ? 'defaultPython' : path;
+                return { id, path };
             },
-            updateActiveEnvironment(env: string | Environment, resource?: Resource): Promise<void> {
-                const path = typeof env !== 'string' ? env.pathID : env;
+            updateActiveEnvironmentSetting(env: string | Environment, resource?: Resource): Promise<void> {
+                const path = typeof env !== 'string' ? env.id : env;
                 resource = resource && 'uri' in resource ? resource.uri : resource;
                 return interpreterPathService.update(resource, ConfigurationTarget.WorkspaceFolder, path);
             },
-            onDidChangeActiveEnvironment: onDidActiveInterpreterChangedEvent.event,
-            resolveEnvironment: (env: string | Environment) => {
-                const path = typeof env !== 'string' ? env.pathID : env;
+            onDidChangeActiveEnvironmentSetting: onDidActiveInterpreterChangedEvent.event,
+            resolveEnvironment: async (env: string | Environment) => {
+                let path = typeof env !== 'string' ? env.id : env;
+                if (pathUtils.basename(path) === path) {
+                    // Value can be `python`, `python3`, `python3.9` etc.
+                    // Note the following triggers autoselection if no interpreter is explictly
+                    // selected, i.e the value is `python`.
+                    // During shutdown we might not be able to get items out of the service container.
+                    const pythonExecutionFactory = serviceContainer.tryGet<IPythonExecutionFactory>(
+                        IPythonExecutionFactory,
+                    );
+                    const pythonExecutionService = pythonExecutionFactory
+                        ? await pythonExecutionFactory.create({ pythonPath: path })
+                        : undefined;
+                    const fullyQualifiedPath = pythonExecutionService
+                        ? await pythonExecutionService.getExecutablePath().catch((ex) => {
+                              traceError(ex);
+                          })
+                        : undefined;
+                    // Python path is invalid or python isn't installed.
+                    if (!fullyQualifiedPath) {
+                        return undefined;
+                    }
+                    path = fullyQualifiedPath;
+                }
                 return resolveEnvironment(path, discoveryApi);
             },
             get environments(): Environment[] {
@@ -175,7 +198,7 @@ export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment 
         tool = 'Unknown';
     }
     const resolvedEnv: ResolvedEnvironment = {
-        pathID: getEnvPath(env.executable.filename, env.location).path,
+        id: getEnvPath(env.executable.filename, env.location).path,
         executable: {
             uri: Uri.file(env.executable.filename),
             bitness: convertArch(env.arch),

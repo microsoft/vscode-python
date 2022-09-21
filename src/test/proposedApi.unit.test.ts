@@ -27,7 +27,7 @@ import {
     ProposedExtensionAPI,
     RefreshState,
     RefreshStateValue,
-    ActiveEnvironmentChangeEvent,
+    ActiveEnvironmentSettingChangeEvent,
     EnvironmentsChangedEvent,
 } from '../client/proposedApiTypes';
 import { PythonEnvKind, PythonEnvSource } from '../client/pythonEnvironments/base/info';
@@ -82,16 +82,16 @@ suite('Proposed Extension API', () => {
     });
 
     test('Provide an event to track when active environment details change', async () => {
-        const events: ActiveEnvironmentChangeEvent[] = [];
-        proposed.environment.onDidChangeActiveEnvironment((e) => {
+        const events: ActiveEnvironmentSettingChangeEvent[] = [];
+        proposed.environment.onDidChangeActiveEnvironmentSetting((e) => {
             events.push(e);
         });
-        reportActiveInterpreterChanged({ pathID: 'path/to/environment', resource: undefined });
+        reportActiveInterpreterChanged({ id: 'path/to/environment', path: 'path/to/environment', resource: undefined });
         await sleep(1);
-        assert.deepEqual(events, [{ pathID: 'path/to/environment', resource: undefined }]);
+        assert.deepEqual(events, [{ id: 'path/to/environment', path: 'path/to/environment', resource: undefined }]);
     });
 
-    test('getActiveInterpreterPath: No resource', async () => {
+    test('getActiveEnvironmentSetting: No resource', async () => {
         const pythonPath = 'this/is/a/test/path';
         interpreterService
             .setup((c) => c.getActiveInterpreter(undefined))
@@ -102,7 +102,7 @@ suite('Proposed Extension API', () => {
         assert.deepEqual((actual as EnvironmentReference).internal, convertCompleteEnvInfo(env));
     });
 
-    test('getActiveInterpreterPath: With resource', async () => {
+    test('getActiveEnvironmentSetting: With resource', async () => {
         const pythonPath = 'this/is/a/test/path';
         const resource = Uri.file(__filename);
         interpreterService
@@ -223,8 +223,8 @@ suite('Proposed Extension API', () => {
         const actual = proposed.environment.environments;
         const actualEnvs = actual?.map((a) => (a as EnvironmentReference).internal);
         assert.deepEqual(
-            actualEnvs?.sort((a, b) => a.pathID.localeCompare(b.pathID)),
-            envs.map((e) => convertEnvInfo(e)).sort((a, b) => a.pathID.localeCompare(b.pathID)),
+            actualEnvs?.sort((a, b) => a.id.localeCompare(b.id)),
+            envs.map((e) => convertEnvInfo(e)).sort((a, b) => a.id.localeCompare(b.id)),
         );
     });
 
