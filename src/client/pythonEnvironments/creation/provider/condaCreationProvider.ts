@@ -13,9 +13,10 @@ import { getEnvironmentVariable, getOSType, OSType } from '../../../common/utils
 import { createCondaScript } from '../../../common/process/internal/scripts';
 import { CreateEnv } from '../../../common/utils/localize';
 import { getConda, pickPythonVersion } from './condaUtils';
+import { showErrorMessageWithLogs } from './commonUtils';
 
-const CONDA_ENV_CREATED_MARKER = 'CREATED_CONDA_ENV:';
-const CONDA_INSTALLING_YML = 'CONDA_INSTALLING_YML:';
+export const CONDA_ENV_CREATED_MARKER = 'CREATED_CONDA_ENV:';
+export const CONDA_INSTALLING_YML = 'CONDA_INSTALLING_YML:';
 
 function generateCommandArgs(version?: string, options?: CreateEnvironmentOptions): string[] {
     let addGitIgnore = true;
@@ -89,7 +90,6 @@ async function createCondaEnv(
                     condaEnvPath = envPath.substring(CONDA_ENV_CREATED_MARKER.length);
                 } catch (ex) {
                     traceError('Parsing out environment path failed.');
-                } finally {
                     condaEnvPath = undefined;
                 }
             } else if (output.includes(CONDA_INSTALLING_YML)) {
@@ -98,9 +98,10 @@ async function createCondaEnv(
                 });
             }
         },
-        (error) => {
+        async (error) => {
             traceError('Error while running conda env creation script: ', error);
             deferred.reject(error);
+            await showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
         },
         () => {
             dispose();
