@@ -8,7 +8,6 @@ import pathlib
 import subprocess
 import sys
 from typing import Optional, Sequence, Union
-from webbrowser import get
 
 VENV_NAME = ".venv"
 CWD = pathlib.PurePath(os.getcwd())

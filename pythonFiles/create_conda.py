@@ -7,7 +7,6 @@ import pathlib
 import subprocess
 import sys
 from typing import Optional, Sequence, Union
-from webbrowser import get
 
 CONDA_ENV_NAME = ".conda"
 CWD = pathlib.PurePath(os.getcwd())
