@@ -23,14 +23,14 @@ suite('Create Environment Command Handler Tests', () => {
         sinon.restore();
     });
 
-    test('No providers registered.', async () => {
+    test('No providers registered', async () => {
         await handleCreateEnvironmentCommand([]);
 
         assert.isTrue(showQuickPickStub.notCalled);
         assert.isTrue(createEnvironmentStub.notCalled);
     });
 
-    test('Single environment creation provider registered.', async () => {
+    test('Single environment creation provider registered', async () => {
         const provider = typemoq.Mock.ofType<CreateEnvironmentProvider>();
         provider.setup((p) => p.name).returns(() => 'test');
         provider.setup((p) => p.id).returns(() => 'test-id');
@@ -42,7 +42,7 @@ suite('Create Environment Command Handler Tests', () => {
         createEnvironmentStub.calledOnceWithExactly(provider.object, undefined);
     });
 
-    test('Multiple environment creation providers registered.', async () => {
+    test('Multiple environment creation providers registered', async () => {
         const provider1 = typemoq.Mock.ofType<CreateEnvironmentProvider>();
         provider1.setup((p) => p.name).returns(() => 'test1');
         provider1.setup((p) => p.id).returns(() => 'test-id1');

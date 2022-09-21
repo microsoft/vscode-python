@@ -551,7 +551,7 @@ export namespace SwitchToDefaultLS {
 }
 
 export namespace CreateEnv {
-    export const statusTitle = localize('createEnv.statusTitle', 'Creating virtual environment');
+    export const statusTitle = localize('createEnv.statusTitle', 'Creating environment');
     export const statusStarting = localize('createEnv.statusStarting', 'Starting...');
     export const statusError = localize('createEnv.statusError', 'Error.');
     export const statusDone = localize('createEnv.statusDone', 'Done.');
@@ -573,7 +573,7 @@ export namespace CreateEnv {
 
     export const providersQuickPickTitle = localize(
         'createEnv.providersQuickPick.title',
-        'Select a virtual environment type.',
+        'Select an environment type.',
     );
 
     export namespace Venv {
@@ -591,7 +591,7 @@ export namespace CreateEnv {
         );
         export const providerDescription = localize(
             'createEnv.venv.description',
-            'Creates a `.venv` virtual environment using `venv` in the current workspace.',
+            'Creates a `.venv` virtual environment in the current workspace.',
         );
         export const providerName = 'venv';
     }
@@ -603,6 +603,10 @@ export namespace CreateEnv {
         );
         export const created = localize('createEnv.conda.created', 'Environment created...');
         export const installingPackages = localize('createEnv.conda.installingPackages', 'Installing packages...');
+        export const errorCreatingEnvironment = localize(
+            'createEnv.conda.errorCreatingEnvironment',
+            'Error while creating conda environment.',
+        );
         export const waitingForWorkspace = localize(
             'createEnv.conda.waitingForWorkspace',
             'Waiting on workspace selection...',
@@ -619,7 +623,7 @@ export namespace CreateEnv {
         export const creating = localize('createEnv.venv.creating', 'Running conda create...');
         export const providerDescription = localize(
             'createEnv.conda.description',
-            'Creates a `.conda` virtual environment, using `conda`, in the current workspace.',
+            'Creates a `.conda` Conda environment in the current workspace.',
         );
         export const providerName = 'conda';
     }

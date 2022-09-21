@@ -39,7 +39,7 @@ suite('Create Environments Tests', () => {
         sinon.restore();
     });
 
-    test('Successful environment creation.', async () => {
+    test('Successful environment creation', async () => {
         const provider = typemoq.Mock.ofType<CreateEnvironmentProvider>();
         provider
             .setup((p) => p.createEnvironment(typemoq.It.isAny(), progressMock.object, undefined))
@@ -53,7 +53,7 @@ suite('Create Environments Tests', () => {
         provider.verifyAll();
     });
 
-    test('Environment creation error.', async () => {
+    test('Environment creation error', async () => {
         const provider = typemoq.Mock.ofType<CreateEnvironmentProvider>();
         provider
             .setup((p) => p.createEnvironment(typemoq.It.isAny(), progressMock.object, undefined))

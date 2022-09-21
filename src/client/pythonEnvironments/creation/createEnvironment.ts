@@ -42,7 +42,6 @@ export async function createEnvironment(
                     });
                 }
             }
-            return undefined;
         },
     );
 }

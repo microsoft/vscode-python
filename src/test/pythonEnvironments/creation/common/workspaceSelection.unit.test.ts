@@ -34,7 +34,7 @@ suite('Create environment workspace selection tests', () => {
         assert.isUndefined(await pickWorkspaceFolder());
     });
 
-    test('User did not select workspace.', async () => {
+    test('User did not select workspace', async () => {
         const workspaces: WorkspaceFolder[] = [
             {
                 uri: Uri.file('some_folder'),
@@ -53,7 +53,7 @@ suite('Create environment workspace selection tests', () => {
         assert.isUndefined(await pickWorkspaceFolder());
     });
 
-    test('single workspace scenario.', async () => {
+    test('single workspace scenario', async () => {
         const workspaces: WorkspaceFolder[] = [
             {
                 uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
@@ -74,7 +74,7 @@ suite('Create environment workspace selection tests', () => {
         assert(showQuickPickStub.notCalled);
     });
 
-    test('Multi-workspace scenario with single workspace selected.', async () => {
+    test('Multi-workspace scenario with single workspace selected', async () => {
         const workspaces: WorkspaceFolder[] = [
             {
                 uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
@@ -115,7 +115,7 @@ suite('Create environment workspace selection tests', () => {
         assert(showQuickPickStub.calledOnce);
     });
 
-    test('Multi-workspace scenario with multiple workspaces selected.', async () => {
+    test('Multi-workspace scenario with multiple workspaces selected', async () => {
         const workspaces: WorkspaceFolder[] = [
             {
                 uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
