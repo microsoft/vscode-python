@@ -5,10 +5,33 @@ import os
 import pathlib
 import sys
 from dbm.ndbm import library
-from typing import KeysView, List, Literal, Optional, Tuple, TypedDict, Union
-from unittest import TestCase
+from typing import List, Literal, Optional, Tuple, TypedDict, Union
 
 import pytest
+
+
+# Inherit from str so it's JSON serializable.
+class TestNodeTypeEnum(str, enum.Enum):
+    class_ = "class"
+    file = "file"
+    folder = "folder"
+    test = "test"
+
+
+class TestData(TypedDict):
+    name: str
+    path: str
+    type_: TestNodeTypeEnum
+    id_: str
+
+
+class TestItem(TestData):
+    lineno: str
+    runID: str
+
+
+class TestNode(TestData):
+    children: "List[TestNode | TestItem]"
 
 
 # Inherit from str so it's JSON serializable.
@@ -39,6 +62,8 @@ class TestNode(TestData):
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PYTHON_FILES)
 
+from testing_tools import socket_manager
+
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
 from testing_tools import socket_manager
@@ -60,34 +85,20 @@ DEFAULT_PORT = "45454"
 def pytest_collection_finish(session):
     print("pytest collection finish")
     session.results = dict()
-    # print("SP", session.path)
-    parent_list = []
-    folder_list = {}
-    for item in session.items:
-        parentIt = item.parent
-        pid = parentIt.nodeid
-        i = {
-            "path": item.fspath,
-            "name": item.name,
-            "type_": "test",
-            "lineno": 0,
-            "id_": item.nodeid,
-        }
-        if parentIt not in parent_list:
-            parent_list.append(parentIt)
+    folder_list = build_test_tree(session)
+    print("folder list", folder_list)
+    session_test_node = {
+        "name": session.name,
+        "path": str(session.fspath),
+        "type": TestNodeTypeEnum.folder,  # check if this is a file or a folder
+        "id": session.nodeid,
+        "children": folder_list,
+    }
 
-            f = {
-                "path": parentIt.fspath,
-                "type": "folder",
-                "name": parentIt.name,
-                "children": [i],
-                "id": pid,
-            }
-            folder_list.update({pid: f})
-        else:
-            f = folder_list.get(pid)
-            f.get("children").append(i)  # type: ignore
-    sendPost()
+    cwd = os.getcwd()
+    print("session, test node", session_test_node)
+    sendPost(cwd, session_test_node)
+    # print("SP", session.path)
 
     # print("PL", parent_list)
     # print("FL", folder_list)
@@ -109,8 +120,41 @@ def buildPayload():
     print("building payload")
 
 
-def buildTestTree(session):
+def build_test_tree(session):
     print("building test tree")
+    errors = []  # how do I check for errors
+    parent_list = []
+    folder_list = {}
+    for item in session.items:
+        parentIterator = item.parent
+        parentId = parentIterator.nodeid
+        currTestItem = {
+            "path": str(item.fspath),
+            "name": item.name,
+            "type_": TestNodeTypeEnum.test,
+            "id_": item.nodeid,
+            "lineno": item.location[1],  # idk worth a shot
+            "runID": item.nodeid,  # can I use this two times?
+        }
+        if parentId not in parent_list:
+            parent_list.append(parentId)
+            folder_test_node = {
+                "name": parentIterator.name,
+                "path": str(parentIterator.fspath),
+                "type": TestNodeTypeEnum.folder,  # check if this is a file or a folder
+                "id": parentId,
+                "children": [currTestItem],
+            }
+            folder_list.update({parentId: folder_test_node})
+        else:
+            folder_test_node = folder_list.get(parentId)
+            folder_test_node.get("children").append(currTestItem)  # type: ignore
+    return list(folder_list.values())
+
+
+def build_test_node(path: str, name: str, id: str, type_: TestNodeTypeEnum) -> TestNode:
+    print("building test node")
+    return {"path": path, "name": name, "type_": type_, "children": [], "id_": id}
 
 
 def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
@@ -208,11 +252,19 @@ def createSessionTestNode(session) -> TestNode:
     }
 
 
-def sendPost():
-    payload: dict = {"status": "success"}
+class PayloadDict(TypedDict):
+    cwd: str
+    status: Literal["success", "error"]
+    tests: NotRequired[TestNode]
+    errors: NotRequired[List[str]]
+
+
+def sendPost(cwd, tests):
+    payload: PayloadDict = {"cwd": cwd, "status": "success", "tests": tests}
     testPort = os.getenv("TEST_PORT", 45454)
+    testuuid = os.getenv("TEST_UUID")
     addr = ("localhost", int(testPort))
-    print("sending post", addr)
+    print("sending post", addr, cwd)
     # socket_manager.send_post("Hello from pytest")  # type: ignore
     with socket_manager.SocketManager(addr) as s:
         data = json.dumps(payload)
@@ -220,7 +272,7 @@ def sendPost():
 Host: localhost:{testPort}
 Content-Length: {len(data)}
 Content-Type: application/json
-Request-uuid: {12312432423}
+Request-uuid: {testuuid}
 
 {data}"""
         result = s.socket.sendall(request.encode("utf-8"))  # type: ignore

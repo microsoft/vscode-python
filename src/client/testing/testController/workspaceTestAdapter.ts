@@ -220,6 +220,8 @@ export class WorkspaceTestAdapter {
         try {
             if (executionFactory !== undefined) {
                 rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
+                console.debug('here');
+                console.debug('rawTestData: ', rawTestData);
             } else {
                 console.log('executionFactory is undefined');
             }
@@ -345,6 +347,10 @@ function populateTestTree(
     }
 
     // Recursively populate the tree with test data.
+    for (let i = 0; i < testTreeData.children.length; i = i + 1) {
+        console.debug('testTreeData.children i= ', i, '', testTreeData.children[i]);
+    }
+
     testTreeData.children.forEach((child) => {
         if (!token?.isCancellationRequested) {
             if (isTestItem(child)) {

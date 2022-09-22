@@ -4,7 +4,6 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
-    ExecutionResult,
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
@@ -35,64 +34,48 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     }
 
     public async discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
-        if (!this.deferred) {
-            this.deferred = createDeferred<DiscoveredTestPayload>();
-
-            const settings = this.configSettings.getSettings(uri);
-            const { pytestArgs } = settings.testing;
-            console.debug(pytestArgs); // do we use pytestArgs anywhere?
-
-            this.cwd = uri.fsPath;
-            await this.runPytestDiscovery(uri, executionFactory);
-        }
-
-        return this.deferred.promise;
-    }
-
-    async runPytestDiscovery(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<void> {
-        const relativePathToPytest = 'pythonFiles/pytest-vscode-integration';
-        const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
-        const uuid = this.testServer.createUUID(uri.fsPath);
-
         const settings = this.configSettings.getSettings(uri);
         const { pytestArgs } = settings.testing;
-        // const pythonPathCommand = `${fullPluginPath}${path.delimiter}`+(process.env.PYTHONPATH ?? "");
-        console.debug('pythonp', process.env.PYTHONPATH);
-        const pythonPathCommand = `${fullPluginPath}${path.delimiter}`.concat(process.env.PYTHONPATH ?? '');
+        console.debug(pytestArgs); // do we use pytestArgs anywhere?
 
-        const spawnOptions: SpawnOptions = {
-            cwd: uri.fsPath,
-            throwOnStdErr: true,
-            extraVariables: {
-                PYTHONPATH: pythonPathCommand,
-                TEST_UUID: uuid.toString(),
-                TEST_PORT: this.testServer.getPort().toString(),
-            },
-        };
+        this.cwd = uri.fsPath;
+        return this.runPytestDiscovery(uri, executionFactory);
+    }
 
-        // Create the Python environment in which to execute the command.
-        const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
-            allowEnvironmentFetchExceptions: false,
-            resource: uri,
-        };
-        const execService = await executionFactory.createActivatedEnvironment(creationOptions);
+    async runPytestDiscovery(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
+        if (!this.deferred) {
+            this.deferred = createDeferred<DiscoveredTestPayload>();
+            const relativePathToPytest = 'pythonFiles/pytest-vscode-integration';
+            const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
+            const uuid = this.testServer.createUUID(uri.fsPath);
+            const settings = this.configSettings.getSettings(uri);
+            const { pytestArgs } = settings.testing;
+            const pythonPathCommand = `${fullPluginPath}${path.delimiter}`.concat(process.env.PYTHONPATH ?? '');
 
-        try {
-            const s: ExecutionResult<string> = await execService.exec(
-                ['-m', 'pytest', '--collect-only', '--port', '500'].concat(pytestArgs),
-                spawnOptions,
-            );
-            console.debug('outout', s.stdout);
-        } catch (ex) {
-            console.error(ex);
+            const spawnOptions: SpawnOptions = {
+                cwd: uri.fsPath,
+                throwOnStdErr: true,
+                extraVariables: {
+                    PYTHONPATH: pythonPathCommand,
+                    TEST_UUID: uuid.toString(),
+                    TEST_PORT: this.testServer.getPort().toString(),
+                },
+            };
+
+            // Create the Python environment in which to execute the command.
+            const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
+                allowEnvironmentFetchExceptions: false,
+                resource: uri,
+            };
+            const execService = await executionFactory.createActivatedEnvironment(creationOptions);
+
+            try {
+                execService.exec(['-m', 'pytest', '--collect-only', '--port', '500'].concat(pytestArgs), spawnOptions);
+            } catch (ex) {
+                console.error(ex);
+            }
         }
-
-        try {
-            const s: ExecutionResult<string> = await execService.exec(['--version'], spawnOptions);
-            console.debug('python3 version', s);
-        } catch (ex) {
-            console.error(ex);
-        }
+        return this.deferred.promise;
     }
 }
 
