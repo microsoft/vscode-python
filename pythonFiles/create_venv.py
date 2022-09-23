@@ -63,6 +63,8 @@ def run_process(args: Sequence[str], error_message: str) -> None:
 
 
 def get_venv_path(name: str) -> str:
+    # See `venv` doc here for more details on binary location:
+    # https://docs.python.org/3/library/venv.html#creating-virtual-environments
     if sys.platform == "win32":
         return os.fspath(CWD / name / "Scripts" / "python.exe")
     else:
