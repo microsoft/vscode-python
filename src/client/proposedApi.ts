@@ -39,6 +39,13 @@ export function reportActiveInterpreterChanged(e: ActiveEnvironmentChangeEvent):
 const onEnvironmentsChanged = new EventEmitter<EnvironmentsChangeEvent>();
 const environmentsReference = new Map<string, EnvironmentReference>();
 
+/**
+ * Make all properties in T mutable.
+ */
+type Mutable<T> = {
+    -readonly [P in keyof T]: Mutable<T[P]>;
+};
+
 export class EnvironmentReference implements Environment {
     readonly id: string;
 
@@ -47,23 +54,23 @@ export class EnvironmentReference implements Environment {
     }
 
     get executable() {
-        return this.internal.executable;
+        return Object.freeze(this.internal.executable);
     }
 
     get environment() {
-        return this.internal.environment;
+        return Object.freeze(this.internal.environment);
     }
 
     get version() {
-        return this.internal.version;
+        return Object.freeze(this.internal.version);
     }
 
     get tools() {
-        return this.internal.tools;
+        return Object.freeze(this.internal.tools);
     }
 
     get path() {
-        return this.internal.path;
+        return Object.freeze(this.internal.path);
     }
 
     updateEnv(newInternal: Environment) {
@@ -239,7 +246,7 @@ function convertKind(kind: PythonEnvKind): EnvironmentTools | undefined {
 }
 
 export function convertEnvInfo(env: PythonEnvInfo): Environment {
-    const convertedEnv = convertCompleteEnvInfo(env) as Environment;
+    const convertedEnv = convertCompleteEnvInfo(env) as Mutable<Environment>;
     if (convertedEnv.executable.sysPrefix === '') {
         convertedEnv.executable.sysPrefix = undefined;
     }
@@ -258,7 +265,7 @@ export function convertEnvInfo(env: PythonEnvInfo): Environment {
     if (convertedEnv.version.minor === -1) {
         convertedEnv.version.minor = undefined;
     }
-    return convertedEnv;
+    return convertedEnv as Environment;
 }
 
 function convertEnvInfoAndGetReference(env: PythonEnvInfo): Environment {

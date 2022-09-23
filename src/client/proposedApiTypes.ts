@@ -73,52 +73,52 @@ export type Environment = EnvironmentId & {
     /**
      * Carries details about python executable.
      */
-    executable: {
+    readonly executable: {
         /**
          * Uri of the python interpreter/executable. Carries `undefined` in case an executable does not belong to
          * the environment.
          */
-        uri: Uri | undefined;
+        readonly uri: Uri | undefined;
         /**
          * Bitness if known at this moment.
          */
-        bitness: Architecture | undefined;
+        readonly bitness: Architecture | undefined;
         /**
          * Value of `sys.prefix` in sys module if known at this moment.
          */
-        sysPrefix: string | undefined;
+        readonly sysPrefix: string | undefined;
     };
     /**
      * Carries details if it is an environment, otherwise `undefined` in case of global interpreters and others.
      */
-    environment:
+    readonly environment:
         | {
               /**
                * Type of the environment.
                */
-              type: EnvironmentType;
+              readonly type: EnvironmentType;
               /**
                * Name to the environment if any.
                */
-              name: string | undefined;
+              readonly name: string | undefined;
               /**
                * Uri of the environment folder.
                */
-              folderUri: Uri;
+              readonly folderUri: Uri;
               /**
                * Any specific workspace folder this environment is created for.
                */
-              workspaceFolder: Uri | undefined;
+              readonly workspaceFolder: Uri | undefined;
           }
         | undefined;
     /**
      * Carries Python version information known at this moment.
      */
-    version: VersionInfo & {
+    readonly version: VersionInfo & {
         /**
          * Value of `sys.version` in sys module if known at this moment.
          */
-        sysVersion: string | undefined;
+        readonly sysVersion: string | undefined;
     };
     /**
      * Tools/plugins which created the environment or where it came from. First value in array corresponds
@@ -127,7 +127,7 @@ export type Environment = EnvironmentId & {
      * Array is empty if no tool is responsible for creating/managing the environment. Usually the case for
      * global interpreters.
      */
-    tools: EnvironmentTools[];
+    readonly tools: readonly EnvironmentTools[];
 };
 
 /**
@@ -138,47 +138,47 @@ export type ResolvedEnvironment = Environment & {
     /**
      * Carries complete details about python executable.
      */
-    executable: {
+    readonly executable: {
         /**
          * Uri of the python interpreter/executable. Carries `undefined` in case an executable does not belong to
          * the environment.
          */
-        uri: Uri | undefined;
+        readonly uri: Uri | undefined;
         /**
          * Bitness of the environment.
          */
-        bitness: Architecture;
+        readonly bitness: Architecture;
         /**
          * Value of `sys.prefix` in sys module.
          */
-        sysPrefix: string;
+        readonly sysPrefix: string;
     };
     /**
      * Carries complete Python version information.
      */
-    version: ResolvedVersionInfo & {
+    readonly version: ResolvedVersionInfo & {
         /**
          * Value of `sys.version` in sys module if known at this moment.
          */
-        sysVersion: string;
+        readonly sysVersion: string;
     };
 };
 
 export type EnvironmentsChangeEvent = {
-    env: Environment;
+    readonly env: Environment;
     /**
      * * "add": New environment is added.
      * * "remove": Existing environment in the list is removed.
      * * "update": New information found about existing environment.
      */
-    type: 'add' | 'remove' | 'update';
+    readonly type: 'add' | 'remove' | 'update';
 };
 
 export type ActiveEnvironmentIdChangeEvent = EnvironmentId & {
     /**
      * Workspace folder the environment changed for.
      */
-    resource: WorkspaceFolder | undefined;
+    readonly resource: WorkspaceFolder | undefined;
 };
 
 /**
@@ -190,13 +190,13 @@ export type EnvironmentId = {
     /**
      * The ID of the environment.
      */
-    id: string;
+    readonly id: string;
     /**
      * Path to environment folder or path to python executable that uniquely identifies an environment. Environments
      * lacking a python executable are identified by environment folder paths, whereas other envs can be identified
      * using python executable path.
      */
-    path: string;
+    readonly path: string;
 };
 
 /**
@@ -240,20 +240,20 @@ export type PythonReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final';
  * Release information for a Python version.
  */
 export type PythonVersionRelease = {
-    level: PythonReleaseLevel;
-    serial: number;
+    readonly level: PythonReleaseLevel;
+    readonly serial: number;
 };
 
 export type VersionInfo = {
-    major: number | undefined;
-    minor: number | undefined;
-    micro: number | undefined;
-    release: PythonVersionRelease | undefined;
+    readonly major: number | undefined;
+    readonly minor: number | undefined;
+    readonly micro: number | undefined;
+    readonly release: PythonVersionRelease | undefined;
 };
 
 export type ResolvedVersionInfo = {
-    major: number;
-    minor: number;
-    micro: number;
-    release: PythonVersionRelease;
+    readonly major: number;
+    readonly minor: number;
+    readonly micro: number;
+    readonly release: PythonVersionRelease;
 };
