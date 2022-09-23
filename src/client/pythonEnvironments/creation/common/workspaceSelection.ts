@@ -4,7 +4,7 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { QuickPickItem, WorkspaceFolder } from 'vscode';
-import { showQuickPick } from '../../../common/vscodeApis/windowApis';
+import { showErrorMessage, showQuickPick } from '../../../common/vscodeApis/windowApis';
 import { getWorkspaceFolders } from '../../../common/vscodeApis/workspaceApis';
 import { CreateEnv } from '../../../common/utils/localize';
 
@@ -38,6 +38,7 @@ export async function pickWorkspaceFolder(
     const workspaces = getWorkspaceFolders();
 
     if (!workspaces || workspaces.length === 0) {
+        showErrorMessage(CreateEnv.noWorkspace);
         return undefined;
     }
 

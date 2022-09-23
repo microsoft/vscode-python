@@ -556,10 +556,7 @@ export namespace CreateEnv {
     export const statusError = localize('createEnv.statusError', 'Error.');
     export const statusDone = localize('createEnv.statusDone', 'Done.');
 
-    export const hasVirtualEnv = localize(
-        'createEnv.hasVirtualEnv',
-        'Workspace folder contains a virtual environment.',
-    );
+    export const hasVirtualEnv = localize('createEnv.hasVirtualEnv', 'Workspace folder contains a virtual environment');
 
     export const noWorkspace = localize(
         'createEnv.noWorkspace',
@@ -568,13 +565,10 @@ export namespace CreateEnv {
 
     export const pickWorkspaceTitle = localize(
         'createEnv.workspaceQuickPick.title',
-        'Select a workspace to create virtual environment.',
+        'Select a workspace to create environment',
     );
 
-    export const providersQuickPickTitle = localize(
-        'createEnv.providersQuickPick.title',
-        'Select an environment type.',
-    );
+    export const providersQuickPickTitle = localize('createEnv.providersQuickPick.title', 'Select an environment type');
 
     export namespace Venv {
         export const creating = localize('createEnv.venv.creating', 'Creating venv...');
@@ -587,13 +581,12 @@ export namespace CreateEnv {
         );
         export const selectPythonQuickPickTitle = localize(
             'createEnv.venv.basePython.title',
-            'Select a python to use for environment creation.',
+            'Select a python to use for environment creation',
         );
         export const providerDescription = localize(
             'createEnv.venv.description',
-            'Creates a `.venv` virtual environment in the current workspace.',
+            'Creates a `.venv` virtual environment in the current workspace',
         );
-        export const providerName = 'venv';
     }
 
     export namespace Conda {
@@ -617,14 +610,13 @@ export namespace CreateEnv {
         );
         export const selectPythonQuickPickTitle = localize(
             'createEnv.conda.pythonSelection.title',
-            'Please select the version of Python to install in the environment.',
+            'Please select the version of Python to install in the environment',
         );
         export const searching = localize('createEnv.conda.searching', 'Searching for conda (base)...');
         export const creating = localize('createEnv.venv.creating', 'Running conda create...');
         export const providerDescription = localize(
             'createEnv.conda.description',
-            'Creates a `.conda` Conda environment in the current workspace.',
+            'Creates a `.conda` Conda environment in the current workspace',
         );
-        export const providerName = 'conda';
     }
 }

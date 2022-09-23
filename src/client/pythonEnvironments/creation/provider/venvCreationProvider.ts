@@ -148,7 +148,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
         return undefined;
     }
 
-    name = CreateEnv.Venv.providerName;
+    name = 'Venv';
 
     description: string = CreateEnv.Venv.providerDescription;
 

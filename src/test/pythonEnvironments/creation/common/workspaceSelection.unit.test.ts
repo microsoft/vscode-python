@@ -14,10 +14,12 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 suite('Create environment workspace selection tests', () => {
     let showQuickPickStub: sinon.SinonStub;
     let getWorkspaceFoldersStub: sinon.SinonStub;
+    let showErrorMessageStub: sinon.SinonStub;
 
     setup(() => {
         showQuickPickStub = sinon.stub(windowApis, 'showQuickPick');
         getWorkspaceFoldersStub = sinon.stub(workspaceApis, 'getWorkspaceFolders');
+        showErrorMessageStub = sinon.stub(windowApis, 'showErrorMessage');
     });
 
     teardown(() => {
@@ -27,11 +29,13 @@ suite('Create environment workspace selection tests', () => {
     test('No workspaces (undefined)', async () => {
         getWorkspaceFoldersStub.returns(undefined);
         assert.isUndefined(await pickWorkspaceFolder());
+        assert.isTrue(showErrorMessageStub.calledOnce);
     });
 
     test('No workspaces (empty array)', async () => {
         getWorkspaceFoldersStub.returns([]);
         assert.isUndefined(await pickWorkspaceFolder());
+        assert.isTrue(showErrorMessageStub.calledOnce);
     });
 
     test('User did not select workspace', async () => {

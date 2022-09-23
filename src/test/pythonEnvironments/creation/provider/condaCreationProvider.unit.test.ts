@@ -17,7 +17,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import * as rawProcessApis from '../../../../client/common/process/rawProcessApis';
 import { Output } from '../../../../client/common/process/types';
 import { createDeferred } from '../../../../client/common/utils/async';
-import * as commonUtils from '../../../../client/pythonEnvironments/creation/provider/commonUtils';
+import * as commonUtils from '../../../../client/pythonEnvironments/creation/common/commonUtils';
 
 chaiUse(chaiAsPromised);
 
