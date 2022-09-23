@@ -11,7 +11,7 @@ import { IServiceContainer } from './ioc/types';
 import {
     ActiveEnvironmentIdChangeEvent,
     Environment,
-    EnvironmentsChangedEvent,
+    EnvironmentsChangeEvent,
     ProposedExtensionAPI,
     ResolvedEnvironment,
     RefreshOptions,
@@ -20,7 +20,7 @@ import {
     EnvironmentTools,
     EnvironmentId,
 } from './proposedApiTypes';
-import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from './pythonEnvironments/base/info';
+import { EnvPathType, PythonEnvInfo, PythonEnvKind, PythonEnvType } from './pythonEnvironments/base/info';
 import { getEnvPath } from './pythonEnvironments/base/info/env';
 import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { IPythonExecutionFactory } from './common/process/types';
@@ -36,7 +36,7 @@ const onDidActiveInterpreterChangedEvent = new EventEmitter<ActiveEnvironmentIdC
 export function reportActiveInterpreterChanged(e: ActiveEnvironmentChangeEvent): void {
     onDidActiveInterpreterChangedEvent.fire({ id: getEnvID(e.path), path: e.path, resource: e.resource });
 }
-const onEnvironmentsChanged = new EventEmitter<EnvironmentsChangedEvent>();
+const onEnvironmentsChanged = new EventEmitter<EnvironmentsChangeEvent>();
 const environmentsReference = new Map<string, EnvironmentReference>();
 
 export class EnvironmentReference implements Environment {
@@ -104,7 +104,14 @@ export function buildProposedApi(
         }),
         onEnvironmentsChanged,
     );
-    const proposed: ProposedExtensionAPI = {
+    const proposed: ProposedExtensionAPI & {
+        environment: {
+            /**
+             * @deprecated Use {@link getActiveEnvironmentId} instead. This will soon be removed.
+             */
+            getActiveEnvironmentPath(resource?: Resource): Promise<EnvPathType | undefined>;
+        };
+    } = {
         environment: {
             getActiveEnvironmentId(resource?: Resource) {
                 resource = resource && 'uri' in resource ? resource.uri : resource;
@@ -139,7 +146,7 @@ export function buildProposedApi(
                 }
                 return resolveEnvironment(path, discoveryApi);
             },
-            get environments(): Environment[] {
+            get all(): Environment[] {
                 return discoveryApi.getEnvs().map((e) => convertEnvInfoAndGetReference(e));
             },
             async refreshEnvironments(options?: RefreshOptions) {

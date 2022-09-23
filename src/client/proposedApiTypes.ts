@@ -32,12 +32,12 @@ interface EnvironmentAPI {
      * Carries environments found by the extension at the time of fetching the property. Note a refresh might be
      * going on so this may not be the complete list.
      */
-    readonly environments: Environment[];
+    readonly all: readonly Environment[];
     /**
      * This event is triggered when the known environment list changes, like when a environment
      * is found, existing environment is removed, or some details changed on an environment.
      */
-    readonly onDidChangeEnvironments: Event<EnvironmentsChangedEvent>;
+    readonly onDidChangeEnvironments: Event<EnvironmentsChangeEvent>;
     /**
      * This API will trigger environment discovery, but only if it has not already happened in this VSCode session.
      * Useful for making sure env list is up-to-date when the caller needs it for the first time.
@@ -56,10 +56,6 @@ interface EnvironmentAPI {
      * the environment id or the environment itself.
      */
     resolveEnvironment(environment: Environment | EnvironmentId | string): Promise<ResolvedEnvironment | undefined>;
-    /**
-     * @deprecated Use {@link getActiveEnvironmentId} instead. This will soon be removed.
-     */
-    getActiveEnvironmentPath(resource?: Resource): Promise<EnvPathType | undefined>;
 }
 
 export type RefreshOptions = {
@@ -168,7 +164,7 @@ export type ResolvedEnvironment = Environment & {
     };
 };
 
-export type EnvironmentsChangedEvent = {
+export type EnvironmentsChangeEvent = {
     env: Environment;
     /**
      * * "add": New environment is added.
@@ -261,11 +257,3 @@ export type ResolvedVersionInfo = {
     micro: number;
     release: PythonVersionRelease;
 };
-
-/**
- * @deprecated: Will be removed soon.
- */
-interface EnvPathType {
-    path: string;
-    pathType: 'envFolderPath' | 'interpreterPath';
-}

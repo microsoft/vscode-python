@@ -28,7 +28,7 @@ import { PythonEnvCollectionChangedEvent } from '../client/pythonEnvironments/ba
 import {
     ProposedExtensionAPI,
     ActiveEnvironmentIdChangeEvent,
-    EnvironmentsChangedEvent,
+    EnvironmentsChangeEvent,
 } from '../client/proposedApiTypes';
 import { normCasePath } from '../client/common/platform/fs-paths';
 
@@ -155,7 +155,7 @@ suite('Proposed Extension API', () => {
 
     test('environments: no pythons found', () => {
         discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
-        const actual = proposed.environment.environments;
+        const actual = proposed.environment.all;
         expect(actual).to.be.deep.equal([]);
     });
 
@@ -205,7 +205,7 @@ suite('Proposed Extension API', () => {
             },
         ];
         discoverAPI.setup((d) => d.getEnvs()).returns(() => envs);
-        const actual = proposed.environment.environments;
+        const actual = proposed.environment.all;
         const actualEnvs = actual?.map((a) => (a as EnvironmentReference).internal);
         assert.deepEqual(
             actualEnvs?.sort((a, b) => a.id.localeCompare(b.id)),
@@ -214,9 +214,9 @@ suite('Proposed Extension API', () => {
     });
 
     test('Provide an event to track when list of environments change', async () => {
-        let events: EnvironmentsChangedEvent[] = [];
-        let eventValues: EnvironmentsChangedEvent[] = [];
-        let expectedEvents: EnvironmentsChangedEvent[] = [];
+        let events: EnvironmentsChangeEvent[] = [];
+        let eventValues: EnvironmentsChangeEvent[] = [];
+        let expectedEvents: EnvironmentsChangeEvent[] = [];
         proposed.environment.onDidChangeEnvironments((e) => {
             events.push(e);
         });
