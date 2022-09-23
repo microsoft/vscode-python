@@ -58,6 +58,7 @@ async function createCondaEnv(
         // then launches `conda.exe` which is a stub to `python.exe -m conda`. Here, we are
         // instead using the `python.exe` that ships with conda to run a python script that
         // handles conda env creation and package installation.
+        // See conda issue: https://github.com/conda/conda/issues/11399
         const root = path.dirname(command);
         const libPath1 = path.join(root, 'Library', 'bin');
         const libPath2 = path.join(root, 'Library', 'mingw-w64', 'bin');
