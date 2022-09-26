@@ -224,10 +224,10 @@ export type KnownEnvironmentTools =
  */
 export type EnvironmentType = KnownEnvironmentTypes | string;
 /**
- * Environment types the Python extension currently has built-in support for. Note this list is expected to shrink
- * once tools have their own separate extensions.
+ * Environment types the Python extension is aware of. Note this list is expected to shrink once tools have their
+ * own separate extensions, in which case they're expected to provide the type themselves.
  */
-export type KnownEnvironmentTypes = 'VirtualEnv' | 'Conda' | 'Unknown';
+export type KnownEnvironmentTypes = 'VirtualEnvironment' | 'Conda' | 'Unknown';
 
 /**
  * Carries bitness for an environment.

@@ -219,7 +219,7 @@ function convertEnvType(envType: PythonEnvType): EnvironmentType {
         return 'Conda';
     }
     if (envType === PythonEnvType.Virtual) {
-        return 'VirtualEnv';
+        return 'VirtualEnvironment';
     }
     return 'Unknown';
 }
