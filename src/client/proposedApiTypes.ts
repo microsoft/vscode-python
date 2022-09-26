@@ -83,7 +83,7 @@ export type Environment = EnvironmentId & {
         /**
          * Bitness if known at this moment.
          */
-        readonly bitness: Architecture | undefined;
+        readonly bitness: Bitness | undefined;
         /**
          * Value of `sys.prefix` in sys module if known at this moment.
          */
@@ -148,7 +148,7 @@ export type ResolvedEnvironment = Environment & {
         /**
          * Bitness of the environment.
          */
-        readonly bitness: Architecture;
+        readonly bitness: Bitness;
         /**
          * Value of `sys.prefix` in sys module.
          */
@@ -206,7 +206,8 @@ export type EnvironmentId = {
  */
 export type EnvironmentTools = KnownEnvironmentTools | string;
 /**
- * Tools or plugins the Python extension is aware of.
+ * Tools or plugins the Python extension currently has built-in support for. Note this list is expected to shrink
+ * once tools have their own separate extensions.
  */
 export type KnownEnvironmentTools =
     | 'Conda'
@@ -223,14 +224,15 @@ export type KnownEnvironmentTools =
  */
 export type EnvironmentType = KnownEnvironmentTypes | string;
 /**
- * Environment types the Python extension is aware of.
+ * Environment types the Python extension currently has built-in support for. Note this list is expected to shrink
+ * once tools have their own separate extensions.
  */
 export type KnownEnvironmentTypes = 'VirtualEnv' | 'Conda' | 'Unknown';
 
 /**
  * Carries bitness for an environment.
  */
-export type Architecture = 'x86' | 'x64' | 'Unknown';
+export type Bitness = '64-bit' | '32-bit' | 'Unknown';
 
 /**
  * The possible Python release levels.

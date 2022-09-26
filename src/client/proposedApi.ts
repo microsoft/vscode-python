@@ -197,7 +197,7 @@ export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment 
         id: getEnvID(path),
         executable: {
             uri: Uri.file(env.executable.filename),
-            bitness: convertArch(env.arch),
+            bitness: convertBitness(env.arch),
             sysPrefix: env.executable.sysPrefix,
         },
         environment: env.type
@@ -272,12 +272,12 @@ function convertEnvInfoAndGetReference(env: PythonEnvInfo): Environment {
     return getEnvReference(convertEnvInfo(env));
 }
 
-function convertArch(arch: Architecture) {
+function convertBitness(arch: Architecture) {
     switch (arch) {
         case Architecture.x64:
-            return 'x64';
+            return '64-bit';
         case Architecture.x86:
-            return 'x86';
+            return '32-bit';
         default:
             return 'Unknown';
     }
