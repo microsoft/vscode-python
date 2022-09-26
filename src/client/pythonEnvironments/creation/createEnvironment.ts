@@ -5,7 +5,7 @@ import { CancellationToken, ProgressLocation } from 'vscode';
 import { withProgress } from '../../common/vscodeApis/windowApis';
 import { traceError } from '../../logging';
 import { CreateEnvironmentOptions, CreateEnvironmentProgress, CreateEnvironmentProvider } from './types';
-import { CreateEnv } from '../../common/utils/localize';
+import { Common, CreateEnv } from '../../common/utils/localize';
 import { Commands } from '../../common/constants';
 
 export async function createEnvironment(
@@ -18,7 +18,7 @@ export async function createEnvironment(
     return withProgress(
         {
             location: ProgressLocation.Notification,
-            title: `${CreateEnv.statusTitle} ([logs](command:${Commands.ViewOutput}))`,
+            title: `${CreateEnv.statusTitle} ([${Common.showLogs}](command:${Commands.ViewOutput}))`,
             cancellable: true,
         },
         async (progress: CreateEnvironmentProgress, token: CancellationToken) => {

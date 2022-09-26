@@ -96,6 +96,7 @@ export namespace Common {
     export const openLaunch = localize('Common.openLaunch', 'Open launch.json');
     export const useCommandPrompt = localize('Common.useCommandPrompt', 'Use Command Prompt');
     export const download = localize('Common.download', 'Download');
+    export const showLogs = localize('Common.showLogs', 'Show logs');
 }
 
 export namespace CommonSurvey {

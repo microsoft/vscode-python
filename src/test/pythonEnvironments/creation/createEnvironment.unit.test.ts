@@ -6,13 +6,14 @@ import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
 import { assert, use as chaiUse } from 'chai';
 import { ProgressLocation, ProgressOptions } from 'vscode';
-import { CreateEnv } from '../../../client/common/utils/localize';
+import { Common, CreateEnv } from '../../../client/common/utils/localize';
 import * as windowApis from '../../../client/common/vscodeApis/windowApis';
 import { createEnvironment } from '../../../client/pythonEnvironments/creation/createEnvironment';
 import {
     CreateEnvironmentProgress,
     CreateEnvironmentProvider,
 } from '../../../client/pythonEnvironments/creation/types';
+import { Commands } from '../../../client/common/constants';
 
 chaiUse(chaiAsPromised);
 
@@ -26,7 +27,7 @@ suite('Create Environments Tests', () => {
         withProgressStub.callsFake(async (options: ProgressOptions, task) => {
             assert.deepEqual(options, {
                 location: ProgressLocation.Notification,
-                title: CreateEnv.statusTitle,
+                title: `${CreateEnv.statusTitle} ([${Common.showLogs}](command:${Commands.ViewOutput}))`,
                 cancellable: true,
             });
 
