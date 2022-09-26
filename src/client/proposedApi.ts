@@ -2,11 +2,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationTarget, EventEmitter, Uri, WorkspaceFolder, Event } from 'vscode';
+import { ConfigurationTarget, EventEmitter, Uri, WorkspaceFolder } from 'vscode';
 import * as pathUtils from 'path';
 import { IConfigurationService, IDisposableRegistry, IExtensions, IInterpreterPathService } from './common/types';
 import { Architecture } from './common/utils/platform';
-import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
 import {
     ActiveEnvironmentIdChangeEvent,
@@ -20,7 +19,7 @@ import {
     EnvironmentTools,
     EnvironmentId,
 } from './proposedApiTypes';
-import { EnvPathType, PythonEnvInfo, PythonEnvKind, PythonEnvType } from './pythonEnvironments/base/info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from './pythonEnvironments/base/info';
 import { getEnvPath } from './pythonEnvironments/base/info/env';
 import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { IPythonExecutionFactory } from './common/process/types';
@@ -28,14 +27,11 @@ import { traceError } from './logging';
 import { normCasePath } from './common/platform/fs-paths';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
-
-/**
- * @deprecated Will be removed soon.
- */
-interface ActiveEnvironmentChangedParams {
-    path: string;
-    resource?: Uri;
-}
+import {
+    buildDeprecatedProposedApi,
+    reportActiveInterpreterChangedDeprecated,
+    reportInterpretersChanged,
+} from './deprecatedProposedApi';
 
 type ActiveEnvironmentChangeEvent = {
     resource: WorkspaceFolder | undefined;
@@ -43,11 +39,11 @@ type ActiveEnvironmentChangeEvent = {
 };
 
 const onDidActiveInterpreterChangedEvent = new EventEmitter<ActiveEnvironmentIdChangeEvent>();
-const onDidActiveInterpreterChangedDeprecated = new EventEmitter<ActiveEnvironmentChangedParams>();
 export function reportActiveInterpreterChanged(e: ActiveEnvironmentChangeEvent): void {
     onDidActiveInterpreterChangedEvent.fire({ id: getEnvID(e.path), path: e.path, resource: e.resource });
-    onDidActiveInterpreterChangedDeprecated.fire({ path: e.path, resource: e.resource?.uri });
+    reportActiveInterpreterChangedDeprecated({ path: e.path, resource: e.resource?.uri });
 }
+
 const onEnvironmentsChanged = new EventEmitter<EnvironmentsChangeEvent>();
 const environmentsReference = new Map<string, EnvironmentReference>();
 
@@ -106,7 +102,6 @@ export function buildProposedApi(
     serviceContainer: IServiceContainer,
 ): ProposedExtensionAPI {
     const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-    const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     const configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
@@ -127,27 +122,47 @@ export function buildProposedApi(
             if (e.old) {
                 if (e.new) {
                     onEnvironmentsChanged.fire({ type: 'update', env: convertEnvInfoAndGetReference(e.new) });
+                    reportInterpretersChanged([
+                        {
+                            path: getEnvPath(e.new.executable.filename, e.new.location).path,
+                            type: 'update',
+                        },
+                    ]);
                 } else {
                     onEnvironmentsChanged.fire({ type: 'remove', env: convertEnvInfoAndGetReference(e.old) });
+                    reportInterpretersChanged([
+                        {
+                            path: getEnvPath(e.old.executable.filename, e.old.location).path,
+                            type: 'remove',
+                        },
+                    ]);
                 }
             } else if (e.new) {
                 onEnvironmentsChanged.fire({ type: 'add', env: convertEnvInfoAndGetReference(e.new) });
+                reportInterpretersChanged([
+                    {
+                        path: getEnvPath(e.new.executable.filename, e.new.location).path,
+                        type: 'add',
+                    },
+                ]);
             }
         }),
         onEnvironmentsChanged,
     );
-    const proposed: ProposedExtensionAPI & {
-        environment: {
-            /**
-             * @deprecated Use {@link getActiveEnvironmentId} instead. This will soon be removed.
-             */
-            getActiveEnvironmentPath(resource?: Resource): Promise<EnvPathType | undefined>;
-            /**
-             * @deprecated Use {@link onDidChangeActiveEnvironmentId} instead. This will soon be removed.
-             */
-            onDidActiveEnvironmentChanged: Event<ActiveEnvironmentChangedParams>;
-        };
-    } = {
+
+    /**
+     * @deprecated Will be removed soon. Use {@link ProposedExtensionAPI} instead.
+     */
+    let deprecatedProposedApi;
+    try {
+        deprecatedProposedApi = buildDeprecatedProposedApi(discoveryApi, serviceContainer);
+    } catch (ex) {
+        deprecatedProposedApi = { environment: {} };
+        // Errors out only in case of testing.
+        // Also, these APIs no longer supported, no need to log error.
+    }
+
+    const proposed: ProposedExtensionAPI = {
         environment: {
             getActiveEnvironmentId(resource?: Resource) {
                 sendApiTelemetry('getActiveEnvironmentId');
@@ -202,16 +217,7 @@ export function buildProposedApi(
                 sendApiTelemetry('onDidChangeEnvironments');
                 return onEnvironmentsChanged.event;
             },
-            async getActiveEnvironmentPath(resource?: Resource) {
-                sendApiTelemetry('getActiveEnvironmentPath');
-                resource = resource && 'uri' in resource ? resource.uri : resource;
-                const env = await interpreterService.getActiveInterpreter(resource);
-                if (!env) {
-                    return undefined;
-                }
-                return getEnvPath(env.path, env.envPath);
-            },
-            onDidActiveEnvironmentChanged: onDidActiveInterpreterChangedDeprecated.event,
+            ...deprecatedProposedApi.environment,
         },
     };
     return proposed;
