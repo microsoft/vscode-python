@@ -6,56 +6,57 @@ import { CancellationToken, Event, Uri, WorkspaceFolder } from 'vscode';
 // https://github.com/microsoft/vscode-python/wiki/Proposed-Environment-APIs
 
 export interface ProposedExtensionAPI {
-    environment: EnvironmentAPI;
-}
-
-interface EnvironmentAPI {
-    /**
-     * Returns the environment configured by user in settings.
-     * @param resource : Uri of a file or workspace folder. This is used to determine the env in a multi-root
-     * scenario. If `undefined`, then the API returns what ever is set for the workspace.
-     */
-    getActiveEnvironmentId(resource?: Resource): EnvironmentId;
-    /**
-     * Sets the active environment path for the python extension for the resource. Configuration target will always
-     * be the workspace folder.
-     * @param environment : Full path to environment folder or python executable for the environment. Can also pass
-     * the environment itself.
-     * @param resource : [optional] File or workspace to scope to a particular workspace folder.
-     */
-    updateActiveEnvironmentId(environment: Environment | EnvironmentId | string, resource?: Resource): Promise<void>;
-    /**
-     * This event is triggered when the active environment setting changes.
-     */
-    readonly onDidChangeActiveEnvironmentId: Event<ActiveEnvironmentIdChangeEvent>;
-    /**
-     * Carries environments found by the extension at the time of fetching the property. Note a refresh might be
-     * going on so this may not be the complete list.
-     */
-    readonly all: readonly Environment[];
-    /**
-     * This event is triggered when the known environment list changes, like when a environment
-     * is found, existing environment is removed, or some details changed on an environment.
-     */
-    readonly onDidChangeEnvironments: Event<EnvironmentsChangeEvent>;
-    /**
-     * This API will trigger environment discovery, but only if it has not already happened in this VSCode session.
-     * Useful for making sure env list is up-to-date when the caller needs it for the first time.
-     *
-     * To force trigger a refresh regardless of whether a refresh was already triggered, see option
-     * {@link RefreshOptions.forceRefresh}.
-     *
-     * Note that if there is a refresh already going on then this returns the promise for that refresh.
-     * @param options Additional options for refresh.
-     * @param token A cancellation token that indicates a refresh is no longer needed.
-     */
-    refreshEnvironments(options?: RefreshOptions, token?: CancellationToken): Promise<void>;
-    /**
-     * Returns details for the given environment, or `undefined` if the env is invalid.
-     * @param environment : Full path to environment folder or python executable for the environment. Can also pass
-     * the environment id or the environment itself.
-     */
-    resolveEnvironment(environment: Environment | EnvironmentId | string): Promise<ResolvedEnvironment | undefined>;
+    readonly environment: {
+        /**
+         * Returns the environment configured by user in settings.
+         * @param resource : Uri of a file or workspace folder. This is used to determine the env in a multi-root
+         * scenario. If `undefined`, then the API returns what ever is set for the workspace.
+         */
+        getActiveEnvironmentId(resource?: Resource): EnvironmentId;
+        /**
+         * Sets the active environment path for the python extension for the resource. Configuration target will always
+         * be the workspace folder.
+         * @param environment : Full path to environment folder or python executable for the environment. Can also pass
+         * the environment itself.
+         * @param resource : [optional] File or workspace to scope to a particular workspace folder.
+         */
+        updateActiveEnvironmentId(
+            environment: Environment | EnvironmentId | string,
+            resource?: Resource,
+        ): Promise<void>;
+        /**
+         * This event is triggered when the active environment setting changes.
+         */
+        readonly onDidChangeActiveEnvironmentId: Event<ActiveEnvironmentIdChangeEvent>;
+        /**
+         * Carries environments found by the extension at the time of fetching the property. Note this may not
+         * contain all environments in the system as a refresh might be going on.
+         */
+        readonly all: readonly Environment[];
+        /**
+         * This event is triggered when the known environment list changes, like when a environment
+         * is found, existing environment is removed, or some details changed on an environment.
+         */
+        readonly onDidChangeEnvironments: Event<EnvironmentsChangeEvent>;
+        /**
+         * This API will trigger environment discovery, but only if it has not already happened in this VSCode session.
+         * Useful for making sure env list is up-to-date when the caller needs it for the first time.
+         *
+         * To force trigger a refresh regardless of whether a refresh was already triggered, see option
+         * {@link RefreshOptions.forceRefresh}.
+         *
+         * Note that if there is a refresh already going on then this returns the promise for that refresh.
+         * @param options Additional options for refresh.
+         * @param token A cancellation token that indicates a refresh is no longer needed.
+         */
+        refreshEnvironments(options?: RefreshOptions, token?: CancellationToken): Promise<void>;
+        /**
+         * Returns details for the given environment, or `undefined` if the env is invalid.
+         * @param environment : Full path to environment folder or python executable for the environment. Can also pass
+         * the environment id or the environment itself.
+         */
+        resolveEnvironment(environment: Environment | EnvironmentId | string): Promise<ResolvedEnvironment | undefined>;
+    };
 }
 
 export type RefreshOptions = {
