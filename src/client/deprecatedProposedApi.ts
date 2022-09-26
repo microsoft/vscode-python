@@ -62,8 +62,10 @@ export function buildDeprecatedProposedApi(
     const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
-    function sendApiTelemetry(apiName: string) {
-        console.warn('Extension is using deprecated python APIs which will be removed soon');
+    function sendApiTelemetry(apiName: string, warnLog = true) {
+        if (warnLog) {
+            console.warn('Extension is using deprecated python APIs which will be removed soon');
+        }
         extensions
             .determineExtensionFromCallStack()
             .then((info) =>
@@ -138,19 +140,19 @@ export function buildDeprecatedProposedApi(
                 return discoveryApi.getRefreshPromise(options);
             },
             get onDidChangeExecutionDetails() {
-                sendApiTelemetry('onDidChangeExecutionDetails');
+                sendApiTelemetry('onDidChangeExecutionDetails', false);
                 return interpreterService.onDidChangeInterpreterConfiguration;
             },
             get onDidEnvironmentsChanged() {
-                sendApiTelemetry('onDidEnvironmentsChanged');
+                sendApiTelemetry('onDidEnvironmentsChanged', false);
                 return onDidInterpretersChangedEvent.event;
             },
             get onDidActiveEnvironmentChanged() {
-                sendApiTelemetry('onDidActiveEnvironmentChanged');
+                sendApiTelemetry('onDidActiveEnvironmentChanged', false);
                 return onDidActiveInterpreterChangedEvent.event;
             },
             get onRefreshProgress() {
-                sendApiTelemetry('onRefreshProgress');
+                sendApiTelemetry('onRefreshProgress', false);
                 return discoveryApi.onProgress;
             },
         },

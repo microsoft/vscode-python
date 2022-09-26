@@ -151,13 +151,13 @@ export function buildProposedApi(
     );
 
     /**
-     * @deprecated Will be removed soon. Use {@link ProposedExtensionAPI} instead.
+     * @deprecated Will be removed soon. Use {@link ProposedExtensionAPI.environment} instead.
      */
-    let deprecatedProposedApi;
+    let deprecatedEnvironmentsApi;
     try {
-        deprecatedProposedApi = buildDeprecatedProposedApi(discoveryApi, serviceContainer);
+        deprecatedEnvironmentsApi = { ...buildDeprecatedProposedApi(discoveryApi, serviceContainer).environment };
     } catch (ex) {
-        deprecatedProposedApi = { environment: {} };
+        deprecatedEnvironmentsApi = {};
         // Errors out only in case of testing.
         // Also, these APIs no longer supported, no need to log error.
     }
@@ -217,7 +217,7 @@ export function buildProposedApi(
                 sendApiTelemetry('onDidChangeEnvironments');
                 return onEnvironmentsChanged.event;
             },
-            ...deprecatedProposedApi.environment,
+            ...deprecatedEnvironmentsApi,
         },
     };
     return proposed;
