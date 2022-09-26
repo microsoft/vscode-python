@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationTarget, EventEmitter, Uri, WorkspaceFolder } from 'vscode';
+import { ConfigurationTarget, EventEmitter, Uri, WorkspaceFolder, Event } from 'vscode';
 import * as pathUtils from 'path';
 import { IConfigurationService, IDisposableRegistry, IExtensions, IInterpreterPathService } from './common/types';
 import { Architecture } from './common/utils/platform';
@@ -29,14 +29,24 @@ import { normCasePath } from './common/platform/fs-paths';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
 
+/**
+ * @deprecated Will be removed soon.
+ */
+interface ActiveEnvironmentChangedParams {
+    path: string;
+    resource?: Uri;
+}
+
 type ActiveEnvironmentChangeEvent = {
     resource: WorkspaceFolder | undefined;
     path: string;
 };
 
 const onDidActiveInterpreterChangedEvent = new EventEmitter<ActiveEnvironmentIdChangeEvent>();
+const onDidActiveInterpreterChangedDeprecated = new EventEmitter<ActiveEnvironmentChangedParams>();
 export function reportActiveInterpreterChanged(e: ActiveEnvironmentChangeEvent): void {
     onDidActiveInterpreterChangedEvent.fire({ id: getEnvID(e.path), path: e.path, resource: e.resource });
+    onDidActiveInterpreterChangedDeprecated.fire({ path: e.path, resource: e.resource?.uri });
 }
 const onEnvironmentsChanged = new EventEmitter<EnvironmentsChangeEvent>();
 const environmentsReference = new Map<string, EnvironmentReference>();
@@ -132,6 +142,10 @@ export function buildProposedApi(
              * @deprecated Use {@link getActiveEnvironmentId} instead. This will soon be removed.
              */
             getActiveEnvironmentPath(resource?: Resource): Promise<EnvPathType | undefined>;
+            /**
+             * @deprecated Use {@link onDidChangeActiveEnvironmentId} instead. This will soon be removed.
+             */
+            onDidActiveEnvironmentChanged: Event<ActiveEnvironmentChangedParams>;
         };
     } = {
         environment: {
@@ -197,6 +211,7 @@ export function buildProposedApi(
                 }
                 return getEnvPath(env.path, env.envPath);
             },
+            onDidActiveEnvironmentChanged: onDidActiveInterpreterChangedDeprecated.event,
         },
     };
     return proposed;

@@ -13,8 +13,7 @@ import { IFileSystem } from '../platform/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
 
 /**
- * Provides functions for tracking the list of extensions that VS code has installed. Code borrowed from:
- * https://github.com/microsoft/vscode-jupyter/blob/67fe33d072f11d6443cf232a06bed0ac5e24682c/src/platform/common/application/extensions.node.ts
+ * Provides functions for tracking the list of extensions that VSCode has installed.
  */
 @injectable()
 export class Extensions implements IExtensions {
@@ -33,6 +32,10 @@ export class Extensions implements IExtensions {
         return extensions.getExtension(extensionId);
     }
 
+    /**
+     * Code borrowed from:
+     * https://github.com/microsoft/vscode-jupyter/blob/67fe33d072f11d6443cf232a06bed0ac5e24682c/src/platform/common/application/extensions.node.ts
+     */
     public async determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }> {
         const { stack } = new Error();
         if (stack) {

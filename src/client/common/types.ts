@@ -430,7 +430,7 @@ export interface IExtensions {
     getExtension<T>(extensionId: string): Extension<T> | undefined;
 
     /**
-     * Determines which called into our extension code based on call stacks.
+     * Determines which extension called into our extension code based on call stacks.
      */
     determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }>;
 }
