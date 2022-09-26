@@ -1107,6 +1107,31 @@ export interface IEventNamePropertyMapping {
          */
         discovered: boolean;
     };
+
+    /**
+     * Telemetry event sent when another extension calls into python extension's environment API. Contains details
+     * of the other extension.
+     */
+    /* __GDPR__
+       "python_environments_api" : {
+          "extensionId" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": false , "owner": "karrtikr"},
+          "displayName" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": false, "owner": "karrtikr" }
+       }
+     */
+    [EventName.PYTHON_ENVIRONMENTS_API]: {
+        /**
+         * The ID of the extension calling the API.
+         */
+        extensionId: string;
+        /**
+         * The name of the extension as displayed in marketplace.
+         */
+        displayName: string;
+        /**
+         * The name of the API called.
+         */
+        apiName: string;
+    };
     /**
      * Telemetry event sent with details after updating the python interpreter
      */

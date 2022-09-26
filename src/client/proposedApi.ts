@@ -4,7 +4,7 @@
 
 import { ConfigurationTarget, EventEmitter, Uri, WorkspaceFolder } from 'vscode';
 import * as pathUtils from 'path';
-import { IConfigurationService, IDisposableRegistry, IInterpreterPathService } from './common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensions, IInterpreterPathService } from './common/types';
 import { Architecture } from './common/utils/platform';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
@@ -26,6 +26,8 @@ import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { IPythonExecutionFactory } from './common/process/types';
 import { traceError } from './logging';
 import { normCasePath } from './common/platform/fs-paths';
+import { sendTelemetryEvent } from './telemetry';
+import { EventName } from './telemetry/constants';
 
 type ActiveEnvironmentChangeEvent = {
     resource: WorkspaceFolder | undefined;
@@ -97,6 +99,19 @@ export function buildProposedApi(
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     const configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+    const extensions = serviceContainer.get<IExtensions>(IExtensions);
+    function sendApiTelemetry(apiName: string) {
+        extensions
+            .determineExtensionFromCallStack()
+            .then((info) =>
+                sendTelemetryEvent(EventName.PYTHON_ENVIRONMENTS_API, undefined, {
+                    apiName,
+                    extensionId: info.extensionId,
+                    displayName: info.displayName,
+                }),
+            )
+            .ignoreErrors();
+    }
     disposables.push(
         discoveryApi.onChanged((e) => {
             if (e.old) {
@@ -121,18 +136,24 @@ export function buildProposedApi(
     } = {
         environment: {
             getActiveEnvironmentId(resource?: Resource) {
+                sendApiTelemetry('getActiveEnvironmentId');
                 resource = resource && 'uri' in resource ? resource.uri : resource;
                 const path = configService.getSettings(resource).pythonPath;
                 const id = path === 'python' ? 'DEFAULT_PYTHON' : getEnvID(path);
                 return { id, path };
             },
             updateActiveEnvironmentId(env: Environment | EnvironmentId | string, resource?: Resource): Promise<void> {
+                sendApiTelemetry('updateActiveEnvironmentId');
                 const path = typeof env !== 'string' ? env.path : env;
                 resource = resource && 'uri' in resource ? resource.uri : resource;
                 return interpreterPathService.update(resource, ConfigurationTarget.WorkspaceFolder, path);
             },
-            onDidChangeActiveEnvironmentId: onDidActiveInterpreterChangedEvent.event,
+            get onDidChangeActiveEnvironmentId() {
+                sendApiTelemetry('onDidChangeActiveEnvironmentId');
+                return onDidActiveInterpreterChangedEvent.event;
+            },
             resolveEnvironment: async (env: Environment | EnvironmentId | string) => {
+                sendApiTelemetry('resolveEnvironment');
                 let path = typeof env !== 'string' ? env.path : env;
                 if (pathUtils.basename(path) === path) {
                     // Value can be `python`, `python3`, `python3.9` etc.
@@ -154,17 +175,21 @@ export function buildProposedApi(
                 return resolveEnvironment(path, discoveryApi);
             },
             get all(): Environment[] {
+                sendApiTelemetry('all');
                 return discoveryApi.getEnvs().map((e) => convertEnvInfoAndGetReference(e));
             },
             async refreshEnvironments(options?: RefreshOptions) {
+                sendApiTelemetry('refreshEnvironments');
                 await discoveryApi.triggerRefresh(undefined, {
                     ifNotTriggerredAlready: !options?.forceRefresh,
                 });
             },
             get onDidChangeEnvironments() {
+                sendApiTelemetry('onDidChangeEnvironments');
                 return onEnvironmentsChanged.event;
             },
             async getActiveEnvironmentPath(resource?: Resource) {
+                sendApiTelemetry('getActiveEnvironmentPath');
                 resource = resource && 'uri' in resource ? resource.uri : resource;
                 const env = await interpreterService.getActiveInterpreter(resource);
                 if (!env) {
