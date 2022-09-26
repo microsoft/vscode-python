@@ -3,7 +3,7 @@
 
 import { ConfigurationTarget, EventEmitter } from 'vscode';
 import { arePathsSame } from './common/platform/fs-paths';
-import { IInterpreterPathService, Resource } from './common/types';
+import { IExtensions, IInterpreterPathService, Resource } from './common/types';
 import {
     EnvironmentsChangedParams,
     ActiveEnvironmentChangedParams,
@@ -16,6 +16,8 @@ import { IServiceContainer } from './ioc/types';
 import { PythonEnvInfo } from './pythonEnvironments/base/info';
 import { getEnvPath } from './pythonEnvironments/base/info/env';
 import { GetRefreshEnvironmentsOptions, IDiscoveryAPI } from './pythonEnvironments/base/locator';
+import { sendTelemetryEvent } from './telemetry';
+import { EventName } from './telemetry/constants';
 
 const onDidInterpretersChangedEvent = new EventEmitter<EnvironmentsChangedParams[]>();
 /**
@@ -59,14 +61,30 @@ export function buildDeprecatedProposedApi(
 ): DeprecatedProposedAPI {
     const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+    const extensions = serviceContainer.get<IExtensions>(IExtensions);
+    function sendApiTelemetry(apiName: string) {
+        console.warn('Extension is using deprecated python APIs which will be removed soon');
+        extensions
+            .determineExtensionFromCallStack()
+            .then((info) =>
+                sendTelemetryEvent(EventName.PYTHON_ENVIRONMENTS_API, undefined, {
+                    apiName,
+                    extensionId: info.extensionId,
+                    displayName: info.displayName,
+                }),
+            )
+            .ignoreErrors();
+    }
 
     const proposed: DeprecatedProposedAPI = {
         environment: {
             async getExecutionDetails(resource?: Resource) {
+                sendApiTelemetry('getExecutionDetails');
                 const env = await interpreterService.getActiveInterpreter(resource);
                 return env ? { execCommand: [env.path] } : { execCommand: undefined };
             },
             async getActiveEnvironmentPath(resource?: Resource) {
+                sendApiTelemetry('getActiveEnvironmentPath');
                 const env = await interpreterService.getActiveInterpreter(resource);
                 if (!env) {
                     return undefined;
@@ -77,6 +95,7 @@ export function buildDeprecatedProposedApi(
                 path: string,
                 options?: EnvironmentDetailsOptions,
             ): Promise<EnvironmentDetails | undefined> {
+                sendApiTelemetry('getEnvironmentDetails');
                 let env: PythonEnvInfo | undefined;
                 if (options?.useCache) {
                     env = discoveryApi.getEnvs().find((v) => isEnvSame(path, v));
@@ -100,24 +119,40 @@ export function buildDeprecatedProposedApi(
                 };
             },
             getEnvironmentPaths() {
+                sendApiTelemetry('getEnvironmentPaths');
                 const paths = discoveryApi.getEnvs().map((e) => getEnvPath(e.executable.filename, e.location));
                 return Promise.resolve(paths);
             },
             setActiveEnvironment(path: string, resource?: Resource): Promise<void> {
+                sendApiTelemetry('setActiveEnvironment');
                 return interpreterPathService.update(resource, ConfigurationTarget.WorkspaceFolder, path);
             },
             async refreshEnvironment() {
+                sendApiTelemetry('refreshEnvironment');
                 await discoveryApi.triggerRefresh();
                 const paths = discoveryApi.getEnvs().map((e) => getEnvPath(e.executable.filename, e.location));
                 return Promise.resolve(paths);
             },
             getRefreshPromise(options?: GetRefreshEnvironmentsOptions): Promise<void> | undefined {
+                sendApiTelemetry('getRefreshPromise');
                 return discoveryApi.getRefreshPromise(options);
             },
-            onDidChangeExecutionDetails: interpreterService.onDidChangeInterpreterConfiguration,
-            onDidEnvironmentsChanged: onDidInterpretersChangedEvent.event,
-            onDidActiveEnvironmentChanged: onDidActiveInterpreterChangedEvent.event,
-            onRefreshProgress: discoveryApi.onProgress,
+            get onDidChangeExecutionDetails() {
+                sendApiTelemetry('onDidChangeExecutionDetails');
+                return interpreterService.onDidChangeInterpreterConfiguration;
+            },
+            get onDidEnvironmentsChanged() {
+                sendApiTelemetry('onDidEnvironmentsChanged');
+                return onDidInterpretersChangedEvent.event;
+            },
+            get onDidActiveEnvironmentChanged() {
+                sendApiTelemetry('onDidActiveEnvironmentChanged');
+                return onDidActiveInterpreterChangedEvent.event;
+            },
+            get onRefreshProgress() {
+                sendApiTelemetry('onRefreshProgress');
+                return discoveryApi.onProgress;
+            },
         },
     };
     return proposed;
