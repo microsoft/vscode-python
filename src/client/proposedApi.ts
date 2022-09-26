@@ -182,7 +182,6 @@ export function buildProposedApi(
                 return onDidActiveInterpreterChangedEvent.event;
             },
             resolveEnvironment: async (env: Environment | EnvironmentId | string) => {
-                sendApiTelemetry('resolveEnvironment');
                 let path = typeof env !== 'string' ? env.path : env;
                 if (pathUtils.basename(path) === path) {
                     // Value can be `python`, `python3`, `python3.9` etc.
@@ -201,6 +200,7 @@ export function buildProposedApi(
                     }
                     path = fullyQualifiedPath;
                 }
+                sendApiTelemetry('resolveEnvironment');
                 return resolveEnvironment(path, discoveryApi);
             },
             get all(): Environment[] {
@@ -208,10 +208,10 @@ export function buildProposedApi(
                 return discoveryApi.getEnvs().map((e) => convertEnvInfoAndGetReference(e));
             },
             async refreshEnvironments(options?: RefreshOptions) {
-                sendApiTelemetry('refreshEnvironments');
                 await discoveryApi.triggerRefresh(undefined, {
                     ifNotTriggerredAlready: !options?.forceRefresh,
                 });
+                sendApiTelemetry('refreshEnvironments');
             },
             get onDidChangeEnvironments() {
                 sendApiTelemetry('onDidChangeEnvironments');

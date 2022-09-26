@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 import { Uri, Event } from 'vscode';
-import { ProposedExtensionAPI, Resource } from './proposedApiTypes';
+import { Resource } from './proposedApiTypes';
 import { PythonEnvKind, EnvPathType } from './pythonEnvironments/base/info';
 import { ProgressNotificationEvent, GetRefreshEnvironmentsOptions } from './pythonEnvironments/base/locator';
 
