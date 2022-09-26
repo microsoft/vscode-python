@@ -8,6 +8,7 @@ import { cloneDeep } from 'lodash';
 import {
     IConfigurationService,
     IDisposableRegistry,
+    IExtensions,
     IInterpreterPathService,
     IPythonSettings,
 } from '../client/common/types';
@@ -37,6 +38,7 @@ suite('Proposed Extension API', () => {
     let discoverAPI: typemoq.IMock<IDiscoveryAPI>;
     let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
     let configService: typemoq.IMock<IConfigurationService>;
+    let extensions: typemoq.IMock<IExtensions>;
     let onDidChangeRefreshState: EventEmitter<ProgressNotificationEvent>;
     let onDidChangeEnvironments: EventEmitter<PythonEnvCollectionChangedEvent>;
 
@@ -45,11 +47,17 @@ suite('Proposed Extension API', () => {
     setup(() => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         discoverAPI = typemoq.Mock.ofType<IDiscoveryAPI>();
+        extensions = typemoq.Mock.ofType<IExtensions>();
+        extensions
+            .setup((e) => e.determineExtensionFromCallStack())
+            .returns(() => Promise.resolve({ extensionId: 'id', displayName: 'displayName', apiName: 'apiName' }))
+            .verifiable(typemoq.Times.atLeastOnce());
         interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
         configService = typemoq.Mock.ofType<IConfigurationService>();
         onDidChangeRefreshState = new EventEmitter();
         onDidChangeEnvironments = new EventEmitter();
 
+        serviceContainer.setup((s) => s.get(IExtensions)).returns(() => extensions.object);
         serviceContainer.setup((s) => s.get(IInterpreterPathService)).returns(() => interpreterPathService.object);
         serviceContainer.setup((s) => s.get(IConfigurationService)).returns(() => configService.object);
         serviceContainer.setup((s) => s.get(IDisposableRegistry)).returns(() => []);
@@ -59,6 +67,12 @@ suite('Proposed Extension API', () => {
 
         proposed = buildProposedApi(discoverAPI.object, serviceContainer.object);
     });
+
+    teardown(() => {
+        // Verify each API method sends telemetry regarding who called the API.
+        extensions.verifyAll();
+    });
+
     test('Provide an event to track when active environment details change', async () => {
         const events: ActiveEnvironmentIdChangeEvent[] = [];
         proposed.environment.onDidChangeActiveEnvironmentId((e) => {
