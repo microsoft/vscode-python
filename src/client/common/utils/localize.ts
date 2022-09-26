@@ -269,7 +269,7 @@ export namespace Interpreters {
     );
     export const environmentPromptMessage = localize(
         'Interpreters.environmentPromptMessage',
-        'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?',
+        'We noticed a new environment has been created. Do you want to select it for the workspace folder?',
     );
     export const entireWorkspace = localize('Interpreters.entireWorkspace', 'Select at workspace level');
     export const clearAtWorkspace = localize('Interpreters.clearAtWorkspace', 'Clear at workspace level');

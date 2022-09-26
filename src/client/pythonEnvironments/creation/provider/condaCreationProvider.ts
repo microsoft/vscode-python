@@ -155,7 +155,7 @@ async function createEnvironment(
     progress?.report({
         message: CreateEnv.Conda.waitingForWorkspace,
     });
-    const workspace = (await pickWorkspaceFolder()) as WorkspaceFolder | undefined;
+    const workspace = (await pickWorkspaceFolder({ token })) as WorkspaceFolder | undefined;
     if (!workspace) {
         traceError('Workspace was not selected or found for creating virtual env.');
         return undefined;
@@ -164,7 +164,7 @@ async function createEnvironment(
     progress?.report({
         message: CreateEnv.Conda.waitingForPython,
     });
-    const version = await pickPythonVersion();
+    const version = await pickPythonVersion(token);
     if (!version) {
         traceError('Conda environments for use with python extension require Python.');
         return undefined;

@@ -116,7 +116,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
             message: CreateEnv.Venv.waitingForWorkspace,
         });
 
-        const workspace = (await pickWorkspaceFolder()) as WorkspaceFolder | undefined;
+        const workspace = (await pickWorkspaceFolder({ token })) as WorkspaceFolder | undefined;
         if (workspace === undefined) {
             traceError('Workspace was not selected or found for creating virtual environment.');
             return undefined;

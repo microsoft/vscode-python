@@ -3,7 +3,7 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { QuickPickItem, WorkspaceFolder } from 'vscode';
+import { CancellationToken, QuickPickItem, WorkspaceFolder } from 'vscode';
 import { showErrorMessage, showQuickPick } from '../../../common/vscodeApis/windowApis';
 import { getWorkspaceFolders } from '../../../common/vscodeApis/workspaceApis';
 import { CreateEnv } from '../../../common/utils/localize';
@@ -30,6 +30,7 @@ async function getWorkspacesForQuickPick(workspaces: readonly WorkspaceFolder[])
 
 export interface PickWorkspaceFolderOptions {
     allowMultiSelect?: boolean;
+    token?: CancellationToken;
 }
 
 export async function pickWorkspaceFolder(
@@ -47,11 +48,15 @@ export async function pickWorkspaceFolder(
     }
 
     // This is multi-root scenario.
-    const selected = await showQuickPick(getWorkspacesForQuickPick(workspaces), {
-        title: CreateEnv.pickWorkspaceTitle,
-        ignoreFocusOut: true,
-        canPickMany: options?.allowMultiSelect,
-    });
+    const selected = await showQuickPick(
+        getWorkspacesForQuickPick(workspaces),
+        {
+            title: CreateEnv.pickWorkspaceTitle,
+            ignoreFocusOut: true,
+            canPickMany: options?.allowMultiSelect,
+        },
+        options?.token,
+    );
 
     if (selected) {
         if (options?.allowMultiSelect) {
