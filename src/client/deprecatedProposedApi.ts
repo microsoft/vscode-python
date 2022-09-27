@@ -85,14 +85,6 @@ export function buildDeprecatedProposedApi(
                 const env = await interpreterService.getActiveInterpreter(resource);
                 return env ? { execCommand: [env.path] } : { execCommand: undefined };
             },
-            async getActiveEnvironmentPath(resource?: Resource) {
-                sendApiTelemetry('getActiveEnvironmentPath');
-                const env = await interpreterService.getActiveInterpreter(resource);
-                if (!env) {
-                    return undefined;
-                }
-                return getEnvPath(env.path, env.envPath);
-            },
             async getEnvironmentDetails(
                 path: string,
                 options?: EnvironmentDetailsOptions,

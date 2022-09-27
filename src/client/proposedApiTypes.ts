@@ -12,7 +12,7 @@ export interface ProposedExtensionAPI {
          * @param resource : Uri of a file or workspace folder. This is used to determine the env in a multi-root
          * scenario. If `undefined`, then the API returns what ever is set for the workspace.
          */
-        getActiveEnvironmentId(resource?: Resource): EnvironmentId;
+        getActiveEnvironmentPath(resource?: Resource): EnvironmentPath;
         /**
          * Sets the active environment path for the python extension for the resource. Configuration target will always
          * be the workspace folder.
@@ -20,14 +20,14 @@ export interface ProposedExtensionAPI {
          * the environment itself.
          * @param resource : [optional] File or workspace to scope to a particular workspace folder.
          */
-        updateActiveEnvironmentId(
-            environment: Environment | EnvironmentId | string,
+        updateActiveEnvironmentPath(
+            environment: string | EnvironmentPath | Environment,
             resource?: Resource,
         ): Promise<void>;
         /**
          * This event is triggered when the active environment setting changes.
          */
-        readonly onDidChangeActiveEnvironmentId: Event<ActiveEnvironmentIdChangeEvent>;
+        readonly onDidChangeActiveEnvironmentPath: Event<ActiveEnvironmentIdChangeEvent>;
         /**
          * Carries environments found by the extension at the time of fetching the property. Note this may not
          * contain all environments in the system as a refresh might be going on.
@@ -55,7 +55,9 @@ export interface ProposedExtensionAPI {
          * @param environment : Full path to environment folder or python executable for the environment. Can also pass
          * the environment id or the environment itself.
          */
-        resolveEnvironment(environment: Environment | EnvironmentId | string): Promise<ResolvedEnvironment | undefined>;
+        resolveEnvironment(
+            environment: Environment | EnvironmentPath | string,
+        ): Promise<ResolvedEnvironment | undefined>;
     };
 }
 
@@ -70,7 +72,7 @@ export type RefreshOptions = {
 /**
  * Details about the environment. Note the environment folder, type and name never changes over time.
  */
-export type Environment = EnvironmentId & {
+export type Environment = EnvironmentPath & {
     /**
      * Carries details about python executable.
      */
@@ -175,7 +177,7 @@ export type EnvironmentsChangeEvent = {
     readonly type: 'add' | 'remove' | 'update';
 };
 
-export type ActiveEnvironmentIdChangeEvent = EnvironmentId & {
+export type ActiveEnvironmentIdChangeEvent = EnvironmentPath & {
     /**
      * Workspace folder the environment changed for.
      */
@@ -187,7 +189,7 @@ export type ActiveEnvironmentIdChangeEvent = EnvironmentId & {
  */
 export type Resource = Uri | WorkspaceFolder;
 
-export type EnvironmentId = {
+export type EnvironmentPath = {
     /**
      * The ID of the environment.
      */

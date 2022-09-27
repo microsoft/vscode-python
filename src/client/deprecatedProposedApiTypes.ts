@@ -75,10 +75,6 @@ export interface DeprecatedProposedAPI {
             execCommand: string[] | undefined;
         }>;
         /**
-         * @deprecated Use {@link getActiveEnvironmentId} instead. This will soon be removed.
-         */
-        getActiveEnvironmentPath(resource?: Resource): Promise<EnvPathType | undefined>;
-        /**
          * Returns details for the given interpreter. Details such as absolute interpreter path,
          * version, type (conda, pyenv, etc). Metadata such as `sysPrefix` can be found under
          * metadata field.
@@ -135,7 +131,7 @@ export interface DeprecatedProposedAPI {
          */
         onDidEnvironmentsChanged: Event<EnvironmentsChangedParams[]>;
         /**
-         * @deprecated Use {@link ProposedExtensionAPI.environment} `onDidChangeActiveEnvironmentId` instead. This will soon be removed.
+         * @deprecated Use {@link ProposedExtensionAPI.environment} `onDidChangeActiveEnvironmentPath` instead. This will soon be removed.
          */
         onDidActiveEnvironmentChanged: Event<ActiveEnvironmentChangedParams>;
     };

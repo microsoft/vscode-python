@@ -17,7 +17,7 @@ import {
     Resource,
     EnvironmentType,
     EnvironmentTools,
-    EnvironmentId,
+    EnvironmentPath,
 } from './proposedApiTypes';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from './pythonEnvironments/base/info';
 import { getEnvPath } from './pythonEnvironments/base/info/env';
@@ -164,24 +164,34 @@ export function buildProposedApi(
 
     const proposed: ProposedExtensionAPI = {
         environment: {
-            getActiveEnvironmentId(resource?: Resource) {
-                sendApiTelemetry('getActiveEnvironmentId');
+            getActiveEnvironmentPath(resource?: Resource) {
+                sendApiTelemetry('getActiveEnvironmentPath');
                 resource = resource && 'uri' in resource ? resource.uri : resource;
                 const path = configService.getSettings(resource).pythonPath;
                 const id = path === 'python' ? 'DEFAULT_PYTHON' : getEnvID(path);
-                return { id, path };
+                return {
+                    id,
+                    path,
+                    /**
+                     * @deprecated Only provided for backwards compatibility and will soon be removed.
+                     */
+                    pathType: 'interpreterPath',
+                };
             },
-            updateActiveEnvironmentId(env: Environment | EnvironmentId | string, resource?: Resource): Promise<void> {
-                sendApiTelemetry('updateActiveEnvironmentId');
+            updateActiveEnvironmentPath(
+                env: Environment | EnvironmentPath | string,
+                resource?: Resource,
+            ): Promise<void> {
+                sendApiTelemetry('updateActiveEnvironmentPath');
                 const path = typeof env !== 'string' ? env.path : env;
                 resource = resource && 'uri' in resource ? resource.uri : resource;
                 return interpreterPathService.update(resource, ConfigurationTarget.WorkspaceFolder, path);
             },
-            get onDidChangeActiveEnvironmentId() {
-                sendApiTelemetry('onDidChangeActiveEnvironmentId');
+            get onDidChangeActiveEnvironmentPath() {
+                sendApiTelemetry('onDidChangeActiveEnvironmentPath');
                 return onDidActiveInterpreterChangedEvent.event;
             },
-            resolveEnvironment: async (env: Environment | EnvironmentId | string) => {
+            resolveEnvironment: async (env: Environment | EnvironmentPath | string) => {
                 let path = typeof env !== 'string' ? env.path : env;
                 if (pathUtils.basename(path) === path) {
                     // Value can be `python`, `python3`, `python3.9` etc.
