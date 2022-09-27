@@ -112,7 +112,6 @@ export function buildProposedApi(
                 sendTelemetryEvent(EventName.PYTHON_ENVIRONMENTS_API, undefined, {
                     apiName,
                     extensionId: info.extensionId,
-                    displayName: info.displayName,
                 }),
             )
             .ignoreErrors();

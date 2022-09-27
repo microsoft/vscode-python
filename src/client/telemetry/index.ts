@@ -1115,7 +1115,7 @@ export interface IEventNamePropertyMapping {
     /* __GDPR__
        "python_environments_api" : {
           "extensionId" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": false , "owner": "karrtikr"},
-          "displayName" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": false, "owner": "karrtikr" }
+          "apiName" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": false, "owner": "karrtikr" }
        }
      */
     [EventName.PYTHON_ENVIRONMENTS_API]: {
@@ -1123,10 +1123,6 @@ export interface IEventNamePropertyMapping {
          * The ID of the extension calling the API.
          */
         extensionId: string;
-        /**
-         * The name of the extension as displayed in marketplace.
-         */
-        displayName: string;
         /**
          * The name of the API called.
          */
