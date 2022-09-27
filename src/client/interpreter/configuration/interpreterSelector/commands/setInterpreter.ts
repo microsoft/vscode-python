@@ -128,7 +128,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs,
         filter?: (i: PythonEnvironment) => boolean,
-        params?: { placeholder: string; title: string },
+        params?: { placeholder?: string | null; title?: string | null },
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         // If the list is refreshing, it's crucial to maintain sorting order at all
         // times so that the visible items do not change.
@@ -139,21 +139,26 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
             this.configurationService.getSettings(state.workspace).pythonPath,
             state.workspace ? state.workspace.fsPath : undefined,
         );
+        const placeholder =
+            params?.placeholder === null
+                ? undefined
+                : params?.placeholder ??
+                  localize(
+                      'InterpreterQuickPickList.quickPickListPlaceholder',
+                      'Selected Interpreter: {0}',
+                      currentInterpreterPathDisplay,
+                  );
+        const title =
+            params?.title === null ? undefined : params?.title ?? InterpreterQuickPickList.browsePath.openButtonLabel;
         const selection = await input.showQuickPick<QuickPickType, IQuickPickParameters<QuickPickType>>({
-            placeholder:
-                params?.placeholder ??
-                localize(
-                    'InterpreterQuickPickList.quickPickListPlaceholder',
-                    'Selected Interpreter: {0}',
-                    currentInterpreterPathDisplay,
-                ),
+            placeholder,
             items: suggestions,
             sortByLabel: !preserveOrderWhenFiltering,
             keepScrollPosition: true,
             activeItem: this.getActiveItem(state.workspace, suggestions), // Use a promise here to ensure quickpick is initialized synchronously.
             matchOnDetail: true,
             matchOnDescription: true,
-            title: params?.title ?? InterpreterQuickPickList.browsePath.openButtonLabel,
+            title,
             customButtonSetups: [
                 {
                     button: this.refreshButton,
@@ -506,7 +511,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
     public async getInterpreterViaQuickPick(
         workspace: Resource,
         filter: ((i: PythonEnvironment) => boolean) | undefined,
-        params?: { placeholder: string; title: string },
+        params?: { placeholder?: string | null; title?: string | null },
     ): Promise<string | undefined> {
         const interpreterState: InterpreterStateArgs = { path: undefined, workspace };
         const multiStep = this.multiStepFactory.create<InterpreterStateArgs>();
