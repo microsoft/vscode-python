@@ -63,10 +63,8 @@ export function buildDeprecatedProposedApi(
     const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
+    const warningLogged = new Set<string>();
     function sendApiTelemetry(apiName: string, warnLog = true) {
-        if (warnLog) {
-            console.warn('Extension is using deprecated python APIs which will be removed soon');
-        }
         extensions
             .determineExtensionFromCallStack()
             .then((info) => {
@@ -75,6 +73,12 @@ export function buildDeprecatedProposedApi(
                     extensionId: info.extensionId,
                 });
                 traceVerbose(`Extension ${info.extensionId} accessed ${apiName}`);
+                if (warnLog && !warningLogged.has(info.extensionId)) {
+                    console.warn(
+                        `${info.extensionId} extension is using deprecated python APIs which will be removed soon.`,
+                    );
+                    warningLogged.add(info.extensionId);
+                }
             })
             .ignoreErrors();
     }
