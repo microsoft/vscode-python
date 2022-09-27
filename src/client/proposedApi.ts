@@ -23,7 +23,7 @@ import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from './pythonEnvironment
 import { getEnvPath } from './pythonEnvironments/base/info/env';
 import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { IPythonExecutionFactory } from './common/process/types';
-import { traceError } from './logging';
+import { traceError, traceVerbose } from './logging';
 import { normCasePath } from './common/platform/fs-paths';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
@@ -108,12 +108,13 @@ export function buildProposedApi(
     function sendApiTelemetry(apiName: string) {
         extensions
             .determineExtensionFromCallStack()
-            .then((info) =>
+            .then((info) => {
                 sendTelemetryEvent(EventName.PYTHON_ENVIRONMENTS_API, undefined, {
                     apiName,
                     extensionId: info.extensionId,
-                }),
-            )
+                });
+                traceVerbose(`Extension ${info.extensionId} accessed ${apiName}`);
+            })
             .ignoreErrors();
     }
     disposables.push(
