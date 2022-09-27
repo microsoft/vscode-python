@@ -71,5 +71,6 @@ export interface IInterpreterQuickPick {
     getInterpreterViaQuickPick(
         workspace: Resource,
         filter?: (i: PythonEnvironment) => boolean,
+        params?: { placeholder: string; title: string },
     ): Promise<string | undefined>;
 }
