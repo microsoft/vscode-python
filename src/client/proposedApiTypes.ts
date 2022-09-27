@@ -27,7 +27,7 @@ export interface ProposedExtensionAPI {
         /**
          * This event is triggered when the active environment setting changes.
          */
-        readonly onDidChangeActiveEnvironmentPath: Event<ActiveEnvironmentIdChangeEvent>;
+        readonly onDidChangeActiveEnvironmentPath: Event<ActiveEnvironmentPathChangeEvent>;
         /**
          * Carries environments found by the extension at the time of fetching the property. Note this may not
          * contain all environments in the system as a refresh might be going on.
@@ -177,7 +177,7 @@ export type EnvironmentsChangeEvent = {
     readonly type: 'add' | 'remove' | 'update';
 };
 
-export type ActiveEnvironmentIdChangeEvent = EnvironmentPath & {
+export type ActiveEnvironmentPathChangeEvent = EnvironmentPath & {
     /**
      * Workspace folder the environment changed for.
      */

@@ -28,7 +28,8 @@ import { Architecture } from '../client/common/utils/platform';
 import { PythonEnvCollectionChangedEvent } from '../client/pythonEnvironments/base/watcher';
 import { normCasePath } from '../client/common/platform/fs-paths';
 import {
-    ActiveEnvironmentIdChangeEvent,
+    ActiveEnvironmentPathChangeEvent,
+    EnvironmentPath,
     EnvironmentsChangeEvent,
     ProposedExtensionAPI,
 } from '../client/proposedApiTypes';
@@ -74,7 +75,7 @@ suite('Proposed Extension API', () => {
     });
 
     test('Provide an event to track when active environment details change', async () => {
-        const events: ActiveEnvironmentIdChangeEvent[] = [];
+        const events: ActiveEnvironmentPathChangeEvent[] = [];
         proposed.environment.onDidChangeActiveEnvironmentPath((e) => {
             events.push(e);
         });
@@ -91,7 +92,11 @@ suite('Proposed Extension API', () => {
             .setup((c) => c.getSettings(undefined))
             .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
         const actual = proposed.environment.getActiveEnvironmentPath();
-        assert.deepEqual(actual, { id: normCasePath(pythonPath), path: pythonPath });
+        assert.deepEqual(actual, ({
+            id: normCasePath(pythonPath),
+            path: pythonPath,
+            pathType: 'interpreterPath',
+        } as unknown) as EnvironmentPath);
     });
 
     test('getActiveEnvironmentPath: default python', () => {
@@ -100,7 +105,11 @@ suite('Proposed Extension API', () => {
             .setup((c) => c.getSettings(undefined))
             .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
         const actual = proposed.environment.getActiveEnvironmentPath();
-        assert.deepEqual(actual, { id: 'DEFAULT_PYTHON', path: pythonPath });
+        assert.deepEqual(actual, ({
+            id: 'DEFAULT_PYTHON',
+            path: pythonPath,
+            pathType: 'interpreterPath',
+        } as unknown) as EnvironmentPath);
     });
 
     test('getActiveEnvironmentPath: With resource', () => {
@@ -110,7 +119,11 @@ suite('Proposed Extension API', () => {
             .setup((c) => c.getSettings(resource))
             .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
         const actual = proposed.environment.getActiveEnvironmentPath(resource);
-        assert.deepEqual(actual, { id: normCasePath(pythonPath), path: pythonPath });
+        assert.deepEqual(actual, ({
+            id: normCasePath(pythonPath),
+            path: pythonPath,
+            pathType: 'interpreterPath',
+        } as unknown) as EnvironmentPath);
     });
 
     test('resolveEnvironment: invalid environment (when passed as string)', async () => {

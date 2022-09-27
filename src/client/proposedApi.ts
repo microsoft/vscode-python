@@ -8,7 +8,7 @@ import { IConfigurationService, IDisposableRegistry, IExtensions, IInterpreterPa
 import { Architecture } from './common/utils/platform';
 import { IServiceContainer } from './ioc/types';
 import {
-    ActiveEnvironmentIdChangeEvent,
+    ActiveEnvironmentPathChangeEvent,
     Environment,
     EnvironmentsChangeEvent,
     ProposedExtensionAPI,
@@ -38,7 +38,7 @@ type ActiveEnvironmentChangeEvent = {
     path: string;
 };
 
-const onDidActiveInterpreterChangedEvent = new EventEmitter<ActiveEnvironmentIdChangeEvent>();
+const onDidActiveInterpreterChangedEvent = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
 export function reportActiveInterpreterChanged(e: ActiveEnvironmentChangeEvent): void {
     onDidActiveInterpreterChangedEvent.fire({ id: getEnvID(e.path), path: e.path, resource: e.resource });
     reportActiveInterpreterChangedDeprecated({ path: e.path, resource: e.resource?.uri });
