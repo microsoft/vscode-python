@@ -4,11 +4,11 @@
 'use strict';
 
 import { noop } from 'lodash';
-import { Uri } from 'vscode';
+import { Uri, Event } from 'vscode';
 import { IExtensionApi } from './apiTypes';
 import { isTestExecution } from './common/constants';
 import { IConfigurationService, Resource } from './common/types';
-import { EnvironmentVariables, IEnvironmentVariablesProvider } from './common/variables/types';
+import { IEnvironmentVariablesProvider } from './common/variables/types';
 import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
@@ -30,7 +30,10 @@ export function buildApi(
          * @deprecated Temporarily exposed for Pylance until we expose this API generally. Will be removed in an
          * iteration or two.
          */
-        pylance: { getPythonPathVar: (resource?: Uri) => Promise<string | undefined> };
+        pylance: {
+            getPythonPathVar: (resource?: Uri) => Promise<string | undefined>;
+            readonly onDidEnvironmentVariablesChange: Event<Uri | undefined>;
+        };
     } = {
         // 'ready' will propagate the exception, but we must log it here first.
         ready: ready.catch((ex) => {
@@ -79,6 +82,7 @@ export function buildApi(
                 const envs = await envService.getEnvironmentVariables(resource);
                 return envs.PYTHONPATH;
             },
+            onDidEnvironmentVariablesChange: envService.onDidEnvironmentVariablesChange,
         },
     };
 
