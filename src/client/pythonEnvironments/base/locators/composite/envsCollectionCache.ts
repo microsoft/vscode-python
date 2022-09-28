@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { isEqual } from 'lodash';
 import { Event } from 'vscode';
 import { isTestExecution } from '../../../../common/constants';
 import { traceInfo } from '../../../../logging';
 import { arePathsSame, getFileInfo, pathExists } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
-import { areSameEnv, getEnvPath } from '../../info/env';
+import { areEnvsDeepEqual, areSameEnv, getEnvPath } from '../../info/env';
 import {
     BasicPythonEnvCollectionChangedEvent,
     PythonEnvCollectionChangedEvent,
@@ -76,7 +75,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         super();
     }
 
-    public async validateCache(latestListOfEnvs?: PythonEnvInfo[]): Promise<void> {
+    public async validateCache(latestListOfEnvs?: PythonEnvLatestInfo[]): Promise<void> {
         /**
          * We do check if an env has updated as we already run discovery in background
          * which means env cache will have up-to-date envs eventually. This also means
@@ -118,7 +117,8 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             latestListOfEnvs.forEach((env) => {
                 const cachedEnv = this.envs.find((e) => e.id === env.id);
                 delete cachedEnv?.hasLatestInfo;
-                if (cachedEnv && !isEqual(cachedEnv, env)) {
+                delete env.hasLatestInfo;
+                if (cachedEnv && !areEnvsDeepEqual(cachedEnv, env)) {
                     this.updateEnv(cachedEnv, env, true);
                 }
             });
