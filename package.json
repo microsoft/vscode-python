@@ -83,6 +83,7 @@
         "onCommand:python.enableSourceMapSupport",
         "onCommand:python.launchTensorBoard",
         "onCommand:python.clearCacheAndReload",
+        "onCommand:python.createEnvironment",
         "onWalkthrough:pythonWelcome",
         "onWalkthrough:pythonWelcomeWithDS",
         "onWalkthrough:pythonDataScienceWelcome",
