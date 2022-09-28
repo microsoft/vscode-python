@@ -926,6 +926,12 @@
                     "description": "%python.pylanceLspNotebooksEnabled.description%",
                     "scope": "machine"
                 },
+                "python.pylanceLspClientEnabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%python.pylanceLspClientEnabled.description%",
+                    "scope": "machine"
+                },
                 "python.sortImports.args": {
                     "default": [],
                     "description": "%python.sortImports.args.description%",
