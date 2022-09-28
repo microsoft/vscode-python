@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { isEqual } from 'lodash';
 import { Event } from 'vscode';
 import { isTestExecution } from '../../../../common/constants';
 import { traceInfo } from '../../../../logging';
@@ -113,6 +114,15 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             const env = this.envs.splice(index, 1)[0];
             this.fire({ old: env, new: undefined });
         });
+        if (latestListOfEnvs) {
+            latestListOfEnvs.forEach((env) => {
+                const cachedEnv = this.envs.find((e) => e.id === env.id);
+                delete cachedEnv?.hasLatestInfo;
+                if (cachedEnv && !isEqual(cachedEnv, env)) {
+                    this.updateEnv(cachedEnv, env, true);
+                }
+            });
+        }
     }
 
     public getAllEnvs(): PythonEnvInfo[] {
@@ -131,9 +141,13 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         }
     }
 
-    public updateEnv(oldValue: PythonEnvInfo, newValue: PythonEnvInfo | undefined): void {
+    public updateEnv(oldValue: PythonEnvInfo, newValue: PythonEnvInfo | undefined, forceUpdate = false): void {
         const index = this.envs.findIndex((e) => areSameEnv(e, oldValue));
         if (index !== -1) {
+            if (this.envs[index].hasLatestInfo && !forceUpdate) {
+                // If we have latest info, then we do not need to update the cache.
+                return;
+            }
             if (newValue === undefined) {
                 this.envs.splice(index, 1);
             } else {
