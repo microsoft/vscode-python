@@ -5,6 +5,8 @@ import { IDisposable } from '../../../../common/types';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { Disposables } from '../../../../common/utils/resourceLifecycle';
 import { traceError } from '../../../../logging';
+import { arePathsSame } from '../../../common/externalDependencies';
+import { getEnvPath } from '../../info/env';
 import { BasicEnvInfo, IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator';
 
 /**
@@ -42,8 +44,21 @@ export abstract class LazyResourceBasedLocator extends Locator<BasicEnvInfo> imp
     }
 
     public async *iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
-        await this.activate();
-        yield* this.doIterEnvs(query);
+        const iterator = this.doIterEnvs(query);
+        if (query?.envPath) {
+            let result = await iterator.next();
+            while (!result.done) {
+                const currEnv = result.value;
+                const { path } = getEnvPath(currEnv.executablePath, currEnv.envPath);
+                if (arePathsSame(path, query.envPath)) {
+                    yield currEnv;
+                    break;
+                }
+                result = await iterator.next();
+            }
+        } else {
+            yield* iterator;
+        }
     }
 
     /**
