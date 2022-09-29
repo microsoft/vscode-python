@@ -85,6 +85,7 @@ def install_packages(env_path: str) -> None:
             ],
             "CREATE_CONDA.FAILED_INSTALL_YML",
         )
+        print("CREATE_CONDA.INSTALLED_YML")
 
 
 def add_gitignore(name: str) -> None:
@@ -100,7 +101,10 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         argv = []
     args = parse_args(argv)
 
-    if not conda_env_exists(args.name):
+    if conda_env_exists(args.name):
+        env_path = get_conda_env_path(args.name)
+        print(f"EXISTING_CONDA_ENV:{env_path}")
+    else:
         run_process(
             [
                 sys.executable,
@@ -114,11 +118,10 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             ],
             "CREATE_CONDA.ENV_FAILED_CREATION",
         )
+        env_path = get_conda_env_path(args.name)
+        print(f"CREATED_CONDA_ENV:{env_path}")
         if args.git_ignore:
             add_gitignore(args.name)
-
-    env_path = get_conda_env_path(args.name)
-    print(f"CREATED_CONDA_ENV:{env_path}")
 
     if args.install:
         install_packages(env_path)

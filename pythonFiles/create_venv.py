@@ -72,9 +72,6 @@ def get_venv_path(name: str) -> str:
 
 
 def install_packages(venv_path: str) -> None:
-    if not is_installed("pip"):
-        raise VenvError("CREATE_VENV.PIP_NOT_FOUND")
-
     requirements = os.fspath(CWD / "requirements.txt")
     pyproject = os.fspath(CWD / "pyproject.toml")
 
@@ -89,12 +86,14 @@ def install_packages(venv_path: str) -> None:
             [venv_path, "-m", "pip", "install", "-r", requirements],
             "CREATE_VENV.PIP_FAILED_INSTALL_REQUIREMENTS",
         )
+        print("CREATE_VENV.PIP_INSTALLED_REQUIREMENTS")
     elif file_exists(pyproject):
         print(f"VENV_INSTALLING_PYPROJECT: {pyproject}")
         run_process(
             [venv_path, "-m", "pip", "install", "-e", ".[extras]"],
             "CREATE_VENV.PIP_FAILED_INSTALL_PYPROJECT",
         )
+        print("CREATE_VENV.PIP_INSTALLED_PYPROJECT")
 
 
 def add_gitignore(name: str) -> None:
@@ -110,20 +109,27 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         argv = []
     args = parse_args(argv)
 
-    if is_installed("venv"):
-        if not venv_exists(args.name):
-            run_process(
-                [sys.executable, "-m", "venv", args.name],
-                "CREATE_VENV.VENV_FAILED_CREATION",
-            )
-            if args.git_ignore:
-                add_gitignore(args.name)
+    if not is_installed("venv"):
+        raise VenvError("CREATE_VENV.VENV_NOT_FOUND")
+
+    if args.install and not is_installed("pip"):
+        raise VenvError("CREATE_VENV.PIP_NOT_FOUND")
+
+    if venv_exists(args.name) and file_exists(get_venv_path(args.name)):
+        venv_path = get_venv_path(args.name)
+        print(f"EXISTING_VENV:{venv_path}")
+    else:
+        run_process(
+            [sys.executable, "-m", "venv", args.name],
+            "CREATE_VENV.VENV_FAILED_CREATION",
+        )
         venv_path = get_venv_path(args.name)
         print(f"CREATED_VENV:{venv_path}")
-        if args.install:
-            install_packages(venv_path)
-    else:
-        raise VenvError("CREATE_VENV.VENV_NOT_FOUND")
+        if args.git_ignore:
+            add_gitignore(args.name)
+
+    if args.install:
+        install_packages(venv_path)
 
 
 if __name__ == "__main__":

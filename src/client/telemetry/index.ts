@@ -1974,18 +1974,97 @@ export interface IEventNamePropertyMapping {
        "tensorboard_jump_to_source_file_not_found" : { "owner": "donjayamanne" }
      */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND]: never | undefined;
+    [EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL]: never | undefined;
+    /**
+     * Telemetry event sent before creating an environment.
+     */
     /* __GDPR__
-			"query-expfeature" : {
-				"owner": "luabud",
-				"comment": "Logs queries to the experiment service by feature for metric calculations",
-				"ABExp.queriedFeature": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The experimental feature being queried" }
-			}
-	*/
+       "environment.creating" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "pythonVersion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_CREATING]: {
+        environmentType: 'venv' | 'conda';
+        pythonVersion: string | undefined;
+    };
+    /**
+     * Telemetry event sent after creating an environment, but before attempting package installation.
+     */
     /* __GDPR__
-			"call-tas-error" : {
-				"owner": "luabud",
-				"comment": "Logs when calls to the experiment service fails",
-				"errortype": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "comment": "Type of error when calling TAS (ServerError, NoResponse, etc.)"}
-			}
-	*/
+       "environment.created" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "reason" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+        }
+     */
+    [EventName.ENVIRONMENT_CREATED]: {
+        environmentType: 'venv' | 'conda';
+        reason: 'created' | 'existing';
+    };
+    /**
+     * Telemetry event sent if creating an environment failed.
+     */
+    /* __GDPR__
+       "environment.failed" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "reason" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_FAILED]: {
+        environmentType: 'venv' | 'conda';
+        reason: 'noVenv' | 'noPip' | 'other';
+    };
+    /**
+     * Telemetry event sent before installing packages.
+     */
+    /* __GDPR__
+       "environment.installing_packages" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "using" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_INSTALLING_PACKAGES]: {
+        environmentType: 'venv' | 'conda';
+        using: 'requirements.txt' | 'pyproject.toml' | 'environment.yml';
+    };
+    /**
+     * Telemetry event sent after installing packages.
+     */
+    /* __GDPR__
+       "environment.installed_packages" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "using" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_INSTALLED_PACKAGES]: {
+        environmentType: 'venv' | 'conda';
+        using: 'requirements.txt' | 'pyproject.toml' | 'environment.yml';
+    };
+    /**
+     * Telemetry event sent if installing packages failed.
+     */
+    /* __GDPR__
+       "environment.installing_packages" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "using" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_INSTALLING_PACKAGES_FAILED]: {
+        environmentType: 'venv' | 'conda';
+        using: 'pipUpgrade' | 'requirements.txt' | 'pyproject.toml' | 'environment.yml';
+    };
+    /* __GDPR__
+            "query-expfeature" : {
+                "owner": "luabud",
+                "comment": "Logs queries to the experiment service by feature for metric calculations",
+                "ABExp.queriedFeature": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The experimental feature being queried" }
+            }
+    */
+    /* __GDPR__
+            "call-tas-error" : {
+                "owner": "luabud",
+                "comment": "Logs when calls to the experiment service fails",
+                "errortype": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "comment": "Type of error when calling TAS (ServerError, NoResponse, etc.)"}
+            }
+    */
 }

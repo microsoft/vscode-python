@@ -1,16 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable } from 'vscode';
+import { ConfigurationTarget, Disposable } from 'vscode';
 import { Commands } from '../../common/constants';
-import { IDisposableRegistry } from '../../common/types';
+import { IDisposableRegistry, IInterpreterPathService } from '../../common/types';
 import { registerCommand } from '../../common/vscodeApis/commandApis';
 import { IInterpreterQuickPick } from '../../interpreter/configuration/types';
-import { IDiscoveryAPI } from '../base/locator';
-import { handleCreateEnvironmentCommand } from './createEnvQuickPick';
+import { getCreationEvents, handleCreateEnvironmentCommand } from './createEnvironment';
 import { condaCreationProvider } from './provider/condaCreationProvider';
 import { VenvCreationProvider } from './provider/venvCreationProvider';
-import { CreateEnvironmentOptions, CreateEnvironmentProvider } from './types';
+import { CreateEnvironmentOptions, CreateEnvironmentProvider, CreateEnvironmentResult } from './types';
+import { showInformationMessage } from '../../common/vscodeApis/windowApis';
+import { CreateEnv } from '../../common/utils/localize';
 
 class CreateEnvironmentProviders {
     private _createEnvProviders: CreateEnvironmentProvider[] = [];
@@ -41,20 +42,43 @@ export function registerCreateEnvironmentProvider(provider: CreateEnvironmentPro
     });
 }
 
+export const { onCreateEnvironmentStarted, onCreateEnvironmentExited } = getCreationEvents();
+
+let _createCalled = 0;
+export function isCreatingEnvironment(): boolean {
+    return _createCalled > 0;
+}
+
 export function registerCreateEnvironmentFeatures(
     disposables: IDisposableRegistry,
-    discoveryApi: IDiscoveryAPI,
     interpreterQuickPick: IInterpreterQuickPick,
+    interpreterPathService: IInterpreterPathService,
 ): void {
     disposables.push(
         registerCommand(
             Commands.Create_Environment,
-            (options?: CreateEnvironmentOptions): Promise<string | undefined> => {
+            (options?: CreateEnvironmentOptions): Promise<CreateEnvironmentResult | undefined> => {
                 const providers = _createEnvironmentProviders.getAll();
                 return handleCreateEnvironmentCommand(providers, options);
             },
         ),
     );
-    disposables.push(registerCreateEnvironmentProvider(new VenvCreationProvider(discoveryApi, interpreterQuickPick)));
+    disposables.push(registerCreateEnvironmentProvider(new VenvCreationProvider(interpreterQuickPick)));
     disposables.push(registerCreateEnvironmentProvider(condaCreationProvider()));
+    disposables.push(
+        onCreateEnvironmentStarted(() => {
+            _createCalled += 1;
+        }),
+    );
+    disposables.push(
+        onCreateEnvironmentExited(async (e: CreateEnvironmentResult | undefined) => {
+            if (_createCalled > 0) {
+                _createCalled -= 1;
+            }
+            if (e && e.path) {
+                await interpreterPathService.update(e.uri, ConfigurationTarget.WorkspaceFolder, e.path);
+                showInformationMessage(`${CreateEnv.informEnvCreation} ${e.path}`);
+            }
+        }),
+    );
 }

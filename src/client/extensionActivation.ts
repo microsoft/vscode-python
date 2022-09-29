@@ -21,7 +21,13 @@ import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './c
 import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IExtensions, IOutputChannel } from './common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExtensions,
+    IInterpreterPathService,
+    IOutputChannel,
+} from './common/types';
 import { noop } from './common/utils/misc';
 import { DebuggerTypeName } from './debugger/constants';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
@@ -97,11 +103,14 @@ export async function activateComponents(
     return Promise.all([legacyActivationResult, ...promises]);
 }
 
-export function activateFeatures(ext: ExtensionState, components: Components): void {
+export function activateFeatures(ext: ExtensionState, _components: Components): void {
     const interpreterQuickPick: IInterpreterQuickPick = ext.legacyIOC.serviceContainer.get<IInterpreterQuickPick>(
         IInterpreterQuickPick,
     );
-    registerCreateEnvironmentFeatures(ext.disposables, components.pythonEnvs, interpreterQuickPick);
+    const interpreterPathService: IInterpreterPathService = ext.legacyIOC.serviceContainer.get<IInterpreterPathService>(
+        IInterpreterPathService,
+    );
+    registerCreateEnvironmentFeatures(ext.disposables, interpreterQuickPick, interpreterPathService);
 }
 
 /// //////////////////////////

@@ -22,14 +22,14 @@ export async function getConda(): Promise<string | undefined> {
 }
 
 export async function pickPythonVersion(token?: CancellationToken): Promise<string | undefined> {
-    const items: QuickPickItem[] = ['3.7', '3.8', '3.9', '3.10'].map((v) => ({
+    const items: QuickPickItem[] = ['3.10', '3.9', '3.8', '3.7'].map((v) => ({
         label: `Python`,
         description: v,
     }));
     const version = await showQuickPick(
         items,
         {
-            title: CreateEnv.Conda.selectPythonQuickPickTitle,
+            placeHolder: CreateEnv.Conda.selectPythonQuickPickPlaceholder,
         },
         token,
     );

@@ -51,7 +51,7 @@ export async function pickWorkspaceFolder(
     const selected = await showQuickPick(
         getWorkspacesForQuickPick(workspaces),
         {
-            title: CreateEnv.pickWorkspaceTitle,
+            placeHolder: CreateEnv.pickWorkspacePlaceholder,
             ignoreFocusOut: true,
             canPickMany: options?.allowMultiSelect,
         },

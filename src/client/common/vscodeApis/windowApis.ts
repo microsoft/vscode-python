@@ -38,6 +38,23 @@ export function showErrorMessage<T>(message: string, ...items: any[]): Thenable<
     return window.showErrorMessage(message, ...items);
 }
 
+export function showInformationMessage<T extends string>(message: string, ...items: T[]): Thenable<T | undefined>;
+export function showInformationMessage<T extends string>(
+    message: string,
+    options: MessageOptions,
+    ...items: T[]
+): Thenable<T | undefined>;
+export function showInformationMessage<T extends MessageItem>(message: string, ...items: T[]): Thenable<T | undefined>;
+export function showInformationMessage<T extends MessageItem>(
+    message: string,
+    options: MessageOptions,
+    ...items: T[]
+): Thenable<T | undefined>;
+
+export function showInformationMessage<T>(message: string, ...items: any[]): Thenable<T | undefined> {
+    return window.showInformationMessage(message, ...items);
+}
+
 export function withProgress<R>(
     options: ProgressOptions,
     task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>,
