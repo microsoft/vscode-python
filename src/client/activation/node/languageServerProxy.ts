@@ -53,6 +53,10 @@ namespace GetExperimentValue {
     }
 }
 
+interface PylanceApi {
+    startClient?(): Promise<void>;
+    stopClient?(): Promise<void>;
+}
 
 export class NodeLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
@@ -63,8 +67,8 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
 
     private lsVersion: string | undefined;
 
-    private usePylanceClient = false;
-    private pylanceApi
+    private pylanceApi: PylanceApi | undefined;
+
     constructor(
         private readonly factory: ILanguageClientFactory,
         private readonly experimentService: IExperimentService,
@@ -72,10 +76,9 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         private readonly environmentService: IEnvironmentVariablesProvider,
         private readonly workspace: IWorkspaceService,
         private readonly extensions: IExtensions,
-        configurationService: IConfigurationService,
+        private readonly configurationService: IConfigurationService,
     ) {
-        this.usePylanceClient = configurationService.getSettings().pylanceLspClientEnabled;
-        const extension = this.extensions.getExtension(PYLANCE_EXTENSION_ID);
+        // Empty
     }
 
     private static versionTelemetryProps(instance: NodeLanguageServerProxy) {
@@ -102,11 +105,13 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         interpreter: PythonEnvironment | undefined,
         options: LanguageClientOptions,
     ): Promise<void> {
-
+        const extension = await this.getPylanceExtension();
         this.lsVersion = extension?.packageJSON.version || '0';
 
-        if (this.usePylanceClient) {
-            await = extension.
+        const usePylanceClient = this.configurationService.getSettings().pylanceLspClientEnabled;
+        if (usePylanceClient && extension && (extension.exports as PylanceApi).startClient) {
+            this.pylanceApi = extension.exports as PylanceApi;
+            await this.pylanceApi.startClient!();
         } else {
             this.cancellationStrategy = new FileBasedCancellationStrategy();
             options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
@@ -121,13 +126,19 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
             );
 
             await client.start();
-
             this.languageClient = client;
         }
     }
 
     @traceDecoratorVerbose('Disposing language server')
     public async stop(): Promise<void> {
+        if (this.pylanceApi) {
+            this.pylanceApi.stopClient!();
+            this.pylanceApi = undefined;
+
+            return;
+        }
+
         while (this.disposables.length > 0) {
             const d = this.disposables.shift()!;
             d.dispose();
@@ -219,5 +230,18 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
                 isTrusted: this.workspace.isTrusted,
             })),
         );
+    }
+
+    private async getPylanceExtension() {
+        const extension = this.extensions.getExtension(PYLANCE_EXTENSION_ID);
+        if (!extension) {
+            return undefined;
+        }
+
+        if (!extension.isActive) {
+            await extension.activate();
+        }
+
+        return extension;
     }
 }
