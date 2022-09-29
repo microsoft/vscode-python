@@ -15,10 +15,7 @@ import {
     ProgressReportStage,
     PythonEnvUpdatedEvent,
 } from '../../../../../client/pythonEnvironments/base/locator';
-import {
-    createCollectionCache,
-    PythonEnvLatestInfo,
-} from '../../../../../client/pythonEnvironments/base/locators/composite/envsCollectionCache';
+import { createCollectionCache } from '../../../../../client/pythonEnvironments/base/locators/composite/envsCollectionCache';
 import { EnvsCollectionService } from '../../../../../client/pythonEnvironments/base/locators/composite/envsCollectionService';
 import { PythonEnvCollectionChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
@@ -111,17 +108,14 @@ suite('Python envs locator - Environments Collection', async () => {
             updatedName,
         );
         // Do not include cached envs which were not yielded by the locator, unless it belongs to some workspace.
-        return [cachedEnvForWorkspace, env1, env2, env3].map((e: PythonEnvLatestInfo) => {
-            e.hasLatestInfo = true;
-            return e;
-        });
+        return [cachedEnvForWorkspace, env1, env2, env3];
     }
 
     setup(async () => {
         storage = [];
         const parentLocator = new SimpleLocator(getLocatorEnvs());
         const cache = await createCollectionCache({
-            load: async () => getCachedEnvs(),
+            get: () => getCachedEnvs(),
             store: async (envs) => {
                 storage = envs;
             },
@@ -166,7 +160,7 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => getCachedEnvs(),
+            get: () => getCachedEnvs(),
             store: async (e) => {
                 storage = e;
             },
@@ -200,7 +194,7 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => cachedEnvs,
+            get: () => cachedEnvs,
             store: async (e) => {
                 storage = e;
             },
@@ -241,7 +235,7 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => cachedEnvs,
+            get: () => cachedEnvs,
             store: async (e) => {
                 storage = e;
             },
@@ -294,7 +288,7 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => cachedEnvs,
+            get: () => cachedEnvs,
             store: async (e) => {
                 storage = e;
             },
@@ -354,11 +348,10 @@ suite('Python envs locator - Environments Collection', async () => {
     test('resolveEnv() uses cache if complete and up to date info is available', async () => {
         const resolvedViaLocator = buildEnvInfo({ executable: 'Resolved via locator' });
         const cachedEnvs = getCachedEnvs();
-        const env: PythonEnvLatestInfo = cachedEnvs[0];
+        const env = cachedEnvs[0];
         env.executable.ctime = 100;
         env.executable.mtime = 100;
         sinon.stub(externalDependencies, 'getFileInfo').resolves({ ctime: 100, mtime: 100 });
-        env.hasLatestInfo = true; // Has complete info
         const parentLocator = new SimpleLocator([], {
             resolve: async (e: PythonEnvInfo) => {
                 if (env.executable.filename === e.executable.filename) {
@@ -368,7 +361,7 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => cachedEnvs,
+            get: () => cachedEnvs,
             store: async () => noop(),
         });
         collectionService = new EnvsCollectionService(cache, parentLocator);
@@ -378,7 +371,7 @@ suite('Python envs locator - Environments Collection', async () => {
 
     test('resolveEnv() uses underlying locator if cache does not have up to date info for env', async () => {
         const cachedEnvs = getCachedEnvs();
-        const env: PythonEnvLatestInfo = cachedEnvs[0];
+        const env = cachedEnvs[0];
         const resolvedViaLocator = buildEnvInfo({
             executable: env.executable.filename,
             sysPrefix: 'Resolved via locator',
@@ -386,7 +379,6 @@ suite('Python envs locator - Environments Collection', async () => {
         env.executable.ctime = 101;
         env.executable.mtime = 90;
         sinon.stub(externalDependencies, 'getFileInfo').resolves({ ctime: 100, mtime: 100 });
-        env.hasLatestInfo = true; // Has complete info
         const parentLocator = new SimpleLocator([], {
             resolve: async (e: PythonEnvInfo) => {
                 if (env.executable.filename === e.executable.filename) {
@@ -396,7 +388,7 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => cachedEnvs,
+            get: () => cachedEnvs,
             store: async () => noop(),
         });
         collectionService = new EnvsCollectionService(cache, parentLocator);
@@ -407,8 +399,7 @@ suite('Python envs locator - Environments Collection', async () => {
     test('resolveEnv() uses underlying locator if cache does not have complete info for env', async () => {
         const resolvedViaLocator = buildEnvInfo({ executable: 'Resolved via locator' });
         const cachedEnvs = getCachedEnvs();
-        const env: PythonEnvLatestInfo = cachedEnvs[0];
-        env.hasLatestInfo = false; // Does not have complete info
+        const env = cachedEnvs[0];
         const parentLocator = new SimpleLocator([], {
             resolve: async (e: PythonEnvInfo) => {
                 if (env.executable.filename === e.executable.filename) {
@@ -418,7 +409,7 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => cachedEnvs,
+            get: () => cachedEnvs,
             store: async () => noop(),
         });
         collectionService = new EnvsCollectionService(cache, parentLocator);
@@ -437,15 +428,12 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => [],
+            get: () => [],
             store: async () => noop(),
         });
         collectionService = new EnvsCollectionService(cache, parentLocator);
-        const resolved: PythonEnvLatestInfo | undefined = await collectionService.resolveEnv(
-            resolvedViaLocator.executable.filename,
-        );
+        const resolved = await collectionService.resolveEnv(resolvedViaLocator.executable.filename);
         const envs = collectionService.getEnvs();
-        expect(resolved?.hasLatestInfo).to.equal(true);
         assertEnvsEqual(envs, [resolved]);
     });
 
@@ -459,7 +447,7 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => [],
+            get: () => [],
             store: async () => noop(),
         });
         collectionService = new EnvsCollectionService(cache, parentLocator);

@@ -58,10 +58,8 @@ export interface IEnvsCollectionCache {
     validateCache(envs?: PythonEnvInfo[], isCompleteList?: boolean): Promise<void>;
 }
 
-export type PythonEnvLatestInfo = { hasLatestInfo?: boolean } & PythonEnvInfo;
-
 interface IPersistentStorage {
-    load(): Promise<PythonEnvInfo[]>;
+    get(): PythonEnvInfo[];
     store(envs: PythonEnvInfo[]): Promise<void>;
 }
 
@@ -70,13 +68,23 @@ interface IPersistentStorage {
  */
 export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionChangedEvent>
     implements IEnvsCollectionCache {
-    private envs: PythonEnvLatestInfo[] = [];
+    private envs: PythonEnvInfo[] = [];
+
+    /**
+     * Carries the list of envs which have been validated to have latest info.
+     */
+    private validatedEnvs = new Set<string>();
+
+    /**
+     * Carries the list of envs which have been flushed to persistent storage.
+     */
+    private flushedEnvs = new Set<string>();
 
     constructor(private readonly persistentStorage: IPersistentStorage) {
         super();
     }
 
-    public async validateCache(envs?: PythonEnvLatestInfo[], isCompleteList?: boolean): Promise<void> {
+    public async validateCache(envs?: PythonEnvInfo[], isCompleteList?: boolean): Promise<void> {
         /**
          * We do check if an env has updated as we already run discovery in background
          * which means env cache will have up-to-date envs eventually. This also means
@@ -117,8 +125,6 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         if (envs) {
             envs.forEach((env) => {
                 const cachedEnv = this.envs.find((e) => e.id === env.id);
-                delete cachedEnv?.hasLatestInfo;
-                delete env.hasLatestInfo;
                 if (cachedEnv && !areEnvsDeepEqual(cachedEnv, env)) {
                     this.updateEnv(cachedEnv, env, true);
                 }
@@ -130,11 +136,11 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         return this.envs;
     }
 
-    public addEnv(env: PythonEnvLatestInfo, hasLatestInfo?: boolean): void {
+    public addEnv(env: PythonEnvInfo, hasLatestInfo?: boolean): void {
         const found = this.envs.find((e) => areSameEnv(e, env));
         if (hasLatestInfo) {
-            env.hasLatestInfo = true;
-            this.flush(false).ignoreErrors();
+            this.validatedEnvs.add(env.id!);
+            this.flush(env).ignoreErrors(); // If we have latest info, flush it so it can be saved.
         }
         if (!found) {
             this.envs.push(env);
@@ -145,7 +151,8 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
     public updateEnv(oldValue: PythonEnvInfo, newValue: PythonEnvInfo | undefined, forceUpdate = false): void {
         const index = this.envs.findIndex((e) => areSameEnv(e, oldValue));
         if (index !== -1) {
-            if (this.envs[index].hasLatestInfo && !forceUpdate) {
+            if (!forceUpdate && this.flushedEnvs.has(this.envs[index].id!)) {
+                // We have already flushed this env to persistent storage, so it likely has upto date info.
                 // If we have latest info, then we do not need to update the cache.
                 return;
             }
@@ -161,32 +168,42 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
     public async getLatestInfo(path: string): Promise<PythonEnvInfo | undefined> {
         // `path` can either be path to environment or executable path
         const env = this.envs.find((e) => arePathsSame(e.location, path)) ?? this.envs.find((e) => areSameEnv(e, path));
-        if (env?.hasLatestInfo) {
-            return env;
-        }
-        if (env && (env?.hasLatestInfo || (await validateInfo(env)))) {
-            return env;
+        if (env) {
+            if (this.validatedEnvs.has(env.id!)) {
+                return env;
+            }
+            if (await validateInfo(env)) {
+                this.validatedEnvs.add(env.id!);
+                return env;
+            }
         }
         return undefined;
     }
 
-    public async clearAndReloadFromStorage(): Promise<void> {
-        this.envs = await this.persistentStorage.load();
-        this.envs.forEach((e) => {
-            delete e.hasLatestInfo;
-        });
+    public clearAndReloadFromStorage(): void {
+        this.envs = this.persistentStorage.get();
+        this.markAllEnvsAsFlushed();
     }
 
-    public async flush(allEnvsHaveLatestInfo = true): Promise<void> {
-        if (this.envs.length) {
-            traceInfo('Environments added to cache', JSON.stringify(this.envs));
-            if (allEnvsHaveLatestInfo) {
-                this.envs.forEach((e) => {
-                    e.hasLatestInfo = true;
-                });
-            }
-            await this.persistentStorage.store(this.envs);
+    public async flush(env?: PythonEnvInfo): Promise<void> {
+        if (env) {
+            // Flush only the given env.
+            const envs = this.persistentStorage.get();
+            const index = envs.findIndex((e) => e.id === env.id);
+            envs[index] = env;
+            await this.persistentStorage.store(envs);
+            this.flushedEnvs.add(env.id!);
+            return;
         }
+        traceInfo('Environments added to cache', JSON.stringify(this.envs));
+        await this.persistentStorage.store(this.envs);
+        this.markAllEnvsAsFlushed();
+    }
+
+    private markAllEnvsAsFlushed(): void {
+        this.envs.forEach((e) => {
+            this.flushedEnvs.add(e.id!);
+        });
     }
 }
 
@@ -205,7 +222,7 @@ async function validateInfo(env: PythonEnvInfo) {
  */
 export async function createCollectionCache(storage: IPersistentStorage): Promise<PythonEnvInfoCache> {
     const cache = new PythonEnvInfoCache(storage);
-    await cache.clearAndReloadFromStorage();
+    cache.clearAndReloadFromStorage();
     await validateCache(cache);
     return cache;
 }
