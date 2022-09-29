@@ -59,10 +59,6 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         this.disposables.forEach((d) => d.dispose());
     }
 
-    public get languageProxy(): ILanguageServerProxy {
-        return this.languageServerProxy;
-    }
-
     @traceDecoratorError('Failed to start language server')
     public async start(resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void> {
         if (this.started) {

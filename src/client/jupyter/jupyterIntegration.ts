@@ -6,10 +6,8 @@
 
 import { inject, injectable, named } from 'inversify';
 import { dirname } from 'path';
-import { CancellationToken, Disposable, Event, Extension, Memento, Uri } from 'vscode';
-import * as lsp from 'vscode-languageserver-protocol';
+import { CancellationToken, Event, Extension, Memento, Uri } from 'vscode';
 import type { SemVer } from 'semver';
-import { ILanguageServerCache, ILanguageServerConnection } from '../activation/types';
 import { IWorkspaceService } from '../common/application/types';
 import { JUPYTER_EXTENSION_ID } from '../common/constants';
 import { InterpreterUri, ModuleInstallFlags } from '../common/installer/types';
@@ -23,7 +21,6 @@ import {
     ProductInstallStatus,
     Resource,
 } from '../common/types';
-import { isResource } from '../common/utils/misc';
 import { getDebugpyPackagePath } from '../debugger/extension/adapter/remoteLaunchers';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
@@ -37,11 +34,6 @@ import {
 } from '../interpreter/contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './types';
-
-interface ILanguageServer extends Disposable {
-    readonly connection: ILanguageServerConnection;
-    readonly capabilities: lsp.ServerCapabilities;
-}
 
 /**
  * This allows Python extension to update Product enum without breaking Jupyter.
@@ -140,11 +132,6 @@ type PythonApiForJupyterExtension = {
      */
     getInterpreterPathSelectedForJupyterServer(): string | undefined;
     /**
-     * Returns a ILanguageServer that can be used for communicating with a language server process.
-     * @param resource file that determines which connection to return
-     */
-    getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined>;
-    /**
      * Registers a visibility filter for the interpreter status bar.
      */
     registerInterpreterStatusFilter(filter: IInterpreterStatusbarVisibilityFilter): void;
@@ -207,7 +194,6 @@ export class JupyterExtensionIntegration {
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IEnvironmentActivationService) private readonly envActivation: IEnvironmentActivationService,
-        @inject(ILanguageServerCache) private readonly languageServerCache: ILanguageServerCache,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IInterpreterDisplay) private interpreterDisplay: IInterpreterDisplay,
         @inject(IComponentAdapter) private pyenvs: IComponentAdapter,
@@ -272,21 +258,6 @@ export class JupyterExtensionIntegration {
             getDebuggerPath: async () => dirname(getDebugpyPackagePath()),
             getInterpreterPathSelectedForJupyterServer: () =>
                 this.globalState.get<string | undefined>('INTERPRETER_PATH_SELECTED_FOR_JUPYTER_SERVER'),
-            getLanguageServer: async (r) => {
-                const resource = isResource(r) ? r : undefined;
-                const interpreter = !isResource(r) ? r : undefined;
-                const client = await this.languageServerCache.get(resource, interpreter);
-
-                // Some language servers don't support the connection yet.
-                if (client && client.connection && client.capabilities) {
-                    return {
-                        connection: client.connection,
-                        capabilities: client.capabilities,
-                        dispose: client.dispose,
-                    };
-                }
-                return undefined;
-            },
             registerInterpreterStatusFilter: this.interpreterDisplay.registerVisibilityFilter.bind(
                 this.interpreterDisplay,
             ),

@@ -25,14 +25,12 @@ import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { traceLog } from '../logging';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { LanguageServerCapabilities } from './languageServerCapabilities';
 import { ILanguageServerExtensionManager } from './types';
 
-export class PylanceLSExtensionManager extends LanguageServerCapabilities
-    implements IDisposable, ILanguageServerExtensionManager {
-    serverManager: NodeLanguageServerManager;
+export class PylanceLSExtensionManager implements IDisposable, ILanguageServerExtensionManager {
+    private serverProxy: NodeLanguageServerProxy;
 
-    serverProxy: NodeLanguageServerProxy;
+    serverManager: NodeLanguageServerManager;
 
     clientFactory: NodeLanguageClientFactory;
 
@@ -53,8 +51,6 @@ export class PylanceLSExtensionManager extends LanguageServerCapabilities
         readonly applicationShell: IApplicationShell,
         lspNotebooksExperiment: LspNotebooksExperiment,
     ) {
-        super();
-
         this.analysisOptions = new NodeLanguageServerAnalysisOptions(
             outputChannel,
             workspaceService,

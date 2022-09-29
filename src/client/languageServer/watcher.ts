@@ -6,13 +6,7 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Uri, WorkspaceFoldersChangeEvent } from 'vscode';
 import * as nls from 'vscode-nls';
 import { LanguageServerChangeHandler } from '../activation/common/languageServerChangeHandler';
-import {
-    IExtensionActivationService,
-    ILanguageServer,
-    ILanguageServerCache,
-    ILanguageServerOutputChannel,
-    LanguageServerType,
-} from '../activation/types';
+import { IExtensionActivationService, ILanguageServerOutputChannel, LanguageServerType } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
 import {
@@ -41,11 +35,8 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 @injectable()
 /**
  * The Language Server Watcher class implements the ILanguageServerWatcher interface, which is the one-stop shop for language server activation.
- *
- * It also implements the ILanguageServerCache interface needed by our Jupyter support.
  */
-export class LanguageServerWatcher
-    implements IExtensionActivationService, ILanguageServerWatcher, ILanguageServerCache {
+export class LanguageServerWatcher implements IExtensionActivationService, ILanguageServerWatcher {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: true, virtualWorkspace: true };
 
     languageServerExtensionManager: ILanguageServerExtensionManager | undefined;
@@ -202,9 +193,7 @@ export class LanguageServerWatcher
         });
     }
 
-    // ILanguageServerCache
-
-    public async get(resource?: Resource): Promise<ILanguageServer> {
+    public async get(resource?: Resource): Promise<ILanguageServerExtensionManager> {
         const key = this.getWorkspaceKey(resource, this.languageServerType);
         let languageServerExtensionManager = this.workspaceLanguageServers.get(key);
 
@@ -212,7 +201,7 @@ export class LanguageServerWatcher
             languageServerExtensionManager = await this.startAndGetLanguageServer(this.languageServerType, resource);
         }
 
-        return Promise.resolve(languageServerExtensionManager.get());
+        return Promise.resolve(languageServerExtensionManager);
     }
 
     // Private methods
