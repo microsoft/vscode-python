@@ -24,6 +24,8 @@ import { DirFilesLocator } from './filesLocator';
  * it for changes.
  */
 export class WindowsPathEnvVarLocator implements ILocator<BasicEnvInfo>, IDisposable {
+    public readonly providerId: string = 'windows-path-env-var-locator';
+
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     private readonly locators: Locators<BasicEnvInfo>;
@@ -93,6 +95,7 @@ function getDirFilesLocator(
         yield* await getEnvs(locator.iterEnvs(query));
     }
     return {
+        providerId: locator.providerId,
         iterEnvs,
         dispose,
         onChanged: locator.onChanged,

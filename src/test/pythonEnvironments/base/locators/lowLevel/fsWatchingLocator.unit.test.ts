@@ -30,6 +30,8 @@ suite('File System Watching Locator Tests', () => {
     });
 
     class TestWatcher extends FSWatchingLocator {
+        public readonly providerId: string = 'test';
+
         constructor(
             watcherKind: FSWatcherKind,
             opts: {

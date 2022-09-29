@@ -155,6 +155,7 @@ export type BasicEnvInfo = {
  */
 export interface ILocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
     extends IPythonEnvsWatcher<E> {
+    readonly providerId: string;
     /**
      * Iterate over the enviroments known tos this locator.
      *
@@ -174,6 +175,11 @@ export interface ILocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEve
     iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator<I>;
 }
 
+export type ICompositeLocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent> = Omit<
+    ILocator<I, E>,
+    'providerId'
+>;
+
 interface IResolver {
     /**
      * Find as much info about the given Python environment as possible.
@@ -184,7 +190,7 @@ interface IResolver {
     resolveEnv(path: string): Promise<PythonEnvInfo | undefined>;
 }
 
-export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ILocator<I> {}
+export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ICompositeLocator<I> {}
 
 export interface GetRefreshEnvironmentsOptions {
     /**
@@ -253,6 +259,8 @@ interface IEmitter<E extends PythonEnvsChangedEvent> {
 abstract class LocatorBase<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
     implements ILocator<I, E> {
     public readonly onChanged: Event<E>;
+
+    public abstract readonly providerId: string;
 
     protected readonly emitter: IEmitter<E>;
 

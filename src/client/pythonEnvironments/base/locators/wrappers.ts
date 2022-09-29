@@ -53,6 +53,8 @@ type WatchRootsFunc = (args: WatchRootsArgs) => IDisposable;
  */
 
 export class WorkspaceLocators<I = PythonEnvInfo> extends LazyResourceBasedLocator<I> {
+    public readonly providerId: string = 'workspace-locators';
+
     private readonly locators: Record<RootURI, [ILocator<I>, IDisposable]> = {};
 
     private readonly roots: Record<RootURI, Uri> = {};

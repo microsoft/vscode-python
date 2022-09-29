@@ -14,7 +14,9 @@ type GetExecutablesFunc = () => AsyncIterableIterator<string>;
 /**
  * A naive locator the wraps a function that finds Python executables.
  */
-class FoundFilesLocator implements ILocator<BasicEnvInfo> {
+abstract class FoundFilesLocator implements ILocator<BasicEnvInfo> {
+    public abstract readonly providerId: string;
+
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     protected readonly watcher = new PythonEnvsWatcher();
@@ -45,6 +47,8 @@ type GetDirExecutablesFunc = (dir: string) => AsyncIterableIterator<string>;
  * A locator for executables in a single directory.
  */
 export class DirFilesLocator extends FoundFilesLocator {
+    public readonly providerId: string;
+
     constructor(
         dirname: string,
         defaultKind: PythonEnvKind,
@@ -53,6 +57,7 @@ export class DirFilesLocator extends FoundFilesLocator {
         source?: PythonEnvSource[],
     ) {
         super(defaultKind, () => getExecutables(dirname), source);
+        this.providerId = `dir-files-${dirname}`;
     }
 }
 

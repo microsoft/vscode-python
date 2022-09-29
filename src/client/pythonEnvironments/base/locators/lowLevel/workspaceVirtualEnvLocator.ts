@@ -51,6 +51,8 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
  * Finds and resolves virtual environments created in workspace roots.
  */
 export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator<BasicEnvInfo> {
+    public readonly providerId: string = 'workspaceVirtualEnvLocator';
+
     public constructor(private readonly root: string) {
         super(
             () => getWorkspaceVirtualEnvDirs(this.root),

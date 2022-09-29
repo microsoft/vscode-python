@@ -61,6 +61,8 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
  * Finds and resolves virtual environments created using poetry.
  */
 export class PoetryLocator extends FSWatchingLocator<BasicEnvInfo> {
+    public readonly providerId: string = 'poetry';
+
     public constructor(private readonly root: string) {
         super(
             () => getRootVirtualEnvDir(root),

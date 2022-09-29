@@ -36,6 +36,8 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<BasicEnvInfo> {
 }
 
 export class PyenvLocator extends FSWatchingLocator<BasicEnvInfo> {
+    public readonly providerId: string = 'pyenv';
+
     constructor() {
         super(getPyenvVersionsDir, async () => PythonEnvKind.Pyenv);
     }

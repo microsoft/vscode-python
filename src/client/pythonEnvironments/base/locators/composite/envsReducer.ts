@@ -9,6 +9,7 @@ import { areSameEnv } from '../../info/env';
 import { getPrioritizedEnvKinds } from '../../info/envKind';
 import {
     BasicEnvInfo,
+    ICompositeLocator,
     ILocator,
     IPythonEnvsIterator,
     isProgressEvent,
@@ -22,7 +23,7 @@ import { PythonEnvsChangedEvent } from '../../watcher';
 /**
  * Combines duplicate environments received from the incoming locator into one and passes on unique environments
  */
-export class PythonEnvsReducer implements ILocator<BasicEnvInfo> {
+export class PythonEnvsReducer implements ICompositeLocator<BasicEnvInfo> {
     public get onChanged(): Event<PythonEnvsChangedEvent> {
         return this.parentLocator.onChanged;
     }

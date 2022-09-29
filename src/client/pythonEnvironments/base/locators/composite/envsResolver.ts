@@ -10,7 +10,7 @@ import { getEnvPath, setEnvDisplayString } from '../../info/env';
 import { InterpreterInformation } from '../../info/interpreter';
 import {
     BasicEnvInfo,
-    ILocator,
+    ICompositeLocator,
     IPythonEnvsIterator,
     IResolvingLocator,
     isProgressEvent,
@@ -35,7 +35,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
     }
 
     constructor(
-        private readonly parentLocator: ILocator<BasicEnvInfo>,
+        private readonly parentLocator: ICompositeLocator<BasicEnvInfo>,
         private readonly environmentInfoService: IEnvironmentInfoService,
     ) {}
 

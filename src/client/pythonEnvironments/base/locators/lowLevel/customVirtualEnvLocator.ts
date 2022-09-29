@@ -79,6 +79,8 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
  * Finds and resolves custom virtual environments that users have provided.
  */
 export class CustomVirtualEnvironmentLocator extends FSWatchingLocator<BasicEnvInfo> {
+    public readonly providerId: string = 'custom-virtual-envs';
+
     constructor() {
         super(getCustomVirtualEnvDirs, getVirtualEnvKind, {
             // Note detecting kind of virtual env depends on the file structure around the

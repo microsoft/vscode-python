@@ -8,6 +8,8 @@ import { traceError, traceVerbose } from '../../../../logging';
 import { FSWatchingLocator } from './fsWatchingLocator';
 
 export class CondaEnvironmentLocator extends FSWatchingLocator<BasicEnvInfo> {
+    public readonly providerId: string = 'conda-envs';
+
     public constructor() {
         super(
             () => getCondaEnvironmentsTxt(),
