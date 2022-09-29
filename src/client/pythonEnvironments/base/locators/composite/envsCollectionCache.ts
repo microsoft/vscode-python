@@ -52,9 +52,10 @@ export interface IEnvsCollectionCache {
     /**
      * Removes invalid envs from cache. Note this does not check for outdated info when
      * validating cache.
-     * @param latestListOfEnvs Carries list of latest envs for this workspace session if known.
+     * @param envs Carries list of envs for the latest refresh.
+     * @param isCompleteList Carries whether the list of envs is complete or not.
      */
-    validateCache(latestListOfEnvs?: PythonEnvInfo[]): Promise<void>;
+    validateCache(envs?: PythonEnvInfo[], isCompleteList?: boolean): Promise<void>;
 }
 
 export type PythonEnvLatestInfo = { hasLatestInfo?: boolean } & PythonEnvInfo;
@@ -75,7 +76,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         super();
     }
 
-    public async validateCache(latestListOfEnvs?: PythonEnvLatestInfo[]): Promise<void> {
+    public async validateCache(envs?: PythonEnvLatestInfo[], isCompleteList?: boolean): Promise<void> {
         /**
          * We do check if an env has updated as we already run discovery in background
          * which means env cache will have up-to-date envs eventually. This also means
@@ -86,7 +87,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             this.envs.map(async (cachedEnv) => {
                 const { path } = getEnvPath(cachedEnv.executable.filename, cachedEnv.location);
                 if (await pathExists(path)) {
-                    if (latestListOfEnvs) {
+                    if (envs && isCompleteList) {
                         /**
                          * Only consider a cached env to be valid if it's relevant. That means:
                          * * It is either reported in the latest complete refresh for this session.
@@ -95,7 +96,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
                         if (cachedEnv.searchLocation) {
                             return true;
                         }
-                        if (latestListOfEnvs.some((env) => cachedEnv.id === env.id)) {
+                        if (envs.some((env) => cachedEnv.id === env.id)) {
                             return true;
                         }
                     } else {
@@ -113,8 +114,8 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             const env = this.envs.splice(index, 1)[0];
             this.fire({ old: env, new: undefined });
         });
-        if (latestListOfEnvs) {
-            latestListOfEnvs.forEach((env) => {
+        if (envs) {
+            envs.forEach((env) => {
                 const cachedEnv = this.envs.find((e) => e.id === env.id);
                 delete cachedEnv?.hasLatestInfo;
                 delete env.hasLatestInfo;

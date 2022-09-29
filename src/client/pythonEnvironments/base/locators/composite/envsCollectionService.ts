@@ -177,7 +177,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         }
         await updatesDone.promise;
         // If query for all envs is done, `seen` should contain the list of all envs.
-        await this.cache.validateCache(query === undefined ? seen : undefined);
+        await this.cache.validateCache(seen, query === undefined);
         this.cache.flush().ignoreErrors();
     }
 
