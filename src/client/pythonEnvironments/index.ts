@@ -177,8 +177,8 @@ function watchRoots(args: WatchRootsArgs): IDisposable {
     });
 }
 
-function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators<BasicEnvInfo> {
-    const locators = new WorkspaceLocators<BasicEnvInfo>(watchRoots, [
+function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators {
+    const locators = new WorkspaceLocators(watchRoots, [
         (root: vscode.Uri) => [new WorkspaceVirtualEnvironmentLocator(root.fsPath), new PoetryLocator(root.fsPath)],
         // Add an ILocator factory func here for each kind of workspace-rooted locator.
     ]);

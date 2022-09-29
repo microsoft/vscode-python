@@ -13,7 +13,7 @@ import {
     resolvePythonExeGlobs,
     watchLocationForPythonBinaries,
 } from '../../../common/pythonBinariesWatcher';
-import { PythonEnvInfo, PythonEnvKind } from '../../info';
+import { PythonEnvKind } from '../../info';
 import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
 
 export enum FSWatcherKind {
@@ -80,7 +80,7 @@ type FileWatchOptions = {
  *
  * Subclasses can call `this.emitter.fire()` * to emit events.
  */
-export abstract class FSWatchingLocator<I = PythonEnvInfo> extends LazyResourceBasedLocator<I> {
+export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
     constructor(
         /**
          * Location(s) to watch for python binaries.
