@@ -65,6 +65,7 @@ export class PylanceLSExtensionManager implements IDisposable, ILanguageServerEx
             environmentService,
             workspaceService,
             extensions,
+            configurationService,
         );
         this.serverManager = new NodeLanguageServerManager(
             serviceContainer,

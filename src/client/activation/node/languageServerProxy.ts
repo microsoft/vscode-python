@@ -9,7 +9,13 @@ import {
     LanguageClientOptions,
 } from 'vscode-languageclient/node';
 
-import { IExperimentService, IExtensions, IInterpreterPathService, Resource } from '../../common/types';
+import {
+    IConfigurationService,
+    IExperimentService,
+    IExtensions,
+    IInterpreterPathService,
+    Resource,
+} from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -47,6 +53,7 @@ namespace GetExperimentValue {
     }
 }
 
+
 export class NodeLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
 
@@ -56,6 +63,8 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
 
     private lsVersion: string | undefined;
 
+    private usePylanceClient = false;
+    private pylanceApi
     constructor(
         private readonly factory: ILanguageClientFactory,
         private readonly experimentService: IExperimentService,
@@ -63,7 +72,11 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         private readonly environmentService: IEnvironmentVariablesProvider,
         private readonly workspace: IWorkspaceService,
         private readonly extensions: IExtensions,
-    ) {}
+        configurationService: IConfigurationService,
+    ) {
+        this.usePylanceClient = configurationService.getSettings().pylanceLspClientEnabled;
+        const extension = this.extensions.getExtension(PYLANCE_EXTENSION_ID);
+    }
 
     private static versionTelemetryProps(instance: NodeLanguageServerProxy) {
         return {
@@ -89,24 +102,28 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         interpreter: PythonEnvironment | undefined,
         options: LanguageClientOptions,
     ): Promise<void> {
-        const extension = this.extensions.getExtension(PYLANCE_EXTENSION_ID);
+
         this.lsVersion = extension?.packageJSON.version || '0';
 
-        this.cancellationStrategy = new FileBasedCancellationStrategy();
-        options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
+        if (this.usePylanceClient) {
+            await = extension.
+        } else {
+            this.cancellationStrategy = new FileBasedCancellationStrategy();
+            options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
 
-        const client = await this.factory.createLanguageClient(resource, interpreter, options);
-        this.registerHandlers(client, resource);
+            const client = await this.factory.createLanguageClient(resource, interpreter, options);
+            this.registerHandlers(client, resource);
 
-        this.disposables.push(
-            this.workspace.onDidGrantWorkspaceTrust(() => {
-                client.sendNotification('python/workspaceTrusted', { isTrusted: true });
-            }),
-        );
+            this.disposables.push(
+                this.workspace.onDidGrantWorkspaceTrust(() => {
+                    client.sendNotification('python/workspaceTrusted', { isTrusted: true });
+                }),
+            );
 
-        await client.start();
+            await client.start();
 
-        this.languageClient = client;
+            this.languageClient = client;
+        }
     }
 
     @traceDecoratorVerbose('Disposing language server')
