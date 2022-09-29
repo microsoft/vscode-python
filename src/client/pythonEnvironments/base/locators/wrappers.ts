@@ -30,7 +30,10 @@ export class ExtensionLocators<I = PythonEnvInfo> extends Locators<I> {
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<I> {
         const iterators: IPythonEnvsIterator<I>[] = [this.workspace.iterEnvs(query)];
         if (!query?.searchLocations?.doNotIncludeNonRooted) {
-            iterators.push(...this.nonWorkspace.map((loc) => loc.iterEnvs(query)));
+            const nonWorkspace = query?.providerId
+                ? this.nonWorkspace.filter((locator) => query.providerId === locator.providerId)
+                : this.nonWorkspace;
+            iterators.push(...nonWorkspace.map((loc) => loc.iterEnvs(query)));
         }
         return combineIterators(iterators);
     }
@@ -81,6 +84,10 @@ export class WorkspaceLocators<I = PythonEnvInfo> extends LazyResourceBasedLocat
                 // Ignore any requests for global envs.
                 if (!query.searchLocations.roots.some(filter)) {
                     // This workspace folder did not match the query, so skip it!
+                    return iterEmpty<I>();
+                }
+                if (query.providerId && query.providerId !== this.providerId) {
+                    // This is a request for a specific provider, so skip it.
                     return iterEmpty<I>();
                 }
             }

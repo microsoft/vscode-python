@@ -128,6 +128,10 @@ export type PythonLocatorQuery = BasicPythonLocatorQuery & {
      * If provided, results should be limited to within these locations.
      */
     searchLocations?: SearchLocations;
+    /**
+     * If provided, results should be limited envs provided by these locators.
+     */
+    providerId?: string;
 };
 
 type QueryForEvent<E> = E extends PythonEnvsChangedEvent ? PythonLocatorQuery : BasicPythonLocatorQuery;
