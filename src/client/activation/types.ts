@@ -89,10 +89,6 @@ export interface ILanguageServerManager extends IDisposable {
 
 export const ILanguageServerProxy = Symbol('ILanguageServerProxy');
 export interface ILanguageServerProxy extends IDisposable {
-    /**
-     * LanguageClient in use
-     */
-    languageClient: LanguageClient | undefined;
     start(
         resource: Resource,
         interpreter: PythonEnvironment | undefined,

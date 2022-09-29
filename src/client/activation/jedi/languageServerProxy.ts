@@ -16,7 +16,7 @@ import { killPid } from '../../common/process/rawProcessApis';
 import { traceDecoratorError, traceDecoratorVerbose, traceError } from '../../logging';
 
 export class JediLanguageServerProxy implements ILanguageServerProxy {
-    public languageClient: LanguageClient | undefined;
+    private languageClient: LanguageClient | undefined;
 
     private readonly disposables: Disposable[] = [];
 
