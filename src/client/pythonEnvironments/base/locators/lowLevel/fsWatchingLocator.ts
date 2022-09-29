@@ -135,7 +135,7 @@ export abstract class FSWatchingLocator<I = PythonEnvInfo> extends LazyResourceB
             this.disposables.push(
                 watchLocationForPattern(path.dirname(root), path.basename(root), () => {
                     traceVerbose('Detected change in file: ', root, 'initiating a refresh');
-                    this.emitter.fire({});
+                    this.emitter.fire({ providerId: this.providerId });
                 }),
             );
             return;
@@ -161,7 +161,7 @@ export abstract class FSWatchingLocator<I = PythonEnvInfo> extends LazyResourceB
             //        |__ python  <--- executable
             const searchLocation = Uri.file(opts.searchLocation ?? path.dirname(getEnvironmentDirFromPath(executable)));
             traceVerbose('Fired event ', JSON.stringify({ type, kind, searchLocation }), 'from locator');
-            this.emitter.fire({ type, kind, searchLocation });
+            this.emitter.fire({ type, kind, searchLocation, providerId: this.providerId, envPath: executable });
         };
 
         const globs = resolvePythonExeGlobs(

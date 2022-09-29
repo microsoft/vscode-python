@@ -57,7 +57,9 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     constructor(private readonly cache: IEnvsCollectionCache, private readonly locator: IResolvingLocator) {
         super();
         this.locator.onChanged((event) => {
-            const query = undefined; // We can also form a query based on the event, but skip that for simplicity.
+            const query: PythonLocatorQuery | undefined = event.providerId
+                ? { providerId: event.providerId, envPath: event.envPath }
+                : undefined; // We can also form a query based on the event, but skip that for simplicity.
             let scheduledRefresh = this.scheduledRefreshesPerQuery.get(query);
             // If there is no refresh scheduled for the query, start a new one.
             if (!scheduledRefresh) {
