@@ -188,14 +188,6 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             await this.persistentStorage.store(this.envs);
         }
     }
-
-    public clearCache(): Promise<void> {
-        this.envs.forEach((e) => {
-            this.fire({ old: e, new: undefined });
-        });
-        this.envs = [];
-        return Promise.resolve();
-    }
 }
 
 async function validateInfo(env: PythonEnvInfo) {
