@@ -9,13 +9,7 @@ import {
     LanguageClientOptions,
 } from 'vscode-languageclient/node';
 
-import {
-    IConfigurationService,
-    IExperimentService,
-    IExtensions,
-    IInterpreterPathService,
-    Resource,
-} from '../../common/types';
+import { IExperimentService, IExtensions, IInterpreterPathService, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -76,7 +70,6 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         private readonly environmentService: IEnvironmentVariablesProvider,
         private readonly workspace: IWorkspaceService,
         private readonly extensions: IExtensions,
-        private readonly configurationService: IConfigurationService,
     ) {
         // Empty
     }
@@ -111,22 +104,23 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         if (extension && (extension.exports as PylanceApi).startClient) {
             this.pylanceApi = extension.exports as PylanceApi;
             await this.pylanceApi.startClient!();
-        } else {
-            this.cancellationStrategy = new FileBasedCancellationStrategy();
-            options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
-
-            const client = await this.factory.createLanguageClient(resource, interpreter, options);
-            this.registerHandlers(client, resource);
-
-            this.disposables.push(
-                this.workspace.onDidGrantWorkspaceTrust(() => {
-                    client.sendNotification('python/workspaceTrusted', { isTrusted: true });
-                }),
-            );
-
-            await client.start();
-            this.languageClient = client;
+            return;
         }
+
+        this.cancellationStrategy = new FileBasedCancellationStrategy();
+        options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
+
+        const client = await this.factory.createLanguageClient(resource, interpreter, options);
+        this.registerHandlers(client, resource);
+
+        this.disposables.push(
+            this.workspace.onDidGrantWorkspaceTrust(() => {
+                client.sendNotification('python/workspaceTrusted', { isTrusted: true });
+            }),
+        );
+
+        await client.start();
+        this.languageClient = client;
     }
 
     @traceDecoratorVerbose('Disposing language server')
