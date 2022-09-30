@@ -17,8 +17,10 @@ interface BrowserConfig {
 }
 
 interface PylanceApi {
-    startClient?(): Promise<void>;
-    stopClient?(): Promise<void>;
+    client?: {
+        start(): Promise<void>;
+        stop(): Promise<void>;
+    };
 }
 
 let languageClient: LanguageClient | undefined;
@@ -44,7 +46,7 @@ export async function deactivate(): Promise<void> {
     const api = pylanceApi;
     pylanceApi = undefined;
 
-    await api?.stopClient!();
+    await api?.client!.stop();
 
     const client = languageClient;
     languageClient = undefined;
@@ -60,9 +62,9 @@ async function runPylance(
     context.subscriptions.push(createStatusItem());
 
     pylanceExtension = await getActivatedExtension(pylanceExtension);
-    if ((pylanceExtension.exports as PylanceApi).startClient) {
+    if ((pylanceExtension.exports as PylanceApi).client) {
         pylanceApi = pylanceExtension.exports as PylanceApi;
-        await pylanceApi.startClient!();
+        await pylanceApi.client!.start();
         return;
     }
 

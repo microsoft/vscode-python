@@ -48,8 +48,10 @@ namespace GetExperimentValue {
 }
 
 interface PylanceApi {
-    startClient?(): Promise<void>;
-    stopClient?(): Promise<void>;
+    client?: {
+        start(): Promise<void>;
+        stop(): Promise<void>;
+    };
 }
 
 export class NodeLanguageServerProxy implements ILanguageServerProxy {
@@ -101,9 +103,9 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         const extension = await this.getPylanceExtension();
         this.lsVersion = extension?.packageJSON.version || '0';
 
-        if (extension && (extension.exports as PylanceApi).startClient) {
+        if (extension && (extension.exports as PylanceApi).client) {
             this.pylanceApi = extension.exports as PylanceApi;
-            await this.pylanceApi.startClient!();
+            await this.pylanceApi.client!.start();
             return;
         }
 
@@ -126,7 +128,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
     @traceDecoratorVerbose('Disposing language server')
     public async stop(): Promise<void> {
         if (this.pylanceApi) {
-            this.pylanceApi.stopClient!();
+            this.pylanceApi.client!.stop();
             this.pylanceApi = undefined;
 
             return;
