@@ -197,7 +197,6 @@ export interface IPythonSettings {
     readonly envFile: string;
     readonly globalModuleInstallation: boolean;
     readonly pylanceLspNotebooksEnabled: boolean;
-    readonly pylanceLspClientEnabled: boolean;
     readonly experiments: IExperiments;
     readonly languageServer: LanguageServerType;
     readonly languageServerIsDefault: boolean;

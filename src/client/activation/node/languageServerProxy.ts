@@ -108,8 +108,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         const extension = await this.getPylanceExtension();
         this.lsVersion = extension?.packageJSON.version || '0';
 
-        const usePylanceClient = this.configurationService.getSettings().pylanceLspClientEnabled;
-        if (usePylanceClient && extension && (extension.exports as PylanceApi).startClient) {
+        if (extension && (extension.exports as PylanceApi).startClient) {
             this.pylanceApi = extension.exports as PylanceApi;
             await this.pylanceApi.startClient!();
         } else {
