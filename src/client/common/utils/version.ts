@@ -70,11 +70,6 @@ export const EMPTY_VERSION: RawBasicVersionInfo = {
     major: -1,
     minor: -1,
     micro: -1,
-    unnormalized: {
-        major: undefined,
-        minor: undefined,
-        micro: undefined,
-    },
 };
 Object.freeze(EMPTY_VERSION);
 

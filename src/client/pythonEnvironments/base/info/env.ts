@@ -78,9 +78,16 @@ export function buildEnvInfo(init?: {
 }
 
 export function areEnvsDeepEqual(env1: PythonEnvInfo, env2: PythonEnvInfo): boolean {
-    env1.source = env1.source.sort();
-    env2.source = env2.source.sort();
-    return isEqual(env1, env2);
+    const env1Clone = cloneDeep(env1);
+    const env2Clone = cloneDeep(env2);
+    // Cannot compare searchLocation as they are Uri objects.
+    delete env1Clone.searchLocation;
+    delete env2Clone.searchLocation;
+    env1Clone.source = env1Clone.source.sort();
+    env2Clone.source = env2Clone.source.sort();
+    const searchLocation1 = env1.searchLocation?.fsPath ?? '';
+    const searchLocation2 = env2.searchLocation?.fsPath ?? '';
+    return isEqual(env1Clone, env2Clone) && arePathsSame(searchLocation1, searchLocation2);
 }
 
 /**
