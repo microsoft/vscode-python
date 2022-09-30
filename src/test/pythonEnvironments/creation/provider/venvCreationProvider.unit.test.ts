@@ -5,16 +5,23 @@ import * as path from 'path';
 import * as typemoq from 'typemoq';
 import { assert, use as chaiUse } from 'chai';
 import * as sinon from 'sinon';
-import { Uri } from 'vscode';
-import { CreateEnvironmentProvider } from '../../../../client/pythonEnvironments/creation/types';
+import { CancellationToken, ProgressOptions, Uri } from 'vscode';
+import {
+    CreateEnvironmentProgress,
+    CreateEnvironmentProvider,
+    CreateEnvironmentResult,
+} from '../../../../client/pythonEnvironments/creation/types';
 import { VenvCreationProvider } from '../../../../client/pythonEnvironments/creation/provider/venvCreationProvider';
 import { IInterpreterQuickPick } from '../../../../client/interpreter/configuration/types';
 import * as wsSelect from '../../../../client/pythonEnvironments/creation/common/workspaceSelection';
+import * as windowApis from '../../../../client/common/vscodeApis/windowApis';
 import * as rawProcessApis from '../../../../client/common/process/rawProcessApis';
+import * as commonUtils from '../../../../client/pythonEnvironments/creation/common/commonUtils';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { createDeferred } from '../../../../client/common/utils/async';
 import { Output } from '../../../../client/common/process/types';
 import { VENV_CREATED_MARKER } from '../../../../client/pythonEnvironments/creation/provider/venvProgressAndTelemetry';
+import { CreateEnv } from '../../../../client/common/utils/localize';
 
 chaiUse(chaiAsPromised);
 
@@ -22,12 +29,21 @@ suite('venv Creation provider tests', () => {
     let venvProvider: CreateEnvironmentProvider;
     let pickWorkspaceFolderStub: sinon.SinonStub;
     let interpreterQuickPick: typemoq.IMock<IInterpreterQuickPick>;
+    let progressMock: typemoq.IMock<CreateEnvironmentProgress>;
     let execObservableStub: sinon.SinonStub;
+    let withProgressStub: sinon.SinonStub;
+    let showErrorMessageWithLogsStub: sinon.SinonStub;
 
     setup(() => {
         pickWorkspaceFolderStub = sinon.stub(wsSelect, 'pickWorkspaceFolder');
         execObservableStub = sinon.stub(rawProcessApis, 'execObservable');
         interpreterQuickPick = typemoq.Mock.ofType<IInterpreterQuickPick>();
+        withProgressStub = sinon.stub(windowApis, 'withProgress');
+
+        showErrorMessageWithLogsStub = sinon.stub(commonUtils, 'showErrorMessageWithLogs');
+        showErrorMessageWithLogsStub.resolves();
+
+        progressMock = typemoq.Mock.ofType<CreateEnvironmentProgress>();
         venvProvider = new VenvCreationProvider(interpreterQuickPick.object);
     });
 
@@ -92,6 +108,18 @@ suite('venv Creation provider tests', () => {
             };
         });
 
+        progressMock.setup((p) => p.report({ message: CreateEnv.statusStarting })).verifiable(typemoq.Times.once());
+
+        withProgressStub.callsFake(
+            (
+                _options: ProgressOptions,
+                task: (
+                    progress: CreateEnvironmentProgress,
+                    token?: CancellationToken,
+                ) => Thenable<CreateEnvironmentResult>,
+            ) => task(progressMock.object),
+        );
+
         const promise = venvProvider.createEnvironment();
         await deferred.promise;
         assert.isDefined(_next);
@@ -99,8 +127,12 @@ suite('venv Creation provider tests', () => {
 
         _next!({ out: `${VENV_CREATED_MARKER}new_environment`, source: 'stdout' });
         _complete!();
-        assert.strictEqual(await promise, { path: 'new_environment', uri: workspace1.uri });
+
+        const actual = await promise;
+        assert.deepStrictEqual(actual, { path: 'new_environment', uri: workspace1.uri });
         interpreterQuickPick.verifyAll();
+        progressMock.verifyAll();
+        assert.isTrue(showErrorMessageWithLogsStub.notCalled);
     });
 
     test('Create venv failed', async () => {
@@ -111,9 +143,9 @@ suite('venv Creation provider tests', () => {
         });
 
         interpreterQuickPick
-            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny()))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(typemoq.Times.never());
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns(() => Promise.resolve('/usr/bin/python'))
+            .verifiable(typemoq.Times.once());
 
         const deferred = createDeferred();
         let _error: undefined | ((error: unknown) => void);
@@ -136,11 +168,24 @@ suite('venv Creation provider tests', () => {
             };
         });
 
+        progressMock.setup((p) => p.report({ message: CreateEnv.statusStarting })).verifiable(typemoq.Times.once());
+
+        withProgressStub.callsFake(
+            (
+                _options: ProgressOptions,
+                task: (
+                    progress: CreateEnvironmentProgress,
+                    token?: CancellationToken,
+                ) => Thenable<CreateEnvironmentResult>,
+            ) => task(progressMock.object),
+        );
+
         const promise = venvProvider.createEnvironment();
         await deferred.promise;
         assert.isDefined(_error);
         _error!('bad arguments');
         _complete!();
         await assert.isRejected(promise);
+        assert.isTrue(showErrorMessageWithLogsStub.calledOnce);
     });
 });

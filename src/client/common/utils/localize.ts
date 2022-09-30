@@ -580,6 +580,10 @@ export namespace CreateEnv {
         export const creating = localize('createEnv.venv.creating', 'Creating venv...');
         export const created = localize('createEnv.venv.created', 'Environment created...');
         export const installingPackages = localize('createEnv.venv.installingPackages', 'Installing packages...');
+        export const errorCreatingEnvironment = localize(
+            'createEnv.venv.errorCreatingEnvironment',
+            'Error while creating virtual environment.',
+        );
         export const selectPythonQuickPickTitle = localize(
             'createEnv.venv.basePython.title',
             'Select a python to use for environment creation',
@@ -611,6 +615,5 @@ export namespace CreateEnv {
             'createEnv.conda.description',
             'Creates a `.conda` Conda environment in the current workspace',
         );
-        export const error = localize('createEnv.conda.error', 'Creating Conda environment failed with error.');
     }
 }

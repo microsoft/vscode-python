@@ -18,10 +18,11 @@ import {
 import { pickWorkspaceFolder } from '../common/workspaceSelection';
 import { IInterpreterQuickPick } from '../../../interpreter/configuration/types';
 import { EnvironmentType, PythonEnvironment } from '../../info';
-import { showErrorMessage, withProgress } from '../../../common/vscodeApis/windowApis';
+import { withProgress } from '../../../common/vscodeApis/windowApis';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { VenvProgressAndTelemetry, VENV_CREATED_MARKER, VENV_EXISTING_MARKER } from './venvProgressAndTelemetry';
+import { showErrorMessageWithLogs } from '../common/commonUtils';
 
 function generateCommandArgs(options?: CreateEnvironmentOptions): string[] {
     let addGitIgnore = true;
@@ -158,9 +159,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                         throw ex;
                     } finally {
                         if (hasError) {
-                            showErrorMessage(
-                                `${CreateEnv.Venv.error} ([${Common.showLogs}](command:${Commands.ViewOutput}))`,
-                            );
+                            showErrorMessageWithLogs(CreateEnv.Venv.errorCreatingEnvironment);
                         }
                     }
 

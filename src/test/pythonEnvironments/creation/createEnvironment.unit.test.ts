@@ -22,7 +22,8 @@ suite('Create Environments Tests', () => {
 
     setup(() => {
         showQuickPickStub = sinon.stub(windowApis, 'showQuickPick');
-
+        startedEventTriggered = false;
+        exitedEventTriggered = false;
         disposables.push(
             onCreateEnvironmentStarted(() => {
                 startedEventTriggered = true;

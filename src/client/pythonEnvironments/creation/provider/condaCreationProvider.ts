@@ -19,7 +19,7 @@ import { createCondaScript } from '../../../common/process/internal/scripts';
 import { Common, CreateEnv } from '../../../common/utils/localize';
 import { getConda, pickPythonVersion } from './condaUtils';
 import { showErrorMessageWithLogs } from '../common/commonUtils';
-import { showErrorMessage, withProgress } from '../../../common/vscodeApis/windowApis';
+import { withProgress } from '../../../common/vscodeApis/windowApis';
 import { EventName } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry';
 import {
@@ -122,7 +122,6 @@ async function createCondaEnv(
         async (error) => {
             traceError('Error while running conda env creation script: ', error);
             deferred.reject(error);
-            await showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
         },
         () => {
             dispose();
@@ -208,7 +207,7 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
                 throw ex;
             } finally {
                 if (hasError) {
-                    showErrorMessage(`${CreateEnv.Conda.error} ([${Common.showLogs}](command:${Commands.ViewOutput}))`);
+                    showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
                 }
             }
             return { path: envPath, uri: workspace.uri };
