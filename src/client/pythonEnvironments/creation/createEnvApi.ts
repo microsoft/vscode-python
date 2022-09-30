@@ -42,12 +42,7 @@ export function registerCreateEnvironmentProvider(provider: CreateEnvironmentPro
     });
 }
 
-export const { onCreateEnvironmentStarted, onCreateEnvironmentExited } = getCreationEvents();
-
-let _createCalled = 0;
-export function isCreatingEnvironment(): boolean {
-    return _createCalled > 0;
-}
+export const { onCreateEnvironmentStarted, onCreateEnvironmentExited, isCreatingEnvironment } = getCreationEvents();
 
 export function registerCreateEnvironmentFeatures(
     disposables: IDisposableRegistry,
@@ -66,15 +61,7 @@ export function registerCreateEnvironmentFeatures(
     disposables.push(registerCreateEnvironmentProvider(new VenvCreationProvider(interpreterQuickPick)));
     disposables.push(registerCreateEnvironmentProvider(condaCreationProvider()));
     disposables.push(
-        onCreateEnvironmentStarted(() => {
-            _createCalled += 1;
-        }),
-    );
-    disposables.push(
         onCreateEnvironmentExited(async (e: CreateEnvironmentResult | undefined) => {
-            if (_createCalled > 0) {
-                _createCalled -= 1;
-            }
             if (e && e.path) {
                 await interpreterPathService.update(e.uri, ConfigurationTarget.WorkspaceFolder, e.path);
                 showInformationMessage(`${CreateEnv.informEnvCreation} ${e.path}`);

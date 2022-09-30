@@ -10,13 +10,31 @@ import { CreateEnvironmentOptions, CreateEnvironmentProvider, CreateEnvironmentR
 const onCreateEnvironmentStartedEvent = new EventEmitter<void>();
 const onCreateEnvironmentExitedEvent = new EventEmitter<CreateEnvironmentResult | undefined>();
 
+let startedEventCount = 0;
+
+function isBusyCreatingEnvironment(): boolean {
+    return startedEventCount > 0;
+}
+
+function fireStartedEvent(): void {
+    onCreateEnvironmentStartedEvent.fire();
+    startedEventCount += 1;
+}
+
+function fireExitedEvent(result: CreateEnvironmentResult | undefined): void {
+    onCreateEnvironmentExitedEvent.fire(result);
+    startedEventCount -= 1;
+}
+
 export function getCreationEvents(): {
     onCreateEnvironmentStarted: Event<void>;
     onCreateEnvironmentExited: Event<CreateEnvironmentResult | undefined>;
+    isCreatingEnvironment: () => boolean;
 } {
     return {
         onCreateEnvironmentStarted: onCreateEnvironmentStartedEvent.event,
         onCreateEnvironmentExited: onCreateEnvironmentExitedEvent.event,
+        isCreatingEnvironment: isBusyCreatingEnvironment,
     };
 }
 
@@ -29,10 +47,10 @@ async function createEnvironment(
 ): Promise<CreateEnvironmentResult | undefined> {
     let result: CreateEnvironmentResult | undefined;
     try {
-        onCreateEnvironmentStartedEvent.fire();
+        fireStartedEvent();
         result = await provider.createEnvironment(options);
     } finally {
-        onCreateEnvironmentExitedEvent.fire(result);
+        fireExitedEvent(result);
     }
     return result;
 }
