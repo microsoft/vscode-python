@@ -558,8 +558,6 @@ export namespace CreateEnv {
     );
     export const statusTitle = localize('createEnv.statusTitle', 'Creating environment');
     export const statusStarting = localize('createEnv.statusStarting', 'Starting...');
-    export const statusError = localize('createEnv.statusError', 'Error.');
-    export const statusDone = localize('createEnv.statusDone', 'Done.');
 
     export const hasVirtualEnv = localize('createEnv.hasVirtualEnv', 'Workspace folder contains a virtual environment');
 
@@ -569,7 +567,7 @@ export namespace CreateEnv {
     );
 
     export const pickWorkspacePlaceholder = localize(
-        'createEnv.workspaceQuickPick.title',
+        'createEnv.workspaceQuickPick.placeholder',
         'Select a workspace to create environment',
     );
 
@@ -582,11 +580,6 @@ export namespace CreateEnv {
         export const creating = localize('createEnv.venv.creating', 'Creating venv...');
         export const created = localize('createEnv.venv.created', 'Environment created...');
         export const installingPackages = localize('createEnv.venv.installingPackages', 'Installing packages...');
-        export const waitingForPython = localize('createEnv.venv.waitingForPython', 'Waiting on Python selection...');
-        export const waitingForWorkspace = localize(
-            'createEnv.venv.waitingForWorkspace',
-            'Waiting on workspace selection...',
-        );
         export const selectPythonQuickPickTitle = localize(
             'createEnv.venv.basePython.title',
             'Select a python to use for environment creation',
@@ -609,19 +602,10 @@ export namespace CreateEnv {
             'createEnv.conda.errorCreatingEnvironment',
             'Error while creating conda environment.',
         );
-        export const waitingForWorkspace = localize(
-            'createEnv.conda.waitingForWorkspace',
-            'Waiting on workspace selection...',
-        );
-        export const waitingForPython = localize(
-            'createEnv.conda.waitingForPython',
-            'Waiting on Python version selection...',
-        );
         export const selectPythonQuickPickPlaceholder = localize(
-            'createEnv.conda.pythonSelection.title',
+            'createEnv.conda.pythonSelection.placeholder',
             'Please select the version of Python to install in the environment',
         );
-        export const searching = localize('createEnv.conda.searching', 'Searching for conda (base)...');
         export const creating = localize('createEnv.conda.creating', 'Running conda create...');
         export const providerDescription = localize(
             'createEnv.conda.description',
