@@ -67,6 +67,13 @@ export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
                 didSave: true,
                 didChange: true,
             },
+            hover: {
+                disable: {
+                    keyword: {
+                        all: true,
+                    },
+                },
+            },
             workspace: {
                 extraPaths: distinctExtraPaths,
                 symbols: {
