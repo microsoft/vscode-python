@@ -64,6 +64,10 @@ suite('Virtual Environment Prompt', () => {
         );
     });
 
+    teardown(() => {
+        sinon.restore();
+    });
+
     test('User is notified if interpreter exists and only python path to global interpreter is specified in settings', async () => {
         const resource = Uri.file('a');
         const interpreter1 = { path: 'path/to/interpreter1' };
@@ -263,7 +267,9 @@ suite('Virtual Environment Prompt', () => {
     });
 
     test('If environment is being created, no notification is shown', async () => {
+        isCreatingEnvironmentStub.reset();
         isCreatingEnvironmentStub.returns(true);
+
         const resource = Uri.file('a');
         const interpreter1 = { path: 'path/to/interpreter1' };
         const prompts = [Common.bannerLabelYes, Common.bannerLabelNo, Common.doNotShowAgain];

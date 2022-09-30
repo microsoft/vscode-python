@@ -61,6 +61,9 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
     }
 
     protected async notifyUser(interpreter: PythonEnvironment, resource: Uri): Promise<void> {
+        if (isCreatingEnvironment()) {
+            return;
+        }
         const notificationPromptEnabled = this.persistentStateFactory.createWorkspacePersistentState(
             doNotDisplayPromptStateKey,
             true,

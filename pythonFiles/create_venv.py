@@ -51,7 +51,7 @@ def file_exists(path: Union[str, pathlib.PurePath]) -> bool:
 
 
 def venv_exists(name: str) -> bool:
-    return os.path.exists(CWD / name)
+    return os.path.exists(CWD / name) and file_exists(get_venv_path(name))
 
 
 def run_process(args: Sequence[str], error_message: str) -> None:
@@ -115,7 +115,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     if args.install and not is_installed("pip"):
         raise VenvError("CREATE_VENV.PIP_NOT_FOUND")
 
-    if venv_exists(args.name) and file_exists(get_venv_path(args.name)):
+    if venv_exists(args.name):
         venv_path = get_venv_path(args.name)
         print(f"EXISTING_VENV:{venv_path}")
     else:

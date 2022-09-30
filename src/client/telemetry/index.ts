@@ -1994,7 +1994,7 @@ export interface IEventNamePropertyMapping {
     /* __GDPR__
        "environment.created" : {
           "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
-          "reason" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "reason" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
         }
      */
     [EventName.ENVIRONMENT_CREATED]: {
