@@ -69,6 +69,7 @@ suite('Jedi LSP - analysis Options', () => {
         expect(result.initializationOptions.diagnostics.didOpen).to.deep.equal(true);
         expect(result.initializationOptions.diagnostics.didSave).to.deep.equal(true);
         expect(result.initializationOptions.diagnostics.didChange).to.deep.equal(true);
+        expect(result.initializationOptions.hover.disable.keyword.all).to.deep.equal(true);
         expect(result.initializationOptions.workspace.extraPaths).to.deep.equal([]);
         expect(result.initializationOptions.workspace.symbols.maxSymbols).to.deep.equal(0);
     });
