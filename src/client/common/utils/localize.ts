@@ -610,7 +610,7 @@ export namespace CreateEnv {
             'createEnv.conda.pythonSelection.placeholder',
             'Please select the version of Python to install in the environment',
         );
-        export const creating = localize('createEnv.conda.creating', 'Running conda create...');
+        export const creating = localize('createEnv.conda.creating', 'Creating conda environment...');
         export const providerDescription = localize(
             'createEnv.conda.description',
             'Creates a `.conda` Conda environment in the current workspace',
