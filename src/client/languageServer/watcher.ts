@@ -284,7 +284,10 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
         const workspacesUris = this.workspaceService.workspaceFolders?.map((workspace) => workspace.uri) ?? [];
 
         workspacesUris.forEach(async (resource) => {
-            if (event.affectsConfiguration(`python.languageServer`, resource)) {
+            if (
+                event.affectsConfiguration(`python.languageServer`, resource) ||
+                event.affectsConfiguration(`python.analysis.pylanceLspClientEnabled`, resource)
+            ) {
                 await this.refreshLanguageServer(resource);
             }
         });
