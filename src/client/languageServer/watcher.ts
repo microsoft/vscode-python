@@ -265,11 +265,11 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
         return lsManager;
     }
 
-    private async refreshLanguageServer(resource?: Resource): Promise<void> {
+    private async refreshLanguageServer(resource?: Resource, forced?: boolean): Promise<void> {
         const lsResource = this.getWorkspaceUri(resource);
         const languageServerType = this.configurationService.getSettings(lsResource).languageServer;
 
-        if (languageServerType !== this.languageServerType) {
+        if (languageServerType !== this.languageServerType || forced) {
             await this.stopLanguageServer(resource);
             await this.startLanguageServer(languageServerType, lsResource);
         }
@@ -284,11 +284,10 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
         const workspacesUris = this.workspaceService.workspaceFolders?.map((workspace) => workspace.uri) ?? [];
 
         workspacesUris.forEach(async (resource) => {
-            if (
-                event.affectsConfiguration(`python.languageServer`, resource) ||
-                event.affectsConfiguration(`python.analysis.pylanceLspClientEnabled`, resource)
-            ) {
+            if (event.affectsConfiguration(`python.languageServer`, resource)) {
                 await this.refreshLanguageServer(resource);
+            } else if (event.affectsConfiguration(`python.analysis.pylanceLspClientEnabled`, resource)) {
+                await this.refreshLanguageServer(resource, /* forced */ true);
             }
         });
     }
