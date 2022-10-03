@@ -6,7 +6,6 @@ import { ConfigurationTarget, Disposable, Uri } from 'vscode';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
-import { sleep } from '../../common/utils/async';
 import { Common, Interpreters } from '../../common/utils/localize';
 import { traceDecoratorError, traceVerbose } from '../../logging';
 import { isCreatingEnvironment } from '../../pythonEnvironments/creation/createEnvApi';
@@ -42,8 +41,6 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         if (isCreatingEnvironment()) {
             return;
         }
-        // Wait for a while, to ensure environment gets created and is accessible (as this is slow on Windows)
-        await sleep(1000);
         const interpreters = await this.pyenvs.getWorkspaceVirtualEnvInterpreters(resource);
         const interpreter =
             Array.isArray(interpreters) && interpreters.length > 0
@@ -61,9 +58,6 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
     }
 
     protected async notifyUser(interpreter: PythonEnvironment, resource: Uri): Promise<void> {
-        if (isCreatingEnvironment()) {
-            return;
-        }
         const notificationPromptEnabled = this.persistentStateFactory.createWorkspacePersistentState(
             doNotDisplayPromptStateKey,
             true,

@@ -271,18 +271,9 @@ suite('Virtual Environment Prompt', () => {
         isCreatingEnvironmentStub.returns(true);
 
         const resource = Uri.file('a');
-        const interpreter1 = { path: 'path/to/interpreter1' };
         const prompts = [Common.bannerLabelYes, Common.bannerLabelNo, Common.doNotShowAgain];
-        const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-        when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
-            notificationPromptEnabled.object,
-        );
-        notificationPromptEnabled.setup((n) => n.value).returns(() => true);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[0] as any);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await environmentPrompt.notifyUser(interpreter1 as any, resource);
+        await environmentPrompt.handleNewEnvironment(resource);
 
         verify(persistentStateFactory.createWorkspacePersistentState(anything(), true)).never();
         verify(appShell.showInformationMessage(anything(), ...prompts)).never();
