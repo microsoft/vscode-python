@@ -18,6 +18,7 @@ interface BrowserConfig {
 
 interface PylanceApi {
     client?: {
+        isEnabled(): boolean;
         start(): Promise<void>;
         stop(): Promise<void>;
     };
@@ -43,10 +44,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 }
 
 export async function deactivate(): Promise<void> {
-    const api = pylanceApi;
-    pylanceApi = undefined;
-
-    await api?.client!.stop();
+    if (pylanceApi) {
+        const api = pylanceApi;
+        pylanceApi = undefined;
+        await api.client!.stop();
+    }
 
     const client = languageClient;
     languageClient = undefined;
@@ -62,9 +64,10 @@ async function runPylance(
     context.subscriptions.push(createStatusItem());
 
     pylanceExtension = await getActivatedExtension(pylanceExtension);
-    if ((pylanceExtension.exports as PylanceApi).client) {
-        pylanceApi = pylanceExtension.exports as PylanceApi;
-        await pylanceApi.client!.start();
+    const api = pylanceExtension.exports as PylanceApi;
+    if (api.client && api.client.isEnabled()) {
+        pylanceApi = api;
+        await api.client.start();
         return;
     }
 
