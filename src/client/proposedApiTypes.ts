@@ -6,7 +6,7 @@ import { CancellationToken, Event, Uri, WorkspaceFolder } from 'vscode';
 // https://github.com/microsoft/vscode-python/wiki/Proposed-Environment-APIs
 
 export interface ProposedExtensionAPI {
-    readonly environment: {
+    readonly environments: {
         /**
          * Returns the environment configured by user in settings.
          * @param resource : Uri of a file or workspace folder. This is used to determine the env in a multi-root
