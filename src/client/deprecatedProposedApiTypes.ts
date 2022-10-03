@@ -43,7 +43,7 @@ export interface ActiveEnvironmentChangedParams {
  */
 export interface DeprecatedProposedAPI {
     /**
-     * @deprecated Use {@link ProposedExtensionAPI.environment} instead. This will soon be removed.
+     * @deprecated Use {@link ProposedExtensionAPI.environments} instead. This will soon be removed.
      */
     environment: {
         /**
@@ -131,7 +131,7 @@ export interface DeprecatedProposedAPI {
          */
         onDidEnvironmentsChanged: Event<EnvironmentsChangedParams[]>;
         /**
-         * @deprecated Use {@link ProposedExtensionAPI.environment} `onDidChangeActiveEnvironmentPath` instead. This will soon be removed.
+         * @deprecated Use {@link ProposedExtensionAPI.environments} `onDidChangeActiveEnvironmentPath` instead. This will soon be removed.
          */
         onDidActiveEnvironmentChanged: Event<ActiveEnvironmentChangedParams>;
     };
