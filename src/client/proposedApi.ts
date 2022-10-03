@@ -213,7 +213,7 @@ export function buildProposedApi(
                 sendApiTelemetry('resolveEnvironment');
                 return resolveEnvironment(path, discoveryApi);
             },
-            get all(): Environment[] {
+            get known(): Environment[] {
                 sendApiTelemetry('all');
                 return discoveryApi.getEnvs().map((e) => convertEnvInfoAndGetReference(e));
             },

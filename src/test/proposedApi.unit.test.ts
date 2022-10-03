@@ -182,7 +182,7 @@ suite('Proposed Extension API', () => {
 
     test('environments: no pythons found', () => {
         discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
-        const actual = proposed.environments.all;
+        const actual = proposed.environments.known;
         expect(actual).to.be.deep.equal([]);
     });
 
@@ -232,7 +232,7 @@ suite('Proposed Extension API', () => {
             },
         ];
         discoverAPI.setup((d) => d.getEnvs()).returns(() => envs);
-        const actual = proposed.environments.all;
+        const actual = proposed.environments.known;
         const actualEnvs = actual?.map((a) => (a as EnvironmentReference).internal);
         assert.deepEqual(
             actualEnvs?.sort((a, b) => a.id.localeCompare(b.id)),
