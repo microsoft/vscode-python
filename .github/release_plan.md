@@ -2,7 +2,7 @@ All dates should align with VS Code's [iteration](https://github.com/microsoft/v
 
 # Feature freeze (Monday @ 17:00 America/Vancouver, XXX XX)
 
--   [ ] Announce the feature freeze on both Teams and e-mail, leave enough time for teams to surface any last minute issues that need to get in before freeze. Make sure debugger and Language Server teams are looped in as well.
+-   [ ] Announce the feature freeze on both Teams and e-mail if needed, leave enough time for teams to surface any last minute issues that need to get in before freeze. Make sure debugger and Language Server teams are looped in as well.
 
 # Release candidate (Monday, XXX XX)
 
