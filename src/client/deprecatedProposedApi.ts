@@ -86,11 +86,12 @@ export function buildDeprecatedProposedApi(
     const proposed: DeprecatedProposedAPI = {
         environment: {
             async getExecutionDetails(resource?: Resource) {
-                sendApiTelemetry('getExecutionDetails');
+                sendApiTelemetry('deprecated.getExecutionDetails');
                 const env = await interpreterService.getActiveInterpreter(resource);
                 return env ? { execCommand: [env.path] } : { execCommand: undefined };
             },
             async getActiveEnvironmentPath(resource?: Resource) {
+                sendApiTelemetry('deprecated.getActiveEnvironmentPath');
                 const env = await interpreterService.getActiveInterpreter(resource);
                 if (!env) {
                     return undefined;
@@ -101,7 +102,7 @@ export function buildDeprecatedProposedApi(
                 path: string,
                 options?: EnvironmentDetailsOptions,
             ): Promise<EnvironmentDetails | undefined> {
-                sendApiTelemetry('getEnvironmentDetails');
+                sendApiTelemetry('deprecated.getEnvironmentDetails');
                 let env: PythonEnvInfo | undefined;
                 if (options?.useCache) {
                     env = discoveryApi.getEnvs().find((v) => isEnvSame(path, v));
@@ -125,38 +126,38 @@ export function buildDeprecatedProposedApi(
                 };
             },
             getEnvironmentPaths() {
-                sendApiTelemetry('getEnvironmentPaths');
+                sendApiTelemetry('deprecated.getEnvironmentPaths');
                 const paths = discoveryApi.getEnvs().map((e) => getEnvPath(e.executable.filename, e.location));
                 return Promise.resolve(paths);
             },
             setActiveEnvironment(path: string, resource?: Resource): Promise<void> {
-                sendApiTelemetry('setActiveEnvironment');
+                sendApiTelemetry('deprecated.setActiveEnvironment');
                 return interpreterPathService.update(resource, ConfigurationTarget.WorkspaceFolder, path);
             },
             async refreshEnvironment() {
-                sendApiTelemetry('refreshEnvironment');
+                sendApiTelemetry('deprecated.refreshEnvironment');
                 await discoveryApi.triggerRefresh();
                 const paths = discoveryApi.getEnvs().map((e) => getEnvPath(e.executable.filename, e.location));
                 return Promise.resolve(paths);
             },
             getRefreshPromise(options?: GetRefreshEnvironmentsOptions): Promise<void> | undefined {
-                sendApiTelemetry('getRefreshPromise');
+                sendApiTelemetry('deprecated.getRefreshPromise');
                 return discoveryApi.getRefreshPromise(options);
             },
             get onDidChangeExecutionDetails() {
-                sendApiTelemetry('onDidChangeExecutionDetails', false);
+                sendApiTelemetry('deprecated.onDidChangeExecutionDetails', false);
                 return interpreterService.onDidChangeInterpreterConfiguration;
             },
             get onDidEnvironmentsChanged() {
-                sendApiTelemetry('onDidEnvironmentsChanged', false);
+                sendApiTelemetry('deprecated.onDidEnvironmentsChanged', false);
                 return onDidInterpretersChangedEvent.event;
             },
             get onDidActiveEnvironmentChanged() {
-                sendApiTelemetry('onDidActiveEnvironmentChanged', false);
+                sendApiTelemetry('deprecated.onDidActiveEnvironmentChanged', false);
                 return onDidActiveInterpreterChangedEvent.event;
             },
             get onRefreshProgress() {
-                sendApiTelemetry('onRefreshProgress', false);
+                sendApiTelemetry('deprecated.onRefreshProgress', false);
                 return discoveryApi.onProgress;
             },
         },
