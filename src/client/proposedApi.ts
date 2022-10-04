@@ -214,7 +214,7 @@ export function buildProposedApi(
                 return resolveEnvironment(path, discoveryApi);
             },
             get known(): Environment[] {
-                sendApiTelemetry('all');
+                sendApiTelemetry('known');
                 return discoveryApi.getEnvs().map((e) => convertEnvInfoAndGetReference(e));
             },
             async refreshEnvironments(options?: RefreshOptions) {
