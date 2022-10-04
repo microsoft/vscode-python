@@ -6,9 +6,10 @@ import { CancellationToken, Event, Uri, WorkspaceFolder } from 'vscode';
 // https://github.com/microsoft/vscode-python/wiki/Proposed-Environment-APIs
 
 export interface ProposedExtensionAPI {
-    readonly environment: {
+    readonly environments: {
         /**
-         * Returns the environment configured by user in settings.
+         * Returns the environment configured by user in settings. Note that this can be an invalid environment, use
+         * {@link resolveEnvironment} to get full details.
          * @param resource : Uri of a file or workspace folder. This is used to determine the env in a multi-root
          * scenario. If `undefined`, then the API returns what ever is set for the workspace.
          */
@@ -29,10 +30,10 @@ export interface ProposedExtensionAPI {
          */
         readonly onDidChangeActiveEnvironmentPath: Event<ActiveEnvironmentPathChangeEvent>;
         /**
-         * Carries environments found by the extension at the time of fetching the property. Note this may not
+         * Carries environments known to the extension at the time of fetching the property. Note this may not
          * contain all environments in the system as a refresh might be going on.
          */
-        readonly all: readonly Environment[];
+        readonly known: readonly Environment[];
         /**
          * This event is triggered when the known environment list changes, like when a environment
          * is found, existing environment is removed, or some details changed on an environment.
@@ -53,7 +54,7 @@ export interface ProposedExtensionAPI {
         /**
          * Returns details for the given environment, or `undefined` if the env is invalid.
          * @param environment : Full path to environment folder or python executable for the environment. Can also pass
-         * the environment id or the environment itself.
+         * the environment itself.
          */
         resolveEnvironment(
             environment: Environment | EnvironmentPath | string,
@@ -63,7 +64,7 @@ export interface ProposedExtensionAPI {
 
 export type RefreshOptions = {
     /**
-     * Force trigger a refresh regardless of whether a refresh was already triggered. Note this can be expensive so
+     * When `true`, force trigger a refresh regardless of whether a refresh was already triggered. Note this can be expensive so
      * it's best to only use it if user manually triggers a refresh.
      */
     forceRefresh?: boolean;

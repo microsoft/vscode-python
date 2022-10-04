@@ -32,6 +32,7 @@ import {
     reportActiveInterpreterChangedDeprecated,
     reportInterpretersChanged,
 } from './deprecatedProposedApi';
+import { DeprecatedProposedAPI } from './deprecatedProposedApiTypes';
 
 type ActiveEnvironmentChangeEvent = {
     resource: WorkspaceFolder | undefined;
@@ -151,19 +152,20 @@ export function buildProposedApi(
     );
 
     /**
-     * @deprecated Will be removed soon. Use {@link ProposedExtensionAPI.environment} instead.
+     * @deprecated Will be removed soon. Use {@link ProposedExtensionAPI} instead.
      */
-    let deprecatedEnvironmentsApi;
+    let deprecatedProposedApi;
     try {
-        deprecatedEnvironmentsApi = { ...buildDeprecatedProposedApi(discoveryApi, serviceContainer).environment };
+        deprecatedProposedApi = { ...buildDeprecatedProposedApi(discoveryApi, serviceContainer) };
     } catch (ex) {
-        deprecatedEnvironmentsApi = {};
+        deprecatedProposedApi = {} as DeprecatedProposedAPI;
         // Errors out only in case of testing.
         // Also, these APIs no longer supported, no need to log error.
     }
 
-    const proposed: ProposedExtensionAPI = {
-        environment: {
+    const proposed: ProposedExtensionAPI & DeprecatedProposedAPI = {
+        ...deprecatedProposedApi,
+        environments: {
             getActiveEnvironmentPath(resource?: Resource) {
                 sendApiTelemetry('getActiveEnvironmentPath');
                 resource = resource && 'uri' in resource ? resource.uri : resource;
@@ -172,10 +174,6 @@ export function buildProposedApi(
                 return {
                     id,
                     path,
-                    /**
-                     * @deprecated Only provided for backwards compatibility and will soon be removed.
-                     */
-                    pathType: 'interpreterPath',
                 };
             },
             updateActiveEnvironmentPath(
@@ -213,8 +211,8 @@ export function buildProposedApi(
                 sendApiTelemetry('resolveEnvironment');
                 return resolveEnvironment(path, discoveryApi);
             },
-            get all(): Environment[] {
-                sendApiTelemetry('all');
+            get known(): Environment[] {
+                sendApiTelemetry('known');
                 return discoveryApi.getEnvs().map((e) => convertEnvInfoAndGetReference(e));
             },
             async refreshEnvironments(options?: RefreshOptions) {
@@ -227,7 +225,6 @@ export function buildProposedApi(
                 sendApiTelemetry('onDidChangeEnvironments');
                 return onEnvironmentsChanged.event;
             },
-            ...deprecatedEnvironmentsApi,
         },
     };
     return proposed;
