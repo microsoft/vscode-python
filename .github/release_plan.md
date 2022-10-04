@@ -9,7 +9,7 @@ All dates should align with VS Code's [iteration](https://github.com/microsoft/v
 NOTE: Third Party Notices are automatically added by our build pipelines using https://tools.opensource.microsoft.com/notice.
 
 -   [ ] Update `main` for the release
-    -   [ ] Change the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) to the next **even** number (🤖)
+    -   [ ] Change the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) to the next **even** number and switch the `-dev` to `-rc` (🤖)
     -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) is up-to-date (🤖)
     -   [ ] Check `pypi.org` and update the version of `debugpy` in `install_debugpy.py` if necessary.
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/main/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
@@ -19,7 +19,7 @@ NOTE: Third Party Notices are automatically added by our build pipelines using h
     -   [ ] Create a new `release/YYYY.minor` branch from `main`
 -   [ ] Create a draft [GitHub release](https://github.com/microsoft/vscode-python/releases) for the release notes (🤖)
 -   [ ] Update `main` post-release (🤖)
-    -   [ ] Bump the minor version number to the next ("YYYY.[minor+1]") release in the `main` branch to an **odd** number (🤖)
+    -   [ ] Bump the minor version number to the next ("YYYY.[minor+1]") release in the `main` branch to an **odd** number and switch the `-rc` to `-dev`(🤖)
         -   [ ] `package.json`
         -   [ ] `package-lock.json`
     -   [ ] Create a pull request against `main`
