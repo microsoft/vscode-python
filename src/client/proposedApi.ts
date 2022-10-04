@@ -151,18 +151,19 @@ export function buildProposedApi(
     );
 
     /**
-     * @deprecated Will be removed soon. Use {@link ProposedExtensionAPI.environments} instead.
+     * @deprecated Will be removed soon. Use {@link ProposedExtensionAPI} instead.
      */
-    let deprecatedEnvironmentsApi;
+    let deprecatedProposedApi;
     try {
-        deprecatedEnvironmentsApi = { ...buildDeprecatedProposedApi(discoveryApi, serviceContainer).environment };
+        deprecatedProposedApi = { ...buildDeprecatedProposedApi(discoveryApi, serviceContainer) };
     } catch (ex) {
-        deprecatedEnvironmentsApi = {};
+        deprecatedProposedApi = {};
         // Errors out only in case of testing.
         // Also, these APIs no longer supported, no need to log error.
     }
 
     const proposed: ProposedExtensionAPI = {
+        ...deprecatedProposedApi,
         environments: {
             getActiveEnvironmentPath(resource?: Resource) {
                 sendApiTelemetry('getActiveEnvironmentPath');
@@ -172,10 +173,6 @@ export function buildProposedApi(
                 return {
                     id,
                     path,
-                    /**
-                     * @deprecated Only provided for backwards compatibility and will soon be removed.
-                     */
-                    pathType: 'interpreterPath',
                 };
             },
             updateActiveEnvironmentPath(
@@ -228,7 +225,6 @@ export function buildProposedApi(
                 return onEnvironmentsChanged.event;
             },
         },
-        ...deprecatedEnvironmentsApi,
     };
     return proposed;
 }

@@ -75,6 +75,15 @@ export interface DeprecatedProposedAPI {
             execCommand: string[] | undefined;
         }>;
         /**
+         * Returns the path to the python binary selected by the user or as in the settings.
+         * This is just the path to the python binary, this does not provide activation or any
+         * other activation command. The `resource` if provided will be used to determine the
+         * python binary in a multi-root scenario. If resource is `undefined` then the API
+         * returns what ever is set for the workspace.
+         * @param resource : Uri of a file or workspace
+         */
+        getActiveEnvironmentPath(resource?: Resource): Promise<EnvPathType | undefined>;
+        /**
          * Returns details for the given interpreter. Details such as absolute interpreter path,
          * version, type (conda, pyenv, etc). Metadata such as `sysPrefix` can be found under
          * metadata field.

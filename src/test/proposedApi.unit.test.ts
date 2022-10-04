@@ -29,7 +29,6 @@ import { PythonEnvCollectionChangedEvent } from '../client/pythonEnvironments/ba
 import { normCasePath } from '../client/common/platform/fs-paths';
 import {
     ActiveEnvironmentPathChangeEvent,
-    EnvironmentPath,
     EnvironmentsChangeEvent,
     ProposedExtensionAPI,
 } from '../client/proposedApiTypes';
@@ -92,11 +91,10 @@ suite('Proposed Extension API', () => {
             .setup((c) => c.getSettings(undefined))
             .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
         const actual = proposed.environments.getActiveEnvironmentPath();
-        assert.deepEqual(actual, ({
+        assert.deepEqual(actual, {
             id: normCasePath(pythonPath),
             path: pythonPath,
-            pathType: 'interpreterPath',
-        } as unknown) as EnvironmentPath);
+        });
     });
 
     test('getActiveEnvironmentPath: default python', () => {
@@ -105,11 +103,10 @@ suite('Proposed Extension API', () => {
             .setup((c) => c.getSettings(undefined))
             .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
         const actual = proposed.environments.getActiveEnvironmentPath();
-        assert.deepEqual(actual, ({
+        assert.deepEqual(actual, {
             id: 'DEFAULT_PYTHON',
             path: pythonPath,
-            pathType: 'interpreterPath',
-        } as unknown) as EnvironmentPath);
+        });
     });
 
     test('getActiveEnvironmentPath: With resource', () => {
@@ -119,11 +116,10 @@ suite('Proposed Extension API', () => {
             .setup((c) => c.getSettings(resource))
             .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
         const actual = proposed.environments.getActiveEnvironmentPath(resource);
-        assert.deepEqual(actual, ({
+        assert.deepEqual(actual, {
             id: normCasePath(pythonPath),
             path: pythonPath,
-            pathType: 'interpreterPath',
-        } as unknown) as EnvironmentPath);
+        });
     });
 
     test('resolveEnvironment: invalid environment (when passed as string)', async () => {
