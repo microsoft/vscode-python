@@ -32,6 +32,7 @@ import {
     reportActiveInterpreterChangedDeprecated,
     reportInterpretersChanged,
 } from './deprecatedProposedApi';
+import { DeprecatedProposedAPI } from './deprecatedProposedApiTypes';
 
 type ActiveEnvironmentChangeEvent = {
     resource: WorkspaceFolder | undefined;
@@ -157,12 +158,12 @@ export function buildProposedApi(
     try {
         deprecatedProposedApi = { ...buildDeprecatedProposedApi(discoveryApi, serviceContainer) };
     } catch (ex) {
-        deprecatedProposedApi = {};
+        deprecatedProposedApi = {} as DeprecatedProposedAPI;
         // Errors out only in case of testing.
         // Also, these APIs no longer supported, no need to log error.
     }
 
-    const proposed: ProposedExtensionAPI = {
+    const proposed: ProposedExtensionAPI & DeprecatedProposedAPI = {
         ...deprecatedProposedApi,
         environments: {
             getActiveEnvironmentPath(resource?: Resource) {
