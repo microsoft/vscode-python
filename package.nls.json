@@ -94,7 +94,6 @@
     "python.logging.level.description": "The logging level the extension logs at, defaults to 'error'",
     "python.pipenvPath.description": "Path to the pipenv executable to use for activation.",
     "python.poetryPath.description": "Path to the poetry executable.",
-    "python.pylanceLspNotebooksEnabled.description": "Determines if Pylance's experimental LSP notebooks support is used or not.",
     "python.sortImports.args.description": "Arguments passed in. Each argument is a separate item in the array.",
     "python.sortImports.path.description": "Path to isort script, default using inner version",
     "python.tensorBoard.logDirectory.description": "Set this setting to your preferred TensorBoard log directory to skip log directory prompt when starting TensorBoard.",
