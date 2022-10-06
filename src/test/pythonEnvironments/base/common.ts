@@ -3,7 +3,7 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
-import { Event } from 'vscode';
+import { Event, Uri } from 'vscode';
 import { createDeferred, flattenIterator, iterable, mapToIterator } from '../../../client/common/utils/async';
 import { getArchitecture } from '../../../client/common/utils/platform';
 import { getVersionString } from '../../../client/common/utils/version';
@@ -35,6 +35,7 @@ export function createLocatedEnv(
     kind = PythonEnvKind.Unknown,
     exec: string | PythonExecutableInfo = 'python',
     distro: PythonDistroInfo = { org: '' },
+    searchLocation?: Uri,
 ): PythonEnvInfo {
     const location =
         locationStr === ''
@@ -57,6 +58,7 @@ export function createLocatedEnv(
         executable,
         location,
         version,
+        searchLocation,
     });
     env.arch = getArchitecture();
     env.distro = distro;
