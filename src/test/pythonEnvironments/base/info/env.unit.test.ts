@@ -5,10 +5,10 @@ import * as assert from 'assert';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { parseVersionInfo } from '../../../../client/common/utils/version';
 import { PythonEnvInfo, PythonDistroInfo, PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { setEnvDisplayString } from '../../../../client/pythonEnvironments/base/info/env';
+import { areEnvsDeepEqual, setEnvDisplayString } from '../../../../client/pythonEnvironments/base/info/env';
 import { createLocatedEnv } from '../common';
 
-suite('pyenvs info - getEnvDisplayString()', () => {
+suite('Environment helpers', () => {
     const name = 'my-env';
     const location = 'x/y/z/spam/';
     const arch = Architecture.x64;
@@ -62,6 +62,19 @@ suite('pyenvs info - getEnvDisplayString()', () => {
 
             assert.equal(env.display, expectedDisplay);
             assert.equal(env.detailedDisplayName, expectedDetailedDisplay);
+        });
+    });
+    tests.forEach(([env1, _d1, display1], index1) => {
+        tests.forEach(([env2, _d2, display2], index2) => {
+            if (index1 === index2) {
+                test(`"${display1}" === "${display2}"`, () => {
+                    assert.strictEqual(areEnvsDeepEqual(env1, env2), true);
+                });
+            } else {
+                test(`"${display1}" !== "${display2}"`, () => {
+                    assert.strictEqual(areEnvsDeepEqual(env1, env2), false);
+                });
+            }
         });
     });
 });
