@@ -84,6 +84,7 @@
         "onCommand:python.launchTensorBoard",
         "onCommand:python.clearCacheAndReload",
         "onCommand:python.createEnvironment",
+        "onCommand:python.createNewFile",
         "onWalkthrough:pythonWelcome",
         "onWalkthrough:pythonWelcomeWithDS",
         "onWalkthrough:pythonDataScienceWelcome",
@@ -247,6 +248,12 @@
             }
         ],
         "commands": [
+            {
+                "title": "%python.command.python.createNewFile.title%",
+                "shortTitle": "%python.menu.createNewFile.title%",
+                "category": "Python",
+                "command": "python.createNewFile"
+            },
             {
                 "category": "Python",
                 "command": "python.analysis.restartLanguageServer",
@@ -1722,6 +1729,13 @@
                     "command": "python.execInTerminal",
                     "group": "Python",
                     "when": "resourceLangId == python && !virtualWorkspace && shellExecutionSupported"
+                }
+            ],
+            "file/newFile": [
+                {
+                    "command": "python.createNewFile",
+                    "group": "file",
+                    "when": "!virtualWorkspace"
                 }
             ],
             "view/title": [

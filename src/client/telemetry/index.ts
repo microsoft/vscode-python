@@ -1375,6 +1375,13 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.USE_REPORT_ISSUE_COMMAND]: unknown;
     /**
+     * Telemetry event sent when the New Python File command is executed.
+     */
+    /* __GDPR__
+      "create_new_file_command" : { "owner": "luabud" }
+     */
+    [EventName.CREATE_NEW_FILE_COMMAND]: unknown;
+    /**
      * Telemetry event sent when the installed versions of Python, Jupyter, and Pylance are all capable
      * of supporting the LSP notebooks experiment. This does not indicate that the experiment is enabled.
      */
