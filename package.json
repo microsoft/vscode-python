@@ -920,12 +920,6 @@
                     "scope": "machine-overridable",
                     "type": "string"
                 },
-                "python.pylanceLspNotebooksEnabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "%python.pylanceLspNotebooksEnabled.description%",
-                    "scope": "machine"
-                },
                 "python.sortImports.args": {
                     "default": [],
                     "description": "%python.sortImports.args.description%",
@@ -1797,7 +1791,7 @@
         "webpack": "webpack"
     },
     "dependencies": {
-        "@vscode/jupyter-lsp-middleware": "^0.2.46",
+        "@vscode/jupyter-lsp-middleware": "^0.2.50",
         "@vscode/extension-telemetry": "^0.6.2",
         "arch": "^2.1.0",
         "diff-match-patch": "^1.0.0",

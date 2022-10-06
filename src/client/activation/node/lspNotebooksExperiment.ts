@@ -68,7 +68,7 @@ export class LspNotebooksExperiment implements IExtensionSingleActivationService
 
     private updateExperimentSupport(): void {
         const wasInExperiment = this.isInExperiment;
-        const isInTreatmentGroup = this.configurationService.getSettings().pylanceLspNotebooksEnabled;
+        const isInTreatmentGroup = true;
         const languageServerType = this.configurationService.getSettings().languageServer;
 
         this.isInExperiment = false;
