@@ -77,6 +77,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
 
     /**
      * Carries the list of envs which have been flushed to persistent storage.
+     * It signifies that the env info is likely up-to-date.
      */
     private flushedEnvs = new Set<string>();
 
@@ -123,6 +124,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             this.fire({ old: env, new: undefined });
         });
         if (envs) {
+            // See if any env has updated after the last refresh and fire events.
             envs.forEach((env) => {
                 const cachedEnv = this.envs.find((e) => e.id === env.id);
                 if (cachedEnv && !areEnvsDeepEqual(cachedEnv, env)) {
@@ -149,13 +151,13 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
     }
 
     public updateEnv(oldValue: PythonEnvInfo, newValue: PythonEnvInfo | undefined, forceUpdate = false): void {
+        if (this.flushedEnvs.has(oldValue.id!) && !forceUpdate) {
+            // We have already flushed this env to persistent storage, so it likely has upto date info.
+            // If we have latest info, then we do not need to update the cache.
+            return;
+        }
         const index = this.envs.findIndex((e) => areSameEnv(e, oldValue));
         if (index !== -1) {
-            if (!forceUpdate && this.flushedEnvs.has(this.envs[index].id!)) {
-                // We have already flushed this env to persistent storage, so it likely has upto date info.
-                // If we have latest info, then we do not need to update the cache.
-                return;
-            }
             if (newValue === undefined) {
                 this.envs.splice(index, 1);
             } else {
@@ -191,13 +193,13 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             const envs = this.persistentStorage.get();
             const index = envs.findIndex((e) => e.id === env.id);
             envs[index] = env;
-            await this.persistentStorage.store(envs);
             this.flushedEnvs.add(env.id!);
+            await this.persistentStorage.store(envs);
             return;
         }
         traceInfo('Environments added to cache', JSON.stringify(this.envs));
-        await this.persistentStorage.store(this.envs);
         this.markAllEnvsAsFlushed();
+        await this.persistentStorage.store(this.envs);
     }
 
     private markAllEnvsAsFlushed(): void {

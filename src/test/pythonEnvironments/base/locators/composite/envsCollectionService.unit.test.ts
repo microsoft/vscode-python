@@ -9,7 +9,7 @@ import { EventEmitter, Uri } from 'vscode';
 import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, createDeferredFromPromise, sleep } from '../../../../../client/common/utils/async';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
-import { buildEnvInfo } from '../../../../../client/pythonEnvironments/base/info/env';
+import { areSameEnv, buildEnvInfo } from '../../../../../client/pythonEnvironments/base/info/env';
 import {
     ProgressNotificationEvent,
     ProgressReportStage,
@@ -215,6 +215,57 @@ suite('Python envs locator - Environments Collection', async () => {
         });
         const expected = getExpectedEnvs();
         assertEnvsEqual(envs, expected);
+    });
+
+    test("Ensure update events are not fired if an environment isn't actually updated", async () => {
+        const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
+        const locatedEnvs = getLocatorEnvs();
+        const cachedEnvs = getCachedEnvs();
+        const parentLocator = new SimpleLocator(locatedEnvs, {
+            onUpdated: onUpdated.event,
+            after: async () => {
+                locatedEnvs.forEach((env, index) => {
+                    const update = cloneDeep(env);
+                    update.name = updatedName;
+                    onUpdated.fire({ index, update });
+                });
+                onUpdated.fire({ index: locatedEnvs.length - 1, update: undefined });
+                // It turns out the last env is invalid, ensure it does not appear in the final result.
+                onUpdated.fire({ stage: ProgressReportStage.discoveryFinished });
+            },
+        });
+        const cache = await createCollectionCache({
+            get: () => cachedEnvs,
+            store: async (e) => {
+                storage = e;
+            },
+        });
+        collectionService = new EnvsCollectionService(cache, parentLocator);
+
+        let events: PythonEnvCollectionChangedEvent[] = [];
+        collectionService.onChanged((e) => {
+            events.push(e);
+        });
+
+        await collectionService.triggerRefresh();
+        expect(events.length).to.not.equal(0, 'Atleast event should be fired');
+        const envs = collectionService.getEnvs();
+
+        // Trigger a refresh again.
+        events = [];
+        await collectionService.triggerRefresh();
+        // Filter out the events which are related to envs in the cache, we expect no such events to be fired as no
+        // envs were updated.
+        events = events.filter((e) =>
+            envs.some((env) => {
+                const eventEnv = e.old ?? e.new;
+                if (!eventEnv) {
+                    return true;
+                }
+                return areSameEnv(eventEnv, env);
+            }),
+        );
+        expect(events.length).to.equal(0, 'Do not fire additional events as envs have not updated');
     });
 
     test('triggerRefresh() refreshes the collection with any new envs & removes cached envs if not relevant', async () => {
