@@ -50,6 +50,7 @@ NOTE: Third Party Notices are automatically added by our build pipelines using h
 
 -   [ ] Make sure [CI](https://github.com/microsoft/vscode-python/actions?query=workflow:%22Build%22) is passing for Release branch (🤖).
 -   [ ] Run the [CD](https://dev.azure.com/monacotools/Monaco/_build?definitionId=299) pipeline on the `release/yyyy.minor` branch.
+-   [ ] Check to ensure VS Code release has gone out before moving onto publishing the python extension
     -   [ ] Press the approve button if everything looks good to publish to market place.
 -   [ ] Create a [GitHub release](https://github.com/microsoft/vscode-python/releases) (🤖)
     -   [ ] Update the release notes
