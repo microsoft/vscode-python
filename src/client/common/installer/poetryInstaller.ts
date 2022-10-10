@@ -70,7 +70,7 @@ export class PoetryInstaller extends ModuleInstaller {
 
     protected async getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo> {
         const execPath = this.configurationService.getSettings(isResource(resource) ? resource : undefined).poetryPath;
-        const args = ['add', '--dev', moduleName];
+        const args = ['add', '--group', 'dev', moduleName];
         if (moduleName === 'black') {
             args.push('--allow-prereleases');
         }
