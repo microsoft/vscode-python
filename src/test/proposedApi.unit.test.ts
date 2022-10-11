@@ -3,404 +3,402 @@
 
 import * as typemoq from 'typemoq';
 import { assert, expect } from 'chai';
-import { ConfigurationTarget, Uri, Event } from 'vscode';
-import { EnvironmentDetails, IProposedExtensionAPI } from '../client/apiTypes';
-import { IInterpreterPathService } from '../client/common/types';
-import { IInterpreterService } from '../client/interpreter/contracts';
-import { IServiceContainer } from '../client/ioc/types';
-import { buildProposedApi } from '../client/proposedApi';
+import { Uri, EventEmitter, ConfigurationTarget, WorkspaceFolder } from 'vscode';
+import { cloneDeep } from 'lodash';
 import {
-    IDiscoveryAPI,
-    ProgressNotificationEvent,
-    ProgressReportStage,
-} from '../client/pythonEnvironments/base/locator';
-import { PythonEnvironment } from '../client/pythonEnvironments/info';
+    IConfigurationService,
+    IDisposableRegistry,
+    IExtensions,
+    IInterpreterPathService,
+    IPythonSettings,
+} from '../client/common/types';
+import { IServiceContainer } from '../client/ioc/types';
+import {
+    buildProposedApi,
+    convertCompleteEnvInfo,
+    convertEnvInfo,
+    EnvironmentReference,
+    reportActiveInterpreterChanged,
+} from '../client/proposedApi';
+import { IDiscoveryAPI, ProgressNotificationEvent } from '../client/pythonEnvironments/base/locator';
+import { buildEnvInfo } from '../client/pythonEnvironments/base/info/env';
+import { sleep } from './core';
 import { PythonEnvKind, PythonEnvSource } from '../client/pythonEnvironments/base/info';
 import { Architecture } from '../client/common/utils/platform';
-import { buildEnvInfo } from '../client/pythonEnvironments/base/info/env';
+import { PythonEnvCollectionChangedEvent } from '../client/pythonEnvironments/base/watcher';
+import { normCasePath } from '../client/common/platform/fs-paths';
+import {
+    ActiveEnvironmentPathChangeEvent,
+    EnvironmentsChangeEvent,
+    ProposedExtensionAPI,
+} from '../client/proposedApiTypes';
 
 suite('Proposed Extension API', () => {
     let serviceContainer: typemoq.IMock<IServiceContainer>;
     let discoverAPI: typemoq.IMock<IDiscoveryAPI>;
     let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
-    let interpreterService: typemoq.IMock<IInterpreterService>;
-    let onDidExecutionEvent: Event<Uri | undefined>;
-    let onRefreshProgress: Event<ProgressNotificationEvent>;
+    let configService: typemoq.IMock<IConfigurationService>;
+    let extensions: typemoq.IMock<IExtensions>;
+    let onDidChangeRefreshState: EventEmitter<ProgressNotificationEvent>;
+    let onDidChangeEnvironments: EventEmitter<PythonEnvCollectionChangedEvent>;
 
-    let proposed: IProposedExtensionAPI;
+    let proposed: ProposedExtensionAPI;
 
     setup(() => {
-        serviceContainer = typemoq.Mock.ofType<IServiceContainer>(undefined, typemoq.MockBehavior.Strict);
-        discoverAPI = typemoq.Mock.ofType<IDiscoveryAPI>(undefined, typemoq.MockBehavior.Strict);
-        interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>(undefined, typemoq.MockBehavior.Strict);
-        interpreterService = typemoq.Mock.ofType<IInterpreterService>(undefined, typemoq.MockBehavior.Strict);
-        onDidExecutionEvent = typemoq.Mock.ofType<Event<Uri | undefined>>().object;
-        onRefreshProgress = typemoq.Mock.ofType<Event<ProgressNotificationEvent>>().object;
-        interpreterService.setup((i) => i.onDidChangeInterpreterConfiguration).returns(() => onDidExecutionEvent);
+        serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
+        discoverAPI = typemoq.Mock.ofType<IDiscoveryAPI>();
+        extensions = typemoq.Mock.ofType<IExtensions>();
+        extensions
+            .setup((e) => e.determineExtensionFromCallStack())
+            .returns(() => Promise.resolve({ extensionId: 'id', displayName: 'displayName', apiName: 'apiName' }))
+            .verifiable(typemoq.Times.atLeastOnce());
+        interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
+        configService = typemoq.Mock.ofType<IConfigurationService>();
+        onDidChangeRefreshState = new EventEmitter();
+        onDidChangeEnvironments = new EventEmitter();
 
+        serviceContainer.setup((s) => s.get(IExtensions)).returns(() => extensions.object);
         serviceContainer.setup((s) => s.get(IInterpreterPathService)).returns(() => interpreterPathService.object);
-        serviceContainer.setup((s) => s.get(IInterpreterService)).returns(() => interpreterService.object);
+        serviceContainer.setup((s) => s.get(IConfigurationService)).returns(() => configService.object);
+        serviceContainer.setup((s) => s.get(IDisposableRegistry)).returns(() => []);
 
-        discoverAPI.setup((d) => d.onProgress).returns(() => onRefreshProgress);
+        discoverAPI.setup((d) => d.onProgress).returns(() => onDidChangeRefreshState.event);
+        discoverAPI.setup((d) => d.onChanged).returns(() => onDidChangeEnvironments.event);
 
         proposed = buildProposedApi(discoverAPI.object, serviceContainer.object);
     });
 
-    test('Provide a callback for tracking refresh progress', async () => {
-        assert.deepEqual(proposed.environment.onRefreshProgress, onRefreshProgress);
+    teardown(() => {
+        // Verify each API method sends telemetry regarding who called the API.
+        extensions.verifyAll();
     });
 
-    test('Provide a callback which is called when execution details changes', async () => {
-        assert.deepEqual(onDidExecutionEvent, proposed.environment.onDidChangeExecutionDetails);
-    });
-
-    test('getExecutionDetails: No resource', async () => {
-        const pythonPath = 'this/is/a/test/path';
-        interpreterService
-            .setup((c) => c.getActiveInterpreter(undefined))
-            .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
-        const actual = await proposed.environment.getExecutionDetails();
-        assert.deepEqual(actual, { execCommand: [pythonPath] });
-    });
-
-    test('getExecutionDetails: With resource', async () => {
-        const resource = Uri.file(__filename);
-        const pythonPath = 'this/is/a/test/path';
-        interpreterService
-            .setup((c) => c.getActiveInterpreter(resource))
-            .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
-        const actual = await proposed.environment.getExecutionDetails(resource);
-        assert.deepEqual(actual, { execCommand: [pythonPath] });
-    });
-
-    test('getActiveInterpreterPath: No resource', async () => {
-        const pythonPath = 'this/is/a/test/path';
-        interpreterService
-            .setup((c) => c.getActiveInterpreter(undefined))
-            .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
-        const actual = await proposed.environment.getActiveEnvironmentPath();
-        assert.deepEqual(actual, { path: pythonPath, pathType: 'interpreterPath' });
-    });
-    test('getActiveInterpreterPath: With resource', async () => {
-        const resource = Uri.file(__filename);
-        const pythonPath = 'this/is/a/test/path';
-        interpreterService
-            .setup((c) => c.getActiveInterpreter(resource))
-            .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
-        const actual = await proposed.environment.getActiveEnvironmentPath(resource);
-        assert.deepEqual(actual, { path: pythonPath, pathType: 'interpreterPath' });
-    });
-
-    test('getInterpreterDetails: no discovered python', async () => {
-        discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
-        discoverAPI.setup((p) => p.resolveEnv(typemoq.It.isAny())).returns(() => Promise.resolve(undefined));
-
-        const pythonPath = 'this/is/a/test/path (without cache)';
-        const actual = await proposed.environment.getEnvironmentDetails(pythonPath);
-        expect(actual).to.be.equal(undefined);
-    });
-
-    test('getInterpreterDetails: no discovered python (with cache)', async () => {
-        discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
-        discoverAPI.setup((p) => p.resolveEnv(typemoq.It.isAny())).returns(() => Promise.resolve(undefined));
-
-        const pythonPath = 'this/is/a/test/path';
-        const actual = await proposed.environment.getEnvironmentDetails(pythonPath, { useCache: true });
-        expect(actual).to.be.equal(undefined);
-    });
-
-    test('getInterpreterDetails: without cache', async () => {
-        const pythonPath = 'this/is/a/test/path';
-
-        const expected: EnvironmentDetails = {
-            interpreterPath: pythonPath,
-            version: ['3', '9', '0'],
-            environmentType: [PythonEnvKind.System],
-            metadata: {
-                sysPrefix: 'prefix/path',
-                bitness: Architecture.x64,
-                project: Uri.file('path/to/project'),
-            },
-            envFolderPath: undefined,
-        };
-
-        discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
-        discoverAPI
-            .setup((p) => p.resolveEnv(pythonPath))
-            .returns(() =>
-                Promise.resolve(
-                    buildEnvInfo({
-                        executable: pythonPath,
-                        version: {
-                            major: 3,
-                            minor: 9,
-                            micro: 0,
-                        },
-                        kind: PythonEnvKind.System,
-                        arch: Architecture.x64,
-                        sysPrefix: 'prefix/path',
-                        searchLocation: Uri.file('path/to/project'),
-                    }),
-                ),
-            );
-
-        const actual = await proposed.environment.getEnvironmentDetails(pythonPath, { useCache: false });
-        expect(actual).to.be.deep.equal(expected);
-    });
-
-    test('getInterpreterDetails: from cache', async () => {
-        const pythonPath = 'this/is/a/test/path';
-
-        const expected: EnvironmentDetails = {
-            interpreterPath: pythonPath,
-            version: ['3', '9', '0'],
-            environmentType: [PythonEnvKind.System],
-            metadata: {
-                sysPrefix: 'prefix/path',
-                bitness: Architecture.x64,
-                project: undefined,
-            },
-            envFolderPath: undefined,
-        };
-
-        discoverAPI
-            .setup((d) => d.getEnvs())
-            .returns(() => [
-                {
-                    executable: {
-                        filename: pythonPath,
-                        ctime: 1,
-                        mtime: 2,
-                        sysPrefix: 'prefix/path',
-                    },
-                    version: {
-                        major: 3,
-                        minor: 9,
-                        micro: 0,
-                    },
-                    kind: PythonEnvKind.System,
-                    arch: Architecture.x64,
-                    name: '',
-                    location: '',
-                    source: [PythonEnvSource.PathEnvVar],
-                    distro: {
-                        org: '',
-                    },
-                },
-            ]);
-        discoverAPI
-            .setup((p) => p.resolveEnv(pythonPath))
-            .returns(() =>
-                Promise.resolve(
-                    buildEnvInfo({
-                        executable: pythonPath,
-                        version: {
-                            major: 3,
-                            minor: 9,
-                            micro: 0,
-                        },
-                        kind: PythonEnvKind.System,
-                        arch: Architecture.x64,
-                        sysPrefix: 'prefix/path',
-                    }),
-                ),
-            );
-
-        const actual = await proposed.environment.getEnvironmentDetails(pythonPath, { useCache: true });
-        expect(actual).to.be.deep.equal(expected);
-    });
-
-    test('getInterpreterDetails: cache miss', async () => {
-        const pythonPath = 'this/is/a/test/path';
-
-        const expected: EnvironmentDetails = {
-            interpreterPath: pythonPath,
-            version: ['3', '9', '0'],
-            environmentType: [PythonEnvKind.System],
-            metadata: {
-                sysPrefix: 'prefix/path',
-                bitness: Architecture.x64,
-                project: undefined,
-            },
-            envFolderPath: undefined,
-        };
-
-        // Force this API to return empty to cause a cache miss.
-        discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
-        discoverAPI
-            .setup((p) => p.resolveEnv(pythonPath))
-            .returns(() =>
-                Promise.resolve(
-                    buildEnvInfo({
-                        executable: pythonPath,
-                        version: {
-                            major: 3,
-                            minor: 9,
-                            micro: 0,
-                        },
-                        kind: PythonEnvKind.System,
-                        arch: Architecture.x64,
-                        sysPrefix: 'prefix/path',
-                    }),
-                ),
-            );
-
-        const actual = await proposed.environment.getEnvironmentDetails(pythonPath, { useCache: true });
-        expect(actual).to.be.deep.equal(expected);
-    });
-
-    test('getInterpreterPaths: no pythons found', async () => {
-        discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
-        const actual = await proposed.environment.getEnvironmentPaths();
-        expect(actual).to.be.deep.equal([]);
-    });
-
-    test('getInterpreterPaths: python found', async () => {
-        discoverAPI
-            .setup((d) => d.getEnvs())
-            .returns(() => [
-                {
-                    executable: {
-                        filename: 'this/is/a/test/python/path1',
-                        ctime: 1,
-                        mtime: 2,
-                        sysPrefix: 'prefix/path',
-                    },
-                    version: {
-                        major: 3,
-                        minor: 9,
-                        micro: 0,
-                    },
-                    kind: PythonEnvKind.System,
-                    arch: Architecture.x64,
-                    name: '',
-                    location: '',
-                    source: [PythonEnvSource.PathEnvVar],
-                    distro: {
-                        org: '',
-                    },
-                },
-                {
-                    executable: {
-                        filename: 'this/is/a/test/python/path2',
-                        ctime: 1,
-                        mtime: 2,
-                        sysPrefix: 'prefix/path',
-                    },
-                    version: {
-                        major: 3,
-                        minor: 10,
-                        micro: 0,
-                    },
-                    kind: PythonEnvKind.Venv,
-                    arch: Architecture.x64,
-                    name: '',
-                    location: '',
-                    source: [PythonEnvSource.PathEnvVar],
-                    distro: {
-                        org: '',
-                    },
-                },
-            ]);
-        const actual = await proposed.environment.getEnvironmentPaths();
-        expect(actual?.map((a) => a.path)).to.be.deep.equal([
-            'this/is/a/test/python/path1',
-            'this/is/a/test/python/path2',
+    test('Provide an event to track when active environment details change', async () => {
+        const events: ActiveEnvironmentPathChangeEvent[] = [];
+        proposed.environments.onDidChangeActiveEnvironmentPath((e) => {
+            events.push(e);
+        });
+        reportActiveInterpreterChanged({ path: 'path/to/environment', resource: undefined });
+        await sleep(1);
+        assert.deepEqual(events, [
+            { id: normCasePath('path/to/environment'), path: 'path/to/environment', resource: undefined },
         ]);
     });
 
-    test('setActiveInterpreter: no resource', async () => {
+    test('getActiveEnvironmentPath: No resource', () => {
+        const pythonPath = 'this/is/a/test/path';
+        configService
+            .setup((c) => c.getSettings(undefined))
+            .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
+        const actual = proposed.environments.getActiveEnvironmentPath();
+        assert.deepEqual(actual, {
+            id: normCasePath(pythonPath),
+            path: pythonPath,
+        });
+    });
+
+    test('getActiveEnvironmentPath: default python', () => {
+        const pythonPath = 'python';
+        configService
+            .setup((c) => c.getSettings(undefined))
+            .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
+        const actual = proposed.environments.getActiveEnvironmentPath();
+        assert.deepEqual(actual, {
+            id: 'DEFAULT_PYTHON',
+            path: pythonPath,
+        });
+    });
+
+    test('getActiveEnvironmentPath: With resource', () => {
+        const pythonPath = 'this/is/a/test/path';
+        const resource = Uri.file(__filename);
+        configService
+            .setup((c) => c.getSettings(resource))
+            .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
+        const actual = proposed.environments.getActiveEnvironmentPath(resource);
+        assert.deepEqual(actual, {
+            id: normCasePath(pythonPath),
+            path: pythonPath,
+        });
+    });
+
+    test('resolveEnvironment: invalid environment (when passed as string)', async () => {
+        const pythonPath = 'this/is/a/test/path';
+        discoverAPI.setup((p) => p.resolveEnv(pythonPath)).returns(() => Promise.resolve(undefined));
+
+        const actual = await proposed.environments.resolveEnvironment(pythonPath);
+        expect(actual).to.be.equal(undefined);
+    });
+
+    test('resolveEnvironment: valid environment (when passed as string)', async () => {
+        const pythonPath = 'this/is/a/test/path';
+        const env = buildEnvInfo({
+            executable: pythonPath,
+            version: {
+                major: 3,
+                minor: 9,
+                micro: 0,
+            },
+            kind: PythonEnvKind.System,
+            arch: Architecture.x64,
+            sysPrefix: 'prefix/path',
+            searchLocation: Uri.file('path/to/project'),
+        });
+        discoverAPI.setup((p) => p.resolveEnv(pythonPath)).returns(() => Promise.resolve(env));
+
+        const actual = await proposed.environments.resolveEnvironment(pythonPath);
+        assert.deepEqual((actual as EnvironmentReference).internal, convertCompleteEnvInfo(env));
+    });
+
+    test('resolveEnvironment: valid environment (when passed as environment)', async () => {
+        const pythonPath = 'this/is/a/test/path';
+        const env = buildEnvInfo({
+            executable: pythonPath,
+            version: {
+                major: 3,
+                minor: 9,
+                micro: 0,
+            },
+            kind: PythonEnvKind.System,
+            arch: Architecture.x64,
+            sysPrefix: 'prefix/path',
+            searchLocation: Uri.file('path/to/project'),
+        });
+        const partialEnv = buildEnvInfo({
+            executable: pythonPath,
+            kind: PythonEnvKind.System,
+            sysPrefix: 'prefix/path',
+            searchLocation: Uri.file('path/to/project'),
+        });
+        discoverAPI.setup((p) => p.resolveEnv(pythonPath)).returns(() => Promise.resolve(env));
+
+        const actual = await proposed.environments.resolveEnvironment(convertCompleteEnvInfo(partialEnv));
+        assert.deepEqual((actual as EnvironmentReference).internal, convertCompleteEnvInfo(env));
+    });
+
+    test('environments: no pythons found', () => {
+        discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
+        const actual = proposed.environments.known;
+        expect(actual).to.be.deep.equal([]);
+    });
+
+    test('environments: python found', async () => {
+        const envs = [
+            {
+                executable: {
+                    filename: 'this/is/a/test/python/path1',
+                    ctime: 1,
+                    mtime: 2,
+                    sysPrefix: 'prefix/path',
+                },
+                version: {
+                    major: 3,
+                    minor: 9,
+                    micro: 0,
+                },
+                kind: PythonEnvKind.System,
+                arch: Architecture.x64,
+                name: '',
+                location: '',
+                source: [PythonEnvSource.PathEnvVar],
+                distro: {
+                    org: '',
+                },
+            },
+            {
+                executable: {
+                    filename: 'this/is/a/test/python/path2',
+                    ctime: 1,
+                    mtime: 2,
+                    sysPrefix: 'prefix/path',
+                },
+                version: {
+                    major: 3,
+                    minor: -1,
+                    micro: -1,
+                },
+                kind: PythonEnvKind.Venv,
+                arch: Architecture.x64,
+                name: '',
+                location: '',
+                source: [PythonEnvSource.PathEnvVar],
+                distro: {
+                    org: '',
+                },
+            },
+        ];
+        discoverAPI.setup((d) => d.getEnvs()).returns(() => envs);
+        const actual = proposed.environments.known;
+        const actualEnvs = actual?.map((a) => (a as EnvironmentReference).internal);
+        assert.deepEqual(
+            actualEnvs?.sort((a, b) => a.id.localeCompare(b.id)),
+            envs.map((e) => convertEnvInfo(e)).sort((a, b) => a.id.localeCompare(b.id)),
+        );
+    });
+
+    test('Provide an event to track when list of environments change', async () => {
+        let events: EnvironmentsChangeEvent[] = [];
+        let eventValues: EnvironmentsChangeEvent[] = [];
+        let expectedEvents: EnvironmentsChangeEvent[] = [];
+        proposed.environments.onDidChangeEnvironments((e) => {
+            events.push(e);
+        });
+        const envs = [
+            buildEnvInfo({
+                executable: 'pythonPath',
+                kind: PythonEnvKind.System,
+                sysPrefix: 'prefix/path',
+                searchLocation: Uri.file('path/to/project'),
+            }),
+            {
+                executable: {
+                    filename: 'this/is/a/test/python/path1',
+                    ctime: 1,
+                    mtime: 2,
+                    sysPrefix: 'prefix/path',
+                },
+                version: {
+                    major: 3,
+                    minor: 9,
+                    micro: 0,
+                },
+                kind: PythonEnvKind.System,
+                arch: Architecture.x64,
+                name: '',
+                location: '',
+                source: [PythonEnvSource.PathEnvVar],
+                distro: {
+                    org: '',
+                },
+            },
+            {
+                executable: {
+                    filename: 'this/is/a/test/python/path2',
+                    ctime: 1,
+                    mtime: 2,
+                    sysPrefix: 'prefix/path',
+                },
+                version: {
+                    major: 3,
+                    minor: 10,
+                    micro: 0,
+                },
+                kind: PythonEnvKind.Venv,
+                arch: Architecture.x64,
+                name: '',
+                location: '',
+                source: [PythonEnvSource.PathEnvVar],
+                distro: {
+                    org: '',
+                },
+            },
+        ];
+
+        // Now fire and verify events. Note the event value holds the reference to an environment, so may itself
+        // change when the environment is altered. So it's important to verify them as soon as they're received.
+
+        // Add events
+        onDidChangeEnvironments.fire({ old: undefined, new: envs[0] });
+        expectedEvents.push({ env: convertEnvInfo(envs[0]), type: 'add' });
+        onDidChangeEnvironments.fire({ old: undefined, new: envs[1] });
+        expectedEvents.push({ env: convertEnvInfo(envs[1]), type: 'add' });
+        onDidChangeEnvironments.fire({ old: undefined, new: envs[2] });
+        expectedEvents.push({ env: convertEnvInfo(envs[2]), type: 'add' });
+        eventValues = events.map((e) => ({ env: (e.env as EnvironmentReference).internal, type: e.type }));
+        assert.deepEqual(eventValues, expectedEvents);
+
+        // Update events
+        events = [];
+        expectedEvents = [];
+        const updatedEnv = cloneDeep(envs[0]);
+        updatedEnv.arch = Architecture.x86;
+        onDidChangeEnvironments.fire({ old: envs[0], new: updatedEnv });
+        expectedEvents.push({ env: convertEnvInfo(updatedEnv), type: 'update' });
+        eventValues = events.map((e) => ({ env: (e.env as EnvironmentReference).internal, type: e.type }));
+        assert.deepEqual(eventValues, expectedEvents);
+
+        // Remove events
+        events = [];
+        expectedEvents = [];
+        onDidChangeEnvironments.fire({ old: envs[2], new: undefined });
+        expectedEvents.push({ env: convertEnvInfo(envs[2]), type: 'remove' });
+        eventValues = events.map((e) => ({ env: (e.env as EnvironmentReference).internal, type: e.type }));
+        assert.deepEqual(eventValues, expectedEvents);
+    });
+
+    test('updateActiveEnvironmentPath: no resource', async () => {
         interpreterPathService
             .setup((i) => i.update(undefined, ConfigurationTarget.WorkspaceFolder, 'this/is/a/test/python/path'))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
-        await proposed.environment.setActiveEnvironment('this/is/a/test/python/path');
+        await proposed.environments.updateActiveEnvironmentPath('this/is/a/test/python/path');
 
         interpreterPathService.verifyAll();
     });
-    test('setActiveInterpreter: with resource', async () => {
-        const resource = Uri.parse('a');
+
+    test('updateActiveEnvironmentPath: passed as Environment', async () => {
         interpreterPathService
-            .setup((i) => i.update(resource, ConfigurationTarget.WorkspaceFolder, 'this/is/a/test/python/path'))
+            .setup((i) => i.update(undefined, ConfigurationTarget.WorkspaceFolder, 'this/is/a/test/python/path'))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
-        await proposed.environment.setActiveEnvironment('this/is/a/test/python/path', resource);
+        await proposed.environments.updateActiveEnvironmentPath({
+            id: normCasePath('this/is/a/test/python/path'),
+            path: 'this/is/a/test/python/path',
+        });
 
         interpreterPathService.verifyAll();
     });
 
-    test('refreshInterpreters: common scenario', async () => {
-        discoverAPI
-            .setup((d) => d.triggerRefresh(undefined, undefined))
+    test('updateActiveEnvironmentPath: with uri', async () => {
+        const uri = Uri.parse('a');
+        interpreterPathService
+            .setup((i) => i.update(uri, ConfigurationTarget.WorkspaceFolder, 'this/is/a/test/python/path'))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
-        discoverAPI
-            .setup((d) => d.getEnvs())
-            .returns(() => [
-                {
-                    executable: {
-                        filename: 'this/is/a/test/python/path1',
-                        ctime: 1,
-                        mtime: 2,
-                        sysPrefix: 'prefix/path',
-                    },
-                    version: {
-                        major: 3,
-                        minor: 9,
-                        micro: 0,
-                    },
-                    kind: PythonEnvKind.System,
-                    arch: Architecture.x64,
-                    name: '',
-                    location: 'this/is/a/test/python/path1/folder',
-                    source: [PythonEnvSource.PathEnvVar],
-                    distro: {
-                        org: '',
-                    },
-                },
-                {
-                    executable: {
-                        filename: 'this/is/a/test/python/path2',
-                        ctime: 1,
-                        mtime: 2,
-                        sysPrefix: 'prefix/path',
-                    },
-                    version: {
-                        major: 3,
-                        minor: 10,
-                        micro: 0,
-                    },
-                    kind: PythonEnvKind.Venv,
-                    arch: Architecture.x64,
-                    name: '',
-                    location: '',
-                    source: [PythonEnvSource.PathEnvVar],
-                    distro: {
-                        org: '',
-                    },
-                },
-            ]);
 
-        const actual = await proposed.environment.refreshEnvironment();
-        expect(actual).to.be.deep.equal([
-            { path: 'this/is/a/test/python/path1/folder', pathType: 'envFolderPath' },
-            { path: 'this/is/a/test/python/path2', pathType: 'interpreterPath' },
-        ]);
+        await proposed.environments.updateActiveEnvironmentPath('this/is/a/test/python/path', uri);
+
+        interpreterPathService.verifyAll();
+    });
+
+    test('updateActiveEnvironmentPath: with workspace folder', async () => {
+        const uri = Uri.parse('a');
+        interpreterPathService
+            .setup((i) => i.update(uri, ConfigurationTarget.WorkspaceFolder, 'this/is/a/test/python/path'))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+        const workspace: WorkspaceFolder = {
+            uri,
+            name: '',
+            index: 0,
+        };
+
+        await proposed.environments.updateActiveEnvironmentPath('this/is/a/test/python/path', workspace);
+
+        interpreterPathService.verifyAll();
+    });
+
+    test('refreshInterpreters: default', async () => {
+        discoverAPI
+            .setup((d) => d.triggerRefresh(undefined, typemoq.It.isValue({ ifNotTriggerredAlready: true })))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+
+        await proposed.environments.refreshEnvironments();
+
         discoverAPI.verifyAll();
     });
 
-    test('getRefreshPromise: common scenario', () => {
-        const expected = Promise.resolve();
+    test('refreshInterpreters: when forcing a refresh', async () => {
         discoverAPI
-            .setup((d) => d.getRefreshPromise(typemoq.It.isValue({ stage: ProgressReportStage.allPathsDiscovered })))
-            .returns(() => expected);
-        const actual = proposed.environment.getRefreshPromise({ stage: ProgressReportStage.allPathsDiscovered });
+            .setup((d) => d.triggerRefresh(undefined, typemoq.It.isValue({ ifNotTriggerredAlready: false })))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
 
-        // We are comparing instances here, they should be the same instance.
-        // So '==' is ok here.
-        // eslint-disable-next-line eqeqeq
-        expect(actual == expected).is.equal(true);
+        await proposed.environments.refreshEnvironments({ forceRefresh: true });
+
+        discoverAPI.verifyAll();
     });
 });

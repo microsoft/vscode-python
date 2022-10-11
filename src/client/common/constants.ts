@@ -33,33 +33,34 @@ export enum CommandSource {
 }
 
 export namespace Commands {
-    export const Set_Interpreter = 'python.setInterpreter';
-    export const Set_ShebangInterpreter = 'python.setShebangInterpreter';
-    export const Exec_In_Terminal = 'python.execInTerminal';
-    export const Exec_In_Terminal_Icon = 'python.execInTerminal-icon';
-    export const Debug_In_Terminal = 'python.debugInTerminal';
-    export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
-    export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
-    export const Tests_Configure = 'python.configureTests';
-    export const Sort_Imports = 'python.sortImports';
-    export const ViewOutput = 'python.viewOutput';
-    export const Start_REPL = 'python.startREPL';
-    export const Create_Terminal = 'python.createTerminal';
-    export const Set_Linter = 'python.setLinter';
-    export const Enable_Linter = 'python.enableLinting';
-    export const Run_Linter = 'python.runLinting';
-    export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
-    export const PickLocalProcess = 'python.pickLocalProcess';
-    export const GetSelectedInterpreterPath = 'python.interpreterPath';
     export const ClearStorage = 'python.clearCacheAndReload';
     export const ClearWorkspaceInterpreter = 'python.clearWorkspaceInterpreter';
+    export const Create_Environment = 'python.createEnvironment';
+    export const Create_Terminal = 'python.createTerminal';
+    export const Debug_In_Terminal = 'python.debugInTerminal';
+    export const Enable_Linter = 'python.enableLinting';
+    export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
+    export const Exec_In_Terminal = 'python.execInTerminal';
+    export const Exec_In_Terminal_Icon = 'python.execInTerminal-icon';
+    export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
+    export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
+    export const GetSelectedInterpreterPath = 'python.interpreterPath';
+    export const InstallPython = 'python.installPython';
+    export const InstallPythonOnLinux = 'python.installPythonOnLinux';
+    export const InstallPythonOnMac = 'python.installPythonOnMac';
     export const LaunchTensorBoard = 'python.launchTensorBoard';
+    export const PickLocalProcess = 'python.pickLocalProcess';
     export const RefreshTensorBoard = 'python.refreshTensorBoard';
     export const ReportIssue = 'python.reportIssue';
-    export const InstallPython = 'python.installPython';
-    export const InstallPythonOnMac = 'python.installPythonOnMac';
-    export const InstallPythonOnLinux = 'python.installPythonOnLinux';
+    export const Run_Linter = 'python.runLinting';
+    export const Set_Interpreter = 'python.setInterpreter';
+    export const Set_Linter = 'python.setLinter';
+    export const Set_ShebangInterpreter = 'python.setShebangInterpreter';
+    export const Sort_Imports = 'python.sortImports';
+    export const Start_REPL = 'python.startREPL';
+    export const Tests_Configure = 'python.configureTests';
     export const TriggerEnvironmentSelection = 'python.triggerEnvSelection';
+    export const ViewOutput = 'python.viewOutput';
 }
 
 // Look at https://microsoft.github.io/vscode-codicons/dist/codicon.html for other Octicon icon ids

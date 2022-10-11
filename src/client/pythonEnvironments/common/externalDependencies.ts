@@ -84,10 +84,6 @@ export function arePathsSame(path1: string, path2: string): boolean {
     return normCasePath(path1) === normCasePath(path2);
 }
 
-export function getWorkspaceFolders(): string[] {
-    return vscode.workspace.workspaceFolders?.map((w) => w.uri.fsPath) ?? [];
-}
-
 export async function resolveSymbolicLink(absPath: string, stats?: fsapi.Stats): Promise<string> {
     stats = stats ?? (await fsapi.lstat(absPath));
     if (stats.isSymbolicLink()) {

@@ -1,5 +1,5 @@
 import { SemVer } from 'semver';
-import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, Event, Uri } from 'vscode';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { Resource } from '../common/types';
 import { PythonEnvSource } from '../pythonEnvironments/base/info';
@@ -98,11 +98,6 @@ export const IInterpreterDisplay = Symbol('IInterpreterDisplay');
 export interface IInterpreterDisplay {
     refresh(resource?: Uri): Promise<void>;
     registerVisibilityFilter(filter: IInterpreterStatusbarVisibilityFilter): void;
-}
-
-export const IShebangCodeLensProvider = Symbol('IShebangCodeLensProvider');
-export interface IShebangCodeLensProvider extends CodeLensProvider {
-    detectShebang(document: TextDocument, resolveShebangAsInterpreter?: boolean): Promise<string | undefined>;
 }
 
 export const IInterpreterHelper = Symbol('IInterpreterHelper');

@@ -18,7 +18,6 @@ import { InstallPythonCommand } from '../../client/interpreter/configuration/int
 import { InstallPythonViaTerminal } from '../../client/interpreter/configuration/interpreterSelector/commands/installPython/installPythonViaTerminal';
 import { ResetInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/resetInterpreter';
 import { SetInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/setInterpreter';
-import { SetShebangInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/setShebangInterpreter';
 import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
@@ -29,15 +28,9 @@ import {
     IPythonPathUpdaterServiceFactory,
     IPythonPathUpdaterServiceManager,
 } from '../../client/interpreter/configuration/types';
-import {
-    IInterpreterDisplay,
-    IInterpreterHelper,
-    IInterpreterService,
-    IShebangCodeLensProvider,
-} from '../../client/interpreter/contracts';
+import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { InterpreterLocatorProgressStatubarHandler } from '../../client/interpreter/display/progressDisplay';
-import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { registerTypes } from '../../client/interpreter/serviceRegistry';
@@ -56,7 +49,6 @@ suite('Interpreters - Service Registry', () => {
             [IExtensionSingleActivationService, SetInterpreterCommand],
             [IInterpreterQuickPick, SetInterpreterCommand],
             [IExtensionSingleActivationService, ResetInterpreterCommand],
-            [IExtensionSingleActivationService, SetShebangInterpreterCommand],
 
             [IExtensionActivationService, VirtualEnvironmentPrompt],
 
@@ -66,7 +58,6 @@ suite('Interpreters - Service Registry', () => {
             [IPythonPathUpdaterServiceFactory, PythonPathUpdaterServiceFactory],
             [IPythonPathUpdaterServiceManager, PythonPathUpdaterService],
             [IInterpreterSelector, InterpreterSelector],
-            [IShebangCodeLensProvider, ShebangCodeLensProvider],
             [IInterpreterHelper, InterpreterHelper],
             [IInterpreterComparer, EnvironmentTypeComparer],
 

@@ -9,7 +9,6 @@ import {
     IExtensionActivationManager,
     IExtensionActivationService,
     IExtensionSingleActivationService,
-    ILanguageServerCache,
     ILanguageServerOutputChannel,
 } from './types';
 import { LoadLanguageServerExtension } from './common/loadLanguageServerExtension';
@@ -36,7 +35,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
 
     serviceManager.addSingleton<ILanguageServerWatcher>(ILanguageServerWatcher, LanguageServerWatcher);
     serviceManager.addBinding(ILanguageServerWatcher, IExtensionActivationService);
-    serviceManager.addBinding(ILanguageServerWatcher, ILanguageServerCache);
     serviceManager.addSingleton<LspNotebooksExperiment>(LspNotebooksExperiment, LspNotebooksExperiment);
     serviceManager.addBinding(LspNotebooksExperiment, IExtensionSingleActivationService);
 }

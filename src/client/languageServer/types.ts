@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ILanguageServer, ILanguageServerProxy, LanguageServerType } from '../activation/types';
+import { LanguageServerType } from '../activation/types';
 import { Resource } from '../common/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 
@@ -15,12 +15,7 @@ export interface ILanguageServerWatcher {
     readonly languageServerType: LanguageServerType;
     startLanguageServer(languageServerType: LanguageServerType, resource?: Resource): Promise<void>;
     restartLanguageServers(): Promise<void>;
-}
-
-export interface ILanguageServerCapabilities extends ILanguageServer {
-    serverProxy: ILanguageServerProxy | undefined;
-
-    get(): Promise<ILanguageServer>;
+    get(resource: Resource, interpreter?: PythonEnvironment): Promise<ILanguageServerExtensionManager>;
 }
 
 /**
@@ -28,7 +23,7 @@ export interface ILanguageServerCapabilities extends ILanguageServer {
  * They are responsible for starting and stopping the language server provided by their LS extension.
  * They also extend the `ILanguageServer` interface via `ILanguageServerCapabilities` to continue supporting the Jupyter integration.
  */
-export interface ILanguageServerExtensionManager extends ILanguageServerCapabilities {
+export interface ILanguageServerExtensionManager {
     startLanguageServer(resource: Resource, interpreter?: PythonEnvironment): Promise<void>;
     stopLanguageServer(): Promise<void>;
     canStartLanguageServer(interpreter: PythonEnvironment | undefined): boolean;

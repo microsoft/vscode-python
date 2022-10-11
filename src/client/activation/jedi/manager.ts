@@ -59,10 +59,6 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         this.disposables.forEach((d) => d.dispose());
     }
 
-    public get languageProxy(): ILanguageServerProxy | undefined {
-        return this.languageServerProxy;
-    }
-
     @traceDecoratorError('Failed to start language server')
     public async start(resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void> {
         this.resource = resource;

@@ -11,9 +11,10 @@ import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { Commands } from '../commands';
 import { NodeLanguageClientMiddleware } from './languageClientMiddleware';
-import { ILanguageServerAnalysisOptions, ILanguageServerManager, ILanguageServerProxy } from '../types';
+import { ILanguageServerAnalysisOptions, ILanguageServerManager } from '../types';
 import { traceDecoratorError, traceDecoratorVerbose } from '../../logging';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
+import { NodeLanguageServerProxy } from './languageServerProxy';
 
 export class NodeLanguageServerManager implements ILanguageServerManager {
     private resource!: Resource;
@@ -35,7 +36,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     constructor(
         private readonly serviceContainer: IServiceContainer,
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
-        private readonly languageServerProxy: ILanguageServerProxy,
+        private readonly languageServerProxy: NodeLanguageServerProxy,
         commandManager: ICommandManager,
         private readonly extensions: IExtensions,
     ) {
@@ -57,10 +58,6 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         this.stopLanguageServer().ignoreErrors();
         NodeLanguageServerManager.commandDispose.dispose();
         this.disposables.forEach((d) => d.dispose());
-    }
-
-    public get languageProxy(): ILanguageServerProxy {
-        return this.languageServerProxy;
     }
 
     @traceDecoratorError('Failed to start language server')

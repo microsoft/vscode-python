@@ -6,9 +6,9 @@ import { ConfigurationTarget, Disposable, Uri } from 'vscode';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
-import { sleep } from '../../common/utils/async';
 import { Common, Interpreters } from '../../common/utils/localize';
 import { traceDecoratorError, traceVerbose } from '../../logging';
+import { isCreatingEnvironment } from '../../pythonEnvironments/creation/createEnvApi';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -38,8 +38,9 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
 
     @traceDecoratorError('Error in event handler for detection of new environment')
     protected async handleNewEnvironment(resource: Uri): Promise<void> {
-        // Wait for a while, to ensure environment gets created and is accessible (as this is slow on Windows)
-        await sleep(1000);
+        if (isCreatingEnvironment()) {
+            return;
+        }
         const interpreters = await this.pyenvs.getWorkspaceVirtualEnvInterpreters(resource);
         const interpreter =
             Array.isArray(interpreters) && interpreters.length > 0

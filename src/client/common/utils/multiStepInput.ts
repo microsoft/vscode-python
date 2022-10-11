@@ -47,7 +47,7 @@ export interface IQuickPickParameters<T extends QuickPickItem, E = any> {
     canGoBack?: boolean;
     items: T[];
     activeItem?: T | Promise<T>;
-    placeholder: string;
+    placeholder: string | undefined;
     customButtonSetups?: QuickInputButtonSetup[];
     matchOnDescription?: boolean;
     matchOnDetail?: boolean;

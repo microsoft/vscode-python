@@ -8,18 +8,14 @@ import * as sinon from 'sinon';
 import { EventEmitter, Uri } from 'vscode';
 import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, createDeferredFromPromise, sleep } from '../../../../../client/common/utils/async';
-import * as proposedApi from '../../../../../client/proposedApi';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
-import { buildEnvInfo } from '../../../../../client/pythonEnvironments/base/info/env';
+import { areSameEnv, buildEnvInfo } from '../../../../../client/pythonEnvironments/base/info/env';
 import {
     ProgressNotificationEvent,
     ProgressReportStage,
     PythonEnvUpdatedEvent,
 } from '../../../../../client/pythonEnvironments/base/locator';
-import {
-    createCollectionCache,
-    PythonEnvLatestInfo,
-} from '../../../../../client/pythonEnvironments/base/locators/composite/envsCollectionCache';
+import { createCollectionCache } from '../../../../../client/pythonEnvironments/base/locators/composite/envsCollectionCache';
 import { EnvsCollectionService } from '../../../../../client/pythonEnvironments/base/locators/composite/envsCollectionService';
 import { PythonEnvCollectionChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
@@ -31,7 +27,6 @@ import { assertEnvEqual, assertEnvsEqual } from '../envTestUtils';
 suite('Python envs locator - Environments Collection', async () => {
     let collectionService: EnvsCollectionService;
     let storage: PythonEnvInfo[];
-    let reportInterpretersChangedStub: sinon.SinonStub;
 
     const updatedName = 'updatedName';
 
@@ -113,23 +108,19 @@ suite('Python envs locator - Environments Collection', async () => {
             updatedName,
         );
         // Do not include cached envs which were not yielded by the locator, unless it belongs to some workspace.
-        return [cachedEnvForWorkspace, env1, env2, env3].map((e: PythonEnvLatestInfo) => {
-            e.hasLatestInfo = true;
-            return e;
-        });
+        return [cachedEnvForWorkspace, env1, env2, env3];
     }
 
     setup(async () => {
         storage = [];
         const parentLocator = new SimpleLocator(getLocatorEnvs());
         const cache = await createCollectionCache({
-            load: async () => getCachedEnvs(),
+            get: () => getCachedEnvs(),
             store: async (envs) => {
                 storage = envs;
             },
         });
         collectionService = new EnvsCollectionService(cache, parentLocator);
-        reportInterpretersChangedStub = sinon.stub(proposedApi, 'reportInterpretersChanged');
     });
 
     teardown(() => {
@@ -169,7 +160,7 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => getCachedEnvs(),
+            get: () => getCachedEnvs(),
             store: async (e) => {
                 storage = e;
             },
@@ -203,7 +194,7 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => cachedEnvs,
+            get: () => cachedEnvs,
             store: async (e) => {
                 storage = e;
             },
@@ -226,6 +217,57 @@ suite('Python envs locator - Environments Collection', async () => {
         assertEnvsEqual(envs, expected);
     });
 
+    test("Ensure update events are not fired if an environment isn't actually updated", async () => {
+        const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
+        const locatedEnvs = getLocatorEnvs();
+        const cachedEnvs = getCachedEnvs();
+        const parentLocator = new SimpleLocator(locatedEnvs, {
+            onUpdated: onUpdated.event,
+            after: async () => {
+                locatedEnvs.forEach((env, index) => {
+                    const update = cloneDeep(env);
+                    update.name = updatedName;
+                    onUpdated.fire({ index, update });
+                });
+                onUpdated.fire({ index: locatedEnvs.length - 1, update: undefined });
+                // It turns out the last env is invalid, ensure it does not appear in the final result.
+                onUpdated.fire({ stage: ProgressReportStage.discoveryFinished });
+            },
+        });
+        const cache = await createCollectionCache({
+            get: () => cachedEnvs,
+            store: async (e) => {
+                storage = e;
+            },
+        });
+        collectionService = new EnvsCollectionService(cache, parentLocator);
+
+        let events: PythonEnvCollectionChangedEvent[] = [];
+        collectionService.onChanged((e) => {
+            events.push(e);
+        });
+
+        await collectionService.triggerRefresh();
+        expect(events.length).to.not.equal(0, 'Atleast event should be fired');
+        const envs = collectionService.getEnvs();
+
+        // Trigger a refresh again.
+        events = [];
+        await collectionService.triggerRefresh();
+        // Filter out the events which are related to envs in the cache, we expect no such events to be fired as no
+        // envs were updated.
+        events = events.filter((e) =>
+            envs.some((env) => {
+                const eventEnv = e.old ?? e.new;
+                if (!eventEnv) {
+                    return true;
+                }
+                return areSameEnv(eventEnv, env);
+            }),
+        );
+        expect(events.length).to.equal(0, 'Do not fire additional events as envs have not updated');
+    });
+
     test('triggerRefresh() refreshes the collection with any new envs & removes cached envs if not relevant', async () => {
         const onUpdated = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
         const locatedEnvs = getLocatorEnvs();
@@ -244,7 +286,7 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => cachedEnvs,
+            get: () => cachedEnvs,
             store: async (e) => {
                 storage = e;
             },
@@ -297,7 +339,7 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => cachedEnvs,
+            get: () => cachedEnvs,
             store: async (e) => {
                 storage = e;
             },
@@ -357,11 +399,10 @@ suite('Python envs locator - Environments Collection', async () => {
     test('resolveEnv() uses cache if complete and up to date info is available', async () => {
         const resolvedViaLocator = buildEnvInfo({ executable: 'Resolved via locator' });
         const cachedEnvs = getCachedEnvs();
-        const env: PythonEnvLatestInfo = cachedEnvs[0];
+        const env = cachedEnvs[0];
         env.executable.ctime = 100;
         env.executable.mtime = 100;
         sinon.stub(externalDependencies, 'getFileInfo').resolves({ ctime: 100, mtime: 100 });
-        env.hasLatestInfo = true; // Has complete info
         const parentLocator = new SimpleLocator([], {
             resolve: async (e: PythonEnvInfo) => {
                 if (env.executable.filename === e.executable.filename) {
@@ -371,18 +412,17 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => cachedEnvs,
+            get: () => cachedEnvs,
             store: async () => noop(),
         });
         collectionService = new EnvsCollectionService(cache, parentLocator);
         const resolved = await collectionService.resolveEnv(env.executable.filename);
         assertEnvEqual(resolved, env);
-        sinon.assert.calledOnce(reportInterpretersChangedStub);
     });
 
     test('resolveEnv() uses underlying locator if cache does not have up to date info for env', async () => {
         const cachedEnvs = getCachedEnvs();
-        const env: PythonEnvLatestInfo = cachedEnvs[0];
+        const env = cachedEnvs[0];
         const resolvedViaLocator = buildEnvInfo({
             executable: env.executable.filename,
             sysPrefix: 'Resolved via locator',
@@ -390,7 +430,6 @@ suite('Python envs locator - Environments Collection', async () => {
         env.executable.ctime = 101;
         env.executable.mtime = 90;
         sinon.stub(externalDependencies, 'getFileInfo').resolves({ ctime: 100, mtime: 100 });
-        env.hasLatestInfo = true; // Has complete info
         const parentLocator = new SimpleLocator([], {
             resolve: async (e: PythonEnvInfo) => {
                 if (env.executable.filename === e.executable.filename) {
@@ -400,20 +439,18 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => cachedEnvs,
+            get: () => cachedEnvs,
             store: async () => noop(),
         });
         collectionService = new EnvsCollectionService(cache, parentLocator);
         const resolved = await collectionService.resolveEnv(env.executable.filename);
         assertEnvEqual(resolved, resolvedViaLocator);
-        sinon.assert.calledOnce(reportInterpretersChangedStub);
     });
 
     test('resolveEnv() uses underlying locator if cache does not have complete info for env', async () => {
         const resolvedViaLocator = buildEnvInfo({ executable: 'Resolved via locator' });
         const cachedEnvs = getCachedEnvs();
-        const env: PythonEnvLatestInfo = cachedEnvs[0];
-        env.hasLatestInfo = false; // Does not have complete info
+        const env = cachedEnvs[0];
         const parentLocator = new SimpleLocator([], {
             resolve: async (e: PythonEnvInfo) => {
                 if (env.executable.filename === e.executable.filename) {
@@ -423,28 +460,12 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => cachedEnvs,
+            get: () => cachedEnvs,
             store: async () => noop(),
         });
         collectionService = new EnvsCollectionService(cache, parentLocator);
         const resolved = await collectionService.resolveEnv(env.executable.filename);
         assertEnvEqual(resolved, resolvedViaLocator);
-
-        const eventData = [
-            {
-                path: path.join(TEST_LAYOUT_ROOT, 'doesNotExist'),
-                type: 'remove',
-            },
-
-            {
-                path: 'Resolved via locator',
-                type: 'add',
-            },
-        ];
-        eventData.forEach((d) => {
-            sinon.assert.calledWithExactly(reportInterpretersChangedStub, [d]);
-        });
-        sinon.assert.callCount(reportInterpretersChangedStub, eventData.length);
     });
 
     test('resolveEnv() adds env to cache after resolving using downstream locator', async () => {
@@ -458,19 +479,13 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => [],
+            get: () => [],
             store: async () => noop(),
         });
         collectionService = new EnvsCollectionService(cache, parentLocator);
-        const resolved: PythonEnvLatestInfo | undefined = await collectionService.resolveEnv(
-            resolvedViaLocator.executable.filename,
-        );
+        const resolved = await collectionService.resolveEnv(resolvedViaLocator.executable.filename);
         const envs = collectionService.getEnvs();
-        expect(resolved?.hasLatestInfo).to.equal(true);
         assertEnvsEqual(envs, [resolved]);
-        sinon.assert.calledOnceWithExactly(reportInterpretersChangedStub, [
-            { path: resolved?.executable.filename, type: 'add' },
-        ]);
     });
 
     test('Ensure events from downstream locators do not trigger new refreshes if a refresh is already scheduled', async () => {
@@ -483,7 +498,7 @@ suite('Python envs locator - Environments Collection', async () => {
             },
         });
         const cache = await createCollectionCache({
-            load: async () => [],
+            get: () => [],
             store: async () => noop(),
         });
         collectionService = new EnvsCollectionService(cache, parentLocator);
@@ -523,7 +538,5 @@ suite('Python envs locator - Environments Collection', async () => {
             events.sort((a, b) => (a.type && b.type ? a.type?.localeCompare(b.type) : 0)),
             downstreamEvents.sort((a, b) => (a.type && b.type ? a.type?.localeCompare(b.type) : 0)),
         );
-
-        sinon.assert.notCalled(reportInterpretersChangedStub);
     });
 });

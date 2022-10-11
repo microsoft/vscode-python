@@ -11,6 +11,7 @@ import {
     PythonEnvInfo,
     PythonEnvKind,
     PythonEnvSource,
+    PythonEnvType,
     PythonVersion,
     UNKNOWN_PYTHON_VERSION,
 } from '../../../../../client/pythonEnvironments/base/info';
@@ -25,12 +26,13 @@ import {
     CondaInfo,
 } from '../../../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { resolveBasicEnv } from '../../../../../client/pythonEnvironments/base/locators/composite/resolverUtils';
+import * as workspaceApis from '../../../../../client/common/vscodeApis/workspaceApis';
 
 suite('Resolver Utils', () => {
     let getWorkspaceFolders: sinon.SinonStub;
     setup(() => {
         sinon.stub(externalDependencies, 'getPythonSetting').withArgs('condaPath').returns('conda');
-        getWorkspaceFolders = sinon.stub(externalDependencies, 'getWorkspaceFolders');
+        getWorkspaceFolders = sinon.stub(workspaceApis, 'getWorkspaceFolderPaths');
         getWorkspaceFolders.returns([]);
     });
 
@@ -76,6 +78,7 @@ suite('Resolver Utils', () => {
                 },
                 source: [],
                 org: 'miniconda3',
+                type: PythonEnvType.Conda,
             });
             envInfo.location = path.join(testPyenvVersionsDir, 'miniconda3-4.7.12');
             envInfo.name = 'base';
@@ -209,6 +212,7 @@ suite('Resolver Utils', () => {
                 version: UNKNOWN_PYTHON_VERSION,
                 fileInfo: undefined,
                 name: 'base',
+                type: PythonEnvType.Conda,
             });
             setEnvDisplayString(info);
             return info;
@@ -237,6 +241,7 @@ suite('Resolver Utils', () => {
                 searchLocation: undefined,
                 source: [],
             };
+            info.type = PythonEnvType.Conda;
             setEnvDisplayString(info);
             return info;
         }
@@ -333,6 +338,7 @@ suite('Resolver Utils', () => {
                 distro: { org: '' },
                 searchLocation: Uri.file(location),
                 source: [],
+                type: PythonEnvType.Virtual,
             };
             setEnvDisplayString(info);
             return info;
@@ -623,6 +629,7 @@ suite('Resolver Utils', () => {
                 org: 'ContinuumAnalytics', // Provided by registry
                 name: 'conda3',
                 source: [PythonEnvSource.WindowsRegistry],
+                type: PythonEnvType.Conda,
             });
             setEnvDisplayString(expected);
             expected.distro.defaultDisplayName = 'Anaconda py38_4.8.3';

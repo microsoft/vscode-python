@@ -196,7 +196,6 @@ export interface IPythonSettings {
     readonly sortImports: ISortImportSettings;
     readonly envFile: string;
     readonly globalModuleInstallation: boolean;
-    readonly pylanceLspNotebooksEnabled: boolean;
     readonly experiments: IExperiments;
     readonly languageServer: LanguageServerType;
     readonly languageServerIsDefault: boolean;
@@ -428,6 +427,11 @@ export interface IExtensions {
      * @return An extension or `undefined`.
      */
     getExtension<T>(extensionId: string): Extension<T> | undefined;
+
+    /**
+     * Determines which extension called into our extension code based on call stacks.
+     */
+    determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }>;
 }
 
 export const IBrowserService = Symbol('IBrowserService');

@@ -189,7 +189,7 @@ function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators<BasicEnv
 async function createCollectionCache(ext: ExtensionState): Promise<IEnvsCollectionCache> {
     const storage = getGlobalStorage<PythonEnvInfo[]>(ext.context, 'PYTHON_ENV_INFO_CACHE', []);
     const cache = await createCache({
-        load: async () => storage.get(),
+        get: () => storage.get(),
         store: async (e) => storage.set(e),
     });
     return cache;

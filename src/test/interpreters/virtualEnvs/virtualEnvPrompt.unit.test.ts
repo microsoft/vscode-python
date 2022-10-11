@@ -3,8 +3,9 @@
 
 'use strict';
 
-import { anything, deepEqual, instance, mock, reset, verify, when } from 'ts-mockito';
+import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
+import { anything, deepEqual, instance, mock, reset, verify, when } from 'ts-mockito';
 import { ConfigurationTarget, Disposable, Uri } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../client/common/application/types';
@@ -17,6 +18,7 @@ import { IComponentAdapter, IInterpreterHelper, IInterpreterService } from '../.
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
 import { VirtualEnvironmentPrompt } from '../../../client/interpreter/virtualEnvs/virtualEnvPrompt';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import * as createEnvApi from '../../../client/pythonEnvironments/creation/createEnvApi';
 
 suite('Virtual Environment Prompt', () => {
     class VirtualEnvironmentPromptTest extends VirtualEnvironmentPrompt {
@@ -36,12 +38,15 @@ suite('Virtual Environment Prompt', () => {
     let componentAdapter: IComponentAdapter;
     let interpreterService: IInterpreterService;
     let environmentPrompt: VirtualEnvironmentPromptTest;
+    let isCreatingEnvironmentStub: sinon.SinonStub;
     setup(() => {
         persistentStateFactory = mock(PersistentStateFactory);
         helper = mock(InterpreterHelper);
         pythonPathUpdaterService = mock(PythonPathUpdaterService);
         componentAdapter = mock<IComponentAdapter>();
         interpreterService = mock<IInterpreterService>();
+        isCreatingEnvironmentStub = sinon.stub(createEnvApi, 'isCreatingEnvironment');
+        isCreatingEnvironmentStub.returns(false);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
             id: 'selected',
             path: 'path/to/selected',
@@ -57,6 +62,10 @@ suite('Virtual Environment Prompt', () => {
             instance(componentAdapter),
             instance(interpreterService),
         );
+    });
+
+    teardown(() => {
+        sinon.restore();
     });
 
     test('User is notified if interpreter exists and only python path to global interpreter is specified in settings', async () => {
@@ -254,6 +263,19 @@ suite('Virtual Environment Prompt', () => {
         await environmentPrompt.notifyUser(interpreter1 as any, resource);
 
         verify(persistentStateFactory.createWorkspacePersistentState(anything(), true)).once();
+        verify(appShell.showInformationMessage(anything(), ...prompts)).never();
+    });
+
+    test('If environment is being created, no notification is shown', async () => {
+        isCreatingEnvironmentStub.reset();
+        isCreatingEnvironmentStub.returns(true);
+
+        const resource = Uri.file('a');
+        const prompts = [Common.bannerLabelYes, Common.bannerLabelNo, Common.doNotShowAgain];
+
+        await environmentPrompt.handleNewEnvironment(resource);
+
+        verify(persistentStateFactory.createWorkspacePersistentState(anything(), true)).never();
         verify(appShell.showInformationMessage(anything(), ...prompts)).never();
     });
 });

@@ -12,6 +12,7 @@ import { buildApi } from '../client/api';
 import { ConfigurationService } from '../client/common/configuration/service';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
 import { IConfigurationService } from '../client/common/types';
+import { IEnvironmentVariablesProvider } from '../client/common/variables/types';
 import { IInterpreterService } from '../client/interpreter/contracts';
 import { InterpreterService } from '../client/interpreter/interpreterService';
 import { ServiceContainer } from '../client/ioc/container';
@@ -27,15 +28,20 @@ suite('Extension API', () => {
     let serviceManager: IServiceManager;
     let configurationService: IConfigurationService;
     let interpreterService: IInterpreterService;
+    let environmentVariablesProvider: IEnvironmentVariablesProvider;
 
     setup(() => {
         serviceContainer = mock(ServiceContainer);
         serviceManager = mock(ServiceManager);
         configurationService = mock(ConfigurationService);
         interpreterService = mock(InterpreterService);
+        environmentVariablesProvider = mock<IEnvironmentVariablesProvider>();
 
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
             instance(configurationService),
+        );
+        when(serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider)).thenReturn(
+            instance(environmentVariablesProvider),
         );
         when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
     });

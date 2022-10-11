@@ -96,6 +96,7 @@ export namespace Common {
     export const openLaunch = localize('Common.openLaunch', 'Open launch.json');
     export const useCommandPrompt = localize('Common.useCommandPrompt', 'Use Command Prompt');
     export const download = localize('Common.download', 'Download');
+    export const showLogs = localize('Common.showLogs', 'Show logs');
 }
 
 export namespace CommonSurvey {
@@ -269,7 +270,7 @@ export namespace Interpreters {
     );
     export const environmentPromptMessage = localize(
         'Interpreters.environmentPromptMessage',
-        'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?',
+        'We noticed a new environment has been created. Do you want to select it for the workspace folder?',
     );
     export const entireWorkspace = localize('Interpreters.entireWorkspace', 'Select at workspace level');
     export const clearAtWorkspace = localize('Interpreters.clearAtWorkspace', 'Clear at workspace level');
@@ -548,4 +549,71 @@ export namespace SwitchToDefaultLS {
         'SwitchToDefaultLS.bannerMessage',
         "The Microsoft Python Language Server has reached end of life. Your language server has been set to the default for Python in VS Code, Pylance.\n\nIf you'd like to change your language server, you can learn about how to do so [here](https://devblogs.microsoft.com/python/python-in-visual-studio-code-may-2021-release/#configuring-your-language-server).\n\nRead Pylance's license [here](https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license).",
     );
+}
+
+export namespace CreateEnv {
+    export const informEnvCreation = localize(
+        'createEnv.informEnvCreation',
+        'We have selected the following environment:',
+    );
+    export const statusTitle = localize('createEnv.statusTitle', 'Creating environment');
+    export const statusStarting = localize('createEnv.statusStarting', 'Starting...');
+
+    export const hasVirtualEnv = localize('createEnv.hasVirtualEnv', 'Workspace folder contains a virtual environment');
+
+    export const noWorkspace = localize(
+        'createEnv.noWorkspace',
+        'Please open a directory when creating an environment using venv.',
+    );
+
+    export const pickWorkspacePlaceholder = localize(
+        'createEnv.workspaceQuickPick.placeholder',
+        'Select a workspace to create environment',
+    );
+
+    export const providersQuickPickPlaceholder = localize(
+        'createEnv.providersQuickPick.placeholder',
+        'Select an environment type',
+    );
+
+    export namespace Venv {
+        export const creating = localize('createEnv.venv.creating', 'Creating venv...');
+        export const created = localize('createEnv.venv.created', 'Environment created...');
+        export const installingPackages = localize('createEnv.venv.installingPackages', 'Installing packages...');
+        export const errorCreatingEnvironment = localize(
+            'createEnv.venv.errorCreatingEnvironment',
+            'Error while creating virtual environment.',
+        );
+        export const selectPythonQuickPickTitle = localize(
+            'createEnv.venv.basePython.title',
+            'Select a python to use for environment creation',
+        );
+        export const providerDescription = localize(
+            'createEnv.venv.description',
+            'Creates a `.venv` virtual environment in the current workspace',
+        );
+        export const error = localize('createEnv.venv.error', 'Creating virtual environment failed with error.');
+    }
+
+    export namespace Conda {
+        export const condaMissing = localize(
+            'createEnv.conda.missing',
+            'Please install `conda` to create conda environments.',
+        );
+        export const created = localize('createEnv.conda.created', 'Environment created...');
+        export const installingPackages = localize('createEnv.conda.installingPackages', 'Installing packages...');
+        export const errorCreatingEnvironment = localize(
+            'createEnv.conda.errorCreatingEnvironment',
+            'Error while creating conda environment.',
+        );
+        export const selectPythonQuickPickPlaceholder = localize(
+            'createEnv.conda.pythonSelection.placeholder',
+            'Please select the version of Python to install in the environment',
+        );
+        export const creating = localize('createEnv.conda.creating', 'Creating conda environment...');
+        export const providerDescription = localize(
+            'createEnv.conda.description',
+            'Creates a `.conda` Conda environment in the current workspace',
+        );
+    }
 }

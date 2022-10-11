@@ -13,6 +13,7 @@ import * as platformApis from '../../../../../client/common/utils/platform';
 import {
     PythonEnvInfo,
     PythonEnvKind,
+    PythonEnvType,
     PythonVersion,
     UNKNOWN_PYTHON_VERSION,
 } from '../../../../../client/pythonEnvironments/base/info';
@@ -37,6 +38,7 @@ import { createBasicEnv, getEnvs, getEnvsWithUpdates, SimpleLocator } from '../.
 import { getOSType, OSType } from '../../../../common';
 import { CondaInfo } from '../../../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { createDeferred } from '../../../../../client/common/utils/async';
+import * as workspaceApis from '../../../../../client/common/vscodeApis/workspaceApis';
 
 suite('Python envs locator - Environments Resolver', () => {
     let envInfoService: IEnvironmentInfoService;
@@ -66,6 +68,9 @@ suite('Python envs locator - Environments Resolver', () => {
         updatedEnv.arch = Architecture.x64;
         updatedEnv.display = expectedDisplay;
         updatedEnv.detailedDisplayName = expectedDisplay;
+        if (env.kind === PythonEnvKind.Conda) {
+            env.type = PythonEnvType.Conda;
+        }
         return updatedEnv;
     }
 
@@ -76,6 +81,7 @@ suite('Python envs locator - Environments Resolver', () => {
         name = '',
         location = '',
         display: string | undefined = undefined,
+        type?: PythonEnvType,
     ): PythonEnvInfo {
         return {
             name,
@@ -94,6 +100,7 @@ suite('Python envs locator - Environments Resolver', () => {
             distro: { org: '' },
             searchLocation: Uri.file(location),
             source: [],
+            type,
         };
     }
     suite('iterEnvs()', () => {
@@ -109,7 +116,7 @@ suite('Python envs locator - Environments Resolver', () => {
                     });
                 }),
             );
-            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([testVirtualHomeDir]);
+            sinon.stub(workspaceApis, 'getWorkspaceFolderPaths').returns([testVirtualHomeDir]);
         });
 
         teardown(() => {
@@ -128,6 +135,7 @@ suite('Python envs locator - Environments Resolver', () => {
                 'win1',
                 path.join(testVirtualHomeDir, '.venvs', 'win1'),
                 "Python ('win1': venv)",
+                PythonEnvType.Virtual,
             );
             const envsReturnedByParentLocator = [env1];
             const parentLocator = new SimpleLocator<BasicEnvInfo>(envsReturnedByParentLocator);
@@ -151,6 +159,8 @@ suite('Python envs locator - Environments Resolver', () => {
                 undefined,
                 'win1',
                 path.join(testVirtualHomeDir, '.venvs', 'win1'),
+                undefined,
+                PythonEnvType.Virtual,
             );
             const envsReturnedByParentLocator = [env1];
             const parentLocator = new SimpleLocator<BasicEnvInfo>(envsReturnedByParentLocator);
@@ -206,6 +216,8 @@ suite('Python envs locator - Environments Resolver', () => {
                 undefined,
                 'win1',
                 path.join(testVirtualHomeDir, '.venvs', 'win1'),
+                undefined,
+                PythonEnvType.Virtual,
             );
             const envsReturnedByParentLocator = [env];
             const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>();
@@ -338,7 +350,7 @@ suite('Python envs locator - Environments Resolver', () => {
                     });
                 }),
             );
-            sinon.stub(externalDependencies, 'getWorkspaceFolders').returns([testVirtualHomeDir]);
+            sinon.stub(workspaceApis, 'getWorkspaceFolderPaths').returns([testVirtualHomeDir]);
         });
 
         teardown(() => {
@@ -355,6 +367,8 @@ suite('Python envs locator - Environments Resolver', () => {
                 undefined,
                 'win1',
                 path.join(testVirtualHomeDir, '.venvs', 'win1'),
+                undefined,
+                PythonEnvType.Virtual,
             );
             const parentLocator = new SimpleLocator([]);
             const resolver = new PythonEnvsResolver(parentLocator, envInfoService);

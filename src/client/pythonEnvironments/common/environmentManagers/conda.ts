@@ -157,6 +157,18 @@ export async function isCondaEnvironment(interpreterPathOrEnvPath: string): Prom
 }
 
 /**
+ * Gets path to conda's `environments.txt` file. More info https://github.com/conda/conda/issues/11845.
+ */
+export async function getCondaEnvironmentsTxt(): Promise<string[]> {
+    const homeDir = getUserHomeDir();
+    if (!homeDir) {
+        return [];
+    }
+    const environmentsTxt = path.join(homeDir, '.conda', 'environments.txt');
+    return [environmentsTxt];
+}
+
+/**
  * Extracts version information from `conda-meta/history` near a given interpreter.
  * @param interpreterPath Absolute path to the interpreter
  *

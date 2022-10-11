@@ -21,7 +21,13 @@ import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './c
 import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IExtensions, IOutputChannel } from './common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExtensions,
+    IInterpreterPathService,
+    IOutputChannel,
+} from './common/types';
 import { noop } from './common/utils/misc';
 import { DebuggerTypeName } from './debugger/constants';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
@@ -57,6 +63,8 @@ import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHan
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { WorkspaceService } from './common/application/workspace';
 import { DynamicPythonDebugConfigurationService } from './debugger/extension/configuration/dynamicdebugConfigurationService';
+import { registerCreateEnvironmentFeatures } from './pythonEnvironments/creation/createEnvApi';
+import { IInterpreterQuickPick } from './interpreter/configuration/types';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -89,6 +97,16 @@ export async function activateComponents(
         pythonEnvironments.activate(components.pythonEnvs, ext),
     ];
     return Promise.all([legacyActivationResult, ...promises]);
+}
+
+export function activateFeatures(ext: ExtensionState, _components: Components): void {
+    const interpreterQuickPick: IInterpreterQuickPick = ext.legacyIOC.serviceContainer.get<IInterpreterQuickPick>(
+        IInterpreterQuickPick,
+    );
+    const interpreterPathService: IInterpreterPathService = ext.legacyIOC.serviceContainer.get<IInterpreterPathService>(
+        IInterpreterPathService,
+    );
+    registerCreateEnvironmentFeatures(ext.disposables, interpreterQuickPick, interpreterPathService);
 }
 
 /// //////////////////////////

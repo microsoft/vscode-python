@@ -35,17 +35,18 @@ import { IApplicationShell, IWorkspaceService } from './common/application/types
 import { IDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
-import { activateComponents } from './extensionActivation';
+import { activateComponents, activateFeatures } from './extensionActivation';
 import { initializeStandard, initializeComponents, initializeGlobals } from './extensionInit';
 import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 import { IStartupDurations } from './types';
 import { runAfterActivation } from './common/utils/runAfterActivation';
 import { IInterpreterService } from './interpreter/contracts';
-import { IExtensionApi, IProposedExtensionAPI } from './apiTypes';
+import { IExtensionApi } from './apiTypes';
 import { buildProposedApi } from './proposedApi';
 import { WorkspaceService } from './common/application/workspace';
 import { disposeAll } from './common/utils/resourceLifecycle';
+import { ProposedExtensionAPI } from './proposedApiTypes';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -103,7 +104,7 @@ async function activateUnsafe(
     context: IExtensionContext,
     startupStopWatch: StopWatch,
     startupDurations: IStartupDurations,
-): Promise<[IExtensionApi & IProposedExtensionAPI, Promise<void>, IServiceContainer]> {
+): Promise<[IExtensionApi & ProposedExtensionAPI, Promise<void>, IServiceContainer]> {
     // Add anything that we got from initializing logs to dispose.
     context.subscriptions.push(...logDispose);
 
@@ -128,6 +129,8 @@ async function activateUnsafe(
 
     // Then we finish activating.
     const componentsActivated = await activateComponents(ext, components);
+    activateFeatures(ext, components);
+
     const nonBlocking = componentsActivated.map((r) => r.fullyReady);
     const activationPromise = (async () => {
         await Promise.all(nonBlocking);

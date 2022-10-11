@@ -45,7 +45,6 @@ suite('Language Server - Pylance LS extension manager', () => {
     test('Constructor should create a client proxy, a server manager and a server proxy', () => {
         assert.notStrictEqual(manager.clientFactory, undefined);
         assert.notStrictEqual(manager.serverManager, undefined);
-        assert.notStrictEqual(manager.serverProxy, undefined);
     });
 
     test('canStartLanguageServer should return true if Pylance is installed', () => {

@@ -32,9 +32,9 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
     public async executeFile(file: Uri) {
         await this.setCwdForFileExecution(file);
-        const x = file.fsPath;
-        const hello = x.fileToCommandArgumentForPythonExt();
-        const { command, args } = await this.getExecuteFileArgs(file, [hello]);
+        const { command, args } = await this.getExecuteFileArgs(file, [
+            file.fsPath.fileToCommandArgumentForPythonExt(),
+        ]);
 
         await this.getTerminalService(file).sendCommand(command, args);
     }

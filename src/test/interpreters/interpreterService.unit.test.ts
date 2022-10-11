@@ -248,6 +248,8 @@ suite('Interpreters service', () => {
     test('If stored setting is an empty string, refresh the interpreter display', async () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
         const resource = Uri.parse('a');
+        const workspaceFolder = { uri: resource, name: '', index: 0 };
+        workspace.setup((w) => w.getWorkspaceFolder(resource)).returns(() => workspaceFolder);
         service._pythonPathSetting = '';
         configService.reset();
         configService.setup((c) => c.getSettings(resource)).returns(() => ({ pythonPath: 'current path' } as any));
@@ -259,13 +261,15 @@ suite('Interpreters service', () => {
         interpreterDisplay.verifyAll();
         sinon.assert.calledOnceWithExactly(reportActiveInterpreterChangedStub, {
             path: 'current path',
-            resource,
+            resource: workspaceFolder,
         });
     });
 
     test('If stored setting is not equal to current interpreter path setting, refresh the interpreter display', async () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
         const resource = Uri.parse('a');
+        const workspaceFolder = { uri: resource, name: '', index: 0 };
+        workspace.setup((w) => w.getWorkspaceFolder(resource)).returns(() => workspaceFolder);
         service._pythonPathSetting = 'stored setting';
         configService.reset();
         configService.setup((c) => c.getSettings(resource)).returns(() => ({ pythonPath: 'current path' } as any));
@@ -277,7 +281,7 @@ suite('Interpreters service', () => {
         interpreterDisplay.verifyAll();
         sinon.assert.calledOnceWithExactly(reportActiveInterpreterChangedStub, {
             path: 'current path',
-            resource,
+            resource: workspaceFolder,
         });
     });
 

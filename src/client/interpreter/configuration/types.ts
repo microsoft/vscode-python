@@ -71,5 +71,15 @@ export interface IInterpreterQuickPick {
     getInterpreterViaQuickPick(
         workspace: Resource,
         filter?: (i: PythonEnvironment) => boolean,
+        params?: {
+            /**
+             * Specify `null` if a placeholder is not required.
+             */
+            placeholder?: string | null;
+            /**
+             * Specify `null` if a title is not required.
+             */
+            title?: string | null;
+        },
     ): Promise<string | undefined>;
 }

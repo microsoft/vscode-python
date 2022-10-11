@@ -11,10 +11,6 @@ suite('Language Server - No LS extension manager', () => {
         manager = new NoneLSExtensionManager();
     });
 
-    test('Constructor should not create a server proxy', () => {
-        assert.strictEqual(manager.serverProxy, undefined);
-    });
-
     test('canStartLanguageServer should return true', () => {
         const result = manager.canStartLanguageServer();
 

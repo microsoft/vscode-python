@@ -3,19 +3,8 @@
 
 'use strict';
 
-import {
-    CodeLensProvider,
-    CompletionItemProvider,
-    DefinitionProvider,
-    DocumentSymbolProvider,
-    Event,
-    HoverProvider,
-    ReferenceProvider,
-    RenameProvider,
-    SignatureHelpProvider,
-} from 'vscode';
+import { Event } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
-import * as lsp from 'vscode-languageserver-protocol';
 import type { IDisposable, IOutputChannel, Resource } from '../common/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 
@@ -69,39 +58,11 @@ export enum LanguageServerType {
     None = 'None',
 }
 
-/**
- * This interface is a subset of the vscode-protocol connection interface.
- * It's the minimum set of functions needed in order to talk to a language server.
- */
-export type ILanguageServerConnection = Pick<
-    lsp.ProtocolConnection,
-    'sendRequest' | 'sendNotification' | 'onProgress' | 'sendProgress' | 'onNotification' | 'onRequest'
->;
-
-export interface ILanguageServer
-    extends RenameProvider,
-        DefinitionProvider,
-        HoverProvider,
-        ReferenceProvider,
-        CompletionItemProvider,
-        CodeLensProvider,
-        DocumentSymbolProvider,
-        SignatureHelpProvider,
-        IDisposable {
-    readonly connection?: ILanguageServerConnection;
-    readonly capabilities?: lsp.ServerCapabilities;
-}
-
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
-export interface ILanguageServerActivator extends ILanguageServer {
+export interface ILanguageServerActivator {
     start(resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void>;
     activate(): void;
     deactivate(): void;
-}
-
-export const ILanguageServerCache = Symbol('ILanguageServerCache');
-export interface ILanguageServerCache {
-    get(resource: Resource, interpreter?: PythonEnvironment): Promise<ILanguageServer>;
 }
 
 export const ILanguageClientFactory = Symbol('ILanguageClientFactory');
@@ -121,7 +82,6 @@ export interface ILanguageServerAnalysisOptions extends IDisposable {
 }
 export const ILanguageServerManager = Symbol('ILanguageServerManager');
 export interface ILanguageServerManager extends IDisposable {
-    readonly languageProxy: ILanguageServerProxy | undefined;
     start(resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void>;
     connect(): void;
     disconnect(): void;
@@ -129,10 +89,6 @@ export interface ILanguageServerManager extends IDisposable {
 
 export const ILanguageServerProxy = Symbol('ILanguageServerProxy');
 export interface ILanguageServerProxy extends IDisposable {
-    /**
-     * LanguageClient in use
-     */
-    languageClient: LanguageClient | undefined;
     start(
         resource: Resource,
         interpreter: PythonEnvironment | undefined,

@@ -19,7 +19,6 @@ import {
 } from '../../../client/interpreter/contracts';
 import { IInterpreterSelector } from '../../../client/interpreter/configuration/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { ILanguageServerCache } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { MockMemento } from '../../mocks/mementos';
 
@@ -37,7 +36,6 @@ suite('Pylance Language Server - Interactive Window LSP Notebooks', () => {
             mock<IInterpreterSelector>(),
             mock<IInstaller>(),
             mock<IEnvironmentActivationService>(),
-            mock<ILanguageServerCache>(),
             new MockMemento(),
             mock<IInterpreterDisplay>(),
             mock<IComponentAdapter>(),
