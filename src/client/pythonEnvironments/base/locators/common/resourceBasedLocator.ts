@@ -44,6 +44,7 @@ export abstract class LazyResourceBasedLocator extends Locator<BasicEnvInfo> imp
     }
 
     public async *iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
+        await this.activate();
         const iterator = this.doIterEnvs(query);
         if (query?.envPath) {
             let result = await iterator.next();
