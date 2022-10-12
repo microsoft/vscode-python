@@ -195,7 +195,7 @@ export class DebugLauncher implements ITestDebugLauncher {
 
         // Clear out purpose so we can detect if the configuration was used to
         // run via F5 style debugging.
-        launchArgs.purpose = [];
+        launchArgs.purpose = [DebugPurpose.DebugTest];
 
         return launchArgs;
     }

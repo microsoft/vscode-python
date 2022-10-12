@@ -13,7 +13,7 @@ import {
     IQuickPickParameters,
     MultiStepInput,
 } from '../../../common/utils/multiStepInput';
-import { AttachRequestArguments, DebugConfigurationArguments, LaunchRequestArguments } from '../../types';
+import { AttachRequestArguments, DebugConfigurationArguments, DebugPurpose, LaunchRequestArguments } from '../../types';
 import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationService } from '../types';
 import { buildDjangoLaunchDebugConfiguration } from './providers/djangoLaunch';
 import { buildFastAPILaunchDebugConfiguration } from './providers/fastapiLaunch';
@@ -85,6 +85,18 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
                     if (Array.isArray(configs) && configs.length === 1) {
                         debugConfiguration = configs[0];
                     }
+                    this.cacheDebugConfig = cloneDeep(debugConfiguration);
+                }
+            } else if (debugConfiguration?.purpose?.includes(DebugPurpose.DebugTest)) {
+                if (
+                    this.cacheDebugConfig &&
+                    this.cacheDebugConfig.purpose?.includes(DebugPurpose.DebugTest) &&
+                    !debugConfiguration.program &&
+                    !debugConfiguration.module &&
+                    !debugConfiguration.code
+                ) {
+                    debugConfiguration = cloneDeep(this.cacheDebugConfig);
+                } else {
                     this.cacheDebugConfig = cloneDeep(debugConfiguration);
                 }
             }
