@@ -1699,7 +1699,7 @@
                 {
                     "command": "python.sortImports",
                     "group": "Refactor",
-                    "title": "Refactor: Sort Imports",
+                    "title": "%python.command.python.sortImports.title%",
                     "when": "editorLangId == python && !notebookEditorFocused && !virtualWorkspace && shellExecutionSupported"
                 }
             ],

@@ -5,6 +5,3 @@
 
 # Unittest test adapter
 typing-extensions==4.4.0
-
-# Sort Imports
-isort==5.10.1
