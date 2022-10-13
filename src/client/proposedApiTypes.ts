@@ -279,9 +279,13 @@ export type ResolvedVersionInfo = {
 
 export type EnvironmentVariables = { readonly [key: string]: string | undefined };
 
-export type EnvironmentVariablesChangeEvent = EnvironmentVariables & {
+export type EnvironmentVariablesChangeEvent = {
     /**
      * Workspace folder the environment variables changed for.
      */
     readonly resource: WorkspaceFolder | undefined;
+    /**
+     * Updated environment variables.
+     */
+    readonly env: EnvironmentVariables;
 };

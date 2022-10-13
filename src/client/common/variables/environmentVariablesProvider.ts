@@ -106,6 +106,59 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         return this.envVarsService.parseFile(envFile, this.process.env);
     }
 
+    public getEnvironmentVariablesSync(resource?: Uri): EnvironmentVariables {
+        const cacheKey = this.getWorkspaceFolderUri(resource)?.fsPath ?? '';
+        let cache = this.envVarCaches.get(cacheKey);
+
+        if (cache) {
+            const cachedData = cache.data;
+            if (cachedData) {
+                traceVerbose(
+                    `Cached data exists getEnvironmentVariablesSync, ${resource ? resource.fsPath : '<No Resource>'}`,
+                );
+                return { ...cachedData };
+            }
+        } else {
+            cache = new InMemoryCache(this.cacheDuration);
+            this.envVarCaches.set(cacheKey, cache);
+        }
+
+        const vars = this._getEnvironmentVariablesSync(resource);
+        cache.data = { ...vars };
+        return vars;
+    }
+
+    public _getEnvironmentVariablesSync(resource?: Uri): EnvironmentVariables {
+        let mergedVars = this.getCustomEnvironmentVariablesSync(resource);
+        if (!mergedVars) {
+            mergedVars = {};
+        }
+        this.envVarsService.mergeVariables(this.process.env, mergedVars!);
+        const pathVariable = this.platformService.pathVariableName;
+        const pathValue = this.process.env[pathVariable];
+        if (pathValue) {
+            this.envVarsService.appendPath(mergedVars!, pathValue);
+        }
+        if (this.process.env.PYTHONPATH) {
+            this.envVarsService.appendPythonPath(mergedVars!, this.process.env.PYTHONPATH);
+        }
+        return mergedVars;
+    }
+
+    private getCustomEnvironmentVariablesSync(resource?: Uri): EnvironmentVariables | undefined {
+        const systemVariables: SystemVariables = new SystemVariables(
+            undefined,
+            PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri?.fsPath,
+            this.workspaceService,
+        );
+        const envFileSetting = this.workspaceService.getConfiguration('python', resource).get<string>('envFile');
+        const envFile = systemVariables.resolveAny(envFileSetting)!;
+        const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
+        this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
+        this.createFileWatcher(envFile, workspaceFolderUri);
+        return this.envVarsService.parseFileSync(envFile, this.process.env);
+    }
+
     public configurationChanged(e: ConfigurationChangeEvent): void {
         this.trackedWorkspaceFolders.forEach((item) => {
             const uri = item && item.length > 0 ? Uri.file(item) : undefined;
