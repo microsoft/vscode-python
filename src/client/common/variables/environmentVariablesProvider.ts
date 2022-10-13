@@ -3,7 +3,6 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
-import { traceVerbose } from '../../logging';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
 import { PythonSettings } from '../configSettings';
@@ -79,9 +78,6 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         if (cache) {
             const cachedData = cache.data;
             if (cachedData) {
-                traceVerbose(
-                    `Cached data exists getEnvironmentVariables, ${resource ? resource.fsPath : '<No Resource>'}`,
-                );
                 return { ...cachedData };
             }
         }
