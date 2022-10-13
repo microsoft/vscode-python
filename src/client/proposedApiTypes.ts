@@ -277,6 +277,9 @@ export type ResolvedVersionInfo = {
     readonly release: PythonVersionRelease;
 };
 
+/**
+ * A record containing readonly keys.
+ */
 export type EnvironmentVariables = { readonly [key: string]: string | undefined };
 
 export type EnvironmentVariablesChangeEvent = {
@@ -285,7 +288,7 @@ export type EnvironmentVariablesChangeEvent = {
      */
     readonly resource: WorkspaceFolder | undefined;
     /**
-     * Updated environment variables.
+     * Updated value of environment variables.
      */
     readonly env: EnvironmentVariables;
 };
