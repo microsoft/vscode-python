@@ -17,7 +17,7 @@ import { InMemoryCache } from '../../common/utils/cacheUtils';
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterService } from '../contracts';
 import { IEnvironmentActivationService } from './types';
@@ -31,6 +31,7 @@ import {
     traceWarn,
 } from '../../logging';
 import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda';
+import { StopWatch } from '../../common/utils/stopWatch';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const CACHE_DURATION = 10 * 60 * 1000;
@@ -128,14 +129,15 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         this.disposables.forEach((d) => d.dispose());
     }
     @traceDecoratorVerbose('getActivatedEnvironmentVariables', TraceOptions.Arguments)
-    @captureTelemetry(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false }, true)
     public async getActivatedEnvironmentVariables(
         resource: Resource,
         interpreter?: PythonEnvironment,
         allowExceptions?: boolean,
     ): Promise<NodeJS.ProcessEnv | undefined> {
+        const stopWatch = new StopWatch();
         // Cache key = resource + interpreter.
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
+        interpreter = interpreter ?? (await this.interpreterService.getActiveInterpreter(resource));
         const interpreterPath = this.platform.isWindows ? interpreter?.path.toLowerCase() : interpreter?.path;
         const cacheKey = `${workspaceKey}_${interpreterPath}`;
 
@@ -145,11 +147,30 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
         // Cache only if successful, else keep trying & failing if necessary.
         const cache = new InMemoryCache<NodeJS.ProcessEnv | undefined>(CACHE_DURATION);
-        return this.getActivatedEnvironmentVariablesImpl(resource, interpreter, allowExceptions).then((vars) => {
-            cache.data = vars;
-            this.activatedEnvVariablesCache.set(cacheKey, cache);
-            return vars;
-        });
+        return this.getActivatedEnvironmentVariablesImpl(resource, interpreter, allowExceptions)
+            .then((vars) => {
+                cache.data = vars;
+                this.activatedEnvVariablesCache.set(cacheKey, cache);
+                sendTelemetryEvent(
+                    EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES,
+                    stopWatch.elapsedTime,
+                    { failed: false },
+                );
+                return vars;
+            })
+            .catch((ex) => {
+                let excString = (ex as Error).toString();
+                if (interpreter?.envName) {
+                    excString = excString.replaceAll(interpreter.envName, '<env name>');
+                }
+                sendTelemetryEvent(
+                    EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES,
+                    stopWatch.elapsedTime,
+                    { failed: true },
+                    new Error(excString),
+                );
+                throw ex;
+            });
     }
     public async getEnvironmentActivationShellCommands(
         resource: Resource,
@@ -176,7 +197,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             args.forEach((arg, i) => {
                 args[i] = arg.toCommandArgumentForPythonExt();
             });
-            interpreter = interpreter ?? (await this.interpreterService.getActiveInterpreter(resource));
             if (interpreter?.envType === EnvironmentType.Conda) {
                 const conda = await Conda.getConda();
                 const pythonArgv = await conda?.getRunPythonArgs({
