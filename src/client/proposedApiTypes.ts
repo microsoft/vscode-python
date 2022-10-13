@@ -59,6 +59,19 @@ export interface ProposedExtensionAPI {
         resolveEnvironment(
             environment: Environment | EnvironmentPath | string,
         ): Promise<ResolvedEnvironment | undefined>;
+        /**
+         * Returns the environment variables used by the extension for a resource, which includes the custom
+         * variables configured by user in `.env` files.
+         * @param resource : Uri of a file or workspace folder. This is used to determine the env in a multi-root
+         * scenario. If `undefined`, then the API returns what ever is set for the workspace.
+         */
+        getEnvironmentVariables(resource?: Resource): EnvironmentVariables;
+        /**
+         * This event is fired when the environment variables for a resource change. Note it's currently not
+         * possible to detect if environment variables in the system change, so this only fires if custom
+         * environment variables are updated in `.env` files.
+         */
+        readonly onDidEnvironmentVariablesChange: Event<EnvironmentVariablesChangeEvent>;
     };
 }
 
@@ -262,4 +275,13 @@ export type ResolvedVersionInfo = {
     readonly minor: number;
     readonly micro: number;
     readonly release: PythonVersionRelease;
+};
+
+export type EnvironmentVariables = { readonly [key: string]: string | undefined };
+
+export type EnvironmentVariablesChangeEvent = EnvironmentVariables & {
+    /**
+     * Workspace folder the environment variables changed for.
+     */
+    readonly resource: WorkspaceFolder | undefined;
 };
