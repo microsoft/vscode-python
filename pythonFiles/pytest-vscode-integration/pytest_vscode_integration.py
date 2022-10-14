@@ -108,7 +108,7 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
             # it is a nested folder structure and so new objects need to be created
             nested_folder_list = name.split("/")
             path_iterator = (
-                str(session.fspath) + "/" + "".join(nested_folder_list[0:-1])
+                str(session.fspath) + "/" + "/".join(nested_folder_list[0:-1])
             )
             for i in range(len(nested_folder_list) - 2, -1, -1):
                 folderName = nested_folder_list[i]
@@ -120,7 +120,7 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
                 folder_test_node["children"].append(prev_folder_test_node)
                 # increase iteration through path
                 prev_folder_test_node = folder_test_node
-                path_iterator = str(session.fspath) + "".join(nested_folder_list[0:i])
+                path_iterator = str(session.fspath) + "/".join(nested_folder_list[0:i])
 
         # the final folder we get to is the highest folder in the path and therefore we add this as a child to the session
         if (prev_folder_test_node != None) and (
