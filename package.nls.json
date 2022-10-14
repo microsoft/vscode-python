@@ -113,5 +113,7 @@
     "python.testing.unittestArgs.description": "Arguments passed in. Each argument is a separate item in the array.",
     "python.testing.unittestEnabled.description": "Enable testing using unittest.",
     "python.venvFolders.description": "Folders in your home directory to look into for virtual environments (supports pyenv, direnv and virtualenvwrapper by default).",
-    "python.venvPath.description": "Path to folder with a list of Virtual Environments (e.g. ~/.pyenv, ~/Envs, ~/.virtualenvs)."
+    "python.venvPath.description": "Path to folder with a list of Virtual Environments (e.g. ~/.pyenv, ~/Envs, ~/.virtualenvs).",
+    "python.sortImports.args.deprecationMessage": "This setting will be removed soon. Use `isort.args` instead.",
+    "python.sortImports.path.deprecationMessage": "This setting will be removed soon. Use `isort.path` instead."
 }

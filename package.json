@@ -934,13 +934,15 @@
                         "type": "string"
                     },
                     "scope": "resource",
-                    "type": "array"
+                    "type": "array",
+                    "deprecationMessage": "%python.sortImports.args.deprecationMessage%"
                 },
                 "python.sortImports.path": {
                     "default": "",
                     "description": "%python.sortImports.path.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "deprecationMessage": "%python.sortImports.path.deprecationMessage%"
                 },
                 "python.tensorBoard.logDirectory": {
                     "default": "",
