@@ -51,23 +51,6 @@ DEFAULT_PORT = "45454"
 # session
 #   test Case
 
-# def pytest_addoption(parser):
-#     group = parser.getgroup("vscode-integration")
-#     group.addoption(
-#         "--port",
-#         action="store",
-#         dest="port_arg",
-#         default="500",
-#         help="Get the port value to send back data to.",
-#     )
-
-
-# def pytest_configure(config):
-#     inputArgs = vars(config.option)
-#     port = inputArgs["port_arg"]
-#     print("portValue", port)
-
-
 def pytest_collection_finish(session):
     node, error = build_test_tree(session)
     cwd = os.getcwd()
@@ -76,7 +59,7 @@ def pytest_collection_finish(session):
 
 
 def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
-    errors: List[str] = []  # how do I check for errors
+    errors: List[str] = []  # TODO: how do I check for errors
     session_test_node = createSessionTestNode(session)
     testNode_file_dict: dict[
         pytest.Module, TestNode
@@ -84,20 +67,39 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
     session_children_dict: dict[
         str, TestNode
     ] = dict()  # a dictionary of all direct children of the session
+    testNode_class_dict: dict[
+        str, TestNode
+    ] = dict()  # a dictionary of all direct children of the session
     # iterate through all the test items in the session
     for test_case in session.items:
         testNode_test = createTestItem(test_case)
         # if the parent object file doesn't already exist
-        if (
-            test_case.parent not in testNode_file_dict.keys()
-            and type(test_case.parent) == pytest.Module
-        ):
-            testNode_file_dict[test_case.parent] = createFileTestNode(
-                test_case.parent, testNode_test
-            )
-        elif type(test_case.parent) != pytest.Module:
-            print("AAA", testNode_file_dict[test_case.parent].keys())
-            (testNode_file_dict[test_case.parent]).get("children").append(testNode_test)
+        if type(test_case.parent) == pytest.Module:
+            if test_case.parent not in testNode_file_dict.keys():
+                testNode_file_dict[test_case.parent] = createFileTestNode(
+                    test_case.parent, testNode_test
+                )
+            else:
+                (testNode_file_dict[test_case.parent]).get("children").append(
+                    testNode_test
+                )
+        else:
+            # this means its a unittest class
+            # create class
+            testNode_class = accessOrCreateClass(test_case.parent, testNode_class_dict)
+            testNode_class["children"].append(testNode_test)
+            parent_module = test_case.parent.parent
+            # create file that wraps class
+            if parent_module not in testNode_file_dict.keys():
+                testNode_file_dict[parent_module] = createFileTestNode(
+                    parent_module, testNode_class
+                )
+            else:
+                if testNode_class not in testNode_file_dict[parent_module]["children"]:
+                    (testNode_file_dict[parent_module]).get("children").append(
+                        testNode_class
+                    )
+
     created_filesfolder_dict: dict[str, TestNode] = {}
     for file_module, testNode_file in testNode_file_dict.items():
         name = str(file_module.name)
@@ -113,7 +115,6 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
                 folder_test_node = accessOrCreateFolder(
                     folderName,
                     created_filesfolder_dict,
-                    prev_folder_test_node,
                     path_iterator,
                 )
                 folder_test_node["children"].append(prev_folder_test_node)
@@ -153,6 +154,16 @@ def createTestItem(test_case) -> TestItem:
     }
 
 
+def createClassTestNode(class_module) -> TestNode:
+    return {
+        "name": class_module.name,
+        "path": str(class_module.fspath),
+        "type_": TestNodeTypeEnum.class_,
+        "children": [],
+        "id_": str(class_module._nodeid),
+    }
+
+
 def createFileTestNode(file_module, testNode_test) -> TestNode:
     return {
         "name": str(file_module.fspath.basename),
@@ -174,7 +185,7 @@ def createFolderTestNode(folderName, path_iterator) -> TestNode:
 
 
 def accessOrCreateFolder(
-    folderName, created_filesfolder_dict, prev_folder_test_node, path_iterator
+    folderName, created_filesfolder_dict, path_iterator
 ) -> TestNode:
     if folderName in created_filesfolder_dict.keys():  # exists in the dictionary
         return created_filesfolder_dict[folderName]
@@ -182,6 +193,16 @@ def accessOrCreateFolder(
         # create new
         temp = createFolderTestNode(folderName, path_iterator)
         created_filesfolder_dict[folderName] = temp
+        return temp
+
+
+def accessOrCreateClass(class_module, testNode_class_dict) -> TestNode:
+    if class_module.name in testNode_class_dict.keys():  # exists in the dictionary
+        return testNode_class_dict[class_module.name]
+    else:
+        # create new
+        temp = createClassTestNode(class_module)
+        testNode_class_dict[class_module.name] = temp
         return temp
 
 
