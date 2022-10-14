@@ -70,7 +70,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             const execService = await executionFactory.createActivatedEnvironment(creationOptions);
 
             try {
-                execService.exec(['-m', 'pytest', '--collect-only', '--port', '500'].concat(pytestArgs), spawnOptions);
+                execService.exec(['-m', 'pytest', '--collect-only'].concat(pytestArgs), spawnOptions);
             } catch (ex) {
                 console.error(ex);
             }
@@ -78,12 +78,3 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         return this.deferred.promise;
     }
 }
-
-// function buildDiscoveryCommand(script: string, args: string[]): TestDiscoveryCommand {
-//     const discoveryScript = script;
-
-//     return {
-//         script: discoveryScript,
-//         args: [...args],
-//     };
-// }
