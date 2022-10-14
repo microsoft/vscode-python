@@ -8,10 +8,8 @@ from dbm.ndbm import library
 from typing import KeysView, List, Literal, Optional, Tuple, TypedDict, Union
 from unittest import TestCase
 
-import debugpy
 import pytest
 
-debugpy.connect(5678)
 
 # Inherit from str so it's JSON serializable.
 class TestNodeTypeEnum(str, enum.Enum):
@@ -77,28 +75,21 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
         if type(test_case.parent) == pytest.Module:
             if test_case.parent not in testNode_file_dict.keys():
                 testNode_file_dict[test_case.parent] = createFileTestNode(
-                    test_case.parent, testNode_test
+                    test_case.parent
                 )
-            else:
-                (testNode_file_dict[test_case.parent]).get("children").append(
-                    testNode_test
-                )
+            testNode_file_dict[test_case.parent].get("children").append(testNode_test)
         else:
             # this means its a unittest class
             # create class
-            testNode_class = accessOrCreateClass(test_case.parent, testNode_class_dict)
+            testNode_class = accessOrCreateGeneral(
+                test_case.parent.name, testNode_class_dict, test_case.parent.fspath
+            )
             testNode_class["children"].append(testNode_test)
             parent_module = test_case.parent.parent
             # create file that wraps class
             if parent_module not in testNode_file_dict.keys():
-                testNode_file_dict[parent_module] = createFileTestNode(
-                    parent_module, testNode_class
-                )
-            else:
-                if testNode_class not in testNode_file_dict[parent_module]["children"]:
-                    (testNode_file_dict[parent_module]).get("children").append(
-                        testNode_class
-                    )
+                testNode_file_dict[parent_module] = createFileTestNode(parent_module)
+            testNode_file_dict[parent_module].get("children").append(testNode_class)
 
     created_filesfolder_dict: dict[str, TestNode] = {}
     for file_module, testNode_file in testNode_file_dict.items():
@@ -112,7 +103,7 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
             )
             for i in range(len(nested_folder_list) - 2, -1, -1):
                 folderName = nested_folder_list[i]
-                folder_test_node = accessOrCreateFolder(
+                folder_test_node = accessOrCreateGeneral(
                     folderName,
                     created_filesfolder_dict,
                     path_iterator,
@@ -133,44 +124,44 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
     return session_test_node, errors
 
 
-def createSessionTestNode(session) -> TestNode:
-    return {
-        "path": str(session.fspath),
-        "name": session.name,
-        "type_": TestNodeTypeEnum.folder,  # check if this is a file or a folder
-        "children": [],
-        "id_": str(session.fspath),
-    }
-
-
 def createTestItem(test_case) -> TestItem:
     return {
         "name": test_case.name,
         "path": str(test_case.fspath),
-        "lineno": test_case.location[1] + 1,  # idk worth a shot
+        "lineno": test_case.location[1] + 1,
         "type_": TestNodeTypeEnum.test,
         "id_": str(test_case.nodeid),
         "runID": test_case.nodeid,  # can I use this two times?
     }
 
 
-def createClassTestNode(class_module) -> TestNode:
+def createSessionTestNode(session) -> TestNode:
     return {
-        "name": class_module.name,
-        "path": str(class_module.fspath),
-        "type_": TestNodeTypeEnum.class_,
+        "name": session.name,
+        "path": str(session.fspath),
+        "type_": TestNodeTypeEnum.folder,  # check if this is a file or a folder
         "children": [],
-        "id_": str(class_module._nodeid),
+        "id_": str(session.fspath),
     }
 
 
-def createFileTestNode(file_module, testNode_test) -> TestNode:
+def createClassTestNode(class_module_name, class_module_path) -> TestNode:
+    return {
+        "name": class_module_name,
+        "path": str(class_module_path),
+        "type_": TestNodeTypeEnum.class_,
+        "children": [],
+        "id_": str(class_module_path),
+    }
+
+
+def createFileTestNode(file_module) -> TestNode:
     return {
         "name": str(file_module.fspath.basename),
         "path": str(file_module.fspath),
         "type_": TestNodeTypeEnum.file,
         "id_": str(file_module.fspath),
-        "children": [testNode_test],
+        "children": [],
     }
 
 
@@ -184,26 +175,24 @@ def createFolderTestNode(folderName, path_iterator) -> TestNode:
     }
 
 
-def accessOrCreateFolder(
-    folderName, created_filesfolder_dict, path_iterator
-) -> TestNode:
-    if folderName in created_filesfolder_dict.keys():  # exists in the dictionary
-        return created_filesfolder_dict[folderName]
+def accessOrCreateGeneral(test_node_name, test_node_dict, test_node_path) -> TestNode:
+    if test_node_name in test_node_dict.keys():  # exists in the dictionary
+        return test_node_dict[test_node_name]
     else:
         # create new
-        temp = createFolderTestNode(folderName, path_iterator)
-        created_filesfolder_dict[folderName] = temp
+        temp = createFolderTestNode(test_node_name, test_node_path)
+        test_node_dict[test_node_name] = temp
         return temp
 
 
-def accessOrCreateClass(class_module, testNode_class_dict) -> TestNode:
-    if class_module.name in testNode_class_dict.keys():  # exists in the dictionary
-        return testNode_class_dict[class_module.name]
-    else:
-        # create new
-        temp = createClassTestNode(class_module)
-        testNode_class_dict[class_module.name] = temp
-        return temp
+# def accessOrCreateClass(class_module, testNode_class_dict) -> TestNode:
+#     if class_module.name in testNode_class_dict.keys():  # exists in the dictionary
+#         return testNode_class_dict[class_module.name]
+#     else:
+#         # create new
+#         temp = createClassTestNode(class_module.name, class_module.fspath)
+#         testNode_class_dict[class_module.name] = temp
+#         return temp
 
 
 class PayloadDict(TypedDict):
