@@ -1,8 +1,5 @@
 PLEASE NOTE: This is the license for the Python extension for Visual Studio Code. The Python extension automatically installs other extensions as optional dependencies, which can be uninstalled at any time. These extensions have separate licenses:
 
- - The Jupyter extension is released under an MIT License:
-  https://marketplace.visualstudio.com/items/ms-toolsai.jupyter/license
-
  - The isort extension is released under an MIT License:
   https://marketplace.visualstudio.com/items/ms-python.isort/license
 

@@ -1,7 +1,7 @@
 {
     "name": "python",
     "displayName": "Python",
-    "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
+    "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), code formatting, refactoring, unit tests, and more.",
     "version": "2022.19.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
@@ -2002,5 +2002,9 @@
         "id": "f1f59ae4-9318-4f3c-a9b5-81b2eaa5f8a5",
         "publisherDisplayName": "Microsoft",
         "publisherId": "998b010b-e2af-44a5-a6cd-0b5fd3b9b6f8"
-    }
+    },
+    "extensionPack": [
+        "ms-python.vscode-pylance",
+        "ms-python.isort"
+    ]
 }
