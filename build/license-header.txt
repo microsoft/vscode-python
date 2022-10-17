@@ -3,6 +3,9 @@ PLEASE NOTE: This is the license for the Python extension for Visual Studio Code
  - The Jupyter extension is released under an MIT License:
   https://marketplace.visualstudio.com/items/ms-toolsai.jupyter/license
 
+ - The isort extension is released under an MIT License:
+  https://marketplace.visualstudio.com/items/ms-python.isort/license
+
  - The Pylance extension is only available in binary form and is released under a Microsoft proprietary license, the terms of which are available here:
   https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license
 
