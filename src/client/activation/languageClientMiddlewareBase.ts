@@ -441,7 +441,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
         if (await this.connected) {
             return this.callNextAndSendTelemetry(
                 'textDocument/foldingRange',
-                debounceRareCall,
+                debounceFrequentCall,
                 'provideFoldingRanges',
                 arguments,
             );
