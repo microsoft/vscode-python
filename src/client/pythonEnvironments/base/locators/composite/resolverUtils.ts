@@ -204,6 +204,7 @@ async function resolveCondaEnv(env: BasicEnvInfo, useCache?: boolean): Promise<P
     // Environment could still be valid, resolve as a simple env.
     env.kind = PythonEnvKind.Unknown;
     const envInfo = await resolveSimpleEnv(env);
+    envInfo.name = ''; // Ensures that conda gets called with a path and not a name
     envInfo.type = PythonEnvType.Conda;
     return envInfo;
 }
