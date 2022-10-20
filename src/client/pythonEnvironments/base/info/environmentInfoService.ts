@@ -170,7 +170,7 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
         const searchLocationPath = searchLocation.fsPath;
         const keys = Array.from(this.cache.keys());
         keys.forEach((key) => {
-            if (key.startsWith(searchLocationPath)) {
+            if (key.startsWith(normCasePath(searchLocationPath))) {
                 this.cache.delete(key);
             }
         });
