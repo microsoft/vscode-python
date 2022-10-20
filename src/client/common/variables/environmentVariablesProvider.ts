@@ -3,6 +3,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
+import { traceError } from '../../logging';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
 import { PythonSettings } from '../configSettings';
@@ -132,7 +133,11 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
             this.workspaceService,
         );
         const envFileSetting = this.workspaceService.getConfiguration('python', resource).get<string>('envFile');
-        const envFile = systemVariables.resolveAny(envFileSetting)!;
+        const envFile = systemVariables.resolveAny(envFileSetting);
+        if (!envFile) {
+            traceError('No env file setting found for resource', JSON.stringify(resource));
+            return '';
+        }
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
         this.createFileWatcher(envFile, workspaceFolderUri);
