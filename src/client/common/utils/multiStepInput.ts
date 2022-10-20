@@ -57,7 +57,7 @@ export interface IQuickPickParameters<T extends QuickPickItem, E = any> {
     /**
      * A method called only after quickpick has been created and all handlers are registered.
      */
-    initialize?: () => void;
+    initialize?: (quickPick: QuickPick<T>) => void;
     onChangeItem?: {
         callback: (event: E, quickPick: QuickPick<T>) => void;
         event: Event<E>;
@@ -152,7 +152,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         }
         // Quickpick should be initialized synchronously and on changed item handlers are registered synchronously.
         if (initialize) {
-            initialize();
+            initialize(input);
         }
         if (activeItem) {
             input.activeItems = [await activeItem];
