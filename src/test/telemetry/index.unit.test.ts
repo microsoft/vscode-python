@@ -166,7 +166,6 @@ suite('Telemetry', () => {
         const expectedProperties = {
             ...properties,
             errorName: error.name,
-            errorMessage: error.message,
             errorStack: error.stack,
         };
 
