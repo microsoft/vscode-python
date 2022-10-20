@@ -1160,7 +1160,7 @@ export interface IEventNamePropertyMapping {
         pythonVersion?: string;
     };
     /* __GDPR__
-       "python_interpreter_activation_environment_variables" : {
+       "python_interpreter.activation_environment_variables" : {
           "hasenvvars" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
           "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" }
        }
