@@ -15,7 +15,6 @@
     "python.command.testing.rerunFailedTests.title": "Rerun Failed Tests",
     "python.command.python.execSelectionInTerminal.title": "Run Selection/Line in Python Terminal",
     "python.command.python.execSelectionInDjangoShell.title": "Run Selection/Line in Django Shell",
-    "python.command.python.goToPythonObject.title": "Go to Python Object",
     "python.command.python.reportIssue.title": "Report Issue...",
     "python.command.python.setLinter.title": "Select Linter",
     "python.command.python.enableLinting.title": "Enable/Disable Linting",

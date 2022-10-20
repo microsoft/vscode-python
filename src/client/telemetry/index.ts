@@ -150,7 +150,6 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     if (ex) {
         const errorProps = {
             errorName: ex.name,
-            errorMessage: ex.message,
             errorStack: ex.stack ?? '',
         };
         Object.assign(customProperties, errorProps);

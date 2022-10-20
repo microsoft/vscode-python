@@ -194,7 +194,6 @@ function sendTelemetryEventBrowser(
     if (ex) {
         const errorProps = {
             errorName: ex.name,
-            errorMessage: ex.message,
             errorStack: ex.stack ?? '',
         };
         Object.assign(customProperties, errorProps);
