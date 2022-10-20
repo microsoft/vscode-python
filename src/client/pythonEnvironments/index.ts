@@ -38,17 +38,15 @@ import { IDisposable } from '../common/types';
  * Set up the Python environments component (during extension activation).'
  */
 export async function initialize(ext: ExtensionState): Promise<IDiscoveryAPI> {
-    const api = await createPythonEnvironments(() => createLocator(ext));
-
-    // Any other initialization goes here.
-
+    // Set up the legacy IOC container before api is created.
     initializeLegacyExternalDependencies(ext.legacyIOC.serviceContainer);
+
+    const api = await createPythonEnvironments(() => createLocator(ext));
     registerNewDiscoveryForIOC(
         // These are what get wrapped in the legacy adapter.
         ext.legacyIOC.serviceManager,
         api,
     );
-
     return api;
 }
 

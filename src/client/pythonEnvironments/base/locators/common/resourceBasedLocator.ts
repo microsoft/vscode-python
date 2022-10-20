@@ -125,7 +125,7 @@ export abstract class LazyResourceBasedLocator extends Locator<BasicEnvInfo> imp
         this.watchersReady = createDeferred<void>();
 
         // Don't create any file watchers in a virtual workspace.
-        if (!(await isVirtualWorkspace())) {
+        if (!isVirtualWorkspace()) {
             await this.initWatchers().catch((ex) => {
                 traceError(ex);
                 this.watchersReady?.reject(ex);

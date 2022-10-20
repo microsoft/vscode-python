@@ -30,7 +30,7 @@ export async function exec(file: string, args: string[], options: SpawnOptions =
 
 // Workspace
 
-export async function isVirtualWorkspace(): Promise<boolean> {
+export function isVirtualWorkspace(): boolean {
     const service = internalServiceContainer.get<IWorkspaceService>(IWorkspaceService);
     return service.isVirtualWorkspace;
 }
