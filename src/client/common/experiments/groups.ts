@@ -2,3 +2,7 @@
 export enum ShowExtensionSurveyPrompt {
     experiment = 'pythonSurveyNotification',
 }
+
+export enum ShowToolsExtensionPrompt {
+    experiment = 'pythonPromptNewToolsExt',
+}

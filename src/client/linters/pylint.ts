@@ -5,8 +5,10 @@ import { CancellationToken, TextDocument } from 'vscode';
 import '../common/extensions';
 import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { traceError } from '../logging';
+import { traceError, traceLog } from '../logging';
 import { BaseLinter } from './baseLinter';
+import { PylintExtensionPrompt } from './prompts/pylintPrompt';
+import { IToolsExtensionPrompt } from './prompts/types';
 import { ILintMessage } from './types';
 
 interface IJsonMessage {
@@ -20,11 +22,19 @@ interface IJsonMessage {
 }
 
 export class Pylint extends BaseLinter {
+    private readonly prompt: IToolsExtensionPrompt;
+
     constructor(serviceContainer: IServiceContainer) {
         super(Product.pylint, serviceContainer);
+        this.prompt = new PylintExtensionPrompt(serviceContainer);
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
+        if (await this.prompt.showPrompt()) {
+            traceLog('LINTING: Skipping linting from Python extension, since Pylint extension is installed.');
+            return [];
+        }
+
         const { uri } = document;
         const settings = this.configService.getSettings(uri);
         const args = [uri.fsPath];
