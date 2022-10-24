@@ -5,6 +5,7 @@
 
 import * as assert from 'assert';
 import * as os from 'os';
+import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, TextDocument, TextLine } from 'vscode';
 import { Product } from '../../client/common/installer/productInstaller';
@@ -16,8 +17,9 @@ import {
     IPythonExecutionService,
     IPythonToolExecutionService,
 } from '../../client/common/process/types';
-import { ProductType } from '../../client/common/types';
+import { IPersistentState, ProductType } from '../../client/common/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
+import * as promptApis from '../../client/linters/prompts/common';
 import { ILintMessage, LintMessageSeverity } from '../../client/linters/types';
 import {
     BaseTestFixture,
@@ -653,6 +655,24 @@ class TestFixture extends BaseTestFixture {
 suite('Linting Scenarios', () => {
     // Note that these aren't actually unit tests.  Instead they are
     // integration tests with heavy usage of mocks.
+
+    let isExtensionInstalledStub: sinon.SinonStub;
+    let doNotShowPromptStateStub: sinon.SinonStub;
+    let persistentState: TypeMoq.IMock<IPersistentState<boolean>>;
+    setup(() => {
+        isExtensionInstalledStub = sinon.stub(promptApis, 'isExtensionInstalled');
+        // For these tests we assume that linter extensions are not installed.
+        isExtensionInstalledStub.returns(false);
+
+        persistentState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+        persistentState.setup((p) => p.value).returns(() => true);
+        doNotShowPromptStateStub = sinon.stub(promptApis, 'doNotShowPromptState');
+        doNotShowPromptStateStub.returns(persistentState.object);
+    });
+
+    teardown(() => {
+        sinon.restore();
+    });
 
     test('No linting with PyLint (enabled) when disabled at top-level', async () => {
         const product = Product.pylint;
