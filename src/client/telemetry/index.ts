@@ -971,7 +971,7 @@ export interface IEventNamePropertyMapping {
          */
         installer: string;
         /**
-         * The name of the installer required (expected to be available) for installation of pacakges. (pipenv, Conda etc.)
+         * The name of the installer required (expected to be available) for installation of packages. (pipenv, Conda etc.)
          */
         requiredInstaller?: string;
         /**
@@ -2054,7 +2054,7 @@ export interface IEventNamePropertyMapping {
         using: 'pipUpgrade' | 'requirements.txt' | 'pyproject.toml' | 'environment.yml';
     };
     /**
-     * Telemetry event sent a linter or formatter extensoin is already installed.
+     * Telemetry event sent when a linter or formatter extension is already installed.
      */
     /* __GDPR__
        "tools_extensions.already_installed" : {
@@ -2076,7 +2076,7 @@ export interface IEventNamePropertyMapping {
         extensionId: 'ms-python.pylint' | 'ms-python.flake8';
     };
     /**
-     * Telemetry event sent when install linter or formatter extension prompt is shown.
+     * Telemetry event sent when clicking to install linter or formatter extension from the suggestion prompt.
      */
     /* __GDPR__
        "tools_extensions.install_selected" : {
@@ -2087,7 +2087,7 @@ export interface IEventNamePropertyMapping {
         extensionId: 'ms-python.pylint' | 'ms-python.flake8';
     };
     /**
-     * Telemetry event sent when install linter or formatter extension prompt is shown.
+     * Telemetry event sent when dismissing prompt suggesting to install the linter or formatter extension.
      */
     /* __GDPR__
        "tools_extensions.prompt_dismissed" : {

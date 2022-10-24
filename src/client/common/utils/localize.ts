@@ -627,6 +627,6 @@ export namespace ToolsExtensions {
         'toolsExt.pylint.message',
         'Use the Pylint extension to enable easier configuration and new features such as quick fixes.',
     );
-    export const installPylintExtension = localize('toolsExt.install.pylint', 'Install Pylint Extension');
-    export const installFlake8Extension = localize('toolsExt.install.flake8', 'Install Flake8 Extension');
+    export const installPylintExtension = localize('toolsExt.install.pylint', 'Install Pylint extension');
+    export const installFlake8Extension = localize('toolsExt.install.flake8', 'Install Flake8 extension');
 }
