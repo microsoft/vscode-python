@@ -4,18 +4,14 @@ import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { traceLog } from '../logging';
 import { BaseLinter } from './baseLinter';
-import { Flake8ExtensionPrompt } from './prompts/flake8Prompt';
 import { IToolsExtensionPrompt } from './prompts/types';
 import { ILintMessage } from './types';
 
 const COLUMN_OFF_SET = 1;
 
 export class Flake8 extends BaseLinter {
-    private readonly prompt: IToolsExtensionPrompt;
-
-    constructor(serviceContainer: IServiceContainer) {
+    constructor(serviceContainer: IServiceContainer, private readonly prompt: IToolsExtensionPrompt) {
         super(Product.flake8, serviceContainer, COLUMN_OFF_SET);
-        this.prompt = new Flake8ExtensionPrompt(serviceContainer);
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {

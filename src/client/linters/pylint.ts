@@ -7,7 +7,6 @@ import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { traceError, traceLog } from '../logging';
 import { BaseLinter } from './baseLinter';
-import { PylintExtensionPrompt } from './prompts/pylintPrompt';
 import { IToolsExtensionPrompt } from './prompts/types';
 import { ILintMessage } from './types';
 
@@ -22,11 +21,8 @@ interface IJsonMessage {
 }
 
 export class Pylint extends BaseLinter {
-    private readonly prompt: IToolsExtensionPrompt;
-
-    constructor(serviceContainer: IServiceContainer) {
+    constructor(serviceContainer: IServiceContainer, private readonly prompt: IToolsExtensionPrompt) {
         super(Product.pylint, serviceContainer);
-        this.prompt = new PylintExtensionPrompt(serviceContainer);
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {

@@ -13,6 +13,8 @@ import { Bandit } from './bandit';
 import { Flake8 } from './flake8';
 import { LinterInfo } from './linterInfo';
 import { MyPy } from './mypy';
+import { Flake8ExtensionPrompt } from './prompts/flake8Prompt';
+import { PylintExtensionPrompt } from './prompts/pylintPrompt';
 import { Prospector } from './prospector';
 import { Pycodestyle } from './pycodestyle';
 import { PyDocStyle } from './pydocstyle';
@@ -110,9 +112,9 @@ export class LinterManager implements ILinterManager {
             case Product.bandit:
                 return new Bandit(serviceContainer);
             case Product.flake8:
-                return new Flake8(serviceContainer);
+                return new Flake8(serviceContainer, new Flake8ExtensionPrompt(serviceContainer));
             case Product.pylint:
-                return new Pylint(serviceContainer);
+                return new Pylint(serviceContainer, new PylintExtensionPrompt(serviceContainer));
             case Product.mypy:
                 return new MyPy(serviceContainer);
             case Product.prospector:
