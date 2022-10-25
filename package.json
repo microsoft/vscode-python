@@ -323,11 +323,6 @@
             },
             {
                 "category": "Python",
-                "command": "python.goToPythonObject",
-                "title": "%python.command.python.goToPythonObject.title%"
-            },
-            {
-                "category": "Python",
                 "command": "python.launchTensorBoard",
                 "title": "%python.command.python.launchTensorBoard.title%"
             },
