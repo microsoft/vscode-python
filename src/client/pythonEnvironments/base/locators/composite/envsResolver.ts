@@ -37,7 +37,14 @@ export class PythonEnvsResolver implements IResolvingLocator {
     constructor(
         private readonly parentLocator: ICompositeLocator<BasicEnvInfo>,
         private readonly environmentInfoService: IEnvironmentInfoService,
-    ) {}
+    ) {
+        this.parentLocator.onChanged((event) => {
+            if (event.type && event.searchLocation !== undefined) {
+                // We detect an environment changed, reset any stored info for it so it can be re-run.
+                this.environmentInfoService.resetInfo(event.searchLocation);
+            }
+        });
+    }
 
     public async resolveEnv(path: string): Promise<PythonEnvInfo | undefined> {
         const [executablePath, envPath] = await getExecutablePathAndEnvPath(path);

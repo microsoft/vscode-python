@@ -141,7 +141,7 @@ suite('Linting - Arguments', () => {
                         expect(invoked).to.be.equal(true, 'method not invoked');
                     }
                     test('Flake8', async () => {
-                        const linter = new Flake8(serviceContainer);
+                        const linter = new Flake8(serviceContainer, { showPrompt: () => Promise.resolve(false) });
                         const expectedArgs = [fileUri.fsPath];
                         await testLinter(linter, expectedArgs);
                     });
@@ -174,7 +174,7 @@ suite('Linting - Arguments', () => {
                         await testLinter(linter, expectedArgs);
                     });
                     test('Pylint', async () => {
-                        const linter = new Pylint(serviceContainer);
+                        const linter = new Pylint(serviceContainer, { showPrompt: () => Promise.resolve(false) });
                         const expectedArgs = [fileUri.fsPath];
                         await testLinter(linter, expectedArgs);
                     });

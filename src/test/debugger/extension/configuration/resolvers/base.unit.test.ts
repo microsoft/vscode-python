@@ -5,21 +5,19 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { DebugConfiguration, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { DocumentManager } from '../../../../../client/common/application/documentManager';
-import { IDocumentManager, IWorkspaceService } from '../../../../../client/common/application/types';
-import { WorkspaceService } from '../../../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../../../client/common/configuration/service';
 import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
-import { PlatformService } from '../../../../../client/common/platform/platformService';
-import { IPlatformService } from '../../../../../client/common/platform/types';
 import { IConfigurationService } from '../../../../../client/common/types';
 import { BaseConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/base';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterService } from '../../../../../client/interpreter/contracts';
+import * as workspaceFolder from '../../../../../client/debugger/extension/configuration/utils/workspaceFolder';
+import * as common from '../../../../../client/debugger/extension/configuration/utils/common';
 
 suite('Debugging - Config Resolver', () => {
     class BaseResolver extends BaseConfigurationResolver<AttachRequestArguments | LaunchRequestArguments> {
@@ -71,26 +69,23 @@ suite('Debugging - Config Resolver', () => {
         }
     }
     let resolver: BaseResolver;
-    let workspaceService: IWorkspaceService;
-    let platformService: IPlatformService;
-    let documentManager: IDocumentManager;
     let configurationService: IConfigurationService;
     let interpreterService: IInterpreterService;
+    let getWorkspaceFoldersStub: sinon.SinonStub;
+    let workspaceStub: sinon.SinonStub;
+    let getActiveTextEditorStub: sinon.SinonStub;
+
     setup(() => {
-        workspaceService = mock(WorkspaceService);
-        documentManager = mock(DocumentManager);
-        platformService = mock(PlatformService);
         configurationService = mock(ConfigurationService);
         interpreterService = mock<IInterpreterService>();
-        resolver = new BaseResolver(
-            instance(workspaceService),
-            instance(documentManager),
-            instance(platformService),
-            instance(configurationService),
-            instance(interpreterService),
-        );
+        resolver = new BaseResolver(instance(configurationService), instance(interpreterService));
+        getWorkspaceFoldersStub = sinon.stub(workspaceFolder, 'getWorkspaceFolders');
+        workspaceStub = sinon.stub(workspaceFolder, 'getWorkspaceFolder');
+        getActiveTextEditorStub = sinon.stub(common, 'getActiveTextEditor');
     });
-
+    teardown(() => {
+        sinon.restore();
+    });
     test('Program should return filepath of active editor if file is python', () => {
         const expectedFileName = 'my.py';
         const editor = typemoq.Mock.ofType<TextEditor>();
@@ -106,7 +101,7 @@ suite('Debugging - Config Resolver', () => {
         doc.setup((d) => d.fileName)
             .returns(() => expectedFileName)
             .verifiable(typemoq.Times.once());
-        when(documentManager.activeTextEditor).thenReturn(editor.object);
+        getActiveTextEditorStub.returns(editor.object);
 
         const program = resolver.getProgram();
 
@@ -123,14 +118,14 @@ suite('Debugging - Config Resolver', () => {
         doc.setup((d) => d.languageId)
             .returns(() => 'C#')
             .verifiable(typemoq.Times.once());
-        when(documentManager.activeTextEditor).thenReturn(editor.object);
+        getActiveTextEditorStub.returns(editor.object);
 
         const program = resolver.getProgram();
 
         expect(program).to.be.equal(undefined, 'Not undefined');
     });
     test('Program should return undefined if there is no active editor', () => {
-        when(documentManager.activeTextEditor).thenReturn(undefined);
+        getActiveTextEditorStub.returns(undefined);
 
         const program = resolver.getProgram();
 
@@ -155,7 +150,7 @@ suite('Debugging - Config Resolver', () => {
             const programPath = path.join('one', 'two', 'three.xyz');
 
             resolver.getProgram = () => programPath;
-            when(workspaceService.workspaceFolders).thenReturn(item.workspaceFolders);
+            getWorkspaceFoldersStub.returns(item.workspaceFolders);
 
             const uri = resolver.getWorkspaceFolder(undefined);
 
@@ -168,7 +163,10 @@ suite('Debugging - Config Resolver', () => {
         const folders: WorkspaceFolder[] = [folder];
 
         resolver.getProgram = () => undefined;
-        when(workspaceService.workspaceFolders).thenReturn(folders);
+
+        workspaceStub.returns(folder);
+
+        getWorkspaceFoldersStub.returns(folders);
 
         const uri = resolver.getWorkspaceFolder(undefined);
 
@@ -181,8 +179,9 @@ suite('Debugging - Config Resolver', () => {
         const folders: WorkspaceFolder[] = [folder1, folder2];
 
         resolver.getProgram = () => programPath;
-        when(workspaceService.workspaceFolders).thenReturn(folders);
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(folder2);
+        getWorkspaceFoldersStub.returns(folders);
+
+        workspaceStub.returns(folder2);
 
         const uri = resolver.getWorkspaceFolder(undefined);
 
@@ -195,8 +194,9 @@ suite('Debugging - Config Resolver', () => {
         const folders: WorkspaceFolder[] = [folder1, folder2];
 
         resolver.getProgram = () => programPath;
-        when(workspaceService.workspaceFolders).thenReturn(folders);
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
+        getWorkspaceFoldersStub.returns(folders);
+
+        workspaceStub.returns(undefined);
 
         const uri = resolver.getWorkspaceFolder(undefined);
 

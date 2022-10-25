@@ -3,27 +3,14 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
-import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
-import { IPlatformService } from '../../../../common/platform/types';
-import { IConfigurationService } from '../../../../common/types';
-import { IInterpreterService } from '../../../../interpreter/contracts';
+import { getOSType, OSType } from '../../../../common/utils/platform';
 import { AttachRequestArguments, DebugOptions, PathMapping } from '../../../types';
 import { BaseConfigurationResolver } from './base';
 
 @injectable()
 export class AttachConfigurationResolver extends BaseConfigurationResolver<AttachRequestArguments> {
-    constructor(
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IPlatformService) platformService: IPlatformService,
-        @inject(IConfigurationService) configurationService: IConfigurationService,
-        @inject(IInterpreterService) interpreterService: IInterpreterService,
-    ) {
-        super(workspaceService, documentManager, platformService, configurationService, interpreterService);
-    }
-
     public async resolveDebugConfigurationWithSubstitutedVariables(
         folder: WorkspaceFolder | undefined,
         debugConfiguration: AttachRequestArguments,
@@ -87,10 +74,10 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         // We'll need paths to be fixed only in the case where local and remote hosts are the same
         // I.e. only if hostName === 'localhost' or '127.0.0.1' or ''
         const isLocalHost = this.isLocalHost(debugConfiguration.host);
-        if (this.platformService.isWindows && isLocalHost) {
+        if (getOSType() == OSType.Windows && isLocalHost) {
             this.debugOption(debugOptions, DebugOptions.FixFilePathCase);
         }
-        if (this.platformService.isWindows) {
+        if (getOSType() == OSType.Windows) {
             this.debugOption(debugOptions, DebugOptions.WindowsClient);
         } else {
             this.debugOption(debugOptions, DebugOptions.UnixClient);

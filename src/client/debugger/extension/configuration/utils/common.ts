@@ -6,7 +6,7 @@
 
 'use strict';
 
-import { WorkspaceFolder } from 'vscode';
+import { WorkspaceFolder, window, TextEditor } from 'vscode';
 import { getWorkspaceFolder } from './workspaceFolder';
 
 /**
@@ -21,20 +21,28 @@ function isString(str: any): str is string {
 }
 
 export function resolveVariables(
-    value: string,
+    value: string | undefined,
     rootFolder: string | undefined,
     folder: WorkspaceFolder | undefined,
-): string {
-    const workspace = folder ? getWorkspaceFolder(folder.uri) : undefined;
-    const variablesObject: { [key: string]: any } = {};
-    variablesObject.workspaceFolder = workspace ? workspace.uri.fsPath : rootFolder;
+): string | undefined {
+    if (value) {
+        const workspace = folder ? getWorkspaceFolder(folder.uri) : undefined;
+        const variablesObject: { [key: string]: any } = {};
+        variablesObject.workspaceFolder = workspace ? workspace.uri.fsPath : rootFolder;
 
-    const regexp = /\$\{(.*?)\}/g;
-    return value.replace(regexp, (match: string, name: string) => {
-        const newValue = variablesObject[name];
-        if (isString(newValue)) {
-            return newValue;
-        }
-        return match && (match.indexOf('env.') > 0 || match.indexOf('env:') > 0) ? '' : match;
-    });
+        const regexp = /\$\{(.*?)\}/g;
+        return value.replace(regexp, (match: string, name: string) => {
+            const newValue = variablesObject[name];
+            if (isString(newValue)) {
+                return newValue;
+            }
+            return match && (match.indexOf('env.') > 0 || match.indexOf('env:') > 0) ? '' : match;
+        });
+    }
+    return value;
+}
+
+export function getActiveTextEditor(): TextEditor | undefined {
+    const { activeTextEditor } = window;
+    return activeTextEditor;
 }

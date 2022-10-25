@@ -150,7 +150,6 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     if (ex) {
         const errorProps = {
             errorName: ex.name,
-            errorMessage: ex.message,
             errorStack: ex.stack ?? '',
         };
         Object.assign(customProperties, errorProps);
@@ -971,7 +970,7 @@ export interface IEventNamePropertyMapping {
          */
         installer: string;
         /**
-         * The name of the installer required (expected to be available) for installation of pacakges. (pipenv, Conda etc.)
+         * The name of the installer required (expected to be available) for installation of packages. (pipenv, Conda etc.)
          */
         requiredInstaller?: string;
         /**
@@ -2059,6 +2058,52 @@ export interface IEventNamePropertyMapping {
     [EventName.ENVIRONMENT_INSTALLING_PACKAGES_FAILED]: {
         environmentType: 'venv' | 'conda';
         using: 'pipUpgrade' | 'requirements.txt' | 'pyproject.toml' | 'environment.yml';
+    };
+    /**
+     * Telemetry event sent when a linter or formatter extension is already installed.
+     */
+    /* __GDPR__
+       "tools_extensions.already_installed" : {
+          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.TOOLS_EXTENSIONS_ALREADY_INSTALLED]: {
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+    };
+    /**
+     * Telemetry event sent when install linter or formatter extension prompt is shown.
+     */
+    /* __GDPR__
+       "tools_extensions.prompt_shown" : {
+          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.TOOLS_EXTENSIONS_PROMPT_SHOWN]: {
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+    };
+    /**
+     * Telemetry event sent when clicking to install linter or formatter extension from the suggestion prompt.
+     */
+    /* __GDPR__
+       "tools_extensions.install_selected" : {
+          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.TOOLS_EXTENSIONS_INSTALL_SELECTED]: {
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+    };
+    /**
+     * Telemetry event sent when dismissing prompt suggesting to install the linter or formatter extension.
+     */
+    /* __GDPR__
+       "tools_extensions.prompt_dismissed" : {
+          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "dismissType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.TOOLS_EXTENSIONS_PROMPT_DISMISSED]: {
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+        dismissType: 'close' | 'doNotShow';
     };
     /* __GDPR__
             "query-expfeature" : {

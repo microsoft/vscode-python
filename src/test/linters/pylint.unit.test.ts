@@ -10,6 +10,7 @@ import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
+import { IToolsExtensionPrompt } from '../../client/linters/prompts/types';
 import { Pylint } from '../../client/linters/pylint';
 import { ILinterInfo, ILinterManager, ILintMessage, LinterId, LintMessageSeverity } from '../../client/linters/types';
 
@@ -23,6 +24,7 @@ suite('Pylint - Function runLinter()', () => {
     let platformService: TypeMoq.IMock<IPlatformService>;
     let run: sinon.SinonStub;
     let parseMessagesSeverity: sinon.SinonStub;
+    let extensionPrompt: TypeMoq.IMock<IToolsExtensionPrompt>;
     const doc = {
         uri: vscode.Uri.file('path/to/doc'),
     };
@@ -93,6 +95,8 @@ suite('Pylint - Function runLinter()', () => {
             .returns((a, b) => a === b);
         manager.setup((m) => m.getLinterInfo(TypeMoq.It.isAny())).returns(() => (undefined as unknown) as ILinterInfo);
         _info.setup((x) => x.id).returns(() => LinterId.PyLint);
+        extensionPrompt = TypeMoq.Mock.ofType<IToolsExtensionPrompt>();
+        extensionPrompt.setup((e) => e.showPrompt()).returns(() => Promise.resolve(false));
     });
 
     teardown(() => {
@@ -111,7 +115,7 @@ suite('Pylint - Function runLinter()', () => {
         run.callsFake(() => Promise.resolve([]));
         parseMessagesSeverity = sinon.stub(PylintTest.prototype, 'parseMessagesSeverity');
         parseMessagesSeverity.callsFake(() => 'Severity');
-        const pylint = new PylintTest(serviceContainer.object);
+        const pylint = new PylintTest(serviceContainer.object, extensionPrompt.object);
         await pylint.runLinter(doc as vscode.TextDocument, mock(vscode.CancellationTokenSource).token);
         assert.deepEqual(run.args[0][0], args);
         assert.ok(parseMessagesSeverity.notCalled);
@@ -141,7 +145,7 @@ suite('Pylint - Function runLinter()', () => {
         run.callsFake(() => Promise.resolve(message));
         parseMessagesSeverity = sinon.stub(PylintTest.prototype, 'parseMessagesSeverity');
         parseMessagesSeverity.callsFake(() => 'LintMessageSeverity');
-        const pylint = new PylintTest(serviceContainer.object);
+        const pylint = new PylintTest(serviceContainer.object, extensionPrompt.object);
         const result = await pylint.runLinter(doc as vscode.TextDocument, mock(vscode.CancellationTokenSource).token);
         assert.deepEqual(result, (expectedResult as unknown) as ILintMessage[]);
         assert.ok(parseMessagesSeverity.calledOnce);
@@ -182,7 +186,7 @@ suite('Pylint - Function runLinter()', () => {
             },
         };
         configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as IPythonSettings);
-        const pylint = new PylintTest(serviceContainer.object);
+        const pylint = new PylintTest(serviceContainer.object, extensionPrompt.object);
         const result = await pylint.parseMessages(
             jsonOutput,
             doc as vscode.TextDocument,
@@ -225,7 +229,7 @@ suite('Pylint - Function runLinter()', () => {
             },
         };
         configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as IPythonSettings);
-        const pylint = new PylintTest(serviceContainer.object);
+        const pylint = new PylintTest(serviceContainer.object, extensionPrompt.object);
         const result = await pylint.parseMessages(
             jsonOutput,
             doc as vscode.TextDocument,
@@ -271,7 +275,7 @@ suite('Pylint - Function runLinter()', () => {
             },
         };
         configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as IPythonSettings);
-        const pylint = new PylintTest(serviceContainer.object);
+        const pylint = new PylintTest(serviceContainer.object, extensionPrompt.object);
         const result = await pylint.parseMessages(
             jsonOutput,
             doc as vscode.TextDocument,

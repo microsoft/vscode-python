@@ -52,12 +52,15 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
             (options.middleware ? (<JediLanguageClientMiddleware>options.middleware).serverVersion : undefined) ??
             '0.19.3';
 
-        const client = await this.factory.createLanguageClient(resource, interpreter, options);
-        this.registerHandlers(client);
-
-        await client.start();
-
-        this.languageClient = client;
+        try {
+            const client = await this.factory.createLanguageClient(resource, interpreter, options);
+            this.registerHandlers(client);
+            await client.start();
+            this.languageClient = client;
+        } catch (ex) {
+            traceError('Failed to start language server:', ex);
+            throw new Error('Launching Jedi language server using python failed, see output.');
+        }
     }
 
     @traceDecoratorVerbose('Stopping language server')

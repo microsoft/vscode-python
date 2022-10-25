@@ -159,15 +159,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 return vars;
             })
             .catch((ex) => {
-                let excString = (ex as Error).toString();
-                if (interpreter?.envName) {
-                    excString = excString.replaceAll(interpreter.envName, '<env name>');
-                }
                 sendTelemetryEvent(
                     EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES,
                     stopWatch.elapsedTime,
                     { failed: true },
-                    new Error(excString),
                 );
                 throw ex;
             });

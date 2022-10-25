@@ -411,11 +411,6 @@
             },
             {
                 "category": "Python",
-                "command": "python.goToPythonObject",
-                "title": "%python.command.python.goToPythonObject.title%"
-            },
-            {
-                "category": "Python",
                 "command": "python.launchTensorBoard",
                 "title": "%python.command.python.launchTensorBoard.title%"
             },
@@ -522,7 +517,8 @@
                     "items": {
                         "enum": [
                             "All",
-                            "pythonSurveyNotification"
+                            "pythonSurveyNotification",
+                            "pythonPromptNewToolsExt"
                         ]
                     },
                     "scope": "machine",
@@ -534,7 +530,8 @@
                     "items": {
                         "enum": [
                             "All",
-                            "pythonSurveyNotification"
+                            "pythonSurveyNotification",
+                            "pythonPromptNewToolsExt"
                         ]
                     },
                     "scope": "machine",
@@ -1691,12 +1688,6 @@
                     "category": "Python",
                     "command": "python.execSelectionInTerminal",
                     "title": "%python.command.python.execSelectionInTerminal.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "category": "Python",
-                    "command": "python.goToPythonObject",
-                    "title": "%python.command.python.goToPythonObject.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported"
                 },
                 {
