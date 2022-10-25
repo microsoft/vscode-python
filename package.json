@@ -150,7 +150,7 @@
                         "title": "Select a Python Interpreter",
                         "description": "Choose which Python interpreter/environment you want to use for your Python project.\n[Select Python Interpreter](command:python.setInterpreter)\n**Tip**: Run the ``Python: Select Interpreter`` command in the [Command Palette](command:workbench.action.showCommands).",
                         "media": {
-                            "svg": "resources/walkthrough/python-interpreter-v2.svg",
+                            "svg": "resources/walkthrough/python-interpreter.svg",
                             "altText": "Selecting a python interpreter from the status bar"
                         },
                         "when": ""
