@@ -151,7 +151,7 @@
                         "title": "Select a Python Interpreter",
                         "description": "Choose which Python interpreter/environment you want to use for your Python project.\n[Select Python Interpreter](command:python.setInterpreter)\n**Tip**: Run the ``Python: Select Interpreter`` command in the [Command Palette](command:workbench.action.showCommands).",
                         "media": {
-                            "svg": "resources/walkthrough/python-interpreter-v2.svg",
+                            "svg": "resources/walkthrough/python-interpreter.svg",
                             "altText": "Selecting a python interpreter from the status bar"
                         },
                         "when": ""
@@ -226,9 +226,9 @@
                     {
                         "id": "python.createEnvironment",
                         "title": "Create a Python Environment ",
-                        "description": "Create an environment for your Python project.\n[Create Environment](command:python.createEnvironment)\n**Tip**: Run the ``Python: Create Environment`` command in the [Command Palette](command:workbench.action.showCommands).\n 🔍 Check out our [docs]() to learn more.",
+                        "description": "Create an environment for your Python project.\n[Create Environment](command:python.createEnvironment)\n**Tip**: Run the ``Python: Create Environment`` command in the [Command Palette](command:workbench.action.showCommands).\n 🔍 Check out our [docs](https://aka.ms/pythonenvs) to learn more.",
                         "media": {
-                            "svg": "resources/walkthrough/python-interpreter-v2.svg",
+                            "svg": "resources/walkthrough/create-environment.svg",
                             "altText": "Creating a Python environment from the status bar"
                         },
                         "when": "workspaceFolderCount > 0"
@@ -238,7 +238,7 @@
                         "title": "Select a Python Interpreter",
                         "description": "Choose which Python interpreter/environment you want to use for your Python project.\n[Select Python Interpreter](command:python.setInterpreter)\n**Tip**: Run the ``Python: Select Interpreter`` command in the [Command Palette](command:workbench.action.showCommands).",
                         "media": {
-                            "svg": "resources/walkthrough/python-interpreter-v2.svg",
+                            "svg": "resources/walkthrough/python-interpreter.svg",
                             "altText": "Selecting a python interpreter from the status bar"
                         },
                         "when": "workspaceFolderCount == 0"
