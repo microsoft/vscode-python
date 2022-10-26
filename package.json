@@ -234,7 +234,7 @@
                         "when": "workspaceFolderCount > 0"
                     },
                     {
-                        "id": "python.selectInterpreter",
+                        "id": "python.selectInterpreter2",
                         "title": "Select a Python Interpreter",
                         "description": "Choose which Python interpreter/environment you want to use for your Python project.\n[Select Python Interpreter](command:python.setInterpreter)\n**Tip**: Run the ``Python: Select Interpreter`` command in the [Command Palette](command:workbench.action.showCommands).",
                         "media": {
