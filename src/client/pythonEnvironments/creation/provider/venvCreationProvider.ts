@@ -78,7 +78,7 @@ async function createVenv(
 
     const deferred = createDeferred<string | undefined>();
     traceLog('Running Env creation script: ', [command, ...args]);
-    const { out, dispose } = execObservable(command, args, {
+    const { proc, out, dispose } = execObservable(command, args, {
         mergeStdOutErr: true,
         token,
         cwd: workspace.uri.fsPath,
@@ -101,7 +101,10 @@ async function createVenv(
         },
         () => {
             dispose();
-            if (!deferred.rejected) {
+            if (proc?.exitCode !== 0) {
+                traceError('Error while running venv creation script: ', progressAndTelemetry.getLastError());
+                deferred.reject(progressAndTelemetry.getLastError());
+            } else {
                 deferred.resolve(venvPath);
             }
         },

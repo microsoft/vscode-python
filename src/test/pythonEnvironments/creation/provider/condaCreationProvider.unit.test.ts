@@ -29,7 +29,7 @@ chaiUse(chaiAsPromised);
 suite('Conda Creation provider tests', () => {
     let condaProvider: CreateEnvironmentProvider;
     let progressMock: typemoq.IMock<CreateEnvironmentProgress>;
-    let getCondaStub: sinon.SinonStub;
+    let getCondaBaseEnvStub: sinon.SinonStub;
     let pickPythonVersionStub: sinon.SinonStub;
     let pickWorkspaceFolderStub: sinon.SinonStub;
     let execObservableStub: sinon.SinonStub;
@@ -38,7 +38,7 @@ suite('Conda Creation provider tests', () => {
 
     setup(() => {
         pickWorkspaceFolderStub = sinon.stub(wsSelect, 'pickWorkspaceFolder');
-        getCondaStub = sinon.stub(condaUtils, 'getConda');
+        getCondaBaseEnvStub = sinon.stub(condaUtils, 'getCondaBaseEnv');
         pickPythonVersionStub = sinon.stub(condaUtils, 'pickPythonVersion');
         execObservableStub = sinon.stub(rawProcessApis, 'execObservable');
         withProgressStub = sinon.stub(windowApis, 'withProgress');
@@ -55,20 +55,20 @@ suite('Conda Creation provider tests', () => {
     });
 
     test('No conda installed', async () => {
-        getCondaStub.resolves(undefined);
+        getCondaBaseEnvStub.resolves(undefined);
 
         assert.isUndefined(await condaProvider.createEnvironment());
     });
 
     test('No workspace selected', async () => {
-        getCondaStub.resolves('/usr/bin/conda');
+        getCondaBaseEnvStub.resolves('/usr/bin/conda');
         pickWorkspaceFolderStub.resolves(undefined);
 
         assert.isUndefined(await condaProvider.createEnvironment());
     });
 
     test('No python version picked selected', async () => {
-        getCondaStub.resolves('/usr/bin/conda');
+        getCondaBaseEnvStub.resolves('/usr/bin/conda');
         pickWorkspaceFolderStub.resolves({
             uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
             name: 'workspace1',
@@ -80,7 +80,7 @@ suite('Conda Creation provider tests', () => {
     });
 
     test('Create conda environment', async () => {
-        getCondaStub.resolves('/usr/bin/conda/conda_bin/conda');
+        getCondaBaseEnvStub.resolves('/usr/bin/conda');
         const workspace1 = {
             uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
             name: 'workspace1',
@@ -95,7 +95,9 @@ suite('Conda Creation provider tests', () => {
         execObservableStub.callsFake(() => {
             deferred.resolve();
             return {
-                proc: undefined,
+                proc: {
+                    exitCode: 0,
+                },
                 out: {
                     subscribe: (
                         next?: (value: Output<string>) => void,
@@ -134,7 +136,7 @@ suite('Conda Creation provider tests', () => {
     });
 
     test('Create conda environment failed', async () => {
-        getCondaStub.resolves('/usr/bin/conda/conda_bin/conda');
+        getCondaBaseEnvStub.resolves('/usr/bin/conda');
         pickWorkspaceFolderStub.resolves({
             uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
             name: 'workspace1',
@@ -179,6 +181,62 @@ suite('Conda Creation provider tests', () => {
         await deferred.promise;
         assert.isDefined(_error);
         _error!('bad arguments');
+        _complete!();
+        await assert.isRejected(promise);
+        assert.isTrue(showErrorMessageWithLogsStub.calledOnce);
+    });
+
+    test('Create conda environment failed (non-zero exit code)', async () => {
+        getCondaBaseEnvStub.resolves('/usr/bin/conda');
+        const workspace1 = {
+            uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
+            name: 'workspace1',
+            index: 0,
+        };
+        pickWorkspaceFolderStub.resolves(workspace1);
+        pickPythonVersionStub.resolves('3.10');
+
+        const deferred = createDeferred();
+        let _next: undefined | ((value: Output<string>) => void);
+        let _complete: undefined | (() => void);
+        execObservableStub.callsFake(() => {
+            deferred.resolve();
+            return {
+                proc: {
+                    exitCode: 1,
+                },
+                out: {
+                    subscribe: (
+                        next?: (value: Output<string>) => void,
+                        _error?: (error: unknown) => void,
+                        complete?: () => void,
+                    ) => {
+                        _next = next;
+                        _complete = complete;
+                    },
+                },
+                dispose: () => undefined,
+            };
+        });
+
+        progressMock.setup((p) => p.report({ message: CreateEnv.statusStarting })).verifiable(typemoq.Times.once());
+
+        withProgressStub.callsFake(
+            (
+                _options: ProgressOptions,
+                task: (
+                    progress: CreateEnvironmentProgress,
+                    token?: CancellationToken,
+                ) => Thenable<CreateEnvironmentResult>,
+            ) => task(progressMock.object),
+        );
+
+        const promise = condaProvider.createEnvironment();
+        await deferred.promise;
+        assert.isDefined(_next);
+        assert.isDefined(_complete);
+
+        _next!({ out: `${CONDA_ENV_CREATED_MARKER}new_environment`, source: 'stdout' });
         _complete!();
         await assert.isRejected(promise);
         assert.isTrue(showErrorMessageWithLogsStub.calledOnce);
