@@ -195,7 +195,7 @@
                         "when": ""
                     },
                     {
-                        "id": "python.installPythonWin8",
+                        "id": "python.installPythonWin82",
                         "title": "Install Python",
                         "description": "The Python Extension requires Python to be installed. Install Python [from python.org](https://www.python.org/downloads).\n\n[Install Python](https://www.python.org/downloads)\n",
                         "media": {
