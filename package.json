@@ -244,7 +244,7 @@
                         "when": "workspaceFolderCount == 0"
                     },
                     {
-                        "id": "python.runAndDebug",
+                        "id": "python.runAndDebug2",
                         "title": "Run and debug your Python file",
                         "description": "Open your Python file  and click on the play button on the top right of the editor, or press F5 when on the file and select \"Python File\" to run with the debugger. \n  \n[Learn more](https://code.visualstudio.com/docs/python/python-tutorial#_run-hello-world)",
                         "media": {
