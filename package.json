@@ -204,7 +204,7 @@
                         "when": "workspacePlatform == windows && showInstallPythonTile"
                     },
                     {
-                        "id": "python.installPythonMac",
+                        "id": "python.installPythonMac2",
                         "title": "Install Python",
                         "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Install Python via Brew](command:python.installPythonOnMac)\n",
                         "media": {
