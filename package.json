@@ -214,7 +214,7 @@
                         "command": "workbench.action.terminal.new"
                     },
                     {
-                        "id": "python.installPythonLinux",
+                        "id": "python.installPythonLinux2",
                         "title": "Install Python",
                         "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Install Python via terminal](command:python.installPythonOnLinux)\n",
                         "media": {
