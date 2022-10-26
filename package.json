@@ -229,7 +229,7 @@
                         "description": "Create an environment for your Python project.\n[Create Environment](command:python.createEnvironment)\n**Tip**: Run the ``Python: Create Environment`` command in the [Command Palette](command:workbench.action.showCommands).\n 🔍 Check out our [docs](https://aka.ms/pythonenvs) to learn more.",
                         "media": {
                             "svg": "resources/walkthrough/create-environment.svg",
-                            "altText": "Creating a Python environment from the status bar"
+                            "altText": "Creating a Python environment from the Command Palette"
                         },
                         "when": "workspaceFolderCount > 0"
                     },
