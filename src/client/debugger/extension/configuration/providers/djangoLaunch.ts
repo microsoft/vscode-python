@@ -65,12 +65,13 @@ export async function validateManagePy(
         return error;
     }
     const resolvedPath = resolveVariables(selected, undefined, folder);
-
-    if (selected !== defaultValue && !(await fs.pathExists(resolvedPath))) {
-        return error;
-    }
-    if (!resolvedPath.trim().toLowerCase().endsWith('.py')) {
-        return error;
+    if (resolvedPath) {
+        if (selected !== defaultValue && !(await fs.pathExists(resolvedPath))) {
+            return error;
+        }
+        if (!resolvedPath.trim().toLowerCase().endsWith('.py')) {
+            return error;
+        }
     }
     return;
 }

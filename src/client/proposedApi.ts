@@ -18,6 +18,7 @@ import {
     EnvironmentType,
     EnvironmentTools,
     EnvironmentPath,
+    EnvironmentVariablesChangeEvent,
 } from './proposedApiTypes';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from './pythonEnvironments/base/info';
 import { getEnvPath } from './pythonEnvironments/base/info/env';
@@ -32,6 +33,9 @@ import {
     reportActiveInterpreterChangedDeprecated,
     reportInterpretersChanged,
 } from './deprecatedProposedApi';
+import { DeprecatedProposedAPI } from './deprecatedProposedApiTypes';
+import { IEnvironmentVariablesProvider } from './common/variables/types';
+import { IWorkspaceService } from './common/application/types';
 
 type ActiveEnvironmentChangeEvent = {
     resource: WorkspaceFolder | undefined;
@@ -45,6 +49,7 @@ export function reportActiveInterpreterChanged(e: ActiveEnvironmentChangeEvent):
 }
 
 const onEnvironmentsChanged = new EventEmitter<EnvironmentsChangeEvent>();
+const onEnvironmentVariablesChanged = new EventEmitter<EnvironmentVariablesChangeEvent>();
 const environmentsReference = new Map<string, EnvironmentReference>();
 
 /**
@@ -105,6 +110,8 @@ export function buildProposedApi(
     const configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
+    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    const envVarsProvider = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
     function sendApiTelemetry(apiName: string) {
         extensions
             .determineExtensionFromCallStack()
@@ -147,23 +154,40 @@ export function buildProposedApi(
                 ]);
             }
         }),
+        envVarsProvider.onDidEnvironmentVariablesChange((e) => {
+            onEnvironmentVariablesChanged.fire({
+                resource: workspaceService.getWorkspaceFolder(e),
+                env: envVarsProvider.getEnvironmentVariablesSync(e),
+            });
+        }),
         onEnvironmentsChanged,
+        onEnvironmentVariablesChanged,
     );
 
     /**
-     * @deprecated Will be removed soon. Use {@link ProposedExtensionAPI.environment} instead.
+     * @deprecated Will be removed soon. Use {@link ProposedExtensionAPI} instead.
      */
-    let deprecatedEnvironmentsApi;
+    let deprecatedProposedApi;
     try {
-        deprecatedEnvironmentsApi = { ...buildDeprecatedProposedApi(discoveryApi, serviceContainer).environment };
+        deprecatedProposedApi = { ...buildDeprecatedProposedApi(discoveryApi, serviceContainer) };
     } catch (ex) {
-        deprecatedEnvironmentsApi = {};
+        deprecatedProposedApi = {} as DeprecatedProposedAPI;
         // Errors out only in case of testing.
         // Also, these APIs no longer supported, no need to log error.
     }
 
-    const proposed: ProposedExtensionAPI = {
-        environment: {
+    const proposed: ProposedExtensionAPI & DeprecatedProposedAPI = {
+        ...deprecatedProposedApi,
+        environments: {
+            getEnvironmentVariables: (resource?: Resource) => {
+                sendApiTelemetry('getEnvironmentVariables');
+                resource = resource && 'uri' in resource ? resource.uri : resource;
+                return envVarsProvider.getEnvironmentVariablesSync(resource);
+            },
+            get onDidEnvironmentVariablesChange() {
+                sendApiTelemetry('onDidEnvironmentVariablesChange');
+                return onEnvironmentVariablesChanged.event;
+            },
             getActiveEnvironmentPath(resource?: Resource) {
                 sendApiTelemetry('getActiveEnvironmentPath');
                 resource = resource && 'uri' in resource ? resource.uri : resource;
@@ -172,10 +196,6 @@ export function buildProposedApi(
                 return {
                     id,
                     path,
-                    /**
-                     * @deprecated Only provided for backwards compatibility and will soon be removed.
-                     */
-                    pathType: 'interpreterPath',
                 };
             },
             updateActiveEnvironmentPath(
@@ -213,8 +233,8 @@ export function buildProposedApi(
                 sendApiTelemetry('resolveEnvironment');
                 return resolveEnvironment(path, discoveryApi);
             },
-            get all(): Environment[] {
-                sendApiTelemetry('all');
+            get known(): Environment[] {
+                sendApiTelemetry('known');
                 return discoveryApi.getEnvs().map((e) => convertEnvInfoAndGetReference(e));
             },
             async refreshEnvironments(options?: RefreshOptions) {
@@ -227,7 +247,6 @@ export function buildProposedApi(
                 sendApiTelemetry('onDidChangeEnvironments');
                 return onEnvironmentsChanged.event;
             },
-            ...deprecatedEnvironmentsApi,
         },
     };
     return proposed;

@@ -150,7 +150,6 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     if (ex) {
         const errorProps = {
             errorName: ex.name,
-            errorMessage: ex.message,
             errorStack: ex.stack ?? '',
         };
         Object.assign(customProperties, errorProps);
@@ -971,7 +970,7 @@ export interface IEventNamePropertyMapping {
          */
         installer: string;
         /**
-         * The name of the installer required (expected to be available) for installation of pacakges. (pipenv, Conda etc.)
+         * The name of the installer required (expected to be available) for installation of packages. (pipenv, Conda etc.)
          */
         requiredInstaller?: string;
         /**
@@ -1160,7 +1159,7 @@ export interface IEventNamePropertyMapping {
         pythonVersion?: string;
     };
     /* __GDPR__
-       "python_interpreter_activation_environment_variables" : {
+       "python_interpreter.activation_environment_variables" : {
           "hasenvvars" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
           "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" }
        }
@@ -1374,6 +1373,13 @@ export interface IEventNamePropertyMapping {
       "use_report_issue_command" : { "owner": "paulacamargo25" }
      */
     [EventName.USE_REPORT_ISSUE_COMMAND]: unknown;
+    /**
+     * Telemetry event sent when the New Python File command is executed.
+     */
+    /* __GDPR__
+      "create_new_file_command" : { "owner": "luabud" }
+     */
+    [EventName.CREATE_NEW_FILE_COMMAND]: unknown;
     /**
      * Telemetry event sent when the installed versions of Python, Jupyter, and Pylance are all capable
      * of supporting the LSP notebooks experiment. This does not indicate that the experiment is enabled.
@@ -2052,6 +2058,52 @@ export interface IEventNamePropertyMapping {
     [EventName.ENVIRONMENT_INSTALLING_PACKAGES_FAILED]: {
         environmentType: 'venv' | 'conda';
         using: 'pipUpgrade' | 'requirements.txt' | 'pyproject.toml' | 'environment.yml';
+    };
+    /**
+     * Telemetry event sent when a linter or formatter extension is already installed.
+     */
+    /* __GDPR__
+       "tools_extensions.already_installed" : {
+          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.TOOLS_EXTENSIONS_ALREADY_INSTALLED]: {
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+    };
+    /**
+     * Telemetry event sent when install linter or formatter extension prompt is shown.
+     */
+    /* __GDPR__
+       "tools_extensions.prompt_shown" : {
+          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.TOOLS_EXTENSIONS_PROMPT_SHOWN]: {
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+    };
+    /**
+     * Telemetry event sent when clicking to install linter or formatter extension from the suggestion prompt.
+     */
+    /* __GDPR__
+       "tools_extensions.install_selected" : {
+          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.TOOLS_EXTENSIONS_INSTALL_SELECTED]: {
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+    };
+    /**
+     * Telemetry event sent when dismissing prompt suggesting to install the linter or formatter extension.
+     */
+    /* __GDPR__
+       "tools_extensions.prompt_dismissed" : {
+          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "dismissType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.TOOLS_EXTENSIONS_PROMPT_DISMISSED]: {
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+        dismissType: 'close' | 'doNotShow';
     };
     /* __GDPR__
             "query-expfeature" : {

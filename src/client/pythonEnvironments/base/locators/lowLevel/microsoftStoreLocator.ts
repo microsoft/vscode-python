@@ -65,7 +65,9 @@ export async function getMicrosoftStorePythonExes(): Promise<string[]> {
     return [];
 }
 
-export class MicrosoftStoreLocator extends FSWatchingLocator<BasicEnvInfo> {
+export class MicrosoftStoreLocator extends FSWatchingLocator {
+    public readonly providerId: string = 'microsoft-store';
+
     private readonly kind: PythonEnvKind = PythonEnvKind.MicrosoftStore;
 
     constructor() {

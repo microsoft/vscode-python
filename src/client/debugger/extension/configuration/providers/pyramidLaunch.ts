@@ -77,11 +77,13 @@ export async function validateIniPath(
         return error;
     }
     const resolvedPath = resolveVariables(selected, undefined, folder);
-    if (selected !== defaultValue && !fs.pathExists(resolvedPath)) {
-        return error;
-    }
-    if (!resolvedPath.trim().toLowerCase().endsWith('.ini')) {
-        return error;
+    if (resolvedPath) {
+        if (selected !== defaultValue && !fs.pathExists(resolvedPath)) {
+            return error;
+        }
+        if (!resolvedPath.trim().toLowerCase().endsWith('.ini')) {
+            return error;
+        }
     }
 }
 

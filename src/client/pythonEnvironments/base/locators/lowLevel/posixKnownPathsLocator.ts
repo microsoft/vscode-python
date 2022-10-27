@@ -12,6 +12,8 @@ import { isMacDefaultPythonPath } from './macDefaultLocator';
 import { traceError } from '../../../../logging';
 
 export class PosixKnownPathsLocator extends Locator<BasicEnvInfo> {
+    public readonly providerId = 'posixKnownPaths';
+
     private kind: PythonEnvKind = PythonEnvKind.OtherGlobal;
 
     public iterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {

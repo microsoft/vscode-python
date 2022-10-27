@@ -4,6 +4,7 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { IWorkspaceService } from '../../common/application/types';
 import { ExecutionResult, IProcessServiceFactory, ShellOptions, SpawnOptions } from '../../common/process/types';
 import { IDisposable, IConfigurationService } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
@@ -25,6 +26,13 @@ export async function shellExecute(command: string, options: ShellOptions = {}):
 export async function exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
     const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
     return service.exec(file, args, options);
+}
+
+// Workspace
+
+export function isVirtualWorkspace(): boolean {
+    const service = internalServiceContainer.get<IWorkspaceService>(IWorkspaceService);
+    return service.isVirtualWorkspace;
 }
 
 // filesystem

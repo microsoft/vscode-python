@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { cloneDeep } from 'lodash';
+import { cloneDeep, isEqual } from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { getArchitectureDisplayName } from '../../../common/platform/registry';
@@ -75,6 +75,19 @@ export function buildEnvInfo(init?: {
     }
     env.id = getEnvID(env.executable.filename, env.location);
     return env;
+}
+
+export function areEnvsDeepEqual(env1: PythonEnvInfo, env2: PythonEnvInfo): boolean {
+    const env1Clone = cloneDeep(env1);
+    const env2Clone = cloneDeep(env2);
+    // Cannot compare searchLocation as they are Uri objects.
+    delete env1Clone.searchLocation;
+    delete env2Clone.searchLocation;
+    env1Clone.source = env1Clone.source.sort();
+    env2Clone.source = env2Clone.source.sort();
+    const searchLocation1 = env1.searchLocation?.fsPath ?? '';
+    const searchLocation2 = env2.searchLocation?.fsPath ?? '';
+    return isEqual(env1Clone, env2Clone) && arePathsSame(searchLocation1, searchLocation2);
 }
 
 /**

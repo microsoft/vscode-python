@@ -7,9 +7,8 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
 import { InvalidPythonPathInDebuggerServiceId } from '../../../../application/diagnostics/checks/invalidPythonPathInDebugger';
 import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../../../application/diagnostics/types';
-import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
-import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
+import { getOSType, OSType } from '../../../../common/utils/platform';
 import { IInterpreterService } from '../../../../interpreter/contracts';
 import { DebuggerTypeName } from '../../../constants';
 import { DebugOptions, DebugPurpose, LaunchRequestArguments } from '../../../types';
@@ -19,17 +18,14 @@ import { IDebugEnvironmentVariablesService } from './helper';
 @injectable()
 export class LaunchConfigurationResolver extends BaseConfigurationResolver<LaunchRequestArguments> {
     constructor(
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(IDiagnosticsService)
         @named(InvalidPythonPathInDebuggerServiceId)
         private readonly invalidPythonPathInDebuggerService: IInvalidPythonPathInDebuggerService,
-        @inject(IPlatformService) platformService: IPlatformService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IDebugEnvironmentVariablesService) private readonly debugEnvHelper: IDebugEnvironmentVariablesService,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
     ) {
-        super(workspaceService, documentManager, platformService, configurationService, interpreterService);
+        super(configurationService, interpreterService);
     }
 
     public async resolveDebugConfiguration(
@@ -153,7 +149,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         if (debugConfiguration.subProcess === true) {
             this.debugOption(debugOptions, DebugOptions.SubProcess);
         }
-        if (this.platformService.isWindows) {
+        if (getOSType() == OSType.Windows) {
             this.debugOption(debugOptions, DebugOptions.FixFilePathCase);
         }
         const isFastAPI = this.isDebuggingFastAPI(debugConfiguration);

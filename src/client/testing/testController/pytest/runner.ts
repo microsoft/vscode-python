@@ -92,6 +92,10 @@ export class PytestRunner implements ITestsRunner {
                 testArgs.splice(0, 0, '--rootdir', options.cwd);
             }
 
+            if (options.debug && !testArgs.some((a) => a.startsWith('--capture') || a === '-s')) {
+                testArgs.push('--capture', 'no');
+            }
+
             // Positional arguments control the tests to be run.
             const rawData = idToRawData.get(testNode.id);
             if (!rawData) {

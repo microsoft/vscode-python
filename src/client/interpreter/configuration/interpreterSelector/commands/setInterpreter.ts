@@ -23,6 +23,7 @@ import {
     IQuickPickParameters,
 } from '../../../../common/utils/multiStepInput';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
+import { TriggerRefreshOptions } from '../../../../pythonEnvironments/base/locator';
 import { EnvironmentType, PythonEnvironment } from '../../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
@@ -163,19 +164,19 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
                 {
                     button: this.refreshButton,
                     callback: (quickpickInput) => {
-                        this.refreshButtonCallback(quickpickInput);
+                        this.refreshCallback(quickpickInput, { isButton: true });
                     },
                 },
             ],
-            initialize: () => {
+            initialize: (quickPick) => {
                 // Note discovery is no longer guranteed to be auto-triggered on extension load, so trigger it when
                 // user interacts with the interpreter picker but only once per session. Users can rely on the
                 // refresh button if they want to trigger it more than once. However if no envs were found previously,
                 // always trigger a refresh.
                 if (this.interpreterService.getInterpreters().length === 0) {
-                    this.interpreterService.triggerRefresh().ignoreErrors();
+                    this.refreshCallback(quickPick);
                 } else {
-                    this.interpreterService.triggerRefresh(undefined, { ifNotTriggerredAlready: true }).ignoreErrors();
+                    this.refreshCallback(quickPick, { ifNotTriggerredAlready: true });
                 }
             },
             onChangeItem: {
@@ -429,19 +430,27 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         }
     }
 
-    private refreshButtonCallback(input: QuickPick<QuickPickItem>) {
-        input.buttons = [
-            {
-                iconPath: new ThemeIcon(ThemeIcons.SpinningLoader),
-                tooltip: InterpreterQuickPickList.refreshingInterpreterList,
-            },
-        ];
+    private refreshCallback(input: QuickPick<QuickPickItem>, options?: TriggerRefreshOptions & { isButton?: boolean }) {
+        if (options?.isButton) {
+            input.buttons = [
+                {
+                    iconPath: new ThemeIcon(ThemeIcons.SpinningLoader),
+                    tooltip: InterpreterQuickPickList.refreshingInterpreterList,
+                },
+            ];
+        }
         this.interpreterService
-            .triggerRefresh()
+            .triggerRefresh(undefined, options)
             .finally(() => {
                 input.buttons = [this.refreshButton];
             })
             .ignoreErrors();
+        if (this.interpreterService.refreshPromise) {
+            input.busy = true;
+            this.interpreterService.refreshPromise.then(() => {
+                input.busy = false;
+            });
+        }
     }
 
     @captureTelemetry(EventName.SELECT_INTERPRETER_ENTER_BUTTON)

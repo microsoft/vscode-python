@@ -6,9 +6,10 @@ import { CancellationToken, Event, Uri, WorkspaceFolder } from 'vscode';
 // https://github.com/microsoft/vscode-python/wiki/Proposed-Environment-APIs
 
 export interface ProposedExtensionAPI {
-    readonly environment: {
+    readonly environments: {
         /**
-         * Returns the environment configured by user in settings.
+         * Returns the environment configured by user in settings. Note that this can be an invalid environment, use
+         * {@link resolveEnvironment} to get full details.
          * @param resource : Uri of a file or workspace folder. This is used to determine the env in a multi-root
          * scenario. If `undefined`, then the API returns what ever is set for the workspace.
          */
@@ -29,10 +30,10 @@ export interface ProposedExtensionAPI {
          */
         readonly onDidChangeActiveEnvironmentPath: Event<ActiveEnvironmentPathChangeEvent>;
         /**
-         * Carries environments found by the extension at the time of fetching the property. Note this may not
+         * Carries environments known to the extension at the time of fetching the property. Note this may not
          * contain all environments in the system as a refresh might be going on.
          */
-        readonly all: readonly Environment[];
+        readonly known: readonly Environment[];
         /**
          * This event is triggered when the known environment list changes, like when a environment
          * is found, existing environment is removed, or some details changed on an environment.
@@ -53,17 +54,30 @@ export interface ProposedExtensionAPI {
         /**
          * Returns details for the given environment, or `undefined` if the env is invalid.
          * @param environment : Full path to environment folder or python executable for the environment. Can also pass
-         * the environment id or the environment itself.
+         * the environment itself.
          */
         resolveEnvironment(
             environment: Environment | EnvironmentPath | string,
         ): Promise<ResolvedEnvironment | undefined>;
+        /**
+         * Returns the environment variables used by the extension for a resource, which includes the custom
+         * variables configured by user in `.env` files.
+         * @param resource : Uri of a file or workspace folder. This is used to determine the env in a multi-root
+         * scenario. If `undefined`, then the API returns what ever is set for the workspace.
+         */
+        getEnvironmentVariables(resource?: Resource): EnvironmentVariables;
+        /**
+         * This event is fired when the environment variables for a resource change. Note it's currently not
+         * possible to detect if environment variables in the system change, so this only fires if custom
+         * environment variables are updated in `.env` files.
+         */
+        readonly onDidEnvironmentVariablesChange: Event<EnvironmentVariablesChangeEvent>;
     };
 }
 
 export type RefreshOptions = {
     /**
-     * Force trigger a refresh regardless of whether a refresh was already triggered. Note this can be expensive so
+     * When `true`, force trigger a refresh regardless of whether a refresh was already triggered. Note this can be expensive so
      * it's best to only use it if user manually triggers a refresh.
      */
     forceRefresh?: boolean;
@@ -261,4 +275,20 @@ export type ResolvedVersionInfo = {
     readonly minor: number;
     readonly micro: number;
     readonly release: PythonVersionRelease;
+};
+
+/**
+ * A record containing readonly keys.
+ */
+export type EnvironmentVariables = { readonly [key: string]: string | undefined };
+
+export type EnvironmentVariablesChangeEvent = {
+    /**
+     * Workspace folder the environment variables changed for.
+     */
+    readonly resource: WorkspaceFolder | undefined;
+    /**
+     * Updated value of environment variables.
+     */
+    readonly env: EnvironmentVariables;
 };

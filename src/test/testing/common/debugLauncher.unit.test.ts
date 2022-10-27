@@ -9,12 +9,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
 import { IInvalidPythonPathInDebuggerService } from '../../../client/application/diagnostics/types';
-import {
-    IApplicationShell,
-    IDebugService,
-    IDocumentManager,
-    IWorkspaceService,
-} from '../../../client/common/application/types';
+import { IApplicationShell, IDebugService, IWorkspaceService } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import '../../../client/common/extensions';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
@@ -48,6 +43,7 @@ suite('Unit Tests - Debug Launcher', () => {
     let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
     let launchJsonReader: ILaunchJsonReader;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
+
     setup(async () => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
@@ -104,10 +100,7 @@ suite('Unit Tests - Debug Launcher', () => {
             .setup((v) => v.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(true));
         return new LaunchConfigurationResolver(
-            workspaceService.object,
-            TypeMoq.Mock.ofType<IDocumentManager>(undefined, TypeMoq.MockBehavior.Strict).object,
             validator.object,
-            platformService.object,
             configService,
             debugEnvHelper.object,
             interpreterService.object,

@@ -4,7 +4,6 @@
 'use strict';
 
 import {
-    CodeActionKind,
     debug,
     DebugConfigurationProvider,
     DebugConfigurationProviderTriggerKind,
@@ -31,23 +30,17 @@ import {
 import { noop } from './common/utils/misc';
 import { DebuggerTypeName } from './debugger/constants';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
-import {
-    IDebugConfigurationService,
-    IDebuggerBanner,
-    IDynamicDebugConfigurationService,
-} from './debugger/extension/types';
+import { IDebugConfigurationService, IDynamicDebugConfigurationService } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterService } from './interpreter/contracts';
 import { getLanguageConfiguration } from './language/languageConfiguration';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { setLoggingLevel } from './logging';
-import { PythonCodeActionProvider } from './providers/codeActionProvider/pythonCodeActionProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { ReplProvider } from './providers/replProvider';
 import { registerTypes as providersRegisterTypes } from './providers/serviceRegistry';
 import { TerminalProvider } from './providers/terminalProvider';
-import { ISortImportsEditingProvider } from './providers/types';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
 import { registerTypes as tensorBoardRegisterTypes } from './tensorBoard/serviceRegistry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
@@ -186,9 +179,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
             serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
             const pythonSettings = configuration.getSettings();
 
-            const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
-            sortImports.registerCommands();
-
             serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
             disposables.push(new LinterCommands(serviceManager));
@@ -209,12 +199,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
             terminalProvider.initialize(window.activeTerminal).ignoreErrors();
             disposables.push(terminalProvider);
 
-            disposables.push(
-                languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), {
-                    providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports],
-                }),
-            );
-
             serviceContainer
                 .getAll<DebugConfigurationProvider>(IDebugConfigurationService)
                 .forEach((debugConfigProvider) => {
@@ -229,8 +213,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
                     DebugConfigurationProviderTriggerKind.Dynamic,
                 ),
             );
-
-            serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
         }
     }
 

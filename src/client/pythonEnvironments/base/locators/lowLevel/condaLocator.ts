@@ -7,7 +7,9 @@ import { Conda, getCondaEnvironmentsTxt } from '../../../common/environmentManag
 import { traceError, traceVerbose } from '../../../../logging';
 import { FSWatchingLocator } from './fsWatchingLocator';
 
-export class CondaEnvironmentLocator extends FSWatchingLocator<BasicEnvInfo> {
+export class CondaEnvironmentLocator extends FSWatchingLocator {
+    public readonly providerId: string = 'conda-envs';
+
     public constructor() {
         super(
             () => getCondaEnvironmentsTxt(),

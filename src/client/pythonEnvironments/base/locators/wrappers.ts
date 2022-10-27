@@ -8,7 +8,7 @@ import { iterEmpty } from '../../../common/utils/async';
 import { getURIFilter } from '../../../common/utils/misc';
 import { Disposables } from '../../../common/utils/resourceLifecycle';
 import { PythonEnvInfo } from '../info';
-import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../locator';
+import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../locator';
 import { combineIterators, Locators } from '../locators';
 import { LazyResourceBasedLocator } from './common/resourceBasedLocator';
 
@@ -30,13 +30,16 @@ export class ExtensionLocators<I = PythonEnvInfo> extends Locators<I> {
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<I> {
         const iterators: IPythonEnvsIterator<I>[] = [this.workspace.iterEnvs(query)];
         if (!query?.searchLocations?.doNotIncludeNonRooted) {
-            iterators.push(...this.nonWorkspace.map((loc) => loc.iterEnvs(query)));
+            const nonWorkspace = query?.providerId
+                ? this.nonWorkspace.filter((locator) => query.providerId === locator.providerId)
+                : this.nonWorkspace;
+            iterators.push(...nonWorkspace.map((loc) => loc.iterEnvs(query)));
         }
         return combineIterators(iterators);
     }
 }
-type WorkspaceLocatorFactoryResult<I> = ILocator<I> & Partial<IDisposable>;
-type WorkspaceLocatorFactory<I = PythonEnvInfo> = (root: Uri) => WorkspaceLocatorFactoryResult<I>[];
+type WorkspaceLocatorFactoryResult = ILocator<BasicEnvInfo> & Partial<IDisposable>;
+type WorkspaceLocatorFactory = (root: Uri) => WorkspaceLocatorFactoryResult[];
 type RootURI = string;
 
 export type WatchRootsArgs = {
@@ -52,12 +55,14 @@ type WatchRootsFunc = (args: WatchRootsArgs) => IDisposable;
  * The factories are used to produce the locators for each workspace folder.
  */
 
-export class WorkspaceLocators<I = PythonEnvInfo> extends LazyResourceBasedLocator<I> {
-    private readonly locators: Record<RootURI, [ILocator<I>, IDisposable]> = {};
+export class WorkspaceLocators extends LazyResourceBasedLocator {
+    public readonly providerId: string = 'workspace-locators';
+
+    private readonly locators: Record<RootURI, [ILocator<BasicEnvInfo>, IDisposable]> = {};
 
     private readonly roots: Record<RootURI, Uri> = {};
 
-    constructor(private readonly watchRoots: WatchRootsFunc, private readonly factories: WorkspaceLocatorFactory<I>[]) {
+    constructor(private readonly watchRoots: WatchRootsFunc, private readonly factories: WorkspaceLocatorFactory[]) {
         super();
         this.activate().ignoreErrors();
     }
@@ -70,7 +75,7 @@ export class WorkspaceLocators<I = PythonEnvInfo> extends LazyResourceBasedLocat
         roots.forEach((root) => this.removeRoot(root));
     }
 
-    protected doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<I> {
+    protected doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
         const iterators = Object.keys(this.locators).map((key) => {
             if (query?.searchLocations !== undefined) {
                 const root = this.roots[key];
@@ -79,7 +84,11 @@ export class WorkspaceLocators<I = PythonEnvInfo> extends LazyResourceBasedLocat
                 // Ignore any requests for global envs.
                 if (!query.searchLocations.roots.some(filter)) {
                     // This workspace folder did not match the query, so skip it!
-                    return iterEmpty<I>();
+                    return iterEmpty<BasicEnvInfo>();
+                }
+                if (query.providerId && query.providerId !== this.providerId) {
+                    // This is a request for a specific provider, so skip it.
+                    return iterEmpty<BasicEnvInfo>();
                 }
             }
             // The query matches or was not location-specific.
@@ -108,7 +117,7 @@ export class WorkspaceLocators<I = PythonEnvInfo> extends LazyResourceBasedLocat
 
     private addRoot(root: Uri): void {
         // Create the root's locator, wrapping each factory-generated locator.
-        const locators: ILocator<I>[] = [];
+        const locators: ILocator<BasicEnvInfo>[] = [];
         const disposables = new Disposables();
         this.factories.forEach((create) => {
             create(root).forEach((loc) => {

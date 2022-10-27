@@ -84,7 +84,7 @@ suite('Conda Env Watcher', async () => {
     test('Fires when conda `environments.txt` file is created', async () => {
         let actualEvent: PythonEnvsChangedEvent;
         const deferred = createDeferred<void>();
-        const expectedEvent = {};
+        const expectedEvent = { providerId: 'conda-envs' };
         await setupLocator(async (e) => {
             deferred.resolve();
             actualEvent = e;
@@ -99,7 +99,7 @@ suite('Conda Env Watcher', async () => {
     test('Fires when conda `environments.txt` file is updated', async () => {
         let actualEvent: PythonEnvsChangedEvent;
         const deferred = createDeferred<void>();
-        const expectedEvent = {};
+        const expectedEvent = { providerId: 'conda-envs' };
         await condaEnvsTxt.create();
         await setupLocator(async (e) => {
             deferred.resolve();

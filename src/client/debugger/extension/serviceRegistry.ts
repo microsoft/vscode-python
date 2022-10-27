@@ -12,7 +12,6 @@ import { DebugSessionLoggingFactory } from './adapter/logging';
 import { OutdatedDebuggerPromptFactory } from './adapter/outdatedDebuggerPrompt';
 import { AttachProcessProviderFactory } from './attachQuickPick/factory';
 import { IAttachProcessProviderFactory } from './attachQuickPick/types';
-import { DebuggerBanner } from './banner';
 import { PythonDebugConfigurationService } from './configuration/debugConfigurationService';
 import { DynamicPythonDebugConfigurationService } from './configuration/dynamicdebugConfigurationService';
 import { LaunchJsonCompletionProvider } from './configuration/launch.json/completionProvider';
@@ -30,7 +29,6 @@ import { IChildProcessAttachService, IDebugSessionEventHandlers } from './hooks/
 import {
     IDebugAdapterDescriptorFactory,
     IDebugConfigurationService,
-    IDebuggerBanner,
     IDebugSessionLoggingFactory,
     IDynamicDebugConfigurationService,
     IOutdatedDebuggerPromptFactory,
@@ -57,7 +55,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         IDynamicDebugConfigurationService,
         DynamicPythonDebugConfigurationService,
     );
-    serviceManager.addSingleton<IDebuggerBanner>(IDebuggerBanner, DebuggerBanner);
     serviceManager.addSingleton<IChildProcessAttachService>(IChildProcessAttachService, ChildProcessAttachService);
     serviceManager.addSingleton<IDebugSessionEventHandlers>(IDebugSessionEventHandlers, ChildProcessAttachEventHandler);
     serviceManager.addSingleton<IDebugConfigurationResolver<LaunchRequestArguments>>(

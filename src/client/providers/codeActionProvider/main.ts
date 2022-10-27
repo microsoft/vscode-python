@@ -4,7 +4,9 @@
 import { inject, injectable } from 'inversify';
 import * as vscodeTypes from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { Commands } from '../../common/constants';
 import { IDisposableRegistry } from '../../common/types';
+import { executeCommand, registerCommand } from '../../common/vscodeApis/commandApis';
 import { LaunchJsonCodeActionProvider } from './launchJsonCodeActionProvider';
 
 @injectable()
@@ -25,6 +27,9 @@ export class CodeActionProviderService implements IExtensionSingleActivationServ
             vscode.languages.registerCodeActionsProvider(documentSelector, new LaunchJsonCodeActionProvider(), {
                 providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
             }),
+        );
+        this.disposableRegistry.push(
+            registerCommand(Commands.Sort_Imports, () => executeCommand('editor.action.organizeImports')),
         );
     }
 }
