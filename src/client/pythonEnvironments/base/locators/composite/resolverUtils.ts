@@ -12,18 +12,8 @@ import {
     UNKNOWN_PYTHON_VERSION,
     virtualEnvKinds,
 } from '../../info';
-import {
-    buildEnvInfo,
-    comparePythonVersionSpecificity,
-    setEnvDisplayString,
-    areSameEnv,
-    getEnvID,
-} from '../../info/env';
-import {
-    getEnvironmentDirFromPath,
-    getInterpreterPathFromDir,
-    getPythonVersionFromPath,
-} from '../../../common/commonUtils';
+import { buildEnvInfo, comparePythonVersionSpecificity, setEnvDisplayString, getEnvID } from '../../info/env';
+import { getEnvironmentDirFromPath, getPythonVersionFromPath } from '../../../common/commonUtils';
 import { arePathsSame, getFileInfo, isParentPath } from '../../../common/externalDependencies';
 import { AnacondaCompanyName, Conda, isCondaEnvironment } from '../../../common/environmentManagers/conda';
 import { getPyenvVersionsDir, parsePyenvVersion } from '../../../common/environmentManagers/pyenv';
@@ -165,47 +155,43 @@ async function resolveSimpleEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     return envInfo;
 }
 
-async function resolveCondaEnv(env: BasicEnvInfo, useCache?: boolean): Promise<PythonEnvInfo> {
+async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     const { executablePath } = env;
     const conda = await Conda.getConda();
-    if (conda === undefined) {
-        traceWarn(`${executablePath} identified as Conda environment even though Conda is not installed`);
+    if (conda === undefined || !env.envPath) {
+        const errorMsg =
+            conda === undefined
+                ? `${executablePath} identified as Conda environment even though Conda is not found`
+                : `Conda environment ${executablePath} does not have envPath`;
+
+        traceError(errorMsg);
+        // Environment could still be valid, resolve as a simple env.
+        env.kind = PythonEnvKind.Unknown;
+        const envInfo = await resolveSimpleEnv(env);
+        envInfo.type = PythonEnvType.Conda;
+        return envInfo;
     }
-    const envs = (await conda?.getEnvList(useCache)) ?? [];
-    for (const { name, prefix } of envs) {
-        let executable = await getInterpreterPathFromDir(prefix);
-        const currEnv: BasicEnvInfo = { executablePath: executable ?? '', kind: PythonEnvKind.Conda, envPath: prefix };
-        if (areSameEnv(env, currEnv)) {
-            if (env.executablePath.length > 0) {
-                executable = env.executablePath;
-            } else {
-                executable = await conda?.getInterpreterPathForEnvironment({ name, prefix });
-            }
-            const info = buildEnvInfo({
-                executable,
-                kind: PythonEnvKind.Conda,
-                org: AnacondaCompanyName,
-                location: prefix,
-                source: [],
-                version: executable ? await getPythonVersionFromPath(executable) : undefined,
-                type: PythonEnvType.Conda,
-            });
-            if (name) {
-                info.name = name;
-            }
-            return info;
-        }
+
+    let executable: string;
+    if (env.executablePath.length > 0) {
+        executable = env.executablePath;
+    } else {
+        executable = await conda.getInterpreterPathForEnvironment({ prefix: env.envPath });
     }
-    traceError(
-        `${env.envPath ?? env.executablePath} identified as a Conda environment but is not returned via '${
-            conda?.command
-        } info' command`,
-    );
-    // Environment could still be valid, resolve as a simple env.
-    env.kind = PythonEnvKind.Unknown;
-    const envInfo = await resolveSimpleEnv(env);
-    envInfo.type = PythonEnvType.Conda;
-    return envInfo;
+    const info = buildEnvInfo({
+        executable,
+        kind: PythonEnvKind.Conda,
+        org: AnacondaCompanyName,
+        location: env.envPath,
+        source: [],
+        version: executable ? await getPythonVersionFromPath(executable) : undefined,
+        type: PythonEnvType.Conda,
+    });
+    const name = await conda?.getName(env.envPath);
+    if (name) {
+        info.name = name;
+    }
+    return info;
 }
 
 async function resolvePyenvEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {

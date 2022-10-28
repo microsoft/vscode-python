@@ -271,7 +271,7 @@ export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment 
         path,
         id: getEnvID(path),
         executable: {
-            uri: Uri.file(env.executable.filename),
+            uri: env.executable.filename === 'python' ? undefined : Uri.file(env.executable.filename),
             bitness: convertBitness(env.arch),
             sysPrefix: env.executable.sysPrefix,
         },
@@ -324,9 +324,6 @@ export function convertEnvInfo(env: PythonEnvInfo): Environment {
     const convertedEnv = convertCompleteEnvInfo(env) as Mutable<Environment>;
     if (convertedEnv.executable.sysPrefix === '') {
         convertedEnv.executable.sysPrefix = undefined;
-    }
-    if (convertedEnv.executable.uri?.fsPath === 'python') {
-        convertedEnv.executable.uri = undefined;
     }
     if (convertedEnv.environment?.name === '') {
         convertedEnv.environment.name = undefined;

@@ -450,28 +450,28 @@ export class Conda {
         if (envs === undefined) {
             return [];
         }
+        return Promise.all(
+            envs.map(async (prefix) => ({
+                prefix,
+                name: await this.getName(prefix, info),
+            })),
+        );
+    }
 
-        function getName(prefix: string) {
-            if (info.root_prefix && arePathsSame(prefix, info.root_prefix)) {
-                return 'base';
-            }
-
-            const parentDir = path.dirname(prefix);
-            if (info.envs_dirs !== undefined) {
-                for (const envsDir of info.envs_dirs) {
-                    if (arePathsSame(parentDir, envsDir)) {
-                        return path.basename(prefix);
-                    }
+    public async getName(prefix: string, info?: CondaInfo): Promise<string | undefined> {
+        info = info ?? (await this.getInfo(true));
+        if (info.root_prefix && arePathsSame(prefix, info.root_prefix)) {
+            return 'base';
+        }
+        const parentDir = path.dirname(prefix);
+        if (info.envs_dirs !== undefined) {
+            for (const envsDir of info.envs_dirs) {
+                if (arePathsSame(parentDir, envsDir)) {
+                    return path.basename(prefix);
                 }
             }
-
-            return undefined;
         }
-
-        return envs.map((prefix) => ({
-            prefix,
-            name: getName(prefix),
-        }));
+        return undefined;
     }
 
     /**
@@ -493,22 +493,17 @@ export class Conda {
      * Returns executable associated with the conda env, swallows exceptions.
      */
     // eslint-disable-next-line class-methods-use-this
-    public async getInterpreterPathForEnvironment(condaEnv: CondaEnvInfo): Promise<string | undefined> {
-        try {
-            const executablePath = await getInterpreterPath(condaEnv.prefix);
-            if (executablePath) {
-                traceVerbose('Found executable within conda env', JSON.stringify(condaEnv));
-                return executablePath;
-            }
-            traceVerbose(
-                'Executable does not exist within conda env, assume the executable to be `python`',
-                JSON.stringify(condaEnv),
-            );
-            return 'python';
-        } catch (ex) {
-            traceError(`Failed to get executable for conda env: ${JSON.stringify(condaEnv)}`, ex);
-            return undefined;
+    public async getInterpreterPathForEnvironment(condaEnv: CondaEnvInfo | { prefix: string }): Promise<string> {
+        const executablePath = await getInterpreterPath(condaEnv.prefix);
+        if (executablePath) {
+            traceVerbose('Found executable within conda env', JSON.stringify(condaEnv));
+            return executablePath;
         }
+        traceVerbose(
+            'Executable does not exist within conda env, assume the executable to be `python`',
+            JSON.stringify(condaEnv),
+        );
+        return 'python';
     }
 
     public async getRunPythonArgs(env: CondaEnvInfo, forShellExecution?: boolean): Promise<string[] | undefined> {
