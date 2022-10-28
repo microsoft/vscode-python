@@ -28,7 +28,7 @@ import { sleep } from './core';
 import { PythonEnvKind, PythonEnvSource } from '../client/pythonEnvironments/base/info';
 import { Architecture } from '../client/common/utils/platform';
 import { PythonEnvCollectionChangedEvent } from '../client/pythonEnvironments/base/watcher';
-import { normCasePath } from '../client/common/platform/fs-paths';
+import { arePathsSame, normCasePath } from '../client/common/platform/fs-paths';
 import {
     ActiveEnvironmentPathChangeEvent,
     EnvironmentsChangeEvent,
@@ -63,7 +63,7 @@ suite('Proposed Extension API', () => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         sinon.stub(workspaceApis, 'getWorkspaceFolders').returns([workspaceFolder]);
         sinon.stub(workspaceApis, 'getWorkspaceFolder').callsFake((resource: Resource) => {
-            if (resource?.fsPath === workspacePath) {
+            if (resource?.fsPath === workspaceFolder.uri.fsPath) {
                 return workspaceFolder;
             }
             return undefined;
