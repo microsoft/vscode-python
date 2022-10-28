@@ -32,6 +32,8 @@ export interface ProposedExtensionAPI {
         /**
          * Carries environments known to the extension at the time of fetching the property. Note this may not
          * contain all environments in the system as a refresh might be going on.
+         *
+         * Only reports environments in the current workspace.
          */
         readonly known: readonly Environment[];
         /**
