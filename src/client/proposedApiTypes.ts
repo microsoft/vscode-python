@@ -129,14 +129,16 @@ export type Environment = EnvironmentPath & {
           }
         | undefined;
     /**
-     * Carries Python version information known at this moment.
+     * Carries Python version information known at this moment, carries `undefined` for envs without python.
      */
-    readonly version: VersionInfo & {
-        /**
-         * Value of `sys.version` in sys module if known at this moment.
-         */
-        readonly sysVersion: string | undefined;
-    };
+    readonly version:
+        | (VersionInfo & {
+              /**
+               * Value of `sys.version` in sys module if known at this moment.
+               */
+              readonly sysVersion: string | undefined;
+          })
+        | undefined;
     /**
      * Tools/plugins which created the environment or where it came from. First value in array corresponds
      * to the primary tool which manages the environment, which never changes over time.
@@ -171,14 +173,16 @@ export type ResolvedEnvironment = Environment & {
         readonly sysPrefix: string;
     };
     /**
-     * Carries complete Python version information.
+     * Carries complete Python version information, carries `undefined` for envs without python.
      */
-    readonly version: ResolvedVersionInfo & {
-        /**
-         * Value of `sys.version` in sys module if known at this moment.
-         */
-        readonly sysVersion: string;
-    };
+    readonly version:
+        | (ResolvedVersionInfo & {
+              /**
+               * Value of `sys.version` in sys module if known at this moment.
+               */
+              readonly sysVersion: string;
+          })
+        | undefined;
 };
 
 export type EnvironmentsChangeEvent = {

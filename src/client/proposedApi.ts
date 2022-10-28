@@ -278,7 +278,7 @@ export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment 
         environment: env.type
             ? {
                   type: convertEnvType(env.type),
-                  name: env.name,
+                  name: env.name === '' ? undefined : env.name,
                   folderUri: Uri.file(env.location),
                   workspaceFolder: env.searchLocation,
               }
@@ -325,16 +325,16 @@ export function convertEnvInfo(env: PythonEnvInfo): Environment {
     if (convertedEnv.executable.sysPrefix === '') {
         convertedEnv.executable.sysPrefix = undefined;
     }
-    if (convertedEnv.environment?.name === '') {
-        convertedEnv.environment.name = undefined;
+    if (convertedEnv.version?.sysVersion === '') {
+        convertedEnv.version.sysVersion = undefined;
     }
-    if (convertedEnv.version.major === -1) {
+    if (convertedEnv.version?.major === -1) {
         convertedEnv.version.major = undefined;
     }
-    if (convertedEnv.version.micro === -1) {
+    if (convertedEnv.version?.micro === -1) {
         convertedEnv.version.micro = undefined;
     }
-    if (convertedEnv.version.minor === -1) {
+    if (convertedEnv.version?.minor === -1) {
         convertedEnv.version.minor = undefined;
     }
     return convertedEnv as Environment;
