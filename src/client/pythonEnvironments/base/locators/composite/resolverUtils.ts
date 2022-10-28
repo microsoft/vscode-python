@@ -158,35 +158,34 @@ async function resolveSimpleEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
 async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     const { executablePath } = env;
     const conda = await Conda.getConda();
-    if (conda === undefined || !env.envPath) {
-        const errorMsg =
-            conda === undefined
-                ? `${executablePath} identified as Conda environment even though Conda is not found`
-                : `Conda environment ${executablePath} does not have envPath`;
-        traceError(errorMsg);
+    if (conda === undefined) {
+        traceWarn(`${executablePath} identified as Conda environment even though Conda is not found`);
         // Environment could still be valid, resolve as a simple env.
         env.kind = PythonEnvKind.Unknown;
         const envInfo = await resolveSimpleEnv(env);
         envInfo.type = PythonEnvType.Conda;
+        // Assume it's a prefixed env by default because prefixed CLIs work even for named environments.
+        envInfo.name = '';
         return envInfo;
     }
 
+    const envPath = env.envPath ?? getEnvironmentDirFromPath(env.executablePath);
     let executable: string;
     if (env.executablePath.length > 0) {
         executable = env.executablePath;
     } else {
-        executable = await conda.getInterpreterPathForEnvironment({ prefix: env.envPath });
+        executable = await conda.getInterpreterPathForEnvironment({ prefix: envPath });
     }
     const info = buildEnvInfo({
         executable,
         kind: PythonEnvKind.Conda,
         org: AnacondaCompanyName,
-        location: env.envPath,
+        location: envPath,
         source: [],
         version: executable ? await getPythonVersionFromPath(executable) : undefined,
         type: PythonEnvType.Conda,
     });
-    const name = await conda?.getName(env.envPath);
+    const name = await conda?.getName(envPath);
     if (name) {
         info.name = name;
     }
