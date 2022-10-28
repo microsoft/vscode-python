@@ -444,8 +444,8 @@ export class Conda {
      * Corresponds to "conda env list --json", but also computes environment names.
      */
     @cache(30_000, true, 10_000)
-    public async getEnvList(useCache?: boolean): Promise<CondaEnvInfo[]> {
-        const info = await this.getInfo(useCache);
+    public async getEnvList(): Promise<CondaEnvInfo[]> {
+        const info = await this.getInfo();
         const { envs } = info;
         if (envs === undefined) {
             return [];
