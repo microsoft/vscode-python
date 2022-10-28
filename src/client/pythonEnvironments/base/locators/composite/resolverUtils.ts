@@ -163,7 +163,6 @@ async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
             conda === undefined
                 ? `${executablePath} identified as Conda environment even though Conda is not found`
                 : `Conda environment ${executablePath} does not have envPath`;
-
         traceError(errorMsg);
         // Environment could still be valid, resolve as a simple env.
         env.kind = PythonEnvKind.Unknown;
