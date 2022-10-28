@@ -24,6 +24,8 @@ export class CondaProgressAndTelemetry {
 
     private condaInstalledPackagesReported = false;
 
+    private lastError: string | undefined = undefined;
+
     constructor(private readonly progress: CreateEnvironmentProgress) {}
 
     public process(output: string): void {
@@ -51,6 +53,7 @@ export class CondaProgressAndTelemetry {
                 environmentType: 'conda',
                 reason: 'other',
             });
+            this.lastError = CREATE_CONDA_FAILED_MARKER;
         } else if (!this.condaInstallingPackagesReported && output.includes(CONDA_INSTALLING_YML)) {
             this.condaInstallingPackagesReported = true;
             this.progress.report({
@@ -66,6 +69,7 @@ export class CondaProgressAndTelemetry {
                 environmentType: 'conda',
                 using: 'environment.yml',
             });
+            this.lastError = CREATE_FAILED_INSTALL_YML;
         } else if (!this.condaInstalledPackagesReported && output.includes(CREATE_CONDA_INSTALLED_YML)) {
             this.condaInstalledPackagesReported = true;
             sendTelemetryEvent(EventName.ENVIRONMENT_INSTALLED_PACKAGES, undefined, {
@@ -73,5 +77,9 @@ export class CondaProgressAndTelemetry {
                 using: 'environment.yml',
             });
         }
+    }
+
+    public getLastError(): string | undefined {
+        return this.lastError;
     }
 }

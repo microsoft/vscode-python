@@ -33,6 +33,8 @@ export class VenvProgressAndTelemetry {
 
     private venvInstalledPackagesReported = false;
 
+    private lastError: string | undefined = undefined;
+
     constructor(private readonly progress: CreateEnvironmentProgress) {}
 
     public process(output: string): void {
@@ -60,18 +62,21 @@ export class VenvProgressAndTelemetry {
                 environmentType: 'venv',
                 reason: 'noVenv',
             });
+            this.lastError = VENV_NOT_INSTALLED_MARKER;
         } else if (!this.venvOrPipMissingReported && output.includes(PIP_NOT_INSTALLED_MARKER)) {
             this.venvOrPipMissingReported = true;
             sendTelemetryEvent(EventName.ENVIRONMENT_FAILED, undefined, {
                 environmentType: 'venv',
                 reason: 'noPip',
             });
+            this.lastError = PIP_NOT_INSTALLED_MARKER;
         } else if (!this.venvFailedReported && output.includes(CREATE_VENV_FAILED_MARKER)) {
             this.venvFailedReported = true;
             sendTelemetryEvent(EventName.ENVIRONMENT_FAILED, undefined, {
                 environmentType: 'venv',
                 reason: 'other',
             });
+            this.lastError = CREATE_VENV_FAILED_MARKER;
         } else if (!this.venvInstallingPackagesReported && output.includes(INSTALLING_REQUIREMENTS)) {
             this.venvInstallingPackagesReported = true;
             this.progress.report({
@@ -96,18 +101,21 @@ export class VenvProgressAndTelemetry {
                 environmentType: 'venv',
                 using: 'pipUpgrade',
             });
+            this.lastError = PIP_UPGRADE_FAILED_MARKER;
         } else if (!this.venvInstallingPackagesFailedReported && output.includes(INSTALL_REQUIREMENTS_FAILED_MARKER)) {
             this.venvInstallingPackagesFailedReported = true;
             sendTelemetryEvent(EventName.ENVIRONMENT_INSTALLING_PACKAGES_FAILED, undefined, {
                 environmentType: 'venv',
                 using: 'requirements.txt',
             });
+            this.lastError = INSTALL_REQUIREMENTS_FAILED_MARKER;
         } else if (!this.venvInstallingPackagesFailedReported && output.includes(INSTALL_PYPROJECT_FAILED_MARKER)) {
             this.venvInstallingPackagesFailedReported = true;
             sendTelemetryEvent(EventName.ENVIRONMENT_INSTALLING_PACKAGES_FAILED, undefined, {
                 environmentType: 'venv',
                 using: 'pyproject.toml',
             });
+            this.lastError = INSTALL_PYPROJECT_FAILED_MARKER;
         } else if (!this.venvInstalledPackagesReported && output.includes(INSTALLED_REQUIREMENTS_MARKER)) {
             this.venvInstalledPackagesReported = true;
             sendTelemetryEvent(EventName.ENVIRONMENT_INSTALLED_PACKAGES, undefined, {
@@ -121,5 +129,9 @@ export class VenvProgressAndTelemetry {
                 using: 'pyproject.toml',
             });
         }
+    }
+
+    public getLastError(): string | undefined {
+        return this.lastError;
     }
 }

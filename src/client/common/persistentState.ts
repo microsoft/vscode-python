@@ -152,7 +152,7 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
 // a simpler, alternate API
 // for components to use
 
-interface IPersistentStorage<T> {
+export interface IPersistentStorage<T> {
     get(): T;
     set(value: T): Promise<void>;
 }
