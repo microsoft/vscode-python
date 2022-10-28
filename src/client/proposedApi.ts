@@ -25,7 +25,7 @@ import { getEnvPath } from './pythonEnvironments/base/info/env';
 import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { IPythonExecutionFactory } from './common/process/types';
 import { traceError, traceVerbose } from './logging';
-import { normCasePath } from './common/platform/fs-paths';
+import { isParentPath, normCasePath } from './common/platform/fs-paths';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
 import {
@@ -35,7 +35,7 @@ import {
 } from './deprecatedProposedApi';
 import { DeprecatedProposedAPI } from './deprecatedProposedApiTypes';
 import { IEnvironmentVariablesProvider } from './common/variables/types';
-import { IWorkspaceService } from './common/application/types';
+import { getWorkspaceFolder, getWorkspaceFolders } from './common/vscodeApis/workspaceApis';
 
 type ActiveEnvironmentChangeEvent = {
     resource: WorkspaceFolder | undefined;
@@ -102,6 +102,19 @@ function getEnvReference(e: Environment) {
     return envClass;
 }
 
+function filterUsingVSCodeContext(e: PythonEnvInfo) {
+    const folders = getWorkspaceFolders();
+    if (e.searchLocation) {
+        // Only return local environments that are in the currently opened workspace folders.
+        const envFolderUri = e.searchLocation;
+        if (folders) {
+            return folders.some((folder) => isParentPath(envFolderUri.fsPath, folder.uri.fsPath));
+        }
+        return false;
+    }
+    return true;
+}
+
 export function buildProposedApi(
     discoveryApi: IDiscoveryAPI,
     serviceContainer: IServiceContainer,
@@ -110,7 +123,6 @@ export function buildProposedApi(
     const configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
-    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const envVarsProvider = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
     function sendApiTelemetry(apiName: string) {
         extensions
@@ -126,6 +138,11 @@ export function buildProposedApi(
     }
     disposables.push(
         discoveryApi.onChanged((e) => {
+            const env = e.new ?? e.old;
+            if (!env || !filterUsingVSCodeContext(env)) {
+                // Filter out environments that are not in the current workspace.
+                return;
+            }
             if (e.old) {
                 if (e.new) {
                     onEnvironmentsChanged.fire({ type: 'update', env: convertEnvInfoAndGetReference(e.new) });
@@ -156,7 +173,7 @@ export function buildProposedApi(
         }),
         envVarsProvider.onDidEnvironmentVariablesChange((e) => {
             onEnvironmentVariablesChanged.fire({
-                resource: workspaceService.getWorkspaceFolder(e),
+                resource: getWorkspaceFolder(e),
                 env: envVarsProvider.getEnvironmentVariablesSync(e),
             });
         }),
@@ -235,7 +252,10 @@ export function buildProposedApi(
             },
             get known(): Environment[] {
                 sendApiTelemetry('known');
-                return discoveryApi.getEnvs().map((e) => convertEnvInfoAndGetReference(e));
+                return discoveryApi
+                    .getEnvs()
+                    .filter((e) => filterUsingVSCodeContext(e))
+                    .map((e) => convertEnvInfoAndGetReference(e));
             },
             async refreshEnvironments(options?: RefreshOptions) {
                 await discoveryApi.triggerRefresh(undefined, {
@@ -271,19 +291,19 @@ export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment 
         path,
         id: getEnvID(path),
         executable: {
-            uri: Uri.file(env.executable.filename),
+            uri: env.executable.filename === 'python' ? undefined : Uri.file(env.executable.filename),
             bitness: convertBitness(env.arch),
             sysPrefix: env.executable.sysPrefix,
         },
         environment: env.type
             ? {
                   type: convertEnvType(env.type),
-                  name: env.name,
+                  name: env.name === '' ? undefined : env.name,
                   folderUri: Uri.file(env.location),
-                  workspaceFolder: env.searchLocation,
+                  workspaceFolder: getWorkspaceFolder(env.searchLocation),
               }
             : undefined,
-        version: version as ResolvedEnvironment['version'],
+        version: env.executable.filename === 'python' ? undefined : (version as ResolvedEnvironment['version']),
         tools: tool ? [tool] : [],
     };
     return resolvedEnv;
@@ -325,19 +345,16 @@ export function convertEnvInfo(env: PythonEnvInfo): Environment {
     if (convertedEnv.executable.sysPrefix === '') {
         convertedEnv.executable.sysPrefix = undefined;
     }
-    if (convertedEnv.executable.uri?.fsPath === 'python') {
-        convertedEnv.executable.uri = undefined;
+    if (convertedEnv.version?.sysVersion === '') {
+        convertedEnv.version.sysVersion = undefined;
     }
-    if (convertedEnv.environment?.name === '') {
-        convertedEnv.environment.name = undefined;
-    }
-    if (convertedEnv.version.major === -1) {
+    if (convertedEnv.version?.major === -1) {
         convertedEnv.version.major = undefined;
     }
-    if (convertedEnv.version.micro === -1) {
+    if (convertedEnv.version?.micro === -1) {
         convertedEnv.version.micro = undefined;
     }
-    if (convertedEnv.version.minor === -1) {
+    if (convertedEnv.version?.minor === -1) {
         convertedEnv.version.minor = undefined;
     }
     return convertedEnv as Environment;
