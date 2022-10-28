@@ -504,7 +504,9 @@ export class PythonSettings implements IPythonSettings {
                   optOutFrom: [],
               };
 
-        const tensorBoardSettings = systemVariables.resolveAny(pythonSettings.get<ITensorBoardSettings>('tensorBoard'))!;
+        const tensorBoardSettings = systemVariables.resolveAny(
+            pythonSettings.get<ITensorBoardSettings>('tensorBoard'),
+        )!;
         if (this.tensorBoard) {
             Object.assign<ITensorBoardSettings, ITensorBoardSettings>(this.tensorBoard, tensorBoardSettings);
         } else {
@@ -514,10 +516,10 @@ export class PythonSettings implements IPythonSettings {
         this.tensorBoard = this.tensorBoard
             ? this.tensorBoard
             : {
-                logDirectory: ''
-            };
-        const logDirectory = systemVariables.resolveAny(this.tensorBoard.logDirectory)
-        this.tensorBoard.logDirectory = logDirectory ? getFullAbsolutePath(logDirectory, workspaceRoot) : logDirectory
+                  logDirectory: '',
+              };
+        const logDirectory = systemVariables.resolveAny(this.tensorBoard.logDirectory);
+        this.tensorBoard.logDirectory = logDirectory ? getFullAbsolutePath(logDirectory, workspaceRoot) : logDirectory;
     }
 
     // eslint-disable-next-line class-methods-use-this

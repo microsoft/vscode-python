@@ -9,7 +9,13 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common
 import { Commands } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { IPythonExecutionFactory } from '../common/process/types';
-import { IDisposableRegistry, IInstaller, IPersistentState, IPersistentStateFactory, IConfigurationService } from '../common/types';
+import {
+    IDisposableRegistry,
+    IInstaller,
+    IPersistentState,
+    IPersistentStateFactory,
+    IConfigurationService,
+} from '../common/types';
 import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
 import { IInterpreterService } from '../interpreter/contracts';
 import { traceError, traceInfo } from '../logging';
