@@ -283,7 +283,7 @@ export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment 
                   workspaceFolder: env.searchLocation,
               }
             : undefined,
-        version: version as ResolvedEnvironment['version'],
+        version: env.executable.filename === 'python' ? undefined : (version as ResolvedEnvironment['version']),
         tools: tool ? [tool] : [],
     };
     return resolvedEnv;
