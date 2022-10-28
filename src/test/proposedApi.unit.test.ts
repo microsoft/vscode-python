@@ -252,7 +252,7 @@ suite('Proposed Extension API', () => {
     });
 
     test('environments: python found', async () => {
-        const envs = [
+        const expectedEnvs = [
             {
                 executable: {
                     filename: 'this/is/a/test/python/path1',
@@ -295,6 +295,9 @@ suite('Proposed Extension API', () => {
                     org: '',
                 },
             },
+        ];
+        const envs = [
+            ...expectedEnvs,
             {
                 executable: {
                     filename: 'this/is/a/test/python/path3',
@@ -323,7 +326,7 @@ suite('Proposed Extension API', () => {
         const actualEnvs = actual?.map((a) => (a as EnvironmentReference).internal);
         assert.deepEqual(
             actualEnvs?.sort((a, b) => a.id.localeCompare(b.id)),
-            envs.map((e) => convertEnvInfo(e)).sort((a, b) => a.id.localeCompare(b.id)),
+            expectedEnvs.map((e) => convertEnvInfo(e)).sort((a, b) => a.id.localeCompare(b.id)),
         );
     });
 
