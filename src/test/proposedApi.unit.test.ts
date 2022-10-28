@@ -28,7 +28,7 @@ import { sleep } from './core';
 import { PythonEnvKind, PythonEnvSource } from '../client/pythonEnvironments/base/info';
 import { Architecture } from '../client/common/utils/platform';
 import { PythonEnvCollectionChangedEvent } from '../client/pythonEnvironments/base/watcher';
-import { arePathsSame, normCasePath } from '../client/common/platform/fs-paths';
+import { normCasePath } from '../client/common/platform/fs-paths';
 import {
     ActiveEnvironmentPathChangeEvent,
     EnvironmentsChangeEvent,
