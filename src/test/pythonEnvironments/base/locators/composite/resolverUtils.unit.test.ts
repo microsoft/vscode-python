@@ -310,7 +310,7 @@ suite('Resolver Utils', () => {
                     path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
                     PythonEnvKind.Unknown,
                     undefined,
-                    'conda1',
+                    '',
                     path.join(TEST_LAYOUT_ROOT, 'conda1'),
                 ),
             );
@@ -639,7 +639,7 @@ suite('Resolver Utils', () => {
                 version: parseVersion('3.8.5'),
                 arch: Architecture.x64, // Provided by registry
                 org: 'ContinuumAnalytics', // Provided by registry
-                name: 'conda3',
+                name: '',
                 source: [PythonEnvSource.WindowsRegistry],
                 type: PythonEnvType.Conda,
             });
