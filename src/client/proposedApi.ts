@@ -35,7 +35,6 @@ import {
 } from './deprecatedProposedApi';
 import { DeprecatedProposedAPI } from './deprecatedProposedApiTypes';
 import { IEnvironmentVariablesProvider } from './common/variables/types';
-import { IWorkspaceService } from './common/application/types';
 import { getWorkspaceFolder, getWorkspaceFolders } from './common/vscodeApis/workspaceApis';
 
 type ActiveEnvironmentChangeEvent = {
@@ -124,7 +123,6 @@ export function buildProposedApi(
     const configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
-    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const envVarsProvider = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
     function sendApiTelemetry(apiName: string) {
         extensions
@@ -175,7 +173,7 @@ export function buildProposedApi(
         }),
         envVarsProvider.onDidEnvironmentVariablesChange((e) => {
             onEnvironmentVariablesChanged.fire({
-                resource: workspaceService.getWorkspaceFolder(e),
+                resource: getWorkspaceFolder(e),
                 env: envVarsProvider.getEnvironmentVariablesSync(e),
             });
         }),
