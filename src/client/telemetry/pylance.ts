@@ -63,7 +63,8 @@
    "language_server/completion_accepted" : {
       "autoimport" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "dictionarykey" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "memberAccess" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "memberaccess" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+
       "keyword" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
    }
 */
