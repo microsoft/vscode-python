@@ -36,6 +36,7 @@ import {
 import { DeprecatedProposedAPI } from './deprecatedProposedApiTypes';
 import { IEnvironmentVariablesProvider } from './common/variables/types';
 import { IWorkspaceService } from './common/application/types';
+import { getWorkspaceFolder } from './common/vscodeApis/workspaceApis';
 
 type ActiveEnvironmentChangeEvent = {
     resource: WorkspaceFolder | undefined;
@@ -280,7 +281,7 @@ export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment 
                   type: convertEnvType(env.type),
                   name: env.name,
                   folderUri: Uri.file(env.location),
-                  workspaceFolder: env.searchLocation,
+                  workspaceFolder: getWorkspaceFolder(env.searchLocation)?.uri,
               }
             : undefined,
         version: version as ResolvedEnvironment['version'],

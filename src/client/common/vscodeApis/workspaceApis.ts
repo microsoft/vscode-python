@@ -1,7 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationScope, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { ConfigurationScope, Uri, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+
+export function getWorkspaceFolder(resource: Uri | undefined): WorkspaceFolder | undefined {
+    return resource ? workspace.getWorkspaceFolder(resource) : resource;
+}
 
 export function getWorkspaceFolders(): readonly WorkspaceFolder[] | undefined {
     return workspace.workspaceFolders;
