@@ -32,10 +32,10 @@ async function getChannel(): Promise<string> {
         return process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL;
     }
 
-    const package_json_path = path.join(EXTENSION_ROOT_DIR, 'package.json');
-    if (await fs.pathExists(package_json_path)) {
-        const package_json = await fs.readJSON(package_json_path);
-        if (package_json.engines.vscode.endsWith('insider')) {
+    const packageJsonPath = path.join(EXTENSION_ROOT_DIR, 'package.json');
+    if (await fs.pathExists(packageJsonPath)) {
+        const packageJson = await fs.readJSON(packageJsonPath);
+        if (packageJson.engines.vscode.endsWith('insider')) {
             return 'insiders';
         }
     }
