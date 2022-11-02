@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2022.17.0-dev",
+    "version": "2022.19.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -40,7 +40,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.68.0"
+        "vscode": "^1.73.0-insider"
     },
     "keywords": [
         "python",
@@ -63,28 +63,19 @@
         "onLanguage:python",
         "onDebugDynamicConfigurations:python",
         "onDebugResolve:python",
-        "onCommand:python.execInTerminal",
-        "onCommand:python.debugInTerminal",
-        "onCommand:python.sortImports",
         "onCommand:python.setInterpreter",
-        "onCommand:python.setShebangInterpreter",
         "onCommand:python.viewLanguageServerOutput",
         "onCommand:python.viewOutput",
-        "onCommand:python.execSelectionInTerminal",
-        "onCommand:python.execSelectionInDjangoShell",
         "onCommand:python.startREPL",
-        "onCommand:python.goToPythonObject",
-        "onCommand:python.reportIssue",
-        "onCommand:python.setLinter",
-        "onCommand:python.enableLinting",
         "onCommand:python.createTerminal",
         "onCommand:python.configureTests",
-        "onCommand:python.clearWorkspaceInterpreter",
         "onCommand:python.enableSourceMapSupport",
         "onCommand:python.launchTensorBoard",
         "onCommand:python.clearCacheAndReload",
         "onCommand:python.createEnvironment",
         "onCommand:python.createNewFile",
+        "onCommand:python.refreshTensorBoard",
+        "onCommand:testing.reRunFailTests",
         "onWalkthrough:pythonWelcome",
         "onWalkthrough:pythonWelcomeWithEnv",
         "onWalkthrough:pythonWelcomeWithDS",
@@ -1614,7 +1605,7 @@
                     "category": "Python",
                     "command": "python.analysis.restartLanguageServer",
                     "title": "%python.command.python.analysis.restartLanguageServer.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
+                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
                 },
                 {
                     "category": "Python",
@@ -1626,7 +1617,7 @@
                     "category": "Python",
                     "command": "python.clearWorkspaceInterpreter",
                     "title": "%python.command.python.clearWorkspaceInterpreter.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
+                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
                 },
                 {
                     "category": "Python",
@@ -1650,7 +1641,7 @@
                     "category": "Python",
                     "command": "python.enableLinting",
                     "title": "%python.command.python.enableLinting.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
+                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
                 },
                 {
                     "category": "Python",
@@ -1662,33 +1653,33 @@
                     "category": "Python",
                     "command": "python.execInTerminal",
                     "title": "%python.command.python.execInTerminal.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
+                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
                 },
                 {
                     "category": "Python",
                     "command": "python.execInTerminal-icon",
                     "icon": "$(play)",
                     "title": "%python.command.python.execInTerminalIcon.title%",
-                    "when": "false"
+                    "when": "false && editorLangId == python"
                 },
                 {
                     "category": "Python",
                     "command": "python.debugInTerminal",
                     "icon": "$(debug-alt)",
                     "title": "%python.command.python.debugInTerminal.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
+                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
                 },
                 {
                     "category": "Python",
                     "command": "python.execSelectionInDjangoShell",
                     "title": "%python.command.python.execSelectionInDjangoShell.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
+                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
                 },
                 {
                     "category": "Python",
                     "command": "python.execSelectionInTerminal",
                     "title": "%python.command.python.execSelectionInTerminal.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
+                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
                 },
                 {
                     "category": "Python",
@@ -1708,7 +1699,7 @@
                     "category": "Python",
                     "command": "python.reportIssue",
                     "title": "%python.command.python.reportIssue.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
+                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
                 },
                 {
                     "category": "Test",
@@ -1721,7 +1712,7 @@
                     "category": "Python",
                     "command": "python.runLinting",
                     "title": "%python.command.python.runLinting.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
+                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
                 },
                 {
                     "category": "Python",
@@ -1733,13 +1724,13 @@
                     "category": "Python",
                     "command": "python.setLinter",
                     "title": "%python.command.python.setLinter.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
+                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
                 },
                 {
                     "category": "Python Refactor",
                     "command": "python.sortImports",
                     "title": "%python.command.python.sortImports.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
+                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
                 },
                 {
                     "category": "Python",

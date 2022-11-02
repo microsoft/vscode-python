@@ -64,7 +64,6 @@
       "autoimport" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "dictionarykey" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "memberaccess" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-
       "keyword" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
    }
 */
