@@ -507,19 +507,10 @@ export class PythonSettings implements IPythonSettings {
         const tensorBoardSettings = systemVariables.resolveAny(
             pythonSettings.get<ITensorBoardSettings>('tensorBoard'),
         )!;
-        if (this.tensorBoard) {
-            Object.assign<ITensorBoardSettings, ITensorBoardSettings>(this.tensorBoard, tensorBoardSettings);
-        } else {
-            this.tensorBoard = tensorBoardSettings;
-        }
-        // Support for travis.
-        this.tensorBoard = this.tensorBoard
-            ? this.tensorBoard
-            : {
-                  logDirectory: '',
-              };
-        const logDirectory = systemVariables.resolveAny(this.tensorBoard.logDirectory);
-        this.tensorBoard.logDirectory = logDirectory ? getFullAbsolutePath(logDirectory, workspaceRoot) : logDirectory;
+        this.tensorBoard = tensorBoardSettings || { logDirectory: '' };
+        this.tensorBoard.logDirectory = this.tensorBoard.logDirectory
+            ? getFullAbsolutePath(this.tensorBoard.logDirectory, workspaceRoot)
+            : this.tensorBoard.logDirectory;
     }
 
     // eslint-disable-next-line class-methods-use-this
