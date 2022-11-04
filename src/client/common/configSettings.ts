@@ -507,10 +507,10 @@ export class PythonSettings implements IPythonSettings {
         const tensorBoardSettings = systemVariables.resolveAny(
             pythonSettings.get<ITensorBoardSettings>('tensorBoard'),
         )!;
-        this.tensorBoard = tensorBoardSettings || { logDirectory: '' };
-        this.tensorBoard.logDirectory = this.tensorBoard.logDirectory
-            ? getFullAbsolutePath(this.tensorBoard.logDirectory, workspaceRoot)
-            : this.tensorBoard.logDirectory;
+        this.tensorBoard = tensorBoardSettings;
+        if (this.tensorBoard.logDirectory) {
+            this.tensorBoard.logDirectory = getAbsolutePath(this.tensorBoard.logDirectory, workspaceRoot);
+        }
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -598,12 +598,6 @@ export class PythonSettings implements IPythonSettings {
         }
         return getAbsolutePath(this.pythonPath, workspaceRoot);
     }
-}
-
-// Workaround since getAbsolutePath cannot handle paths such as "runs" and "."
-function getFullAbsolutePath(pathToCheck: string, rootDir: string | undefined): string {
-    pathToCheck = untildify(pathToCheck) as string;
-    return rootDir ? path.resolve(rootDir, pathToCheck) : path.resolve(pathToCheck);
 }
 
 function getAbsolutePath(pathToCheck: string, rootDir: string | undefined): string {
