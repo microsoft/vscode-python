@@ -65,6 +65,11 @@ export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJs
 export function sortImports(filename: string, sortArgs?: string[]): [string[], (out: string) => string] {
     const script = path.join(SCRIPTS_DIR, 'sortImports.py');
     const args = [script, filename, '--diff'];
+
+    if (path.extname(filename) === '.pyi') {
+        args.push(...['--ext-format', 'pyi']);
+    }
+
     if (sortArgs) {
         args.push(...sortArgs);
     }
