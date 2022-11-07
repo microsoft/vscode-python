@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-<<<<<<< HEAD
 import enum
 import json
 import os
@@ -8,13 +7,10 @@ import sys
 from dbm.ndbm import library
 from typing import KeysView, List, Literal, Optional, Tuple, TypedDict, Union
 from unittest import TestCase
-=======
->>>>>>> 5f80ae666 (pushing changes in order to rebase)
 
 import pytest
 
 
-<<<<<<< HEAD
 # Inherit from str so it's JSON serializable.
 class TestNodeTypeEnum(str, enum.Enum):
     class_ = "class"
@@ -54,12 +50,11 @@ DEFAULT_PORT = "45454"
 #   test Case
 
 # modules folders1/folders2  (can be in classes)
-#   test cases 
+#   test cases
 
 # module
 # class
 # test case
-
 
 
 def pytest_collection_finish(session):
@@ -90,7 +85,9 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
                 testNode_file_dict[test_case.parent] = createFileTestNode(
                     test_case.parent
                 )
-            testNode_file_dict[test_case.parent].get("children").append(testNode_test) # use set default
+            testNode_file_dict[test_case.parent].get("children").append(
+                testNode_test
+            )  # use set default
         else:
             # this means its a unittest class
             # create class
@@ -112,9 +109,13 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
             # it is a nested folder structure and so new objects need to be created
             nested_folder_list = name.split("/")
             path_iterator = (
-                str(session.fspath) + "/" + "/".join(nested_folder_list[0:-1]) # check to see if windows style (more fancy stuff path lib if windows or posix via API in os module)
+                str(session.fspath)
+                + "/"
+                + "/".join(
+                    nested_folder_list[0:-1]
+                )  # check to see if windows style (more fancy stuff path lib if windows or posix via API in os module)
             )
-            for i in range(len(nested_folder_list) - 2, -1, -1): #reverse and slice
+            for i in range(len(nested_folder_list) - 2, -1, -1):  # reverse and slice
                 folderName = nested_folder_list[i]
                 folder_test_node = accessOrCreateGeneral(
                     folderName,
@@ -232,26 +233,3 @@ Request-uuid: {testuuid}
 
 {data}"""
         result = s.socket.sendall(request.encode("utf-8"))  # type: ignore
-=======
-def pytest_addoption(parser):
-    group = parser.getgroup("vscode-integration")
-    group.addoption(
-        "--foo",
-        action="store",
-        dest="dest_foo",
-        default="2022",
-        help='Set the value for the fixture "bar".',
-    )
-
-    parser.addini("HELLO", "Dummy pytest.ini setting")
-
-
-@pytest.fixture
-def bar(request):
-    return request.config.option.dest_foo
-
-
-def pytest_runtest_setup(item):
-    # called for running each test in 'a' directory
-    print("AAAAA: setting up", item)
->>>>>>> 5f80ae666 (pushing changes in order to rebase)
