@@ -211,7 +211,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
 
 async function validateInfo(env: PythonEnvInfo) {
     const { ctime, mtime } = await getFileInfo(env.executable.filename);
-    if (ctime === env.executable.ctime && mtime === env.executable.mtime) {
+    if (ctime !== -1 && mtime !== -1 && ctime === env.executable.ctime && mtime === env.executable.mtime) {
         return true;
     }
     env.executable.ctime = ctime;

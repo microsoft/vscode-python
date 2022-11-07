@@ -124,7 +124,7 @@ export function buildProposedApi(
     const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
     const envVarsProvider = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
-    function sendApiTelemetry(apiName: string) {
+    function sendApiTelemetry(apiName: string, args?: unknown) {
         extensions
             .determineExtensionFromCallStack()
             .then((info) => {
@@ -132,7 +132,7 @@ export function buildProposedApi(
                     apiName,
                     extensionId: info.extensionId,
                 });
-                traceVerbose(`Extension ${info.extensionId} accessed ${apiName}`);
+                traceVerbose(`Extension ${info.extensionId} accessed ${apiName} with args: ${JSON.stringify(args)}`);
             })
             .ignoreErrors();
     }
@@ -247,7 +247,7 @@ export function buildProposedApi(
                     }
                     path = fullyQualifiedPath;
                 }
-                sendApiTelemetry('resolveEnvironment');
+                sendApiTelemetry('resolveEnvironment', env);
                 return resolveEnvironment(path, discoveryApi);
             },
             get known(): Environment[] {

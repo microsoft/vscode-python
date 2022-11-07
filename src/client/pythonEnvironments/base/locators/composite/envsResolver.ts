@@ -52,6 +52,9 @@ export class PythonEnvsResolver implements IResolvingLocator {
         const kind = await identifyEnvironment(path);
         const environment = await resolveBasicEnv({ kind, executablePath, envPath });
         const info = await this.environmentInfoService.getEnvironmentInfo(environment);
+        traceVerbose(
+            `Environment resolver resolved ${path} for ${JSON.stringify(environment)} to ${JSON.stringify(info)}`,
+        );
         if (!info) {
             return undefined;
         }
