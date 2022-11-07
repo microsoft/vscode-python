@@ -16,7 +16,7 @@ import {
 } from '../common/types';
 
 /**
- * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
+ * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.
  */
 export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     private deferred: Deferred<DiscoveredTestPayload> | undefined;
@@ -63,7 +63,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 }
 
 function buildDiscoveryCommand(args: string[]): TestDiscoveryCommand {
-    const discoveryScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittest_adapter', 'unittest_discovery.py');
+    const discoveryScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'discovery.py');
 
     return {
         script: discoveryScript,

@@ -122,18 +122,6 @@ suite('venv Creation provider tests', () => {
             ) => task(progressMock.object),
         );
 
-        progressMock.setup((p) => p.report({ message: CreateEnv.statusStarting })).verifiable(typemoq.Times.once());
-
-        withProgressStub.callsFake(
-            (
-                _options: ProgressOptions,
-                task: (
-                    progress: CreateEnvironmentProgress,
-                    token?: CancellationToken,
-                ) => Thenable<CreateEnvironmentResult>,
-            ) => task(progressMock.object),
-        );
-
         const promise = venvProvider.createEnvironment();
         await deferred.promise;
         assert.isDefined(_next);

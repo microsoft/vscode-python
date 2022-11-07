@@ -58,7 +58,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
         architecture: Architecture.x64,
     };
 
-    function initSetup() {
+    function initSetup(interpreter: PythonEnvironment | undefined) {
         helper = mock(TerminalHelper);
         platform = mock(PlatformService);
         processServiceFactory = mock(ProcessServiceFactory);
@@ -71,6 +71,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
         onDidChangeInterpreter = new EventEmitter<void>();
         when(envVarsService.onDidEnvironmentVariablesChange).thenReturn(onDidChangeEnvVariables.event);
         when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(interpreter);
         service = new EnvironmentActivationService(
             instance(helper),
             instance(platform),
@@ -89,7 +90,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
     [undefined, Uri.parse('a')].forEach((resource) =>
         [undefined, pythonInterpreter].forEach((interpreter) => {
             suite(title(resource, interpreter), () => {
-                setup(initSetup);
+                setup(() => initSetup(interpreter));
                 test('Unknown os will return empty variables', async () => {
                     when(platform.osType).thenReturn(OSType.Unknown);
                     const env = await service.getActivatedEnvironmentVariables(resource);
@@ -102,7 +103,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
 
                 osTypes.forEach((osType) => {
                     suite(osType.name, () => {
-                        setup(initSetup);
+                        setup(() => initSetup(interpreter));
                         test('getEnvironmentActivationShellCommands will be invoked', async () => {
                             when(platform.osType).thenReturn(osType.value);
                             when(

@@ -71,12 +71,6 @@ export class PythonTestServer implements ITestServer, Disposable {
         return (this.server.address() as net.AddressInfo).port;
     }
 
-    public createUUID(cwd: string): string {
-        const uuid = crypto.randomUUID();
-        this.uuids.set(uuid, cwd);
-        return uuid;
-    }
-
     public dispose(): void {
         this.server.close();
         this._onDataReceived.dispose();
@@ -87,12 +81,14 @@ export class PythonTestServer implements ITestServer, Disposable {
     }
 
     async sendCommand(options: TestCommandOptions): Promise<void> {
-        const uuid = this.createUUID(options.cwd);
+        const uuid = crypto.randomUUID();
         const spawnOptions: SpawnOptions = {
             token: options.token,
             cwd: options.cwd,
             throwOnStdErr: true,
         };
+
+        this.uuids.set(uuid, options.cwd);
 
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {

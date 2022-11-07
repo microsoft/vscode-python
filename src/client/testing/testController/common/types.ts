@@ -12,7 +12,6 @@ import {
     Uri,
     WorkspaceFolder,
 } from 'vscode';
-import { IPythonExecutionFactory } from '../../../common/process/types';
 import { TestDiscoveryOptions } from '../../common/types';
 
 export type TestRunInstanceOptions = TestRunOptions & {
@@ -152,17 +151,6 @@ export type TestCommandOptions = {
     testIds?: string[];
 };
 
-export type TestCommandOptionsPytest = {
-    workspaceFolder: Uri;
-    cwd: string;
-    commandStr: string;
-    token?: CancellationToken;
-    outChannel?: OutputChannel;
-    debugBool?: boolean;
-    testIds?: string[];
-    env: { [key: string]: string | undefined };
-};
-
 /**
  * Interface describing the server that will send test commands to the Python side, and process responses.
  *
@@ -173,12 +161,10 @@ export interface ITestServer {
     readonly onDataReceived: Event<DataReceivedEvent>;
     sendCommand(options: TestCommandOptions): Promise<void>;
     serverReady(): Promise<void>;
-    getPort(): number;
-    createUUID(cwd: string): string;
 }
 
 export interface ITestDiscoveryAdapter {
-    discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload>;
+    discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
 }
 
 // interface for execution/runner adapter
