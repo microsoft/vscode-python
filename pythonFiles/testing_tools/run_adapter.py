@@ -14,9 +14,9 @@ sys.path.insert(
     ),
 )
 
-from testing_tools.adapter.__main__ import main, parse_args
+from testing_tools.adapter.__main__ import parse_args, main
+
 
 if __name__ == "__main__":
     tool, cmd, subargs, toolargs = parse_args()
     main(tool, cmd, subargs, toolargs)
-    print("run adapter hello")
