@@ -7,7 +7,6 @@ import { Event, Uri } from 'vscode';
 import { IAsyncIterableIterator, iterEmpty } from '../../common/utils/async';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from './info';
 import {
-    BasicPythonEnvsChangedEvent,
     IPythonEnvsWatcher,
     PythonEnvCollectionChangedEvent,
     PythonEnvsChangedEvent,
@@ -128,6 +127,14 @@ export type PythonLocatorQuery = BasicPythonLocatorQuery & {
      * If provided, results should be limited to within these locations.
      */
     searchLocations?: SearchLocations;
+    /**
+     * If provided, results should be limited envs provided by these locators.
+     */
+    providerId?: string;
+    /**
+     * If provided, results area limited to this env.
+     */
+    envPath?: string;
 };
 
 type QueryForEvent<E> = E extends PythonEnvsChangedEvent ? PythonLocatorQuery : BasicPythonLocatorQuery;
@@ -153,8 +160,8 @@ export type BasicEnvInfo = {
  * events emitted via `onChanged` do not need to provide information
  * for the specific environments that changed.
  */
-export interface ILocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
-    extends IPythonEnvsWatcher<E> {
+export interface ILocator<I = PythonEnvInfo, E = PythonEnvsChangedEvent> extends IPythonEnvsWatcher<E> {
+    readonly providerId: string;
     /**
      * Iterate over the enviroments known tos this locator.
      *
@@ -174,6 +181,8 @@ export interface ILocator<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEve
     iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator<I>;
 }
 
+export type ICompositeLocator<I = PythonEnvInfo, E = PythonEnvsChangedEvent> = Omit<ILocator<I, E>, 'providerId'>;
+
 interface IResolver {
     /**
      * Find as much info about the given Python environment as possible.
@@ -184,7 +193,7 @@ interface IResolver {
     resolveEnv(path: string): Promise<PythonEnvInfo | undefined>;
 }
 
-export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ILocator<I> {}
+export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ICompositeLocator<I> {}
 
 export interface GetRefreshEnvironmentsOptions {
     /**
@@ -234,7 +243,7 @@ export interface IDiscoveryAPI {
     resolveEnv(path: string): Promise<PythonEnvInfo | undefined>;
 }
 
-interface IEmitter<E extends PythonEnvsChangedEvent> {
+interface IEmitter<E> {
     fire(e: E): void;
 }
 
@@ -250,9 +259,10 @@ interface IEmitter<E extends PythonEnvsChangedEvent> {
  * should be used.  Only in low-level cases should you consider using
  * `BasicPythonEnvsChangedEvent`.
  */
-abstract class LocatorBase<I = PythonEnvInfo, E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
-    implements ILocator<I, E> {
+abstract class LocatorBase<I = PythonEnvInfo, E = PythonEnvsChangedEvent> implements ILocator<I, E> {
     public readonly onChanged: Event<E>;
+
+    public abstract readonly providerId: string;
 
     protected readonly emitter: IEmitter<E>;
 

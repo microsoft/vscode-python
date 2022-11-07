@@ -7,7 +7,9 @@ import { Conda, getCondaEnvironmentsTxt } from '../../../common/environmentManag
 import { traceError, traceVerbose } from '../../../../logging';
 import { FSWatchingLocator } from './fsWatchingLocator';
 
-export class CondaEnvironmentLocator extends FSWatchingLocator<BasicEnvInfo> {
+export class CondaEnvironmentLocator extends FSWatchingLocator {
+    public readonly providerId: string = 'conda-envs';
+
     public constructor() {
         super(
             () => getCondaEnvironmentsTxt(),
@@ -30,12 +32,8 @@ export class CondaEnvironmentLocator extends FSWatchingLocator<BasicEnvInfo> {
             try {
                 traceVerbose(`Looking into conda env for executable: ${JSON.stringify(env)}`);
                 const executablePath = await conda.getInterpreterPathForEnvironment(env);
-                if (executablePath !== undefined) {
-                    traceVerbose(`Found conda executable: ${executablePath}`);
-                    yield { kind: PythonEnvKind.Conda, executablePath, envPath: env.prefix };
-                } else {
-                    traceError(`Executable for conda env not found: ${JSON.stringify(env)}`);
-                }
+                traceVerbose(`Found conda executable: ${executablePath}`);
+                yield { kind: PythonEnvKind.Conda, executablePath, envPath: env.prefix };
             } catch (ex) {
                 traceError(`Failed to process conda env: ${JSON.stringify(env)}`, ex);
             }

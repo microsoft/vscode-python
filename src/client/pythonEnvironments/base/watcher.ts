@@ -22,11 +22,20 @@ export type BasicPythonEnvsChangedEvent = {
 
 /**
  * The full set of possible info for a Python environments event.
- *
- * @prop searchLocation - the location, if any, affected by the event
  */
 export type PythonEnvsChangedEvent = BasicPythonEnvsChangedEvent & {
+    /**
+     * The location, if any, affected by the event.
+     */
     searchLocation?: Uri;
+    /**
+     * A specific provider, if any, affected by the event.
+     */
+    providerId?: string;
+    /**
+     * The env, if any, affected by the event.
+     */
+    envPath?: string;
 };
 
 export type PythonEnvCollectionChangedEvent = BasicPythonEnvCollectionChangedEvent & {
@@ -47,7 +56,7 @@ export type BasicPythonEnvCollectionChangedEvent = {
  * events, their source, and the timing is entirely up to the watcher
  * implementation.
  */
-export interface IPythonEnvsWatcher<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent> {
+export interface IPythonEnvsWatcher<E = PythonEnvsChangedEvent> {
     /**
      * The hook for registering event listeners (callbacks).
      */

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { pathExistsSync, readFileSync } from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { traceError } from '../../logging';
@@ -30,6 +31,22 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
             traceError('Custom .env is likely not pointing to a valid file', ex);
             return undefined;
         });
+        if (!contents) {
+            return;
+        }
+        return parseEnvFile(contents, baseVars);
+    }
+
+    public parseFileSync(filePath?: string, baseVars?: EnvironmentVariables): EnvironmentVariables | undefined {
+        if (!filePath || !pathExistsSync(filePath)) {
+            return;
+        }
+        let contents: string | undefined;
+        try {
+            contents = readFileSync(filePath, { encoding: 'utf8' });
+        } catch (ex) {
+            traceError('Custom .env is likely not pointing to a valid file', ex);
+        }
         if (!contents) {
             return;
         }

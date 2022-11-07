@@ -617,3 +617,16 @@ export namespace CreateEnv {
         );
     }
 }
+
+export namespace ToolsExtensions {
+    export const flake8PromptMessage = localize(
+        'toolsExt.flake8.message',
+        'Use the Flake8 extension to enable easier configuration and new features such as quick fixes.',
+    );
+    export const pylintPromptMessage = localize(
+        'toolsExt.pylint.message',
+        'Use the Pylint extension to enable easier configuration and new features such as quick fixes.',
+    );
+    export const installPylintExtension = localize('toolsExt.install.pylint', 'Install Pylint extension');
+    export const installFlake8Extension = localize('toolsExt.install.flake8', 'Install Flake8 extension');
+}

@@ -24,7 +24,12 @@ import {
     IPythonExecutionFactory,
     IPythonToolExecutionService,
 } from '../../client/common/process/types';
-import { IConfigurationService, IDisposableRegistry, IInterpreterPathService } from '../../client/common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IInterpreterPathService,
+    IPersistentState,
+} from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IComponentAdapter, IInterpreterService } from '../../client/interpreter/contracts';
@@ -35,6 +40,7 @@ import { deleteFile, PYTHON_PATH } from '../common';
 import { BaseTestFixture, getLinterID, getProductName, newMockDocument, throwUnknownProduct } from './common';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
 import { Conda } from '../../client/pythonEnvironments/common/environmentManagers/conda';
+import * as promptApis from '../../client/linters/prompts/common';
 
 const workspaceDir = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const workspaceUri = Uri.file(workspaceDir);
@@ -745,6 +751,19 @@ class TestFixture extends BaseTestFixture {
 }
 
 suite('Linting Functional Tests', () => {
+    let isExtensionInstalledStub: sinon.SinonStub;
+    let doNotShowPromptStateStub: sinon.SinonStub;
+    let persistentState: TypeMoq.IMock<IPersistentState<boolean>>;
+    setup(() => {
+        isExtensionInstalledStub = sinon.stub(promptApis, 'isExtensionInstalled');
+        // For these tests we assume that linter extensions are not installed.
+        isExtensionInstalledStub.returns(false);
+
+        persistentState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+        persistentState.setup((p) => p.value).returns(() => true);
+        doNotShowPromptStateStub = sinon.stub(promptApis, 'doNotShowPromptState');
+        doNotShowPromptStateStub.returns(persistentState.object);
+    });
     teardown(() => {
         sinon.restore();
     });

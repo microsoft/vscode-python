@@ -17,7 +17,7 @@ import { DebugConfigurationState, DebugConfigurationType } from '../../types';
 export async function buildFastAPILaunchDebugConfiguration(
     input: MultiStepInput<DebugConfigurationState>,
     state: DebugConfigurationState,
-) {
+): Promise<void> {
     const application = await getApplicationPath(state.folder);
     let manuallyEnteredAValue: boolean | undefined;
     const config: Partial<LaunchRequestArguments> = {
@@ -57,10 +57,11 @@ export async function buildFastAPILaunchDebugConfiguration(
 }
 export async function getApplicationPath(folder: WorkspaceFolder | undefined): Promise<string | undefined> {
     if (!folder) {
-        return;
+        return undefined;
     }
     const defaultLocationOfManagePy = path.join(folder.uri.fsPath, 'main.py');
     if (await fs.pathExists(defaultLocationOfManagePy)) {
         return 'main.py';
     }
+    return undefined;
 }

@@ -28,6 +28,7 @@ import { IDebugConfigurationResolver } from './types';
 @injectable()
 export class PythonDebugConfigurationService implements IDebugConfigurationService {
     private cacheDebugConfig: DebugConfiguration | undefined = undefined;
+
     constructor(
         @inject(IDebugConfigurationResolver)
         @named('attach')
@@ -47,13 +48,12 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
 
         // Disabled until configuration issues are addressed by VS Code. See #4007
         const multiStep = this.multiStepFactory.create<DebugConfigurationState>();
-        await multiStep.run((input, s) => this.pickDebugConfiguration(input, s), state);
+        await multiStep.run((input, s) => PythonDebugConfigurationService.pickDebugConfiguration(input, s), state);
 
-        if (Object.keys(state.config).length === 0) {
-            return;
-        } else {
+        if (Object.keys(state.config).length !== 0) {
             return [state.config as DebugConfiguration];
         }
+        return undefined;
     }
 
     public async resolveDebugConfiguration(
@@ -67,7 +67,8 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
                 debugConfiguration as AttachRequestArguments,
                 token,
             );
-        } else if (debugConfiguration.request === 'test') {
+        }
+        if (debugConfiguration.request === 'test') {
             // `"request": "test"` is now deprecated. But some users might have it in their
             // launch config. We get here if they triggered it using F5 or start with debugger.
             throw Error(
@@ -80,9 +81,10 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
                 } else {
                     const configs = await this.provideDebugConfigurations(folder, token);
                     if (configs === undefined) {
-                        return;
+                        return undefined;
                     }
                     if (Array.isArray(configs) && configs.length === 1) {
+                        // eslint-disable-next-line prefer-destructuring
                         debugConfiguration = configs[0];
                     }
                     this.cacheDebugConfig = cloneDeep(debugConfiguration);
@@ -107,7 +109,8 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         return debugConfiguration.request === 'attach' ? resolve(this.attachResolver) : resolve(this.launchResolver);
     }
 
-    protected async pickDebugConfiguration(
+    // eslint-disable-next-line consistent-return
+    protected static async pickDebugConfiguration(
         input: MultiStepInput<DebugConfigurationState>,
         state: DebugConfigurationState,
     ): Promise<InputStep<DebugConfigurationState> | void> {
@@ -178,7 +181,7 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
             title: DebugConfigStrings.selectConfiguration.title,
             placeholder: DebugConfigStrings.selectConfiguration.placeholder,
             activeItem: items[0],
-            items: items,
+            items,
         });
         if (pick) {
             const pickedDebugConfiguration = debugConfigurations.get(pick.type)!;

@@ -6,11 +6,8 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
-import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../../../common/constants';
-import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
-import { SystemVariables } from '../../../../common/variables/systemVariables';
+import { getOSType, OSType } from '../../../../common/utils/platform';
 import { IInterpreterService } from '../../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
@@ -18,6 +15,9 @@ import { DebuggerTelemetry } from '../../../../telemetry/types';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments, PathMapping } from '../../../types';
 import { PythonPathSource } from '../../types';
 import { IDebugConfigurationResolver } from '../types';
+import { resolveVariables } from '../utils/common';
+import { getWorkspaceFolder as getVSCodeWorkspaceFolder, getWorkspaceFolders } from '../utils/workspaceFolder';
+import { getProgram } from './helper';
 
 @injectable()
 export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
@@ -25,9 +25,6 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
     protected pythonPathSource: PythonPathSource = PythonPathSource.launchJson;
 
     constructor(
-        protected readonly workspaceService: IWorkspaceService,
-        protected readonly documentManager: IDocumentManager,
-        protected readonly platformService: IPlatformService,
         protected readonly configurationService: IConfigurationService,
         protected readonly interpreterService: IInterpreterService,
     ) {}
@@ -40,6 +37,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
     // and validation of debug configuration in derived classes should be performed in
     // resolveDebugConfigurationWithSubstitutedVariables() instead, where all variables
     // are already substituted.
+    // eslint-disable-next-line class-methods-use-this
     public async resolveDebugConfiguration(
         _folder: WorkspaceFolder | undefined,
         debugConfiguration: DebugConfiguration,
@@ -54,44 +52,37 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         token?: CancellationToken,
     ): Promise<T | undefined>;
 
-    protected getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
+    protected static getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
         if (folder) {
             return folder.uri;
         }
-        const program = this.getProgram();
-        if (
-            !Array.isArray(this.workspaceService.workspaceFolders) ||
-            this.workspaceService.workspaceFolders.length === 0
-        ) {
+        const program = getProgram();
+        const workspaceFolders = getWorkspaceFolders();
+
+        if (!Array.isArray(workspaceFolders) || workspaceFolders.length === 0) {
             return program ? Uri.file(path.dirname(program)) : undefined;
         }
-        if (this.workspaceService.workspaceFolders.length === 1) {
-            return this.workspaceService.workspaceFolders[0].uri;
+        if (workspaceFolders.length === 1) {
+            return workspaceFolders[0].uri;
         }
         if (program) {
-            const workspaceFolder = this.workspaceService.getWorkspaceFolder(Uri.file(program));
+            const workspaceFolder = getVSCodeWorkspaceFolder(Uri.file(program));
             if (workspaceFolder) {
                 return workspaceFolder.uri;
             }
         }
-    }
-
-    protected getProgram(): string | undefined {
-        const editor = this.documentManager.activeTextEditor;
-        if (editor && editor.document.languageId === PYTHON_LANGUAGE) {
-            return editor.document.fileName;
-        }
+        return undefined;
     }
 
     protected async resolveAndUpdatePaths(
         workspaceFolder: Uri | undefined,
         debugConfiguration: LaunchRequestArguments,
     ): Promise<void> {
-        this.resolveAndUpdateEnvFilePath(workspaceFolder, debugConfiguration);
+        BaseConfigurationResolver.resolveAndUpdateEnvFilePath(workspaceFolder, debugConfiguration);
         await this.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
     }
 
-    protected resolveAndUpdateEnvFilePath(
+    protected static resolveAndUpdateEnvFilePath(
         workspaceFolder: Uri | undefined,
         debugConfiguration: LaunchRequestArguments,
     ): void {
@@ -99,11 +90,11 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
             return;
         }
         if (debugConfiguration.envFile && (workspaceFolder || debugConfiguration.cwd)) {
-            const systemVariables = new SystemVariables(
-                undefined,
+            debugConfiguration.envFile = resolveVariables(
+                debugConfiguration.envFile,
                 (workspaceFolder ? workspaceFolder.fsPath : undefined) || debugConfiguration.cwd,
+                undefined,
             );
-            debugConfiguration.envFile = systemVariables.resolveAny(debugConfiguration.envFile);
         }
     }
 
@@ -114,40 +105,43 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         if (!debugConfiguration) {
             return;
         }
-        const systemVariables: SystemVariables = new SystemVariables(
-            undefined,
-            workspaceFolder?.fsPath,
-            this.workspaceService,
-        );
         if (debugConfiguration.pythonPath === '${command:python.interpreterPath}' || !debugConfiguration.pythonPath) {
             const interpreterPath =
                 (await this.interpreterService.getActiveInterpreter(workspaceFolder))?.path ??
                 this.configurationService.getSettings(workspaceFolder).pythonPath;
             debugConfiguration.pythonPath = interpreterPath;
         } else {
-            debugConfiguration.pythonPath = systemVariables.resolveAny(debugConfiguration.pythonPath);
+            debugConfiguration.pythonPath = resolveVariables(
+                debugConfiguration.pythonPath ? debugConfiguration.pythonPath : undefined,
+                workspaceFolder?.fsPath,
+                undefined,
+            );
         }
         if (debugConfiguration.python === '${command:python.interpreterPath}' || !debugConfiguration.python) {
             this.pythonPathSource = PythonPathSource.settingsJson;
         } else {
             this.pythonPathSource = PythonPathSource.launchJson;
         }
-        debugConfiguration.python = systemVariables.resolveAny(debugConfiguration.python);
+        debugConfiguration.python = resolveVariables(
+            debugConfiguration.python ? debugConfiguration.python : undefined,
+            workspaceFolder?.fsPath,
+            undefined,
+        );
     }
 
-    protected debugOption(debugOptions: DebugOptions[], debugOption: DebugOptions) {
+    protected static debugOption(debugOptions: DebugOptions[], debugOption: DebugOptions): void {
         if (debugOptions.indexOf(debugOption) >= 0) {
             return;
         }
         debugOptions.push(debugOption);
     }
 
-    protected isLocalHost(hostName?: string) {
+    protected static isLocalHost(hostName?: string): boolean {
         const LocalHosts = ['localhost', '127.0.0.1', '::1'];
-        return hostName && LocalHosts.indexOf(hostName.toLowerCase()) >= 0 ? true : false;
+        return !!(hostName && LocalHosts.indexOf(hostName.toLowerCase()) >= 0);
     }
 
-    protected fixUpPathMappings(
+    protected static fixUpPathMappings(
         pathMappings: PathMapping[],
         defaultLocalRoot?: string,
         defaultRemoteRoot?: string,
@@ -168,17 +162,19 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
             ];
         } else {
             // Expand ${workspaceFolder} variable first if necessary.
-            const systemVariables = new SystemVariables(undefined, defaultLocalRoot);
-            pathMappings = pathMappings.map(({ localRoot: mappedLocalRoot, remoteRoot }) => ({
-                localRoot: systemVariables.resolveAny(mappedLocalRoot),
-                // TODO: Apply to remoteRoot too?
-                remoteRoot,
-            }));
+            pathMappings = pathMappings.map(({ localRoot: mappedLocalRoot, remoteRoot }) => {
+                const resolvedLocalRoot = resolveVariables(mappedLocalRoot, defaultLocalRoot, undefined);
+                return {
+                    localRoot: resolvedLocalRoot || '',
+                    // TODO: Apply to remoteRoot too?
+                    remoteRoot,
+                };
+            });
         }
 
         // If on Windows, lowercase the drive letter for path mappings.
         // TODO: Apply even if no localRoot?
-        if (this.platformService.isWindows) {
+        if (getOSType() === OSType.Windows) {
             // TODO: Apply to remoteRoot too?
             pathMappings = pathMappings.map(({ localRoot: windowsLocalRoot, remoteRoot }) => {
                 let localRoot = windowsLocalRoot;
@@ -192,18 +188,22 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         return pathMappings;
     }
 
-    protected isDebuggingFastAPI(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
-        return debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FASTAPI' ? true : false;
+    protected static isDebuggingFastAPI(
+        debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>,
+    ): boolean {
+        return !!(debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FASTAPI');
     }
 
-    protected isDebuggingFlask(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
-        return debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK' ? true : false;
+    protected static isDebuggingFlask(
+        debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>,
+    ): boolean {
+        return !!(debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK');
     }
 
-    protected sendTelemetry(
+    protected static sendTelemetry(
         trigger: 'launch' | 'attach' | 'test',
         debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>,
-    ) {
+    ): void {
         const name = debugConfiguration.name || '';
         const moduleName = debugConfiguration.module || '';
         const telemetryProps: DebuggerTelemetry = {
@@ -211,10 +211,10 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
             console: debugConfiguration.console,
             hasEnvVars: typeof debugConfiguration.env === 'object' && Object.keys(debugConfiguration.env).length > 0,
             django: !!debugConfiguration.django,
-            fastapi: this.isDebuggingFastAPI(debugConfiguration),
-            flask: this.isDebuggingFlask(debugConfiguration),
+            fastapi: BaseConfigurationResolver.isDebuggingFastAPI(debugConfiguration),
+            flask: BaseConfigurationResolver.isDebuggingFlask(debugConfiguration),
             hasArgs: Array.isArray(debugConfiguration.args) && debugConfiguration.args.length > 0,
-            isLocalhost: this.isLocalHost(debugConfiguration.host),
+            isLocalhost: BaseConfigurationResolver.isLocalHost(debugConfiguration.host),
             isModule: moduleName.length > 0,
             isSudo: !!debugConfiguration.sudo,
             jinja: !!debugConfiguration.jinja,

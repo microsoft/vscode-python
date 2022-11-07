@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as typemoq from 'typemoq';
+import * as sinon from 'sinon';
 import { assert, expect } from 'chai';
 import { Uri, EventEmitter, ConfigurationTarget, WorkspaceFolder } from 'vscode';
 import { cloneDeep } from 'lodash';
@@ -11,6 +12,7 @@ import {
     IExtensions,
     IInterpreterPathService,
     IPythonSettings,
+    Resource,
 } from '../client/common/types';
 import { IServiceContainer } from '../client/ioc/types';
 import {
@@ -29,26 +31,47 @@ import { PythonEnvCollectionChangedEvent } from '../client/pythonEnvironments/ba
 import { normCasePath } from '../client/common/platform/fs-paths';
 import {
     ActiveEnvironmentPathChangeEvent,
-    EnvironmentPath,
     EnvironmentsChangeEvent,
+    EnvironmentVariablesChangeEvent,
     ProposedExtensionAPI,
 } from '../client/proposedApiTypes';
+import { IWorkspaceService } from '../client/common/application/types';
+import { IEnvironmentVariablesProvider } from '../client/common/variables/types';
+import * as workspaceApis from '../client/common/vscodeApis/workspaceApis';
 
 suite('Proposed Extension API', () => {
+    const workspacePath = 'path/to/workspace';
+    const workspaceFolder = {
+        name: 'workspace',
+        uri: Uri.file(workspacePath),
+        index: 0,
+    };
     let serviceContainer: typemoq.IMock<IServiceContainer>;
     let discoverAPI: typemoq.IMock<IDiscoveryAPI>;
     let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
     let configService: typemoq.IMock<IConfigurationService>;
     let extensions: typemoq.IMock<IExtensions>;
+    let workspaceService: typemoq.IMock<IWorkspaceService>;
+    let envVarsProvider: typemoq.IMock<IEnvironmentVariablesProvider>;
     let onDidChangeRefreshState: EventEmitter<ProgressNotificationEvent>;
     let onDidChangeEnvironments: EventEmitter<PythonEnvCollectionChangedEvent>;
+    let onDidChangeEnvironmentVariables: EventEmitter<Uri | undefined>;
 
     let proposed: ProposedExtensionAPI;
 
     setup(() => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
+        sinon.stub(workspaceApis, 'getWorkspaceFolders').returns([workspaceFolder]);
+        sinon.stub(workspaceApis, 'getWorkspaceFolder').callsFake((resource: Resource) => {
+            if (resource?.fsPath === workspaceFolder.uri.fsPath) {
+                return workspaceFolder;
+            }
+            return undefined;
+        });
         discoverAPI = typemoq.Mock.ofType<IDiscoveryAPI>();
         extensions = typemoq.Mock.ofType<IExtensions>();
+        workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
+        envVarsProvider = typemoq.Mock.ofType<IEnvironmentVariablesProvider>();
         extensions
             .setup((e) => e.determineExtensionFromCallStack())
             .returns(() => Promise.resolve({ extensionId: 'id', displayName: 'displayName', apiName: 'apiName' }))
@@ -57,10 +80,16 @@ suite('Proposed Extension API', () => {
         configService = typemoq.Mock.ofType<IConfigurationService>();
         onDidChangeRefreshState = new EventEmitter();
         onDidChangeEnvironments = new EventEmitter();
+        onDidChangeEnvironmentVariables = new EventEmitter();
 
         serviceContainer.setup((s) => s.get(IExtensions)).returns(() => extensions.object);
         serviceContainer.setup((s) => s.get(IInterpreterPathService)).returns(() => interpreterPathService.object);
         serviceContainer.setup((s) => s.get(IConfigurationService)).returns(() => configService.object);
+        serviceContainer.setup((s) => s.get(IWorkspaceService)).returns(() => workspaceService.object);
+        serviceContainer.setup((s) => s.get(IEnvironmentVariablesProvider)).returns(() => envVarsProvider.object);
+        envVarsProvider
+            .setup((e) => e.onDidEnvironmentVariablesChange)
+            .returns(() => onDidChangeEnvironmentVariables.event);
         serviceContainer.setup((s) => s.get(IDisposableRegistry)).returns(() => []);
 
         discoverAPI.setup((d) => d.onProgress).returns(() => onDidChangeRefreshState.event);
@@ -72,11 +101,50 @@ suite('Proposed Extension API', () => {
     teardown(() => {
         // Verify each API method sends telemetry regarding who called the API.
         extensions.verifyAll();
+        sinon.restore();
+    });
+
+    test('Provide an event to track when environment variables change', async () => {
+        const resource = workspaceFolder.uri;
+        const envVars = { PATH: 'path' };
+        envVarsProvider.setup((e) => e.getEnvironmentVariablesSync(resource)).returns(() => envVars);
+        const events: EnvironmentVariablesChangeEvent[] = [];
+        proposed.environments.onDidEnvironmentVariablesChange((e) => {
+            events.push(e);
+        });
+        onDidChangeEnvironmentVariables.fire(resource);
+        await sleep(1);
+        assert.deepEqual(events, [{ env: envVars, resource: workspaceFolder }]);
+    });
+
+    test('getEnvironmentVariables: No resource', async () => {
+        const resource = undefined;
+        const envVars = { PATH: 'path' };
+        envVarsProvider.setup((e) => e.getEnvironmentVariablesSync(resource)).returns(() => envVars);
+        const vars = proposed.environments.getEnvironmentVariables(resource);
+        assert.deepEqual(vars, envVars);
+    });
+
+    test('getEnvironmentVariables: With Uri resource', async () => {
+        const resource = Uri.file('x');
+        const envVars = { PATH: 'path' };
+        envVarsProvider.setup((e) => e.getEnvironmentVariablesSync(resource)).returns(() => envVars);
+        const vars = proposed.environments.getEnvironmentVariables(resource);
+        assert.deepEqual(vars, envVars);
+    });
+
+    test('getEnvironmentVariables: With WorkspaceFolder resource', async () => {
+        const resource = Uri.file('x');
+        const folder = ({ uri: resource } as unknown) as WorkspaceFolder;
+        const envVars = { PATH: 'path' };
+        envVarsProvider.setup((e) => e.getEnvironmentVariablesSync(resource)).returns(() => envVars);
+        const vars = proposed.environments.getEnvironmentVariables(folder);
+        assert.deepEqual(vars, envVars);
     });
 
     test('Provide an event to track when active environment details change', async () => {
         const events: ActiveEnvironmentPathChangeEvent[] = [];
-        proposed.environment.onDidChangeActiveEnvironmentPath((e) => {
+        proposed.environments.onDidChangeActiveEnvironmentPath((e) => {
             events.push(e);
         });
         reportActiveInterpreterChanged({ path: 'path/to/environment', resource: undefined });
@@ -91,12 +159,11 @@ suite('Proposed Extension API', () => {
         configService
             .setup((c) => c.getSettings(undefined))
             .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
-        const actual = proposed.environment.getActiveEnvironmentPath();
-        assert.deepEqual(actual, ({
+        const actual = proposed.environments.getActiveEnvironmentPath();
+        assert.deepEqual(actual, {
             id: normCasePath(pythonPath),
             path: pythonPath,
-            pathType: 'interpreterPath',
-        } as unknown) as EnvironmentPath);
+        });
     });
 
     test('getActiveEnvironmentPath: default python', () => {
@@ -104,12 +171,11 @@ suite('Proposed Extension API', () => {
         configService
             .setup((c) => c.getSettings(undefined))
             .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
-        const actual = proposed.environment.getActiveEnvironmentPath();
-        assert.deepEqual(actual, ({
+        const actual = proposed.environments.getActiveEnvironmentPath();
+        assert.deepEqual(actual, {
             id: 'DEFAULT_PYTHON',
             path: pythonPath,
-            pathType: 'interpreterPath',
-        } as unknown) as EnvironmentPath);
+        });
     });
 
     test('getActiveEnvironmentPath: With resource', () => {
@@ -118,19 +184,18 @@ suite('Proposed Extension API', () => {
         configService
             .setup((c) => c.getSettings(resource))
             .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
-        const actual = proposed.environment.getActiveEnvironmentPath(resource);
-        assert.deepEqual(actual, ({
+        const actual = proposed.environments.getActiveEnvironmentPath(resource);
+        assert.deepEqual(actual, {
             id: normCasePath(pythonPath),
             path: pythonPath,
-            pathType: 'interpreterPath',
-        } as unknown) as EnvironmentPath);
+        });
     });
 
     test('resolveEnvironment: invalid environment (when passed as string)', async () => {
         const pythonPath = 'this/is/a/test/path';
         discoverAPI.setup((p) => p.resolveEnv(pythonPath)).returns(() => Promise.resolve(undefined));
 
-        const actual = await proposed.environment.resolveEnvironment(pythonPath);
+        const actual = await proposed.environments.resolveEnvironment(pythonPath);
         expect(actual).to.be.equal(undefined);
     });
 
@@ -146,11 +211,11 @@ suite('Proposed Extension API', () => {
             kind: PythonEnvKind.System,
             arch: Architecture.x64,
             sysPrefix: 'prefix/path',
-            searchLocation: Uri.file('path/to/project'),
+            searchLocation: Uri.file(workspacePath),
         });
         discoverAPI.setup((p) => p.resolveEnv(pythonPath)).returns(() => Promise.resolve(env));
 
-        const actual = await proposed.environment.resolveEnvironment(pythonPath);
+        const actual = await proposed.environments.resolveEnvironment(pythonPath);
         assert.deepEqual((actual as EnvironmentReference).internal, convertCompleteEnvInfo(env));
     });
 
@@ -166,28 +231,28 @@ suite('Proposed Extension API', () => {
             kind: PythonEnvKind.System,
             arch: Architecture.x64,
             sysPrefix: 'prefix/path',
-            searchLocation: Uri.file('path/to/project'),
+            searchLocation: Uri.file(workspacePath),
         });
         const partialEnv = buildEnvInfo({
             executable: pythonPath,
             kind: PythonEnvKind.System,
             sysPrefix: 'prefix/path',
-            searchLocation: Uri.file('path/to/project'),
+            searchLocation: Uri.file(workspacePath),
         });
         discoverAPI.setup((p) => p.resolveEnv(pythonPath)).returns(() => Promise.resolve(env));
 
-        const actual = await proposed.environment.resolveEnvironment(convertCompleteEnvInfo(partialEnv));
+        const actual = await proposed.environments.resolveEnvironment(convertCompleteEnvInfo(partialEnv));
         assert.deepEqual((actual as EnvironmentReference).internal, convertCompleteEnvInfo(env));
     });
 
     test('environments: no pythons found', () => {
         discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
-        const actual = proposed.environment.all;
+        const actual = proposed.environments.known;
         expect(actual).to.be.deep.equal([]);
     });
 
     test('environments: python found', async () => {
-        const envs = [
+        const expectedEnvs = [
             {
                 executable: {
                     filename: 'this/is/a/test/python/path1',
@@ -231,12 +296,37 @@ suite('Proposed Extension API', () => {
                 },
             },
         ];
+        const envs = [
+            ...expectedEnvs,
+            {
+                executable: {
+                    filename: 'this/is/a/test/python/path3',
+                    ctime: 1,
+                    mtime: 2,
+                    sysPrefix: 'prefix/path',
+                },
+                version: {
+                    major: 3,
+                    minor: -1,
+                    micro: -1,
+                },
+                kind: PythonEnvKind.Venv,
+                arch: Architecture.x64,
+                name: '',
+                location: '',
+                source: [PythonEnvSource.PathEnvVar],
+                distro: {
+                    org: '',
+                },
+                searchLocation: Uri.file('path/outside/workspace'),
+            },
+        ];
         discoverAPI.setup((d) => d.getEnvs()).returns(() => envs);
-        const actual = proposed.environment.all;
+        const actual = proposed.environments.known;
         const actualEnvs = actual?.map((a) => (a as EnvironmentReference).internal);
         assert.deepEqual(
             actualEnvs?.sort((a, b) => a.id.localeCompare(b.id)),
-            envs.map((e) => convertEnvInfo(e)).sort((a, b) => a.id.localeCompare(b.id)),
+            expectedEnvs.map((e) => convertEnvInfo(e)).sort((a, b) => a.id.localeCompare(b.id)),
         );
     });
 
@@ -244,7 +334,7 @@ suite('Proposed Extension API', () => {
         let events: EnvironmentsChangeEvent[] = [];
         let eventValues: EnvironmentsChangeEvent[] = [];
         let expectedEvents: EnvironmentsChangeEvent[] = [];
-        proposed.environment.onDidChangeEnvironments((e) => {
+        proposed.environments.onDidChangeEnvironments((e) => {
             events.push(e);
         });
         const envs = [
@@ -252,7 +342,7 @@ suite('Proposed Extension API', () => {
                 executable: 'pythonPath',
                 kind: PythonEnvKind.System,
                 sysPrefix: 'prefix/path',
-                searchLocation: Uri.file('path/to/project'),
+                searchLocation: Uri.file(workspacePath),
             }),
             {
                 executable: {
@@ -336,7 +426,7 @@ suite('Proposed Extension API', () => {
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
-        await proposed.environment.updateActiveEnvironmentPath('this/is/a/test/python/path');
+        await proposed.environments.updateActiveEnvironmentPath('this/is/a/test/python/path');
 
         interpreterPathService.verifyAll();
     });
@@ -347,7 +437,7 @@ suite('Proposed Extension API', () => {
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
-        await proposed.environment.updateActiveEnvironmentPath({
+        await proposed.environments.updateActiveEnvironmentPath({
             id: normCasePath('this/is/a/test/python/path'),
             path: 'this/is/a/test/python/path',
         });
@@ -362,7 +452,7 @@ suite('Proposed Extension API', () => {
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
-        await proposed.environment.updateActiveEnvironmentPath('this/is/a/test/python/path', uri);
+        await proposed.environments.updateActiveEnvironmentPath('this/is/a/test/python/path', uri);
 
         interpreterPathService.verifyAll();
     });
@@ -379,7 +469,7 @@ suite('Proposed Extension API', () => {
             index: 0,
         };
 
-        await proposed.environment.updateActiveEnvironmentPath('this/is/a/test/python/path', workspace);
+        await proposed.environments.updateActiveEnvironmentPath('this/is/a/test/python/path', workspace);
 
         interpreterPathService.verifyAll();
     });
@@ -390,7 +480,7 @@ suite('Proposed Extension API', () => {
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
-        await proposed.environment.refreshEnvironments();
+        await proposed.environments.refreshEnvironments();
 
         discoverAPI.verifyAll();
     });
@@ -401,7 +491,7 @@ suite('Proposed Extension API', () => {
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
-        await proposed.environment.refreshEnvironments({ forceRefresh: true });
+        await proposed.environments.refreshEnvironments({ forceRefresh: true });
 
         discoverAPI.verifyAll();
     });

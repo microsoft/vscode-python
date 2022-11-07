@@ -2,6 +2,7 @@
     "python.command.python.sortImports.title": "Sort Imports",
     "python.command.python.startREPL.title": "Start REPL",
     "python.command.python.createEnvironment.title": "Create Environment",
+    "python.command.python.createNewFile.title": "New Python File",
     "python.command.python.createTerminal.title": "Create Terminal",
     "python.command.python.execInTerminal.title": "Run Python File in Terminal",
     "python.command.python.debugInTerminal.title": "Debug Python File",
@@ -14,7 +15,6 @@
     "python.command.testing.rerunFailedTests.title": "Rerun Failed Tests",
     "python.command.python.execSelectionInTerminal.title": "Run Selection/Line in Python Terminal",
     "python.command.python.execSelectionInDjangoShell.title": "Run Selection/Line in Django Shell",
-    "python.command.python.goToPythonObject.title": "Go to Python Object",
     "python.command.python.reportIssue.title": "Report Issue...",
     "python.command.python.setLinter.title": "Select Linter",
     "python.command.python.enableLinting.title": "Enable/Disable Linting",
@@ -94,7 +94,6 @@
     "python.logging.level.description": "The logging level the extension logs at, defaults to 'error'",
     "python.pipenvPath.description": "Path to the pipenv executable to use for activation.",
     "python.poetryPath.description": "Path to the poetry executable.",
-    "python.pylanceLspNotebooksEnabled.description": "Determines if Pylance's experimental LSP notebooks support is used or not.",
     "python.sortImports.args.description": "Arguments passed in. Each argument is a separate item in the array.",
     "python.sortImports.path.description": "Path to isort script, default using inner version",
     "python.tensorBoard.logDirectory.description": "Set this setting to your preferred TensorBoard log directory to skip log directory prompt when starting TensorBoard.",
@@ -113,5 +112,7 @@
     "python.testing.unittestArgs.description": "Arguments passed in. Each argument is a separate item in the array.",
     "python.testing.unittestEnabled.description": "Enable testing using unittest.",
     "python.venvFolders.description": "Folders in your home directory to look into for virtual environments (supports pyenv, direnv and virtualenvwrapper by default).",
-    "python.venvPath.description": "Path to folder with a list of Virtual Environments (e.g. ~/.pyenv, ~/Envs, ~/.virtualenvs)."
+    "python.venvPath.description": "Path to folder with a list of Virtual Environments (e.g. ~/.pyenv, ~/Envs, ~/.virtualenvs).",
+    "python.sortImports.args.deprecationMessage": "This setting will be removed soon. Use `isort.args` instead.",
+    "python.sortImports.path.deprecationMessage": "This setting will be removed soon. Use `isort.path` instead."
 }

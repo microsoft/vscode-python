@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { Uri } from 'vscode';
 import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../../common/utils/workerPool';
@@ -20,10 +21,20 @@ export enum EnvironmentInfoServiceQueuePriority {
 }
 
 export interface IEnvironmentInfoService {
+    /**
+     * Get the interpreter information for the given environment.
+     * @param env The environment to get the interpreter information for.
+     * @param priority The priority of the request.
+     */
     getEnvironmentInfo(
         env: PythonEnvInfo,
         priority?: EnvironmentInfoServiceQueuePriority,
     ): Promise<InterpreterInformation | undefined>;
+    /**
+     * Reset any stored interpreter information for the given environment.
+     * @param searchLocation Search location of the environment.
+     */
+    resetInfo(searchLocation: Uri): void;
 }
 
 async function buildEnvironmentInfo(env: PythonEnvInfo): Promise<InterpreterInformation | undefined> {
@@ -153,6 +164,16 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
             }
         }
         return r;
+    }
+
+    public resetInfo(searchLocation: Uri): void {
+        const searchLocationPath = searchLocation.fsPath;
+        const keys = Array.from(this.cache.keys());
+        keys.forEach((key) => {
+            if (key.startsWith(normCasePath(searchLocationPath))) {
+                this.cache.delete(key);
+            }
+        });
     }
 }
 

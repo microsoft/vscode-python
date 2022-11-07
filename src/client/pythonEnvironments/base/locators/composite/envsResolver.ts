@@ -10,7 +10,7 @@ import { getEnvPath, setEnvDisplayString } from '../../info/env';
 import { InterpreterInformation } from '../../info/interpreter';
 import {
     BasicEnvInfo,
-    ILocator,
+    ICompositeLocator,
     IPythonEnvsIterator,
     IResolvingLocator,
     isProgressEvent,
@@ -35,9 +35,16 @@ export class PythonEnvsResolver implements IResolvingLocator {
     }
 
     constructor(
-        private readonly parentLocator: ILocator<BasicEnvInfo>,
+        private readonly parentLocator: ICompositeLocator<BasicEnvInfo>,
         private readonly environmentInfoService: IEnvironmentInfoService,
-    ) {}
+    ) {
+        this.parentLocator.onChanged((event) => {
+            if (event.type && event.searchLocation !== undefined) {
+                // We detect an environment changed, reset any stored info for it so it can be re-run.
+                this.environmentInfoService.resetInfo(event.searchLocation);
+            }
+        });
+    }
 
     public async resolveEnv(path: string): Promise<PythonEnvInfo | undefined> {
         const [executablePath, envPath] = await getExecutablePathAndEnvPath(path);
@@ -45,6 +52,9 @@ export class PythonEnvsResolver implements IResolvingLocator {
         const kind = await identifyEnvironment(path);
         const environment = await resolveBasicEnv({ kind, executablePath, envPath });
         const info = await this.environmentInfoService.getEnvironmentInfo(environment);
+        traceVerbose(
+            `Environment resolver resolved ${path} for ${JSON.stringify(environment)} to ${JSON.stringify(info)}`,
+        );
         if (!info) {
             return undefined;
         }
@@ -88,7 +98,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
                 } else if (seen[event.index] !== undefined) {
                     const old = seen[event.index];
                     await setKind(event.update, environmentKinds);
-                    seen[event.index] = await resolveBasicEnv(event.update, true);
+                    seen[event.index] = await resolveBasicEnv(event.update);
                     didUpdate.fire({ old, index: event.index, update: seen[event.index] });
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
                 } else {
@@ -106,7 +116,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
         while (!result.done) {
             // Use cache from the current refresh where possible.
             await setKind(result.value, environmentKinds);
-            const currEnv = await resolveBasicEnv(result.value, true);
+            const currEnv = await resolveBasicEnv(result.value);
             seen.push(currEnv);
             yield currEnv;
             this.resolveInBackground(seen.indexOf(currEnv), state, didUpdate, seen).ignoreErrors();

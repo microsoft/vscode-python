@@ -354,7 +354,12 @@ export class LanguageClientMiddlewareBase implements Middleware {
 
     public async provideOnTypeFormattingEdits() {
         if (await this.connected) {
-            return this.callNext('provideOnTypeFormattingEdits', arguments);
+            return this.callNextAndSendTelemetry(
+                'textDocument/onTypeFormatting',
+                debounceFrequentCall,
+                'provideOnTypeFormattingEdits',
+                arguments,
+            );
         }
     }
 
@@ -405,7 +410,12 @@ export class LanguageClientMiddlewareBase implements Middleware {
 
     public async provideTypeDefinition() {
         if (await this.connected) {
-            return this.callNext('provideTypeDefinition', arguments);
+            return this.callNextAndSendTelemetry(
+                'textDocument/typeDefinition',
+                debounceRareCall,
+                'provideTypeDefinition',
+                arguments,
+            );
         }
     }
 
@@ -429,13 +439,23 @@ export class LanguageClientMiddlewareBase implements Middleware {
 
     public async provideFoldingRanges() {
         if (await this.connected) {
-            return this.callNext('provideFoldingRanges', arguments);
+            return this.callNextAndSendTelemetry(
+                'textDocument/foldingRange',
+                debounceFrequentCall,
+                'provideFoldingRanges',
+                arguments,
+            );
         }
     }
 
     public async provideSelectionRanges() {
         if (await this.connected) {
-            return this.callNext('provideSelectionRanges', arguments);
+            return this.callNextAndSendTelemetry(
+                'textDocument/selectionRange',
+                debounceRareCall,
+                'provideSelectionRanges',
+                arguments,
+            );
         }
     }
 

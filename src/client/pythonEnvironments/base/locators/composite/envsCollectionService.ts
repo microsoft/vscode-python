@@ -5,7 +5,7 @@ import { Event, EventEmitter } from 'vscode';
 import '../../../../common/extensions';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
-import { traceError } from '../../../../logging';
+import { traceError, traceVerbose } from '../../../../logging';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { normalizePath } from '../../../common/externalDependencies';
@@ -57,7 +57,9 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     constructor(private readonly cache: IEnvsCollectionCache, private readonly locator: IResolvingLocator) {
         super();
         this.locator.onChanged((event) => {
-            const query = undefined; // We can also form a query based on the event, but skip that for simplicity.
+            const query: PythonLocatorQuery | undefined = event.providerId
+                ? { providerId: event.providerId, envPath: event.envPath }
+                : undefined; // We can also form a query based on the event, but skip that for simplicity.
             let scheduledRefresh = this.scheduledRefreshesPerQuery.get(query);
             // If there is no refresh scheduled for the query, start a new one.
             if (!scheduledRefresh) {
@@ -92,6 +94,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             traceError(`Failed to resolve ${path}`, ex);
             return undefined;
         });
+        traceVerbose(`Resolved ${path} to ${JSON.stringify(resolved)}`);
         if (resolved) {
             this.cache.addEnv(resolved, true);
         }
@@ -177,7 +180,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         }
         await updatesDone.promise;
         // If query for all envs is done, `seen` should contain the list of all envs.
-        await this.cache.validateCache(query === undefined ? seen : undefined);
+        await this.cache.validateCache(seen, query === undefined);
         this.cache.flush().ignoreErrors();
     }
 

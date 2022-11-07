@@ -7,6 +7,8 @@ import { getRegistryInterpreters } from '../../../common/windowsUtils';
 import { traceError } from '../../../../logging';
 
 export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
+    public readonly providerId: string = 'windows-registry';
+
     // eslint-disable-next-line class-methods-use-this
     public iterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const iterator = async function* () {

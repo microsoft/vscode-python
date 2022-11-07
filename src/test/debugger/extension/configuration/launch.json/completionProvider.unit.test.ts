@@ -41,18 +41,18 @@ suite('Debugging - launch.json Completion Provider', () => {
         const document = typemoq.Mock.ofType<TextDocument>();
         const position = new Position(0, 0);
         document.setup((doc) => doc.uri).returns(() => Uri.file(__filename));
-        assert.strictEqual(completionProvider.canProvideCompletions(document.object, position), false);
+        assert.strictEqual(LaunchJsonCompletionProvider.canProvideCompletions(document.object, position), false);
 
         document.reset();
         document.setup((doc) => doc.uri).returns(() => Uri.file('settings.json'));
-        assert.strictEqual(completionProvider.canProvideCompletions(document.object, position), false);
+        assert.strictEqual(LaunchJsonCompletionProvider.canProvideCompletions(document.object, position), false);
     });
     function testCanProvideCompletions(position: Position, offset: number, json: string, expectedValue: boolean) {
         const document = typemoq.Mock.ofType<TextDocument>();
         document.setup((doc) => doc.getText(typemoq.It.isAny())).returns(() => json);
         document.setup((doc) => doc.uri).returns(() => Uri.file('launch.json'));
         document.setup((doc) => doc.offsetAt(typemoq.It.isAny())).returns(() => offset);
-        const canProvideCompletions = completionProvider.canProvideCompletions(document.object, position);
+        const canProvideCompletions = LaunchJsonCompletionProvider.canProvideCompletions(document.object, position);
         assert.strictEqual(canProvideCompletions, expectedValue);
     }
     test('Cannot provide completions when there is no configurations section in json', () => {
@@ -60,7 +60,7 @@ suite('Debugging - launch.json Completion Provider', () => {
         const config = `{
     "version": "0.1.0"
 }`;
-        testCanProvideCompletions(position, 1, config as any, false);
+        testCanProvideCompletions(position, 1, config as string, false);
     });
     test('Cannot provide completions when cursor position is not in configurations array', () => {
         const position = new Position(0, 0);
@@ -83,7 +83,7 @@ suite('Debugging - launch.json Completion Provider', () => {
     test('No Completions for non launch.json', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
         document.setup((doc) => doc.uri).returns(() => Uri.file('settings.json'));
-        const token = new CancellationTokenSource().token;
+        const { token } = new CancellationTokenSource();
         const position = new Position(0, 0);
 
         const completions = await completionProvider.provideCompletionItems(document.object, position, token);
@@ -93,7 +93,7 @@ suite('Debugging - launch.json Completion Provider', () => {
     test('No Completions for files ending with launch.json', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
         document.setup((doc) => doc.uri).returns(() => Uri.file('x-launch.json'));
-        const token = new CancellationTokenSource().token;
+        const { token } = new CancellationTokenSource();
         const position = new Position(0, 0);
 
         const completions = await completionProvider.provideCompletionItems(document.object, position, token);
@@ -113,7 +113,7 @@ suite('Debugging - launch.json Completion Provider', () => {
         document.setup((doc) => doc.uri).returns(() => Uri.file('launch.json'));
         document.setup((doc) => doc.offsetAt(typemoq.It.isAny())).returns(() => json.indexOf('# Cursor Position'));
         const position = new Position(0, 0);
-        const token = new CancellationTokenSource().token;
+        const { token } = new CancellationTokenSource();
 
         const completions = await completionProvider.provideCompletionItems(document.object, position, token);
 

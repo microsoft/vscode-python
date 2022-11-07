@@ -21,11 +21,6 @@ export interface IDebugConfigurationService extends DebugConfigurationProvider {
 export const IDynamicDebugConfigurationService = Symbol('IDynamicDebugConfigurationService');
 export interface IDynamicDebugConfigurationService extends DebugConfigurationProvider {}
 
-export const IDebuggerBanner = Symbol('IDebuggerBanner');
-export interface IDebuggerBanner {
-    initialize(): void;
-}
-
 export type DebugConfigurationState = {
     config: Partial<DebugConfigurationArguments>;
     folder?: WorkspaceFolder;
@@ -62,6 +57,6 @@ export interface IOutdatedDebuggerPromptFactory extends DebugAdapterTrackerFacto
 export const IProtocolParser = Symbol('IProtocolParser');
 export interface IProtocolParser extends Disposable {
     connect(stream: Readable): void;
-    once(event: string | symbol, listener: Function): this;
-    on(event: string | symbol, listener: Function): this;
+    once(event: string | symbol, listener: (...args: unknown[]) => void): this;
+    on(event: string | symbol, listener: (...args: unknown[]) => void): this;
 }

@@ -14,7 +14,7 @@ import { DebugConfigurationState, DebugConfigurationType } from '../../types';
 export async function buildModuleLaunchConfiguration(
     input: MultiStepInput<DebugConfigurationState>,
     state: DebugConfigurationState,
-) {
+): Promise<void> {
     let manuallyEnteredAValue: boolean | undefined;
     const config: Partial<LaunchRequestArguments> = {
         name: DebugConfigStrings.module.snippet.name,

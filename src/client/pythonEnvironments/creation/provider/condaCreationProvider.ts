@@ -17,7 +17,7 @@ import { createDeferred } from '../../../common/utils/async';
 import { getEnvironmentVariable, getOSType, OSType } from '../../../common/utils/platform';
 import { createCondaScript } from '../../../common/process/internal/scripts';
 import { Common, CreateEnv } from '../../../common/utils/localize';
-import { getConda, pickPythonVersion } from './condaUtils';
+import { getCondaBaseEnv, pickPythonVersion } from './condaUtils';
 import { showErrorMessageWithLogs } from '../common/commonUtils';
 import { withProgress } from '../../../common/vscodeApis/windowApis';
 import { EventName } from '../../../telemetry/constants';
@@ -99,7 +99,7 @@ async function createCondaEnv(
         pathEnv = `${libPath}${path.delimiter}${pathEnv}`;
     }
     traceLog('Running Conda Env creation script: ', [command, ...args]);
-    const { out, dispose } = execObservable(command, args, {
+    const { proc, out, dispose } = execObservable(command, args, {
         mergeStdOutErr: true,
         token,
         cwd: workspace.uri.fsPath,
@@ -125,7 +125,10 @@ async function createCondaEnv(
         },
         () => {
             dispose();
-            if (!deferred.rejected) {
+            if (proc?.exitCode !== 0) {
+                traceError('Error while running venv creation script: ', progressAndTelemetry.getLastError());
+                deferred.reject(progressAndTelemetry.getLastError());
+            } else {
                 deferred.resolve(condaEnvPath);
             }
         },
@@ -133,29 +136,22 @@ async function createCondaEnv(
     return deferred.promise;
 }
 
-function getExecutableCommand(condaPath: string): string {
+function getExecutableCommand(condaBaseEnvPath: string): string {
     if (getOSType() === OSType.Windows) {
         // Both Miniconda3 and Anaconda3 have the following structure:
         // Miniconda3 (or Anaconda3)
-        //  |- condabin
-        //  |   |- conda.bat  <--- this actually points to python.exe below,
-        //  |                      after adding few paths to PATH.
-        //  |- Scripts
-        //  |   |- conda.exe  <--- this is the path we get as condaPath,
-        //  |                      which is really a stub for `python.exe -m conda`.
         //  |- python.exe     <--- this is the python that we want.
-        return path.join(path.dirname(path.dirname(condaPath)), 'python.exe');
+        return path.join(condaBaseEnvPath, 'python.exe');
     }
     // On non-windows machines:
     // miniconda (or miniforge or anaconda3)
     // |- bin
-    //     |- conda    <--- this is the path we get as condaPath.
     //     |- python   <--- this is the python that we want.
-    return path.join(path.dirname(condaPath), 'python');
+    return path.join(condaBaseEnvPath, 'bin', 'python');
 }
 
 async function createEnvironment(options?: CreateEnvironmentOptions): Promise<CreateEnvironmentResult | undefined> {
-    const conda = await getConda();
+    const conda = await getCondaBaseEnv();
     if (!conda) {
         return undefined;
     }

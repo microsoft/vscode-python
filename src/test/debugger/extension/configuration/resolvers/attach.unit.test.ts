@@ -5,27 +5,26 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
+import * as sinon from 'sinon';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
-import { IDocumentManager, IWorkspaceService } from '../../../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
-import { IFileSystem, IPlatformService } from '../../../../../client/common/platform/types';
 import { IConfigurationService } from '../../../../../client/common/types';
-import { OSType } from '../../../../../client/common/utils/platform';
 import { AttachConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/attach';
 import { AttachRequestArguments, DebugOptions } from '../../../../../client/debugger/types';
 import { IInterpreterService } from '../../../../../client/interpreter/contracts';
-import { IServiceContainer } from '../../../../../client/ioc/types';
-import { getOSType } from '../../../../common';
-import { getInfoPerOS, setUpOSMocks } from './common';
+import { getInfoPerOS } from './common';
+import * as common from '../../../../../client/debugger/extension/configuration/utils/common';
+import * as workspaceFolderFile from '../../../../../client/debugger/extension/configuration/utils/workspaceFolder';
+import * as platform from '../../../../../client/common/utils/platform';
 
 getInfoPerOS().forEach(([osName, osType, path]) => {
-    if (osType === OSType.Unknown) {
+    if (osType === platform.OSType.Unknown) {
         return;
     }
 
     function getAvailableOptions(): string[] {
         const options = [DebugOptions.RedirectOutput];
-        if (osType === OSType.Windows) {
+        if (osType === platform.OSType.Windows) {
             options.push(DebugOptions.FixFilePathCase);
             options.push(DebugOptions.WindowsClient);
         } else {
@@ -36,36 +35,26 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
     }
 
     suite(`Debugging - Config Resolver attach, OS = ${osName}`, () => {
-        let serviceContainer: TypeMoq.IMock<IServiceContainer>;
         let debugProvider: DebugConfigurationProvider;
-        let platformService: TypeMoq.IMock<IPlatformService>;
-        let fileSystem: TypeMoq.IMock<IFileSystem>;
-        let documentManager: TypeMoq.IMock<IDocumentManager>;
         let configurationService: TypeMoq.IMock<IConfigurationService>;
-        let workspaceService: TypeMoq.IMock<IWorkspaceService>;
         let interpreterService: TypeMoq.IMock<IInterpreterService>;
+        let getActiveTextEditorStub: sinon.SinonStub;
+        let getWorkspaceFoldersStub: sinon.SinonStub;
+        let getOSTypeStub: sinon.SinonStub;
         const debugOptionsAvailable = getAvailableOptions();
 
         setup(() => {
-            serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-            platformService = TypeMoq.Mock.ofType<IPlatformService>();
-            workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
             configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-            fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
-                .returns(() => platformService.object);
-            serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
-            setUpOSMocks(osType, platformService);
-            documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
-            debugProvider = new AttachConfigurationResolver(
-                workspaceService.object,
-                documentManager.object,
-                platformService.object,
-                configurationService.object,
-                interpreterService.object,
-            );
+            debugProvider = new AttachConfigurationResolver(configurationService.object, interpreterService.object);
+            getActiveTextEditorStub = sinon.stub(common, 'getActiveTextEditor');
+            getOSTypeStub = sinon.stub(platform, 'getOSType');
+            getWorkspaceFoldersStub = sinon.stub(workspaceFolderFile, 'getWorkspaceFolders');
+            getOSTypeStub.returns(osType);
+        });
+
+        teardown(() => {
+            sinon.restore();
         });
 
         function createMoqWorkspaceFolder(folderPath: string) {
@@ -81,21 +70,15 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 document.setup((d) => d.languageId).returns(() => languageId);
                 document.setup((d) => d.fileName).returns(() => fileName);
                 textEditor.setup((t) => t.document).returns(() => document.object);
-                documentManager.setup((d) => d.activeTextEditor).returns(() => textEditor.object);
+                getActiveTextEditorStub.returns(textEditor.object);
             } else {
-                documentManager.setup((d) => d.activeTextEditor).returns(() => undefined);
+                getActiveTextEditorStub.returns(undefined);
             }
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(IDocumentManager)))
-                .returns(() => documentManager.object);
         }
 
         function setupWorkspaces(folders: string[]) {
             const workspaceFolders = folders.map(createMoqWorkspaceFolder);
-            workspaceService.setup((w) => w.workspaceFolders).returns(() => workspaceFolders);
-            serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
-                .returns(() => workspaceService.object);
+            getWorkspaceFoldersStub.returns(workspaceFolders);
         }
 
         const attach: Partial<AttachRequestArguments> = {
@@ -262,14 +245,14 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 });
 
                 expect(debugConfig).to.have.property('localRoot', localRoot);
-                const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                const { pathMappings } = debugConfig as AttachRequestArguments;
                 expect(pathMappings).to.be.lengthOf(1);
                 expect(pathMappings![0].localRoot).to.be.equal(workspaceFolder.uri.fsPath);
                 expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
             });
 
             test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}'`, async function () {
-                if (getOSType() !== OSType.Windows || osType !== OSType.Windows) {
+                if (platform.getOSType() !== platform.OSType.Windows || osType !== platform.OSType.Windows) {
                     return this.skip();
                 }
                 const activeFile = 'xyz.py';
@@ -284,15 +267,17 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     localRoot,
                     host,
                 });
-                const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                const { pathMappings } = debugConfig as AttachRequestArguments;
 
                 const expected = Uri.file(path.join('c:', 'Debug', 'Python_Path')).fsPath;
                 expect(pathMappings![0].localRoot).to.be.equal(expected);
                 expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
+
+                return undefined;
             });
 
             test(`Ensure drive letter is not lower cased for local path mappings on non-Windows when host is '${host}'`, async function () {
-                if (getOSType() === OSType.Windows || osType === OSType.Windows) {
+                if (platform.getOSType() === platform.OSType.Windows || osType === platform.OSType.Windows) {
                     return this.skip();
                 }
                 const activeFile = 'xyz.py';
@@ -307,15 +292,17 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     localRoot,
                     host,
                 });
-                const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                const { pathMappings } = debugConfig as AttachRequestArguments;
 
                 const expected = Uri.file(path.join('USR', 'Debug', 'Python_Path')).fsPath;
                 expect(pathMappings![0].localRoot).to.be.equal(expected);
                 expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
+
+                return undefined;
             });
 
             test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}' and with existing path mappings`, async function () {
-                if (getOSType() !== OSType.Windows || osType !== OSType.Windows) {
+                if (platform.getOSType() !== platform.OSType.Windows || osType !== platform.OSType.Windows) {
                     return this.skip();
                 }
                 const activeFile = 'xyz.py';
@@ -334,15 +321,17 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     pathMappings: debugPathMappings,
                     host,
                 });
-                const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                const { pathMappings } = debugConfig as AttachRequestArguments;
 
                 const expected = Uri.file(path.join('c:', 'Debug', 'Python_Path', localRoot)).fsPath;
                 expect(pathMappings![0].localRoot).to.be.equal(expected);
                 expect(pathMappings![0].remoteRoot).to.be.equal('/app/');
+
+                return undefined;
             });
 
             test(`Ensure drive letter is not lower cased for local path mappings on non-Windows when host is '${host}' and with existing path mappings`, async function () {
-                if (getOSType() === OSType.Windows || osType === OSType.Windows) {
+                if (platform.getOSType() === platform.OSType.Windows || osType === platform.OSType.Windows) {
                     return this.skip();
                 }
                 const activeFile = 'xyz.py';
@@ -355,17 +344,20 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 const debugPathMappings = [
                     { localRoot: path.join('${workspaceFolder}', localRoot), remoteRoot: '/app/' },
                 ];
+
                 const debugConfig = await resolveDebugConfiguration(workspaceFolder, {
                     ...attach,
                     localRoot,
                     pathMappings: debugPathMappings,
                     host,
                 });
-                const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                const { pathMappings } = debugConfig as AttachRequestArguments;
 
                 const expected = Uri.file(path.join('USR', 'Debug', 'Python_Path', localRoot)).fsPath;
-                expect(pathMappings![0].localRoot).to.be.equal(expected);
+                expect(Uri.file(pathMappings![0].localRoot).fsPath).to.be.equal(expected);
                 expect(pathMappings![0].remoteRoot).to.be.equal('/app/');
+
+                return undefined;
             });
 
             test(`Ensure local path mappings are not modified when not pointing to a local drive when host is '${host}'`, async () => {
@@ -381,7 +373,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     localRoot,
                     host,
                 });
-                const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                const { pathMappings } = debugConfig as AttachRequestArguments;
 
                 expect(pathMappings![0].localRoot).to.be.equal(workspaceFolder.uri.fsPath);
                 expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
@@ -404,7 +396,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 });
 
                 expect(debugConfig).to.have.property('localRoot', localRoot);
-                const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                const { pathMappings } = debugConfig as AttachRequestArguments;
                 expect(pathMappings || []).to.be.lengthOf(0);
             });
         });

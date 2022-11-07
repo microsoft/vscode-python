@@ -42,6 +42,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.Create_Terminal]: [];
     [Commands.PickLocalProcess]: [];
     [Commands.ClearStorage]: [];
+    [Commands.CreateNewFile]: [];
     [Commands.ReportIssue]: [];
     [Commands.RefreshTensorBoard]: [];
     [LSCommands.RestartLS]: [];

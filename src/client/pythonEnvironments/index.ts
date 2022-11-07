@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { getGlobalStorage } from '../common/persistentState';
+import { Uri } from 'vscode';
+import { cloneDeep } from 'lodash';
+import { getGlobalStorage, IPersistentStorage } from '../common/persistentState';
 import { getOSType, OSType } from '../common/utils/platform';
 import { ActivationResult, ExtensionState } from '../components';
 import { PythonEnvInfo } from './base/info';
@@ -33,22 +35,21 @@ import {
 } from './base/locators/composite/envsCollectionCache';
 import { EnvsCollectionService } from './base/locators/composite/envsCollectionService';
 import { IDisposable } from '../common/types';
+import { traceError } from '../logging';
 
 /**
  * Set up the Python environments component (during extension activation).'
  */
 export async function initialize(ext: ExtensionState): Promise<IDiscoveryAPI> {
-    const api = await createPythonEnvironments(() => createLocator(ext));
-
-    // Any other initialization goes here.
-
+    // Set up the legacy IOC container before api is created.
     initializeLegacyExternalDependencies(ext.legacyIOC.serviceContainer);
+
+    const api = await createPythonEnvironments(() => createLocator(ext));
     registerNewDiscoveryForIOC(
         // These are what get wrapped in the legacy adapter.
         ext.legacyIOC.serviceManager,
         api,
     );
-
     return api;
 }
 
@@ -106,7 +107,7 @@ async function createLocator(
     // This is shared.
 ): Promise<IDiscoveryAPI> {
     // Create the low-level locators.
-    let locators: ILocator<BasicEnvInfo> = new ExtensionLocators<BasicEnvInfo>(
+    const locators: ILocator<BasicEnvInfo> = new ExtensionLocators<BasicEnvInfo>(
         // Here we pull the locators together.
         createNonWorkspaceLocators(ext),
         createWorkspaceLocator(ext),
@@ -116,9 +117,9 @@ async function createLocator(
     const envInfoService = getEnvironmentInfoService(ext.disposables);
 
     // Build the stack of composite locators.
-    locators = new PythonEnvsReducer(locators);
+    const reducer = new PythonEnvsReducer(locators);
     const resolvingLocator = new PythonEnvsResolver(
-        locators,
+        reducer,
         // These are shared.
         envInfoService,
     );
@@ -177,8 +178,8 @@ function watchRoots(args: WatchRootsArgs): IDisposable {
     });
 }
 
-function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators<BasicEnvInfo> {
-    const locators = new WorkspaceLocators<BasicEnvInfo>(watchRoots, [
+function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators {
+    const locators = new WorkspaceLocators(watchRoots, [
         (root: vscode.Uri) => [new WorkspaceVirtualEnvironmentLocator(root.fsPath), new PoetryLocator(root.fsPath)],
         // Add an ILocator factory func here for each kind of workspace-rooted locator.
     ]);
@@ -186,11 +187,41 @@ function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators<BasicEnv
     return locators;
 }
 
+function getFromStorage(storage: IPersistentStorage<PythonEnvInfo[]>): PythonEnvInfo[] {
+    return storage.get().map((e) => {
+        if (e.searchLocation) {
+            if (typeof e.searchLocation === 'string') {
+                e.searchLocation = Uri.parse(e.searchLocation);
+            } else if ('scheme' in e.searchLocation && 'path' in e.searchLocation) {
+                e.searchLocation = Uri.parse(`${e.searchLocation.scheme}://${e.searchLocation.path}`);
+            } else {
+                traceError('Unexpected search location', JSON.stringify(e.searchLocation));
+            }
+        }
+        return e;
+    });
+}
+
+function putIntoStorage(storage: IPersistentStorage<PythonEnvInfo[]>, envs: PythonEnvInfo[]): Promise<void> {
+    storage.set(
+        // We have to `cloneDeep()` here so that we don't overwrite the original `PythonEnvInfo` objects.
+        cloneDeep(envs).map((e) => {
+            if (e.searchLocation) {
+                // Make TS believe it is string. This is temporary. We need to serialize this in
+                // a custom way.
+                e.searchLocation = (e.searchLocation.toString() as unknown) as Uri;
+            }
+            return e;
+        }),
+    );
+    return Promise.resolve();
+}
+
 async function createCollectionCache(ext: ExtensionState): Promise<IEnvsCollectionCache> {
     const storage = getGlobalStorage<PythonEnvInfo[]>(ext.context, 'PYTHON_ENV_INFO_CACHE', []);
     const cache = await createCache({
-        load: async () => storage.get(),
-        store: async (e) => storage.set(e),
+        get: () => getFromStorage(storage),
+        store: async (e) => putIntoStorage(storage, e),
     });
     return cache;
 }

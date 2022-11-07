@@ -6,7 +6,7 @@ import * as sinon from 'sinon';
 import { getOSType, OSType } from '../../../../../client/common/utils/platform';
 import { Disposables } from '../../../../../client/common/utils/resourceLifecycle';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
-import { IPythonEnvsIterator } from '../../../../../client/pythonEnvironments/base/locator';
+import { BasicEnvInfo, IPythonEnvsIterator } from '../../../../../client/pythonEnvironments/base/locator';
 import {
     FSWatcherKind,
     FSWatchingLocator,
@@ -30,6 +30,8 @@ suite('File System Watching Locator Tests', () => {
     });
 
     class TestWatcher extends FSWatchingLocator {
+        public readonly providerId: string = 'test';
+
         constructor(
             watcherKind: FSWatcherKind,
             opts: {
@@ -44,7 +46,7 @@ suite('File System Watching Locator Tests', () => {
         }
 
         // eslint-disable-next-line class-methods-use-this
-        protected doIterEnvs(): IPythonEnvsIterator {
+        protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
             throw new Error('Method not implemented.');
         }
 

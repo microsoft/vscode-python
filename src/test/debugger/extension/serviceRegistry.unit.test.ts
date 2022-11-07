@@ -11,7 +11,6 @@ import { DebugSessionLoggingFactory } from '../../../client/debugger/extension/a
 import { OutdatedDebuggerPromptFactory } from '../../../client/debugger/extension/adapter/outdatedDebuggerPrompt';
 import { AttachProcessProviderFactory } from '../../../client/debugger/extension/attachQuickPick/factory';
 import { IAttachProcessProviderFactory } from '../../../client/debugger/extension/attachQuickPick/types';
-import { DebuggerBanner } from '../../../client/debugger/extension/banner';
 import { PythonDebugConfigurationService } from '../../../client/debugger/extension/configuration/debugConfigurationService';
 import { LaunchJsonCompletionProvider } from '../../../client/debugger/extension/configuration/launch.json/completionProvider';
 import { InterpreterPathCommand } from '../../../client/debugger/extension/configuration/launch.json/interpreterPathCommand';
@@ -28,7 +27,6 @@ import { registerTypes } from '../../../client/debugger/extension/serviceRegistr
 import {
     IDebugAdapterDescriptorFactory,
     IDebugConfigurationService,
-    IDebuggerBanner,
     IDebugSessionLoggingFactory,
     IOutdatedDebuggerPromptFactory,
 } from '../../../client/debugger/extension/types';
@@ -57,7 +55,6 @@ suite('Debugging - Service Registry', () => {
                 PythonDebugConfigurationService,
             ),
         ).once();
-        verify(serviceManager.addSingleton<IDebuggerBanner>(IDebuggerBanner, DebuggerBanner)).once();
         verify(
             serviceManager.addSingleton<IChildProcessAttachService>(
                 IChildProcessAttachService,

@@ -91,7 +91,7 @@ suite('Linting - Pylint', () => {
 
     test('Negative column numbers should be treated 0', async () => {
         const fileFolder = '/user/a/b/c';
-        const pylinter = new Pylint(serviceContainer);
+        const pylinter = new Pylint(serviceContainer, { showPrompt: () => Promise.resolve(false) });
 
         const document = TypeMoq.Mock.ofType<TextDocument>();
         document.setup((x) => x.uri).returns(() => Uri.file(path.join(fileFolder, 'test.py')));
