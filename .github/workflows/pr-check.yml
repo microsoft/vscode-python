@@ -15,6 +15,7 @@ env:
   VSIX_NAME: ms-python-insiders.vsix
   TEST_RESULTS_DIRECTORY: .
   DISABLE_TRANSLATIONS: true
+  VSC_PYTHON_CI_TEST_GREP: 'Python API tests'
   # Force a path with spaces and to test extension works in these scenarios
   # Unicode characters are causing 2.7 failures so skip that for now.
   special-working-directory: './path with spaces'
@@ -93,10 +94,10 @@ jobs:
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the Unix case.
-        os: [ubuntu-latest, windows-latest]
+        os: [windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
-        python: ['3.x']
-        test-suite: [ts-unit, python-unit, venv, single-workspace, debugger, functional]
+        python: ['3.10']
+        test-suite: [single-workspace]
 
     steps:
       - name: Checkout
