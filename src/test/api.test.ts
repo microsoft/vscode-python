@@ -14,7 +14,11 @@ suite('Python API tests', () => {
     test('Active environment is defined', async () => {
         const environmentPath = api.environments.getActiveEnvironmentPath();
         const environment = await api.environments.resolveEnvironment(environmentPath);
-        console.log('Log active environment', JSON.stringify(environment));
-        expect(environment).to.not.equal(undefined, 'Active environment is not defined');
+        expect(environment).to.not.equal(
+            undefined,
+            `Active environment is not defined, envPath: ${JSON.stringify(environmentPath)}, env: ${JSON.stringify(
+                environment,
+            )}`,
+        );
     });
 });
