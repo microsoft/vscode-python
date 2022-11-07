@@ -2,34 +2,27 @@
 // Licensed under the MIT License.
 
 'use strict';
-
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, ProviderResult } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IApplicationShell } from '../../../common/application/types';
-import { IBrowserService } from '../../../common/types';
 import { Common, OutdatedDebugger } from '../../../common/utils/localize';
+import { launch } from '../../../common/vscodeApis/browserApis';
+import { showInformationMessage } from '../../../common/vscodeApis/windowApis';
 import { IPromptShowState } from './types';
 
 // This situation occurs when user connects to old containers or server where
 // the debugger they had installed was ptvsd. We should show a prompt to ask them to update.
 class OutdatedDebuggerPrompt implements DebugAdapterTracker {
-    constructor(
-        private promptCheck: IPromptShowState,
-        private appShell: IApplicationShell,
-        private browserService: IBrowserService,
-    ) {}
+    constructor(private promptCheck: IPromptShowState) {}
 
     public onDidSendMessage(message: DebugProtocol.ProtocolMessage) {
         if (this.promptCheck.shouldShowPrompt() && this.isPtvsd(message)) {
             const prompts = [Common.moreInfo];
-            this.appShell
-                .showInformationMessage(OutdatedDebugger.outdatedDebuggerMessage, ...prompts)
-                .then((selection) => {
-                    if (selection === prompts[0]) {
-                        this.browserService.launch('https://aka.ms/migrateToDebugpy');
-                    }
-                });
+            showInformationMessage(OutdatedDebugger.outdatedDebuggerMessage, ...prompts).then((selection) => {
+                if (selection === prompts[0]) {
+                    launch('https://aka.ms/migrateToDebugpy');
+                }
+            });
         }
     }
 
@@ -71,13 +64,10 @@ class OutdatedDebuggerPromptState implements IPromptShowState {
 @injectable()
 export class OutdatedDebuggerPromptFactory implements DebugAdapterTrackerFactory {
     private readonly promptCheck: OutdatedDebuggerPromptState;
-    constructor(
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IBrowserService) private browserService: IBrowserService,
-    ) {
+    constructor() {
         this.promptCheck = new OutdatedDebuggerPromptState();
     }
     public createDebugAdapterTracker(_session: DebugSession): ProviderResult<DebugAdapterTracker> {
-        return new OutdatedDebuggerPrompt(this.promptCheck, this.appShell, this.browserService);
+        return new OutdatedDebuggerPrompt(this.promptCheck);
     }
 }

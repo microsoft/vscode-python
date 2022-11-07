@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as typemoq from 'typemoq';
+import * as sinon from 'sinon';
 import { assert, expect } from 'chai';
 import { Uri, EventEmitter, ConfigurationTarget, WorkspaceFolder } from 'vscode';
 import { cloneDeep } from 'lodash';
@@ -11,6 +12,7 @@ import {
     IExtensions,
     IInterpreterPathService,
     IPythonSettings,
+    Resource,
 } from '../client/common/types';
 import { IServiceContainer } from '../client/ioc/types';
 import {
@@ -35,8 +37,15 @@ import {
 } from '../client/proposedApiTypes';
 import { IWorkspaceService } from '../client/common/application/types';
 import { IEnvironmentVariablesProvider } from '../client/common/variables/types';
+import * as workspaceApis from '../client/common/vscodeApis/workspaceApis';
 
 suite('Proposed Extension API', () => {
+    const workspacePath = 'path/to/workspace';
+    const workspaceFolder = {
+        name: 'workspace',
+        uri: Uri.file(workspacePath),
+        index: 0,
+    };
     let serviceContainer: typemoq.IMock<IServiceContainer>;
     let discoverAPI: typemoq.IMock<IDiscoveryAPI>;
     let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
@@ -52,6 +61,13 @@ suite('Proposed Extension API', () => {
 
     setup(() => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
+        sinon.stub(workspaceApis, 'getWorkspaceFolders').returns([workspaceFolder]);
+        sinon.stub(workspaceApis, 'getWorkspaceFolder').callsFake((resource: Resource) => {
+            if (resource?.fsPath === workspaceFolder.uri.fsPath) {
+                return workspaceFolder;
+            }
+            return undefined;
+        });
         discoverAPI = typemoq.Mock.ofType<IDiscoveryAPI>();
         extensions = typemoq.Mock.ofType<IExtensions>();
         workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
@@ -85,21 +101,20 @@ suite('Proposed Extension API', () => {
     teardown(() => {
         // Verify each API method sends telemetry regarding who called the API.
         extensions.verifyAll();
+        sinon.restore();
     });
 
     test('Provide an event to track when environment variables change', async () => {
-        const resource = Uri.file('x');
-        const folder = ({ uri: resource } as unknown) as WorkspaceFolder;
+        const resource = workspaceFolder.uri;
         const envVars = { PATH: 'path' };
         envVarsProvider.setup((e) => e.getEnvironmentVariablesSync(resource)).returns(() => envVars);
-        workspaceService.setup((w) => w.getWorkspaceFolder(resource)).returns(() => folder);
         const events: EnvironmentVariablesChangeEvent[] = [];
         proposed.environments.onDidEnvironmentVariablesChange((e) => {
             events.push(e);
         });
         onDidChangeEnvironmentVariables.fire(resource);
         await sleep(1);
-        assert.deepEqual(events, [{ env: envVars, resource: folder }]);
+        assert.deepEqual(events, [{ env: envVars, resource: workspaceFolder }]);
     });
 
     test('getEnvironmentVariables: No resource', async () => {
@@ -196,7 +211,7 @@ suite('Proposed Extension API', () => {
             kind: PythonEnvKind.System,
             arch: Architecture.x64,
             sysPrefix: 'prefix/path',
-            searchLocation: Uri.file('path/to/project'),
+            searchLocation: Uri.file(workspacePath),
         });
         discoverAPI.setup((p) => p.resolveEnv(pythonPath)).returns(() => Promise.resolve(env));
 
@@ -216,13 +231,13 @@ suite('Proposed Extension API', () => {
             kind: PythonEnvKind.System,
             arch: Architecture.x64,
             sysPrefix: 'prefix/path',
-            searchLocation: Uri.file('path/to/project'),
+            searchLocation: Uri.file(workspacePath),
         });
         const partialEnv = buildEnvInfo({
             executable: pythonPath,
             kind: PythonEnvKind.System,
             sysPrefix: 'prefix/path',
-            searchLocation: Uri.file('path/to/project'),
+            searchLocation: Uri.file(workspacePath),
         });
         discoverAPI.setup((p) => p.resolveEnv(pythonPath)).returns(() => Promise.resolve(env));
 
@@ -237,7 +252,7 @@ suite('Proposed Extension API', () => {
     });
 
     test('environments: python found', async () => {
-        const envs = [
+        const expectedEnvs = [
             {
                 executable: {
                     filename: 'this/is/a/test/python/path1',
@@ -281,12 +296,37 @@ suite('Proposed Extension API', () => {
                 },
             },
         ];
+        const envs = [
+            ...expectedEnvs,
+            {
+                executable: {
+                    filename: 'this/is/a/test/python/path3',
+                    ctime: 1,
+                    mtime: 2,
+                    sysPrefix: 'prefix/path',
+                },
+                version: {
+                    major: 3,
+                    minor: -1,
+                    micro: -1,
+                },
+                kind: PythonEnvKind.Venv,
+                arch: Architecture.x64,
+                name: '',
+                location: '',
+                source: [PythonEnvSource.PathEnvVar],
+                distro: {
+                    org: '',
+                },
+                searchLocation: Uri.file('path/outside/workspace'),
+            },
+        ];
         discoverAPI.setup((d) => d.getEnvs()).returns(() => envs);
         const actual = proposed.environments.known;
         const actualEnvs = actual?.map((a) => (a as EnvironmentReference).internal);
         assert.deepEqual(
             actualEnvs?.sort((a, b) => a.id.localeCompare(b.id)),
-            envs.map((e) => convertEnvInfo(e)).sort((a, b) => a.id.localeCompare(b.id)),
+            expectedEnvs.map((e) => convertEnvInfo(e)).sort((a, b) => a.id.localeCompare(b.id)),
         );
     });
 
@@ -302,7 +342,7 @@ suite('Proposed Extension API', () => {
                 executable: 'pythonPath',
                 kind: PythonEnvKind.System,
                 sysPrefix: 'prefix/path',
-                searchLocation: Uri.file('path/to/project'),
+                searchLocation: Uri.file(workspacePath),
             }),
             {
                 executable: {

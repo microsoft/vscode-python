@@ -43,18 +43,16 @@ export type InterpreterInfoJson = {
 
 export const OUTPUT_MARKER_SCRIPT = path.join(_SCRIPTS_DIR, 'get_output_via_markers.py');
 
-export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJson | undefined] {
+export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJson] {
     const script = path.join(SCRIPTS_DIR, 'interpreterInfo.py');
     const args = [script];
 
-    function parse(out: string): InterpreterInfoJson | undefined {
-        let json: InterpreterInfoJson | undefined;
+    function parse(out: string): InterpreterInfoJson {
         try {
-            json = JSON.parse(out);
+            return JSON.parse(out);
         } catch (ex) {
             throw Error(`python ${args} returned bad JSON (${out}) (${ex})`);
         }
-        return json;
     }
 
     return [args, parse];

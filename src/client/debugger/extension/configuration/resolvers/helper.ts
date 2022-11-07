@@ -7,6 +7,8 @@ import { inject, injectable } from 'inversify';
 import { ICurrentProcess, IPathUtils } from '../../../../common/types';
 import { EnvironmentVariables, IEnvironmentVariablesService } from '../../../../common/variables/types';
 import { LaunchRequestArguments } from '../../../types';
+import { getActiveTextEditor } from '../utils/common';
+import { PYTHON_LANGUAGE } from '../../../../common/constants';
 
 export const IDebugEnvironmentVariablesService = Symbol('IDebugEnvironmentVariablesService');
 export interface IDebugEnvironmentVariablesService {
@@ -20,12 +22,15 @@ export class DebugEnvironmentVariablesHelper implements IDebugEnvironmentVariabl
         @inject(IPathUtils) private pathUtils: IPathUtils,
         @inject(ICurrentProcess) private process: ICurrentProcess,
     ) {}
+
     public async getEnvironmentVariables(args: LaunchRequestArguments): Promise<EnvironmentVariables> {
         const pathVariableName = this.pathUtils.getPathVariableName();
 
         // Merge variables from both .env file and env json variables.
         const debugLaunchEnvVars: Record<string, string> =
-            args.env && Object.keys(args.env).length > 0 ? ({ ...args.env } as any) : ({} as any);
+            args.env && Object.keys(args.env).length > 0
+                ? ({ ...args.env } as Record<string, string>)
+                : ({} as Record<string, string>);
         const envFileVars = await this.envParser.parseFile(args.envFile, debugLaunchEnvVars);
         const env = envFileVars ? { ...envFileVars } : {};
 
@@ -76,4 +81,12 @@ export class DebugEnvironmentVariablesHelper implements IDebugEnvironmentVariabl
 
         return env;
     }
+}
+
+export function getProgram(): string | undefined {
+    const activeTextEditor = getActiveTextEditor();
+    if (activeTextEditor && activeTextEditor.document.languageId === PYTHON_LANGUAGE) {
+        return activeTextEditor.document.fileName;
+    }
+    return undefined;
 }

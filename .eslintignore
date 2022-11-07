@@ -108,17 +108,6 @@ src/test/common/interpreterPathService.unit.test.ts
 
 src/test/pythonFiles/formatting/dummy.ts
 
-src/test/debugger/extension/configuration/debugConfigurationService.unit.test.ts
-src/test/debugger/extension/configuration/providers/fileLaunch.unit.test.ts
-src/test/debugger/extension/configuration/providers/providerFactory.unit.test.ts
-src/test/debugger/extension/configuration/providers/pidAttach.unit.test.ts
-src/test/debugger/extension/configuration/resolvers/base.unit.test.ts
-src/test/debugger/extension/configuration/resolvers/common.ts
-src/test/debugger/extension/configuration/resolvers/attach.unit.test.ts
-src/test/debugger/extension/configuration/resolvers/launch.unit.test.ts
-src/test/debugger/extension/configuration/launch.json/updaterServer.unit.test.ts
-src/test/debugger/extension/configuration/launch.json/completionProvider.unit.test.ts
-src/test/debugger/extension/configuration/launch.json/interpreterPathCommand.unit.test.ts
 src/test/debugger/extension/banner.unit.test.ts
 src/test/debugger/extension/adapter/adapter.test.ts
 src/test/debugger/extension/adapter/outdatedDebuggerPrompt.unit.test.ts
@@ -272,38 +261,18 @@ src/client/common/process/pythonProcess.ts
 src/client/common/process/pythonEnvironment.ts
 src/client/common/process/decoder.ts
 
-src/client/debugger/extension/configuration/providers/moduleLaunch.ts
-src/client/debugger/extension/configuration/providers/fastapiLaunch.ts
-src/client/debugger/extension/configuration/providers/flaskLaunch.ts
-src/client/debugger/extension/configuration/providers/fileLaunch.ts
-src/client/debugger/extension/configuration/providers/remoteAttach.ts
-src/client/debugger/extension/configuration/providers/djangoLaunch.ts
-src/client/debugger/extension/configuration/providers/providerFactory.ts
-src/client/debugger/extension/configuration/providers/pyramidLaunch.ts
-src/client/debugger/extension/configuration/providers/pidAttach.ts
-src/client/debugger/extension/configuration/resolvers/base.ts
-src/client/debugger/extension/configuration/resolvers/helper.ts
-src/client/debugger/extension/configuration/resolvers/launch.ts
-src/client/debugger/extension/configuration/resolvers/attach.ts
-src/client/debugger/extension/configuration/debugConfigurationService.ts
-src/client/debugger/extension/configuration/launch.json/updaterService.ts
-src/client/debugger/extension/configuration/launch.json/interpreterPathCommand.ts
-src/client/debugger/extension/configuration/launch.json/completionProvider.ts
-src/client/debugger/extension/banner.ts
-src/client/debugger/extension/serviceRegistry.ts
+
 src/client/debugger/extension/adapter/remoteLaunchers.ts
 src/client/debugger/extension/adapter/outdatedDebuggerPrompt.ts
 src/client/debugger/extension/adapter/factory.ts
 src/client/debugger/extension/adapter/activator.ts
 src/client/debugger/extension/adapter/logging.ts
-src/client/debugger/extension/types.ts
 src/client/debugger/extension/hooks/eventHandlerDispatcher.ts
 src/client/debugger/extension/hooks/childProcessAttachService.ts
 src/client/debugger/extension/attachQuickPick/wmicProcessParser.ts
 src/client/debugger/extension/attachQuickPick/factory.ts
 src/client/debugger/extension/attachQuickPick/psProcessParser.ts
 src/client/debugger/extension/attachQuickPick/picker.ts
-src/client/debugger/extension/helpers/protocolParser.ts
 
 src/client/application/serviceRegistry.ts
 src/client/application/diagnostics/surceMapSupportService.ts

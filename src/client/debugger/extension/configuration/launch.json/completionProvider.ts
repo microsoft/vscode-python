@@ -29,10 +29,12 @@ enum JsonLanguages {
 @injectable()
 export class LaunchJsonCompletionProvider implements CompletionItemProvider, IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
+
     constructor(
         @inject(ILanguageService) private readonly languageService: ILanguageService,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
     ) {}
+
     public async activate(): Promise<void> {
         this.disposableRegistry.push(
             this.languageService.registerCompletionItemProvider({ language: JsonLanguages.json }, this),
@@ -41,12 +43,14 @@ export class LaunchJsonCompletionProvider implements CompletionItemProvider, IEx
             this.languageService.registerCompletionItemProvider({ language: JsonLanguages.jsonWithComments }, this),
         );
     }
+
+    // eslint-disable-next-line class-methods-use-this
     public async provideCompletionItems(
         document: TextDocument,
         position: Position,
         token: CancellationToken,
     ): Promise<CompletionItem[]> {
-        if (!this.canProvideCompletions(document, position)) {
+        if (!LaunchJsonCompletionProvider.canProvideCompletions(document, position)) {
             return [];
         }
 
@@ -66,7 +70,8 @@ export class LaunchJsonCompletionProvider implements CompletionItemProvider, IEx
             },
         ];
     }
-    public canProvideCompletions(document: TextDocument, position: Position) {
+
+    public static canProvideCompletions(document: TextDocument, position: Position): boolean {
         if (path.basename(document.uri.fsPath) !== 'launch.json') {
             return false;
         }

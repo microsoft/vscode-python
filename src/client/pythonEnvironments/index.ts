@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { getGlobalStorage } from '../common/persistentState';
+import { Uri } from 'vscode';
+import { cloneDeep } from 'lodash';
+import { getGlobalStorage, IPersistentStorage } from '../common/persistentState';
 import { getOSType, OSType } from '../common/utils/platform';
 import { ActivationResult, ExtensionState } from '../components';
 import { PythonEnvInfo } from './base/info';
@@ -33,6 +35,7 @@ import {
 } from './base/locators/composite/envsCollectionCache';
 import { EnvsCollectionService } from './base/locators/composite/envsCollectionService';
 import { IDisposable } from '../common/types';
+import { traceError } from '../logging';
 
 /**
  * Set up the Python environments component (during extension activation).'
@@ -184,11 +187,41 @@ function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators {
     return locators;
 }
 
+function getFromStorage(storage: IPersistentStorage<PythonEnvInfo[]>): PythonEnvInfo[] {
+    return storage.get().map((e) => {
+        if (e.searchLocation) {
+            if (typeof e.searchLocation === 'string') {
+                e.searchLocation = Uri.parse(e.searchLocation);
+            } else if ('scheme' in e.searchLocation && 'path' in e.searchLocation) {
+                e.searchLocation = Uri.parse(`${e.searchLocation.scheme}://${e.searchLocation.path}`);
+            } else {
+                traceError('Unexpected search location', JSON.stringify(e.searchLocation));
+            }
+        }
+        return e;
+    });
+}
+
+function putIntoStorage(storage: IPersistentStorage<PythonEnvInfo[]>, envs: PythonEnvInfo[]): Promise<void> {
+    storage.set(
+        // We have to `cloneDeep()` here so that we don't overwrite the original `PythonEnvInfo` objects.
+        cloneDeep(envs).map((e) => {
+            if (e.searchLocation) {
+                // Make TS believe it is string. This is temporary. We need to serialize this in
+                // a custom way.
+                e.searchLocation = (e.searchLocation.toString() as unknown) as Uri;
+            }
+            return e;
+        }),
+    );
+    return Promise.resolve();
+}
+
 async function createCollectionCache(ext: ExtensionState): Promise<IEnvsCollectionCache> {
     const storage = getGlobalStorage<PythonEnvInfo[]>(ext.context, 'PYTHON_ENV_INFO_CACHE', []);
     const cache = await createCache({
-        get: () => storage.get(),
-        store: async (e) => storage.set(e),
+        get: () => getFromStorage(storage),
+        store: async (e) => putIntoStorage(storage, e),
     });
     return cache;
 }

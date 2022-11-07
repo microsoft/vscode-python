@@ -139,7 +139,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                         break;
                 }
             } catch (exception) {
-                console.error(`Failed to serialize ${prop} for ${eventName}`, exception);
+                console.error(`Failed to serialize ${prop} for ${String(eventName)}`, exception);
             }
         });
     }
@@ -2050,7 +2050,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent if installing packages failed.
      */
     /* __GDPR__
-       "environment.installing_packages" : {
+       "environment.installing_packages_failed" : {
           "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
           "using" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
        }
