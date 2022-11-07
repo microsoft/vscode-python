@@ -32,6 +32,9 @@ def discover(
     if ec == 5:
         # No tests were discovered.
         pass
+    elif ec == 1:
+        # Some tests where collected but with errors.
+        pass
     elif ec != 0:
         print(
             "equivalent command: {} -m pytest {}".format(

@@ -403,6 +403,31 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(tests, expected)
         self.assertEqual(actual_calls, expected_calls)
 
+    def test_found_with_collection_error(self):
+        stub = util.Stub()
+        pytest = StubPyTest(stub)
+        pytest.return_main = 1
+        plugin = StubPlugin(stub)
+        expected = []
+        plugin.discovered = expected
+        calls = [
+            ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
+            ("discovered.parents", None, None),
+            ("discovered.__len__", None, None),
+            ("discovered.__getitem__", (0,), None),
+        ]
+
+        parents, tests = _discovery.discover(
+            [], _pytest_main=pytest.main, _plugin=plugin
+        )
+
+        actual_calls = unique(stub.calls, lambda k: k[0])
+        expected_calls = unique(calls, lambda k: k[0])
+
+        self.assertEqual(parents, [])
+        self.assertEqual(tests, expected)
+        self.assertEqual(actual_calls, expected_calls)
+
     def test_stdio_hidden_file(self):
         stub = util.Stub()
 
