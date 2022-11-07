@@ -49,6 +49,14 @@ DEFAULT_PORT = "45454"
 # session
 #   test Case
 
+# modules folders1/folders2  (can be in classes)
+#   test cases
+
+# module
+# class
+# test case
+
+
 def pytest_collection_finish(session):
     node, error = build_test_tree(session)
     cwd = os.getcwd()
@@ -73,11 +81,13 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
         testNode_test = createTestItem(test_case)
         # if the parent object file doesn't already exist
         if type(test_case.parent) == pytest.Module:
-            if test_case.parent not in testNode_file_dict.keys():
+            if test_case.parent not in testNode_file_dict:
                 testNode_file_dict[test_case.parent] = createFileTestNode(
                     test_case.parent
                 )
-            testNode_file_dict[test_case.parent].get("children").append(testNode_test)
+            testNode_file_dict[test_case.parent].get("children").append(
+                testNode_test
+            )  # use set default
         else:
             # this means its a unittest class
             # create class
@@ -99,9 +109,13 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
             # it is a nested folder structure and so new objects need to be created
             nested_folder_list = name.split("/")
             path_iterator = (
-                str(session.fspath) + "/" + "/".join(nested_folder_list[0:-1])
+                str(session.fspath)
+                + "/"
+                + "/".join(
+                    nested_folder_list[0:-1]
+                )  # check to see if windows style (more fancy stuff path lib if windows or posix via API in os module)
             )
-            for i in range(len(nested_folder_list) - 2, -1, -1):
+            for i in range(len(nested_folder_list) - 2, -1, -1):  # reverse and slice
                 folderName = nested_folder_list[i]
                 folder_test_node = accessOrCreateGeneral(
                     folderName,
@@ -114,8 +128,8 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
                 path_iterator = str(session.fspath) + "/".join(nested_folder_list[0:i])
 
         # the final folder we get to is the highest folder in the path and therefore we add this as a child to the session
-        if (prev_folder_test_node != None) and (
-            prev_folder_test_node.get("id_") not in session_children_dict.keys()
+        if (prev_folder_test_node is not None) and (
+            prev_folder_test_node.get("id_") not in session_children_dict
         ):
             session_children_dict[
                 prev_folder_test_node.get("id_")
