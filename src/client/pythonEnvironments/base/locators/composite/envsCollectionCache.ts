@@ -176,7 +176,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
                 traceVerbose(`Found cached env for ${path}`);
                 return env;
             }
-            if (await validateInfo(env)) {
+            if (await this.validateInfo(env)) {
                 traceVerbose(`Needed to validate ${path} with latest info`);
                 this.validatedEnvs.add(env.id!);
                 return env;
@@ -211,16 +211,24 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             this.flushedEnvs.add(e.id!);
         });
     }
-}
 
-async function validateInfo(env: PythonEnvInfo) {
-    const { ctime, mtime } = await getFileInfo(env.executable.filename);
-    if (ctime !== -1 && mtime !== -1 && ctime === env.executable.ctime && mtime === env.executable.mtime) {
-        return true;
+    /**
+     * Ensure environment has complete and latest information.
+     */
+    private async validateInfo(env: PythonEnvInfo) {
+        // Make sure any previously flushed information is upto date by ensuring environment did not change.
+        if (!this.flushedEnvs.has(env.id!)) {
+            // Any environment with complete information is flushed, so this env does not contain complete info.
+            return false;
+        }
+        const { ctime, mtime } = await getFileInfo(env.executable.filename);
+        if (ctime !== -1 && mtime !== -1 && ctime === env.executable.ctime && mtime === env.executable.mtime) {
+            return true;
+        }
+        env.executable.ctime = ctime;
+        env.executable.mtime = mtime;
+        return false;
     }
-    env.executable.ctime = ctime;
-    env.executable.mtime = mtime;
-    return false;
 }
 
 /**
