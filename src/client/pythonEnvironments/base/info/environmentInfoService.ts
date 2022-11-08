@@ -102,6 +102,9 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
         this._getEnvironmentInfo(env, priority)
             .then((r) => {
                 deferred.resolve(r);
+                if (r === undefined) {
+                    this.cache.delete(normCasePath(interpreterPath));
+                }
             })
             .catch((ex) => {
                 deferred.reject(ex);
