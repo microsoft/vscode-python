@@ -4,7 +4,7 @@
 import { inject, injectable, optional } from 'inversify';
 import path from 'path';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
-import { traceError } from '../../logging';
+import { traceError, traceVerbose } from '../../logging';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
 import { PythonSettings } from '../configSettings';
@@ -61,6 +61,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         }
         const vars = await this._getEnvironmentVariables(resource);
         this.setCachedEnvironmentVariables(resource, vars);
+        traceVerbose('Dump environment variables', JSON.stringify(vars, null, 4));
         return vars;
     }
 
