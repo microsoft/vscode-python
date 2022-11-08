@@ -142,10 +142,14 @@ export class Poetry {
         traceVerbose(`Getting poetry for cwd ${cwd}`);
         // Produce a list of candidate binaries to be probed by exec'ing them.
         function* getCandidates() {
-            const customPoetryPath = getPythonSetting<string>('poetryPath');
-            if (customPoetryPath && customPoetryPath !== 'poetry') {
-                // If user has specified a custom poetry path, use it first.
-                yield customPoetryPath;
+            try {
+                const customPoetryPath = getPythonSetting<string>('poetryPath');
+                if (customPoetryPath && customPoetryPath !== 'poetry') {
+                    // If user has specified a custom poetry path, use it first.
+                    yield customPoetryPath;
+                }
+            } catch (ex) {
+                traceError(`Failed to get poetry setting`, ex);
             }
             // Check unqualified filename, in case it's on PATH.
             yield 'poetry';
