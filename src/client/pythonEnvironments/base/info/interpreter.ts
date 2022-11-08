@@ -89,13 +89,16 @@ export async function getInterpreterInfo(
     const result = await shellExecute(quoted, { timeout: timeout ?? 15000 });
     if (result.stderr) {
         traceError(
-            `Stderr when executing script with ${argv} stderr: ${result.stderr}, still attempting to parse output`,
+            `Stderr when executing script with >> ${quoted} << stderr: ${result.stderr}, still attempting to parse output`,
         );
     }
-    const json = parse(result.stdout);
-    if (!json) {
+    let json: InterpreterInfoJson;
+    try {
+        json = parse(result.stdout);
+    } catch (ex) {
+        traceError(`Failed to parse interpreter information for >> ${quoted} << with ${ex}`);
         return undefined;
     }
-    traceInfo(`Found interpreter for ${argv}`);
+    traceInfo(`Found interpreter for >> ${quoted} <<: ${JSON.stringify(json)}`);
     return extractInterpreterInfo(python.pythonExecutable, json);
 }

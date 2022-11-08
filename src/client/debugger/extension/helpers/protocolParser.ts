@@ -9,7 +9,7 @@ import { IProtocolParser } from '../types';
 
 const PROTOCOL_START_INDENTIFIER = '\r\n\r\n';
 
-type Listener = (...args: any[]) => void;
+type Listener = (...args: unknown[]) => void;
 
 /**
  * Parsers the debugger Protocol messages and raises the following events:
@@ -26,34 +26,45 @@ type Listener = (...args: any[]) => void;
 @injectable()
 export class ProtocolParser implements IProtocolParser {
     private rawData = Buffer.alloc(0);
-    private contentLength: number = -1;
-    private disposed: boolean = false;
+
+    private contentLength = -1;
+
+    private disposed = false;
+
     private stream?: Readable;
+
     private events: EventEmitter;
+
     constructor() {
         this.events = new EventEmitter();
     }
-    public dispose() {
+
+    public dispose(): void {
         if (this.stream) {
             this.stream.removeListener('data', this.dataCallbackHandler);
             this.stream = undefined;
         }
     }
-    public connect(stream: Readable) {
+
+    public connect(stream: Readable): void {
         this.stream = stream;
         stream.addListener('data', this.dataCallbackHandler);
     }
+
     public on(event: string | symbol, listener: Listener): this {
         this.events.on(event, listener);
         return this;
     }
+
     public once(event: string | symbol, listener: Listener): this {
         this.events.once(event, listener);
         return this;
     }
+
     private dataCallbackHandler = (data: string | Buffer) => {
         this.handleData(data as Buffer);
     };
+
     private dispatch(body: string): void {
         const message = JSON.parse(body) as DebugProtocol.ProtocolMessage;
 
@@ -86,12 +97,14 @@ export class ProtocolParser implements IProtocolParser {
 
         this.events.emit('data', message);
     }
+
     private handleData(data: Buffer): void {
         if (this.disposed) {
             return;
         }
         this.rawData = Buffer.concat([this.rawData, data]);
 
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             if (this.contentLength >= 0) {
                 if (this.rawData.length >= this.contentLength) {
@@ -102,6 +115,7 @@ export class ProtocolParser implements IProtocolParser {
                         this.dispatch(message);
                     }
                     // there may be more complete messages to process.
+                    // eslint-disable-next-line no-continue
                     continue;
                 }
             } else {
@@ -116,6 +130,7 @@ export class ProtocolParser implements IProtocolParser {
                         }
                     }
                     this.rawData = this.rawData.slice(idx + PROTOCOL_START_INDENTIFIER.length);
+                    // eslint-disable-next-line no-continue
                     continue;
                 }
             }

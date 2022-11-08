@@ -10,6 +10,7 @@ import { IDisposable, IConfigurationService } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
+import { traceError } from '../../logging';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
@@ -116,6 +117,7 @@ export async function getFileInfo(filePath: string): Promise<{ ctime: number; mt
     } catch (ex) {
         // This can fail on some cases, such as, `reparse points` on windows. So, return the
         // time as -1. Which we treat as not set in the extension.
+        traceError(`Failed to get file info for ${filePath}`, ex);
         return { ctime: -1, mtime: -1 };
     }
 }

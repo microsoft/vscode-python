@@ -14,6 +14,7 @@ import { Commands } from '../../../../../client/common/constants';
 import { IDisposable } from '../../../../../client/common/types';
 import { InterpreterPathCommand } from '../../../../../client/debugger/extension/configuration/launch.json/interpreterPathCommand';
 import { IInterpreterService } from '../../../../../client/interpreter/contracts';
+import { PythonEnvironment } from '../../../../../client/pythonEnvironments/info';
 
 suite('Interpreter Path Command', () => {
     let cmdManager: ICommandManager;
@@ -30,7 +31,7 @@ suite('Interpreter Path Command', () => {
     });
 
     test('Ensure command is registered with the correct callback handler', async () => {
-        let getInterpreterPathHandler!: Function;
+        let getInterpreterPathHandler = (_param: unknown) => undefined;
         when(cmdManager.registerCommand(Commands.GetSelectedInterpreterPath, anything())).thenCall((_, cb) => {
             getInterpreterPathHandler = cb;
             return TypeMoq.Mock.ofType<IDisposable>().object;
@@ -50,7 +51,7 @@ suite('Interpreter Path Command', () => {
         when(interpreterService.getActiveInterpreter(anything())).thenCall((arg) => {
             assert.deepEqual(arg, Uri.parse('folderPath'));
 
-            return Promise.resolve({ path: 'settingValue' }) as any;
+            return Promise.resolve({ path: 'settingValue' }) as unknown;
         });
         const setting = await interpreterPathCommand._getSelectedInterpreterPath(args);
         expect(setting).to.equal('settingValue');
@@ -61,7 +62,7 @@ suite('Interpreter Path Command', () => {
         when(interpreterService.getActiveInterpreter(anything())).thenCall((arg) => {
             assert.deepEqual(arg, Uri.parse('folderPath'));
 
-            return Promise.resolve({ path: 'settingValue' }) as any;
+            return Promise.resolve({ path: 'settingValue' }) as unknown;
         });
         const setting = await interpreterPathCommand._getSelectedInterpreterPath(args);
         expect(setting).to.equal('settingValue');
@@ -71,7 +72,7 @@ suite('Interpreter Path Command', () => {
         const args = ['command'];
 
         when(interpreterService.getActiveInterpreter(undefined)).thenReturn(
-            Promise.resolve({ path: 'settingValue' }) as any,
+            Promise.resolve({ path: 'settingValue' }) as Promise<PythonEnvironment | undefined>,
         );
         const setting = await interpreterPathCommand._getSelectedInterpreterPath(args);
         expect(setting).to.equal('settingValue');
@@ -81,7 +82,7 @@ suite('Interpreter Path Command', () => {
         const args = ['command', '${input:some_input}'];
         when(interpreterService.getActiveInterpreter(anything())).thenCall((arg) => {
             assert.deepEqual(arg, undefined);
-            return Promise.resolve({ path: 'settingValue' }) as any;
+            return Promise.resolve({ path: 'settingValue' }) as unknown;
         });
         const setting = await interpreterPathCommand._getSelectedInterpreterPath(args);
         expect(setting).to.equal('settingValue');

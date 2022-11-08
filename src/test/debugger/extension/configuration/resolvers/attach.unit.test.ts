@@ -14,7 +14,7 @@ import { AttachRequestArguments, DebugOptions } from '../../../../../client/debu
 import { IInterpreterService } from '../../../../../client/interpreter/contracts';
 import { getInfoPerOS } from './common';
 import * as common from '../../../../../client/debugger/extension/configuration/utils/common';
-import * as workspaceFolder from '../../../../../client/debugger/extension/configuration/utils/workspaceFolder';
+import * as workspaceFolderFile from '../../../../../client/debugger/extension/configuration/utils/workspaceFolder';
 import * as platform from '../../../../../client/common/utils/platform';
 
 getInfoPerOS().forEach(([osName, osType, path]) => {
@@ -49,7 +49,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             debugProvider = new AttachConfigurationResolver(configurationService.object, interpreterService.object);
             getActiveTextEditorStub = sinon.stub(common, 'getActiveTextEditor');
             getOSTypeStub = sinon.stub(platform, 'getOSType');
-            getWorkspaceFoldersStub = sinon.stub(workspaceFolder, 'getWorkspaceFolders');
+            getWorkspaceFoldersStub = sinon.stub(workspaceFolderFile, 'getWorkspaceFolders');
             getOSTypeStub.returns(osType);
         });
 
@@ -245,7 +245,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 });
 
                 expect(debugConfig).to.have.property('localRoot', localRoot);
-                const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                const { pathMappings } = debugConfig as AttachRequestArguments;
                 expect(pathMappings).to.be.lengthOf(1);
                 expect(pathMappings![0].localRoot).to.be.equal(workspaceFolder.uri.fsPath);
                 expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
@@ -267,11 +267,13 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     localRoot,
                     host,
                 });
-                const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                const { pathMappings } = debugConfig as AttachRequestArguments;
 
                 const expected = Uri.file(path.join('c:', 'Debug', 'Python_Path')).fsPath;
                 expect(pathMappings![0].localRoot).to.be.equal(expected);
                 expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
+
+                return undefined;
             });
 
             test(`Ensure drive letter is not lower cased for local path mappings on non-Windows when host is '${host}'`, async function () {
@@ -290,11 +292,13 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     localRoot,
                     host,
                 });
-                const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                const { pathMappings } = debugConfig as AttachRequestArguments;
 
                 const expected = Uri.file(path.join('USR', 'Debug', 'Python_Path')).fsPath;
                 expect(pathMappings![0].localRoot).to.be.equal(expected);
                 expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
+
+                return undefined;
             });
 
             test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}' and with existing path mappings`, async function () {
@@ -317,11 +321,13 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     pathMappings: debugPathMappings,
                     host,
                 });
-                const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                const { pathMappings } = debugConfig as AttachRequestArguments;
 
                 const expected = Uri.file(path.join('c:', 'Debug', 'Python_Path', localRoot)).fsPath;
                 expect(pathMappings![0].localRoot).to.be.equal(expected);
                 expect(pathMappings![0].remoteRoot).to.be.equal('/app/');
+
+                return undefined;
             });
 
             test(`Ensure drive letter is not lower cased for local path mappings on non-Windows when host is '${host}' and with existing path mappings`, async function () {
@@ -345,11 +351,13 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     pathMappings: debugPathMappings,
                     host,
                 });
-                const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                const { pathMappings } = debugConfig as AttachRequestArguments;
 
                 const expected = Uri.file(path.join('USR', 'Debug', 'Python_Path', localRoot)).fsPath;
                 expect(Uri.file(pathMappings![0].localRoot).fsPath).to.be.equal(expected);
                 expect(pathMappings![0].remoteRoot).to.be.equal('/app/');
+
+                return undefined;
             });
 
             test(`Ensure local path mappings are not modified when not pointing to a local drive when host is '${host}'`, async () => {
@@ -365,7 +373,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                     localRoot,
                     host,
                 });
-                const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                const { pathMappings } = debugConfig as AttachRequestArguments;
 
                 expect(pathMappings![0].localRoot).to.be.equal(workspaceFolder.uri.fsPath);
                 expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
@@ -388,7 +396,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 });
 
                 expect(debugConfig).to.have.property('localRoot', localRoot);
-                const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                const { pathMappings } = debugConfig as AttachRequestArguments;
                 expect(pathMappings || []).to.be.lengthOf(0);
             });
         });

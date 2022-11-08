@@ -17,7 +17,7 @@ import { DebugConfigurationState, DebugConfigurationType } from '../../types';
 export async function buildFlaskLaunchDebugConfiguration(
     input: MultiStepInput<DebugConfigurationState>,
     state: DebugConfigurationState,
-) {
+): Promise<void> {
     const application = await getApplicationPath(state.folder);
     let manuallyEnteredAValue: boolean | undefined;
     const config: Partial<LaunchRequestArguments> = {
@@ -61,10 +61,11 @@ export async function buildFlaskLaunchDebugConfiguration(
 }
 export async function getApplicationPath(folder: WorkspaceFolder | undefined): Promise<string | undefined> {
     if (!folder) {
-        return;
+        return undefined;
     }
     const defaultLocationOfManagePy = path.join(folder.uri.fsPath, 'app.py');
     if (await fs.pathExists(defaultLocationOfManagePy)) {
         return 'app.py';
     }
+    return undefined;
 }

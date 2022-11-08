@@ -34,7 +34,7 @@ import {
     IOutdatedDebuggerPromptFactory,
 } from './types';
 
-export function registerTypes(serviceManager: IServiceManager) {
+export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         LaunchJsonCompletionProvider,

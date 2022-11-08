@@ -20,7 +20,7 @@ const workspaceFolderToken = '${workspaceFolder}';
 export async function buildDjangoLaunchDebugConfiguration(
     input: MultiStepInput<DebugConfigurationState>,
     state: DebugConfigurationState,
-) {
+): Promise<void> {
     const program = await getManagePyPath(state.folder);
     let manuallyEnteredAValue: boolean | undefined;
     const defaultProgram = `${workspaceFolderToken}${path.sep}manage.py`;
@@ -73,15 +73,16 @@ export async function validateManagePy(
             return error;
         }
     }
-    return;
+    return undefined;
 }
 
 export async function getManagePyPath(folder: vscode.WorkspaceFolder | undefined): Promise<string | undefined> {
     if (!folder) {
-        return;
+        return undefined;
     }
     const defaultLocationOfManagePy = path.join(folder.uri.fsPath, 'manage.py');
     if (await fs.pathExists(defaultLocationOfManagePy)) {
         return `${workspaceFolderToken}${path.sep}manage.py`;
     }
+    return undefined;
 }

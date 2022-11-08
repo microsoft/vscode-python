@@ -13,7 +13,7 @@ import { IInterpreterService } from '../../../../interpreter/contracts';
 import { DebuggerTypeName } from '../../../constants';
 import { DebugOptions, DebugPurpose, LaunchRequestArguments } from '../../../types';
 import { BaseConfigurationResolver } from './base';
-import { IDebugEnvironmentVariablesService } from './helper';
+import { getProgram, IDebugEnvironmentVariablesService } from './helper';
 
 @injectable()
 export class LaunchConfigurationResolver extends BaseConfigurationResolver<LaunchRequestArguments> {
@@ -40,7 +40,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.program === undefined &&
             debugConfiguration.env === undefined
         ) {
-            const defaultProgram = this.getProgram();
+            const defaultProgram = getProgram();
             debugConfiguration.name = 'Launch';
             debugConfiguration.type = DebuggerTypeName;
             debugConfiguration.request = 'launch';
@@ -48,7 +48,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.env = {};
         }
 
-        const workspaceFolder = this.getWorkspaceFolder(folder);
+        const workspaceFolder = LaunchConfigurationResolver.getWorkspaceFolder(folder);
         await this.resolveAndUpdatePaths(workspaceFolder, debugConfiguration);
         return debugConfiguration;
     }
@@ -58,12 +58,12 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         debugConfiguration: LaunchRequestArguments,
         _token?: CancellationToken,
     ): Promise<LaunchRequestArguments | undefined> {
-        const workspaceFolder = this.getWorkspaceFolder(folder);
+        const workspaceFolder = LaunchConfigurationResolver.getWorkspaceFolder(folder);
         await this.provideLaunchDefaults(workspaceFolder, debugConfiguration);
 
         const isValid = await this.validateLaunchConfiguration(folder, debugConfiguration);
         if (!isValid) {
-            return;
+            return undefined;
         }
 
         if (Array.isArray(debugConfiguration.debugOptions)) {
@@ -123,50 +123,50 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         debugConfiguration.workspaceFolder = workspaceFolder ? workspaceFolder.fsPath : undefined;
         const debugOptions = debugConfiguration.debugOptions!;
         if (!debugConfiguration.justMyCode) {
-            this.debugOption(debugOptions, DebugOptions.DebugStdLib);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.DebugStdLib);
         }
         if (debugConfiguration.stopOnEntry) {
-            this.debugOption(debugOptions, DebugOptions.StopOnEntry);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.StopOnEntry);
         }
         if (debugConfiguration.showReturnValue) {
-            this.debugOption(debugOptions, DebugOptions.ShowReturnValue);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.ShowReturnValue);
         }
         if (debugConfiguration.django) {
-            this.debugOption(debugOptions, DebugOptions.Django);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.Django);
         }
         if (debugConfiguration.jinja) {
-            this.debugOption(debugOptions, DebugOptions.Jinja);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.Jinja);
         }
         if (debugConfiguration.redirectOutput === undefined && debugConfiguration.console === 'internalConsole') {
             debugConfiguration.redirectOutput = true;
         }
         if (debugConfiguration.redirectOutput) {
-            this.debugOption(debugOptions, DebugOptions.RedirectOutput);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.RedirectOutput);
         }
         if (debugConfiguration.sudo) {
-            this.debugOption(debugOptions, DebugOptions.Sudo);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.Sudo);
         }
         if (debugConfiguration.subProcess === true) {
-            this.debugOption(debugOptions, DebugOptions.SubProcess);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.SubProcess);
         }
-        if (getOSType() == OSType.Windows) {
-            this.debugOption(debugOptions, DebugOptions.FixFilePathCase);
+        if (getOSType() === OSType.Windows) {
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.FixFilePathCase);
         }
-        const isFastAPI = this.isDebuggingFastAPI(debugConfiguration);
-        const isFlask = this.isDebuggingFlask(debugConfiguration);
+        const isFastAPI = LaunchConfigurationResolver.isDebuggingFastAPI(debugConfiguration);
+        const isFlask = LaunchConfigurationResolver.isDebuggingFlask(debugConfiguration);
         if (
             (debugConfiguration.pyramid || isFlask || isFastAPI) &&
             debugOptions.indexOf(DebugOptions.Jinja) === -1 &&
             debugConfiguration.jinja !== false
         ) {
-            this.debugOption(debugOptions, DebugOptions.Jinja);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.Jinja);
         }
         // Unlike with attach, we do not set a default path mapping.
         // (See: https://github.com/microsoft/vscode-python/issues/3568)
         if (debugConfiguration.pathMappings) {
-            let pathMappings = debugConfiguration.pathMappings;
+            let { pathMappings } = debugConfiguration;
             if (pathMappings.length > 0) {
-                pathMappings = this.fixUpPathMappings(
+                pathMappings = LaunchConfigurationResolver.fixUpPathMappings(
                     pathMappings || [],
                     workspaceFolder ? workspaceFolder.fsPath : '',
                 );
@@ -177,7 +177,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.purpose?.includes(DebugPurpose.DebugTest) || debugConfiguration.request === 'test'
                 ? 'test'
                 : 'launch';
-        this.sendTelemetry(trigger, debugConfiguration);
+        LaunchConfigurationResolver.sendTelemetry(trigger, debugConfiguration);
     }
 
     protected async validateLaunchConfiguration(
