@@ -510,6 +510,8 @@ export class PythonSettings implements IPythonSettings {
         this.tensorBoard = tensorBoardSettings;
         if (this.tensorBoard.logDirectory) {
             this.tensorBoard.logDirectory = getAbsolutePath(this.tensorBoard.logDirectory, workspaceRoot);
+        } else {
+            this.tensorBoard = { logDirectory: '' };
         }
     }
 
