@@ -180,7 +180,6 @@ function checkIfFinishedAndNotify(
 function getResolvedEnv(interpreterInfo: InterpreterInformation, environment: PythonEnvInfo) {
     // Deep copy into a new object
     const resolvedEnv = cloneDeep(environment);
-    resolvedEnv.executable.filename = interpreterInfo.executable.filename;
     resolvedEnv.executable.sysPrefix = interpreterInfo.executable.sysPrefix;
     const isEnvLackingPython =
         getEnvPath(resolvedEnv.executable.filename, resolvedEnv.location).pathType === 'envFolderPath';
