@@ -507,11 +507,9 @@ export class PythonSettings implements IPythonSettings {
         const tensorBoardSettings = systemVariables.resolveAny(
             pythonSettings.get<ITensorBoardSettings>('tensorBoard'),
         )!;
-        this.tensorBoard = tensorBoardSettings;
+        this.tensorBoard = tensorBoardSettings || { logDirectory: '' };
         if (this.tensorBoard.logDirectory) {
             this.tensorBoard.logDirectory = getAbsolutePath(this.tensorBoard.logDirectory, workspaceRoot);
-        } else {
-            this.tensorBoard = { logDirectory: '' };
         }
     }
 
