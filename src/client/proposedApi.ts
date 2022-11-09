@@ -274,9 +274,6 @@ export function buildProposedApi(
 
 async function resolveEnvironment(path: string, discoveryApi: IDiscoveryAPI): Promise<ResolvedEnvironment | undefined> {
     const env = await discoveryApi.resolveEnv(path);
-    if (env?.version.major === -1 || env?.version.minor === -1 || env?.version.micro === -1) {
-        traceError(`Invalid version for ${path}: ${JSON.stringify(env)}`);
-    }
     if (!env) {
         return undefined;
     }
@@ -309,6 +306,10 @@ export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment 
         version: env.executable.filename === 'python' ? undefined : (version as ResolvedEnvironment['version']),
         tools: tool ? [tool] : [],
     };
+
+    if (resolvedEnv.version?.major === -1 || resolvedEnv.version?.minor === -1 || resolvedEnv.version?.micro === -1) {
+        traceError(`Invalid version for ${path}: ${JSON.stringify(env)}`);
+    }
     return resolvedEnv;
 }
 
