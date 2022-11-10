@@ -38,7 +38,6 @@ import {
     TestRefreshOptions,
     ITestExecutionAdapter,
 } from './common/types';
-// TODO: create pytest and add to import
 import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
 import { UnittestTestExecutionAdapter } from './unittest/testExecutionAdapter';
 import { PytestTestDiscoveryAdapter } from './pytest/pytestDiscoveryAdapter';
@@ -160,22 +159,16 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             let discoveryAdapter: ITestDiscoveryAdapter;
             let executionAdapter: ITestExecutionAdapter;
             let testProvider: TestProvider;
-            if (settings.testing.pytestEnabled) {
-                console.log('settings.testing.pytestEnabled = true');
-                discoveryAdapter = new PytestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings); // what is the ... for
-                executionAdapter = new PytestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
-                testProvider = PYTEST_PROVIDER;
-            } else if (settings.testing.unittestEnabled) {
-                console.log('settings.testing.unittestEnabled = true');
+            if (settings.testing.unittestEnabled) {
                 discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);
                 executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = UNITTEST_PROVIDER;
             } else {
-                // this would be an error because neither is enabled?
-                discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);
+                discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, { ...this.configSettings });
                 executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = PYTEST_PROVIDER;
             }
+            // why is the default unit tests? Also shouldn't it test for pytest first because if both are enabled that comes first?
 
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 testProvider,
@@ -233,43 +226,35 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.refreshingStartedEvent.fire();
         if (uri) {
             const settings = this.configSettings.getSettings(uri);
+            traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
+            const workspace = this.workspaceService.getWorkspaceFolder(uri);
+            console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
             if (settings.testing.pytestEnabled) {
-                traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
-
-                // can I move these out of the if statement
-                const workspace = this.workspaceService.getWorkspaceFolder(uri);
-                console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
-                const testAdapter =
-                    this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                testAdapter.discoverTests(
-                    this.testController,
-                    this.refreshCancellation.token,
-                    this.testAdapters.size > 1,
-                    this.workspaceService.workspaceFile?.fsPath,
-                );
+                // const testAdapter =
+                //     this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                // testAdapter.discoverTests(
+                //     this.testController,
+                //     this.refreshCancellation.token,
+                //     this.testAdapters.size > 1,
+                //     this.workspaceService.workspaceFile?.fsPath,
+                // );
                 // Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
                 // comment below 229 to run the new way and uncomment above 212 ~ 227
-                // await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
-
-                // await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+                await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
-                // TODO: Use new test discovery mechanism
-                traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
-                const workspace = this.workspaceService.getWorkspaceFolder(uri);
-                console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
-                const testAdapter =
-                    this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                testAdapter.discoverTests(
-                    this.testController,
-                    this.refreshCancellation.token,
-                    this.testAdapters.size > 1,
-                    this.workspaceService.workspaceFile?.fsPath,
-                );
+                // const testAdapter =
+                //     this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                // testAdapter.discoverTests(
+                //     this.testController,
+                //     this.refreshCancellation.token,
+                //     this.testAdapters.size > 1,
+                //     this.workspaceService.workspaceFile?.fsPath,
+                // );
                 // Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
                 // comment below 229 to run the new way and uncomment above 212 ~ 227
-                // await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+                await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else {
                 if (this.sendTestDisabledTelemetry) {
                     this.sendTestDisabledTelemetry = false;
@@ -278,7 +263,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 // If we are here we may have to remove an existing node from the tree
                 // This handles the case where user removes test settings. Which should remove the
                 // tests for that particular case from the tree view
-                const workspace = this.workspaceService.getWorkspaceFolder(uri);
                 if (workspace) {
                     const toDelete: string[] = [];
                     this.testController.items.forEach((i: TestItem) => {
