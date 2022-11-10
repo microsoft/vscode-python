@@ -277,7 +277,11 @@ async function resolveEnvironment(path: string, discoveryApi: IDiscoveryAPI): Pr
     if (!env) {
         return undefined;
     }
-    return getEnvReference(convertCompleteEnvInfo(env)) as ResolvedEnvironment;
+    const resolvedEnv = getEnvReference(convertCompleteEnvInfo(env)) as ResolvedEnvironment;
+    if (resolvedEnv.version?.major === -1 || resolvedEnv.version?.minor === -1 || resolvedEnv.version?.micro === -1) {
+        traceError(`Invalid version for ${path}: ${JSON.stringify(env)}`);
+    }
+    return resolvedEnv;
 }
 
 export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment {
