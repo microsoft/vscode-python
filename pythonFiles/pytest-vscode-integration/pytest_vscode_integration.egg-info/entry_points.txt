@@ -1,2 +1,0 @@
-[pytest11]
-vscode-integration = pytest_vscode_integration
