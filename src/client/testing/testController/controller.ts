@@ -315,7 +315,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             const settings = this.configSettings.getSettings(item.uri);
             if (settings.testing.pytestEnabled) {
                 return this.pytest.resolveChildren(this.testController, item, this.refreshCancellation.token);
-                // ** check resolve children functionality
             }
             if (settings.testing.unittestEnabled) {
                 return this.unittest.resolveChildren(this.testController, item, this.refreshCancellation.token);
@@ -334,11 +333,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 }),
             );
         }
-        console.log('HERE2');
-        this.testController.items.forEach((element) => console.log(element));
-
-        console.log(this.testController.items);
-        console.log('size', this.testController.items.size);
         return Promise.resolve();
     }
 
@@ -388,11 +382,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     if (testItems.length > 0) {
                         if (settings.testing.pytestEnabled) {
                             sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
-                                // seems like this telemetry is named incorrectly?
                                 tool: 'pytest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
-                            // ** update this to reflect the nwe execution style before
                             return this.pytest.runTests(
                                 {
                                     includes: testItems,
@@ -439,7 +431,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     }
 
                     if (!settings.testing.pytestEnabled && !settings.testing.unittestEnabled) {
-                        // ** this could be the logic I am looking for
                         unconfiguredWorkspaces.push(workspace);
                     }
                     return Promise.resolve();
@@ -522,8 +513,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             }),
         );
     }
-
-    // ** not sure about the telemetry
 
     /**
      * Send UNITTEST_DISCOVERY_TRIGGER telemetry event only once per trigger type.

@@ -71,6 +71,11 @@ export class PythonTestServer implements ITestServer, Disposable {
         return (this.server.address() as net.AddressInfo).port;
     }
 
+    /**
+     * TODO: not actually sure if this is necessary!
+     * @param options
+     * @returns
+     */
     public createUUID(options: TestCommandOptions): string {
         const uuid = crypto.randomUUID();
         this.uuids.set(uuid, options.cwd);
@@ -86,6 +91,12 @@ export class PythonTestServer implements ITestServer, Disposable {
         return this._onDataReceived.event;
     }
 
+    /**
+     * Sends the pytest command to the server with the passed in args
+     * @param options configuration options
+     * @param args arguments to be passed to pytest
+     * @returns Promise<void>
+     */
     async sendCommandPytest(options: TestCommandOptions, args: string[]): Promise<void> {
         const uuid = this.createUUID(options);
         const spawnOptions: SpawnOptions = {
