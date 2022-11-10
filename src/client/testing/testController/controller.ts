@@ -144,11 +144,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             });
             return this.refreshTestData(undefined, { forceRefresh: true });
         };
-<<<<<<< HEAD
 
-=======
         // this.pythonTestServer = new PythonTestServer(this.pythonExecFactory); // old way where debugLauncher did not have to be passed
->>>>>>> 9cca1d959 (pytest is now running - unable to collect output)
         this.pythonTestServer = new PythonTestServer(this.pythonExecFactory, this.debugLauncher);
     }
 

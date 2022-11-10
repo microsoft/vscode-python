@@ -3,20 +3,12 @@
 
 import argparse
 import json
-import logging
 import os
 import pathlib
 import sys
 import traceback
 import unittest
 from typing import List, Literal, Optional, Tuple, TypedDict, Union
-
-sys.path.append(
-    "/Users/eleanorboyd/.vscode/extensions/ms-python.python-2022.12.1/pythonFiles/lib/python"
-)  #
-import debugpy
-
-debugpy.connect(5678)
 
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,7 +17,7 @@ sys.path.insert(0, PYTHON_FILES)
 from testing_tools import socket_manager
 
 # If I use from utils then there will be an import error in test_discovery.py.
-from unittest_adapter.utils import TestNode, build_test_tree, parse_unittest_args
+from unittestadapter.utils import TestNode, build_test_tree, parse_unittest_args
 
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
@@ -122,9 +114,6 @@ if __name__ == "__main__":
     index = argv.index("--udiscovery")
 
     start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
-    logging.debug(
-        "start_dir, pattern, top_level_dir", start_dir, pattern, top_level_dir
-    )
 
     # Perform test discovery.
     port, uuid = parse_discovery_cli_args(argv[:index])
