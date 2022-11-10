@@ -39,8 +39,8 @@ import {
     ITestExecutionAdapter,
 } from './common/types';
 // TODO: create pytest and add to import
-import { UnittestTestDiscoveryAdapter } from './unittest/unittestDiscoveryAdapter';
-import { UnittestTestExecutionAdapter } from './unittest/unittestExecutionAdapter';
+import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
+import { UnittestTestExecutionAdapter } from './unittest/testExecutionAdapter';
 import { PytestTestDiscoveryAdapter } from './pytest/pytestDiscoveryAdapter';
 import { PytestTestExecutionAdapter } from './pytest/pytestExecutionAdapter';
 import { WorkspaceTestAdapter } from './workspaceTestAdapter';
