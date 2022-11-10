@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, optional } from 'inversify';
-import path from 'path';
+import * as path from 'path';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
-import { traceError } from '../../logging';
+import { traceError, traceVerbose } from '../../logging';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
 import { PythonSettings } from '../configSettings';
@@ -61,6 +61,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         }
         const vars = await this._getEnvironmentVariables(resource);
         this.setCachedEnvironmentVariables(resource, vars);
+        traceVerbose('Dump environment variables', JSON.stringify(vars, null, 4));
         return vars;
     }
 
@@ -136,7 +137,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         const envFileSetting = this.workspaceService.getConfiguration('python', resource).get<string>('envFile');
         const envFile = systemVariables.resolveAny(envFileSetting);
-        if (!envFile) {
+        if (envFile === undefined) {
             traceError('Unable to read `python.envFile` setting for resource', JSON.stringify(resource));
             return workspaceFolderUri?.fsPath ? path.join(workspaceFolderUri?.fsPath, '.env') : '';
         }

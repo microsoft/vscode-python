@@ -46,7 +46,6 @@ import { registerTypes as tensorBoardRegisterTypes } from './tensorBoard/service
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
-import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 
 // components
 import * as pythonEnvironments from './pythonEnvironments';
@@ -131,7 +130,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     // Feature specific registrations.
     unitTestsRegisterTypes(serviceManager);
     lintersRegisterTypes(serviceManager);
-    interpretersRegisterTypes(serviceManager);
     formattersRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);

@@ -435,7 +435,7 @@ export class Conda {
     // eslint-disable-next-line class-methods-use-this
     private async getInfoImpl(command: string): Promise<CondaInfo> {
         const result = await exec(command, ['info', '--json'], { timeout: CONDA_GENERAL_TIMEOUT });
-        traceVerbose(`conda info --json: ${result.stdout}`);
+        traceVerbose(`${command} info --json: ${result.stdout}`);
         return JSON.parse(result.stdout);
     }
 

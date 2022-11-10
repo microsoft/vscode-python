@@ -74,3 +74,11 @@ export class PylintExtensionPrompt implements IToolsExtensionPrompt {
         return false;
     }
 }
+
+let _prompt: IToolsExtensionPrompt | undefined;
+export function getOrCreatePylintPrompt(serviceContainer: IServiceContainer): IToolsExtensionPrompt {
+    if (!_prompt) {
+        _prompt = new PylintExtensionPrompt(serviceContainer);
+    }
+    return _prompt;
+}
