@@ -143,8 +143,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             });
             return this.refreshTestData(undefined, { forceRefresh: true });
         };
-
-        // this.pythonTestServer = new PythonTestServer(this.pythonExecFactory); // old way where debugLauncher did not have to be passed
         this.pythonTestServer = new PythonTestServer(this.pythonExecFactory, this.debugLauncher);
     }
 
@@ -164,8 +162,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = UNITTEST_PROVIDER;
             } else {
-                discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, { ...this.configSettings });
-                executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
+                discoveryAdapter = new PytestTestDiscoveryAdapter(this.pythonTestServer, { ...this.configSettings });
+                executionAdapter = new PytestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = PYTEST_PROVIDER;
             }
             // why is the default unit tests? Also shouldn't it test for pytest first because if both are enabled that comes first?
@@ -241,7 +239,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 // Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
                 // comment below 229 to run the new way and uncomment above 212 ~ 227
-                await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+                await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
                 // const testAdapter =
                 //     this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
