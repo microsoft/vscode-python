@@ -479,6 +479,7 @@ export interface IInterpreterPathService {
     get(resource: Resource): string;
     inspect(resource: Resource): InspectInterpreterSettingType;
     update(resource: Resource, configTarget: ConfigurationTarget, value: string | undefined): Promise<void>;
+    copyOldInterpreterStorageValuesToNew(resource: Resource): Promise<void>;
 }
 
 export type DefaultLSType = LanguageServerType.Jedi | LanguageServerType.Node;
