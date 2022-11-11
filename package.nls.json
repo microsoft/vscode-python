@@ -100,7 +100,7 @@
     "python.terminal.activateEnvInCurrentTerminal.description": "Activate Python Environment in the current Terminal on load of the Extension.",
     "python.terminal.activateEnvironment.description": "Activate Python Environment in Terminal created using the Extension.",
     "python.terminal.executeInFileDir.description": "When executing a file in the terminal, whether to use execute in the file's directory, instead of the current open folder.",
-    "python.terminal.focusAfterLaunch.description": "When launching a python process, whether to focus on the terminal.",
+    "python.terminal.focusAfterLaunch.description": "When launching a python terminal, whether to focus the cursor on the terminal.",
     "python.terminal.launchArgs.description": "Python launch arguments to use when executing a file in the terminal.",
     "python.testing.autoTestDiscoverOnSaveEnabled.description": "Enable auto run test discovery when saving a test file.",
     "python.testing.cwd.description": "Optional working directory for tests.",
