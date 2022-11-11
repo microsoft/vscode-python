@@ -16,7 +16,7 @@ import {
 } from '../common/types';
 
 /**
- * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
+ * Wrapper class for pytest test discovery. This is where we call `discovery`.
  */
 export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     private deferred: Deferred<DiscoveredTestPayload> | undefined;
@@ -41,17 +41,10 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             const settings = this.configSettings.getSettings(uri);
             const { pytestArgs } = settings.testing;
             console.debug(pytestArgs);
-            // const command2 = buildDiscoveryCommand('-m pytest', ['--collect-only', ...pytestArgs]);
-            // const command = buildDiscoveryCommand('import pytest', []);
-
-            this.cwd = uri.fsPath; // this.cwd normally = '/Users/eleanorboyd/Documents/testing - tester files/inc_dec_example'
-            // const discoveryScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittest_adapter', 'unittest_discovery.py');
-
+            this.cwd = uri.fsPath;
             const relativePathToPytest = 'pythonFiles/pytest-vscode-integration';
             const fpath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
-            // console.debug('1.2: ', fpath);
-            const cc = 'sys.path.append('.concat(fpath.toString(), ')'); // 1.2:  /Users/eleanorboyd/vscode-python/pythonFiles/pytest-vscode-integration
-            // console.debug('1.3: ', cc);
+            const cc = 'sys.path.append('.concat(fpath.toString(), ')');
             let command: TestDiscoveryCommand = buildDiscoveryCommand(cc, []);
             const options3: TestCommandOptions = {
                 workspaceFolder: uri,
@@ -60,12 +53,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             };
             this.testServer.sendCommand(options3);
 
-            // const options2: TestCommandOptions = {
-            //     workspaceFolder: uri,
-            //     command3,
-            //     cwd: this.cwd,
-            // };
-
             this.deferred = createDeferred<DiscoveredTestPayload>();
             const prom = this.deferred.promise;
             const a = await prom;
@@ -73,7 +60,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
             // // Send the test command to the server.
             // // The server will fire an onDataReceived event once it gets a response.
-            // this.testServer.sendCommand(options2);
             command = buildDiscoveryCommand('import pytest', []);
             const options4: TestCommandOptions = {
                 workspaceFolder: uri,

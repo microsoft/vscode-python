@@ -166,8 +166,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 executionAdapter = new PytestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = PYTEST_PROVIDER;
             }
-            // why is the default unit tests? Also shouldn't it test for pytest first because if both are enabled that comes first?
-
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 testProvider,
                 discoveryAdapter,
