@@ -16,7 +16,7 @@ import {
 } from '../common/types';
 
 /**
- * Wrapper Class for pytest test execution. This is where we call `runTestCommand`?
+ * Wrapper Class for unittest test execution. This is where we call `runTestCommand`?
  */
 
 export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
