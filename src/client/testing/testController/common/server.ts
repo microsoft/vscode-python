@@ -91,52 +91,6 @@ export class PythonTestServer implements ITestServer, Disposable {
         return this._onDataReceived.event;
     }
 
-    /**
-     * Sends the pytest command to the server with the passed in args
-     * @param options configuration options
-     * @param args arguments to be passed to pytest
-     * @returns Promise<void>
-     */
-    async sendCommandPytest(options: TestCommandOptions, args: string[]): Promise<void> {
-        const uuid = this.createUUID(options);
-        const spawnOptions: SpawnOptions = {
-            token: options.token,
-            cwd: options.cwd,
-            throwOnStdErr: true,
-        };
-
-        // Create the Python environment in which to execute the command.
-        const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
-            allowEnvironmentFetchExceptions: false,
-            resource: options.workspaceFolder,
-        };
-        const execService = await this.executionFactory.createActivatedEnvironment(creationOptions);
-
-        try {
-            if (options.debugBool) {
-                const launchOptions: LaunchOptions = {
-                    cwd: options.cwd,
-                    args,
-                    token: options.token,
-                    testProvider: UNITTEST_PROVIDER,
-                };
-
-                await this.debugLauncher!.launchDebugger(launchOptions);
-            } else {
-                await execService.exec(args, spawnOptions);
-            }
-        } catch (ex) {
-            this.uuids.delete(uuid);
-            this._onDataReceived.fire({
-                cwd: options.cwd,
-                data: JSON.stringify({
-                    status: 'error',
-                    errors: [(ex as Error).message],
-                }),
-            });
-        }
-    }
-
     async sendCommand(options: TestCommandOptions): Promise<void> {
         const uuid = this.createUUID(options);
         const spawnOptions: SpawnOptions = {
