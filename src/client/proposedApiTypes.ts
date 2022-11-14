@@ -17,8 +17,8 @@ export interface ProposedExtensionAPI {
         /**
          * Sets the active environment path for the python extension for the resource. Configuration target will always
          * be the workspace folder.
-         * @param environment : Full path to environment folder or python executable for the environment. Can also pass
-         * the environment itself.
+         * @param environment : If string, it represents the full path to environment folder or python executable
+         * for the environment. Otherwise it can be {@link Environment} or {@link EnvironmentPath} itself.
          * @param resource : [optional] File or workspace to scope to a particular workspace folder.
          */
         updateActiveEnvironmentPath(
@@ -55,8 +55,8 @@ export interface ProposedExtensionAPI {
         refreshEnvironments(options?: RefreshOptions, token?: CancellationToken): Promise<void>;
         /**
          * Returns details for the given environment, or `undefined` if the env is invalid.
-         * @param environment : Full path to environment folder or python executable for the environment. Can also pass
-         * the environment itself.
+         * @param environment : If string, it represents the full path to environment folder or python executable
+         * for the environment. Otherwise it can be {@link Environment} or {@link EnvironmentPath} itself.
          */
         resolveEnvironment(
             environment: Environment | EnvironmentPath | string,
