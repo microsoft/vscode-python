@@ -19,6 +19,7 @@ import { EXTENSION_ROOT_DIR } from '../constants';
 export class Extensions implements IExtensions {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private _cachedExtensions?: readonly Extension<any>[];
+
     constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -41,7 +42,7 @@ export class Extensions implements IExtensions {
                 this._cachedExtensions = this._cachedExtensions || extensions.all;
             });
         }
-        return this._cachedExtensions!;
+        return this._cachedExtensions;
     }
 
     /**
@@ -63,6 +64,7 @@ export class Extensions implements IExtensions {
                 })
                 .filter((item) => item && !item.toLowerCase().startsWith(pythonExtRoot))
                 .filter((item) =>
+                    // Use cached list of extensions as we need this to be fast.
                     this.cachedExtensions.some(
                         (ext) => item!.includes(ext.extensionUri.path) || item!.includes(ext.extensionUri.fsPath),
                     ),
