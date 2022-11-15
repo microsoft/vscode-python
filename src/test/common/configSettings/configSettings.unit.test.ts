@@ -11,7 +11,6 @@ import * as TypeMoq from 'typemoq';
 import untildify = require('untildify');
 import { WorkspaceConfiguration } from 'vscode';
 import { LanguageServerType } from '../../../client/activation/types';
-import { IApplicationEnvironment } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { InterpreterPathService } from '../../../client/common/interpreterPathService';
@@ -55,18 +54,14 @@ suite('Python Settings', async () => {
             undefined,
             new MockAutoSelectionService(),
             workspaceService,
-            new InterpreterPathService(persistentStateFactory, workspaceService, [], {
-                remoteName: undefined,
-            } as IApplicationEnvironment),
+            new InterpreterPathService(persistentStateFactory, workspaceService, []),
             undefined,
         );
         settings = new CustomPythonSettings(
             undefined,
             new MockAutoSelectionService(),
             workspaceService,
-            new InterpreterPathService(persistentStateFactory, workspaceService, [], {
-                remoteName: undefined,
-            } as IApplicationEnvironment),
+            new InterpreterPathService(persistentStateFactory, workspaceService, []),
             undefined,
         );
         expected.defaultInterpreterPath = 'python';
