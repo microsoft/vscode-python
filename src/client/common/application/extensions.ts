@@ -37,9 +37,9 @@ export class Extensions implements IExtensions {
 
     private get cachedExtensions() {
         if (!this._cachedExtensions) {
-            this._cachedExtensions = this._cachedExtensions || extensions.all;
+            this._cachedExtensions = extensions.all;
             extensions.onDidChange(() => {
-                this._cachedExtensions = this._cachedExtensions || extensions.all;
+                this._cachedExtensions = extensions.all;
             });
         }
         return this._cachedExtensions;
