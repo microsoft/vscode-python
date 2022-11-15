@@ -35,6 +35,7 @@ import {
     ProductInstallStatus,
     Product,
     IPersistentState,
+    IConfigurationService,
 } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { Common, TensorBoard } from '../common/utils/localize';
@@ -100,6 +101,7 @@ export class TensorBoardSession {
         private readonly applicationShell: IApplicationShell,
         private readonly globalMemento: IPersistentState<ViewColumn>,
         private readonly multiStepFactory: IMultiStepInputFactory,
+        private readonly configurationService: IConfigurationService,
     ) {}
 
     public get onDidDispose(): Event<TensorBoardSession> {
@@ -341,10 +343,10 @@ export class TensorBoardSession {
     // the editor, if any, then the directory that the active text editor is in, if any.
     private async getLogDirectory(): Promise<string | undefined> {
         // See if the user told us to always use a specific log directory
-        const setting = this.workspaceService.getConfiguration('python.tensorBoard');
-        const settingValue = setting.get<string>('logDirectory');
+        const settings = this.configurationService.getSettings();
+        const settingValue = settings.tensorBoard?.logDirectory;
         if (settingValue) {
-            traceInfo(`Using log directory specified by python.tensorBoard.logDirectory setting: ${settingValue}`);
+            traceInfo(`Using log directory resolved by python.tensorBoard.logDirectory setting: ${settingValue}`);
             return settingValue;
         }
         // No log directory in settings. Ask the user which directory to use
