@@ -1023,7 +1023,7 @@
                 "python.tensorBoard.logDirectory": {
                     "default": "",
                     "description": "%python.tensorBoard.logDirectory.description%",
-                    "scope": "application",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "python.terminal.activateEnvInCurrentTerminal": {

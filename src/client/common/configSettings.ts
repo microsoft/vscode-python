@@ -504,7 +504,13 @@ export class PythonSettings implements IPythonSettings {
                   optOutFrom: [],
               };
 
-        this.tensorBoard = pythonSettings.get<ITensorBoardSettings>('tensorBoard');
+        const tensorBoardSettings = systemVariables.resolveAny(
+            pythonSettings.get<ITensorBoardSettings>('tensorBoard'),
+        )!;
+        this.tensorBoard = tensorBoardSettings || { logDirectory: '' };
+        if (this.tensorBoard.logDirectory) {
+            this.tensorBoard.logDirectory = getAbsolutePath(this.tensorBoard.logDirectory, workspaceRoot);
+        }
     }
 
     // eslint-disable-next-line class-methods-use-this

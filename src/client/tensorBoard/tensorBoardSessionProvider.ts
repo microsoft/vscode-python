@@ -9,7 +9,13 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common
 import { Commands } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { IPythonExecutionFactory } from '../common/process/types';
-import { IDisposableRegistry, IInstaller, IPersistentState, IPersistentStateFactory } from '../common/types';
+import {
+    IDisposableRegistry,
+    IInstaller,
+    IPersistentState,
+    IPersistentStateFactory,
+    IConfigurationService,
+} from '../common/types';
 import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
 import { IInterpreterService } from '../interpreter/contracts';
 import { traceError, traceInfo } from '../logging';
@@ -42,6 +48,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
         @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
     ) {
         this.preferredViewGroupMemento = this.stateFactory.createGlobalPersistentState<ViewColumn>(
             PREFERRED_VIEWGROUP,
@@ -102,6 +109,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                 this.applicationShell,
                 this.preferredViewGroupMemento,
                 this.multiStepFactory,
+                this.configurationService,
             );
             newSession.onDidChangeViewState(() => this.updateTensorBoardSessionContext(), this, this.disposables);
             newSession.onDidDispose((e) => this.didDisposeSession(e), this, this.disposables);

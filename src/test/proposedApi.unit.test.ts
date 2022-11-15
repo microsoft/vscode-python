@@ -99,8 +99,6 @@ suite('Proposed Extension API', () => {
     });
 
     teardown(() => {
-        // Verify each API method sends telemetry regarding who called the API.
-        extensions.verifyAll();
         sinon.restore();
     });
 
