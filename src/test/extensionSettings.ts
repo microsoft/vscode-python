@@ -6,6 +6,7 @@
 'use strict';
 
 import { Event, Uri } from 'vscode';
+import { IApplicationEnvironment } from '../client/common/application/types';
 import { WorkspaceService } from '../client/common/application/workspace';
 import { InterpreterPathService } from '../client/common/interpreterPathService';
 import { PersistentStateFactory } from '../client/common/persistentState';
@@ -44,7 +45,9 @@ export function getExtensionSettings(resource: Uri | undefined): IPythonSettings
         resource,
         new AutoSelectionService(),
         workspaceService,
-        new InterpreterPathService(persistentStateFactory, workspaceService, []),
+        new InterpreterPathService(persistentStateFactory, workspaceService, [], {
+            remoteName: undefined,
+        } as IApplicationEnvironment),
         undefined,
     );
 }

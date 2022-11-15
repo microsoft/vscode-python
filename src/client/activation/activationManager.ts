@@ -9,7 +9,7 @@ import { IApplicationDiagnostics } from '../application/types';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
-import { IDisposable, Resource } from '../common/types';
+import { IDisposable, IInterpreterPathService, Resource } from '../common/types';
 import { Deferred } from '../common/utils/async';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
 import { traceDecoratorError } from '../logging';
@@ -36,6 +36,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
+        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
     ) {}
 
     private filterServices() {
@@ -91,6 +92,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         if (this.workspaceService.isTrusted) {
             // Do not interact with interpreters in a untrusted workspace.
             await this.autoSelection.autoSelectInterpreter(resource);
+            await this.interpreterPathService.copyOldInterpreterStorageValuesToNew(resource);
         }
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
         await Promise.all(this.activationServices.map((item) => item.activate(resource)));
