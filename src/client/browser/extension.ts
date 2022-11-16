@@ -77,7 +77,7 @@ async function runPylance(
             ],
             synchronize: {
                 // Synchronize the setting section to the server.
-                configurationSection: ['python'],
+                configurationSection: ['python', 'jupyter.runStartupCommands'],
             },
             middleware,
         };
