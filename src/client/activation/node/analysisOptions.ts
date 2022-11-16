@@ -27,7 +27,7 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
     }
 
     protected getConfigSectionsToSynchronize(): string[] {
-        return [...super.getConfigSectionsToSynchronize(), 'jupyter'];
+        return [...super.getConfigSectionsToSynchronize(), 'jupyter.runStartupCommands'];
     }
 
     // eslint-disable-next-line class-methods-use-this
