@@ -42,7 +42,7 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
             documentSelector,
             workspaceFolder,
             synchronize: {
-                configurationSection: PYTHON_LANGUAGE,
+                configurationSection: [PYTHON_LANGUAGE, 'jupyter'],
             },
             outputChannel: this.output,
             revealOutputChannelOn: RevealOutputChannelOn.Never,
