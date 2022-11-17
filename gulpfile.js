@@ -86,7 +86,9 @@ async function addExtensionPackDependencies() {
         packageJson.extensionPack ? packageJson.extensionPack : [],
     );
     // Remove potential duplicates.
-    packageJson.extensionPack = packageJson.extensionPack.filter((item, index) => packageJson.extensionPack.indexOf(item) === index);
+    packageJson.extensionPack = packageJson.extensionPack.filter(
+        (item, index) => packageJson.extensionPack.indexOf(item) === index,
+    );
     await fsExtra.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
 }
 
