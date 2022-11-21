@@ -14,11 +14,10 @@ import { IAttachProcessProviderFactory } from '../../../client/debugger/extensio
 import { PythonDebugConfigurationService } from '../../../client/debugger/extension/configuration/debugConfigurationService';
 import { LaunchJsonCompletionProvider } from '../../../client/debugger/extension/configuration/launch.json/completionProvider';
 import { InterpreterPathCommand } from '../../../client/debugger/extension/configuration/launch.json/interpreterPathCommand';
-import { LaunchJsonReader } from '../../../client/debugger/extension/configuration/launch.json/launchJsonReader';
 import { LaunchJsonUpdaterService } from '../../../client/debugger/extension/configuration/launch.json/updaterService';
 import { AttachConfigurationResolver } from '../../../client/debugger/extension/configuration/resolvers/attach';
 import { LaunchConfigurationResolver } from '../../../client/debugger/extension/configuration/resolvers/launch';
-import { IDebugConfigurationResolver, ILaunchJsonReader } from '../../../client/debugger/extension/configuration/types';
+import { IDebugConfigurationResolver } from '../../../client/debugger/extension/configuration/types';
 import { DebugCommands } from '../../../client/debugger/extension/debugCommands';
 import { ChildProcessAttachEventHandler } from '../../../client/debugger/extension/hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from '../../../client/debugger/extension/hooks/childProcessAttachService';
@@ -141,6 +140,5 @@ suite('Debugging - Service Registry', () => {
                 DebugCommands,
             ),
         ).once();
-        verify(serviceManager.addSingleton<ILaunchJsonReader>(ILaunchJsonReader, LaunchJsonReader)).once();
     });
 });

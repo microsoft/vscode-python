@@ -2,44 +2,36 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+import * as fs from 'fs-extra';
 import { parse } from 'jsonc-parser';
-import { inject, injectable } from 'inversify';
 import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
-import { IFileSystem } from '../../../../common/platform/types';
-import { ILaunchJsonReader } from '../types';
-import { IWorkspaceService } from '../../../../common/application/types';
+import { getWorkspaceFolder } from '../utils/workspaceFolder';
 
-@injectable()
-export class LaunchJsonReader implements ILaunchJsonReader {
-    constructor(
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-    ) {}
+export async function getConfigurationsForWorkspace(workspace: WorkspaceFolder): Promise<DebugConfiguration[]> {
+    const filename = path.join(workspace.uri.fsPath, '.vscode', 'launch.json');
 
-    public async getConfigurationsForWorkspace(workspace: WorkspaceFolder): Promise<DebugConfiguration[]> {
-        const filename = path.join(workspace.uri.fsPath, '.vscode', 'launch.json');
-
-        if (!(await this.fs.fileExists(filename))) {
-            return [];
-        }
-
-        const text = await this.fs.readFile(filename);
-        const parsed = parse(text, [], { allowTrailingComma: true, disallowComments: false });
-        if (!parsed.configurations || !Array.isArray(parsed.configurations)) {
-            throw Error('Missing field in launch.json: configurations');
-        }
-        if (!parsed.version) {
-            throw Error('Missing field in launch.json: version');
-        }
-        // We do not bother ensuring each item is a DebugConfiguration...
-        return parsed.configurations;
-    }
-
-    public async getConfigurationsByUri(uri: Uri): Promise<DebugConfiguration[]> {
-        const workspace = this.workspaceService.getWorkspaceFolder(uri);
-        if (workspace) {
-            return this.getConfigurationsForWorkspace(workspace);
-        }
+    if (!(await fs.pathExists(filename))) {
         return [];
     }
+
+    const text = await fs.readFile(filename, 'utf-8');
+    const parsed = parse(text, [], { allowTrailingComma: true, disallowComments: false });
+    if (!parsed.configurations || !Array.isArray(parsed.configurations)) {
+        throw Error('Missing field in launch.json: configurations');
+    }
+    if (!parsed.version) {
+        throw Error('Missing field in launch.json: version');
+    }
+    // We do not bother ensuring each item is a DebugConfiguration...
+    return parsed.configurations;
+}
+
+export async function getConfigurationsByUri(uri?: Uri): Promise<DebugConfiguration[]> {
+    if (uri) {
+        const workspace = getWorkspaceFolder(uri);
+        if (workspace) {
+            return getConfigurationsForWorkspace(workspace);
+        }
+    }
+    return [];
 }

@@ -5,11 +5,13 @@
 
 import { createScanner, parse, SyntaxKind } from 'jsonc-parser';
 import { CancellationToken, DebugConfiguration, Position, Range, TextDocument, WorkspaceEdit } from 'vscode';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
+import { ICommandManager } from '../../../../common/application/types';
 import { noop } from '../../../../common/utils/misc';
 import { captureTelemetry } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { IDebugConfigurationService } from '../../types';
+import { applyEdit, getActiveTextEditor } from '../utils/common';
+import { getWorkspaceFolder } from '../utils/workspaceFolder';
 
 type PositionOfCursor = 'InsideEmptyArray' | 'BeforeItem' | 'AfterItem';
 type PositionOfComma = 'BeforeCursor';
@@ -17,8 +19,6 @@ type PositionOfComma = 'BeforeCursor';
 export class LaunchJsonUpdaterServiceHelper {
     constructor(
         private readonly commandManager: ICommandManager,
-        private readonly workspace: IWorkspaceService,
-        private readonly documentManager: IDocumentManager,
         private readonly configurationProvider: IDebugConfigurationService,
     ) {}
 
@@ -28,8 +28,9 @@ export class LaunchJsonUpdaterServiceHelper {
         position: Position,
         token: CancellationToken,
     ): Promise<void> {
-        if (this.documentManager.activeTextEditor && this.documentManager.activeTextEditor.document === document) {
-            const folder = this.workspace.getWorkspaceFolder(document.uri);
+        const activeTextEditor = getActiveTextEditor();
+        if (activeTextEditor && activeTextEditor.document === document) {
+            const folder = getWorkspaceFolder(document.uri);
             const configs = await this.configurationProvider.provideDebugConfigurations!(folder, token);
 
             if (!token.isCancellationRequested && Array.isArray(configs) && configs.length > 0) {
@@ -66,7 +67,7 @@ export class LaunchJsonUpdaterServiceHelper {
         const formattedJson = LaunchJsonUpdaterServiceHelper.getTextForInsertion(config, cursorPosition, commaPosition);
         const workspaceEdit = new WorkspaceEdit();
         workspaceEdit.insert(document.uri, position, formattedJson);
-        await this.documentManager.applyEdit(workspaceEdit);
+        await applyEdit(workspaceEdit);
         this.commandManager.executeCommand('editor.action.formatDocument').then(noop, noop);
     }
 

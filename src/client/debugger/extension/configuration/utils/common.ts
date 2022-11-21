@@ -6,7 +6,7 @@
 
 'use strict';
 
-import { WorkspaceFolder, window, TextEditor } from 'vscode';
+import { WorkspaceFolder, window, TextEditor, WorkspaceEdit, workspace } from 'vscode';
 import { getWorkspaceFolder } from './workspaceFolder';
 
 /**
@@ -26,9 +26,9 @@ export function resolveVariables(
     folder: WorkspaceFolder | undefined,
 ): string | undefined {
     if (value) {
-        const workspace = folder ? getWorkspaceFolder(folder.uri) : undefined;
+        const workspaceFolder = folder ? getWorkspaceFolder(folder.uri) : undefined;
         const variablesObject: { [key: string]: any } = {};
-        variablesObject.workspaceFolder = workspace ? workspace.uri.fsPath : rootFolder;
+        variablesObject.workspaceFolder = workspaceFolder ? workspaceFolder.uri.fsPath : rootFolder;
 
         const regexp = /\$\{(.*?)\}/g;
         return value.replace(regexp, (match: string, name: string) => {
@@ -45,4 +45,8 @@ export function resolveVariables(
 export function getActiveTextEditor(): TextEditor | undefined {
     const { activeTextEditor } = window;
     return activeTextEditor;
+}
+
+export function applyEdit(edit: WorkspaceEdit): Thenable<boolean> {
+    return workspace.applyEdit(edit);
 }

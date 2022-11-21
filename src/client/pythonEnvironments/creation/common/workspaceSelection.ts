@@ -6,7 +6,8 @@ import * as path from 'path';
 import { CancellationToken, QuickPickItem, WorkspaceFolder } from 'vscode';
 import { showErrorMessage, showQuickPick } from '../../../common/vscodeApis/windowApis';
 import { getWorkspaceFolders } from '../../../common/vscodeApis/workspaceApis';
-import { CreateEnv } from '../../../common/utils/localize';
+import { Common, CreateEnv } from '../../../common/utils/localize';
+import { executeCommand } from '../../../common/vscodeApis/commandApis';
 
 function hasVirtualEnv(workspace: WorkspaceFolder): Promise<boolean> {
     return Promise.race([
@@ -39,7 +40,10 @@ export async function pickWorkspaceFolder(
     const workspaces = getWorkspaceFolders();
 
     if (!workspaces || workspaces.length === 0) {
-        showErrorMessage(CreateEnv.noWorkspace);
+        const result = await showErrorMessage(CreateEnv.noWorkspace, Common.openFolder);
+        if (result === Common.openFolder) {
+            await executeCommand('vscode.openFolder');
+        }
         return undefined;
     }
 

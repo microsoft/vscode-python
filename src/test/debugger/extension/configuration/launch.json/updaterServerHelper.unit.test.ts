@@ -18,9 +18,9 @@ import {
     Uri,
 } from 'vscode';
 import { CommandManager } from '../../../../../client/common/application/commandManager';
-import { DocumentManager } from '../../../../../client/common/application/documentManager';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../../../client/common/application/types';
-import { WorkspaceService } from '../../../../../client/common/application/workspace';
+import * as common from '../../../../../client/debugger/extension/configuration/utils/common';
+import { ICommandManager } from '../../../../../client/common/application/types';
+import * as workspaceFolder from '../../../../../client/debugger/extension/configuration/utils/workspaceFolder';
 import { PythonDebugConfigurationService } from '../../../../../client/debugger/extension/configuration/debugConfigurationService';
 import { LaunchJsonUpdaterServiceHelper } from '../../../../../client/debugger/extension/configuration/launch.json/updaterServiceHelper';
 import { IDebugConfigurationService } from '../../../../../client/debugger/extension/types';
@@ -33,24 +33,25 @@ type LaunchJsonSchema = {
 suite('Debugging - launch.json Updater Service', () => {
     let helper: LaunchJsonUpdaterServiceHelper;
     let commandManager: ICommandManager;
-    let workspace: IWorkspaceService;
-    let documentManager: IDocumentManager;
+    let getWorkspaceFolderStub: sinon.SinonStub;
+    let getActiveTextEditorStub: sinon.SinonStub;
+    let applyEditStub: sinon.SinonStub;
     let debugConfigService: IDebugConfigurationService;
+
     const sandbox = sinon.createSandbox();
     setup(() => {
         commandManager = mock(CommandManager);
-        workspace = mock(WorkspaceService);
-        documentManager = mock(DocumentManager);
+        getWorkspaceFolderStub = sinon.stub(workspaceFolder, 'getWorkspaceFolder');
+        getActiveTextEditorStub = sinon.stub(common, 'getActiveTextEditor');
+        applyEditStub = sinon.stub(common, 'applyEdit');
         debugConfigService = mock(PythonDebugConfigurationService);
         sandbox.stub(LaunchJsonUpdaterServiceHelper, 'isCommaImmediatelyBeforeCursor').returns(false);
-        helper = new LaunchJsonUpdaterServiceHelper(
-            instance(commandManager),
-            instance(workspace),
-            instance(documentManager),
-            instance(debugConfigService),
-        );
+        helper = new LaunchJsonUpdaterServiceHelper(instance(commandManager), instance(debugConfigService));
     });
-    teardown(() => sandbox.restore());
+    teardown(() => {
+        sandbox.restore();
+        sinon.restore();
+    });
 
     test('Configuration Array is detected as being empty', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
@@ -244,19 +245,19 @@ suite('Debugging - launch.json Updater Service', () => {
         const document = typemoq.Mock.ofType<TextDocument>();
         document.setup((doc) => doc.getText(typemoq.It.isAny())).returns(() => json);
         document.setup((doc) => doc.offsetAt(typemoq.It.isAny())).returns(() => json.indexOf('},') + 1);
-        when(documentManager.applyEdit(anything())).thenResolve();
+        applyEditStub.returns(undefined);
         when(commandManager.executeCommand('editor.action.formatDocument')).thenResolve();
 
         await helper.insertDebugConfiguration(document.object, new Position(0, 0), config);
 
-        verify(documentManager.applyEdit(anything())).once();
+        assert(applyEditStub.calledOnce);
         verify(commandManager.executeCommand('editor.action.formatDocument')).once();
     });
     test('No changes to configuration if there is not active document', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
         const position = new Position(0, 0);
         const { token } = new CancellationTokenSource();
-        when(documentManager.activeTextEditor).thenReturn();
+        getActiveTextEditorStub.returns(undefined);
         let debugConfigInserted = false;
         helper.insertDebugConfiguration = async () => {
             debugConfigInserted = true;
@@ -264,8 +265,8 @@ suite('Debugging - launch.json Updater Service', () => {
 
         await helper.selectAndInsertDebugConfig(document.object, position, token);
 
-        verify(documentManager.activeTextEditor).atLeast(1);
-        verify(workspace.getWorkspaceFolder(anything())).never();
+        assert(getActiveTextEditorStub.calledOnce);
+        assert(getWorkspaceFolderStub.neverCalledWith(anything));
         assert.strictEqual(debugConfigInserted, false);
     });
     test('No changes to configuration if the active document is not same as the document passed in', async () => {
@@ -277,7 +278,7 @@ suite('Debugging - launch.json Updater Service', () => {
             .setup((t) => t.document)
             .returns(() => ('x' as unknown) as TextDocument)
             .verifiable(typemoq.Times.atLeastOnce());
-        when(documentManager.activeTextEditor).thenReturn(textEditor.object);
+        getActiveTextEditorStub.returns(textEditor.object);
         let debugConfigInserted = false;
         helper.insertDebugConfiguration = async () => {
             debugConfigInserted = true;
@@ -285,9 +286,8 @@ suite('Debugging - launch.json Updater Service', () => {
 
         await helper.selectAndInsertDebugConfig(document.object, position, token);
 
-        verify(documentManager.activeTextEditor).atLeast(1);
-        verify(documentManager.activeTextEditor).atLeast(1);
-        verify(workspace.getWorkspaceFolder(anything())).never();
+        assert(getActiveTextEditorStub.called);
+        getWorkspaceFolderStub.neverCalledWith(anything);
         textEditor.verifyAll();
         assert.strictEqual(debugConfigInserted, false);
     });
@@ -309,8 +309,8 @@ suite('Debugging - launch.json Updater Service', () => {
             .setup((t) => t.document)
             .returns(() => document.object)
             .verifiable(typemoq.Times.atLeastOnce());
-        when(documentManager.activeTextEditor).thenReturn(textEditor.object);
-        when(workspace.getWorkspaceFolder(docUri)).thenReturn(folder);
+        getActiveTextEditorStub.returns(textEditor.object);
+        getWorkspaceFolderStub.returns(folder);
         when(debugConfigService.provideDebugConfigurations!(folder, token)).thenResolve(([''] as unknown) as void);
         let debugConfigInserted = false;
         helper.insertDebugConfiguration = async () => {
@@ -319,9 +319,9 @@ suite('Debugging - launch.json Updater Service', () => {
 
         await helper.selectAndInsertDebugConfig(document.object, position, token);
 
-        verify(documentManager.activeTextEditor).atLeast(1);
-        verify(documentManager.activeTextEditor).atLeast(1);
-        verify(workspace.getWorkspaceFolder(docUri)).atLeast(1);
+        assert(getActiveTextEditorStub.called);
+        assert(getWorkspaceFolderStub.called);
+
         textEditor.verifyAll();
         document.verifyAll();
         assert.strictEqual(debugConfigInserted, false);
@@ -343,8 +343,10 @@ suite('Debugging - launch.json Updater Service', () => {
             .setup((t) => t.document)
             .returns(() => document.object)
             .verifiable(typemoq.Times.atLeastOnce());
-        when(documentManager.activeTextEditor).thenReturn(textEditor.object);
-        when(workspace.getWorkspaceFolder(docUri)).thenReturn(folder);
+
+        getActiveTextEditorStub.returns(textEditor.object);
+        getWorkspaceFolderStub.returns(folder);
+
         when(debugConfigService.provideDebugConfigurations!(folder, token)).thenResolve(([] as unknown) as void);
         let debugConfigInserted = false;
         helper.insertDebugConfiguration = async () => {
@@ -353,9 +355,9 @@ suite('Debugging - launch.json Updater Service', () => {
 
         await helper.selectAndInsertDebugConfig(document.object, position, token);
 
-        verify(documentManager.activeTextEditor).atLeast(1);
-        verify(documentManager.activeTextEditor).atLeast(1);
-        verify(workspace.getWorkspaceFolder(docUri)).atLeast(1);
+        assert(getActiveTextEditorStub.called);
+        assert(getWorkspaceFolderStub.withArgs(docUri).called);
+
         textEditor.verifyAll();
         document.verifyAll();
         assert.strictEqual(debugConfigInserted, false);
@@ -377,8 +379,8 @@ suite('Debugging - launch.json Updater Service', () => {
             .setup((t) => t.document)
             .returns(() => document.object)
             .verifiable(typemoq.Times.atLeastOnce());
-        when(documentManager.activeTextEditor).thenReturn(textEditor.object);
-        when(workspace.getWorkspaceFolder(docUri)).thenReturn(folder);
+        getActiveTextEditorStub.returns(textEditor.object);
+        getWorkspaceFolderStub.withArgs(docUri).returns(folder);
         when(debugConfigService.provideDebugConfigurations!(folder, token)).thenResolve(([
             'config',
         ] as unknown) as void);
@@ -389,9 +391,9 @@ suite('Debugging - launch.json Updater Service', () => {
 
         await helper.selectAndInsertDebugConfig(document.object, position, token);
 
-        verify(documentManager.activeTextEditor).atLeast(1);
-        verify(documentManager.activeTextEditor).atLeast(1);
-        verify(workspace.getWorkspaceFolder(docUri)).atLeast(1);
+        assert(getActiveTextEditorStub.called);
+        assert(getActiveTextEditorStub.called);
+        assert(getWorkspaceFolderStub.calledOnceWithExactly(docUri));
         textEditor.verifyAll();
         document.verifyAll();
         assert.strictEqual(debugConfigInserted, true);

@@ -26,6 +26,10 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         super(lsOutputChannel, workspace);
     }
 
+    protected getConfigSectionsToSynchronize(): string[] {
+        return [...super.getConfigSectionsToSynchronize(), 'jupyter.runStartupCommands'];
+    }
+
     // eslint-disable-next-line class-methods-use-this
     protected async getInitializationOptions(): Promise<LanguageClientOptions> {
         return ({
