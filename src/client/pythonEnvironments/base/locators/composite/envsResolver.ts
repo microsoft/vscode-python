@@ -52,6 +52,9 @@ export class PythonEnvsResolver implements IResolvingLocator {
         const kind = await identifyEnvironment(path);
         const environment = await resolveBasicEnv({ kind, executablePath, envPath });
         const info = await this.environmentInfoService.getEnvironmentInfo(environment);
+        traceVerbose(
+            `Environment resolver resolved ${path} for ${JSON.stringify(environment)} to ${JSON.stringify(info)}`,
+        );
         if (!info) {
             return undefined;
         }
@@ -95,7 +98,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
                 } else if (seen[event.index] !== undefined) {
                     const old = seen[event.index];
                     await setKind(event.update, environmentKinds);
-                    seen[event.index] = await resolveBasicEnv(event.update, true);
+                    seen[event.index] = await resolveBasicEnv(event.update);
                     didUpdate.fire({ old, index: event.index, update: seen[event.index] });
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
                 } else {
@@ -113,7 +116,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
         while (!result.done) {
             // Use cache from the current refresh where possible.
             await setKind(result.value, environmentKinds);
-            const currEnv = await resolveBasicEnv(result.value, true);
+            const currEnv = await resolveBasicEnv(result.value);
             seen.push(currEnv);
             yield currEnv;
             this.resolveInBackground(seen.indexOf(currEnv), state, didUpdate, seen).ignoreErrors();
@@ -177,7 +180,6 @@ function checkIfFinishedAndNotify(
 function getResolvedEnv(interpreterInfo: InterpreterInformation, environment: PythonEnvInfo) {
     // Deep copy into a new object
     const resolvedEnv = cloneDeep(environment);
-    resolvedEnv.executable.filename = interpreterInfo.executable.filename;
     resolvedEnv.executable.sysPrefix = interpreterInfo.executable.sysPrefix;
     const isEnvLackingPython =
         getEnvPath(resolvedEnv.executable.filename, resolvedEnv.location).pathType === 'envFolderPath';

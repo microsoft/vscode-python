@@ -6,9 +6,10 @@ import { Common } from '../../../browser/localize';
 import { CreateEnv } from '../../../common/utils/localize';
 import { executeCommand } from '../../../common/vscodeApis/commandApis';
 import { showErrorMessage, showQuickPick } from '../../../common/vscodeApis/windowApis';
+import { traceLog } from '../../../logging';
 import { Conda } from '../../common/environmentManagers/conda';
 
-export async function getConda(): Promise<string | undefined> {
+export async function getCondaBaseEnv(): Promise<string | undefined> {
     const conda = await Conda.getConda();
 
     if (!conda) {
@@ -18,7 +19,20 @@ export async function getConda(): Promise<string | undefined> {
         }
         return undefined;
     }
-    return conda.command;
+
+    const envs = (await conda.getEnvList()).filter((e) => e.name === 'base');
+    if (envs.length === 1) {
+        return envs[0].prefix;
+    }
+    if (envs.length > 1) {
+        traceLog(
+            'Multiple conda base envs detected: ',
+            envs.map((e) => e.prefix),
+        );
+        return undefined;
+    }
+
+    return undefined;
 }
 
 export async function pickPythonVersion(token?: CancellationToken): Promise<string | undefined> {

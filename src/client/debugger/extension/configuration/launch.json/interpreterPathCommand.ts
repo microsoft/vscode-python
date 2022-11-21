@@ -14,24 +14,34 @@ import { IInterpreterService } from '../../../../interpreter/contracts';
 @injectable()
 export class InterpreterPathCommand implements IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
+
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposable[],
     ) {}
 
-    public async activate() {
+    public async activate(): Promise<void> {
         this.disposables.push(
-            this.commandManager.registerCommand(Commands.GetSelectedInterpreterPath, (args) => {
-                return this._getSelectedInterpreterPath(args);
-            }),
+            this.commandManager.registerCommand(Commands.GetSelectedInterpreterPath, (args) =>
+                this._getSelectedInterpreterPath(args),
+            ),
         );
     }
 
     public async _getSelectedInterpreterPath(args: { workspaceFolder: string } | string[]): Promise<string> {
         // If `launch.json` is launching this command, `args.workspaceFolder` carries the workspaceFolder
         // If `tasks.json` is launching this command, `args[1]` carries the workspaceFolder
-        const workspaceFolder = 'workspaceFolder' in args ? args.workspaceFolder : args[1] ? args[1] : undefined;
+        let workspaceFolder;
+        if ('workspaceFolder' in args) {
+            workspaceFolder = args.workspaceFolder;
+        } else if (args[1]) {
+            const [, second] = args;
+            workspaceFolder = second;
+        } else {
+            workspaceFolder = undefined;
+        }
+
         let workspaceFolderUri;
         try {
             workspaceFolderUri = workspaceFolder ? Uri.parse(workspaceFolder) : undefined;

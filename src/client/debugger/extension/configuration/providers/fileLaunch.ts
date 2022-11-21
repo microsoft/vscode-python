@@ -14,7 +14,7 @@ import { DebugConfigurationState, DebugConfigurationType } from '../../types';
 export async function buildFileLaunchDebugConfiguration(
     _input: MultiStepInput<DebugConfigurationState>,
     state: DebugConfigurationState,
-) {
+): Promise<void> {
     const config: Partial<LaunchRequestArguments> = {
         name: DebugConfigStrings.file.snippet.name,
         type: DebuggerTypeName,

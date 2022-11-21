@@ -6,19 +6,19 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
+import * as fs from 'fs-extra';
+import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 import { CancellationTokenSource, DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
 import { IInvalidPythonPathInDebuggerService } from '../../../client/application/diagnostics/types';
-import { IApplicationShell, IDebugService, IWorkspaceService } from '../../../client/common/application/types';
+import { IApplicationShell, IDebugService } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import '../../../client/common/extensions';
-import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
-import { LaunchJsonReader } from '../../../client/debugger/extension/configuration/launch.json/launchJsonReader';
 import { IDebugEnvironmentVariablesService } from '../../../client/debugger/extension/configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from '../../../client/debugger/extension/configuration/resolvers/launch';
-import { ILaunchJsonReader } from '../../../client/debugger/extension/configuration/types';
 import { DebugOptions } from '../../../client/debugger/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -36,13 +36,13 @@ suite('Unit Tests - Debug Launcher', () => {
     let unitTestSettings: TypeMoq.IMock<ITestingSettings>;
     let debugLauncher: DebugLauncher;
     let debugService: TypeMoq.IMock<IDebugService>;
-    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
-    let platformService: TypeMoq.IMock<IPlatformService>;
-    let filesystem: TypeMoq.IMock<IFileSystem>;
     let settings: TypeMoq.IMock<IPythonSettings>;
     let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
-    let launchJsonReader: ILaunchJsonReader;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
+    let getWorkspaceFolderStub: sinon.SinonStub;
+    let getWorkspaceFoldersStub: sinon.SinonStub;
+    let pathExistsStub: sinon.SinonStub;
+    let readFileStub: sinon.SinonStub;
 
     setup(async () => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
@@ -54,19 +54,10 @@ suite('Unit Tests - Debug Launcher', () => {
 
         debugService = TypeMoq.Mock.ofType<IDebugService>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IDebugService))).returns(() => debugService.object);
-
-        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>(undefined, TypeMoq.MockBehavior.Strict);
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
-            .returns(() => workspaceService.object);
-
-        platformService = TypeMoq.Mock.ofType<IPlatformService>(undefined, TypeMoq.MockBehavior.Strict);
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
-            .returns(() => platformService.object);
-
-        filesystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
-        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => filesystem.object);
+        getWorkspaceFolderStub = sinon.stub(workspaceApis, 'getWorkspaceFolder');
+        getWorkspaceFoldersStub = sinon.stub(workspaceApis, 'getWorkspaceFolders');
+        pathExistsStub = sinon.stub(fs, 'pathExists');
+        readFileStub = sinon.stub(fs, 'readFile');
 
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
         appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
@@ -83,14 +74,13 @@ suite('Unit Tests - Debug Launcher', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IDebugEnvironmentVariablesService)))
             .returns(() => debugEnvHelper.object);
 
-        launchJsonReader = new LaunchJsonReader(filesystem.object, workspaceService.object);
-
-        debugLauncher = new DebugLauncher(
-            serviceContainer.object,
-            getNewResolver(configService.object),
-            launchJsonReader,
-        );
+        debugLauncher = new DebugLauncher(serviceContainer.object, getNewResolver(configService.object));
     });
+
+    teardown(() => {
+        sinon.restore();
+    });
+
     function getNewResolver(configService: IConfigurationService) {
         const validator = TypeMoq.Mock.ofType<IInvalidPythonPathInDebuggerService>(
             undefined,
@@ -111,7 +101,6 @@ suite('Unit Tests - Debug Launcher', () => {
         expected: DebugConfiguration,
         testProvider: TestProvider,
     ) {
-        platformService.setup((p) => p.isWindows).returns(() => /^win/.test(process.platform));
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(({ path: 'python' } as unknown) as PythonEnvironment));
@@ -184,22 +173,21 @@ suite('Unit Tests - Debug Launcher', () => {
         const testLaunchScript = getTestLauncherScript(testProvider);
 
         const workspaceFolders = [createWorkspaceFolder(options.cwd), createWorkspaceFolder('five/six/seven')];
-        workspaceService.setup((u) => u.workspaceFolders).returns(() => workspaceFolders);
-        workspaceService.setup((u) => u.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolders[0]);
+        getWorkspaceFoldersStub.returns(workspaceFolders);
+        getWorkspaceFolderStub.returns(workspaceFolders[0]);
 
         if (!debugConfigs) {
-            filesystem.setup((fs) => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
+            pathExistsStub.resolves(false);
         } else {
-            filesystem.setup((fs) => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
+            pathExistsStub.resolves(true);
+
             if (typeof debugConfigs !== 'string') {
                 debugConfigs = JSON.stringify({
                     version: '0.1.0',
                     configurations: debugConfigs,
                 });
             }
-            filesystem
-                .setup((fs) => fs.readFile(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve(debugConfigs as string));
+            readFileStub.resolves(debugConfigs as string);
         }
 
         if (!expected) {
@@ -298,7 +286,7 @@ suite('Unit Tests - Debug Launcher', () => {
             debugService.verifyAll();
         });
         test(`Must throw an exception if there are no workspaces ${testTitleSuffix}`, async () => {
-            workspaceService.setup((u) => u.workspaceFolders).returns(() => undefined);
+            getWorkspaceFoldersStub.returns(undefined);
             debugService
                 .setup((d) => d.startDebugging(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(undefined as any))
@@ -588,8 +576,8 @@ suite('Unit Tests - Debug Launcher', () => {
         const workspaceFolder = { name: 'abc', index: 0, uri: Uri.file(__filename) };
         const filename = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
         const jsonc = '{"version":"1234", "configurations":[1,2,],}';
-        filesystem.setup((fs) => fs.fileExists(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(true));
-        filesystem.setup((fs) => fs.readFile(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(jsonc));
+        pathExistsStub.resolves(true);
+        readFileStub.withArgs(filename).resolves(jsonc);
 
         const configs = await debugLauncher.readAllDebugConfigs(workspaceFolder);
 
@@ -600,8 +588,8 @@ suite('Unit Tests - Debug Launcher', () => {
         const filename = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
         const jsonc = '{"version":"1234"';
 
-        filesystem.setup((fs) => fs.fileExists(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(true));
-        filesystem.setup((fs) => fs.readFile(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(jsonc));
+        pathExistsStub.resolves(true);
+        readFileStub.withArgs(filename).resolves(jsonc);
 
         const configs = await debugLauncher.readAllDebugConfigs(workspaceFolder);
 

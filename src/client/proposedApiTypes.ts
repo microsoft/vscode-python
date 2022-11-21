@@ -17,8 +17,8 @@ export interface ProposedExtensionAPI {
         /**
          * Sets the active environment path for the python extension for the resource. Configuration target will always
          * be the workspace folder.
-         * @param environment : Full path to environment folder or python executable for the environment. Can also pass
-         * the environment itself.
+         * @param environment : If string, it represents the full path to environment folder or python executable
+         * for the environment. Otherwise it can be {@link Environment} or {@link EnvironmentPath} itself.
          * @param resource : [optional] File or workspace to scope to a particular workspace folder.
          */
         updateActiveEnvironmentPath(
@@ -32,6 +32,8 @@ export interface ProposedExtensionAPI {
         /**
          * Carries environments known to the extension at the time of fetching the property. Note this may not
          * contain all environments in the system as a refresh might be going on.
+         *
+         * Only reports environments in the current workspace.
          */
         readonly known: readonly Environment[];
         /**
@@ -53,8 +55,8 @@ export interface ProposedExtensionAPI {
         refreshEnvironments(options?: RefreshOptions, token?: CancellationToken): Promise<void>;
         /**
          * Returns details for the given environment, or `undefined` if the env is invalid.
-         * @param environment : Full path to environment folder or python executable for the environment. Can also pass
-         * the environment itself.
+         * @param environment : If string, it represents the full path to environment folder or python executable
+         * for the environment. Otherwise it can be {@link Environment} or {@link EnvironmentPath} itself.
          */
         resolveEnvironment(
             environment: Environment | EnvironmentPath | string,
@@ -125,18 +127,20 @@ export type Environment = EnvironmentPath & {
               /**
                * Any specific workspace folder this environment is created for.
                */
-              readonly workspaceFolder: Uri | undefined;
+              readonly workspaceFolder: WorkspaceFolder | undefined;
           }
         | undefined;
     /**
-     * Carries Python version information known at this moment.
+     * Carries Python version information known at this moment, carries `undefined` for envs without python.
      */
-    readonly version: VersionInfo & {
-        /**
-         * Value of `sys.version` in sys module if known at this moment.
-         */
-        readonly sysVersion: string | undefined;
-    };
+    readonly version:
+        | (VersionInfo & {
+              /**
+               * Value of `sys.version` in sys module if known at this moment.
+               */
+              readonly sysVersion: string | undefined;
+          })
+        | undefined;
     /**
      * Tools/plugins which created the environment or where it came from. First value in array corresponds
      * to the primary tool which manages the environment, which never changes over time.
@@ -171,14 +175,16 @@ export type ResolvedEnvironment = Environment & {
         readonly sysPrefix: string;
     };
     /**
-     * Carries complete Python version information.
+     * Carries complete Python version information, carries `undefined` for envs without python.
      */
-    readonly version: ResolvedVersionInfo & {
-        /**
-         * Value of `sys.version` in sys module if known at this moment.
-         */
-        readonly sysVersion: string;
-    };
+    readonly version:
+        | (ResolvedVersionInfo & {
+              /**
+               * Value of `sys.version` in sys module if known at this moment.
+               */
+              readonly sysVersion: string;
+          })
+        | undefined;
 };
 
 export type EnvironmentsChangeEvent = {

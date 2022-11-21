@@ -5,7 +5,7 @@ import { Event, EventEmitter } from 'vscode';
 import '../../../../common/extensions';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
-import { traceError } from '../../../../logging';
+import { traceError, traceVerbose } from '../../../../logging';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { normalizePath } from '../../../common/externalDependencies';
@@ -88,12 +88,14 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         // only use cache if it has complete info on an environment.
         const cachedEnv = await this.cache.getLatestInfo(path);
         if (cachedEnv) {
+            traceVerbose(`Resolved ${path} from cache: ${JSON.stringify(cachedEnv)}`);
             return cachedEnv;
         }
         const resolved = await this.locator.resolveEnv(path).catch((ex) => {
             traceError(`Failed to resolve ${path}`, ex);
             return undefined;
         });
+        traceVerbose(`Resolved ${path} to ${JSON.stringify(resolved)}`);
         if (resolved) {
             this.cache.addEnv(resolved, true);
         }

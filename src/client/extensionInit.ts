@@ -10,6 +10,7 @@ import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
+import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import {
     GLOBAL_MEMENTO,
     IDisposableRegistry,
@@ -85,6 +86,7 @@ export function initializeStandard(ext: ExtensionState): void {
     variableRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
+    interpretersRegisterTypes(serviceManager);
 
     // We will be pulling other code over from activateLegacy().
 }

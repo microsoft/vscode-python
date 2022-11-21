@@ -46,6 +46,9 @@ suite('Activation Manager', () => {
         let fileSystem: IFileSystem;
         setup(() => {
             interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
+            interpreterPathService
+                .setup((i) => i.copyOldInterpreterStorageValuesToNew(typemoq.It.isAny()))
+                .returns(() => Promise.resolve());
             workspaceService = mock(WorkspaceService);
             activeResourceService = mock(ActiveResourceService);
             appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
@@ -66,6 +69,7 @@ suite('Activation Manager', () => {
                 instance(workspaceService),
                 instance(fileSystem),
                 instance(activeResourceService),
+                interpreterPathService.object,
             );
 
             sinon.stub(EnvFileTelemetry, 'sendActivationTelemetry').resolves();
@@ -97,6 +101,7 @@ suite('Activation Manager', () => {
                 instance(workspaceService),
                 instance(fileSystem),
                 instance(activeResourceService),
+                interpreterPathService.object,
             );
             await managerTest.activateWorkspace(resource);
 
@@ -126,6 +131,7 @@ suite('Activation Manager', () => {
                 instance(workspaceService),
                 instance(fileSystem),
                 instance(activeResourceService),
+                interpreterPathService.object,
             );
             await managerTest.activateWorkspace(resource);
 

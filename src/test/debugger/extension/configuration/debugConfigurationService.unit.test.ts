@@ -5,7 +5,7 @@
 
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
-import { Uri } from 'vscode';
+import { DebugConfiguration, Uri } from 'vscode';
 import { IMultiStepInputFactory, MultiStepInput } from '../../../../client/common/utils/multiStepInput';
 import { PythonDebugConfigurationService } from '../../../../client/debugger/extension/configuration/debugConfigurationService';
 import { IDebugConfigurationResolver } from '../../../../client/debugger/extension/configuration/types';
@@ -19,11 +19,11 @@ suite('Debugging - Configuration Service', () => {
     let multiStepFactory: typemoq.IMock<IMultiStepInputFactory>;
 
     class TestPythonDebugConfigurationService extends PythonDebugConfigurationService {
-        public async pickDebugConfiguration(
+        public static async pickDebugConfiguration(
             input: MultiStepInput<DebugConfigurationState>,
             state: DebugConfigurationState,
         ) {
-            return super.pickDebugConfiguration(input, state);
+            return PythonDebugConfigurationService.pickDebugConfiguration(input, state);
         }
     }
     setup(() => {
@@ -40,7 +40,7 @@ suite('Debugging - Configuration Service', () => {
     test('Should use attach resolver when passing attach config', async () => {
         const config = ({
             request: 'attach',
-        } as any) as AttachRequestArguments;
+        } as DebugConfiguration) as AttachRequestArguments;
         const folder = { name: '1', index: 0, uri: Uri.parse('1234') };
         const expectedConfig = { yay: 1 };
 
@@ -48,13 +48,13 @@ suite('Debugging - Configuration Service', () => {
             .setup((a) =>
                 a.resolveDebugConfiguration(typemoq.It.isValue(folder), typemoq.It.isValue(config), typemoq.It.isAny()),
             )
-            .returns(() => Promise.resolve(expectedConfig as any))
+            .returns(() => Promise.resolve((expectedConfig as unknown) as AttachRequestArguments))
             .verifiable(typemoq.Times.once());
         launchResolver
             .setup((a) => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
             .verifiable(typemoq.Times.never());
 
-        const resolvedConfig = await configService.resolveDebugConfiguration(folder, config as any);
+        const resolvedConfig = await configService.resolveDebugConfiguration(folder, config as DebugConfiguration);
 
         expect(resolvedConfig).to.deep.equal(expectedConfig);
         attachResolver.verifyAll();
@@ -69,17 +69,17 @@ suite('Debugging - Configuration Service', () => {
                 .setup((a) =>
                     a.resolveDebugConfiguration(
                         typemoq.It.isValue(folder),
-                        typemoq.It.isValue((config as any) as LaunchRequestArguments),
+                        typemoq.It.isValue((config as DebugConfiguration) as LaunchRequestArguments),
                         typemoq.It.isAny(),
                     ),
                 )
-                .returns(() => Promise.resolve(expectedConfig as any))
+                .returns(() => Promise.resolve((expectedConfig as unknown) as LaunchRequestArguments))
                 .verifiable(typemoq.Times.once());
             attachResolver
                 .setup((a) => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
                 .verifiable(typemoq.Times.never());
 
-            const resolvedConfig = await configService.resolveDebugConfiguration(folder, config as any);
+            const resolvedConfig = await configService.resolveDebugConfiguration(folder, config as DebugConfiguration);
 
             expect(resolvedConfig).to.deep.equal(expectedConfig);
             attachResolver.verifyAll();
@@ -87,26 +87,26 @@ suite('Debugging - Configuration Service', () => {
         });
     });
     test('Picker should be displayed', async () => {
-        const state = ({ configs: [], folder: {}, token: undefined } as any) as DebugConfigurationState;
+        const state = ({ configs: [], folder: {}, token: undefined } as unknown) as DebugConfigurationState;
         const multiStepInput = typemoq.Mock.ofType<MultiStepInput<DebugConfigurationState>>();
         multiStepInput
             .setup((i) => i.showQuickPick(typemoq.It.isAny()))
-            .returns(() => Promise.resolve(undefined as any))
+            .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
 
-        await configService.pickDebugConfiguration(multiStepInput.object, state);
+        await TestPythonDebugConfigurationService.pickDebugConfiguration(multiStepInput.object, state);
 
         multiStepInput.verifyAll();
     });
     test('Existing Configuration items must be removed before displaying picker', async () => {
-        const state = ({ configs: [1, 2, 3], folder: {}, token: undefined } as any) as DebugConfigurationState;
+        const state = ({ configs: [1, 2, 3], folder: {}, token: undefined } as unknown) as DebugConfigurationState;
         const multiStepInput = typemoq.Mock.ofType<MultiStepInput<DebugConfigurationState>>();
         multiStepInput
             .setup((i) => i.showQuickPick(typemoq.It.isAny()))
-            .returns(() => Promise.resolve(undefined as any))
+            .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
 
-        await configService.pickDebugConfiguration(multiStepInput.object, state);
+        await TestPythonDebugConfigurationService.pickDebugConfiguration(multiStepInput.object, state);
 
         multiStepInput.verifyAll();
         expect(Object.keys(state.config)).to.be.lengthOf(0);
@@ -114,34 +114,34 @@ suite('Debugging - Configuration Service', () => {
     test('Ensure generated config is returned', async () => {
         const expectedConfig = { yes: 'Updated' };
         const multiStepInput = {
-            run: (_: any, state: any) => {
+            run: (_: unknown, state: DebugConfiguration) => {
                 Object.assign(state.config, expectedConfig);
                 return Promise.resolve();
             },
         };
         multiStepFactory
             .setup((f) => f.create())
-            .returns(() => multiStepInput as any)
+            .returns(() => multiStepInput as MultiStepInput<unknown>)
             .verifiable(typemoq.Times.once());
-        configService.pickDebugConfiguration = (_, state) => {
+        TestPythonDebugConfigurationService.pickDebugConfiguration = (_, state) => {
             Object.assign(state.config, expectedConfig);
             return Promise.resolve();
         };
-        const config = await configService.provideDebugConfigurations!({} as any);
+        const config = await configService.provideDebugConfigurations!(({} as unknown) as undefined);
 
         multiStepFactory.verifyAll();
         expect(config).to.deep.equal([expectedConfig]);
     });
     test('Ensure `undefined` is returned if QuickPick is cancelled', async () => {
         const multiStepInput = {
-            run: () => Promise.resolve(),
+            run: (_: unknown, _state: DebugConfiguration) => Promise.resolve(),
         };
         const folder = { name: '1', index: 0, uri: Uri.parse('1234') };
         multiStepFactory
             .setup((f) => f.create())
-            .returns(() => multiStepInput as any)
+            .returns(() => multiStepInput as MultiStepInput<unknown>)
             .verifiable(typemoq.Times.once());
-        const config = await configService.resolveDebugConfiguration(folder, {} as any);
+        const config = await configService.resolveDebugConfiguration(folder, {} as DebugConfiguration);
 
         multiStepFactory.verifyAll();
 
@@ -157,23 +157,23 @@ suite('Debugging - Configuration Service', () => {
             console: 'integratedTerminal',
         };
         const multiStepInput = {
-            run: (_: any, state: any) => {
+            run: (_: unknown, state: DebugConfiguration) => {
                 Object.assign(state.config, expectedConfig);
                 return Promise.resolve();
             },
         };
         multiStepFactory
             .setup((f) => f.create())
-            .returns(() => multiStepInput as any)
+            .returns(() => multiStepInput as MultiStepInput<unknown>)
             .verifiable(typemoq.Times.once()); // this should be called only once.
 
         launchResolver
             .setup((a) => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
-            .returns(() => Promise.resolve(expectedConfig as any))
+            .returns(() => Promise.resolve(expectedConfig as LaunchRequestArguments))
             .verifiable(typemoq.Times.exactly(2)); // this should be called twice with the same config.
 
-        await configService.resolveDebugConfiguration(folder, {} as any);
-        await configService.resolveDebugConfiguration(folder, {} as any);
+        await configService.resolveDebugConfiguration(folder, {} as DebugConfiguration);
+        await configService.resolveDebugConfiguration(folder, {} as DebugConfiguration);
 
         multiStepFactory.verifyAll();
         launchResolver.verifyAll();

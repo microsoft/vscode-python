@@ -191,18 +191,17 @@ suite('Resolver Utils', () => {
     suite('Conda', () => {
         const condaPrefixNonWindows = path.join(TEST_LAYOUT_ROOT, 'conda2');
         const condaPrefixWindows = path.join(TEST_LAYOUT_ROOT, 'conda1');
-        function condaInfo(condaPrefix: string): CondaInfo {
-            return {
-                conda_version: '4.8.0',
-                python_version: '3.9.0',
-                'sys.version': '3.9.0',
-                'sys.prefix': '/some/env',
-                root_prefix: condaPrefix,
-                envs: [condaPrefix],
-            };
-        }
+        const condaInfo: CondaInfo = {
+            conda_version: '4.8.0',
+            python_version: '3.9.0',
+            'sys.version': '3.9.0',
+            'sys.prefix': '/some/env',
+            root_prefix: path.dirname(TEST_LAYOUT_ROOT),
+            envs: [],
+            envs_dirs: [TEST_LAYOUT_ROOT],
+        };
 
-        function expectedEnvInfo(executable: string, location: string) {
+        function expectedEnvInfo(executable: string, location: string, name: string) {
             const info = buildEnvInfo({
                 executable,
                 kind: PythonEnvKind.Conda,
@@ -211,7 +210,7 @@ suite('Resolver Utils', () => {
                 source: [],
                 version: UNKNOWN_PYTHON_VERSION,
                 fileInfo: undefined,
-                name: 'base',
+                name,
                 type: PythonEnvType.Conda,
             });
             setEnvDisplayString(info);
@@ -254,32 +253,45 @@ suite('Resolver Utils', () => {
             sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Windows);
             sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
                 if (command === 'conda' && args[0] === 'info' && args[1] === '--json') {
-                    return { stdout: JSON.stringify(condaInfo(condaPrefixWindows)) };
+                    return { stdout: JSON.stringify(condaInfo) };
                 }
                 throw new Error(`${command} is missing or is not executable`);
             });
             const actual = await resolveBasicEnv({
-                executablePath: path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
+                executablePath: path.join(condaPrefixWindows, 'python.exe'),
+                envPath: condaPrefixWindows,
                 kind: PythonEnvKind.Conda,
             });
-            assertEnvEqual(actual, expectedEnvInfo(path.join(condaPrefixWindows, 'python.exe'), condaPrefixWindows));
+            assertEnvEqual(
+                actual,
+                expectedEnvInfo(
+                    path.join(condaPrefixWindows, 'python.exe'),
+                    condaPrefixWindows,
+                    path.basename(condaPrefixWindows),
+                ),
+            );
         });
 
         test('resolveEnv (non-Windows)', async () => {
             sinon.stub(platformApis, 'getOSType').callsFake(() => platformApis.OSType.Linux);
             sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
                 if (command === 'conda' && args[0] === 'info' && args[1] === '--json') {
-                    return { stdout: JSON.stringify(condaInfo(condaPrefixNonWindows)) };
+                    return { stdout: JSON.stringify(condaInfo) };
                 }
                 throw new Error(`${command} is missing or is not executable`);
             });
             const actual = await resolveBasicEnv({
-                executablePath: path.join(TEST_LAYOUT_ROOT, 'conda2', 'bin', 'python'),
+                executablePath: path.join(condaPrefixNonWindows, 'bin', 'python'),
                 kind: PythonEnvKind.Conda,
+                envPath: condaPrefixNonWindows,
             });
             assertEnvEqual(
                 actual,
-                expectedEnvInfo(path.join(condaPrefixNonWindows, 'bin', 'python'), condaPrefixNonWindows),
+                expectedEnvInfo(
+                    path.join(condaPrefixNonWindows, 'bin', 'python'),
+                    condaPrefixNonWindows,
+                    path.basename(condaPrefixNonWindows),
+                ),
             );
         });
 
@@ -298,7 +310,7 @@ suite('Resolver Utils', () => {
                     path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe'),
                     PythonEnvKind.Unknown,
                     undefined,
-                    'conda1',
+                    '',
                     path.join(TEST_LAYOUT_ROOT, 'conda1'),
                 ),
             );
@@ -627,7 +639,7 @@ suite('Resolver Utils', () => {
                 version: parseVersion('3.8.5'),
                 arch: Architecture.x64, // Provided by registry
                 org: 'ContinuumAnalytics', // Provided by registry
-                name: 'conda3',
+                name: '',
                 source: [PythonEnvSource.WindowsRegistry],
                 type: PythonEnvType.Conda,
             });

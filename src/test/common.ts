@@ -14,6 +14,7 @@ import type { IExtensionApi } from '../client/apiTypes';
 import { IProcessService } from '../client/common/process/types';
 import { IDisposable } from '../client/common/types';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
+import { ProposedExtensionAPI } from '../client/proposedApiTypes';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop, sleep } from './core';
 
@@ -437,7 +438,7 @@ export async function isPythonVersion(...versions: string[]): Promise<boolean> {
     }
 }
 
-export interface IExtensionTestApi extends IExtensionApi {
+export interface IExtensionTestApi extends IExtensionApi, ProposedExtensionAPI {
     serviceContainer: IServiceContainer;
     serviceManager: IServiceManager;
 }

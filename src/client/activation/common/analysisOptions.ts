@@ -42,7 +42,7 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
             documentSelector,
             workspaceFolder,
             synchronize: {
-                configurationSection: PYTHON_LANGUAGE,
+                configurationSection: this.getConfigSectionsToSynchronize(),
             },
             outputChannel: this.output,
             revealOutputChannelOn: RevealOutputChannelOn.Never,
@@ -56,6 +56,10 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
 
     protected getDocumentFilters(_workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
         return this.workspace.isVirtualWorkspace ? [{ language: PYTHON_LANGUAGE }] : PYTHON;
+    }
+
+    protected getConfigSectionsToSynchronize(): string[] {
+        return [PYTHON_LANGUAGE];
     }
 
     protected async getInitializationOptions(): Promise<any> {

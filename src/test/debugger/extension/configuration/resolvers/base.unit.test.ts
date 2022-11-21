@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -7,17 +8,16 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
-import * as typemoq from 'typemoq';
-import { DebugConfiguration, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
+import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ConfigurationService } from '../../../../../client/common/configuration/service';
-import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
 import { IConfigurationService } from '../../../../../client/common/types';
 import { BaseConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/base';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterService } from '../../../../../client/interpreter/contracts';
 import * as workspaceFolder from '../../../../../client/debugger/extension/configuration/utils/workspaceFolder';
-import * as common from '../../../../../client/debugger/extension/configuration/utils/common';
+import * as helper from '../../../../../client/debugger/extension/configuration/resolvers/helper';
+import { PythonEnvironment } from '../../../../../client/pythonEnvironments/info';
 
 suite('Debugging - Config Resolver', () => {
     class BaseResolver extends BaseConfigurationResolver<AttachRequestArguments | LaunchRequestArguments> {
@@ -38,34 +38,30 @@ suite('Debugging - Config Resolver', () => {
         }
 
         public getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
-            return super.getWorkspaceFolder(folder);
-        }
-
-        public getProgram(): string | undefined {
-            return super.getProgram();
+            return BaseConfigurationResolver.getWorkspaceFolder(folder);
         }
 
         public resolveAndUpdatePythonPath(
-            workspaceFolder: Uri | undefined,
+            workspaceFolderUri: Uri | undefined,
             debugConfiguration: LaunchRequestArguments,
         ) {
-            return super.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
+            return super.resolveAndUpdatePythonPath(workspaceFolderUri, debugConfiguration);
         }
 
         public debugOption(debugOptions: DebugOptions[], debugOption: DebugOptions) {
-            return super.debugOption(debugOptions, debugOption);
+            return BaseConfigurationResolver.debugOption(debugOptions, debugOption);
         }
 
         public isLocalHost(hostName?: string) {
-            return super.isLocalHost(hostName);
+            return BaseConfigurationResolver.isLocalHost(hostName);
         }
 
         public isDebuggingFastAPI(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
-            return super.isDebuggingFastAPI(debugConfiguration);
+            return BaseConfigurationResolver.isDebuggingFastAPI(debugConfiguration);
         }
 
         public isDebuggingFlask(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
-            return super.isDebuggingFlask(debugConfiguration);
+            return BaseConfigurationResolver.isDebuggingFlask(debugConfiguration);
         }
     }
     let resolver: BaseResolver;
@@ -73,7 +69,7 @@ suite('Debugging - Config Resolver', () => {
     let interpreterService: IInterpreterService;
     let getWorkspaceFoldersStub: sinon.SinonStub;
     let workspaceStub: sinon.SinonStub;
-    let getActiveTextEditorStub: sinon.SinonStub;
+    let getProgramStub: sinon.SinonStub;
 
     setup(() => {
         configurationService = mock(ConfigurationService);
@@ -81,56 +77,12 @@ suite('Debugging - Config Resolver', () => {
         resolver = new BaseResolver(instance(configurationService), instance(interpreterService));
         getWorkspaceFoldersStub = sinon.stub(workspaceFolder, 'getWorkspaceFolders');
         workspaceStub = sinon.stub(workspaceFolder, 'getWorkspaceFolder');
-        getActiveTextEditorStub = sinon.stub(common, 'getActiveTextEditor');
+        getProgramStub = sinon.stub(helper, 'getProgram');
     });
     teardown(() => {
         sinon.restore();
     });
-    test('Program should return filepath of active editor if file is python', () => {
-        const expectedFileName = 'my.py';
-        const editor = typemoq.Mock.ofType<TextEditor>();
-        const doc = typemoq.Mock.ofType<TextDocument>();
 
-        editor
-            .setup((e) => e.document)
-            .returns(() => doc.object)
-            .verifiable(typemoq.Times.once());
-        doc.setup((d) => d.languageId)
-            .returns(() => PYTHON_LANGUAGE)
-            .verifiable(typemoq.Times.once());
-        doc.setup((d) => d.fileName)
-            .returns(() => expectedFileName)
-            .verifiable(typemoq.Times.once());
-        getActiveTextEditorStub.returns(editor.object);
-
-        const program = resolver.getProgram();
-
-        expect(program).to.be.equal(expectedFileName);
-    });
-    test('Program should return undefined if active file is not python', () => {
-        const editor = typemoq.Mock.ofType<TextEditor>();
-        const doc = typemoq.Mock.ofType<TextDocument>();
-
-        editor
-            .setup((e) => e.document)
-            .returns(() => doc.object)
-            .verifiable(typemoq.Times.once());
-        doc.setup((d) => d.languageId)
-            .returns(() => 'C#')
-            .verifiable(typemoq.Times.once());
-        getActiveTextEditorStub.returns(editor.object);
-
-        const program = resolver.getProgram();
-
-        expect(program).to.be.equal(undefined, 'Not undefined');
-    });
-    test('Program should return undefined if there is no active editor', () => {
-        getActiveTextEditorStub.returns(undefined);
-
-        const program = resolver.getProgram();
-
-        expect(program).to.be.equal(undefined, 'Not undefined');
-    });
     test('Should get workspace folder when workspace folder is provided', () => {
         const expectedUri = Uri.parse('mock');
         const folder: WorkspaceFolder = { index: 0, uri: expectedUri, name: 'mock' };
@@ -149,7 +101,7 @@ suite('Debugging - Config Resolver', () => {
         test(item.title, () => {
             const programPath = path.join('one', 'two', 'three.xyz');
 
-            resolver.getProgram = () => programPath;
+            getProgramStub.returns(programPath);
             getWorkspaceFoldersStub.returns(item.workspaceFolders);
 
             const uri = resolver.getWorkspaceFolder(undefined);
@@ -162,7 +114,7 @@ suite('Debugging - Config Resolver', () => {
         const folder: WorkspaceFolder = { index: 0, uri: expectedUri, name: 'mock' };
         const folders: WorkspaceFolder[] = [folder];
 
-        resolver.getProgram = () => undefined;
+        getProgramStub.returns(undefined);
 
         workspaceStub.returns(folder);
 
@@ -178,7 +130,8 @@ suite('Debugging - Config Resolver', () => {
         const folder2: WorkspaceFolder = { index: 1, uri: Uri.parse('134'), name: 'mock2' };
         const folders: WorkspaceFolder[] = [folder1, folder2];
 
-        resolver.getProgram = () => programPath;
+        getProgramStub.returns(programPath);
+
         getWorkspaceFoldersStub.returns(folders);
 
         workspaceStub.returns(folder2);
@@ -193,7 +146,7 @@ suite('Debugging - Config Resolver', () => {
         const folder2: WorkspaceFolder = { index: 1, uri: Uri.parse('134'), name: 'mock2' };
         const folders: WorkspaceFolder[] = [folder1, folder2];
 
-        resolver.getProgram = () => programPath;
+        getProgramStub.returns(programPath);
         getWorkspaceFoldersStub.returns(folders);
 
         workspaceStub.returns(undefined);
@@ -203,15 +156,17 @@ suite('Debugging - Config Resolver', () => {
         expect(uri).to.be.deep.equal(undefined, 'not undefined');
     });
     test('Do nothing if debug configuration is undefined', async () => {
-        await resolver.resolveAndUpdatePythonPath(undefined, undefined as any);
+        await resolver.resolveAndUpdatePythonPath(undefined, (undefined as unknown) as LaunchRequestArguments);
     });
     test('pythonPath in debug config must point to pythonPath in settings if pythonPath in config is not set', async () => {
         const config = {};
         const pythonPath = path.join('1', '2', '3');
 
-        when(interpreterService.getActiveInterpreter(anything())).thenResolve({ path: pythonPath } as any);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
 
-        await resolver.resolveAndUpdatePythonPath(undefined, config as any);
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
 
         expect(config).to.have.property('pythonPath', pythonPath);
     });
@@ -221,9 +176,11 @@ suite('Debugging - Config Resolver', () => {
         };
         const pythonPath = path.join('1', '2', '3');
 
-        when(interpreterService.getActiveInterpreter(anything())).thenResolve({ path: pythonPath } as any);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
 
-        await resolver.resolveAndUpdatePythonPath(undefined, config as any);
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
 
         expect(config.pythonPath).to.equal(pythonPath);
     });
@@ -244,32 +201,32 @@ suite('Debugging - Config Resolver', () => {
     });
     test('Is debugging fastapi=true', () => {
         const config = { module: 'fastapi' };
-        const isFastAPI = resolver.isDebuggingFastAPI(config as any);
+        const isFastAPI = resolver.isDebuggingFastAPI(config as LaunchRequestArguments);
         expect(isFastAPI).to.equal(true, 'not fastapi');
     });
     test('Is debugging fastapi=false', () => {
         const config = { module: 'fastapi2' };
-        const isFastAPI = resolver.isDebuggingFastAPI(config as any);
+        const isFastAPI = resolver.isDebuggingFastAPI(config as LaunchRequestArguments);
         expect(isFastAPI).to.equal(false, 'fastapi');
     });
     test('Is debugging fastapi=false when not defined', () => {
         const config = {};
-        const isFastAPI = resolver.isDebuggingFastAPI(config as any);
+        const isFastAPI = resolver.isDebuggingFastAPI(config as LaunchRequestArguments);
         expect(isFastAPI).to.equal(false, 'fastapi');
     });
     test('Is debugging flask=true', () => {
         const config = { module: 'flask' };
-        const isFlask = resolver.isDebuggingFlask(config as any);
+        const isFlask = resolver.isDebuggingFlask(config as LaunchRequestArguments);
         expect(isFlask).to.equal(true, 'not flask');
     });
     test('Is debugging flask=false', () => {
         const config = { module: 'flask2' };
-        const isFlask = resolver.isDebuggingFlask(config as any);
+        const isFlask = resolver.isDebuggingFlask(config as LaunchRequestArguments);
         expect(isFlask).to.equal(false, 'flask');
     });
     test('Is debugging flask=false when not defined', () => {
         const config = {};
-        const isFlask = resolver.isDebuggingFlask(config as any);
+        const isFlask = resolver.isDebuggingFlask(config as LaunchRequestArguments);
         expect(isFlask).to.equal(false, 'flask');
     });
 });

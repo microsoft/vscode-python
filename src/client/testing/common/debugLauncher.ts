@@ -2,34 +2,33 @@ import { inject, injectable, named } from 'inversify';
 
 import * as path from 'path';
 import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
-import { IApplicationShell, IDebugService, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IDebugService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { IConfigurationService, IPythonSettings } from '../../common/types';
 import { DebuggerTypeName } from '../../debugger/constants';
-import { IDebugConfigurationResolver, ILaunchJsonReader } from '../../debugger/extension/configuration/types';
+import { IDebugConfigurationResolver } from '../../debugger/extension/configuration/types';
 import { DebugPurpose, LaunchRequestArguments } from '../../debugger/types';
 import { IServiceContainer } from '../../ioc/types';
 import { traceError } from '../../logging';
 import { TestProvider } from '../types';
 import { ITestDebugLauncher, LaunchOptions } from './types';
 import * as nls from 'vscode-nls';
+import { getConfigurationsForWorkspace } from '../../debugger/extension/configuration/launch.json/launchJsonReader';
+import { getWorkspaceFolder, getWorkspaceFolders } from '../../common/vscodeApis/workspaceApis';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
     private readonly configService: IConfigurationService;
-    private readonly workspaceService: IWorkspaceService;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IDebugConfigurationResolver)
         @named('launch')
         private readonly launchResolver: IDebugConfigurationResolver<LaunchRequestArguments>,
-        @inject(ILaunchJsonReader) private readonly launchJsonReader: ILaunchJsonReader,
     ) {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
 
     public async launchDebugger(options: LaunchOptions) {
@@ -58,7 +57,7 @@ export class DebugLauncher implements ITestDebugLauncher {
     }
     public async readAllDebugConfigs(workspace: WorkspaceFolder): Promise<DebugConfiguration[]> {
         try {
-            const configs = await this.launchJsonReader.getConfigurationsForWorkspace(workspace);
+            const configs = await getConfigurationsForWorkspace(workspace);
             return configs;
         } catch (exc) {
             traceError('could not get debug config', exc);
@@ -70,15 +69,15 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
     }
     private resolveWorkspaceFolder(cwd: string): WorkspaceFolder {
-        const hasWorkspaceFolders = (this.workspaceService.workspaceFolders?.length || 0) > 0;
+        const hasWorkspaceFolders = (getWorkspaceFolders()?.length || 0) > 0;
         if (!hasWorkspaceFolders) {
             throw new Error('Please open a workspace');
         }
 
         const cwdUri = cwd ? Uri.file(cwd) : undefined;
-        let workspaceFolder = this.workspaceService.getWorkspaceFolder(cwdUri);
+        let workspaceFolder = getWorkspaceFolder(cwdUri);
         if (!workspaceFolder) {
-            workspaceFolder = this.workspaceService.workspaceFolders![0];
+            workspaceFolder = getWorkspaceFolders()![0];
         }
         return workspaceFolder;
     }

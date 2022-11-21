@@ -2,9 +2,14 @@
 // Licensed under the MIT License.
 
 import { ConfigurationScope, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { Resource } from '../types';
 
 export function getWorkspaceFolders(): readonly WorkspaceFolder[] | undefined {
     return workspace.workspaceFolders;
+}
+
+export function getWorkspaceFolder(uri: Resource): WorkspaceFolder | undefined {
+    return uri ? workspace.getWorkspaceFolder(uri) : undefined;
 }
 
 export function getWorkspaceFolderPaths(): string[] {

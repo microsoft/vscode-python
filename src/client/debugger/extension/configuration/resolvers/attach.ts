@@ -16,7 +16,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         debugConfiguration: AttachRequestArguments,
         _token?: CancellationToken,
     ): Promise<AttachRequestArguments | undefined> {
-        const workspaceFolder = this.getWorkspaceFolder(folder);
+        const workspaceFolder = AttachConfigurationResolver.getWorkspaceFolder(folder);
 
         await this.provideAttachDefaults(workspaceFolder, debugConfiguration as AttachRequestArguments);
 
@@ -49,41 +49,41 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         debugConfiguration.workspaceFolder = workspaceFolder ? workspaceFolder.fsPath : undefined;
         const debugOptions = debugConfiguration.debugOptions!;
         if (!debugConfiguration.justMyCode) {
-            this.debugOption(debugOptions, DebugOptions.DebugStdLib);
+            AttachConfigurationResolver.debugOption(debugOptions, DebugOptions.DebugStdLib);
         }
         if (debugConfiguration.django) {
-            this.debugOption(debugOptions, DebugOptions.Django);
+            AttachConfigurationResolver.debugOption(debugOptions, DebugOptions.Django);
         }
         if (debugConfiguration.jinja) {
-            this.debugOption(debugOptions, DebugOptions.Jinja);
+            AttachConfigurationResolver.debugOption(debugOptions, DebugOptions.Jinja);
         }
         if (debugConfiguration.subProcess === true) {
-            this.debugOption(debugOptions, DebugOptions.SubProcess);
+            AttachConfigurationResolver.debugOption(debugOptions, DebugOptions.SubProcess);
         }
         if (
             debugConfiguration.pyramid &&
             debugOptions.indexOf(DebugOptions.Jinja) === -1 &&
             debugConfiguration.jinja !== false
         ) {
-            this.debugOption(debugOptions, DebugOptions.Jinja);
+            AttachConfigurationResolver.debugOption(debugOptions, DebugOptions.Jinja);
         }
         if (debugConfiguration.redirectOutput || debugConfiguration.redirectOutput === undefined) {
-            this.debugOption(debugOptions, DebugOptions.RedirectOutput);
+            AttachConfigurationResolver.debugOption(debugOptions, DebugOptions.RedirectOutput);
         }
 
         // We'll need paths to be fixed only in the case where local and remote hosts are the same
         // I.e. only if hostName === 'localhost' or '127.0.0.1' or ''
-        const isLocalHost = this.isLocalHost(debugConfiguration.host);
-        if (getOSType() == OSType.Windows && isLocalHost) {
-            this.debugOption(debugOptions, DebugOptions.FixFilePathCase);
+        const isLocalHost = AttachConfigurationResolver.isLocalHost(debugConfiguration.host);
+        if (getOSType() === OSType.Windows && isLocalHost) {
+            AttachConfigurationResolver.debugOption(debugOptions, DebugOptions.FixFilePathCase);
         }
-        if (getOSType() == OSType.Windows) {
-            this.debugOption(debugOptions, DebugOptions.WindowsClient);
+        if (getOSType() === OSType.Windows) {
+            AttachConfigurationResolver.debugOption(debugOptions, DebugOptions.WindowsClient);
         } else {
-            this.debugOption(debugOptions, DebugOptions.UnixClient);
+            AttachConfigurationResolver.debugOption(debugOptions, DebugOptions.UnixClient);
         }
         if (debugConfiguration.showReturnValue) {
-            this.debugOption(debugOptions, DebugOptions.ShowReturnValue);
+            AttachConfigurationResolver.debugOption(debugOptions, DebugOptions.ShowReturnValue);
         }
 
         debugConfiguration.pathMappings = this.resolvePathMappings(
@@ -93,9 +93,10 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
             debugConfiguration.remoteRoot,
             workspaceFolder,
         );
-        this.sendTelemetry('attach', debugConfiguration);
+        AttachConfigurationResolver.sendTelemetry('attach', debugConfiguration);
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private resolvePathMappings(
         pathMappings: PathMapping[],
         host?: string,
@@ -106,13 +107,16 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         // This is for backwards compatibility.
         if (localRoot && remoteRoot) {
             pathMappings.push({
-                localRoot: localRoot,
-                remoteRoot: remoteRoot,
+                localRoot,
+                remoteRoot,
             });
         }
         // If attaching to local host, then always map local root and remote roots.
-        if (this.isLocalHost(host)) {
-            pathMappings = this.fixUpPathMappings(pathMappings, workspaceFolder ? workspaceFolder.fsPath : '');
+        if (AttachConfigurationResolver.isLocalHost(host)) {
+            pathMappings = AttachConfigurationResolver.fixUpPathMappings(
+                pathMappings,
+                workspaceFolder ? workspaceFolder.fsPath : '',
+            );
         }
         return pathMappings.length > 0 ? pathMappings : undefined;
     }

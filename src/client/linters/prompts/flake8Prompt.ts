@@ -61,3 +61,11 @@ export class Flake8ExtensionPrompt implements IToolsExtensionPrompt {
         return false;
     }
 }
+
+let _prompt: IToolsExtensionPrompt | undefined;
+export function getOrCreateFlake8Prompt(serviceContainer: IServiceContainer): IToolsExtensionPrompt {
+    if (!_prompt) {
+        _prompt = new Flake8ExtensionPrompt(serviceContainer);
+    }
+    return _prompt;
+}
