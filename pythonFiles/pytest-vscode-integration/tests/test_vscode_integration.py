@@ -21,7 +21,7 @@ def test_bar_fixture(testdir):
     )
 
     # make sure that that we get a '0' exit code for the testsuite
-    assert result.ret == 0
+    assert not result.ret
 
 
 def test_help_message(testdir):
