@@ -3,12 +3,10 @@
 def test_bar_fixture(testdir):
     """Make sure that pytest accepts our fixture."""
     # Create a temporary pytest test module.
-    testdir.makepyfile(
-        """
+    testdir.makepyfile("""
         def test_sth(bar):
             assert bar == "europython2015"
-    """
-    )
+""")
 
     # run pytest with the following cmd args
     result = testdir.runpytest("--foo=europython2015", "-v")
