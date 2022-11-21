@@ -1,6 +1,6 @@
 
 
-def test_bar_fixture(testdir):
+def test_plugin_fixture(testdir):
     """Make sure that pytest accepts our fixture."""
     # Create a temporary pytest test module.
     testdir.makepyfile("""
