@@ -86,7 +86,6 @@
         "onCommand:python.createEnvironment",
         "onCommand:python.createNewFile",
         "onWalkthrough:pythonWelcome",
-        "onWalkthrough:pythonWelcomeWithEnv",
         "onWalkthrough:pythonWelcomeWithDS",
         "onWalkthrough:pythonDataScienceWelcome",
         "workspaceContains:mspythonconfig.json",
