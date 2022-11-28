@@ -11,6 +11,7 @@ import { IExperimentService } from '../../common/types';
 import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
 import { ILanguageServerOutputChannel } from '../types';
 import { LspNotebooksExperiment } from './lspNotebooksExperiment';
+import { traceWarn } from '../../logging';
 
 const EDITOR_CONFIG_SECTION = 'editor';
 const FORMAT_ON_TYPE_CONFIG_SETTING = 'formatOnType';
@@ -79,11 +80,15 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         editorConfig: WorkspaceConfiguration,
         value: boolean | undefined,
     ) {
-        await editorConfig.update(
-            FORMAT_ON_TYPE_CONFIG_SETTING,
-            value,
-            ConfigurationTarget.Global,
-            /* overrideInLanguage */ true,
-        );
+        try {
+            await editorConfig.update(
+                FORMAT_ON_TYPE_CONFIG_SETTING,
+                value,
+                ConfigurationTarget.Global,
+                /* overrideInLanguage */ true,
+            );
+        } catch (ex) {
+            traceWarn(`Failed to set formatOnType to ${value}`);
+        }
     }
 }
