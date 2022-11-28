@@ -27,14 +27,13 @@ const extensionDevelopmentPath = process.env.CODE_EXTENSIONS_PATH
     ? process.env.CODE_EXTENSIONS_PATH
     : EXTENSION_ROOT_DIR_FOR_TESTS;
 
-async function getChannel(): Promise<string> {
+function getChannel(): string {
     if (process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL) {
         return process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL;
     }
-
     const packageJsonPath = path.join(EXTENSION_ROOT_DIR, 'package.json');
-    if (await fs.pathExists(packageJsonPath)) {
-        const packageJson = await fs.readJSON(packageJsonPath);
+    if (fs.pathExistsSync(packageJsonPath)) {
+        const packageJson = fs.readJSONSync(packageJsonPath);
         if (packageJson.engines.vscode.endsWith('insider')) {
             return 'insiders';
         }
@@ -90,7 +89,7 @@ async function installPylanceExtension(vscodeExecutablePath: string) {
 async function start() {
     console.log('*'.repeat(100));
     console.log('Start Standard tests');
-    const channel = await getChannel();
+    const channel = getChannel();
     console.log(`Using ${channel} build of VS Code.`);
     const vscodeExecutablePath = await downloadAndUnzipVSCode(channel);
     const baseLaunchArgs =

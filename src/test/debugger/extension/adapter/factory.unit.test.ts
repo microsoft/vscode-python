@@ -13,10 +13,10 @@ import { SemVer } from 'semver';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { DebugAdapterExecutable, DebugAdapterServer, DebugConfiguration, DebugSession, WorkspaceFolder } from 'vscode';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
-import { IPythonSettings } from '../../../../client/common/types';
+import { IPersistentStateFactory, IPythonSettings } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
-import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/adapter/factory';
+import { DebugAdapterDescriptorFactory, debugStateKeys } from '../../../../client/debugger/extension/adapter/factory';
 import { IDebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
@@ -24,13 +24,19 @@ import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 import { clearTelemetryReporter } from '../../../../client/telemetry';
 import { EventName } from '../../../../client/telemetry/constants';
 import * as windowApis from '../../../../client/common/vscodeApis/windowApis';
+import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
+import { ICommandManager } from '../../../../client/common/application/types';
+import { CommandManager } from '../../../../client/common/application/commandManager';
 
 use(chaiAsPromised);
 
 suite('Debugging - Adapter Factory', () => {
     let factory: IDebugAdapterDescriptorFactory;
     let interpreterService: IInterpreterService;
+    let stateFactory: IPersistentStateFactory;
+    let state: PersistentState<boolean | undefined>;
     let showErrorMessageStub: sinon.SinonStub;
+    let commandManager: ICommandManager;
 
     const nodeExecutable = undefined;
     const debugAdapterPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy', 'adapter');
@@ -62,7 +68,15 @@ suite('Debugging - Adapter Factory', () => {
         process.env.VSC_PYTHON_CI_TEST = undefined;
         rewiremock.enable();
         rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
+        stateFactory = mock(PersistentStateFactory);
+        state = mock(PersistentState) as PersistentState<boolean | undefined>;
+        commandManager = mock(CommandManager);
+
         showErrorMessageStub = sinon.stub(windowApis, 'showErrorMessage');
+
+        when(
+            stateFactory.createGlobalPersistentState<boolean | undefined>(debugStateKeys.doNotShowAgain, false),
+        ).thenReturn(instance(state));
 
         const configurationService = mock(ConfigurationService);
         when(configurationService.getSettings(undefined)).thenReturn(({
@@ -74,7 +88,11 @@ suite('Debugging - Adapter Factory', () => {
         when(interpreterService.getInterpreterDetails(pythonPath)).thenResolve(interpreter);
         when(interpreterService.getInterpreters(anything())).thenReturn([interpreter]);
 
-        factory = new DebugAdapterDescriptorFactory(instance(interpreterService));
+        factory = new DebugAdapterDescriptorFactory(
+            instance(commandManager),
+            instance(interpreterService),
+            instance(stateFactory),
+        );
     });
 
     teardown(() => {
@@ -138,7 +156,24 @@ suite('Debugging - Adapter Factory', () => {
         await expect(promise).to.eventually.be.rejectedWith('Debug Adapter Executable not provided');
         sinon.assert.calledOnce(showErrorMessageStub);
     });
+    test('Display a message if python version is less than 3.7', async () => {
+        when(interpreterService.getInterpreters(anything())).thenReturn([]);
+        const session = createSession({});
+        const deprecatedInterpreter = {
+            architecture: Architecture.Unknown,
+            path: pythonPath,
+            sysPrefix: '',
+            sysVersion: '',
+            envType: EnvironmentType.Unknown,
+            version: new SemVer('3.6.12-test'),
+        };
+        when(state.value).thenReturn(false);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(deprecatedInterpreter);
 
+        await factory.createDebugAdapterDescriptor(session, nodeExecutable);
+
+        sinon.assert.calledOnce(showErrorMessageStub);
+    });
     test('Return Debug Adapter server if request is "attach", and port is specified directly', async () => {
         const session = createSession({ request: 'attach', port: 5678, host: 'localhost' });
         const debugServer = new DebugAdapterServer(session.configuration.port, session.configuration.host);

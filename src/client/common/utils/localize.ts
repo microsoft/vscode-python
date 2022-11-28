@@ -97,6 +97,7 @@ export namespace Common {
     export const useCommandPrompt = localize('Common.useCommandPrompt', 'Use Command Prompt');
     export const download = localize('Common.download', 'Download');
     export const showLogs = localize('Common.showLogs', 'Show logs');
+    export const openFolder = localize('Common.openFolder', 'Open Folder...');
 }
 
 export namespace CommonSurvey {
@@ -281,6 +282,10 @@ export namespace Interpreters {
     export const installPythonTerminalMessage = localize(
         'Interpreters.installPythonTerminalMessage',
         '💡 Please try installing the python package using your package manager. Alternatively you can also download it from https://www.python.org/downloads',
+    );
+    export const changePythonInterpreter = localize(
+        'Interpreters.changePythonInterpreter',
+        'Change Python Interpreter',
     );
 }
 
@@ -563,7 +568,7 @@ export namespace CreateEnv {
 
     export const noWorkspace = localize(
         'createEnv.noWorkspace',
-        'Please open a directory when creating an environment using venv.',
+        'Please open a folder when creating an environment using venv.',
     );
 
     export const pickWorkspacePlaceholder = localize(
