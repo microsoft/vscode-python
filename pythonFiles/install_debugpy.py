@@ -12,12 +12,12 @@ from packaging.version import parse as version_parser
 EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEBUGGER_DEST = os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python")
 DEBUGGER_PACKAGE = "debugpy"
-DEBUGGER_PYTHON_ABI_VERSIONS = ("cp39",)
-DEBUGGER_VERSION = "1.6.3"  # can also be "latest"
+DEBUGGER_PYTHON_ABI_VERSIONS = ("cp310",)
+DEBUGGER_VERSION = "1.6.4"  # can also be "latest"
 
 
 def _contains(s, parts=()):
-    return any(p for p in parts if p in s)
+    return any(p in s for p in parts)
 
 
 def _get_package_data():
