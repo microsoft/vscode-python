@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationTarget, EventEmitter, Uri, WorkspaceFolder } from 'vscode';
+import { ConfigurationTarget, EventEmitter, Uri, workspace, WorkspaceFolder } from 'vscode';
 import * as pathUtils from 'path';
 import { IConfigurationService, IDisposableRegistry, IExtensions, IInterpreterPathService } from './common/types';
 import { Architecture } from './common/utils/platform';
@@ -233,6 +233,9 @@ export function buildProposedApi(
                 return onDidActiveInterpreterChangedEvent.event;
             },
             resolveEnvironment: async (env: Environment | EnvironmentPath | string) => {
+                if (!workspace.isTrusted) {
+                    throw new Error('Not allowed to resolve environment in an untrusted workspace');
+                }
                 let path = typeof env !== 'string' ? env.path : env;
                 if (pathUtils.basename(path) === path) {
                     // Value can be `python`, `python3`, `python3.9` etc.
@@ -262,6 +265,10 @@ export function buildProposedApi(
                     .map((e) => convertEnvInfoAndGetReference(e));
             },
             async refreshEnvironments(options?: RefreshOptions) {
+                if (!workspace.isTrusted) {
+                    traceError('Not allowed to refresh environments in an untrusted workspace');
+                    return;
+                }
                 await discoveryApi.triggerRefresh(undefined, {
                     ifNotTriggerredAlready: !options?.forceRefresh,
                 });
