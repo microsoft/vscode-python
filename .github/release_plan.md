@@ -10,17 +10,17 @@ NOTE: the number of this release is in the issue title and can be substituted in
 
 NOTE: Third Party Notices are automatically added by our build pipelines using  https://tools.opensource.microsoft.com/notice.
 
-### Step 1: 
-##### Bump the version of `main` to be a release candidate (also updating debugpy dependences, third party notices, and package-lock.json).❄️
+### Step 1:
+##### Bump the version of `main` to be a release candidate (also updating debugpy dependences, third party notices, and package-lock.json).❄️ (steps with ❄️ will dictate this step happens while main is frozen 🥶)
 
--   [ ] `git fetch` to ensure you are up to date with `main` on your local machine.
+-   [ ] checkout to  `main` on your local machine and run `git fetch` to ensure your local is up to date with the remote repo.
 -   [ ] Create a new branch called  **`bump-release-[YYYY.minor]`**.
 -   [ ] Change the version in `package.json` to the next **even** number and switch the `-dev` to `-rc`. (🤖)
 -   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(you should now see changes to the `package.json` and `package-lock.json` at this point which update the version number **only**)_. (🤖)
 -   [ ] Check [debugpy on PyPI](https://pypi.org/project/debugpy/) for a new release and update the version of debugpy in [`install_debugpy.py`](https://github.com/microsoft/vscode-python/blob/main/pythonFiles/install_debugpy.py) if necessary.
--   [ ] Update `ThirdPartyNotices-Repository.txt` as appropriate. You can check by looking at the [commit history](https://github.com/microsoft/vscode-python/commits/main) and scrolling through to see if there's anything listed there which might have pulled in some code directly into the repository from somewhere else. If you are still unsure you can check with the team. 
+-   [ ] Update `ThirdPartyNotices-Repository.txt` as appropriate. You can check by looking at the [commit history](https://github.com/microsoft/vscode-python/commits/main) and scrolling through to see if there's anything listed there which might have pulled in some code directly into the repository from somewhere else. If you are still unsure you can check with the team.
 -   [ ] Create a PR from your branch  **`bump-release-[YYYY.minor]`** to `main`. Add the `"no change-log"` tag to the PR which ensures it passes CI and does not show up on the release notes.
--   [ ] 🧍🧍 Get approval on this PR then merge this PR into main. This will delete branch **`bump-release-[YYYY.minor]`** as it is no longer needed. (steps with 🧍🧍require an additional person) 
+-   [ ] 🧍🧍 Get approval on this PR then merge this PR into main. This will delete branch **`bump-release-[YYYY.minor]`** as it is no longer needed. (steps with 🧍🧍require an additional person)
 
 NOTE: this PR will fail the test in our internal release pipeline called `VS Code (pre-release)` because the version specified in `main` is (temporarily) an invalid pre-release version. This is expected as this will be resolved below.
 
@@ -49,7 +49,6 @@ NOTE: The purpose of this step is ensuring that main always is on a dev version 
 NOTE: this PR should make all CI relating to `main` be passing again (such as the failures stemming from step 1).
 
 ### Step 5: Notifications and Checks on External Release Factors
--   [ ] Announce the code freeze is over on the same channels, not required if this occurs on normal release cadence. 
 -   [ ] Update Component Governance _(notes are in the team OneNote under Python VS Code → Dev Process → Component Governance)_.
 -   [ ] Check [Component Governance](https://dev.azure.com/monacotools/Monaco/_componentGovernance/192726?_a=alerts&typeId=11825783&alerts-view-option=active) to make sure there are no active alerts.
 -   [ ] Manually add/fix any 3rd-party licenses as appropriate based on what the internal build pipeline detects.
@@ -62,7 +61,7 @@ NOTE: this PR should make all CI relating to `main` be passing again (such as th
 ### Step 6: Take the release branch from a candidate to the finalized release
 -   [ ] Make sure the [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls) for the [documentation](https://code.visualstudio.com/docs/python/python-tutorial) -- including the [WOW](https://code.visualstudio.com/docs/languages/python) page -- are ready.
 -   [ ] Check to make sure any final updates to the **`release/YYYY.minor`** branch have been merged.
--   [ ] Create a branch against  **`release/YYYY.minor`** called **`finalized-release-[YYYY.minor]`**. 
+-   [ ] Create a branch against  **`release/YYYY.minor`** called **`finalized-release-[YYYY.minor]`**.
 -   [ ] Update the version in `package.json` to remove the `-rc` (🤖) from the version.
 -   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(the only update should be the version number if `package-lock.json` has been kept up-to-date)_. (🤖)
 -   [ ] Update `ThirdPartyNotices-Repository.txt` manually if necessary.
@@ -76,9 +75,9 @@ NOTE: this PR should make all CI relating to `main` be passing again (such as th
 -   [ ] Run the [CD](https://dev.azure.com/monacotools/Monaco/_build?definitionId=299) pipeline on the **`release/YYYY.minor`** branch.
     -   [ ] Click `run pipeline`.
 	-   [ ] for `branch/tag` select the release branch which is **`release/YYYY.minor`**.
-	-   NOTE: You no longer need to wait for VS Code to release before we since our extension version depends on the VS Code engine number.
+	-   NOTE: Please opt to release the python extension close to when VS Code is released to align when release notes go out. When we bump the VS Code engine number, our extension will not go out to stable until the VS Code stable release but this only occurs when we bump the engine number.
 -   [ ] 🧍🧍 Get approval on the release on the [CD](https://dev.azure.com/monacotools/Monaco/_build?definitionId=299).
--   [ ] Click "approve" in the publish step of [CD](https://dev.azure.com/monacotools/Monaco/_build?definitionId=299) to publish the release to the marketplace.  🎉 
+-   [ ] Click "approve" in the publish step of [CD](https://dev.azure.com/monacotools/Monaco/_build?definitionId=299) to publish the release to the marketplace.  🎉
 -   [ ] Take the Github release out of draft.
 -   [ ] Publish documentation changes.
 -   [ ] Contact the PM team to publish the blog post.
