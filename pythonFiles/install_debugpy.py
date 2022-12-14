@@ -13,7 +13,7 @@ EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEBUGGER_DEST = os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python")
 DEBUGGER_PACKAGE = "debugpy"
 DEBUGGER_PYTHON_ABI_VERSIONS = ("cp310",)
-DEBUGGER_VERSION = "1.6.4"  # can also be "latest"
+DEBUGGER_VERSION = "1.6.3"  # can also be "latest"
 
 
 def _contains(s, parts=()):

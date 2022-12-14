@@ -34,10 +34,6 @@ import {
 import { PylanceDefaultDiagnosticService, PylanceDefaultDiagnosticServiceId } from './checks/pylanceDefault';
 import { InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId } from './checks/pythonInterpreter';
 import {
-    PythonPathDeprecatedDiagnosticService,
-    PythonPathDeprecatedDiagnosticServiceId,
-} from './checks/pythonPathDeprecated';
-import {
     SwitchToDefaultLanguageServerDiagnosticService,
     SwitchToDefaultLanguageServerDiagnosticServiceId,
 } from './checks/switchToDefaultLS';
@@ -91,11 +87,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IDiagnosticsService,
         InvalidMacPythonInterpreterService,
         InvalidMacPythonInterpreterServiceId,
-    );
-    serviceManager.addSingleton<IDiagnosticsService>(
-        IDiagnosticsService,
-        PythonPathDeprecatedDiagnosticService,
-        PythonPathDeprecatedDiagnosticServiceId,
     );
 
     serviceManager.addSingleton<IDiagnosticsService>(
