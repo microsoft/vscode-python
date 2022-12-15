@@ -115,7 +115,7 @@ suite('Module Installer - Poetry', () => {
         const info = await poetryInstaller.getExecutionInfo('black', uri);
 
         assert.deepEqual(info, {
-            args: ['add', '--group', 'dev', 'black', '--allow-prereleases'],
+            args: ['add', '--group', 'dev', 'black'],
             execPath: 'poetry path',
         });
     });

@@ -393,7 +393,8 @@
                     "default": [],
                     "description": "%python.autoComplete.extraPaths.description%",
                     "scope": "resource",
-                    "type": "array"
+                    "type": "array",
+                    "uniqueItems": true
                 },
                 "python.condaPath": {
                     "default": "",
@@ -436,7 +437,8 @@
                         ]
                     },
                     "scope": "machine",
-                    "type": "array"
+                    "type": "array",
+                    "uniqueItems": true
                 },
                 "python.experiments.optOutFrom": {
                     "default": [],
@@ -449,7 +451,8 @@
                         ]
                     },
                     "scope": "machine",
-                    "type": "array"
+                    "type": "array",
+                    "uniqueItems": true
                 },
                 "python.formatting.autopep8Args": {
                     "default": [],
@@ -648,7 +651,8 @@
                         "type": "string"
                     },
                     "scope": "resource",
-                    "type": "array"
+                    "type": "array",
+                    "uniqueItems": true
                 },
                 "python.linting.lintOnSave": {
                     "default": true,
@@ -1052,7 +1056,8 @@
                         "type": "string"
                     },
                     "scope": "machine",
-                    "type": "array"
+                    "type": "array",
+                    "uniqueItems": true
                 },
                 "python.venvPath": {
                     "default": "",
