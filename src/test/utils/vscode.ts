@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 
-const insidersVersion = /^\d+\.\d+\.\d+-(insider|\d{8})$/;
+const insidersVersion = /^\^(\d+\.\d+\.\d+)-(insider|\d{8})$/;
 
 export function getChannel(): string {
     if (process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL) {
