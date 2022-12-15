@@ -1,6 +1,6 @@
 All dates should align with VS Code's [iteration](https://github.com/microsoft/vscode/labels/iteration-plan) and [endgame](https://github.com/microsoft/vscode/labels/endgame-plan) plans.
 
-Feature freeze is Monday @ 17:00 America/Vancouver, XXX XX .
+Feature freeze is Monday @ 17:00 America/Vancouver, XXX XX.
 
 
 NOTE: the number of this release is in the issue title and can be substituted in wherever you see [YYYY.minor].
@@ -13,14 +13,13 @@ NOTE: Third Party Notices are automatically added by our build pipelines using  
 ### Step 1:
 ##### Bump the version of `main` to be a release candidate (also updating debugpy dependences, third party notices, and package-lock.json).❄️ (steps with ❄️ will dictate this step happens while main is frozen 🥶)
 
--   [ ] checkout to  `main` on your local machine and run `git fetch` to ensure your local is up to date with the remote repo.
+-   [ ] checkout to `main` on your local machine and run `git fetch` to ensure your local is up to date with the remote repo.
 -   [ ] Create a new branch called  **`bump-release-[YYYY.minor]`**.
 -   [ ] Change the version in `package.json` to the next **even** number and switch the `-dev` to `-rc`. (🤖)
 -   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(you should now see changes to the `package.json` and `package-lock.json` at this point which update the version number **only**)_. (🤖)
 -   [ ] Check [debugpy on PyPI](https://pypi.org/project/debugpy/) for a new release and update the version of debugpy in [`install_debugpy.py`](https://github.com/microsoft/vscode-python/blob/main/pythonFiles/install_debugpy.py) if necessary.
 -   [ ] Update `ThirdPartyNotices-Repository.txt` as appropriate. You can check by looking at the [commit history](https://github.com/microsoft/vscode-python/commits/main) and scrolling through to see if there's anything listed there which might have pulled in some code directly into the repository from somewhere else. If you are still unsure you can check with the team.
--   [ ] Create a PR from your branch  **`bump-release-[YYYY.minor]`** to `main`. Add the `"no change-log"` tag to the PR which ensures it passes CI and does not show up on the release notes.
--   [ ] 🧍🧍 Get approval on this PR then merge this PR into main. This will delete branch **`bump-release-[YYYY.minor]`** as it is no longer needed. (steps with 🧍🧍require an additional person)
+-   [ ] Create a PR from your branch  **`bump-release-[YYYY.minor]`** to `main`. Add the `"no change-log"` tag to the PR so it does not show up on the release notes before merging it.
 
 NOTE: this PR will fail the test in our internal release pipeline called `VS Code (pre-release)` because the version specified in `main` is (temporarily) an invalid pre-release version. This is expected as this will be resolved below.
 
