@@ -39,16 +39,15 @@ NOTE: If there are release branches that are two versions old you can delete the
 
 ### Step 4: Return `main` to dev and unfreeze (❄️ ➡ 💧)
 NOTE: The purpose of this step is ensuring that main always is on a dev version number for every night's 🌃 pre-release. Therefore it is imperative that you do this directly after the previous steps to reset the version in main to a dev version **before** a pre-release goes out.
--   [ ] Create a branch called **`dev-version-bump-YYYY.[minor+1]`**.
+-   [ ] Create a branch called **`bump-dev-version-YYYY.[minor+1]`**.
 -   [ ] Bump the minor version number in the `package.json` to the next `YYYY.[minor+1]` which will be an odd number, and switch the `-rc` to `-dev`.(🤖)
 -   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(you should now see changes to the `package.json` and `package-lock.json` only relating to the new version number)_ . (🤖)
 -   [ ] From this branch create a PR against `main`.
--   [ ] 🧍🧍 Get approval on PR then merge pull request into `main`. This will delete branch **`dev-version-bump-YYYY.[minor+1]`** as it is no longer needed.
+-   [ ] Merge pull request into `main`. This will delete branch **`bump-dev-version-YYYY.[minor+1]`** as it is no longer needed.
 
 NOTE: this PR should make all CI relating to `main` be passing again (such as the failures stemming from step 1).
 
 ### Step 5: Notifications and Checks on External Release Factors
--   [ ] Update Component Governance _(notes are in the team OneNote under Python VS Code → Dev Process → Component Governance)_.
 -   [ ] Check [Component Governance](https://dev.azure.com/monacotools/Monaco/_componentGovernance/192726?_a=alerts&typeId=11825783&alerts-view-option=active) to make sure there are no active alerts.
 -   [ ] Manually add/fix any 3rd-party licenses as appropriate based on what the internal build pipeline detects.
 -   [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython).
@@ -65,7 +64,6 @@ NOTE: this PR should make all CI relating to `main` be passing again (such as th
 -   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(the only update should be the version number if `package-lock.json` has been kept up-to-date)_. (🤖)
 -   [ ] Update `ThirdPartyNotices-Repository.txt` manually if necessary.
 -   [ ] Create PR from **`finalized-release-[YYYY.minor]`** and ensure it will be merged against the release branch **`release/YYYY.minor`**. (🤖)
--   [ ] 🧍🧍 Get approval on PR then merge the PR into **`release/YYYY.minor`**. This will delete branch **`finalized-release-[YYYY.minor]`** as it is no longer needed.
 -   [ ] Merge pull request into the release branch **`release/YYYY.minor`**.
 
 
