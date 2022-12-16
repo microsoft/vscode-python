@@ -42,8 +42,7 @@ NOTE: The purpose of this step is ensuring that main always is on a dev version 
 -   [ ] Create a branch called **`bump-dev-version-YYYY.[minor+1]`**.
 -   [ ] Bump the minor version number in the `package.json` to the next `YYYY.[minor+1]` which will be an odd number, and switch the `-rc` to `-dev`.(🤖)
 -   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(you should now see changes to the `package.json` and `package-lock.json` only relating to the new version number)_ . (🤖)
--   [ ] From this branch create a PR against `main`.
--   [ ] Merge pull request into `main`. This will delete branch **`bump-dev-version-YYYY.[minor+1]`** as it is no longer needed.
+-   [ ] Create a PR from this branch against `main` and merge it.
 
 NOTE: this PR should make all CI relating to `main` be passing again (such as the failures stemming from step 1).
 
@@ -63,8 +62,7 @@ NOTE: this PR should make all CI relating to `main` be passing again (such as th
 -   [ ] Update the version in `package.json` to remove the `-rc` (🤖) from the version.
 -   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(the only update should be the version number if `package-lock.json` has been kept up-to-date)_. (🤖)
 -   [ ] Update `ThirdPartyNotices-Repository.txt` manually if necessary.
--   [ ] Create PR from **`finalized-release-[YYYY.minor]`** and ensure it will be merged against the release branch **`release/YYYY.minor`**. (🤖)
--   [ ] Merge pull request into the release branch **`release/YYYY.minor`**.
+-   [ ] Create a PR from **`finalized-release-[YYYY.minor]`** against `release/YYYY.minor` and merge it.
 
 
 ### Step 7: Execute the Release
