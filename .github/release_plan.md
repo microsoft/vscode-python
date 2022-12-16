@@ -31,7 +31,7 @@ NOTE: If there are release branches that are two versions old you can delete the
 
 ### Step 3 Create a draft GitHub release for the release notes (🤖) ❄️
 
--   [ ] Go [here](https://github.com/microsoft/vscode-python/releases/new) to create a new GitHub release.
+-   [ ] Create a new [GitHub release](https://github.com/microsoft/vscode-python/releases/new).
 -   [ ] Specify a new tag called `YYYY.minor.0`.
 -   [ ] Have the `target` for the github release be your release branch called **`release/YYYY.minor`**.
 -   [ ] Create the release notes by specifying the previous tag for the last stable release and click `Generate release notes`. Quickly check that it only contain notes from what is new in this release.
