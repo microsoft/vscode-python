@@ -26,6 +26,7 @@ import {
     IExtensions,
     IInterpreterPathService,
     IOutputChannel,
+    IPathUtils,
 } from './common/types';
 import { noop } from './common/utils/misc';
 import { DebuggerTypeName } from './debugger/constants';
@@ -102,7 +103,8 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     const interpreterPathService: IInterpreterPathService = ext.legacyIOC.serviceContainer.get<IInterpreterPathService>(
         IInterpreterPathService,
     );
-    registerCreateEnvironmentFeatures(ext.disposables, interpreterQuickPick, interpreterPathService);
+    const pathUtils = ext.legacyIOC.serviceContainer.get<IPathUtils>(IPathUtils);
+    registerCreateEnvironmentFeatures(ext.disposables, interpreterQuickPick, interpreterPathService, pathUtils);
 }
 
 /// //////////////////////////

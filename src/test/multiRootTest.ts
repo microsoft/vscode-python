@@ -1,29 +1,14 @@
 import * as path from 'path';
-import * as fs from 'fs-extra';
 import { runTests } from '@vscode/test-electron';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 import { initializeLogger } from './testLogger';
-import { EXTENSION_ROOT_DIR } from '../client/common/constants';
+import { getChannel } from './utils/vscode';
 
 const workspacePath = path.join(__dirname, '..', '..', 'src', 'testMultiRootWkspc', 'multi.code-workspace');
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
 process.env.VSC_PYTHON_CI_TEST = '1';
 
 initializeLogger();
-
-function getChannel(): string {
-    if (process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL) {
-        return process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL;
-    }
-    const packageJsonPath = path.join(EXTENSION_ROOT_DIR, 'package.json');
-    if (fs.pathExistsSync(packageJsonPath)) {
-        const packageJson = fs.readJSONSync(packageJsonPath);
-        if (packageJson.engines.vscode.endsWith('insider')) {
-            return 'insiders';
-        }
-    }
-    return 'stable';
-}
 
 function start() {
     console.log('*'.repeat(100));

@@ -62,9 +62,6 @@ export class PipEnvInstaller extends ModuleInstaller {
             flags & ModuleInstallFlags.updateDependencies ||
             flags & ModuleInstallFlags.upgrade;
         const args = [update ? 'update' : 'install', moduleName, '--dev'];
-        if (moduleName === 'black') {
-            args.push('--pre');
-        }
         return {
             args: args,
             execPath: pipenvName,
