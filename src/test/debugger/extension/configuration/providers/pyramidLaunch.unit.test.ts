@@ -13,9 +13,9 @@ import { DebugConfigStrings } from '../../../../../client/common/utils/localize'
 import { MultiStepInput } from '../../../../../client/common/utils/multiStepInput';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
 import { resolveVariables } from '../../../../../client/debugger/extension/configuration/utils/common';
-import * as workspaceFolder from '../../../../../client/debugger/extension/configuration/utils/workspaceFolder';
 import * as pyramidLaunch from '../../../../../client/debugger/extension/configuration/providers/pyramidLaunch';
 import { DebugConfigurationState } from '../../../../../client/debugger/extension/types';
+import * as workspaceApis from '../../../../../client/common/vscodeApis/workspaceApis';
 
 suite('Debugging - Configuration Provider Pyramid', () => {
     let input: MultiStepInput<DebugConfigurationState>;
@@ -27,7 +27,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
         input = mock<MultiStepInput<DebugConfigurationState>>(MultiStepInput);
         pathExistsStub = sinon.stub(fs, 'pathExists');
         pathSeparatorStub = sinon.stub(path, 'sep');
-        workspaceStub = sinon.stub(workspaceFolder, 'getWorkspaceFolder');
+        workspaceStub = sinon.stub(workspaceApis, 'getWorkspaceFolder');
     });
     teardown(() => {
         sinon.restore();

@@ -5,8 +5,8 @@
 
 import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../../../activation/types';
-import { ICommandManager } from '../../../../common/application/types';
 import { IDisposableRegistry } from '../../../../common/types';
+import { registerCommand } from '../../../../common/vscodeApis/commandApis';
 import { IDebugConfigurationService } from '../../types';
 import { LaunchJsonUpdaterServiceHelper } from './updaterServiceHelper';
 
@@ -15,19 +15,14 @@ export class LaunchJsonUpdaterService implements IExtensionSingleActivationServi
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
 
     constructor(
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IDebugConfigurationService) private readonly configurationProvider: IDebugConfigurationService,
     ) {}
 
     public async activate(): Promise<void> {
-        const handler = new LaunchJsonUpdaterServiceHelper(this.commandManager, this.configurationProvider);
+        const handler = new LaunchJsonUpdaterServiceHelper(this.configurationProvider);
         this.disposableRegistry.push(
-            this.commandManager.registerCommand(
-                'python.SelectAndInsertDebugConfiguration',
-                handler.selectAndInsertDebugConfig,
-                handler,
-            ),
+            registerCommand('python.SelectAndInsertDebugConfiguration', handler.selectAndInsertDebugConfig, handler),
         );
     }
 }

@@ -172,7 +172,6 @@ src/client/formatters/baseFormatter.ts
 src/client/testing/serviceRegistry.ts
 src/client/testing/main.ts
 src/client/testing/configurationFactory.ts
-src/client/testing/common/debugLauncher.ts
 src/client/testing/common/constants.ts
 src/client/testing/common/testUtils.ts
 src/client/testing/common/socketServer.ts

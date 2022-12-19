@@ -3,7 +3,7 @@
 
 import { ConfigurationTarget, Disposable } from 'vscode';
 import { Commands } from '../../common/constants';
-import { IDisposableRegistry, IInterpreterPathService } from '../../common/types';
+import { IDisposableRegistry, IInterpreterPathService, IPathUtils } from '../../common/types';
 import { registerCommand } from '../../common/vscodeApis/commandApis';
 import { IInterpreterQuickPick } from '../../interpreter/configuration/types';
 import { getCreationEvents, handleCreateEnvironmentCommand } from './createEnvironment';
@@ -48,6 +48,7 @@ export function registerCreateEnvironmentFeatures(
     disposables: IDisposableRegistry,
     interpreterQuickPick: IInterpreterQuickPick,
     interpreterPathService: IInterpreterPathService,
+    pathUtils: IPathUtils,
 ): void {
     disposables.push(
         registerCommand(
@@ -64,7 +65,7 @@ export function registerCreateEnvironmentFeatures(
         onCreateEnvironmentExited(async (e: CreateEnvironmentResult | undefined) => {
             if (e && e.path) {
                 await interpreterPathService.update(e.uri, ConfigurationTarget.WorkspaceFolder, e.path);
-                showInformationMessage(`${CreateEnv.informEnvCreation} ${e.path}`);
+                showInformationMessage(`${CreateEnv.informEnvCreation} ${pathUtils.getDisplayName(e.path)}`);
             }
         }),
     );

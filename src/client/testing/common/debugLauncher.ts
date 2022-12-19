@@ -1,6 +1,6 @@
 import { inject, injectable, named } from 'inversify';
-
 import * as path from 'path';
+import * as nls from 'vscode-nls';
 import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
@@ -13,15 +13,16 @@ import { IServiceContainer } from '../../ioc/types';
 import { traceError } from '../../logging';
 import { TestProvider } from '../types';
 import { ITestDebugLauncher, LaunchOptions } from './types';
-import * as nls from 'vscode-nls';
 import { getConfigurationsForWorkspace } from '../../debugger/extension/configuration/launch.json/launchJsonReader';
 import { getWorkspaceFolder, getWorkspaceFolders } from '../../common/vscodeApis/workspaceApis';
+import { showErrorMessage } from '../../common/vscodeApis/windowApis';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
     private readonly configService: IConfigurationService;
+
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IDebugConfigurationResolver)
@@ -31,44 +32,32 @@ export class DebugLauncher implements ITestDebugLauncher {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
-    public async launchDebugger(options: LaunchOptions) {
+    public async launchDebugger(options: LaunchOptions): Promise<void> {
         if (options.token && options.token.isCancellationRequested) {
-            return;
+            return undefined;
         }
 
-        const workspaceFolder = this.resolveWorkspaceFolder(options.cwd);
+        const workspaceFolder = DebugLauncher.resolveWorkspaceFolder(options.cwd);
         const launchArgs = await this.getLaunchArgs(
             options,
             workspaceFolder,
             this.configService.getSettings(workspaceFolder.uri),
         );
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
+
         return debugManager.startDebugging(workspaceFolder, launchArgs).then(
             // Wait for debug session to be complete.
-            () => {
-                return new Promise<void>((resolve) => {
+            () =>
+                new Promise<void>((resolve) => {
                     debugManager.onDidTerminateDebugSession(() => {
                         resolve();
                     });
-                });
-            },
+                }),
             (ex) => traceError('Failed to start debugging tests', ex),
         );
     }
-    public async readAllDebugConfigs(workspace: WorkspaceFolder): Promise<DebugConfiguration[]> {
-        try {
-            const configs = await getConfigurationsForWorkspace(workspace);
-            return configs;
-        } catch (exc) {
-            traceError('could not get debug config', exc);
-            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            await appShell.showErrorMessage(
-                localize('readDebugError', 'Could not load unit test config from launch.json as it is missing a field'),
-            );
-            return [];
-        }
-    }
-    private resolveWorkspaceFolder(cwd: string): WorkspaceFolder {
+
+    private static resolveWorkspaceFolder(cwd: string): WorkspaceFolder {
         const hasWorkspaceFolders = (getWorkspaceFolders()?.length || 0) > 0;
         if (!hasWorkspaceFolders) {
             throw new Error('Please open a workspace');
@@ -77,7 +66,8 @@ export class DebugLauncher implements ITestDebugLauncher {
         const cwdUri = cwd ? Uri.file(cwd) : undefined;
         let workspaceFolder = getWorkspaceFolder(cwdUri);
         if (!workspaceFolder) {
-            workspaceFolder = getWorkspaceFolders()![0];
+            const [first] = getWorkspaceFolders()!;
+            workspaceFolder = first;
         }
         return workspaceFolder;
     }
@@ -87,7 +77,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         workspaceFolder: WorkspaceFolder,
         configSettings: IPythonSettings,
     ): Promise<LaunchRequestArguments> {
-        let debugConfig = await this.readDebugConfig(workspaceFolder);
+        let debugConfig = await DebugLauncher.readDebugConfig(workspaceFolder);
         if (!debugConfig) {
             debugConfig = {
                 name: 'Debug Unit Test',
@@ -103,27 +93,52 @@ export class DebugLauncher implements ITestDebugLauncher {
             path: path.join(EXTENSION_ROOT_DIR, 'pythonFiles'),
             include: false,
         });
-        this.applyDefaults(debugConfig!, workspaceFolder, configSettings);
+        DebugLauncher.applyDefaults(debugConfig!, workspaceFolder, configSettings);
 
         return this.convertConfigToArgs(debugConfig!, workspaceFolder, options);
     }
 
-    private async readDebugConfig(workspaceFolder: WorkspaceFolder): Promise<LaunchRequestArguments | undefined> {
-        const configs = await this.readAllDebugConfigs(workspaceFolder);
-        for (const cfg of configs) {
-            if (cfg.name && cfg.type === DebuggerTypeName) {
+    public async readAllDebugConfigs(workspace: WorkspaceFolder): Promise<DebugConfiguration[]> {
+        try {
+            const configs = await getConfigurationsForWorkspace(workspace);
+            return configs;
+        } catch (exc) {
+            traceError('could not get debug config', exc);
+            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+            await appShell.showErrorMessage(
+                localize('readDebugError', 'Could not load unit test config from launch.json as it is missing a field'),
+            );
+            return [];
+        }
+    }
+
+    private static async readDebugConfig(
+        workspaceFolder: WorkspaceFolder,
+    ): Promise<LaunchRequestArguments | undefined> {
+        try {
+            const configs = await getConfigurationsForWorkspace(workspaceFolder);
+            for (const cfg of configs) {
                 if (
-                    cfg.request === 'test' ||
-                    (cfg as LaunchRequestArguments).purpose?.includes(DebugPurpose.DebugTest)
+                    cfg.name &&
+                    cfg.type === DebuggerTypeName &&
+                    (cfg.request === 'test' ||
+                        (cfg as LaunchRequestArguments).purpose?.includes(DebugPurpose.DebugTest))
                 ) {
                     // Return the first one.
                     return cfg as LaunchRequestArguments;
                 }
             }
+            return undefined;
+        } catch (exc) {
+            traceError('could not get debug config', exc);
+            await showErrorMessage(
+                localize('readDebugError', 'Could not load unit test config from launch.json as it is missing a field'),
+            );
+            return undefined;
         }
-        return undefined;
     }
-    private applyDefaults(
+
+    private static applyDefaults(
         cfg: LaunchRequestArguments,
         workspaceFolder: WorkspaceFolder,
         configSettings: IPythonSettings,
@@ -144,7 +159,6 @@ export class DebugLauncher implements ITestDebugLauncher {
         if (!cfg.envFile) {
             cfg.envFile = configSettings.envFile;
         }
-
         if (cfg.stopOnEntry === undefined) {
             cfg.stopOnEntry = false;
         }
@@ -166,11 +180,12 @@ export class DebugLauncher implements ITestDebugLauncher {
         options: LaunchOptions,
     ): Promise<LaunchRequestArguments> {
         const configArgs = debugConfig as LaunchRequestArguments;
-
-        const testArgs = this.fixArgs(options.args, options.testProvider);
-        const script = this.getTestLauncherScript(options.testProvider);
+        const testArgs =
+            options.testProvider === 'unittest' ? options.args.filter((item) => item !== '--debug') : options.args;
+        const script = DebugLauncher.getTestLauncherScript(options.testProvider);
         const args = script(testArgs);
-        configArgs.program = args[0];
+        const [program] = args;
+        configArgs.program = program;
         configArgs.args = args.slice(1);
         // We leave configArgs.request as "test" so it will be sent in telemetry.
 
@@ -199,15 +214,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         return launchArgs;
     }
 
-    private fixArgs(args: string[], testProvider: TestProvider): string[] {
-        if (testProvider === 'unittest') {
-            return args.filter((item) => item !== '--debug');
-        } else {
-            return args;
-        }
-    }
-
-    private getTestLauncherScript(testProvider: TestProvider) {
+    private static getTestLauncherScript(testProvider: TestProvider) {
         switch (testProvider) {
             case 'unittest': {
                 return internalScripts.visualstudio_py_testlauncher; // old way unittest execution, debugger

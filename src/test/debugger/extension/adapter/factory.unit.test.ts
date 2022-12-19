@@ -156,6 +156,7 @@ suite('Debugging - Adapter Factory', () => {
         await expect(promise).to.eventually.be.rejectedWith('Debug Adapter Executable not provided');
         sinon.assert.calledOnce(showErrorMessageStub);
     });
+
     test('Display a message if python version is less than 3.7', async () => {
         when(interpreterService.getInterpreters(anything())).thenReturn([]);
         const session = createSession({});
@@ -174,6 +175,7 @@ suite('Debugging - Adapter Factory', () => {
 
         sinon.assert.calledOnce(showErrorMessageStub);
     });
+
     test('Return Debug Adapter server if request is "attach", and port is specified directly', async () => {
         const session = createSession({ request: 'attach', port: 5678, host: 'localhost' });
         const debugServer = new DebugAdapterServer(session.configuration.port, session.configuration.host);

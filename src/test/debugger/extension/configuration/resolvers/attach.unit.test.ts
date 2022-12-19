@@ -13,9 +13,9 @@ import { AttachConfigurationResolver } from '../../../../../client/debugger/exte
 import { AttachRequestArguments, DebugOptions } from '../../../../../client/debugger/types';
 import { IInterpreterService } from '../../../../../client/interpreter/contracts';
 import { getInfoPerOS } from './common';
-import * as common from '../../../../../client/debugger/extension/configuration/utils/common';
-import * as workspaceFolderFile from '../../../../../client/debugger/extension/configuration/utils/workspaceFolder';
 import * as platform from '../../../../../client/common/utils/platform';
+import * as windowApis from '../../../../../client/common/vscodeApis/windowApis';
+import * as workspaceApis from '../../../../../client/common/vscodeApis/workspaceApis';
 
 getInfoPerOS().forEach(([osName, osType, path]) => {
     if (osType === platform.OSType.Unknown) {
@@ -47,9 +47,9 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
             debugProvider = new AttachConfigurationResolver(configurationService.object, interpreterService.object);
-            getActiveTextEditorStub = sinon.stub(common, 'getActiveTextEditor');
+            getActiveTextEditorStub = sinon.stub(windowApis, 'getActiveTextEditor');
             getOSTypeStub = sinon.stub(platform, 'getOSType');
-            getWorkspaceFoldersStub = sinon.stub(workspaceFolderFile, 'getWorkspaceFolders');
+            getWorkspaceFoldersStub = sinon.stub(workspaceApis, 'getWorkspaceFolders');
             getOSTypeStub.returns(osType);
         });
 

@@ -6,9 +6,9 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../../activation/types';
-import { ICommandManager } from '../../../../common/application/types';
 import { Commands } from '../../../../common/constants';
 import { IDisposable, IDisposableRegistry } from '../../../../common/types';
+import { registerCommand } from '../../../../common/vscodeApis/commandApis';
 import { IInterpreterService } from '../../../../interpreter/contracts';
 
 @injectable()
@@ -16,16 +16,13 @@ export class InterpreterPathCommand implements IExtensionSingleActivationService
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
 
     constructor(
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposable[],
     ) {}
 
     public async activate(): Promise<void> {
         this.disposables.push(
-            this.commandManager.registerCommand(Commands.GetSelectedInterpreterPath, (args) =>
-                this._getSelectedInterpreterPath(args),
-            ),
+            registerCommand(Commands.GetSelectedInterpreterPath, (args) => this._getSelectedInterpreterPath(args)),
         );
     }
 

@@ -18,10 +18,10 @@ suite('Debugging - launch.json Updater Service', () => {
     setup(() => {
         commandManager = mock(CommandManager);
         debugConfigService = mock(PythonDebugConfigurationService);
-        helper = new LaunchJsonUpdaterServiceHelper(instance(commandManager), instance(debugConfigService));
+        helper = new LaunchJsonUpdaterServiceHelper(instance(debugConfigService));
     });
     test('Activation will register the required commands', async () => {
-        const service = new LaunchJsonUpdaterService(instance(commandManager), [], instance(debugConfigService));
+        const service = new LaunchJsonUpdaterService([], instance(debugConfigService));
         await service.activate();
         verify(
             commandManager.registerCommand(

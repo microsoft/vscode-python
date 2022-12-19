@@ -641,9 +641,6 @@ suite('Module Installer', () => {
                                                 moduleName,
                                                 '--dev',
                                             ];
-                                            if (moduleName === 'black') {
-                                                expectedArgs.push('--pre');
-                                            }
                                             await installModuleAndVerifyCommand(
                                                 pipenvName,
                                                 expectedArgs,

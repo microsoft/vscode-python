@@ -15,9 +15,9 @@ import { IConfigurationService } from '../../../../../client/common/types';
 import { BaseConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/base';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterService } from '../../../../../client/interpreter/contracts';
-import * as workspaceFolder from '../../../../../client/debugger/extension/configuration/utils/workspaceFolder';
-import * as helper from '../../../../../client/debugger/extension/configuration/resolvers/helper';
 import { PythonEnvironment } from '../../../../../client/pythonEnvironments/info';
+import * as workspaceApis from '../../../../../client/common/vscodeApis/workspaceApis';
+import * as helper from '../../../../../client/debugger/extension/configuration/resolvers/helper';
 
 suite('Debugging - Config Resolver', () => {
     class BaseResolver extends BaseConfigurationResolver<AttachRequestArguments | LaunchRequestArguments> {
@@ -68,15 +68,15 @@ suite('Debugging - Config Resolver', () => {
     let configurationService: IConfigurationService;
     let interpreterService: IInterpreterService;
     let getWorkspaceFoldersStub: sinon.SinonStub;
-    let workspaceStub: sinon.SinonStub;
+    let getWorkspaceFolderStub: sinon.SinonStub;
     let getProgramStub: sinon.SinonStub;
 
     setup(() => {
         configurationService = mock(ConfigurationService);
         interpreterService = mock<IInterpreterService>();
         resolver = new BaseResolver(instance(configurationService), instance(interpreterService));
-        getWorkspaceFoldersStub = sinon.stub(workspaceFolder, 'getWorkspaceFolders');
-        workspaceStub = sinon.stub(workspaceFolder, 'getWorkspaceFolder');
+        getWorkspaceFoldersStub = sinon.stub(workspaceApis, 'getWorkspaceFolders');
+        getWorkspaceFolderStub = sinon.stub(workspaceApis, 'getWorkspaceFolder');
         getProgramStub = sinon.stub(helper, 'getProgram');
     });
     teardown(() => {
@@ -116,7 +116,7 @@ suite('Debugging - Config Resolver', () => {
 
         getProgramStub.returns(undefined);
 
-        workspaceStub.returns(folder);
+        getWorkspaceFolderStub.returns(folder);
 
         getWorkspaceFoldersStub.returns(folders);
 
@@ -134,7 +134,7 @@ suite('Debugging - Config Resolver', () => {
 
         getWorkspaceFoldersStub.returns(folders);
 
-        workspaceStub.returns(folder2);
+        getWorkspaceFolderStub.returns(folder2);
 
         const uri = resolver.getWorkspaceFolder(undefined);
 
@@ -149,7 +149,7 @@ suite('Debugging - Config Resolver', () => {
         getProgramStub.returns(programPath);
         getWorkspaceFoldersStub.returns(folders);
 
-        workspaceStub.returns(undefined);
+        getWorkspaceFolderStub.returns(undefined);
 
         const uri = resolver.getWorkspaceFolder(undefined);
 

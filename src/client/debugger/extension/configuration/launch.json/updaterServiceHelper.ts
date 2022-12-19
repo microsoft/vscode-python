@@ -5,22 +5,19 @@
 
 import { createScanner, parse, SyntaxKind } from 'jsonc-parser';
 import { CancellationToken, DebugConfiguration, Position, Range, TextDocument, WorkspaceEdit } from 'vscode';
-import { ICommandManager } from '../../../../common/application/types';
 import { noop } from '../../../../common/utils/misc';
+import { executeCommand } from '../../../../common/vscodeApis/commandApis';
+import { getActiveTextEditor } from '../../../../common/vscodeApis/windowApis';
+import { applyEdit, getWorkspaceFolder } from '../../../../common/vscodeApis/workspaceApis';
 import { captureTelemetry } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { IDebugConfigurationService } from '../../types';
-import { applyEdit, getActiveTextEditor } from '../utils/common';
-import { getWorkspaceFolder } from '../utils/workspaceFolder';
 
 type PositionOfCursor = 'InsideEmptyArray' | 'BeforeItem' | 'AfterItem';
 type PositionOfComma = 'BeforeCursor';
 
 export class LaunchJsonUpdaterServiceHelper {
-    constructor(
-        private readonly commandManager: ICommandManager,
-        private readonly configurationProvider: IDebugConfigurationService,
-    ) {}
+    constructor(private readonly configurationProvider: IDebugConfigurationService) {}
 
     @captureTelemetry(EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON)
     public async selectAndInsertDebugConfig(
@@ -35,7 +32,7 @@ export class LaunchJsonUpdaterServiceHelper {
 
             if (!token.isCancellationRequested && Array.isArray(configs) && configs.length > 0) {
                 // Always use the first available debug configuration.
-                await this.insertDebugConfiguration(document, position, configs[0]);
+                await LaunchJsonUpdaterServiceHelper.insertDebugConfiguration(document, position, configs[0]);
             }
         }
     }
@@ -49,7 +46,7 @@ export class LaunchJsonUpdaterServiceHelper {
      * @returns {Promise<void>}
      * @memberof LaunchJsonCompletionItemProvider
      */
-    public async insertDebugConfiguration(
+    public static async insertDebugConfiguration(
         document: TextDocument,
         position: Position,
         config: DebugConfiguration,
@@ -68,7 +65,7 @@ export class LaunchJsonUpdaterServiceHelper {
         const workspaceEdit = new WorkspaceEdit();
         workspaceEdit.insert(document.uri, position, formattedJson);
         await applyEdit(workspaceEdit);
-        this.commandManager.executeCommand('editor.action.formatDocument').then(noop, noop);
+        executeCommand('editor.action.formatDocument').then(noop, noop);
     }
 
     /**

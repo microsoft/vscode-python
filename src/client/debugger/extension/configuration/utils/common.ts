@@ -6,8 +6,8 @@
 
 'use strict';
 
-import { WorkspaceFolder, window, TextEditor, WorkspaceEdit, workspace } from 'vscode';
-import { getWorkspaceFolder } from './workspaceFolder';
+import { WorkspaceFolder } from 'vscode';
+import { getWorkspaceFolder } from '../../../../common/vscodeApis/workspaceApis';
 
 /**
  * @returns whether the provided parameter is a JavaScript String or not.
@@ -40,13 +40,4 @@ export function resolveVariables(
         });
     }
     return value;
-}
-
-export function getActiveTextEditor(): TextEditor | undefined {
-    const { activeTextEditor } = window;
-    return activeTextEditor;
-}
-
-export function applyEdit(edit: WorkspaceEdit): Thenable<boolean> {
-    return workspace.applyEdit(edit);
 }

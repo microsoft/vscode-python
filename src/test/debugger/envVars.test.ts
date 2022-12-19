@@ -37,7 +37,7 @@ suite('Resolving Environment Variables when Debugging', () => {
         const envParser = ioc.serviceContainer.get<IEnvironmentVariablesService>(IEnvironmentVariablesService);
         const pathUtils = ioc.serviceContainer.get<IPathUtils>(IPathUtils);
         mockProcess = ioc.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
-        debugEnvParser = new DebugEnvironmentVariablesHelper(envParser, pathUtils, mockProcess);
+        debugEnvParser = new DebugEnvironmentVariablesHelper(envParser, mockProcess);
         pathVariableName = pathUtils.getPathVariableName();
     });
     suiteTeardown(closeActiveWindows);
