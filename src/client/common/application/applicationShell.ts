@@ -122,7 +122,11 @@ export class ApplicationShell implements IApplicationShell {
         return window.setStatusBarMessage(text, arg);
     }
 
-    public createStatusBarItem(alignment?: StatusBarAlignment, priority?: number, id?: string): StatusBarItem {
+    public createStatusBarItem(
+        alignment?: StatusBarAlignment,
+        priority?: number,
+        id?: string | undefined,
+    ): StatusBarItem {
         return window.createStatusBarItem(id, alignment, priority);
     }
     public showWorkspaceFolderPick(options?: WorkspaceFolderPickOptions): Thenable<WorkspaceFolder | undefined> {

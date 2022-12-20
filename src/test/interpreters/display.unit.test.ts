@@ -19,7 +19,7 @@ import { IApplicationShell, IWorkspaceService } from '../../client/common/applic
 import { Commands, PYTHON_LANGUAGE } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IDisposableRegistry, IPathUtils, ReadWrite } from '../../client/common/types';
-import { InterpreterQuickPickList, Interpreters } from '../../client/common/utils/localize';
+import { InterpreterQuickPickList } from '../../client/common/utils/localize';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterDisplay,
