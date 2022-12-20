@@ -13,7 +13,7 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import { Commands, PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
 import { IDisposableRegistry, IPathUtils, Resource } from '../../common/types';
-import { InterpreterQuickPickList } from '../../common/utils/localize';
+import { InterpreterQuickPickList, Interpreters } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { traceLog } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -32,6 +32,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * This is to ensure the item appears right after the Python language status item.
  */
 const STATUS_BAR_ITEM_PRIORITY = 100.09999;
+
 @injectable()
 export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingleActivationService {
     public supportedWorkspaceTypes: { untrustedWorkspace: boolean; virtualWorkspace: boolean } = {
@@ -81,9 +82,10 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
             this.disposableRegistry.push(this.languageStatus);
         } else {
             const [alignment, priority] = [StatusBarAlignment.Right, STATUS_BAR_ITEM_PRIORITY];
-            this.statusBar = application.createStatusBarItem(alignment, priority);
+            this.statusBar = application.createStatusBarItem(alignment, priority, 'python.selectedInterpreterDisplay');
             this.statusBar.command = Commands.Set_Interpreter;
             this.disposableRegistry.push(this.statusBar);
+            this.statusBar.name = Interpreters.selectedPythonInterpreter;
         }
     }
 
