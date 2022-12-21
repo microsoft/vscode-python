@@ -127,7 +127,9 @@ export class ApplicationShell implements IApplicationShell {
         priority?: number,
         id?: string | undefined,
     ): StatusBarItem {
-        return window.createStatusBarItem(id, alignment, priority);
+        return id
+            ? window.createStatusBarItem(id, alignment, priority)
+            : window.createStatusBarItem(alignment, priority);
     }
     public showWorkspaceFolderPick(options?: WorkspaceFolderPickOptions): Thenable<WorkspaceFolder | undefined> {
         return window.showWorkspaceFolderPick(options);
