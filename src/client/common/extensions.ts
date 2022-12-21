@@ -73,7 +73,9 @@ String.prototype.toCommandArgumentForPythonExt = function (this: string): string
     if (!this) {
         return this;
     }
-    return (this.indexOf(' ') >= 0 || this.indexOf('&') >= 0) && !this.startsWith('"') && !this.endsWith('"')
+    return (this.indexOf(' ') >= 0 || this.indexOf('&') >= 0 || this.indexOf('(') >= 0 || this.indexOf(')') >= 0) &&
+        !this.startsWith('"') &&
+        !this.endsWith('"')
         ? `"${this}"`
         : this.toString();
 };
