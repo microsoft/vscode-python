@@ -355,7 +355,7 @@ export interface IApplicationShell {
      * @param priority The priority of the item. Higher values mean the item should be shown more to the left.
      * @return A new status bar item.
      */
-    createStatusBarItem(alignment?: StatusBarAlignment, priority?: number): StatusBarItem;
+    createStatusBarItem(alignment?: StatusBarAlignment, priority?: number, id?: string): StatusBarItem;
     /**
      * Shows a selection list of [workspace folders](#workspace.workspaceFolders) to pick from.
      * Returns `undefined` if no folder is open.

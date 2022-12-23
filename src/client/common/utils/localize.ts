@@ -283,6 +283,10 @@ export namespace Interpreters {
         'Interpreters.changePythonInterpreter',
         'Change Python Interpreter',
     );
+    export const selectedPythonInterpreter = localize(
+        'Interpreters.selectedPythonInterpreter',
+        'Selected Python Interpreter',
+    );
 }
 
 export namespace InterpreterQuickPickList {
