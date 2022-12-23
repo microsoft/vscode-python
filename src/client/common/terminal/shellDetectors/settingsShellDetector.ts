@@ -28,7 +28,6 @@ export class SettingsShellDetector extends BaseShellDetector {
         super(2);
     }
     public getTerminalShellPath(): string | undefined {
-        const shellConfig = this.workspace.getConfiguration('terminal.integrated.shell');
         let osSection = '';
         switch (this.platform.osType) {
             case OSType.Windows: {
@@ -47,7 +46,15 @@ export class SettingsShellDetector extends BaseShellDetector {
                 return '';
             }
         }
-        return shellConfig.get<string>(osSection)!;
+        const legacyShell = this.workspace.getConfiguration('terminal.integrated.shell').get<string>(osSection);
+        if (legacyShell) return legacyShell;
+        const profiles = this.workspace
+            .getConfiguration('terminal.integrated.profiles')
+            .get<{ [key: string]: any }>(osSection);
+        const defaultProfile = this.workspace
+            .getConfiguration('terminal.integrated.defaultProfile')
+            .get<string>(osSection);
+        if (profiles && defaultProfile) return profiles[defaultProfile]?.path;
     }
     public identify(
         telemetryProperties: ShellIdentificationTelemetry,
