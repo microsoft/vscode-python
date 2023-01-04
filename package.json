@@ -41,7 +41,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.75.0-20221216"
+        "vscode": "^1.75.0-20230104"
     },
     "keywords": [
         "python",
@@ -1806,7 +1806,7 @@
     },
     "dependencies": {
         "@vscode/jupyter-lsp-middleware": "^0.2.50",
-        "@vscode/extension-telemetry": "^0.7.3-preview",
+        "@vscode/extension-telemetry": "^0.7.4-preview",
         "arch": "^2.1.0",
         "diff-match-patch": "^1.0.0",
         "fs-extra": "^10.0.1",
