@@ -108,7 +108,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
         }
     }
     private onDidChangeInterpreterInformation(info: PythonEnvironment) {
-        if (!this.currentlySelectedInterpreterPath || this.currentlySelectedInterpreterPath === info.path) {
+        if (this.currentlySelectedInterpreterPath === info.path) {
             this.updateDisplay(this.currentlySelectedWorkspaceFolder).ignoreErrors();
         }
     }

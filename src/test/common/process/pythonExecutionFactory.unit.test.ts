@@ -153,7 +153,22 @@ suite('Process - PythonExecutionFactory', () => {
                 verify(pythonSettings.pythonPath).once();
             });
 
-            test('If interpreter is explicitly set, ensure we use it', async () => {
+            test('If interpreter is explicitly set to `python`, ensure we use it', async () => {
+                const pythonSettings = mock(PythonSettings);
+                when(processFactory.create(resource)).thenResolve(processService.object);
+                when(activationHelper.getActivatedEnvironmentVariables(resource)).thenResolve({ x: '1' });
+                reset(interpreterPathExpHelper);
+                when(interpreterPathExpHelper.get(anything())).thenReturn('python');
+                when(autoSelection.autoSelectInterpreter(anything())).thenResolve();
+                when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
+
+                const service = await factory.create({ resource, pythonPath: 'python' });
+
+                expect(service).to.not.equal(undefined);
+                verify(autoSelection.autoSelectInterpreter(anything())).once();
+            });
+
+            test('Otherwise if interpreter is explicitly set, ensure we use it', async () => {
                 const pythonSettings = mock(PythonSettings);
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(activationHelper.getActivatedEnvironmentVariables(resource)).thenResolve({ x: '1' });
