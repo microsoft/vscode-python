@@ -8,7 +8,7 @@ import { LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/browser';
 import { LanguageClientMiddlewareBase } from '../activation/languageClientMiddlewareBase';
 import { LanguageServerType } from '../activation/types';
-import { AppinsightsKey, PYLANCE_EXTENSION_ID } from '../common/constants';
+import { AppinsightsKey, PVSC_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../common/constants';
 import { EventName } from '../telemetry/constants';
 import { createStatusItem } from './intellisenseStatus';
 
@@ -127,10 +127,16 @@ function getTelemetryReporter() {
     if (telemetryReporter) {
         return telemetryReporter;
     }
+    const extensionId = PVSC_EXTENSION_ID;
+
+    // eslint-disable-next-line global-require
+    const { extensions } = require('vscode') as typeof import('vscode');
+    const extension = extensions.getExtension(extensionId)!;
+    const extensionVersion = extension.packageJSON.version;
 
     // eslint-disable-next-line global-require
     const Reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
-    telemetryReporter = new Reporter(AppinsightsKey, [
+    telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true, [
         {
             lookup: /(errorName|errorMessage|errorStack)/g,
         },

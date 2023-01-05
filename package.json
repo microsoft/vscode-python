@@ -19,8 +19,7 @@
     "publisher": "ms-python",
     "enabledApiProposals": [
         "quickPickSortByLabel",
-        "testObserver",
-        "telemetryLogger"
+        "testObserver"
     ],
     "author": {
         "name": "Microsoft Corporation"
@@ -1806,7 +1805,7 @@
     },
     "dependencies": {
         "@vscode/jupyter-lsp-middleware": "^0.2.50",
-        "@vscode/extension-telemetry": "^0.7.4-preview",
+        "@vscode/extension-telemetry": "^0.6.2",
         "arch": "^2.1.0",
         "diff-match-patch": "^1.0.0",
         "fs-extra": "^10.0.1",
