@@ -48,13 +48,13 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         const formatOnTypeSetForPython = formatOnTypeInspect?.globalLanguageValue !== undefined;
 
         const inExperiment = await this.isInAutoIndentExperiment();
-        // only explicitly enable formatOnType for those who are in the experiment 
-        // but have not explicitly given a value for the setting 
-        if(!formatOnTypeSetForPython && inExperiment){
+        // only explicitly enable formatOnType for those who are in the experiment
+        // but have not explicitly given a value for the setting
+        if (!formatOnTypeSetForPython && inExperiment) {
             await NodeLanguageServerAnalysisOptions.setPythonSpecificFormatOnType(editorConfig, true);
         }
-         
-        let formatOnTypeEffectiveValue = this.getPythonSpecificEditorSection().get(FORMAT_ON_TYPE_CONFIG_SETTING);
+
+        const formatOnTypeEffectiveValue = this.getPythonSpecificEditorSection().get(FORMAT_ON_TYPE_CONFIG_SETTING);
 
         return formatOnTypeEffectiveValue;
     }
