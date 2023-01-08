@@ -127,5 +127,14 @@
         "body": [
             "import ${1:module}"
         ]
+    },
+    "@dataclass": {
+        "description": "[@dataclass]",
+        "prefix": "@dataclass",
+        "body": [
+            "@dataclass(init=${1|True,False|}, eq=${2|True,False|}, order=${3|True,False|})",
+            "class ${4:name}:",
+            "\t$0"
+        ]
     }
 }
