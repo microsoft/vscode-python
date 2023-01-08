@@ -68,6 +68,14 @@
             "\t$0"
         ]
     },
+    "cl": {
+        "description": "[cl]ass",
+        "prefix": "cl",
+        "body": [
+            "class ${1:name}:",
+            "\t$0"
+        ]
+    },
     "tr": {
         "description": "[tr]y",
         "prefix": "tr",
