@@ -55,5 +55,19 @@
             "def main():",
             "\t$0"
         ]
+    },
+    "fr": {
+        "description": "[fr]om",
+        "prefix": "fr",
+        "body": [
+            "from ${1:module} import ${2:items}"
+        ]
+    },
+    "im": {
+        "description": "[im]port",
+        "prefix": "im",
+        "body": [
+            "import ${1:module}"
+        ]
     }
 }
