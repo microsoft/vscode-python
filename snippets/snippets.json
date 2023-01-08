@@ -1,0 +1,59 @@
+{
+    "shebang": {
+        "description": "[sh]hebang",
+        "prefix": "sh",
+        "body": [
+            "#!/usr/bin/env ${1|python3,python|}"
+        ]
+    },
+    "if": {
+        "description": "[if]",
+        "prefix": "if",
+        "body": [
+            "if ${1:condition}:",
+            "\t$0"
+        ]
+    },
+    "ife": {
+        "description": "[if] [e]lse",
+        "prefix": "ife",
+        "body": [
+            "if ${1:condition}:",
+            "\tprint()",
+            "else:",
+            "\t$0"
+        ]
+    },
+    "wh": {
+        "description": "[wh]ile",
+        "prefix": "wh",
+        "body": [
+            "while ${1:condition}:",
+            "\t$0"
+        ]
+    },
+    "fo": {
+        "description": "[fo]r",
+        "prefix": "fo",
+        "body": [
+            "for ${1:variable} in ${2:list}:",
+            "\t$0"
+        ]
+    },
+    "de": {
+        "description": "[de]f",
+        "prefix": "de",
+        "body": [
+            "def ${1:function_name}(${2:parameters}):",
+            "\t$0"
+        ]
+    },
+    "ma": {
+        "description": "[ma]in",
+        "prefix": "ma",
+        "body": [
+            "def main():",
+            "\t$0"
+        ]
+    }
+}

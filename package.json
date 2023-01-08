@@ -90,6 +90,12 @@
     "main": "./out/client/extension",
     "browser": "./dist/extension.browser.js",
     "contributes": {
+        "snippets": [
+            {
+                "language": "python",
+                "path": "./snippets/snippets.json"
+            }
+        ],
         "walkthroughs": [
             {
                 "id": "pythonWelcome",
