@@ -32,11 +32,31 @@
             "\t$0"
         ]
     },
+    "whe": {
+        "description": "[wh]ile [e]lse",
+        "prefix": "whe",
+        "body": [
+            "while ${1:condition}:",
+            "\t${2:print()}",
+            "else:",
+            "\t$0"
+        ]
+    },
     "fo": {
         "description": "[fo]r",
         "prefix": "fo",
         "body": [
             "for ${1:variable} in ${2:list}:",
+            "\t$0"
+        ]
+    },
+    "foe": {
+        "description": "[fo]r [e]lse",
+        "prefix": "foe",
+        "body": [
+            "for ${1:variable} in ${2:list}:",
+            "\t${3:print()}",
+            "else:",
             "\t$0"
         ]
     },
