@@ -48,6 +48,28 @@
             "\t$0"
         ]
     },
+    "tr": {
+        "description": "[tr]y",
+        "prefix": "tr",
+        "body": [
+            "try",
+            "\t${1:print()}",
+            "except:",
+            "\t$0"
+        ]
+    },
+    "trf": {
+        "description": "[tr]y [f]inally",
+        "prefix": "trf",
+        "body": [
+            "try",
+            "\t${1:print()}",
+            "except:",
+            "\t${2:print()}",
+            "finally:",
+            "\t$0"
+        ]
+    },
     "ma": {
         "description": "[ma]in",
         "prefix": "ma",
