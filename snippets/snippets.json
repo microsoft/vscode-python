@@ -19,7 +19,7 @@
         "prefix": "ife",
         "body": [
             "if ${1:condition}:",
-            "\tprint()",
+            "\t${2:print()}",
             "else:",
             "\t$0"
         ]
