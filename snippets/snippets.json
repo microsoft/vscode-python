@@ -90,6 +90,14 @@
             "\t$0"
         ]
     },
+    "wi": {
+        "description": "[wi]th",
+        "prefix": "wi",
+        "body": [
+            "with open(\"${1:path/to/file}\", \"${2|r,w|}\") as ${3:file}:",
+            "\t$0"
+        ]
+    },
     "ma": {
         "description": "[ma]in",
         "prefix": "ma",
