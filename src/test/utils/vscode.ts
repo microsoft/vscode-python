@@ -17,7 +17,7 @@ export function getChannel(): string {
             // https://github.com/microsoft/vscode-test/issues/176
             return 'insiders';
         }
-        return engineVersion.replace('^', '');
+        return engineVersion;
     }
     return 'stable';
 }

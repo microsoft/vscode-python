@@ -19,7 +19,8 @@
     "publisher": "ms-python",
     "enabledApiProposals": [
         "quickPickSortByLabel",
-        "testObserver"
+        "testObserver",
+        "telemetryLogger"
     ],
     "author": {
         "name": "Microsoft Corporation"
@@ -40,7 +41,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.74.0"
+        "vscode": "^1.75.0-20230104"
     },
     "keywords": [
         "python",
@@ -1805,7 +1806,7 @@
     },
     "dependencies": {
         "@vscode/jupyter-lsp-middleware": "^0.2.50",
-        "@vscode/extension-telemetry": "^0.6.2",
+        "@vscode/extension-telemetry": "^0.7.4-preview",
         "arch": "^2.1.0",
         "diff-match-patch": "^1.0.0",
         "fs-extra": "^10.0.1",
