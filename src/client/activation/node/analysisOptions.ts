@@ -11,6 +11,7 @@ import { IExperimentService } from '../../common/types';
 import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
 import { ILanguageServerOutputChannel } from '../types';
 import { LspNotebooksExperiment } from './lspNotebooksExperiment';
+import { traceWarn } from '../../logging';
 
 const EDITOR_CONFIG_SECTION = 'editor';
 const FORMAT_ON_TYPE_CONFIG_SETTING = 'formatOnType';
@@ -26,6 +27,10 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         super(lsOutputChannel, workspace);
     }
 
+    protected getConfigSectionsToSynchronize(): string[] {
+        return [...super.getConfigSectionsToSynchronize(), 'jupyter.runStartupCommands'];
+    }
+
     // eslint-disable-next-line class-methods-use-this
     protected async getInitializationOptions(): Promise<LanguageClientOptions> {
         return ({
@@ -39,23 +44,19 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
 
     private async isAutoIndentEnabled() {
         const editorConfig = this.getPythonSpecificEditorSection();
-        let formatOnTypeEffectiveValue = editorConfig.get(FORMAT_ON_TYPE_CONFIG_SETTING);
         const formatOnTypeInspect = editorConfig.inspect(FORMAT_ON_TYPE_CONFIG_SETTING);
         const formatOnTypeSetForPython = formatOnTypeInspect?.globalLanguageValue !== undefined;
 
         const inExperiment = await this.isInAutoIndentExperiment();
-
-        if (inExperiment !== formatOnTypeSetForPython) {
-            if (inExperiment) {
-                await NodeLanguageServerAnalysisOptions.setPythonSpecificFormatOnType(editorConfig, true);
-            } else if (formatOnTypeInspect?.globalLanguageValue !== false) {
-                await NodeLanguageServerAnalysisOptions.setPythonSpecificFormatOnType(editorConfig, undefined);
-            }
-
-            formatOnTypeEffectiveValue = this.getPythonSpecificEditorSection().get(FORMAT_ON_TYPE_CONFIG_SETTING);
+        // only explicitly enable formatOnType for those who are in the experiment
+        // but have not explicitly given a value for the setting
+        if (!formatOnTypeSetForPython && inExperiment) {
+            await NodeLanguageServerAnalysisOptions.setPythonSpecificFormatOnType(editorConfig, true);
         }
 
-        return inExperiment && formatOnTypeEffectiveValue;
+        const formatOnTypeEffectiveValue = this.getPythonSpecificEditorSection().get(FORMAT_ON_TYPE_CONFIG_SETTING);
+
+        return formatOnTypeEffectiveValue;
     }
 
     private async isInAutoIndentExperiment(): Promise<boolean> {
@@ -75,11 +76,15 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         editorConfig: WorkspaceConfiguration,
         value: boolean | undefined,
     ) {
-        await editorConfig.update(
-            FORMAT_ON_TYPE_CONFIG_SETTING,
-            value,
-            ConfigurationTarget.Global,
-            /* overrideInLanguage */ true,
-        );
+        try {
+            await editorConfig.update(
+                FORMAT_ON_TYPE_CONFIG_SETTING,
+                value,
+                ConfigurationTarget.Global,
+                /* overrideInLanguage */ true,
+            );
+        } catch (ex) {
+            traceWarn(`Failed to set formatOnType to ${value}`);
+        }
     }
 }

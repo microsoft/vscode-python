@@ -203,6 +203,7 @@ export class JupyterExtensionIntegration {
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
         if (!this.workspaceService.isTrusted) {
+            this.workspaceService.onDidGrantWorkspaceTrust(() => this.registerApi(jupyterExtensionApi));
             return undefined;
         }
         // Forward python parts

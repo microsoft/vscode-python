@@ -77,8 +77,14 @@ export class InterpreterPathService implements IInterpreterPathService {
             this.workspaceService.getConfiguration('python', resource)?.inspect<string>('defaultInterpreterPath') ?? {};
         return {
             globalValue: defaultInterpreterPath.globalValue,
-            workspaceFolderValue: workspaceFolderSetting?.value || defaultInterpreterPath.workspaceFolderValue,
-            workspaceValue: workspaceSetting?.value || defaultInterpreterPath.workspaceValue,
+            workspaceFolderValue:
+                !workspaceFolderSetting?.value || workspaceFolderSetting?.value === 'python'
+                    ? defaultInterpreterPath.workspaceFolderValue
+                    : workspaceFolderSetting.value,
+            workspaceValue:
+                !workspaceSetting?.value || workspaceSetting?.value === 'python'
+                    ? defaultInterpreterPath.workspaceValue
+                    : workspaceSetting.value,
         };
     }
 

@@ -2,11 +2,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import TelemetryReporter from '@vscode/extension-telemetry/lib/telemetryReporter';
+import TelemetryReporter from '@vscode/extension-telemetry';
 
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
-import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
+import { AppinsightsKey, isTestExecution, isUnitTestExecution } from '../common/constants';
 import type { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { isPromise } from '../common/utils/async';
@@ -80,14 +80,9 @@ function getTelemetryReporter() {
     if (!isTestExecution() && telemetryReporter) {
         return telemetryReporter;
     }
-    const extensionId = PVSC_EXTENSION_ID;
-
-    const { extensions } = require('vscode') as typeof import('vscode');
-    const extension = extensions.getExtension(extensionId)!;
-    const extensionVersion = extension.packageJSON.version;
 
     const Reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
-    telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true, [
+    telemetryReporter = new Reporter(AppinsightsKey, [
         {
             lookup: /(errorName|errorMessage|errorStack)/g,
         },

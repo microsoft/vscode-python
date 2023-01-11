@@ -18,9 +18,9 @@ import { PythonPathSource } from '../../../../../client/debugger/extension/types
 import { ConsoleType, DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterHelper, IInterpreterService } from '../../../../../client/interpreter/contracts';
 import { getInfoPerOS } from './common';
-import * as common from '../../../../../client/debugger/extension/configuration/utils/common';
-import * as workspaceFoldersFile from '../../../../../client/debugger/extension/configuration/utils/workspaceFolder';
 import * as platform from '../../../../../client/common/utils/platform';
+import * as windowApis from '../../../../../client/common/vscodeApis/windowApis';
+import * as workspaceApis from '../../../../../client/common/vscodeApis/workspaceApis';
 
 getInfoPerOS().forEach(([osName, osType, path]) => {
     if (osType === platform.OSType.Unknown) {
@@ -42,9 +42,9 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         let getWorkspaceFolderStub: sinon.SinonStub;
 
         setup(() => {
-            getActiveTextEditorStub = sinon.stub(common, 'getActiveTextEditor');
+            getActiveTextEditorStub = sinon.stub(windowApis, 'getActiveTextEditor');
             getOSTypeStub = sinon.stub(platform, 'getOSType');
-            getWorkspaceFolderStub = sinon.stub(workspaceFoldersFile, 'getWorkspaceFolders');
+            getWorkspaceFolderStub = sinon.stub(workspaceApis, 'getWorkspaceFolders');
             getOSTypeStub.returns(osType);
         });
 

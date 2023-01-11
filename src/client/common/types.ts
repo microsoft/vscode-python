@@ -205,7 +205,7 @@ export interface IPythonSettings {
 }
 
 export interface ITensorBoardSettings {
-    readonly logDirectory: string | undefined;
+    logDirectory: string | undefined;
 }
 export interface ISortImportSettings {
     readonly path: string;

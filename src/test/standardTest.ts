@@ -3,8 +3,9 @@ import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
-import { EXTENSION_ROOT_DIR, JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../client/common/constants';
+import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../client/common/constants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
+import { getChannel } from './utils/vscode';
 
 // If running smoke tests, we don't have access to this.
 if (process.env.TEST_FILES_SUFFIX !== 'smoke.test') {
@@ -26,21 +27,6 @@ const workspacePath = process.env.CODE_TESTS_WORKSPACE
 const extensionDevelopmentPath = process.env.CODE_EXTENSIONS_PATH
     ? process.env.CODE_EXTENSIONS_PATH
     : EXTENSION_ROOT_DIR_FOR_TESTS;
-
-async function getChannel(): Promise<string> {
-    if (process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL) {
-        return process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL;
-    }
-
-    const packageJsonPath = path.join(EXTENSION_ROOT_DIR, 'package.json');
-    if (await fs.pathExists(packageJsonPath)) {
-        const packageJson = await fs.readJSON(packageJsonPath);
-        if (packageJson.engines.vscode.endsWith('insider')) {
-            return 'insiders';
-        }
-    }
-    return 'stable';
-}
 
 /**
  * Smoke tests & tests running in VSCode require Jupyter extension to be installed.
@@ -90,7 +76,7 @@ async function installPylanceExtension(vscodeExecutablePath: string) {
 async function start() {
     console.log('*'.repeat(100));
     console.log('Start Standard tests');
-    const channel = await getChannel();
+    const channel = getChannel();
     console.log(`Using ${channel} build of VS Code.`);
     const vscodeExecutablePath = await downloadAndUnzipVSCode(channel);
     const baseLaunchArgs =

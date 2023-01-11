@@ -9,6 +9,7 @@ import {
     ProgressOptions,
     QuickPickItem,
     QuickPickOptions,
+    TextEditor,
     window,
 } from 'vscode';
 
@@ -60,4 +61,9 @@ export function withProgress<R>(
     task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>,
 ): Thenable<R> {
     return window.withProgress(options, task);
+}
+
+export function getActiveTextEditor(): TextEditor | undefined {
+    const { activeTextEditor } = window;
+    return activeTextEditor;
 }

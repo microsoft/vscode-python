@@ -5,13 +5,15 @@
 
 import { inject, injectable } from 'inversify';
 import { DebugConfiguration, DebugSession, WorkspaceFolder } from 'vscode';
-import { IApplicationShell, IDebugService, IWorkspaceService } from '../../../common/application/types';
+import { IDebugService } from '../../../common/application/types';
 import { noop } from '../../../common/utils/misc';
 import { captureTelemetry } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { AttachRequestArguments } from '../../types';
 import { IChildProcessAttachService } from './types';
 import * as nls from 'vscode-nls';
+import { showErrorMessage } from '../../../common/vscodeApis/windowApis';
+import { getWorkspaceFolders } from '../../../common/vscodeApis/workspaceApis';
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
@@ -24,11 +26,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  */
 @injectable()
 export class ChildProcessAttachService implements IChildProcessAttachService {
-    constructor(
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IDebugService) private readonly debugService: IDebugService,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-    ) {}
+    constructor(@inject(IDebugService) private readonly debugService: IDebugService) {}
 
     @captureTelemetry(EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS)
     public async attach(data: AttachRequestArguments & DebugConfiguration, parentSession: DebugSession): Promise<void> {
@@ -37,11 +35,9 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
         const folder = this.getRelatedWorkspaceFolder(debugConfig);
         const launched = await this.debugService.startDebugging(folder, debugConfig, parentSession);
         if (!launched) {
-            this.appShell
-                .showErrorMessage(
-                    localize('debuggerError', 'Failed to launch debugger for child process {0}', processId),
-                )
-                .then(noop, noop);
+            showErrorMessage(
+                localize('debuggerError', 'Failed to launch debugger for child process {0}', processId),
+            ).then(noop, noop);
         }
     }
 
@@ -49,10 +45,11 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
         config: AttachRequestArguments & DebugConfiguration,
     ): WorkspaceFolder | undefined {
         const workspaceFolder = config.workspaceFolder;
-        const hasWorkspaceFolders = (this.workspaceService.workspaceFolders?.length || 0) > 0;
+
+        const hasWorkspaceFolders = (getWorkspaceFolders()?.length || 0) > 0;
         if (!hasWorkspaceFolders || !workspaceFolder) {
             return;
         }
-        return this.workspaceService.workspaceFolders!.find((ws) => ws.uri.fsPath === workspaceFolder);
+        return getWorkspaceFolders()!.find((ws) => ws.uri.fsPath === workspaceFolder);
     }
 }

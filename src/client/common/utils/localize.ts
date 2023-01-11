@@ -28,10 +28,6 @@ export namespace Diagnostics {
         'diagnostics.lsNotSupported',
         'Your operating system does not meet the minimum requirements of the Python Language Server. Reverting to the alternative autocompletion provider, Jedi.',
     );
-    export const removedPythonPathFromSettings = localize(
-        'diagnostics.removedPythonPathFromSettings',
-        'The "python.pythonPath" setting in your settings.json is no longer used by the Python extension. If you want, you can use a new setting called "python.defaultInterpreterPath" instead. Keep in mind that you need to change the value of this setting manually as the Python extension doesn\'t modify it when you change interpreters. [Learn more](https://aka.ms/AA7jfor).',
-    );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',
         'You need to select a Python interpreter before you start debugging.\n\nTip: click on "Select Interpreter" in the status bar.',
@@ -97,6 +93,7 @@ export namespace Common {
     export const useCommandPrompt = localize('Common.useCommandPrompt', 'Use Command Prompt');
     export const download = localize('Common.download', 'Download');
     export const showLogs = localize('Common.showLogs', 'Show logs');
+    export const openFolder = localize('Common.openFolder', 'Open Folder...');
 }
 
 export namespace CommonSurvey {
@@ -281,6 +278,14 @@ export namespace Interpreters {
     export const installPythonTerminalMessage = localize(
         'Interpreters.installPythonTerminalMessage',
         '💡 Please try installing the python package using your package manager. Alternatively you can also download it from https://www.python.org/downloads',
+    );
+    export const changePythonInterpreter = localize(
+        'Interpreters.changePythonInterpreter',
+        'Change Python Interpreter',
+    );
+    export const selectedPythonInterpreter = localize(
+        'Interpreters.selectedPythonInterpreter',
+        'Selected Python Interpreter',
     );
 }
 
@@ -563,7 +568,7 @@ export namespace CreateEnv {
 
     export const noWorkspace = localize(
         'createEnv.noWorkspace',
-        'Please open a directory when creating an environment using venv.',
+        'Please open a folder when creating an environment using venv.',
     );
 
     export const pickWorkspacePlaceholder = localize(

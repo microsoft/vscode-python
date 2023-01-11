@@ -20,6 +20,21 @@ suite('String Extensions', () => {
         const argTotest = 'one two three';
         expect(argTotest.toCommandArgumentForPythonExt()).to.be.equal(`"${argTotest}"`);
     });
+    test('Should quote file paths containing one of the parentheses: ( ', () => {
+        const fileToTest = 'user/code(1.py';
+        expect(fileToTest.fileToCommandArgumentForPythonExt()).to.be.equal(`"${fileToTest}"`);
+    });
+
+    test('Should quote file paths containing one of the parentheses: ) ', () => {
+        const fileToTest = 'user)/code1.py';
+        expect(fileToTest.fileToCommandArgumentForPythonExt()).to.be.equal(`"${fileToTest}"`);
+    });
+
+    test('Should quote file paths containing both of the parentheses: () ', () => {
+        const fileToTest = '(user)/code1.py';
+        expect(fileToTest.fileToCommandArgumentForPythonExt()).to.be.equal(`"${fileToTest}"`);
+    });
+
     test('Should quote command arguments containing ampersand', () => {
         const argTotest = 'one&twothree';
         expect(argTotest.toCommandArgumentForPythonExt()).to.be.equal(`"${argTotest}"`);

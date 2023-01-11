@@ -51,7 +51,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         let { pythonPath } = options;
-        if (!pythonPath) {
+        if (!pythonPath || pythonPath === 'python') {
             // If python path wasn't passed in, we need to auto select it and then read it
             // from the configuration.
             const interpreterPath = this.interpreterPathExpHelper.get(options.resource);

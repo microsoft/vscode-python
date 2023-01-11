@@ -16,12 +16,11 @@ import { PythonDebugConfigurationService } from './configuration/debugConfigurat
 import { DynamicPythonDebugConfigurationService } from './configuration/dynamicdebugConfigurationService';
 import { LaunchJsonCompletionProvider } from './configuration/launch.json/completionProvider';
 import { InterpreterPathCommand } from './configuration/launch.json/interpreterPathCommand';
-import { LaunchJsonReader } from './configuration/launch.json/launchJsonReader';
 import { LaunchJsonUpdaterService } from './configuration/launch.json/updaterService';
 import { AttachConfigurationResolver } from './configuration/resolvers/attach';
 import { DebugEnvironmentVariablesHelper, IDebugEnvironmentVariablesService } from './configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from './configuration/resolvers/launch';
-import { IDebugConfigurationResolver, ILaunchJsonReader } from './configuration/types';
+import { IDebugConfigurationResolver } from './configuration/types';
 import { DebugCommands } from './debugCommands';
 import { ChildProcessAttachEventHandler } from './hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from './hooks/childProcessAttachService';
@@ -89,5 +88,4 @@ export function registerTypes(serviceManager: IServiceManager): void {
         AttachProcessProviderFactory,
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebugCommands);
-    serviceManager.addSingleton<ILaunchJsonReader>(ILaunchJsonReader, LaunchJsonReader);
 }

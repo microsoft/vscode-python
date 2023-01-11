@@ -4,11 +4,12 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ICurrentProcess, IPathUtils } from '../../../../common/types';
+import { ICurrentProcess } from '../../../../common/types';
 import { EnvironmentVariables, IEnvironmentVariablesService } from '../../../../common/variables/types';
 import { LaunchRequestArguments } from '../../../types';
-import { getActiveTextEditor } from '../utils/common';
 import { PYTHON_LANGUAGE } from '../../../../common/constants';
+import { getActiveTextEditor } from '../../../../common/vscodeApis/windowApis';
+import { getSearchPathEnvVarNames } from '../../../../common/utils/exec';
 
 export const IDebugEnvironmentVariablesService = Symbol('IDebugEnvironmentVariablesService');
 export interface IDebugEnvironmentVariablesService {
@@ -19,12 +20,11 @@ export interface IDebugEnvironmentVariablesService {
 export class DebugEnvironmentVariablesHelper implements IDebugEnvironmentVariablesService {
     constructor(
         @inject(IEnvironmentVariablesService) private envParser: IEnvironmentVariablesService,
-        @inject(IPathUtils) private pathUtils: IPathUtils,
         @inject(ICurrentProcess) private process: ICurrentProcess,
     ) {}
 
     public async getEnvironmentVariables(args: LaunchRequestArguments): Promise<EnvironmentVariables> {
-        const pathVariableName = this.pathUtils.getPathVariableName();
+        const pathVariableName = getSearchPathEnvVarNames()[0];
 
         // Merge variables from both .env file and env json variables.
         const debugLaunchEnvVars: Record<string, string> =
