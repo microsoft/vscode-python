@@ -38,7 +38,7 @@ export class CondaInstaller extends ModuleInstaller {
     }
 
     public get priority(): number {
-        return 0;
+        return 10;
     }
 
     /**

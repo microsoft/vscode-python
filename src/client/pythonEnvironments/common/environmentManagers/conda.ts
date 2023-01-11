@@ -506,7 +506,11 @@ export class Conda {
         return 'python';
     }
 
-    public async getRunPythonArgs(env: CondaEnvInfo, forShellExecution?: boolean): Promise<string[] | undefined> {
+    public async getRunPythonArgs(
+        env: CondaEnvInfo,
+        forShellExecution?: boolean,
+        isolatedFlag = false,
+    ): Promise<string[] | undefined> {
         const condaVersion = await this.getCondaVersion();
         if (condaVersion && lt(condaVersion, CONDA_RUN_VERSION)) {
             traceError('`conda run` is not supported for conda version', condaVersion.raw);
@@ -518,14 +522,17 @@ export class Conda {
         } else {
             args.push('-p', env.prefix);
         }
-        return [
+        const python = [
             forShellExecution ? this.shellCommand : this.command,
             'run',
             ...args,
             '--no-capture-output',
             'python',
-            OUTPUT_MARKER_SCRIPT,
         ];
+        if (isolatedFlag) {
+            python.push('-I');
+        }
+        return [...python, OUTPUT_MARKER_SCRIPT];
     }
 
     /**

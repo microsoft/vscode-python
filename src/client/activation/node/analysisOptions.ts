@@ -44,23 +44,19 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
 
     private async isAutoIndentEnabled() {
         const editorConfig = this.getPythonSpecificEditorSection();
-        let formatOnTypeEffectiveValue = editorConfig.get(FORMAT_ON_TYPE_CONFIG_SETTING);
         const formatOnTypeInspect = editorConfig.inspect(FORMAT_ON_TYPE_CONFIG_SETTING);
         const formatOnTypeSetForPython = formatOnTypeInspect?.globalLanguageValue !== undefined;
 
         const inExperiment = await this.isInAutoIndentExperiment();
-
-        if (inExperiment !== formatOnTypeSetForPython) {
-            if (inExperiment) {
-                await NodeLanguageServerAnalysisOptions.setPythonSpecificFormatOnType(editorConfig, true);
-            } else if (formatOnTypeInspect?.globalLanguageValue !== false) {
-                await NodeLanguageServerAnalysisOptions.setPythonSpecificFormatOnType(editorConfig, undefined);
-            }
-
-            formatOnTypeEffectiveValue = this.getPythonSpecificEditorSection().get(FORMAT_ON_TYPE_CONFIG_SETTING);
+        // only explicitly enable formatOnType for those who are in the experiment
+        // but have not explicitly given a value for the setting
+        if (!formatOnTypeSetForPython && inExperiment) {
+            await NodeLanguageServerAnalysisOptions.setPythonSpecificFormatOnType(editorConfig, true);
         }
 
-        return inExperiment && formatOnTypeEffectiveValue;
+        const formatOnTypeEffectiveValue = this.getPythonSpecificEditorSection().get(FORMAT_ON_TYPE_CONFIG_SETTING);
+
+        return formatOnTypeEffectiveValue;
     }
 
     private async isInAutoIndentExperiment(): Promise<boolean> {

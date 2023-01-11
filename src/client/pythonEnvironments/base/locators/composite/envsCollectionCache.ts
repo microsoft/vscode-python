@@ -99,13 +99,18 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
                     if (envs && isCompleteList) {
                         /**
                          * Only consider a cached env to be valid if it's relevant. That means:
-                         * * It is either reported in the latest complete refresh for this session.
-                         * * Or it is relevant for some other workspace folder which is not opened currently.
+                         * * It is relevant for some other workspace folder which is not opened currently.
+                         * * It is either reported in the latest complete discovery for this session.
+                         * * It is provided by the consumer themselves.
                          */
                         if (cachedEnv.searchLocation) {
                             return true;
                         }
                         if (envs.some((env) => cachedEnv.id === env.id)) {
+                            return true;
+                        }
+                        if (Array.from(this.validatedEnvs.keys()).some((envId) => cachedEnv.id === envId)) {
+                            // These envs are provided by the consumer themselves, consider them valid.
                             return true;
                         }
                     } else {
@@ -141,7 +146,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
     public addEnv(env: PythonEnvInfo, hasLatestInfo?: boolean): void {
         const found = this.envs.find((e) => areSameEnv(e, env));
         if (hasLatestInfo) {
-            traceVerbose(`Adding env to cache ${env.id}`);
+            traceVerbose(`Flushing env to cache ${env.id}`);
             this.validatedEnvs.add(env.id!);
             this.flush(env).ignoreErrors(); // If we have latest info, flush it so it can be saved.
         }

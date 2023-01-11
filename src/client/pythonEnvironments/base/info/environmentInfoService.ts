@@ -38,7 +38,7 @@ export interface IEnvironmentInfoService {
 }
 
 async function buildEnvironmentInfo(env: PythonEnvInfo): Promise<InterpreterInformation | undefined> {
-    const python = [env.executable.filename, OUTPUT_MARKER_SCRIPT];
+    const python = [env.executable.filename, '-I', OUTPUT_MARKER_SCRIPT];
     const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(python, undefined, env.executable.filename));
     return interpreterInfo;
 }
@@ -50,7 +50,7 @@ async function buildEnvironmentInfoUsingCondaRun(env: PythonEnvInfo): Promise<In
     if (!condaEnv) {
         return undefined;
     }
-    const python = await conda?.getRunPythonArgs(condaEnv, true);
+    const python = await conda?.getRunPythonArgs(condaEnv, true, true);
     if (!python) {
         return undefined;
     }
