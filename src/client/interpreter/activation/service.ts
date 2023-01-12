@@ -11,7 +11,7 @@ import { IPlatformService } from '../../common/platform/types';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalHelper, TerminalShellType } from '../../common/terminal/types';
-import { ICurrentProcess, IDisposable, Resource } from '../../common/types';
+import { ICurrentProcess, IDisposable, IExtensionContext, Resource } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { InMemoryCache } from '../../common/utils/cacheUtils';
 import { OSType } from '../../common/utils/platform';
@@ -102,6 +102,7 @@ export class EnvironmentActivationServiceCache {
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
+    private previousEnvVars = process.env;
     private readonly activatedEnvVariablesCache = new EnvironmentActivationServiceCache();
     constructor(
         @inject(ITerminalHelper) private readonly helper: ITerminalHelper,
@@ -111,6 +112,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider,
+        @inject(IExtensionContext) private context: IExtensionContext,
     ) {
         this.envVarsService.onDidEnvironmentVariablesChange(
             () => this.activatedEnvVariablesCache.clear(),
@@ -119,10 +121,15 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         );
 
         this.interpreterService.onDidChangeInterpreter(
-            () => this.activatedEnvVariablesCache.clear(),
+            async (resource) => {
+                this.activatedEnvVariablesCache.clear();
+                await this.initializeEnvironmentCollection(resource);
+            },
             this,
             this.disposables,
         );
+
+        this.initializeEnvironmentCollection(undefined).ignoreErrors();
     }
 
     public dispose(): void {
@@ -321,5 +328,29 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         output = output.substring(output.indexOf(ENVIRONMENT_PREFIX) + ENVIRONMENT_PREFIX.length);
         const js = output.substring(output.indexOf('{')).trim();
         return parse(js);
+    }
+
+    private async initializeEnvironmentCollection(resource: Resource) {
+        const env = await this.getActivatedEnvironmentVariables(resource);
+        if (!env) {
+            this.context.environmentVariableCollection.clear();
+            this.previousEnvVars = process.env;
+            return;
+        }
+        const previousEnv = this.previousEnvVars;
+        Object.keys(previousEnv).forEach((key) => {
+            // If the previous env var is not in the current env, then explicitly add it so it can cleared later.
+            if (!(key in env)) {
+                env[key] = '';
+            }
+        });
+        this.previousEnvVars = env;
+        for (const key in env) {
+            const value = env[key];
+            const prevValue = previousEnv[key];
+            if (value !== undefined && prevValue !== value) {
+                this.context.environmentVariableCollection.replace(key, value);
+            }
+        }
     }
 }
