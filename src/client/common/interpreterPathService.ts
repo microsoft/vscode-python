@@ -74,15 +74,15 @@ export class InterpreterPathService implements IInterpreterPathService {
             );
         }
         const defaultInterpreterPath: InspectInterpreterSettingType =
-            this.workspaceService.getConfiguration('python', resource)?.inspect<string>('defaultInterpreterPath') ?? {};
+            this.workspaceService.getConfiguration('auto', resource)?.inspect<string>('defaultInterpreterPath') ?? {};
         return {
             globalValue: defaultInterpreterPath.globalValue,
             workspaceFolderValue:
-                !workspaceFolderSetting?.value || workspaceFolderSetting?.value === 'python'
+                !workspaceFolderSetting?.value || workspaceFolderSetting?.value === 'auto'
                     ? defaultInterpreterPath.workspaceFolderValue
                     : workspaceFolderSetting.value,
             workspaceValue:
-                !workspaceSetting?.value || workspaceSetting?.value === 'python'
+                !workspaceSetting?.value || workspaceSetting?.value === 'auto'
                     ? defaultInterpreterPath.workspaceValue
                     : workspaceSetting.value,
         };
@@ -94,7 +94,7 @@ export class InterpreterPathService implements IInterpreterPathService {
             settings.workspaceFolderValue ||
             settings.workspaceValue ||
             settings.globalValue ||
-            (isTestExecution() ? CI_PYTHON_PATH : 'python');
+            (isTestExecution() ? CI_PYTHON_PATH : 'auto');
         const systemVariables = new SystemVariables(
             undefined,
             this.workspaceService.getWorkspaceFolder(resource)?.uri.fsPath,

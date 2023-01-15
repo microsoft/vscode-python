@@ -91,7 +91,7 @@ export namespace ThemeIcons {
     export const SpinningLoader = 'loading~spin';
 }
 
-export const DEFAULT_INTERPRETER_SETTING = 'python';
+export const DEFAULT_INTERPRETER_SETTING = 'auto';
 
 export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';
 
