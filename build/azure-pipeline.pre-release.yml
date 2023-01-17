@@ -21,8 +21,7 @@ resources:
 extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
-    locTsConfigs: $(Build.SourcesDirectory)/tsconfig.json
-    locBundleDestination: $(Build.SourcesDirectory)/out/client
+    l10nSourcePaths: ./src/client
     buildSteps:
       - task: NodeTool@0
         inputs:

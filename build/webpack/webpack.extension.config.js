@@ -26,7 +26,6 @@ const config = {
     },
     module: {
         rules: [
-            ...common.getTranlationsLoader(),
             {
                 test: /\.ts$/,
                 use: [

@@ -3,8 +3,7 @@
 
 'use strict';
 
-import { DiagnosticCollection, Disposable, QuickPickOptions, Uri } from 'vscode';
-import * as nls from 'vscode-nls';
+import { DiagnosticCollection, Disposable, l10n, QuickPickOptions, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { IDisposable } from '../common/types';
@@ -13,8 +12,6 @@ import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { ILinterManager, ILintingEngine, LinterId } from './types';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class LinterCommands implements IDisposable {
     private disposables: Disposable[] = [];
@@ -74,11 +71,7 @@ export class LinterCommands implements IDisposable {
                 const index = linters.findIndex((x) => x.id === selection);
                 if (activeLinters.length > 1) {
                     const response = await this.appShell.showWarningMessage(
-                        localize(
-                            'Linter.replaceWithSelectedLinter',
-                            "Multiple linters are enabled in settings. Replace with '{0}'?",
-                            selection,
-                        ),
+                        l10n.t("Multiple linters are enabled in settings. Replace with '{0}'?", selection),
                         Common.bannerLabelYes,
                         Common.bannerLabelNo,
                     );

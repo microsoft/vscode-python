@@ -7,14 +7,14 @@
 'use strict';
 
 import { relative } from 'path';
-import type * as vscode from 'vscode';
+import * as vscode from 'vscode';
 import * as vscMockHtmlContent from './htmlContent';
 import * as vscMockStrings from './strings';
 import * as vscUri from './uri';
 import { generateUuid } from './uuid';
 
 export enum NotebookCellKind {
-    Markdown = 1,
+    Markup = 1,
     Code = 2,
 }
 
@@ -493,11 +493,11 @@ export class TextEdit {
         return ret;
     }
 
-    protected _range: Range = new Range(new Position(0, 0), new Position(0, 0));
+    _range: Range = new Range(new Position(0, 0), new Position(0, 0));
 
-    protected _newText = '';
+    newText = '';
 
-    protected _newEol: EndOfLine = EndOfLine.LF;
+    _newEol: EndOfLine = EndOfLine.LF;
 
     get range(): Range {
         return this._range;
@@ -508,17 +508,6 @@ export class TextEdit {
             throw illegalArgument('range');
         }
         this._range = value;
-    }
-
-    get newText(): string {
-        return this._newText || '';
-    }
-
-    set newText(value: string) {
-        if (value && typeof value !== 'string') {
-            throw illegalArgument('newText');
-        }
-        this._newText = value;
     }
 
     get newEol(): EndOfLine {
@@ -535,14 +524,6 @@ export class TextEdit {
     constructor(range: Range, newText: string) {
         this.range = range;
         this.newText = newText;
-    }
-
-    toJSON(): { range: Range; newText: string; newEol: EndOfLine } {
-        return {
-            range: this.range,
-            newText: this.newText,
-            newEol: this._newEol,
-        };
     }
 }
 
@@ -664,7 +645,7 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
         return this._textEdits.has(uri.toString());
     }
 
-    set(uri: vscUri.URI, edits: TextEdit[]): void {
+    set(uri: vscUri.URI, edits: readonly unknown[]): void {
         let data = this._textEdits.get(uri.toString());
         if (!data) {
             data = { seq: this._seqPool += 1, uri, edits: [] };
@@ -673,7 +654,7 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
         if (!edits) {
             data.edits = [];
         } else {
-            data.edits = edits.slice(0);
+            data.edits = edits.slice(0) as TextEdit[];
         }
     }
 
@@ -913,19 +894,16 @@ export class Diagnostic {
 }
 
 export class Hover {
-    public contents: vscode.MarkdownString[] | vscode.MarkedString[];
+    public contents: vscode.MarkdownString[];
 
     public range: Range;
 
-    constructor(
-        contents: vscode.MarkdownString | vscode.MarkedString | vscode.MarkdownString[] | vscode.MarkedString[],
-        range?: Range,
-    ) {
+    constructor(contents: vscode.MarkdownString | vscode.MarkdownString[], range?: Range) {
         if (!contents) {
             throw new Error('Illegal argument, contents must be defined');
         }
         if (Array.isArray(contents)) {
-            this.contents = <vscode.MarkdownString[] | vscode.MarkedString[]>contents;
+            this.contents = <vscode.MarkdownString[]>contents;
         } else if (vscMockHtmlContent.isMarkdownString(contents)) {
             this.contents = [contents];
         } else {

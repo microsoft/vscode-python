@@ -18,7 +18,6 @@ env:
   # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
   # Also enables a reporter which exits the process running the tests if it haven't already.
   MOCHA_REPORTER_JUNIT: true
-  DISABLE_TRANSLATIONS: true
 
 jobs:
   setup:

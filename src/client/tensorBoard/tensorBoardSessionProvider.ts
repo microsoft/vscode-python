@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ViewColumn } from 'vscode';
-import * as nls from 'vscode-nls';
+import { l10n, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { Commands } from '../common/constants';
@@ -23,8 +22,6 @@ import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from './constants';
 import { TensorBoardSession } from './tensorBoardSession';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const PREFERRED_VIEWGROUP = 'PythonTensorBoardWebviewPreferredViewGroup';
 
@@ -119,8 +116,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
         } catch (e) {
             traceError(`Encountered error while starting new TensorBoard session: ${e}`);
             await this.applicationShell.showErrorMessage(
-                localize(
-                    'TensorBoard.failedToStartSessionError',
+                l10n.t(
                     'We failed to start a TensorBoard session due to the following error: {0}',
                     (e as Error).message,
                 ),

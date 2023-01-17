@@ -14,7 +14,6 @@ env:
   ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
   VSIX_NAME: ms-python-insiders.vsix
   TEST_RESULTS_DIRECTORY: .
-  DISABLE_TRANSLATIONS: true
   # Force a path with spaces and to test extension works in these scenarios
   # Unicode characters are causing 2.7 failures so skip that for now.
   special-working-directory: './path with spaces'

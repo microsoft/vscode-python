@@ -28,7 +28,6 @@ initializeFileLogging(logDispose);
 //===============================================
 // loading starts here
 
-import '../setupNls';
 import { ProgressLocation, ProgressOptions, window } from 'vscode';
 import { buildApi } from './api';
 import { IApplicationShell, IWorkspaceService } from './common/application/types';

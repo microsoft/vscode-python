@@ -3,9 +3,8 @@
 
 // eslint-disable-next-line max-classes-per-file
 import { inject, injectable } from 'inversify';
-import { DiagnosticSeverity } from 'vscode';
+import { DiagnosticSeverity, l10n } from 'vscode';
 import '../../../common/extensions';
-import * as nls from 'vscode-nls';
 import * as path from 'path';
 import { IDisposableRegistry, IInterpreterPathService, Resource } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
@@ -30,15 +29,11 @@ import { IExtensionSingleActivationService } from '../../../activation/types';
 import { cache } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
 
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-
 const messages = {
-    [DiagnosticCodes.NoPythonInterpretersDiagnostic]: localize(
-        'DiagnosticCodes.NoPythonInterpretersDiagnostic',
+    [DiagnosticCodes.NoPythonInterpretersDiagnostic]: l10n.t(
         'No Python interpreter is selected. Please select a Python interpreter to enable features such as IntelliSense, linting, and debugging.',
     ),
-    [DiagnosticCodes.InvalidPythonInterpreterDiagnostic]: localize(
-        'DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic',
+    [DiagnosticCodes.InvalidPythonInterpreterDiagnostic]: l10n.t(
         'An Invalid Python interpreter is selected{0}, please try changing it to enable features such as IntelliSense, linting, and debugging.',
     ),
 };
@@ -59,7 +54,7 @@ export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
             // Specify folder name in case of multiroot scenarios
             const folder = workspaceService.getWorkspaceFolder(resource);
             if (folder) {
-                formatArg = ` ${localize('Common.forWorkspace', 'for workspace')} ${path.basename(folder.uri.fsPath)}`;
+                formatArg = ` ${l10n.t('for workspace')} ${path.basename(folder.uri.fsPath)}`;
             }
         }
         super(code, messages[code].format(formatArg), DiagnosticSeverity.Error, scope, resource, undefined, 'always');

@@ -1,7 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { ConfigurationTarget, Uri, window } from 'vscode';
-import * as nls from 'vscode-nls';
+import { ConfigurationTarget, l10n, Uri, window } from 'vscode';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { SystemVariables } from '../../common/variables/systemVariables';
 import { traceError } from '../../logging';
@@ -10,8 +9,6 @@ import { EventName } from '../../telemetry/constants';
 import { PythonInterpreterTelemetry } from '../../telemetry/types';
 import { IComponentAdapter } from '../contracts';
 import { IPythonPathUpdaterServiceFactory, IPythonPathUpdaterServiceManager } from './types';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 @injectable()
 export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManager {
@@ -36,9 +33,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
             failed = true;
             const reason = err as Error;
             const message = reason && typeof reason.message === 'string' ? (reason.message as string) : '';
-            window.showErrorMessage(
-                localize('setInterpreterError', 'Failed to set interpreter path. Error: {0}', message),
-            );
+            window.showErrorMessage(l10n.t('Failed to set interpreter path. Error: {0}', message));
             traceError(reason);
         }
         // do not wait for this to complete

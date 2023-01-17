@@ -63,6 +63,7 @@ export function initialize() {
 }
 
 mockedVSCode.ThemeIcon = vscodeMocks.ThemeIcon;
+mockedVSCode.l10n = vscodeMocks.l10n;
 mockedVSCode.ThemeColor = vscodeMocks.ThemeColor;
 mockedVSCode.MarkdownString = vscodeMocks.MarkdownString;
 mockedVSCode.Hover = vscodeMocks.Hover;

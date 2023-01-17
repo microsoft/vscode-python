@@ -3,9 +3,8 @@
 
 // eslint-disable-next-line max-classes-per-file
 import { inject, injectable } from 'inversify';
-import { DiagnosticSeverity } from 'vscode';
+import { DiagnosticSeverity, l10n } from 'vscode';
 import '../../../common/extensions';
-import * as nls from 'vscode-nls';
 import { useCommandPromptAsDefaultShell } from '../../../common/terminal/commandPrompt';
 import { IConfigurationService, ICurrentProcess, IDisposableRegistry, Resource } from '../../../common/types';
 import { Common } from '../../../common/utils/localize';
@@ -19,10 +18,7 @@ import { DiagnosticCodes } from '../constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../promptHandler';
 import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../types';
 
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-
-const PowershellActivationNotSupportedWithBatchFilesMessage = localize(
-    'powershelActivationMsg',
+const PowershellActivationNotSupportedWithBatchFilesMessage = l10n.t(
     'Activation of the selected Python environment is not supported in PowerShell. Consider changing your shell to Command Prompt.',
 );
 
