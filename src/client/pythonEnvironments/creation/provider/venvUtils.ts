@@ -6,6 +6,7 @@ import * as fs from 'fs-extra';
 import { flatten, isArray } from 'lodash';
 import * as path from 'path';
 import { CancellationToken, QuickPickItem, RelativePattern, WorkspaceFolder } from 'vscode';
+import { CreateEnv } from '../../../common/utils/localize';
 import { showQuickPick } from '../../../common/vscodeApis/windowApis';
 import { findFiles } from '../../../common/vscodeApis/workspaceApis';
 import { traceError, traceVerbose } from '../../../logging';
@@ -50,8 +51,9 @@ async function pickTomlExtras(extras: string[], token?: CancellationToken): Prom
     const selection = await showQuickPick(
         items,
         {
-            placeHolder: 'Select optional dependencies to install from `pyproject.toml`.',
+            placeHolder: CreateEnv.Venv.tomlExtrasQuickPickTitle,
             canPickMany: true,
+            ignoreFocusOut: true,
         },
         token,
     );
@@ -81,7 +83,8 @@ async function pickRequirementsFiles(files: string[], token?: CancellationToken)
     const selection = await showQuickPick(
         items,
         {
-            placeHolder: 'Select dependencies to install. Click Ok without selecting anything to skip.',
+            placeHolder: CreateEnv.Venv.requirementsQuickPickTitle,
+            ignoreFocusOut: true,
             canPickMany: true,
         },
         token,

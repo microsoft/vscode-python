@@ -437,6 +437,10 @@ export namespace CreateEnv {
         export const selectPythonQuickPickTitle = l10n.t('Select a python to use for environment creation');
         export const providerDescription = l10n.t('Creates a `.venv` virtual environment in the current workspace');
         export const error = l10n.t('Creating virtual environment failed with error.');
+        export const tomlExtrasQuickPickTitle = l10n.t('Select optional dependencies to install from pyproject.toml.');
+        export const requirementsQuickPickTitle = l10n.t(
+            'Select dependencies to install. Click Ok without selecting anything to skip.',
+        );
     }
 
     export namespace Conda {
@@ -454,13 +458,11 @@ export namespace CreateEnv {
 
 export namespace ToolsExtensions {
     export const flake8PromptMessage = l10n.t(
-        'toolsExt.flake8.message',
         'Use the Flake8 extension to enable easier configuration and new features such as quick fixes.',
     );
     export const pylintPromptMessage = l10n.t(
-        'toolsExt.pylint.message',
         'Use the Pylint extension to enable easier configuration and new features such as quick fixes.',
     );
-    export const installPylintExtension = l10n.t('toolsExt.install.pylint', 'Install Pylint extension');
-    export const installFlake8Extension = l10n.t('toolsExt.install.flake8', 'Install Flake8 extension');
+    export const installPylintExtension = l10n.t('Install Pylint extension');
+    export const installFlake8Extension = l10n.t('Install Flake8 extension');
 }

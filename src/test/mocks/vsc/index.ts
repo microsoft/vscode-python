@@ -81,10 +81,19 @@ export namespace l10n {
               },
         ...args: unknown[]
     ): string {
-        if (args) {
-            return (message as string).format(...(args as Array<string>)) as string;
+        let _message = message;
+        let _args: unknown[] | Record<string, unknown> | undefined = args;
+        if (typeof message !== 'string') {
+            _message = message.message;
+            _args = message.args ?? args;
         }
-        return message as string;
+
+        if ((_args as Array<string>).length > 0) {
+            return (_message as string).replace(/{(\d+)}/g, (match, number) =>
+                (_args as Array<string>)[number] === undefined ? match : (_args as Array<string>)[number],
+            );
+        }
+        return _message as string;
     }
     export const bundle: { [key: string]: string } | undefined = undefined;
     export const uri: vscode.Uri | undefined = undefined;

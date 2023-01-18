@@ -101,6 +101,11 @@ suite('venv Creation provider tests', () => {
             .returns(() => Promise.resolve('/usr/bin/python'))
             .verifiable(typemoq.Times.once());
 
+        pickPackagesToInstallStub.resolves({
+            installType: 'none',
+            installList: [],
+        });
+
         const deferred = createDeferred();
         let _next: undefined | ((value: Output<string>) => void);
         let _complete: undefined | (() => void);
@@ -159,6 +164,11 @@ suite('venv Creation provider tests', () => {
             .returns(() => Promise.resolve('/usr/bin/python'))
             .verifiable(typemoq.Times.once());
 
+        pickPackagesToInstallStub.resolves({
+            installType: 'none',
+            installList: [],
+        });
+
         const deferred = createDeferred();
         let _error: undefined | ((error: unknown) => void);
         let _complete: undefined | (() => void);
@@ -210,6 +220,11 @@ suite('venv Creation provider tests', () => {
             .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(() => Promise.resolve('/usr/bin/python'))
             .verifiable(typemoq.Times.once());
+
+        pickPackagesToInstallStub.resolves({
+            installType: 'none',
+            installList: [],
+        });
 
         const deferred = createDeferred();
         let _next: undefined | ((value: Output<string>) => void);

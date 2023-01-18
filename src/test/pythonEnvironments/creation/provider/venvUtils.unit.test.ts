@@ -9,6 +9,7 @@ import * as windowApis from '../../../../client/common/vscodeApis/windowApis';
 import * as workspaceApis from '../../../../client/common/vscodeApis/workspaceApis';
 import { pickPackagesToInstall } from '../../../../client/pythonEnvironments/creation/provider/venvUtils';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
+import { CreateEnv } from '../../../../client/common/utils/localize';
 
 suite('Venv Utils test', () => {
     let findFilesStub: sinon.SinonStub;
@@ -72,7 +73,8 @@ suite('Venv Utils test', () => {
             showQuickPickStub.calledWithExactly(
                 [{ label: 'test' }, { label: 'doc' }],
                 {
-                    placeHolder: 'Select optional dependencies to install from `pyproject.toml`.',
+                    placeHolder: CreateEnv.Venv.tomlExtrasQuickPickTitle,
+                    ignoreFocusOut: true,
                     canPickMany: true,
                 },
                 undefined,
@@ -95,7 +97,8 @@ suite('Venv Utils test', () => {
             showQuickPickStub.calledWithExactly(
                 [{ label: 'test' }, { label: 'doc' }],
                 {
-                    placeHolder: 'Select optional dependencies to install from `pyproject.toml`.',
+                    placeHolder: CreateEnv.Venv.tomlExtrasQuickPickTitle,
+                    ignoreFocusOut: true,
                     canPickMany: true,
                 },
                 undefined,
@@ -122,7 +125,8 @@ suite('Venv Utils test', () => {
             showQuickPickStub.calledWithExactly(
                 [{ label: 'test' }, { label: 'doc' }],
                 {
-                    placeHolder: 'Select optional dependencies to install from `pyproject.toml`.',
+                    placeHolder: CreateEnv.Venv.tomlExtrasQuickPickTitle,
+                    ignoreFocusOut: true,
                     canPickMany: true,
                 },
                 undefined,
@@ -149,7 +153,8 @@ suite('Venv Utils test', () => {
             showQuickPickStub.calledWithExactly(
                 [{ label: 'test' }, { label: 'doc' }, { label: 'cov' }],
                 {
-                    placeHolder: 'Select optional dependencies to install from `pyproject.toml`.',
+                    placeHolder: CreateEnv.Venv.tomlExtrasQuickPickTitle,
+                    ignoreFocusOut: true,
                     canPickMany: true,
                 },
                 undefined,
@@ -184,7 +189,8 @@ suite('Venv Utils test', () => {
             showQuickPickStub.calledWithExactly(
                 [{ label: 'requirements.txt' }, { label: 'dev-requirements.txt' }, { label: 'test-requirements.txt' }],
                 {
-                    placeHolder: 'Select dependencies to install. Click Ok without selecting anything to skip.',
+                    placeHolder: CreateEnv.Venv.requirementsQuickPickTitle,
+                    ignoreFocusOut: true,
                     canPickMany: true,
                 },
                 undefined,
@@ -216,7 +222,8 @@ suite('Venv Utils test', () => {
             showQuickPickStub.calledWithExactly(
                 [{ label: 'requirements.txt' }, { label: 'dev-requirements.txt' }, { label: 'test-requirements.txt' }],
                 {
-                    placeHolder: 'Select dependencies to install. Click Ok without selecting anything to skip.',
+                    placeHolder: CreateEnv.Venv.requirementsQuickPickTitle,
+                    ignoreFocusOut: true,
                     canPickMany: true,
                 },
                 undefined,
@@ -251,7 +258,8 @@ suite('Venv Utils test', () => {
             showQuickPickStub.calledWithExactly(
                 [{ label: 'requirements.txt' }, { label: 'dev-requirements.txt' }, { label: 'test-requirements.txt' }],
                 {
-                    placeHolder: 'Select dependencies to install. Click Ok without selecting anything to skip.',
+                    placeHolder: CreateEnv.Venv.requirementsQuickPickTitle,
+                    ignoreFocusOut: true,
                     canPickMany: true,
                 },
                 undefined,
@@ -286,7 +294,8 @@ suite('Venv Utils test', () => {
             showQuickPickStub.calledWithExactly(
                 [{ label: 'requirements.txt' }, { label: 'dev-requirements.txt' }, { label: 'test-requirements.txt' }],
                 {
-                    placeHolder: 'Select dependencies to install. Click Ok without selecting anything to skip.',
+                    placeHolder: CreateEnv.Venv.requirementsQuickPickTitle,
+                    ignoreFocusOut: true,
                     canPickMany: true,
                 },
                 undefined,
