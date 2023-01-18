@@ -117,3 +117,66 @@ def test_install_packages(install_type):
 
     assert pip_upgraded
     assert installing == install_type
+
+
+@pytest.mark.parametrize(
+    ("extras", "expected"),
+    [
+        ([], ["-m", "pip", "install", "-e", "."]),
+        (["test"], ["-m", "pip", "install", "-e", ".[test]"]),
+        (["test", "doc"], ["-m", "pip", "install", "-e", ".[test,doc]"]),
+    ],
+)
+def test_toml_args(extras, expected):
+    importlib.reload(create_venv)
+
+    actual = []
+
+    def run_process(args, error_message):
+        nonlocal actual
+        actual = args[1:]
+
+    create_venv.run_process = run_process
+
+    create_venv.install_toml(sys.executable, extras)
+
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    ("extras", "expected"),
+    [
+        ([], None),
+        (
+            ["requirements/test.txt"],
+            [sys.executable, "-m", "pip", "install", "-r", "requirements/test.txt"],
+        ),
+        (
+            ["requirements/test.txt", "requirements/doc.txt"],
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "-r",
+                "requirements/test.txt",
+                "-r",
+                "requirements/doc.txt",
+            ],
+        ),
+    ],
+)
+def test_requirements_args(extras, expected):
+    importlib.reload(create_venv)
+
+    actual = None
+
+    def run_process(args, error_message):
+        nonlocal actual
+        actual = args
+
+    create_venv.run_process = run_process
+
+    create_venv.install_requirements(sys.executable, extras)
+
+    assert actual == expected

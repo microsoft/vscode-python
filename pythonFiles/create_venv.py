@@ -20,22 +20,20 @@ class VenvError(Exception):
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
-    dep_group = parser.add_mutually_exclusive_group()
-    dep_group.add_argument(
+    parser.add_argument(
         "--requirements",
         action="append",
         default=[],
         help="Install additional dependencies into the virtual environment.",
     )
 
-    toml_group = dep_group.add_argument_group()
-    toml_group.add_argument(
+    parser.add_argument(
         "--toml",
         action="store",
         default=None,
         help="Install additional dependencies from sources like `pyproject.toml` into the virtual environment.",
     )
-    toml_group.add_argument(
+    parser.add_argument(
         "--extras",
         action="append",
         default=[],
@@ -89,10 +87,13 @@ def get_venv_path(name: str) -> str:
 
 
 def install_requirements(venv_path: str, requirements: List[str]) -> None:
+    if not requirements:
+        return
+
     print(f"VENV_INSTALLING_REQUIREMENTS: {requirements}")
     args = []
     for requirement in requirements:
-        args+= ["-r", requirement]
+        args += ["-r", requirement]
     run_process(
         [venv_path, "-m", "pip", "install"] + args,
         "CREATE_VENV.PIP_FAILED_INSTALL_REQUIREMENTS",
@@ -101,7 +102,7 @@ def install_requirements(venv_path: str, requirements: List[str]) -> None:
 
 
 def install_toml(venv_path: str, extras: List[str]) -> None:
-    args = ["."] if len(extras) == 0 else f".[{','.join(extras)}]"
+    args = "." if len(extras) == 0 else f".[{','.join(extras)}]"
     run_process(
         [venv_path, "-m", "pip", "install", "-e", args],
         "CREATE_VENV.PIP_FAILED_INSTALL_PYPROJECT",
@@ -133,7 +134,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         raise VenvError("CREATE_VENV.VENV_NOT_FOUND")
 
     pip_installed = is_installed("pip")
-    deps_needed = (args.requirements or args.extras or args.toml)
+    deps_needed = args.requirements or args.extras or args.toml
     if deps_needed and not pip_installed:
         raise VenvError("CREATE_VENV.PIP_NOT_FOUND")
 
