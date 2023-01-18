@@ -152,7 +152,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             add_gitignore(args.name)
 
     if pip_installed:
-        upgrade_pip(args.name)
+        upgrade_pip(venv_path)
 
     if args.requirements:
         print(f"VENV_INSTALLING_REQUIREMENTS: {args.requirements}")
