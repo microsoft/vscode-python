@@ -1,7 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import * as nls from 'vscode-nls';
-import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
+import { DebugConfiguration, l10n, Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import * as internalScripts from '../../common/process/internal/scripts';
@@ -16,8 +15,6 @@ import { ITestDebugLauncher, LaunchOptions } from './types';
 import { getConfigurationsForWorkspace } from '../../debugger/extension/configuration/launch.json/launchJsonReader';
 import { getWorkspaceFolder, getWorkspaceFolders } from '../../common/vscodeApis/workspaceApis';
 import { showErrorMessage } from '../../common/vscodeApis/windowApis';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
@@ -106,7 +103,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             traceError('could not get debug config', exc);
             const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
             await appShell.showErrorMessage(
-                localize('readDebugError', 'Could not load unit test config from launch.json as it is missing a field'),
+                l10n.t('Could not load unit test config from launch.json as it is missing a field'),
             );
             return [];
         }
@@ -131,9 +128,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             return undefined;
         } catch (exc) {
             traceError('could not get debug config', exc);
-            await showErrorMessage(
-                localize('readDebugError', 'Could not load unit test config from launch.json as it is missing a field'),
-            );
+            await showErrorMessage(l10n.t('Could not load unit test config from launch.json as it is missing a field'));
             return undefined;
         }
     }

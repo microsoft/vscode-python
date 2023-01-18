@@ -90,6 +90,7 @@
     ],
     "main": "./out/client/extension",
     "browser": "./dist/extension.browser.js",
+    "l10n": "./l10n",
     "contributes": {
         "walkthroughs": [
             {
@@ -1805,8 +1806,8 @@
         "webpack": "webpack"
     },
     "dependencies": {
-        "@vscode/jupyter-lsp-middleware": "^0.2.50",
         "@vscode/extension-telemetry": "^0.7.4-preview",
+        "@vscode/jupyter-lsp-middleware": "^0.2.50",
         "arch": "^2.1.0",
         "diff-match-patch": "^1.0.0",
         "fs-extra": "^10.0.1",
@@ -1825,8 +1826,8 @@
         "request-progress": "^3.0.0",
         "rxjs": "^6.5.4",
         "rxjs-compat": "^6.5.4",
-        "stack-trace": "0.0.10",
         "semver": "^5.5.0",
+        "stack-trace": "0.0.10",
         "sudo-prompt": "^9.2.1",
         "tmp": "^0.0.33",
         "uint64be": "^3.0.0",
@@ -1838,11 +1839,10 @@
         "vscode-languageclient": "8.0.2-next.5",
         "vscode-languageserver": "8.0.2-next.5",
         "vscode-languageserver-protocol": "3.17.2-next.6",
-        "vscode-nls": "^5.0.1",
         "vscode-tas-client": "^0.1.63",
+        "which": "^2.0.2",
         "winreg": "^1.2.4",
-        "xml2js": "^0.4.19",
-        "which": "^2.0.2"
+        "xml2js": "^0.4.19"
     },
     "devDependencies": {
         "@istanbuljs/nyc-config-typescript": "^1.0.2",
@@ -1865,7 +1865,7 @@
         "@types/stack-trace": "0.0.29",
         "@types/tmp": "^0.0.33",
         "@types/uuid": "^8.3.4",
-        "@types/vscode": "~1.68.0",
+        "@types/vscode": "^1.74.0",
         "@types/which": "^2.0.1",
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",
@@ -1915,7 +1915,6 @@
         "uuid": "^8.3.2",
         "vsce": "^2.6.6",
         "vscode-debugadapter-testsupport": "^1.27.0",
-        "vscode-nls-dev": "^4.0.0",
         "webpack": "^5.70.0",
         "webpack-bundle-analyzer": "^4.5.0",
         "webpack-cli": "^4.9.2",

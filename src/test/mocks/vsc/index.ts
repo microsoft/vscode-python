@@ -62,6 +62,34 @@ export class Disposable {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace l10n {
+    export function t(message: string, ...args: unknown[]): string;
+    export function t(options: {
+        message: string;
+        args?: Array<string | number | boolean> | Record<string, unknown>;
+        comment: string | string[];
+    }): string;
+
+    export function t(
+        message:
+            | string
+            | {
+                  message: string;
+                  args?: Array<string | number | boolean> | Record<string, unknown>;
+                  comment: string | string[];
+              },
+        ...args: unknown[]
+    ): string {
+        if (args) {
+            return (message as string).format(...(args as Array<string>)) as string;
+        }
+        return message as string;
+    }
+    export const bundle: { [key: string]: string } | undefined = undefined;
+    export const uri: vscode.Uri | undefined = undefined;
+}
+
 export class EventEmitter<T> implements vscode.EventEmitter<T> {
     public event: vscode.Event<T>;
 
@@ -301,6 +329,8 @@ export class CodeActionKind {
     public static readonly RefactorExtract: CodeActionKind = new CodeActionKind('refactor.extract');
 
     public static readonly RefactorInline: CodeActionKind = new CodeActionKind('refactor.inline');
+
+    public static readonly RefactorMove: CodeActionKind = new CodeActionKind('refactor.move');
 
     public static readonly RefactorRewrite: CodeActionKind = new CodeActionKind('refactor.rewrite');
 

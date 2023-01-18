@@ -3,7 +3,7 @@
 
 import { injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, ProgressLocation, ProgressOptions } from 'vscode';
+import { CancellationToken, l10n, ProgressLocation, ProgressOptions } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { traceError, traceLog } from '../../logging';
@@ -21,9 +21,6 @@ import { ExecutionInfo, IConfigurationService, IOutputChannel, Product } from '.
 import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
 import { IModuleInstaller, InstallOptions, InterpreterUri, ModuleInstallFlags } from './types';
-import * as nls from 'vscode-nls';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 @injectable()
 export abstract class ModuleInstaller implements IModuleInstaller {
@@ -139,7 +136,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             const options: ProgressOptions = {
                 location: ProgressLocation.Notification,
                 cancellable: true,
-                title: localize('products.installingModule', 'Installing {0}', name),
+                title: l10n.t('Installing {0}', name),
             };
             await shell.withProgress(options, async (_, token: CancellationToken) =>
                 install(wrapCancellationTokens(token, cancel)),
