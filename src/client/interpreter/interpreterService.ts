@@ -22,6 +22,7 @@ import {
 import { IServiceContainer } from '../ioc/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import {
+    IActivatedEnvironmentLaunch,
     IComponentAdapter,
     IInterpreterDisplay,
     IInterpreterService,
@@ -93,6 +94,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public async refresh(resource?: Uri): Promise<void> {
+        const activatedEnvLaunch = this.serviceContainer.get<IActivatedEnvironmentLaunch>(IActivatedEnvironmentLaunch);
+        await activatedEnvLaunch.selectIfLaunchedViaActivatedEnv();
         const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
         await interpreterDisplay.refresh(resource);
         this.ensureEnvironmentContainsPython(this.configService.getSettings(resource).pythonPath).ignoreErrors();

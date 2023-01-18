@@ -1316,6 +1316,22 @@ export interface IEventNamePropertyMapping {
         selection: 'Yes' | 'No' | 'More Info' | undefined;
     };
     /**
+     * Telemetry event sent with details when user clicks the prompt with the following message
+     * `Prompt message` :- 'We noticed VSCode was launched from an activated conda environment, would you like to select it?'
+     */
+    /* __GDPR__
+       "conda_inherit_env_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+     */
+    [EventName.ACTIVATED_CONDA_ENV_LAUNCH]: {
+        /**
+         * `Yes` When 'Yes' option is selected
+         * `No` When 'No' option is selected
+         */
+        selection: 'Yes' | 'No' | undefined;
+    };
+    /**
      * Telemetry event sent with details when user clicks a button in the virtual environment prompt.
      * `Prompt message` :- 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?'
      */

@@ -25,11 +25,12 @@ import {
     IPythonPathUpdaterServiceFactory,
     IPythonPathUpdaterServiceManager,
 } from './configuration/types';
-import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService } from './contracts';
+import { IActivatedEnvironmentLaunch, IInterpreterDisplay, IInterpreterHelper, IInterpreterService } from './contracts';
 import { InterpreterDisplay } from './display';
 import { InterpreterLocatorProgressStatubarHandler } from './display/progressDisplay';
 import { InterpreterHelper } from './helpers';
 import { InterpreterService } from './interpreterService';
+import { ActivatedEnvironmentLaunch } from './virtualEnvs/activatedEnvLaunch';
 import { CondaInheritEnvPrompt } from './virtualEnvs/condaInheritEnvPrompt';
 import { VirtualEnvironmentPrompt } from './virtualEnvs/virtualEnvPrompt';
 
@@ -90,6 +91,11 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
     );
 
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, CondaInheritEnvPrompt);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        ActivatedEnvironmentLaunch,
+    );
+    serviceManager.addSingleton<IActivatedEnvironmentLaunch>(IActivatedEnvironmentLaunch, ActivatedEnvironmentLaunch);
 }
 
 export function registerTypes(serviceManager: IServiceManager): void {

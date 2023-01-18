@@ -34,6 +34,7 @@ import { InterpreterLocatorProgressStatubarHandler } from '../../client/interpre
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { registerTypes } from '../../client/interpreter/serviceRegistry';
+import { ActivatedEnvironmentLaunch } from '../../client/interpreter/virtualEnvs/activatedEnvLaunch';
 import { CondaInheritEnvPrompt } from '../../client/interpreter/virtualEnvs/condaInheritEnvPrompt';
 import { VirtualEnvironmentPrompt } from '../../client/interpreter/virtualEnvs/virtualEnvPrompt';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -69,6 +70,7 @@ suite('Interpreters - Service Registry', () => {
             [EnvironmentActivationService, EnvironmentActivationService],
             [IEnvironmentActivationService, EnvironmentActivationService],
             [IExtensionActivationService, CondaInheritEnvPrompt],
+            [IExtensionSingleActivationService, ActivatedEnvironmentLaunch],
         ].forEach((mapping) => {
             // eslint-disable-next-line prefer-spread
             verify(serviceManager.addSingleton.apply(serviceManager, mapping as never)).once();
