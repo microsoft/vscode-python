@@ -24,6 +24,12 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
+    discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
+        console.log(uri);
+        this.deferred = createDeferred<DiscoveredTestPayload>();
+        return this.deferred.promise;
+    }
+
     public onDataReceivedHandler({ cwd, data }: DataReceivedEvent): void {
         if (this.deferred && cwd === this.cwd) {
             const testData: DiscoveredTestPayload = JSON.parse(data);
@@ -33,14 +39,14 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         }
     }
 
-    public async discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
-        const settings = this.configSettings.getSettings(uri);
-        const { pytestArgs } = settings.testing;
-        console.debug(pytestArgs); // do we use pytestArgs anywhere?
+    // public async discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
+    //     const settings = this.configSettings.getSettings(uri);
+    //     const { pytestArgs } = settings.testing;
+    //     console.debug(pytestArgs); // do we use pytestArgs anywhere?
 
-        this.cwd = uri.fsPath;
-        return this.runPytestDiscovery(uri, executionFactory);
-    }
+    //     this.cwd = uri.fsPath;
+    //     return this.runPytestDiscovery(uri, executionFactory);
+    // }
 
     async runPytestDiscovery(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
         if (!this.deferred) {
