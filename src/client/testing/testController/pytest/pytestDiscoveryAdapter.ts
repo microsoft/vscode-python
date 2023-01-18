@@ -2,21 +2,18 @@
 // Licensed under the MIT License.
 import * as path from 'path';
 import { Uri } from 'vscode';
+import {
+    ExecutionFactoryCreateWithEnvironmentOptions,
+    IPythonExecutionFactory,
+    SpawnOptions,
+} from '../../../common/process/types';
 import { IConfigurationService } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-
-import {
-    DataReceivedEvent,
-    DiscoveredTestPayload,
-    ITestDiscoveryAdapter,
-    ITestServer,
-    TestCommandOptions,
-    TestDiscoveryCommand,
-} from '../common/types';
+import { DataReceivedEvent, DiscoveredTestPayload, ITestDiscoveryAdapter, ITestServer } from '../common/types';
 
 /**
- * Wrapper class for pytest test discovery. This is where we call `discovery`.
+ * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
  */
 export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     private deferred: Deferred<DiscoveredTestPayload> | undefined;
@@ -36,39 +33,48 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         }
     }
 
-    public async discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
+    public async discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
+        const settings = this.configSettings.getSettings(uri);
+        const { pytestArgs } = settings.testing;
+        console.debug(pytestArgs); // do we use pytestArgs anywhere?
+
+        this.cwd = uri.fsPath;
+        return this.runPytestDiscovery(uri, executionFactory);
+    }
+
+    async runPytestDiscovery(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
         if (!this.deferred) {
-            this.cwd = uri.fsPath;
-            const relativePathToPytest = 'pythonFiles/pytest-vscode-integration';
-            const fpath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
-
-            // send path for pytest plugin
-            const pytestPluginPath = 'sys.path.append('.concat(fpath.toString(), ')');
-            let command: TestDiscoveryCommand = buildDiscoveryCommand(pytestPluginPath, []);
-            const options: TestCommandOptions = {
-                workspaceFolder: uri,
-                command,
-                cwd: fpath,
-            };
-            this.testServer.sendCommand(options);
-
             this.deferred = createDeferred<DiscoveredTestPayload>();
+            const relativePathToPytest = 'pythonFiles/pytest-vscode-integration';
+            const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
+            const uuid = this.testServer.createUUID(uri.fsPath);
+            const settings = this.configSettings.getSettings(uri);
+            const { pytestArgs } = settings.testing;
+            const pythonPathCommand = `${fullPluginPath}${path.delimiter}`.concat(process.env.PYTHONPATH ?? '');
 
-            // importing pytest
-            command = buildDiscoveryCommand('import pytest', []);
+            const spawnOptions: SpawnOptions = {
+                cwd: uri.fsPath,
+                throwOnStdErr: true,
+                extraVariables: {
+                    PYTHONPATH: pythonPathCommand,
+                    TEST_UUID: uuid.toString(),
+                    TEST_PORT: this.testServer.getPort().toString(),
+                },
+            };
 
-            this.testServer.sendCommand(options);
+            // Create the Python environment in which to execute the command.
+            const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
+                allowEnvironmentFetchExceptions: false,
+                resource: uri,
+            };
+            const execService = await executionFactory.createActivatedEnvironment(creationOptions);
+
+            try {
+                execService.exec(['-m', 'pytest', '--collect-only'].concat(pytestArgs), spawnOptions);
+            } catch (ex) {
+                console.error(ex);
+            }
         }
-
         return this.deferred.promise;
     }
-}
-
-function buildDiscoveryCommand(script: string, args: string[]): TestDiscoveryCommand {
-    const discoveryScript = script;
-
-    return {
-        script: discoveryScript,
-        args: [...args],
-    };
 }

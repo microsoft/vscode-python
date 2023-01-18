@@ -76,9 +76,9 @@ export class PythonTestServer implements ITestServer, Disposable {
      * @param options test command options
      * @returns a UUID as a string
      */
-    public createUUID(options: TestCommandOptions): string {
+    public createUUID(cwd: string): string {
         const uuid = crypto.randomUUID();
-        this.uuids.set(uuid, options.cwd);
+        this.uuids.set(uuid, cwd);
         return uuid;
     }
 
@@ -92,7 +92,7 @@ export class PythonTestServer implements ITestServer, Disposable {
     }
 
     async sendCommand(options: TestCommandOptions): Promise<void> {
-        const uuid = this.createUUID(options);
+        const uuid = this.createUUID(options.cwd);
         const spawnOptions: SpawnOptions = {
             token: options.token,
             cwd: options.cwd,
