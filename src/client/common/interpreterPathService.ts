@@ -74,7 +74,7 @@ export class InterpreterPathService implements IInterpreterPathService {
             );
         }
         const defaultInterpreterPath: InspectInterpreterSettingType =
-            this.workspaceService.getConfiguration('auto', resource)?.inspect<string>('defaultInterpreterPath') ?? {};
+            this.workspaceService.getConfiguration('python', resource)?.inspect<string>('defaultInterpreterPath') ?? {};
         return {
             globalValue: defaultInterpreterPath.globalValue,
             workspaceFolderValue:
