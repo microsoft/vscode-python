@@ -7,7 +7,7 @@ import os
 import pathlib
 import subprocess
 import sys
-from typing import Optional, Sequence, Union
+from typing import List, Optional, Sequence, Union
 
 VENV_NAME = ".venv"
 CWD = pathlib.PurePath(os.getcwd())
@@ -19,12 +19,29 @@ class VenvError(Exception):
 
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--install",
-        action="store_true",
-        default=False,
-        help="Install packages into the virtual environment.",
+
+    dep_group = parser.add_mutually_exclusive_group()
+    dep_group.add_argument(
+        "--requirements",
+        action="append",
+        default=[],
+        help="Install additional dependencies into the virtual environment.",
     )
+
+    toml_group = dep_group.add_argument_group()
+    toml_group.add_argument(
+        "--toml",
+        action="store",
+        default=None,
+        help="Install additional dependencies from sources like `pyproject.toml` into the virtual environment.",
+    )
+    toml_group.add_argument(
+        "--extras",
+        action="append",
+        default=[],
+        help="Install specific package groups from `pyproject.toml` into the virtual environment.",
+    )
+
     parser.add_argument(
         "--git-ignore",
         action="store_true",
@@ -71,29 +88,32 @@ def get_venv_path(name: str) -> str:
         return os.fspath(CWD / name / "bin" / "python")
 
 
-def install_packages(venv_path: str) -> None:
-    requirements = os.fspath(CWD / "requirements.txt")
-    pyproject = os.fspath(CWD / "pyproject.toml")
+def install_requirements(venv_path: str, requirements: List[str]) -> None:
+    print(f"VENV_INSTALLING_REQUIREMENTS: {requirements}")
+    args = []
+    for requirement in requirements:
+        args+= ["-r", requirement]
+    run_process(
+        [venv_path, "-m", "pip", "install"] + args,
+        "CREATE_VENV.PIP_FAILED_INSTALL_REQUIREMENTS",
+    )
+    print("CREATE_VENV.PIP_INSTALLED_REQUIREMENTS")
 
+
+def install_toml(venv_path: str, extras: List[str]) -> None:
+    args = ["."] if len(extras) == 0 else f".[{','.join(extras)}]"
+    run_process(
+        [venv_path, "-m", "pip", "install", "-e", args],
+        "CREATE_VENV.PIP_FAILED_INSTALL_PYPROJECT",
+    )
+    print("CREATE_VENV.PIP_INSTALLED_PYPROJECT")
+
+
+def upgrade_pip(venv_path: str) -> None:
     run_process(
         [venv_path, "-m", "pip", "install", "--upgrade", "pip"],
         "CREATE_VENV.PIP_UPGRADE_FAILED",
     )
-
-    if file_exists(requirements):
-        print(f"VENV_INSTALLING_REQUIREMENTS: {requirements}")
-        run_process(
-            [venv_path, "-m", "pip", "install", "-r", requirements],
-            "CREATE_VENV.PIP_FAILED_INSTALL_REQUIREMENTS",
-        )
-        print("CREATE_VENV.PIP_INSTALLED_REQUIREMENTS")
-    elif file_exists(pyproject):
-        print(f"VENV_INSTALLING_PYPROJECT: {pyproject}")
-        run_process(
-            [venv_path, "-m", "pip", "install", "-e", ".[extras]"],
-            "CREATE_VENV.PIP_FAILED_INSTALL_PYPROJECT",
-        )
-        print("CREATE_VENV.PIP_INSTALLED_PYPROJECT")
 
 
 def add_gitignore(name: str) -> None:
@@ -112,7 +132,9 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     if not is_installed("venv"):
         raise VenvError("CREATE_VENV.VENV_NOT_FOUND")
 
-    if args.install and not is_installed("pip"):
+    pip_installed = is_installed("pip")
+    deps_needed = (args.requirements or args.extras or args.toml)
+    if deps_needed and not pip_installed:
         raise VenvError("CREATE_VENV.PIP_NOT_FOUND")
 
     if venv_exists(args.name):
@@ -128,8 +150,16 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         if args.git_ignore:
             add_gitignore(args.name)
 
-    if args.install:
-        install_packages(venv_path)
+    if pip_installed:
+        upgrade_pip(args.name)
+
+    if args.requirements:
+        print(f"VENV_INSTALLING_REQUIREMENTS: {args.requirements}")
+        install_requirements(venv_path, args.requirements)
+
+    if args.toml:
+        print(f"VENV_INSTALLING_PYPROJECT: {args.toml}")
+        install_toml(venv_path, args.extras)
 
 
 if __name__ == "__main__":
