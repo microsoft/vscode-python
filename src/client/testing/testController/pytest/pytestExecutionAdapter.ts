@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
 import { Uri } from 'vscode';
 import { IConfigurationService } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
-import { EXTENSION_ROOT_DIR } from '../../../constants';
 import {
     DataReceivedEvent,
     ExecutionTestPayload,
@@ -40,9 +38,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     public async runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload> {
         if (!this.deferred) {
             const settings = this.configSettings.getSettings(uri);
-            const { unittestArgs } = settings.testing;
+            const { pytestArgs } = settings.testing;
 
-            const command = buildExecutionCommand(unittestArgs);
+            const command = buildExecutionCommand(pytestArgs);
             this.cwd = uri.fsPath;
 
             const options: TestCommandOptions = {
@@ -64,7 +62,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
 }
 
 function buildExecutionCommand(args: string[]): TestExecutionCommand {
-    const executionScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'execution.py');
+    const executionScript = '';
 
     return {
         script: executionScript,

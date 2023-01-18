@@ -72,9 +72,9 @@ export class PythonTestServer implements ITestServer, Disposable {
     }
 
     /**
-     * TODO: not actually sure if this is necessary!
-     * @param options
-     * @returns
+     * creates a UUID using crypto library given test command options
+     * @param options test command options
+     * @returns a UUID as a string
      */
     public createUUID(options: TestCommandOptions): string {
         const uuid = crypto.randomUUID();

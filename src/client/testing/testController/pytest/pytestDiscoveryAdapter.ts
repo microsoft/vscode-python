@@ -38,35 +38,26 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
     public async discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
         if (!this.deferred) {
-            const settings = this.configSettings.getSettings(uri);
-            const { pytestArgs } = settings.testing;
-            console.debug(pytestArgs);
             this.cwd = uri.fsPath;
             const relativePathToPytest = 'pythonFiles/pytest-vscode-integration';
             const fpath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
-            const cc = 'sys.path.append('.concat(fpath.toString(), ')');
-            let command: TestDiscoveryCommand = buildDiscoveryCommand(cc, []);
-            const options3: TestCommandOptions = {
+
+            // send path for pytest plugin
+            const pytestPluginPath = 'sys.path.append('.concat(fpath.toString(), ')');
+            let command: TestDiscoveryCommand = buildDiscoveryCommand(pytestPluginPath, []);
+            const options: TestCommandOptions = {
                 workspaceFolder: uri,
                 command,
                 cwd: fpath,
             };
-            this.testServer.sendCommand(options3);
+            this.testServer.sendCommand(options);
 
             this.deferred = createDeferred<DiscoveredTestPayload>();
-            const prom = this.deferred.promise;
-            const a = await prom;
-            console.debug('AAAA', a);
 
-            // // Send the test command to the server.
-            // // The server will fire an onDataReceived event once it gets a response.
+            // importing pytest
             command = buildDiscoveryCommand('import pytest', []);
-            const options4: TestCommandOptions = {
-                workspaceFolder: uri,
-                command,
-                cwd: fpath,
-            };
-            this.testServer.sendCommand(options4);
+
+            this.testServer.sendCommand(options);
         }
 
         return this.deferred.promise;
