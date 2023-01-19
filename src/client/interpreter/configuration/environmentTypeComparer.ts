@@ -234,6 +234,7 @@ function getPrioritizedEnvironmentType(): EnvironmentType[] {
         EnvironmentType.VirtualEnvWrapper,
         EnvironmentType.Venv,
         EnvironmentType.VirtualEnv,
+        EnvironmentType.ActiveState,
         EnvironmentType.Conda,
         EnvironmentType.Pyenv,
         EnvironmentType.MicrosoftStore,
