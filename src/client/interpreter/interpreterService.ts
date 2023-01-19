@@ -181,7 +181,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         const activatedEnvLaunch = this.serviceContainer.get<IActivatedEnvironmentLaunch>(IActivatedEnvironmentLaunch);
-        let path = await activatedEnvLaunch.getPrefixOfActivatedEnv();
+        let path = await activatedEnvLaunch.selectIfLaunchedViaActivatedEnv(true);
         if (!path) {
             path = this.configService.getSettings(resource).pythonPath;
         }

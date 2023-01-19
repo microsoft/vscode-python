@@ -87,13 +87,22 @@ export class ActivatedEnvironmentLaunch implements IExtensionSingleActivationSer
     }
 
     @cache(-1, true)
-    public async selectIfLaunchedViaActivatedEnv(): Promise<void> {
-        const prefix = await this.getPrefixOfActivatedEnv();
-        if (!prefix) {
-            return;
+    public async selectIfLaunchedViaActivatedEnv(doNotBlockOnSelection = false): Promise<string | undefined> {
+        if (this.wasSelected) {
+            return undefined;
         }
-        await this.setPrefixAsInterpeter(prefix);
-        await sleep(1);
+        const prefix = await this.getPrefixOfSelectedActivatedEnv();
+        if (!prefix) {
+            return undefined;
+        }
+        this.wasSelected = true;
+        if (doNotBlockOnSelection) {
+            this.setPrefixAsInterpeter(prefix).ignoreErrors();
+        } else {
+            await this.setPrefixAsInterpeter(prefix);
+            await sleep(1); // Yield control so config service can update itself.
+        }
+        return prefix;
     }
 
     private async setPrefixAsInterpeter(prefix: string) {
@@ -114,18 +123,7 @@ export class ActivatedEnvironmentLaunch implements IExtensionSingleActivationSer
     }
 
     @cache(-1, true)
-    public async getPrefixOfActivatedEnv(): Promise<string | undefined> {
-        if (this.wasSelected) {
-            return undefined;
-        }
-        const prefix = await this._getPrefixOfActivatedEnv();
-        if (!prefix) {
-            this.wasSelected = true;
-        }
-        return prefix;
-    }
-
-    private async _getPrefixOfActivatedEnv(): Promise<string | undefined> {
+    public async getPrefixOfSelectedActivatedEnv(): Promise<string | undefined> {
         const virtualEnvVar = process.env.VIRTUAL_ENV;
         if (virtualEnvVar !== undefined && virtualEnvVar.length > 0) {
             return virtualEnvVar;
