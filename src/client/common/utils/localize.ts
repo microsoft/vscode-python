@@ -437,10 +437,8 @@ export namespace CreateEnv {
         export const selectPythonQuickPickTitle = l10n.t('Select a python to use for environment creation');
         export const providerDescription = l10n.t('Creates a `.venv` virtual environment in the current workspace');
         export const error = l10n.t('Creating virtual environment failed with error.');
-        export const tomlExtrasQuickPickTitle = l10n.t('Select optional dependencies to install from pyproject.toml.');
-        export const requirementsQuickPickTitle = l10n.t(
-            'Select dependencies to install. Click Ok without selecting anything to skip.',
-        );
+        export const tomlExtrasQuickPickTitle = l10n.t('Select optional dependencies to install from pyproject.toml');
+        export const requirementsQuickPickTitle = l10n.t('Select dependencies to install');
     }
 
     export namespace Conda {
