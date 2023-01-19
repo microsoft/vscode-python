@@ -22,6 +22,7 @@ export function getKindDisplayName(kind: PythonEnvKind): string {
         [PythonEnvKind.VirtualEnvWrapper, 'virtualenv'],
         [PythonEnvKind.Pipenv, 'pipenv'],
         [PythonEnvKind.Conda, 'conda'],
+        [PythonEnvKind.ActiveState, 'ActiveState'],
         // For now we treat OtherVirtual like Unknown.
     ] as [PythonEnvKind, string][]) {
         if (kind === candidate) {
@@ -63,6 +64,7 @@ export function getPrioritizedEnvKinds(): PythonEnvKind[] {
         PythonEnvKind.Venv,
         PythonEnvKind.VirtualEnvWrapper,
         PythonEnvKind.VirtualEnv,
+        PythonEnvKind.ActiveState,
         PythonEnvKind.OtherVirtual,
         PythonEnvKind.OtherGlobal,
         PythonEnvKind.System,

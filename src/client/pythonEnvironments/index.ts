@@ -36,6 +36,7 @@ import {
 import { EnvsCollectionService } from './base/locators/composite/envsCollectionService';
 import { IDisposable } from '../common/types';
 import { traceError } from '../logging';
+import { ActiveStateLocator } from './base/locators/lowLevel/activestateLocator';
 
 /**
  * Set up the Python environments component (during extension activation).'
@@ -137,6 +138,7 @@ function createNonWorkspaceLocators(ext: ExtensionState): ILocator<BasicEnvInfo>
         // OS-independent locators go here.
         new PyenvLocator(),
         new CondaEnvironmentLocator(),
+        new ActiveStateLocator(),
         new GlobalVirtualEnvironmentLocator(),
         new CustomVirtualEnvironmentLocator(),
     );

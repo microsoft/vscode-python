@@ -20,6 +20,7 @@ const KIND_NAMES: [PythonEnvKind, string][] = [
     [PythonEnvKind.VirtualEnvWrapper, 'virtualenvWrapper'],
     [PythonEnvKind.Pipenv, 'pipenv'],
     [PythonEnvKind.Conda, 'conda'],
+    [PythonEnvKind.ActiveState, 'activestate'],
     [PythonEnvKind.OtherVirtual, 'otherVirtual'],
 ];
 

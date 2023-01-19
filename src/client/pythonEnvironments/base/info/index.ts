@@ -15,6 +15,7 @@ export enum PythonEnvKind {
     MicrosoftStore = 'global-microsoft-store',
     Pyenv = 'global-pyenv',
     Poetry = 'poetry',
+    ActiveState = 'activestate',
     Custom = 'global-custom',
     OtherGlobal = 'global-other',
     // "virtual"
@@ -28,6 +29,7 @@ export enum PythonEnvKind {
 
 export enum PythonEnvType {
     Conda = 'Conda',
+    ActiveState = 'ActiveState',
     Virtual = 'Virtual',
 }
 
@@ -48,6 +50,7 @@ export const virtualEnvKinds = [
     PythonEnvKind.VirtualEnvWrapper,
     PythonEnvKind.Conda,
     PythonEnvKind.VirtualEnv,
+    PythonEnvKind.ActiveState,
 ];
 
 export const globallyInstalledEnvKinds = [
