@@ -6,6 +6,8 @@ import { ConfigurationTarget } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { IProcessServiceFactory } from '../../common/process/types';
+import { sleep } from '../../common/utils/async';
+import { cache } from '../../common/utils/decorators';
 import { Common, Interpreters } from '../../common/utils/localize';
 import { traceError, traceWarn } from '../../logging';
 import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda';
@@ -82,13 +84,15 @@ export class ActivatedEnvironmentLaunch implements IExtensionSingleActivationSer
         }
     }
 
+    @cache(-1, true)
     public async selectIfLaunchedViaActivatedEnv(): Promise<void> {
+        this.wasTriggered = true;
         const prefix = await this.getPrefixOfActivatedEnv();
         if (!prefix) {
             return;
         }
-        this.wasTriggered = true;
         await this.setPrefixAsInterpeter(prefix);
+        await sleep(1);
     }
 
     private async setPrefixAsInterpeter(prefix: string) {

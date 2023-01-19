@@ -192,11 +192,9 @@ export namespace Interpreters {
         'We noticed you\'re using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we recommend that you let the Python extension change "terminal.integrated.inheritEnv" to false in your user settings.',
     );
     export const activatedCondaEnvLaunch = l10n.t(
-        'Interpreters.activatedCondaEnvLaunch',
-        'We noticed VSCode was launched from an activated conda environment, would you like to select it?',
+        'We noticed VS Code was launched from an activated conda environment, would you like to select it?',
     );
     export const environmentPromptMessage = l10n.t(
-        'Interpreters.environmentPromptMessage',
         'We noticed a new environment has been created. Do you want to select it for the workspace folder?',
     );
     export const entireWorkspace = l10n.t('Select at workspace level');

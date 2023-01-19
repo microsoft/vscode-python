@@ -94,8 +94,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public async refresh(resource?: Uri): Promise<void> {
-        const activatedEnvLaunch = this.serviceContainer.get<IActivatedEnvironmentLaunch>(IActivatedEnvironmentLaunch);
-        await activatedEnvLaunch.selectIfLaunchedViaActivatedEnv();
         const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
         await interpreterDisplay.refresh(resource);
         this.ensureEnvironmentContainsPython(this.configService.getSettings(resource).pythonPath).ignoreErrors();
@@ -182,6 +180,12 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
+        const activatedEnvLaunch = this.serviceContainer.get<IActivatedEnvironmentLaunch>(IActivatedEnvironmentLaunch);
+        await activatedEnvLaunch.selectIfLaunchedViaActivatedEnv();
+        // Config service also updates itself on interpreter config change,
+        // so yielding control here to make sure it goes first and updates
+        // itself before we can query it.
+        await sleep(1);
         let path = this.configService.getSettings(resource).pythonPath;
         if (pathUtils.basename(path) === path) {
             // Value can be `python`, `python3`, `python3.9` etc.

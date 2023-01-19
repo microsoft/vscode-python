@@ -18,6 +18,7 @@ import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IDisposable, IInterpreterPathService } from '../../client/common/types';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
+import { IActivatedEnvironmentLaunch } from '../../client/interpreter/contracts';
 import * as EnvFileTelemetry from '../../client/telemetry/envFileTelemetry';
 import { sleep } from '../core';
 
@@ -43,8 +44,11 @@ suite('Activation Manager', () => {
         let activeResourceService: IActiveResourceService;
         let documentManager: typemoq.IMock<IDocumentManager>;
         let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
+        let activatedEnvLaunch: typemoq.IMock<IActivatedEnvironmentLaunch>;
         let fileSystem: IFileSystem;
         setup(() => {
+            activatedEnvLaunch = typemoq.Mock.ofType<IActivatedEnvironmentLaunch>();
+            activatedEnvLaunch.setup((a) => a.selectIfLaunchedViaActivatedEnv()).returns(() => Promise.resolve());
             interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
             interpreterPathService
                 .setup((i) => i.copyOldInterpreterStorageValuesToNew(typemoq.It.isAny()))
@@ -70,6 +74,7 @@ suite('Activation Manager', () => {
                 instance(fileSystem),
                 instance(activeResourceService),
                 interpreterPathService.object,
+                activatedEnvLaunch.object,
             );
 
             sinon.stub(EnvFileTelemetry, 'sendActivationTelemetry').resolves();
@@ -102,6 +107,7 @@ suite('Activation Manager', () => {
                 instance(fileSystem),
                 instance(activeResourceService),
                 interpreterPathService.object,
+                activatedEnvLaunch.object,
             );
             await managerTest.activateWorkspace(resource);
 
@@ -132,6 +138,7 @@ suite('Activation Manager', () => {
                 instance(fileSystem),
                 instance(activeResourceService),
                 interpreterPathService.object,
+                activatedEnvLaunch.object,
             );
             await managerTest.activateWorkspace(resource);
 

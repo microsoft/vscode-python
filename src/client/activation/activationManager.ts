@@ -12,6 +12,7 @@ import { IFileSystem } from '../common/platform/types';
 import { IDisposable, IInterpreterPathService, Resource } from '../common/types';
 import { Deferred } from '../common/utils/async';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
+import { IActivatedEnvironmentLaunch } from '../interpreter/contracts';
 import { traceDecoratorError } from '../logging';
 import { sendActivationTelemetry } from '../telemetry/envFileTelemetry';
 import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
@@ -37,6 +38,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
+        @inject(IActivatedEnvironmentLaunch) private readonly activatedEnvLaunch: IActivatedEnvironmentLaunch,
     ) {}
 
     private filterServices() {
@@ -91,6 +93,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
 
         if (this.workspaceService.isTrusted) {
             // Do not interact with interpreters in a untrusted workspace.
+            await this.activatedEnvLaunch.selectIfLaunchedViaActivatedEnv();
             await this.autoSelection.autoSelectInterpreter(resource);
             await this.interpreterPathService.copyOldInterpreterStorageValuesToNew(resource);
         }

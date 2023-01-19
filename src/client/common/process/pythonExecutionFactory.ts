@@ -3,7 +3,7 @@
 import { inject, injectable } from 'inversify';
 
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { IComponentAdapter } from '../../interpreter/contracts';
+import { IActivatedEnvironmentLaunch, IComponentAdapter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -52,6 +52,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         let { pythonPath } = options;
         if (!pythonPath || pythonPath === 'python') {
+            const activatedEnvLaunch = this.serviceContainer.get<IActivatedEnvironmentLaunch>(
+                IActivatedEnvironmentLaunch,
+            );
+            await activatedEnvLaunch.selectIfLaunchedViaActivatedEnv();
             // If python path wasn't passed in, we need to auto select it and then read it
             // from the configuration.
             const interpreterPath = this.interpreterPathExpHelper.get(options.resource);
