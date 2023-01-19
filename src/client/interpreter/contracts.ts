@@ -126,4 +126,5 @@ export type WorkspacePythonPath = {
 export const IActivatedEnvironmentLaunch = Symbol('IActivatedEnvironmentLaunch');
 export interface IActivatedEnvironmentLaunch {
     selectIfLaunchedViaActivatedEnv(): Promise<void>;
+    getPrefixOfActivatedEnv(): Promise<string | undefined>;
 }

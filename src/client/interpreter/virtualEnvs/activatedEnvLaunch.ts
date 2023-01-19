@@ -14,10 +14,10 @@ import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IPythonPathUpdaterServiceManager } from '../configuration/types';
-import { IInterpreterService } from '../contracts';
+import { IActivatedEnvironmentLaunch, IInterpreterService } from '../contracts';
 
 @injectable()
-export class ActivatedEnvironmentLaunch implements IExtensionSingleActivationService {
+export class ActivatedEnvironmentLaunch implements IExtensionSingleActivationService, IActivatedEnvironmentLaunch {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
 
     constructor(
@@ -27,7 +27,7 @@ export class ActivatedEnvironmentLaunch implements IExtensionSingleActivationSer
         private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
-        @optional() public wasTriggered: boolean = false,
+        @optional() public wasSelected: boolean = false,
     ) {}
 
     public async activate(): Promise<void> {
@@ -39,7 +39,9 @@ export class ActivatedEnvironmentLaunch implements IExtensionSingleActivationSer
             // Assuming multiroot workspaces cannot be directly launched via `code .` command.
             return;
         }
-        if (this.wasTriggered) {
+        await this.selectIfLaunchedViaActivatedEnv();
+        if (this.wasSelected) {
+            // Return if we have already selected or prompted to select an interpreter.
             return;
         }
         const baseCondaPrefix = getPrefixOfActivatedCondaEnv();
@@ -69,7 +71,7 @@ export class ActivatedEnvironmentLaunch implements IExtensionSingleActivationSer
     }
 
     private async promptAndUpdate(prefix: string) {
-        this.wasTriggered = true;
+        this.wasSelected = true;
         const prompts = [Common.bannerLabelYes, Common.bannerLabelNo];
         const telemetrySelections: ['Yes', 'No'] = ['Yes', 'No'];
         const selection = await this.appShell.showInformationMessage(Interpreters.activatedCondaEnvLaunch, ...prompts);
@@ -86,7 +88,6 @@ export class ActivatedEnvironmentLaunch implements IExtensionSingleActivationSer
 
     @cache(-1, true)
     public async selectIfLaunchedViaActivatedEnv(): Promise<void> {
-        this.wasTriggered = true;
         const prefix = await this.getPrefixOfActivatedEnv();
         if (!prefix) {
             return;
@@ -112,7 +113,19 @@ export class ActivatedEnvironmentLaunch implements IExtensionSingleActivationSer
         }
     }
 
-    private async getPrefixOfActivatedEnv(): Promise<string | undefined> {
+    @cache(-1, true)
+    public async getPrefixOfActivatedEnv(): Promise<string | undefined> {
+        if (this.wasSelected) {
+            return undefined;
+        }
+        const prefix = await this._getPrefixOfActivatedEnv();
+        if (!prefix) {
+            this.wasSelected = true;
+        }
+        return prefix;
+    }
+
+    private async _getPrefixOfActivatedEnv(): Promise<string | undefined> {
         const virtualEnvVar = process.env.VIRTUAL_ENV;
         if (virtualEnvVar !== undefined && virtualEnvVar.length > 0) {
             return virtualEnvVar;
