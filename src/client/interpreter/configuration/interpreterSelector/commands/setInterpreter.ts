@@ -6,8 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
-import { QuickPick, QuickPickItem, QuickPickItemKind, ThemeIcon } from 'vscode';
-import * as nls from 'vscode-nls';
+import { l10n, QuickPick, QuickPickItem, QuickPickItemKind, ThemeIcon } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands, Octicons, ThemeIcons } from '../../../../common/constants';
 import { isParentPath } from '../../../../common/platform/fs-paths';
@@ -38,7 +37,6 @@ import {
 } from '../../types';
 import { BaseInterpreterSelectorCommand } from './base';
 
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 const untildify = require('untildify');
 
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
@@ -143,12 +141,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         const placeholder =
             params?.placeholder === null
                 ? undefined
-                : params?.placeholder ??
-                  localize(
-                      'InterpreterQuickPickList.quickPickListPlaceholder',
-                      'Selected Interpreter: {0}',
-                      currentInterpreterPathDisplay,
-                  );
+                : params?.placeholder ?? l10n.t('Selected Interpreter: {0}', currentInterpreterPathDisplay);
         const title =
             params?.title === null ? undefined : params?.title ?? InterpreterQuickPickList.browsePath.openButtonLabel;
         const selection = await input.showQuickPick<QuickPickType, IQuickPickParameters<QuickPickType>>({

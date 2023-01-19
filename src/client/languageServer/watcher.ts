@@ -3,8 +3,7 @@
 
 import * as path from 'path';
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Uri, WorkspaceFoldersChangeEvent } from 'vscode';
-import * as nls from 'vscode-nls';
+import { ConfigurationChangeEvent, l10n, Uri, WorkspaceFoldersChangeEvent } from 'vscode';
 import { LanguageServerChangeHandler } from '../activation/common/languageServerChangeHandler';
 import { IExtensionActivationService, ILanguageServerOutputChannel, LanguageServerType } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
@@ -29,8 +28,6 @@ import { NoneLSExtensionManager } from './noneLSExtensionManager';
 import { PylanceLSExtensionManager } from './pylanceLSExtensionManager';
 import { ILanguageServerExtensionManager, ILanguageServerWatcher } from './types';
 import { LspNotebooksExperiment } from '../activation/node/lspNotebooksExperiment';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 @injectable()
 /**
@@ -380,7 +377,7 @@ function logStartup(languageServerType: LanguageServerType, resource: Uri): void
 
     switch (languageServerType) {
         case LanguageServerType.Jedi:
-            outputLine = localize('LanguageService.startingJedi', 'Starting Jedi language server for {0}.', basename);
+            outputLine = l10n.t('Starting Jedi language server for {0}.', basename);
             break;
         case LanguageServerType.Node:
             outputLine = LanguageService.startingPylance;

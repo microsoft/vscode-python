@@ -8,7 +8,7 @@ import { createVenvScript } from '../../../common/process/internal/scripts';
 import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
 import { Common, CreateEnv } from '../../../common/utils/localize';
-import { traceError, traceLog } from '../../../logging';
+import { traceError, traceInfo, traceLog } from '../../../logging';
 import {
     CreateEnvironmentOptions,
     CreateEnvironmentProgress,
@@ -23,23 +23,22 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { VenvProgressAndTelemetry, VENV_CREATED_MARKER, VENV_EXISTING_MARKER } from './venvProgressAndTelemetry';
 import { showErrorMessageWithLogs } from '../common/commonUtils';
+import { IPackageInstallSelection, pickPackagesToInstall } from './venvUtils';
 
-function generateCommandArgs(options?: CreateEnvironmentOptions): string[] {
-    let addGitIgnore = true;
-    let installPackages = true;
-    if (options) {
-        addGitIgnore = options?.ignoreSourceControl !== undefined ? options.ignoreSourceControl : true;
-        installPackages = options?.installPackages !== undefined ? options.installPackages : true;
-    }
-
+function generateCommandArgs(installInfo?: IPackageInstallSelection, addGitIgnore?: boolean): string[] {
     const command: string[] = [createVenvScript()];
 
     if (addGitIgnore) {
         command.push('--git-ignore');
     }
 
-    if (installPackages) {
-        command.push('--install');
+    if (installInfo) {
+        if (installInfo?.installType === 'toml') {
+            command.push('--toml', installInfo.source?.fileToCommandArgumentForPythonExt() || 'pyproject.toml');
+            installInfo.installList?.forEach((i) => command.push('--extras', i));
+        } else if (installInfo?.installType === 'requirements') {
+            installInfo.installList?.forEach((i) => command.push('--requirements', i));
+        }
     }
 
     return command;
@@ -128,51 +127,62 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                 [EnvironmentType.System, EnvironmentType.MicrosoftStore, EnvironmentType.Global].includes(i.envType),
         );
 
-        if (interpreter) {
-            return withProgress(
-                {
-                    location: ProgressLocation.Notification,
-                    title: `${CreateEnv.statusTitle} ([${Common.showLogs}](command:${Commands.ViewOutput}))`,
-                    cancellable: true,
-                },
-                async (
-                    progress: CreateEnvironmentProgress,
-                    token: CancellationToken,
-                ): Promise<CreateEnvironmentResult | undefined> => {
-                    let hasError = false;
+        let addGitIgnore = true;
+        let installPackages = true;
+        if (options) {
+            addGitIgnore = options?.ignoreSourceControl !== undefined ? options.ignoreSourceControl : true;
+            installPackages = options?.installPackages !== undefined ? options.installPackages : true;
+        }
+        let installInfo: IPackageInstallSelection | undefined;
+        if (installPackages) {
+            installInfo = await pickPackagesToInstall(workspace);
+        }
+        const args = generateCommandArgs(installInfo, addGitIgnore);
 
-                    progress.report({
-                        message: CreateEnv.statusStarting,
-                    });
-
-                    let envPath: string | undefined;
-                    try {
-                        if (interpreter) {
-                            envPath = await createVenv(
-                                workspace,
-                                interpreter,
-                                generateCommandArgs(options),
-                                progress,
-                                token,
-                            );
-                        }
-                    } catch (ex) {
-                        traceError(ex);
-                        hasError = true;
-                        throw ex;
-                    } finally {
-                        if (hasError) {
-                            showErrorMessageWithLogs(CreateEnv.Venv.errorCreatingEnvironment);
-                        }
-                    }
-
-                    return { path: envPath, uri: workspace.uri };
-                },
-            );
+        if (!interpreter) {
+            traceError('Virtual env creation requires an interpreter.');
+            return undefined;
         }
 
-        traceError('Virtual env creation requires an interpreter.');
-        return undefined;
+        if (!installInfo) {
+            traceInfo('Virtual env creation exited during dependencies selection.');
+            return undefined;
+        }
+
+        return withProgress(
+            {
+                location: ProgressLocation.Notification,
+                title: `${CreateEnv.statusTitle} ([${Common.showLogs}](command:${Commands.ViewOutput}))`,
+                cancellable: true,
+            },
+            async (
+                progress: CreateEnvironmentProgress,
+                token: CancellationToken,
+            ): Promise<CreateEnvironmentResult | undefined> => {
+                let hasError = false;
+
+                progress.report({
+                    message: CreateEnv.statusStarting,
+                });
+
+                let envPath: string | undefined;
+                try {
+                    if (interpreter) {
+                        envPath = await createVenv(workspace, interpreter, args, progress, token);
+                    }
+                } catch (ex) {
+                    traceError(ex);
+                    hasError = true;
+                    throw ex;
+                } finally {
+                    if (hasError) {
+                        showErrorMessageWithLogs(CreateEnv.Venv.errorCreatingEnvironment);
+                    }
+                }
+
+                return { path: envPath, uri: workspace.uri };
+            },
+        );
     }
 
     name = 'Venv';

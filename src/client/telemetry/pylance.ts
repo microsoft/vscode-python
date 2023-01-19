@@ -204,7 +204,7 @@
 */
 /* __GDPR__
    "language_server/installed_packages" : {
-      "packages" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "packagesbitarray" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "packageslowercase" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "resolverid" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
    }
