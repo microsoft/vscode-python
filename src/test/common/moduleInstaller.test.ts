@@ -1,7 +1,7 @@
 import { expect, should as chaiShould, use as chaiUse } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { SemVer } from 'semver';
-import { instance, mock } from 'ts-mockito';
+import { instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
@@ -106,7 +106,6 @@ import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initializeTest } from '../initialize';
-import { ActivatedEnvironmentLaunch } from '../../client/interpreter/virtualEnvs/activatedEnvLaunch';
 
 chaiUse(chaiAsPromised);
 
@@ -169,10 +168,11 @@ suite('Module Installer', () => {
                 ITerminalServiceFactory,
                 mockTerminalFactory.object,
             );
-
-            ioc.serviceManager.addSingleton<IActivatedEnvironmentLaunch>(
+            const activatedEnvironmentLaunch = mock<IActivatedEnvironmentLaunch>();
+            when(activatedEnvironmentLaunch.selectIfLaunchedViaActivatedEnv()).thenResolve(undefined);
+            ioc.serviceManager.addSingletonInstance<IActivatedEnvironmentLaunch>(
                 IActivatedEnvironmentLaunch,
-                ActivatedEnvironmentLaunch,
+                instance(activatedEnvironmentLaunch),
             );
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
