@@ -6,7 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { traceError, traceWarn } from '../logging';
+import { traceError, traceVerbose, traceWarn } from '../logging';
 import { ICommandManager } from './application/types';
 import { Commands } from './constants';
 import {
@@ -49,11 +49,11 @@ export class PersistentState<T> implements IPersistentState<T> {
                 await this.storage.update(this.key, newValue);
             }
             if (retryOnce && JSON.stringify(this.value) != JSON.stringify(newValue)) {
-                traceWarn('Storage update failed for key', this.key, ' retrying');
+                traceVerbose('Storage update failed for key', this.key, ' retrying');
                 await this.updateValue(undefined as any, false);
                 await this.updateValue(newValue, false);
                 if (JSON.stringify(this.value) != JSON.stringify(newValue)) {
-                    traceError('Retry failed, storage update failed for key', this.key);
+                    traceWarn('Retry failed, storage update failed for key', this.key);
                 }
             }
         } catch (ex) {

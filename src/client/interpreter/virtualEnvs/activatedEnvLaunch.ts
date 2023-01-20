@@ -3,13 +3,13 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
+import * as path from 'path';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { sleep } from '../../common/utils/async';
 import { cache } from '../../common/utils/decorators';
 import { Common, Interpreters } from '../../common/utils/localize';
-import { traceError, traceWarn } from '../../logging';
+import { traceError, traceLog, traceWarn } from '../../logging';
 import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -17,8 +17,10 @@ import { IPythonPathUpdaterServiceManager } from '../configuration/types';
 import { IActivatedEnvironmentLaunch, IInterpreterService } from '../contracts';
 
 @injectable()
-export class ActivatedEnvironmentLaunch implements IExtensionSingleActivationService, IActivatedEnvironmentLaunch {
+export class ActivatedEnvironmentLaunch implements IActivatedEnvironmentLaunch {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
+
+    private inMemorySelection: string | undefined;
 
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -30,18 +32,9 @@ export class ActivatedEnvironmentLaunch implements IExtensionSingleActivationSer
         @optional() public wasSelected: boolean = false,
     ) {}
 
-    public async activate(): Promise<void> {
-        this.initializeInBackground().ignoreErrors();
-    }
-
-    public async initializeInBackground(): Promise<void> {
+    private async promptIfApplicable(): Promise<void> {
         if (this.workspaceService.workspaceFile) {
             // Assuming multiroot workspaces cannot be directly launched via `code .` command.
-            return;
-        }
-        await this.selectIfLaunchedViaActivatedEnv();
-        if (this.wasSelected) {
-            // Return if we have already selected or prompted to select an interpreter.
             return;
         }
         const baseCondaPrefix = getPrefixOfActivatedCondaEnv();
@@ -82,30 +75,42 @@ export class ActivatedEnvironmentLaunch implements IExtensionSingleActivationSer
             return;
         }
         if (selection === prompts[0]) {
-            await this.setPrefixAsInterpeter(prefix);
+            await this.setInterpeterInStorage(prefix);
         }
+    }
+
+    public async selectIfLaunchedViaActivatedEnv(doNotBlockOnSelection = false): Promise<string | undefined> {
+        if (this.wasSelected) {
+            return this.inMemorySelection;
+        }
+        return this._selectIfLaunchedViaActivatedEnv(doNotBlockOnSelection);
     }
 
     @cache(-1, true)
-    public async selectIfLaunchedViaActivatedEnv(doNotBlockOnSelection = false): Promise<string | undefined> {
-        if (this.wasSelected) {
-            return undefined;
-        }
+    private async _selectIfLaunchedViaActivatedEnv(doNotBlockOnSelection = false): Promise<string | undefined> {
         const prefix = await this.getPrefixOfSelectedActivatedEnv();
         if (!prefix) {
+            this.promptIfApplicable().ignoreErrors();
             return undefined;
         }
         this.wasSelected = true;
+        this.inMemorySelection = prefix;
+        traceLog(
+            `VS Code was launched from an activated environment: '${path.basename(
+                prefix,
+            )}', selecting it as the interpreter for workspace.`,
+        );
         if (doNotBlockOnSelection) {
-            this.setPrefixAsInterpeter(prefix).ignoreErrors();
+            this.setInterpeterInStorage(prefix).ignoreErrors();
         } else {
-            await this.setPrefixAsInterpeter(prefix);
+            await this.setInterpeterInStorage(prefix);
             await sleep(1); // Yield control so config service can update itself.
         }
+        this.inMemorySelection = undefined; // Once we have set the prefix in storage, clear the in memory selection.
         return prefix;
     }
 
-    private async setPrefixAsInterpeter(prefix: string) {
+    private async setInterpeterInStorage(prefix: string) {
         if (this.workspaceService.workspaceFile) {
             return;
         }

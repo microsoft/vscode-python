@@ -91,10 +91,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
     );
 
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, CondaInheritEnvPrompt);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        ActivatedEnvironmentLaunch,
-    );
     serviceManager.addSingleton<IActivatedEnvironmentLaunch>(IActivatedEnvironmentLaunch, ActivatedEnvironmentLaunch);
 }
 

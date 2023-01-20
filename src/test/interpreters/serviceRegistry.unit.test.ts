@@ -28,7 +28,12 @@ import {
     IPythonPathUpdaterServiceFactory,
     IPythonPathUpdaterServiceManager,
 } from '../../client/interpreter/configuration/types';
-import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService } from '../../client/interpreter/contracts';
+import {
+    IActivatedEnvironmentLaunch,
+    IInterpreterDisplay,
+    IInterpreterHelper,
+    IInterpreterService,
+} from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { InterpreterLocatorProgressStatubarHandler } from '../../client/interpreter/display/progressDisplay';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
@@ -70,7 +75,7 @@ suite('Interpreters - Service Registry', () => {
             [EnvironmentActivationService, EnvironmentActivationService],
             [IEnvironmentActivationService, EnvironmentActivationService],
             [IExtensionActivationService, CondaInheritEnvPrompt],
-            [IExtensionSingleActivationService, ActivatedEnvironmentLaunch],
+            [IActivatedEnvironmentLaunch, ActivatedEnvironmentLaunch],
         ].forEach((mapping) => {
             // eslint-disable-next-line prefer-spread
             verify(serviceManager.addSingleton.apply(serviceManager, mapping as never)).once();
