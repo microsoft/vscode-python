@@ -33,7 +33,7 @@ export class ActivatedEnvironmentLaunch implements IActivatedEnvironmentLaunch {
     ) {}
 
     @cache(-1, true)
-    private async promptIfApplicable(): Promise<void> {
+    public async _promptIfApplicable(): Promise<void> {
         if (this.workspaceService.workspaceFile) {
             // Assuming multiroot workspaces cannot be directly launched via `code .` command.
             return;
@@ -89,9 +89,12 @@ export class ActivatedEnvironmentLaunch implements IActivatedEnvironmentLaunch {
 
     @cache(-1, true)
     private async _selectIfLaunchedViaActivatedEnv(doNotBlockOnSelection = false): Promise<string | undefined> {
+        if (this.workspaceService.workspaceFile) {
+            return undefined;
+        }
         const prefix = await this.getPrefixOfSelectedActivatedEnv();
         if (!prefix) {
-            this.promptIfApplicable().ignoreErrors();
+            this._promptIfApplicable().ignoreErrors();
             return undefined;
         }
         this.wasSelected = true;
@@ -112,9 +115,6 @@ export class ActivatedEnvironmentLaunch implements IActivatedEnvironmentLaunch {
     }
 
     private async setInterpeterInStorage(prefix: string) {
-        if (this.workspaceService.workspaceFile) {
-            return;
-        }
         const { workspaceFolders } = this.workspaceService;
         if (!workspaceFolders || workspaceFolders.length === 0) {
             await this.pythonPathUpdaterService.updatePythonPath(prefix, ConfigurationTarget.Global, 'load');
@@ -128,8 +128,7 @@ export class ActivatedEnvironmentLaunch implements IActivatedEnvironmentLaunch {
         }
     }
 
-    @cache(-1, true)
-    public async getPrefixOfSelectedActivatedEnv(): Promise<string | undefined> {
+    private async getPrefixOfSelectedActivatedEnv(): Promise<string | undefined> {
         const virtualEnvVar = process.env.VIRTUAL_ENV;
         if (virtualEnvVar !== undefined && virtualEnvVar.length > 0) {
             return virtualEnvVar;
