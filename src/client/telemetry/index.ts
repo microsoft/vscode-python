@@ -1299,8 +1299,9 @@ export interface IEventNamePropertyMapping {
         environmentsWithoutPython?: number;
     };
     /**
-     * Telemetry event sent with details when user clicks the prompt with the following message
-     * `Prompt message` :- 'We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the "terminal.integrated.inheritEnv" setting to be changed to false. Would you like to update this setting?'
+     * Telemetry event sent with details when user clicks the prompt with the following message:
+     *
+     * 'We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the "terminal.integrated.inheritEnv" setting to be changed to false. Would you like to update this setting?'
      */
     /* __GDPR__
        "conda_inherit_env_prompt" : {
@@ -1316,11 +1317,12 @@ export interface IEventNamePropertyMapping {
         selection: 'Yes' | 'No' | 'More Info' | undefined;
     };
     /**
-     * Telemetry event sent with details when user clicks the prompt with the following message
-     * `Prompt message` :- 'We noticed VSCode was launched from an activated conda environment, would you like to select it?'
+     * Telemetry event sent with details when user clicks the prompt with the following message:
+     *
+     * 'We noticed VS Code was launched from an activated conda environment, would you like to select it?'
      */
     /* __GDPR__
-       "conda_inherit_env_prompt" : {
+       "activated_conda_env_launch" : {
           "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */

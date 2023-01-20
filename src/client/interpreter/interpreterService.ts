@@ -182,6 +182,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         const activatedEnvLaunch = this.serviceContainer.get<IActivatedEnvironmentLaunch>(IActivatedEnvironmentLaunch);
         let path = await activatedEnvLaunch.selectIfLaunchedViaActivatedEnv(true);
+        // This is being set as interpreter in background, after which it'll show up in `.pythonPath` config.
+        // However we need not wait on the update to take place, as we can use the value directly.
         if (!path) {
             path = this.configService.getSettings(resource).pythonPath;
         }

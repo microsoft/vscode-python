@@ -32,6 +32,7 @@ export class ActivatedEnvironmentLaunch implements IActivatedEnvironmentLaunch {
         @optional() public wasSelected: boolean = false,
     ) {}
 
+    @cache(-1, true)
     private async promptIfApplicable(): Promise<void> {
         if (this.workspaceService.workspaceFile) {
             // Assuming multiroot workspaces cannot be directly launched via `code .` command.
