@@ -90,7 +90,12 @@ import {
 import { IMultiStepInputFactory, MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { Architecture } from '../../client/common/utils/platform';
 import { Random } from '../../client/common/utils/random';
-import { ICondaService, IInterpreterService, IComponentAdapter } from '../../client/interpreter/contracts';
+import {
+    ICondaService,
+    IInterpreterService,
+    IComponentAdapter,
+    IActivatedEnvironmentLaunch,
+} from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { JupyterExtensionDependencyManager } from '../../client/jupyter/jupyterExtensionDependencyManager';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
@@ -101,6 +106,7 @@ import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initializeTest } from '../initialize';
+import { ActivatedEnvironmentLaunch } from '../../client/interpreter/virtualEnvs/activatedEnvLaunch';
 
 chaiUse(chaiAsPromised);
 
@@ -164,6 +170,10 @@ suite('Module Installer', () => {
                 mockTerminalFactory.object,
             );
 
+            ioc.serviceManager.addSingleton<IActivatedEnvironmentLaunch>(
+                IActivatedEnvironmentLaunch,
+                ActivatedEnvironmentLaunch,
+            );
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipEnvInstaller);

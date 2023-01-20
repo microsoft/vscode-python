@@ -32,7 +32,11 @@ import {
 } from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
-import { IComponentAdapter, IInterpreterService } from '../../client/interpreter/contracts';
+import {
+    IActivatedEnvironmentLaunch,
+    IComponentAdapter,
+    IInterpreterService,
+} from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { ILintMessage, LinterId, LintMessageSeverity } from '../../client/linters/types';
@@ -650,7 +654,13 @@ class TestFixture extends BaseTestFixture {
         serviceContainer
             .setup((s) => s.get(TypeMoq.It.isValue(IComponentAdapter), TypeMoq.It.isAny()))
             .returns(() => componentAdapter.object);
-
+        const activatedEnvironmentLaunch = TypeMoq.Mock.ofType<IActivatedEnvironmentLaunch>();
+        activatedEnvironmentLaunch
+            .setup((a) => a.selectIfLaunchedViaActivatedEnv())
+            .returns(() => Promise.resolve(undefined));
+        serviceContainer
+            .setup((s) => s.get(TypeMoq.It.isValue(IActivatedEnvironmentLaunch), TypeMoq.It.isAny()))
+            .returns(() => activatedEnvironmentLaunch.object);
         const platformService = new PlatformService();
 
         super(
