@@ -34,10 +34,6 @@ export class ActivatedEnvironmentLaunch implements IActivatedEnvironmentLaunch {
 
     @cache(-1, true)
     public async _promptIfApplicable(): Promise<void> {
-        if (this.workspaceService.workspaceFile) {
-            // Assuming multiroot workspaces cannot be directly launched via `code .` command.
-            return;
-        }
         const baseCondaPrefix = getPrefixOfActivatedCondaEnv();
         if (!baseCondaPrefix) {
             return;
@@ -90,6 +86,7 @@ export class ActivatedEnvironmentLaunch implements IActivatedEnvironmentLaunch {
     @cache(-1, true)
     private async _selectIfLaunchedViaActivatedEnv(doNotBlockOnSelection = false): Promise<string | undefined> {
         if (this.workspaceService.workspaceFile) {
+            // Assuming multiroot workspaces cannot be directly launched via `code .` command.
             return undefined;
         }
         const prefix = await this.getPrefixOfSelectedActivatedEnv();
