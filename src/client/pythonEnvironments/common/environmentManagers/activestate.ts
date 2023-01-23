@@ -8,7 +8,7 @@ import { pathExists, shellExecute } from '../externalDependencies';
 import { cache } from '../../../common/utils/decorators';
 import { traceError, traceVerbose } from '../../../logging';
 
-const STATE_GENERAL_TIMEOUT = 50000;
+const STATE_GENERAL_TIMEOUT = 5000;
 
 export type ProjectInfo = {
     name: string;
