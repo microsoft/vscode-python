@@ -68,8 +68,8 @@ async function pickTomlExtras(extras: string[], token?: CancellationToken): Prom
 async function pickRequirementsFiles(files: string[], token?: CancellationToken): Promise<string[] | undefined> {
     const items: QuickPickItem[] = files
         .sort((a, b) => {
-            const al:number = a.split(/[\\\/]/).length;
-            const bl:number = b.split(/[\\\/]/).length;
+            const al: number = a.split(/[\\\/]/).length;
+            const bl: number = b.split(/[\\\/]/).length;
             if (al === bl) {
                 if (a.length === b.length) {
                     return a.localeCompare(b);
