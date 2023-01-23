@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License
 
-import * as tomljs from '@ltd/j-toml';
+import * as tomljs from '@iarna/toml';
 import * as fs from 'fs-extra';
 import { flatten, isArray } from 'lodash';
 import * as path from 'path';
@@ -68,8 +68,8 @@ async function pickTomlExtras(extras: string[], token?: CancellationToken): Prom
 async function pickRequirementsFiles(files: string[], token?: CancellationToken): Promise<string[] | undefined> {
     const items: QuickPickItem[] = files
         .sort((a, b) => {
-            const al = a.split(/[\\\/]/).length;
-            const bl = b.split(/[\\\/]/).length;
+            const al: number = a.split(/[\\\/]/).length;
+            const bl: number = b.split(/[\\\/]/).length;
             if (al === bl) {
                 if (a.length === b.length) {
                     return a.localeCompare(b);
