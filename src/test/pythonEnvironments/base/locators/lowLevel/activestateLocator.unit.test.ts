@@ -24,7 +24,15 @@ suite('ActiveState Locator', () => {
         shellExecute.callsFake((command: string) => {
             if (command === 'state projects -o editor') {
                 return Promise.resolve<ExecutionResult<string>>({
-                    stdout: `[{"name":"test","organization":"test-org","local_checkouts":["does-not-matter"],"executables":["${testActiveStateDir}/c09080d1/exec"]},{"name":"test2","organization":"test-org","local_checkouts":["does-not-matter2"],"executables":["${testActiveStateDir}/2af6390a/exec"]}]\n\0`,
+                    stdout: `[{"name":"test","organization":"test-org","local_checkouts":["does-not-matter"],"executables":["${path.join(
+                        testActiveStateDir,
+                        'c09080d1',
+                        'exec',
+                    )}]},{"name":"test2","organization":"test-org","local_checkouts":["does-not-matter2"],"executables":["${path.join(
+                        testActiveStateDir,
+                        '2af6390a',
+                        'exec',
+                    )}]}]\n\0`,
                 });
             }
             return Promise.reject(new Error('Command failed'));
