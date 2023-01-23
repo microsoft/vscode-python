@@ -29,7 +29,6 @@ export enum PythonEnvKind {
 
 export enum PythonEnvType {
     Conda = 'Conda',
-    ActiveState = 'ActiveState',
     Virtual = 'Virtual',
 }
 
