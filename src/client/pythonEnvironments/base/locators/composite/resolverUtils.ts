@@ -247,7 +247,7 @@ async function resolveActiveStateEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> 
         executable: env.executablePath,
         type: PythonEnvType.ActiveState,
     });
-    const projects = await ActiveState.getProjects();
+    const projects = await ActiveState.getState().then((v) => v?.getProjects());
     if (projects) {
         for (const project of projects) {
             for (const dir of project.executables) {

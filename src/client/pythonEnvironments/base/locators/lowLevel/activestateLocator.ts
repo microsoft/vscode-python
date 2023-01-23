@@ -15,7 +15,12 @@ export class ActiveStateLocator extends LazyResourceBasedLocator {
 
     // eslint-disable-next-line class-methods-use-this
     public async *doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
-        const projects = await ActiveState.getProjects();
+        const state = await ActiveState.getState();
+        if (state === undefined) {
+            traceVerbose(`Couldn't locate the state binary.`);
+            return;
+        }
+        const projects = await state.getProjects();
         if (projects === undefined) {
             traceVerbose(`Couldn't fetch State Tool projects.`);
             return;

@@ -7,6 +7,8 @@ import * as path from 'path';
 import { pathExists, shellExecute } from '../externalDependencies';
 import { cache } from '../../../common/utils/decorators';
 import { traceError, traceVerbose } from '../../../logging';
+import { isTestExecution } from '../../../common/constants';
+import { getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
 
 const STATE_GENERAL_TIMEOUT = 5000;
 
@@ -24,16 +26,44 @@ export async function isActiveStateEnvironment(interpreterPath: string): Promise
 }
 
 export class ActiveState {
-    public static readonly stateCommand: string = 'state';
+    private static statePromise: Promise<ActiveState | undefined> | undefined;
 
-    public static async getProjects(): Promise<ProjectInfo[] | undefined> {
+    public static async getState(): Promise<ActiveState | undefined> {
+        if (ActiveState.statePromise === undefined || isTestExecution()) {
+            ActiveState.statePromise = ActiveState.locate();
+        }
+        return ActiveState.statePromise;
+    }
+
+    public static getStateToolDir(): string | undefined {
+        const home = getUserHomeDir();
+        if (!home) {
+            return undefined;
+        }
+        return getOSType() === OSType.Windows
+            ? path.join(home, 'AppData', 'Local', 'ActiveState', 'StateTool')
+            : path.join(home, '.local', 'ActiveState', 'StateTool');
+    }
+
+    private static async locate(): Promise<ActiveState | undefined> {
+        const stateToolDir = this.getStateToolDir();
+        if ((stateToolDir && (await pathExists(stateToolDir))) || isTestExecution()) {
+            return new ActiveState();
+        }
+        return undefined;
+    }
+
+    public async getProjects(): Promise<ProjectInfo[] | undefined> {
         return this.getProjectsCached();
     }
 
+    private static readonly stateCommand: string = 'state';
+
     @cache(30_000, true, 10_000)
-    private static async getProjectsCached(): Promise<ProjectInfo[] | undefined> {
+    // eslint-disable-next-line class-methods-use-this
+    private async getProjectsCached(): Promise<ProjectInfo[] | undefined> {
         try {
-            const result = await shellExecute(`${this.stateCommand} projects -o editor`, {
+            const result = await shellExecute(`${ActiveState.stateCommand} projects -o editor`, {
                 timeout: STATE_GENERAL_TIMEOUT,
             });
             if (!result) {
@@ -44,7 +74,7 @@ export class ActiveState {
                 // '\0' is a record separator.
                 output = output.substring(0, output.length - 1);
             }
-            traceVerbose(`${this.stateCommand} projects -o editor: ${output}`);
+            traceVerbose(`${ActiveState.stateCommand} projects -o editor: ${output}`);
             return JSON.parse(output);
         } catch (ex) {
             traceError(ex);
