@@ -1806,7 +1806,7 @@
         "webpack": "webpack"
     },
     "dependencies": {
-        "@ltd/j-toml": "^1.37.0",
+        "@iarna/toml": "^2.2.5",
         "@vscode/extension-telemetry": "^0.7.4-preview",
         "@vscode/jupyter-lsp-middleware": "^0.2.50",
         "arch": "^2.1.0",

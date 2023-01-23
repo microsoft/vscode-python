@@ -1,7 +1,7 @@
 import { expect, should as chaiShould, use as chaiUse } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { SemVer } from 'semver';
-import { instance, mock } from 'ts-mockito';
+import { instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
@@ -90,7 +90,12 @@ import {
 import { IMultiStepInputFactory, MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { Architecture } from '../../client/common/utils/platform';
 import { Random } from '../../client/common/utils/random';
-import { ICondaService, IInterpreterService, IComponentAdapter } from '../../client/interpreter/contracts';
+import {
+    ICondaService,
+    IInterpreterService,
+    IComponentAdapter,
+    IActivatedEnvironmentLaunch,
+} from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { JupyterExtensionDependencyManager } from '../../client/jupyter/jupyterExtensionDependencyManager';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
@@ -163,7 +168,12 @@ suite('Module Installer', () => {
                 ITerminalServiceFactory,
                 mockTerminalFactory.object,
             );
-
+            const activatedEnvironmentLaunch = mock<IActivatedEnvironmentLaunch>();
+            when(activatedEnvironmentLaunch.selectIfLaunchedViaActivatedEnv()).thenResolve(undefined);
+            ioc.serviceManager.addSingletonInstance<IActivatedEnvironmentLaunch>(
+                IActivatedEnvironmentLaunch,
+                instance(activatedEnvironmentLaunch),
+            );
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipEnvInstaller);

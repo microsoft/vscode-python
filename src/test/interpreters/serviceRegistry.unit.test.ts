@@ -28,12 +28,18 @@ import {
     IPythonPathUpdaterServiceFactory,
     IPythonPathUpdaterServiceManager,
 } from '../../client/interpreter/configuration/types';
-import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService } from '../../client/interpreter/contracts';
+import {
+    IActivatedEnvironmentLaunch,
+    IInterpreterDisplay,
+    IInterpreterHelper,
+    IInterpreterService,
+} from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { InterpreterLocatorProgressStatubarHandler } from '../../client/interpreter/display/progressDisplay';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { registerTypes } from '../../client/interpreter/serviceRegistry';
+import { ActivatedEnvironmentLaunch } from '../../client/interpreter/virtualEnvs/activatedEnvLaunch';
 import { CondaInheritEnvPrompt } from '../../client/interpreter/virtualEnvs/condaInheritEnvPrompt';
 import { VirtualEnvironmentPrompt } from '../../client/interpreter/virtualEnvs/virtualEnvPrompt';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -69,6 +75,7 @@ suite('Interpreters - Service Registry', () => {
             [EnvironmentActivationService, EnvironmentActivationService],
             [IEnvironmentActivationService, EnvironmentActivationService],
             [IExtensionActivationService, CondaInheritEnvPrompt],
+            [IActivatedEnvironmentLaunch, ActivatedEnvironmentLaunch],
         ].forEach((mapping) => {
             // eslint-disable-next-line prefer-spread
             verify(serviceManager.addSingleton.apply(serviceManager, mapping as never)).once();

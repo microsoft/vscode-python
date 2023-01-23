@@ -26,7 +26,11 @@ import { IConfigurationService, IDisposableRegistry, IInterpreterPathService } f
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { IComponentAdapter, IInterpreterService } from '../../../client/interpreter/contracts';
+import {
+    IActivatedEnvironmentLaunch,
+    IComponentAdapter,
+    IInterpreterService,
+} from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
@@ -73,6 +77,7 @@ suite('Process - PythonExecutionFactory', () => {
         suite(title(resource, interpreter), () => {
             let factory: PythonExecutionFactory;
             let activationHelper: IEnvironmentActivationService;
+            let activatedEnvironmentLaunch: IActivatedEnvironmentLaunch;
             let processFactory: IProcessServiceFactory;
             let configService: IConfigurationService;
             let processLogger: IProcessLogger;
@@ -121,6 +126,11 @@ suite('Process - PythonExecutionFactory', () => {
                 when(serviceContainer.get<IProcessLogger>(IProcessLogger)).thenReturn(processLogger);
                 when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(
                     instance(interpreterService),
+                );
+                activatedEnvironmentLaunch = mock<IActivatedEnvironmentLaunch>();
+                when(activatedEnvironmentLaunch.selectIfLaunchedViaActivatedEnv()).thenResolve();
+                when(serviceContainer.get<IActivatedEnvironmentLaunch>(IActivatedEnvironmentLaunch)).thenReturn(
+                    instance(activatedEnvironmentLaunch),
                 );
                 when(serviceContainer.get<IComponentAdapter>(IComponentAdapter)).thenReturn(instance(pyenvs));
                 when(serviceContainer.tryGet<IInterpreterService>(IInterpreterService)).thenReturn(
