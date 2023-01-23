@@ -4,8 +4,8 @@
 'use strict';
 
 import { inject, injectable, multiInject } from 'inversify';
-import { Terminal } from 'vscode';
-import { traceVerbose } from '../../logging';
+import { Terminal, env } from 'vscode';
+import { traceError, traceVerbose } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import '../extensions';
@@ -70,6 +70,7 @@ export class ShellDetector {
 
         // If we could not identify the shell, use the defaults.
         if (shell === undefined || shell === TerminalShellType.other) {
+            traceError('Unable to identify shell', env.shell, ' for OS ', this.platform.osType);
             traceVerbose('Using default OS shell');
             shell = defaultOSShells[this.platform.osType];
         }
