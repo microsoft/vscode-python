@@ -251,7 +251,7 @@ async function resolveActiveStateEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> 
     if (projects) {
         for (const project of projects) {
             for (const dir of project.executables) {
-                if (dir === path.dirname(env.executablePath)) {
+                if (arePathsSame(dir, path.dirname(env.executablePath))) {
                     info.name = `${project.organization}/${project.name}`;
                     return info;
                 }

@@ -35,11 +35,6 @@ suite('isActiveStateEnvironment Tests', () => {
     });
 
     test(`Return false if the runtime is not set up`, async () => {
-        const runtimeStorePath = path.join(testActiveStateDir, 'b6a0705d', '_runtime_store');
-        fileSystem
-            .setup((f) => f.directoryExists(TypeMoq.It.isValue(runtimeStorePath)))
-            .returns(() => Promise.resolve(false));
-
         const result = await isActiveStateEnvironment(
             path.join(
                 testActiveStateDir,
