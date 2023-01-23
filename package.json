@@ -20,7 +20,6 @@
     "enabledApiProposals": [
         "quickPickSortByLabel",
         "testObserver",
-        "telemetryLogger"
     ],
     "author": {
         "name": "Microsoft Corporation"
@@ -41,7 +40,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.75.0-20230104"
+        "vscode": "^1.75.0-20230123"
     },
     "keywords": [
         "python",
@@ -64,19 +63,6 @@
         "onLanguage:python",
         "onDebugDynamicConfigurations:python",
         "onDebugResolve:python",
-        "onCommand:python.setInterpreter",
-        "onCommand:python.viewLanguageServerOutput",
-        "onCommand:python.viewOutput",
-        "onCommand:python.startREPL",
-        "onCommand:python.createTerminal",
-        "onCommand:python.configureTests",
-        "onCommand:python.enableSourceMapSupport",
-        "onCommand:python.launchTensorBoard",
-        "onCommand:python.clearCacheAndReload",
-        "onCommand:python.createEnvironment",
-        "onCommand:python.createNewFile",
-        "onCommand:python.refreshTensorBoard",
-        "onCommand:testing.reRunFailTests",
         "onWalkthrough:pythonWelcome",
         "onWalkthrough:pythonWelcomeWithDS",
         "onWalkthrough:pythonDataScienceWelcome",
