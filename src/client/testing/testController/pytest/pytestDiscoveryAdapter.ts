@@ -73,18 +73,10 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             const execService = await executionFactory.createActivatedEnvironment(creationOptions);
 
             try {
-                // const p = await execService.exec(['os.getenv("TEST_PORT",5555)'], spawnOptions);
-                // console.log(await execService.exec(['echo', '$PYTHONPATH'], spawnOptions));\--trace-config
-                // const p = await execService.exec(
-                //     ['-m', 'pytest', '-p', 'vscode_pytest', '--trace-config'].concat(pytestArgs),
-                //     spawnOptions,
-                // );
                 execService.exec(
                     ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs),
                     spawnOptions,
                 );
-                // console.log(p.stdout);
-                console.log('finish');
             } catch (ex) {
                 console.error(ex);
             }

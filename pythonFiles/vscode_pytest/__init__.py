@@ -196,12 +196,4 @@ Content-Type: application/json
 Request-uuid: {testuuid}
 
 {data}"""
-        with open(
-            "/Users/eleanorboyd/vscode-python/pythonFiles/vscode_pytest/test_logs.log",
-            "w",
-        ) as f:
-            f.write(request)
-            try:
-                s.socket.sendall(request.encode("utf-8"))  # type: ignore
-            except Exception as ex:
-                f.write(traceback.format_exc())
+        result = s.socket.sendall(request.encode("utf-8"))  # type: ignore
