@@ -125,18 +125,23 @@ def build_nested_folders(
     return prev_folder_node
 
 
-def create_test_node(test_case) -> TestItem:
+def create_test_node(
+    test_case: pytest.Item,
+) -> TestItem:  # stickynote what is this type
+    test_case_loc: str = (
+        "" if test_case.location[1] is None else str(test_case.location[1] + 1)
+    )
     return {
         "name": test_case.name,
         "path": str(test_case.path),
-        "lineno": test_case.location[1] + 1,
+        "lineno": test_case_loc,
         "type_": TestNodeTypeEnum.test,
         "id_": test_case.nodeid,  # remove cast
         "runID": test_case.nodeid,
     }
 
 
-def create_session_node(session) -> TestNode:
+def create_session_node(session: pytest.Session) -> TestNode:
     return {
         "name": session.name,
         "path": str(session.path),
@@ -146,7 +151,7 @@ def create_session_node(session) -> TestNode:
     }
 
 
-def create_class_node(class_module) -> TestNode:
+def create_class_node(class_module: pytest.Class) -> TestNode:
     return {
         "name": class_module.name,
         "path": str(class_module.path),
@@ -156,7 +161,7 @@ def create_class_node(class_module) -> TestNode:
     }
 
 
-def create_file_node(file_module) -> TestNode:
+def create_file_node(file_module: pytest.Module) -> TestNode:
     return {
         "name": str(file_module.path.name),
         "path": str(file_module.path),
@@ -166,7 +171,7 @@ def create_file_node(file_module) -> TestNode:
     }
 
 
-def create_folder_node(folderName, path_iterator) -> TestNode:
+def create_folder_node(folderName: str, path_iterator: pathlib.Path) -> TestNode:
     return {
         "name": folderName,
         "path": str(path_iterator),
@@ -183,19 +188,20 @@ class PayloadDict(TypedDict):
     errors: NotRequired[List[str]]
 
 
-def sendPost(cwd, tests):
+def sendPost(cwd: str, tests: TestNode) -> None:
+    # Sends a post request as a response to the server.
     payload: PayloadDict = {"cwd": cwd, "status": "success", "tests": tests}
-    testPort = os.getenv("TEST_PORT", 45454)
-    testuuid = os.getenv("TEST_UUID")
-    addr = ("localhost", int(testPort))
-    print("sending post", addr, cwd)
-    with socket_manager.SocketManager(addr) as s:
-        data = json.dumps(payload)
-        request = f"""POST / HTTP/1.1
+    testPort: Union[str, int] = os.getenv("TEST_PORT", 45454)
+    testuuid: Union[str, None] = os.getenv("TEST_UUID")
+    addr = "localhost", int(testPort)
+    data = json.dumps(payload)
+    request = f"""POST / HTTP/1.1
 Host: localhost:{testPort}
 Content-Length: {len(data)}
 Content-Type: application/json
 Request-uuid: {testuuid}
 
 {data}"""
-        result = s.socket.sendall(request.encode("utf-8"))  # type: ignore
+    with socket_manager.SocketManager(addr) as s:
+        if s.socket is not None:
+            s.socket.sendall(request.encode("utf-8"))  # type: ignore
