@@ -45,12 +45,15 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     async runPytestDiscovery(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
         if (!this.deferred) {
             this.deferred = createDeferred<DiscoveredTestPayload>();
-            const relativePathToPytest = 'pythonFiles/pytest-vscode-integration';
+            const relativePathToPytest = 'pythonFiles';
             const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
             const uuid = this.testServer.createUUID(uri.fsPath);
             const settings = this.configSettings.getSettings(uri);
             const { pytestArgs } = settings.testing;
-            const pythonPathCommand = `${fullPluginPath}${path.delimiter}`.concat(process.env.PYTHONPATH ?? '');
+
+            const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
+            const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
+            console.log('port', this.testServer.getPort().toString(), uuid.toString());
 
             const spawnOptions: SpawnOptions = {
                 cwd: uri.fsPath,
@@ -70,7 +73,18 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             const execService = await executionFactory.createActivatedEnvironment(creationOptions);
 
             try {
-                execService.exec(['-m', 'pytest', '--collect-only'].concat(pytestArgs), spawnOptions);
+                // const p = await execService.exec(['os.getenv("TEST_PORT",5555)'], spawnOptions);
+                // console.log(await execService.exec(['echo', '$PYTHONPATH'], spawnOptions));\--trace-config
+                // const p = await execService.exec(
+                //     ['-m', 'pytest', '-p', 'vscode_pytest', '--trace-config'].concat(pytestArgs),
+                //     spawnOptions,
+                // );
+                execService.exec(
+                    ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs),
+                    spawnOptions,
+                );
+                // console.log(p.stdout);
+                console.log('finish');
             } catch (ex) {
                 console.error(ex);
             }
