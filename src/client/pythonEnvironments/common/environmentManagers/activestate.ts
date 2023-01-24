@@ -7,7 +7,6 @@ import * as path from 'path';
 import { pathExists, shellExecute } from '../externalDependencies';
 import { cache } from '../../../common/utils/decorators';
 import { traceError, traceVerbose } from '../../../logging';
-import { isTestExecution } from '../../../common/constants';
 import { getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
 
 const STATE_GENERAL_TIMEOUT = 5000;
@@ -29,7 +28,7 @@ export class ActiveState {
     private static statePromise: Promise<ActiveState | undefined> | undefined;
 
     public static async getState(): Promise<ActiveState | undefined> {
-        if (ActiveState.statePromise === undefined || isTestExecution()) {
+        if (ActiveState.statePromise === undefined) {
             ActiveState.statePromise = ActiveState.locate();
         }
         return ActiveState.statePromise;
@@ -47,7 +46,7 @@ export class ActiveState {
 
     private static async locate(): Promise<ActiveState | undefined> {
         const stateToolDir = this.getStateToolDir();
-        if ((stateToolDir && (await pathExists(stateToolDir))) || isTestExecution()) {
+        if (stateToolDir && (await pathExists(stateToolDir))) {
             return new ActiveState();
         }
         return undefined;
