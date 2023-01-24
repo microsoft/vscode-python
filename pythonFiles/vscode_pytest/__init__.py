@@ -4,7 +4,6 @@ import json
 import os
 import pathlib
 import sys
-import traceback
 from typing import List, Literal, Tuple, TypedDict, Union
 
 import pytest
@@ -12,10 +11,6 @@ import pytest
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
-
-import debugpy
-
-debugpy.breakpoint()
 
 # Inherit from str so it's JSON serializable.
 class TestNodeTypeEnum(str, enum.Enum):
@@ -38,15 +33,9 @@ class TestItem(TestData):
 
 
 class TestNode(TestData):
-    children: "List[TestNode | TestItem]"
+    children: "List[Union[TestNode, TestItem]]"
 
 
-# Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
-# PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# sys.path.insert(0, PYTHON_FILES)
-
-# # Add the lib path to sys.path to find the typing_extensions module.
-# sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
 from testing_tools import socket_manager
 from typing_extensions import NotRequired
 
@@ -54,8 +43,8 @@ DEFAULT_PORT = "45454"
 
 
 def pytest_collection_finish(session):
-    print("hello")
-    node, error = build_test_tree(session)
+    # Called after collection has been performed.
+    node: Union[TestNode, None] = build_test_tree(session)[0]
     cwd = os.getcwd()
     # TODO: add error checking.
     sendPost(cwd, node)
