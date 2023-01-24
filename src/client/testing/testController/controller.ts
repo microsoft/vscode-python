@@ -236,7 +236,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 // );
                 // Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
-                // comment below 229 to run the new way and uncomment above 212 ~ 227
+                // comment the line 240 and uncomment the lines 229-236 to run the new way
                 await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
                 // const testAdapter =
