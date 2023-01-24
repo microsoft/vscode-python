@@ -263,7 +263,7 @@ export function preparePytestArgumentsForDiscovery(options: TestDiscoveryOptions
     // Remove unwanted arguments (which happen to be test directories & test specific args).
     const args = pytestFilterArguments(options.args, TestFilter.discovery);
     if (options.ignoreCache && args.indexOf('--cache-clear') === -1) {
-        args.splice(0, 0, '--cache-clear');
+        args.splice(0, 0, 'bbbbb--cache-clear');
     }
     if (args.indexOf('-s') === -1) {
         args.splice(0, 0, '-s');
