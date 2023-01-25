@@ -4,7 +4,8 @@
 'use strict';
 
 import * as path from 'path';
-import { pathExists, shellExecute } from '../externalDependencies';
+import { dirname } from 'path';
+import { arePathsSame, pathExists, shellExecute } from '../externalDependencies';
 import { cache } from '../../../common/utils/decorators';
 import { traceError, traceVerbose } from '../../../logging';
 import { getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
@@ -80,4 +81,33 @@ export class ActiveState {
             return undefined;
         }
     }
+
+    // Stored copy of known projects. isActiveStateEnvironmentForWorkspace() is
+    // not async, so getProjects() cannot be used. ActiveStateLocator sets this
+    // when it resolves project info.
+    private static cachedProjectInfo: ProjectInfo[] = [];
+
+    public static getCachedProjectInfo(): ProjectInfo[] {
+        return this.cachedProjectInfo;
+    }
+
+    public static setCachedProjectInfo(projects: ProjectInfo[]): void {
+        this.cachedProjectInfo = projects;
+    }
+}
+
+export function isActiveStateEnvironmentForWorkspace(interpreterPath: string, workspacePath: string): boolean {
+    const interpreterDir = dirname(interpreterPath);
+    for (const project of ActiveState.getCachedProjectInfo()) {
+        if (project.executables) {
+            for (const [i, dir] of project.executables.entries()) {
+                // Note multiple checkouts for the same interpreter may exist.
+                // Check them all.
+                if (arePathsSame(dir, interpreterDir) && arePathsSame(workspacePath, project.local_checkouts[i])) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }

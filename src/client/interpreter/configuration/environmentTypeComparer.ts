@@ -4,6 +4,7 @@
 import { injectable, inject } from 'inversify';
 import { Resource } from '../../common/types';
 import { Architecture } from '../../common/utils/platform';
+import { isActiveStateEnvironmentForWorkspace } from '../../pythonEnvironments/common/environmentManagers/activestate';
 import { isParentPath } from '../../pythonEnvironments/common/externalDependencies';
 import { EnvironmentType, PythonEnvironment, virtualEnvTypes } from '../../pythonEnvironments/info';
 import { PythonVersion } from '../../pythonEnvironments/info/pythonVersion';
@@ -92,6 +93,9 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
         const filteredInterpreters = interpreters.filter((i) => {
             if (isProblematicCondaEnvironment(i)) {
                 return false;
+            }
+            if (workspaceUri && isActiveStateEnvironmentForWorkspace(i.path, workspaceUri.folderUri.fsPath)) {
+                return true;
             }
             if (getEnvLocationHeuristic(i, workspaceUri?.folderUri.fsPath || '') === EnvLocationHeuristic.Local) {
                 return true;

@@ -25,6 +25,7 @@ export class ActiveStateLocator extends LazyResourceBasedLocator {
             traceVerbose(`Couldn't fetch State Tool projects.`);
             return;
         }
+        ActiveState.setCachedProjectInfo(projects);
         for (const project of projects) {
             if (project.executables) {
                 for (const dir of project.executables) {
