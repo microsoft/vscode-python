@@ -14,7 +14,6 @@ import {
     Uri,
     Location,
 } from 'vscode';
-import { IPythonExecutionFactory } from '../../common/process/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
 import { traceError } from '../../logging';
@@ -197,12 +196,12 @@ export class WorkspaceTestAdapter {
         return Promise.resolve();
     }
 
+    // add `executionFactory?: IPythonExecutionFactory,` to the function for new pytest method
     public async discoverTests(
         testController: TestController,
         token?: CancellationToken,
         isMultiroot?: boolean,
         workspaceFilePath?: string,
-        executionFactory?: IPythonExecutionFactory,
     ): Promise<void> {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: this.testProvider });
 
@@ -218,7 +217,9 @@ export class WorkspaceTestAdapter {
 
         let rawTestData;
         try {
-            rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
+            // First line is old way, second line is new way.
+            rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri);
+            // rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
             deferred.resolve();
         } catch (ex) {
             sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: this.testProvider, failed: true });
