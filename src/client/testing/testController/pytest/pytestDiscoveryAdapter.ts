@@ -33,14 +33,15 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         }
     }
 
-    public async discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
-        const settings = this.configSettings.getSettings(uri);
-        const { pytestArgs } = settings.testing;
-        console.debug(pytestArgs); // do we use pytestArgs anywhere?
+    // Uncomment the function discoverTests to use the new discovery method.
+    // public async discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
+    //     const settings = this.configSettings.getSettings(uri);
+    //     const { pytestArgs } = settings.testing;
+    //     console.debug(pytestArgs);
 
-        this.cwd = uri.fsPath;
-        return this.runPytestDiscovery(uri, executionFactory);
-    }
+    //     this.cwd = uri.fsPath;
+    //     return this.runPytestDiscovery(uri, executionFactory);
+    // }
 
     async runPytestDiscovery(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
         if (!this.deferred) {
@@ -53,7 +54,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
             const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
             const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
-            console.log('port', this.testServer.getPort().toString(), uuid.toString());
 
             const spawnOptions: SpawnOptions = {
                 cwd: uri.fsPath,

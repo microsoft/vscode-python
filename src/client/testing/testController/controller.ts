@@ -165,8 +165,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             } else {
                 // TODO: PYTEST DISCOVERY ADAPTER
                 // this is a placeholder for now
-                discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, { ...this.configSettings });
-                executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
+                discoveryAdapter = new PytestTestDiscoveryAdapter(this.pythonTestServer, { ...this.configSettings });
+                executionAdapter = new PytestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = PYTEST_PROVIDER;
             }
 
@@ -325,11 +325,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 }),
             );
         }
-        console.log('HERE2');
-        this.testController.items.forEach((element) => console.log(element));
-
-        console.log(this.testController.items);
-        console.log('size', this.testController.items.size);
         return Promise.resolve();
     }
 
@@ -379,11 +374,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     if (testItems.length > 0) {
                         if (settings.testing.pytestEnabled) {
                             sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
-                                // seems like this telemetry is named incorrectly?
                                 tool: 'pytest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
-                            // ** update this to reflect the nwe execution style before
                             return this.pytest.runTests(
                                 {
                                     includes: testItems,
@@ -430,7 +423,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     }
 
                     if (!settings.testing.pytestEnabled && !settings.testing.unittestEnabled) {
-                        // ** this could be the logic I am looking for
                         unconfiguredWorkspaces.push(workspace);
                     }
                     return Promise.resolve();
@@ -513,8 +505,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             }),
         );
     }
-
-    // ** not sure about the telemetry
 
     /**
      * Send UNITTEST_DISCOVERY_TRIGGER telemetry event only once per trigger type.

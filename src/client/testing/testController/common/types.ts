@@ -12,7 +12,6 @@ import {
     Uri,
     WorkspaceFolder,
 } from 'vscode';
-import { IPythonExecutionFactory } from '../../../common/process/types';
 import { TestDiscoveryOptions } from '../../common/types';
 
 export type TestRunInstanceOptions = TestRunOptions & {
@@ -178,7 +177,9 @@ export interface ITestServer {
 }
 
 export interface ITestDiscoveryAdapter {
-    discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload>;
+    // Uncomment line 182 and comment out line 181 to use the new discovery method.
+    discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
+    // discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload>; testing rewrite
 }
 
 // interface for execution/runner adapter
