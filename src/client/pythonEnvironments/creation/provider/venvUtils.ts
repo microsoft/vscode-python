@@ -25,24 +25,21 @@ async function getPipRequirementsFiles(
     return files;
 }
 
-async function getTomlOptionalDeps(tomlPath: string): Promise<string[] | undefined> {
-    if (await fs.pathExists(tomlPath)) {
-        const content = await fs.readFile(tomlPath, 'utf-8');
-        const extras: string[] = [];
-        try {
-            const toml = tomljs.parse(content);
-            if (toml.project && (toml.project as Record<string, Array<string>>)['optional-dependencies']) {
-                const deps = (toml.project as Record<string, Record<string, Array<string>>>)['optional-dependencies'];
-                for (const key of Object.keys(deps)) {
-                    extras.push(key);
-                }
+async function getTomlOptionalDeps(tomlPath: string): Promise<string[]> {
+    const content = await fs.readFile(tomlPath, 'utf-8');
+    const extras: string[] = [];
+    try {
+        const toml = tomljs.parse(content);
+        if (toml.project && (toml.project as Record<string, Array<string>>)['optional-dependencies']) {
+            const deps = (toml.project as Record<string, Record<string, Array<string>>>)['optional-dependencies'];
+            for (const key of Object.keys(deps)) {
+                extras.push(key);
             }
-        } catch (err) {
-            traceError('Failed to parse `pyproject.toml`:', err);
         }
-        return extras;
+    } catch (err) {
+        traceError('Failed to parse `pyproject.toml`:', err);
     }
-    return undefined;
+    return extras;
 }
 
 async function pickTomlExtras(extras: string[], token?: CancellationToken): Promise<string[] | undefined> {
@@ -109,9 +106,18 @@ export async function pickPackagesToInstall(
 ): Promise<IPackageInstallSelection | undefined> {
     const tomlPath = path.join(workspaceFolder.uri.fsPath, 'pyproject.toml');
     traceVerbose(`Looking for toml pyproject.toml with optional dependencies at: ${tomlPath}`);
-    const extras = await getTomlOptionalDeps(tomlPath);
 
-    if (extras && extras.length > 0) {
+    let extras: string[] = [];
+    let tomlExists = false;
+    if (await fs.pathExists(tomlPath)) {
+        tomlExists = true;
+        extras = await getTomlOptionalDeps(tomlPath);
+    }
+
+    if (tomlExists) {
+        if (extras.length === 0) {
+            return { installType: 'toml', installList: [], source: tomlPath };
+        }
         traceVerbose('Found toml with optional dependencies.');
         const installList = await pickTomlExtras(extras, token);
         if (installList) {
