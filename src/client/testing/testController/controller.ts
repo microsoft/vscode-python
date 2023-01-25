@@ -227,7 +227,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             if (settings.testing.pytestEnabled) {
                 // Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
-                // uncomment 240 - 250 to NEW new test discovery mechanism
+                // ** uncomment ~231 - 241 to NEW new test discovery mechanism
                 // const workspace = this.workspaceService.getWorkspaceFolder(uri);
                 // console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
                 // const testAdapter =
@@ -239,12 +239,12 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 //     this.workspaceService.workspaceFile?.fsPath,
                 //     this.pythonExecFactory,
                 // );
-                // uncomment 252 to use OLD test discovery mechanism
+                // uncomment ~243 to use OLD test discovery mechanism
                 await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
-                // Ensure we send test telemetry if it gets disabled again
+                // ** Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
-                // uncomment 257 - 267 to NEW new test discovery mechanism
+                // uncomment ~248 - 258 to NEW new test discovery mechanism
                 // const workspace = this.workspaceService.getWorkspaceFolder(uri);
                 // console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
                 // const testAdapter =
@@ -256,7 +256,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 //     this.workspaceService.workspaceFile?.fsPath,
                 //     this.pythonExecFactory,
                 // );
-                // uncomment 269 to use OLD test discovery mechanism
+                // uncomment ~260 to use OLD test discovery mechanism
                 await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else {
                 if (this.sendTestDisabledTelemetry) {
@@ -385,7 +385,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             );
                         }
                         if (settings.testing.unittestEnabled) {
-                            // potentially sqeeze in the new exeuction way here?
+                            // potentially squeeze in the new execution way here?
                             sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
                                 tool: 'unittest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,

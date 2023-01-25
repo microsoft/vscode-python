@@ -177,9 +177,9 @@ export interface ITestServer {
 }
 
 export interface ITestDiscoveryAdapter {
-    // Uncomment line 182 and comment out line 181 to use the new discovery method.
+    // ** Uncomment second line and comment out first line to use the new discovery method.
     discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
-    // discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload>; testing rewrite
+    // discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload>
 }
 
 // interface for execution/runner adapter

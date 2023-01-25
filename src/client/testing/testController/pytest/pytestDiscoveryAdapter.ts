@@ -33,7 +33,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         }
     }
 
-    // Old version of discover tests.
+    // ** Old version of discover tests.
     discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
         console.log(uri);
         this.deferred = createDeferred<DiscoveredTestPayload>();

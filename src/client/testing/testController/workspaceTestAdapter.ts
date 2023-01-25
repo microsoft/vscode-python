@@ -217,9 +217,13 @@ export class WorkspaceTestAdapter {
 
         let rawTestData;
         try {
-            // First line is old way, second line is new way.
+            // ** First line is old way, section with if statement below is new way.
             rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri);
-            // rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
+            // if (executionFactory !== undefined) {
+            //     rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
+            // } else {
+            //     console.log('executionFactory is undefined');
+            // }
             deferred.resolve();
         } catch (ex) {
             sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: this.testProvider, failed: true });
