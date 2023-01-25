@@ -33,7 +33,13 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         }
     }
 
-    // Uncomment the function discoverTests to use the new discovery method.
+    // Old version of discover tests.
+    discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
+        console.log(uri);
+        this.deferred = createDeferred<DiscoveredTestPayload>();
+        return this.deferred.promise;
+    }
+    // Uncomment this version of the function discoverTests to use the new discovery method.
     // public async discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
     //     const settings = this.configSettings.getSettings(uri);
     //     const { pytestArgs } = settings.testing;
