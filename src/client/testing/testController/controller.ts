@@ -158,19 +158,14 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             let discoveryAdapter: ITestDiscoveryAdapter;
             let executionAdapter: ITestExecutionAdapter;
             let testProvider: TestProvider;
-            if (settings.testing.pytestEnabled) {
-                console.log('settings.testing.pytestEnabled = true');
-                discoveryAdapter = new PytestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings); // what is the ... for
-                executionAdapter = new PytestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
-                testProvider = PYTEST_PROVIDER;
-            } else if (settings.testing.unittestEnabled) {
-                console.log('settings.testing.unittestEnabled = true');
+            if (settings.testing.unittestEnabled) {
                 discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);
                 executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = UNITTEST_PROVIDER;
             } else {
-                // this would be an error because neither is enabled?
-                discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);
+                // TODO: PYTEST DISCOVERY ADAPTER
+                // this is a placeholder for now
+                discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, { ...this.configSettings });
                 executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = PYTEST_PROVIDER;
             }
