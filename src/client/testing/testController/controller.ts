@@ -38,7 +38,6 @@ import {
     TestRefreshOptions,
     ITestExecutionAdapter,
 } from './common/types';
-// TODO: create pytest and add to import
 import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
 import { UnittestTestExecutionAdapter } from './unittest/testExecutionAdapter';
 import { PytestTestDiscoveryAdapter } from './pytest/pytestDiscoveryAdapter';
@@ -163,8 +162,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = UNITTEST_PROVIDER;
             } else {
-                // TODO: PYTEST DISCOVERY ADAPTER
-                // this is a placeholder for now
                 discoveryAdapter = new PytestTestDiscoveryAdapter(this.pythonTestServer, { ...this.configSettings });
                 executionAdapter = new PytestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = PYTEST_PROVIDER;
@@ -306,7 +303,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             const settings = this.configSettings.getSettings(item.uri);
             if (settings.testing.pytestEnabled) {
                 return this.pytest.resolveChildren(this.testController, item, this.refreshCancellation.token);
-                // ** check resolve children functionality
             }
             if (settings.testing.unittestEnabled) {
                 return this.unittest.resolveChildren(this.testController, item, this.refreshCancellation.token);
