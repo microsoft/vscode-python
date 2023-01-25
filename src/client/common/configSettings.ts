@@ -104,6 +104,8 @@ export class PythonSettings implements IPythonSettings {
 
     public poetryPath = '';
 
+    public statePath = '';
+
     public devOptions: string[] = [];
 
     public linting!: ILintingSettings;
@@ -260,6 +262,8 @@ export class PythonSettings implements IPythonSettings {
         this.pipenvPath = pipenvPath && pipenvPath.length > 0 ? getAbsolutePath(pipenvPath, workspaceRoot) : pipenvPath;
         const poetryPath = systemVariables.resolveAny(pythonSettings.get<string>('poetryPath'))!;
         this.poetryPath = poetryPath && poetryPath.length > 0 ? getAbsolutePath(poetryPath, workspaceRoot) : poetryPath;
+        const statePath = systemVariables.resolveAny(pythonSettings.get<string>('statePath'))!;
+        this.statePath = statePath && statePath.length > 0 ? getAbsolutePath(statePath, workspaceRoot) : statePath;
 
         this.interpreter = pythonSettings.get<IInterpreterSettings>('interpreter') ?? {
             infoVisibility: 'onPythonRelated',

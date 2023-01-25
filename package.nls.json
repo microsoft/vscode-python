@@ -96,6 +96,7 @@
     "python.poetryPath.description": "Path to the poetry executable.",
     "python.sortImports.args.description": "Arguments passed in. Each argument is a separate item in the array.",
     "python.sortImports.path.description": "Path to isort script, default using inner version",
+    "python.statePath.description": "Path to the State Tool executable for ActiveState runtimes (version 0.36+).",
     "python.tensorBoard.logDirectory.description": "Set this setting to your preferred TensorBoard log directory to skip log directory prompt when starting TensorBoard.",
     "python.terminal.activateEnvInCurrentTerminal.description": "Activate Python Environment in the current Terminal on load of the Extension.",
     "python.terminal.activateEnvironment.description": "Activate Python Environment in Terminal created using the Extension.",

@@ -948,6 +948,12 @@
                     "type": "string",
                     "deprecationMessage": "%python.sortImports.path.deprecationMessage%"
                 },
+                "python.statePath": {
+                    "default": "state",
+                    "description": "%python.statePath.description%",
+                    "scope": "machine-overridable",
+                    "type": "string"
+                },
                 "python.tensorBoard.logDirectory": {
                     "default": "",
                     "description": "%python.tensorBoard.logDirectory.description%",
