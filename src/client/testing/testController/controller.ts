@@ -253,8 +253,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 //     this.testController,
                 //     this.refreshCancellation.token,
                 //     this.testAdapters.size > 1,
-                //     this.workspaceService.workspaceFile?.fsPath,
-                //     this.pythonExecFactory,
+                //     this.workspaceService.workspaceFile?.fsPath
                 // );
                 // uncomment ~260 to use OLD test discovery mechanism
                 await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
