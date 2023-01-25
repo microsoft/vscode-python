@@ -230,8 +230,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.refreshingStartedEvent.fire();
         if (uri) {
             const settings = this.configSettings.getSettings(uri);
+            traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
             if (settings.testing.pytestEnabled) {
-                traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
+                // Ensure we send test telemetry if it gets disabled again
+                this.sendTestDisabledTelemetry = true;
+                // uncomment 240 - 250 to NEW new test discovery mechanism
                 const workspace = this.workspaceService.getWorkspaceFolder(uri);
                 console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
                 const testAdapter =
@@ -243,12 +246,12 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     this.workspaceService.workspaceFile?.fsPath,
                     this.pythonExecFactory,
                 );
-                // Ensure we send test telemetry if it gets disabled again
-                this.sendTestDisabledTelemetry = true;
-                // comment below 229 to run the new way and uncomment above 212 ~ 227
+                // uncomment 252 to use OLD test discovery mechanism
                 // await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
-                traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
+                // Ensure we send test telemetry if it gets disabled again
+                this.sendTestDisabledTelemetry = true;
+                // uncomment 257 - 267 to NEW new test discovery mechanism
                 const workspace = this.workspaceService.getWorkspaceFolder(uri);
                 console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
                 const testAdapter =
@@ -260,9 +263,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     this.workspaceService.workspaceFile?.fsPath,
                     this.pythonExecFactory,
                 );
-                // Ensure we send test telemetry if it gets disabled again
-                this.sendTestDisabledTelemetry = true;
-                // comment below 229 to run the new way and uncomment above 212 ~ 227
+                // uncomment 269 to use OLD test discovery mechanism
                 // await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else {
                 if (this.sendTestDisabledTelemetry) {
