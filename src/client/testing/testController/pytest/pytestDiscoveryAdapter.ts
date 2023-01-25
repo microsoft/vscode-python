@@ -53,7 +53,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
             const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
             const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
-            console.log('port', this.testServer.getPort().toString(), uuid.toString());
 
             const spawnOptions: SpawnOptions = {
                 cwd: uri.fsPath,

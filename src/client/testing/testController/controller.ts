@@ -151,7 +151,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         traceVerbose('Waiting for test server to start...');
         await this.pythonTestServer.serverReady();
         traceVerbose('Test server started.');
-        console.debug('Test server started');
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
         workspaces.forEach((workspace) => {
             const settings = this.configSettings.getSettings(workspace.uri);
@@ -170,7 +169,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = UNITTEST_PROVIDER;
             } else {
-                // this would be an error because neither is enabled?
                 discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);
                 executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = PYTEST_PROVIDER;
@@ -234,8 +232,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             const settings = this.configSettings.getSettings(uri);
             if (settings.testing.pytestEnabled) {
                 traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
-
-                // can I move these out of the if statement
                 const workspace = this.workspaceService.getWorkspaceFolder(uri);
                 console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
                 const testAdapter =
@@ -251,10 +247,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 this.sendTestDisabledTelemetry = true;
                 // comment below 229 to run the new way and uncomment above 212 ~ 227
                 // await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
-
-                // await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
-                // TODO: Use new test discovery mechanism
                 traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
                 const workspace = this.workspaceService.getWorkspaceFolder(uri);
                 console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
@@ -335,11 +328,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 }),
             );
         }
-        console.log('HERE2');
         this.testController.items.forEach((element) => console.log(element));
-
-        console.log(this.testController.items);
-        console.log('size', this.testController.items.size);
         return Promise.resolve();
     }
 
@@ -389,11 +378,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     if (testItems.length > 0) {
                         if (settings.testing.pytestEnabled) {
                             sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
-                                // seems like this telemetry is named incorrectly?
                                 tool: 'pytest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
-                            // ** update this to reflect the nwe execution style before
                             return this.pytest.runTests(
                                 {
                                     includes: testItems,
@@ -440,7 +427,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     }
 
                     if (!settings.testing.pytestEnabled && !settings.testing.unittestEnabled) {
-                        // ** this could be the logic I am looking for
                         unconfiguredWorkspaces.push(workspace);
                     }
                     return Promise.resolve();
@@ -523,8 +509,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             }),
         );
     }
-
-    // ** not sure about the telemetry
 
     /**
      * Send UNITTEST_DISCOVERY_TRIGGER telemetry event only once per trigger type.
