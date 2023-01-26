@@ -2080,7 +2080,7 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.TOOLS_EXTENSIONS_ALREADY_INSTALLED]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8' | 'ms-python.isort';
     };
     /**
      * Telemetry event sent when install linter or formatter extension prompt is shown.
@@ -2091,7 +2091,7 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.TOOLS_EXTENSIONS_PROMPT_SHOWN]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8' | 'ms-python.isort';
     };
     /**
      * Telemetry event sent when clicking to install linter or formatter extension from the suggestion prompt.
@@ -2102,7 +2102,7 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.TOOLS_EXTENSIONS_INSTALL_SELECTED]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8' | 'ms-python.isort';
     };
     /**
      * Telemetry event sent when dismissing prompt suggesting to install the linter or formatter extension.
@@ -2114,7 +2114,7 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.TOOLS_EXTENSIONS_PROMPT_DISMISSED]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8' | 'ms-python.isort';
         dismissType: 'close' | 'doNotShow';
     };
     /* __GDPR__

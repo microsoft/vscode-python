@@ -26,6 +26,9 @@ function isExtensionInstalledButDisabled(extensions: IExtensions, extensionId: s
     return false;
 }
 
+/**
+ * Detects installations even if extension is disabled.
+ */
 export function isExtensionInstalled(serviceContainer: IServiceContainer, extensionId: string): boolean {
     const extensions: IExtensions = serviceContainer.get<IExtensions>(IExtensions);
     const extension = extensions.getExtension(extensionId);
@@ -33,6 +36,15 @@ export function isExtensionInstalled(serviceContainer: IServiceContainer, extens
         // The extension you are looking for might be disabled.
         return isExtensionInstalledButDisabled(extensions, extensionId);
     }
+    return extension !== undefined;
+}
+
+/**
+ * Detects if extension is installed and enabled.
+ */
+export function isExtensionEnabled(serviceContainer: IServiceContainer, extensionId: string): boolean {
+    const extensions: IExtensions = serviceContainer.get<IExtensions>(IExtensions);
+    const extension = extensions.getExtension(extensionId);
     return extension !== undefined;
 }
 
