@@ -12,6 +12,14 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
+
+# sys.path.append("/Users/eleanorboyd/vscode-python/pythonFiles/lib/python")
+# import debugpy
+
+# debugpy.connect(5678)
+# debugpy.breakpoint()
+
+
 # Inherit from str so it's JSON serializable.
 class TestNodeTypeEnum(str, enum.Enum):
     class_ = "class"
@@ -62,7 +70,9 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
     for test_case in session.items:
         test_node: TestItem = create_test_node(test_case)
         # Check parent node type, either Module or UnitTest class.
-        if type(test_case.parent) is pytest.Module:
+        if type(test_case.parent) == pytest.DoctestTextfile:
+            print("true")
+        elif type(test_case.parent) is pytest.Module:
             try:
                 parent_test_case: TestNode = file_nodes_dict[test_case.parent]
             except KeyError:
