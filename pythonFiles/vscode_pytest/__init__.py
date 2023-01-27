@@ -7,6 +7,7 @@ import sys
 from typing import List, Literal, Tuple, TypedDict, Union
 
 import pytest
+from _pytest.doctest import DoctestTextfile
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
@@ -70,7 +71,7 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
     for test_case in session.items:
         test_node: TestItem = create_test_node(test_case)
         # Check parent node type, either Module or UnitTest class.
-        if type(test_case.parent) == pytest.DoctestTextfile:
+        if type(test_case.parent) == DoctestTextfile:
             print("true")
         elif type(test_case.parent) is pytest.Module:
             try:
