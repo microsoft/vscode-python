@@ -14,11 +14,11 @@ sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
 
-# sys.path.append("/Users/eleanorboyd/vscode-python/pythonFiles/lib/python")
-# import debugpy
+sys.path.append("/Users/eleanorboyd/vscode-python/pythonFiles/lib/python")
+import debugpy
 
-# debugpy.connect(5678)
-# debugpy.breakpoint()
+debugpy.connect(5678)
+debugpy.breakpoint()
 
 
 # Inherit from str so it's JSON serializable.
@@ -27,6 +27,7 @@ class TestNodeTypeEnum(str, enum.Enum):
     file = "file"
     folder = "folder"
     test = "test"
+    doc_file = "doc_file"
 
 
 class TestData(TypedDict):
@@ -52,6 +53,7 @@ DEFAULT_PORT = "45454"
 
 
 def pytest_collection_finish(session):
+    print("yes")
     # Called after collection has been performed.
     node: Union[TestNode, None] = build_test_tree(session)[0]
     cwd = pathlib.Path.cwd()
@@ -69,11 +71,18 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
     class_nodes_dict: dict[str, TestNode] = {}
 
     for test_case in session.items:
-        test_node: TestItem = create_test_node(test_case)
+        test_node: TestItem = create_test_node(
+            test_case
+        )  # TODO: this might need to be checked depending on doc test types
         # Check parent node type, either Module or UnitTest class.
         if type(test_case.parent) == DoctestTextfile:
-            print("true")
-        elif type(test_case.parent) is pytest.Module:
+            try:
+                parent_test_case: TestNode = file_nodes_dict[test_case.parent]
+            except KeyError:
+                parent_test_case: TestNode = create_doc_file_node(test_case.parent)
+                file_nodes_dict[test_case.parent] = parent_test_case
+            parent_test_case["children"].append(test_node)
+        if type(test_case.parent) is pytest.Module:
             try:
                 parent_test_case: TestNode = file_nodes_dict[test_case.parent]
             except KeyError:
@@ -177,6 +186,16 @@ def create_file_node(file_module: pytest.Module) -> TestNode:
         "name": str(file_module.path.name),
         "path": str(file_module.path),
         "type_": TestNodeTypeEnum.file,
+        "id_": str(file_module.path),
+        "children": [],
+    }
+
+
+def create_doc_file_node(file_module: pytest.Module) -> TestNode:
+    return {
+        "name": str(file_module.path.name),
+        "path": str(file_module.path),
+        "type_": TestNodeTypeEnum.doc_file,
         "id_": str(file_module.path),
         "children": [],
     }
