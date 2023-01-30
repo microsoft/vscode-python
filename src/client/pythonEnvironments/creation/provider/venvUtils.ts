@@ -11,7 +11,7 @@ import { showQuickPick } from '../../../common/vscodeApis/windowApis';
 import { findFiles } from '../../../common/vscodeApis/workspaceApis';
 import { traceError, traceVerbose } from '../../../logging';
 
-const exclude = '**/{.venv*,.git,.nox,.tox,.conda}/**';
+const exclude = '**/{.venv*,.git,.nox,.tox,.conda,site-packages,__pypackages__}/**';
 async function getPipRequirementsFiles(
     workspaceFolder: WorkspaceFolder,
     token?: CancellationToken,
