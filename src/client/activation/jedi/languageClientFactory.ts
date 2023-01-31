@@ -28,6 +28,8 @@ export class JediLanguageClientFactory implements ILanguageClientFactory {
             args: [lsScriptPath],
         };
 
+        console.log(`Jedi Language Server options: ${JSON.stringify(serverOptions)}`);
+
         return new LanguageClient(PYTHON_LANGUAGE, languageClientName, serverOptions, clientOptions);
     }
 }
