@@ -391,7 +391,7 @@
                 },
                 "python.defaultInterpreterPath": {
                     "default": "python",
-                    "description": "%python.defaultInterpreterPath.description%",
+                    "markdownDescription": "%python.defaultInterpreterPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
                 },
@@ -415,7 +415,7 @@
                 },
                 "python.experiments.optInto": {
                     "default": [],
-                    "description": "%python.experiments.optInto.description%",
+                    "markdownDescription": "%python.experiments.optInto.description%",
                     "items": {
                         "enum": [
                             "All",
@@ -429,7 +429,7 @@
                 },
                 "python.experiments.optOutFrom": {
                     "default": [],
-                    "description": "%python.experiments.optOutFrom.description%",
+                    "markdownDescription": "%python.experiments.optOutFrom.description%",
                     "items": {
                         "enum": [
                             "All",
