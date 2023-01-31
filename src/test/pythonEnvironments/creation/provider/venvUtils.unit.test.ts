@@ -54,8 +54,9 @@ suite('Venv Utils test', () => {
         const actual = await pickPackagesToInstall(workspace1);
         assert.isTrue(showQuickPickStub.notCalled);
         assert.deepStrictEqual(actual, {
-            installType: 'none',
+            installType: 'toml',
             installList: [],
+            source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
         });
     });
 
