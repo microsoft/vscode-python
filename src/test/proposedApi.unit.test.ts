@@ -252,6 +252,7 @@ suite('Proposed Extension API', () => {
     test('environments: python found', async () => {
         const expectedEnvs = [
             {
+                id: normCasePath('this/is/a/test/python/path1'),
                 executable: {
                     filename: 'this/is/a/test/python/path1',
                     ctime: 1,
@@ -273,6 +274,7 @@ suite('Proposed Extension API', () => {
                 },
             },
             {
+                id: normCasePath('this/is/a/test/python/path2'),
                 executable: {
                     filename: 'this/is/a/test/python/path2',
                     ctime: 1,
@@ -297,6 +299,7 @@ suite('Proposed Extension API', () => {
         const envs = [
             ...expectedEnvs,
             {
+                id: normCasePath('this/is/a/test/python/path3'),
                 executable: {
                     filename: 'this/is/a/test/python/path3',
                     ctime: 1,
@@ -343,6 +346,7 @@ suite('Proposed Extension API', () => {
                 searchLocation: Uri.file(workspacePath),
             }),
             {
+                id: normCasePath('this/is/a/test/python/path1'),
                 executable: {
                     filename: 'this/is/a/test/python/path1',
                     ctime: 1,
@@ -364,6 +368,7 @@ suite('Proposed Extension API', () => {
                 },
             },
             {
+                id: normCasePath('this/is/a/test/python/path2'),
                 executable: {
                     filename: 'this/is/a/test/python/path2',
                     ctime: 1,
