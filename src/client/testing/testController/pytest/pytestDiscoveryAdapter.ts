@@ -10,6 +10,7 @@ import {
 import { IConfigurationService } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
+import { traceVerbose } from '../../../logging';
 import { DataReceivedEvent, DiscoveredTestPayload, ITestDiscoveryAdapter, ITestServer } from '../common/types';
 
 /**
@@ -35,7 +36,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
     // ** Old version of discover tests.
     discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
-        console.log(uri);
+        traceVerbose(uri);
         this.deferred = createDeferred<DiscoveredTestPayload>();
         return this.deferred.promise;
     }
@@ -43,7 +44,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     // public async discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
     //     const settings = this.configSettings.getSettings(uri);
     //     const { pytestArgs } = settings.testing;
-    //     console.debug(pytestArgs);
+    //     traceVerbose(pytestArgs);
 
     //     this.cwd = uri.fsPath;
     //     return this.runPytestDiscovery(uri, executionFactory);

@@ -222,7 +222,7 @@ export class WorkspaceTestAdapter {
             // if (executionFactory !== undefined) {
             //     rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
             // } else {
-            //     console.log('executionFactory is undefined');
+            //     traceVerbose('executionFactory is undefined');
             // }
             deferred.resolve();
         } catch (ex) {

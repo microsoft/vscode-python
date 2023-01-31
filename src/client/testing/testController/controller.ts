@@ -229,7 +229,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 this.sendTestDisabledTelemetry = true;
                 // ** uncomment ~231 - 241 to NEW new test discovery mechanism
                 // const workspace = this.workspaceService.getWorkspaceFolder(uri);
-                // console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
+                // traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
                 // const testAdapter =
                 //     this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
                 // testAdapter.discoverTests(
@@ -246,7 +246,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 this.sendTestDisabledTelemetry = true;
                 // uncomment ~248 - 258 to NEW new test discovery mechanism
                 // const workspace = this.workspaceService.getWorkspaceFolder(uri);
-                // console.warn(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
+                // traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
                 // const testAdapter =
                 //     this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
                 // testAdapter.discoverTests(
