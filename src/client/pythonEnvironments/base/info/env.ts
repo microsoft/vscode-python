@@ -73,7 +73,6 @@ export function buildEnvInfo(init?: {
     if (init !== undefined) {
         updateEnv(env, init);
     }
-    env.id = getEnvID(env.executable.filename, env.location);
     return env;
 }
 
@@ -266,7 +265,12 @@ export function areSameEnv(
     const leftFilename = leftInfo.executable!.filename;
     const rightFilename = rightInfo.executable!.filename;
 
-    if (getEnvID(leftFilename, leftInfo.location) === getEnvID(rightFilename, rightInfo.location)) {
+    if (
+        arePathsSame(
+            getEnvPath(leftFilename, leftInfo.location).path,
+            getEnvPath(rightFilename, rightInfo.location).path,
+        )
+    ) {
         return true;
     }
 
