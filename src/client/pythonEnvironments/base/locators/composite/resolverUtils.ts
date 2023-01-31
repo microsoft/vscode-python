@@ -195,6 +195,8 @@ async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     }
     if (env.envPath && env.kind === PythonEnvKind.Conda && path.basename(executable) === executable) {
         // For environments without python, set ID using the predicted executable path after python is installed.
+        // Another alternative could've been to set ID of all conda environments to the environment path, as that
+        // remains constant even after python installation.
         const predictedExecutable = getCondaInterpreterPath(env.envPath);
         info.id = normCasePath(predictedExecutable);
     }
