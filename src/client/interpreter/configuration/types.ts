@@ -66,20 +66,26 @@ export interface IInterpreterComparer {
     getRecommended(interpreters: PythonEnvironment[], resource: Resource): PythonEnvironment | undefined;
 }
 
+export interface InterpreterQuickPickParams {
+    /**
+     * Specify `null` if a placeholder is not required.
+     */
+    placeholder?: string | null;
+    /**
+     * Specify `null` if a title is not required.
+     */
+    title?: string | null;
+    /**
+     * Specify `true` to skip showing recommended python interpreter.
+     */
+    skipRecommended?: boolean;
+}
+
 export const IInterpreterQuickPick = Symbol('IInterpreterQuickPick');
 export interface IInterpreterQuickPick {
     getInterpreterViaQuickPick(
         workspace: Resource,
         filter?: (i: PythonEnvironment) => boolean,
-        params?: {
-            /**
-             * Specify `null` if a placeholder is not required.
-             */
-            placeholder?: string | null;
-            /**
-             * Specify `null` if a title is not required.
-             */
-            title?: string | null;
-        },
+        params?: InterpreterQuickPickParams,
     ): Promise<string | undefined>;
 }
