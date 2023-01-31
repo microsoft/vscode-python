@@ -37,6 +37,12 @@ runs:
       with:
         options: '-t ./pythonFiles/lib/python --implementation py'
 
+    - name: Install Jedi LSP
+      uses: brettcannon/pip-secure-install@v1
+      with:
+        requirements-file: './pythonFiles/jedilsp_requirements/requirements.txt'
+        options: '-t ./pythonFiles/lib/jedilsp --implementation py --platform any --abi none'
+
     - name: pip install system test requirements
       run: |
         python -m pip install --upgrade -r build/test-requirements.txt
