@@ -31,7 +31,6 @@ export const virtualEnvTypes = [
     EnvironmentType.VirtualEnvWrapper,
     EnvironmentType.Conda,
     EnvironmentType.VirtualEnv,
-    EnvironmentType.ActiveState,
 ];
 
 /**

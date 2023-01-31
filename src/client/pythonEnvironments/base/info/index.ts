@@ -49,7 +49,6 @@ export const virtualEnvKinds = [
     PythonEnvKind.VirtualEnvWrapper,
     PythonEnvKind.Conda,
     PythonEnvKind.VirtualEnv,
-    PythonEnvKind.ActiveState,
 ];
 
 export const globallyInstalledEnvKinds = [
