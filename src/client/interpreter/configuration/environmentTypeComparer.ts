@@ -94,8 +94,13 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
             if (isProblematicCondaEnvironment(i)) {
                 return false;
             }
-            if (i.path && workspaceUri && isActiveStateEnvironmentForWorkspace(i.path, workspaceUri.folderUri.fsPath)) {
-                return true;
+            if (
+                i.envType === EnvironmentType.ActiveState &&
+                (!i.path ||
+                    !workspaceUri ||
+                    !isActiveStateEnvironmentForWorkspace(i.path, workspaceUri.folderUri.fsPath))
+            ) {
+                return false;
             }
             if (getEnvLocationHeuristic(i, workspaceUri?.folderUri.fsPath || '') === EnvLocationHeuristic.Local) {
                 return true;
