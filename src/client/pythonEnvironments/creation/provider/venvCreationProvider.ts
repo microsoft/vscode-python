@@ -125,6 +125,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
             workspace.uri,
             (i: PythonEnvironment) =>
                 [EnvironmentType.System, EnvironmentType.MicrosoftStore, EnvironmentType.Global].includes(i.envType),
+            { skipRecommended: true },
         );
 
         let addGitIgnore = true;
