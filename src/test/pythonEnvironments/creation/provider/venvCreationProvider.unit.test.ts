@@ -62,9 +62,14 @@ suite('venv Creation provider tests', () => {
 
     test('No workspace selected', async () => {
         pickWorkspaceFolderStub.resolves(undefined);
+        interpreterQuickPick
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny()))
+            .verifiable(typemoq.Times.never());
 
         assert.isUndefined(await venvProvider.createEnvironment());
         assert.isTrue(pickWorkspaceFolderStub.calledOnce);
+        interpreterQuickPick.verifyAll();
+        assert.isTrue(pickPackagesToInstallStub.notCalled);
     });
 
     test('No Python selected', async () => {
@@ -76,7 +81,10 @@ suite('venv Creation provider tests', () => {
             .verifiable(typemoq.Times.once());
 
         assert.isUndefined(await venvProvider.createEnvironment());
+
+        assert.isTrue(pickWorkspaceFolderStub.calledOnce);
         interpreterQuickPick.verifyAll();
+        assert.isTrue(pickPackagesToInstallStub.notCalled);
     });
 
     test('User pressed Esc while selecting dependencies', async () => {

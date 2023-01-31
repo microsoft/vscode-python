@@ -127,6 +127,11 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                 [EnvironmentType.System, EnvironmentType.MicrosoftStore, EnvironmentType.Global].includes(i.envType),
         );
 
+        if (!interpreter) {
+            traceError('Virtual env creation requires an interpreter.');
+            return undefined;
+        }
+
         let addGitIgnore = true;
         let installPackages = true;
         if (options) {
@@ -138,11 +143,6 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
             installInfo = await pickPackagesToInstall(workspace);
         }
         const args = generateCommandArgs(installInfo, addGitIgnore);
-
-        if (!interpreter) {
-            traceError('Virtual env creation requires an interpreter.');
-            return undefined;
-        }
 
         if (!installInfo) {
             traceInfo('Virtual env creation exited during dependencies selection.');
