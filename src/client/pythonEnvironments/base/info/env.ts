@@ -235,9 +235,9 @@ export function getEnvPath(interpreterPath: string, envFolderPath?: string): Env
 }
 
 /**
- * Gets unique identifier for an environment.
+ * Gets general unique identifier for most environments.
  */
-export function getNormCaseEnvPath(interpreterPath: string, envFolderPath?: string): string {
+function getNormCaseEnvPath(interpreterPath: string, envFolderPath?: string): string {
     return normCasePath(getEnvPath(interpreterPath, envFolderPath).path);
 }
 
@@ -266,12 +266,7 @@ export function areSameEnv(
     const leftFilename = leftInfo.executable!.filename;
     const rightFilename = rightInfo.executable!.filename;
 
-    if (
-        arePathsSame(
-            getEnvPath(leftFilename, leftInfo.location).path,
-            getEnvPath(rightFilename, rightInfo.location).path,
-        )
-    ) {
+    if (getNormCaseEnvPath(leftFilename, leftInfo.location) === getNormCaseEnvPath(rightFilename, rightInfo.location)) {
         return true;
     }
 
