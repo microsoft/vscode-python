@@ -25,7 +25,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     }
 
     discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
-        console.log(uri);
+        console.debug(uri);
         this.deferred = createDeferred<DiscoveredTestPayload>();
         return this.deferred.promise;
     }
