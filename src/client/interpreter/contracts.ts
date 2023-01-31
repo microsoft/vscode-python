@@ -122,3 +122,8 @@ export type WorkspacePythonPath = {
     folderUri: Uri;
     configTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder;
 };
+
+export const IActivatedEnvironmentLaunch = Symbol('IActivatedEnvironmentLaunch');
+export interface IActivatedEnvironmentLaunch {
+    selectIfLaunchedViaActivatedEnv(doNotBlockOnSelection?: boolean): Promise<string | undefined>;
+}

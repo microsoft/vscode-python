@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.",
-    "version": "2023.1.0-dev",
+    "version": "2023.3.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -19,8 +19,7 @@
     "publisher": "ms-python",
     "enabledApiProposals": [
         "quickPickSortByLabel",
-        "testObserver",
-        "telemetryLogger"
+        "testObserver"
     ],
     "author": {
         "name": "Microsoft Corporation"
@@ -41,7 +40,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.75.0-20230104"
+        "vscode": "^1.75.0-20230123"
     },
     "keywords": [
         "python",
@@ -64,19 +63,6 @@
         "onLanguage:python",
         "onDebugDynamicConfigurations:python",
         "onDebugResolve:python",
-        "onCommand:python.setInterpreter",
-        "onCommand:python.viewLanguageServerOutput",
-        "onCommand:python.viewOutput",
-        "onCommand:python.startREPL",
-        "onCommand:python.createTerminal",
-        "onCommand:python.configureTests",
-        "onCommand:python.enableSourceMapSupport",
-        "onCommand:python.launchTensorBoard",
-        "onCommand:python.clearCacheAndReload",
-        "onCommand:python.createEnvironment",
-        "onCommand:python.createNewFile",
-        "onCommand:python.refreshTensorBoard",
-        "onCommand:testing.reRunFailTests",
         "onWalkthrough:pythonWelcome",
         "onWalkthrough:pythonWelcomeWithDS",
         "onWalkthrough:pythonDataScienceWelcome",
@@ -1812,7 +1798,7 @@
         "webpack": "webpack"
     },
     "dependencies": {
-        "@ltd/j-toml": "^1.37.0",
+        "@iarna/toml": "^2.2.5",
         "@vscode/extension-telemetry": "^0.7.4-preview",
         "@vscode/jupyter-lsp-middleware": "^0.2.50",
         "arch": "^2.1.0",

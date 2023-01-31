@@ -22,6 +22,7 @@ import {
 import { IServiceContainer } from '../ioc/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import {
+    IActivatedEnvironmentLaunch,
     IComponentAdapter,
     IInterpreterDisplay,
     IInterpreterService,
@@ -179,7 +180,13 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
-        let path = this.configService.getSettings(resource).pythonPath;
+        const activatedEnvLaunch = this.serviceContainer.get<IActivatedEnvironmentLaunch>(IActivatedEnvironmentLaunch);
+        let path = await activatedEnvLaunch.selectIfLaunchedViaActivatedEnv(true);
+        // This is being set as interpreter in background, after which it'll show up in `.pythonPath` config.
+        // However we need not wait on the update to take place, as we can use the value directly.
+        if (!path) {
+            path = this.configService.getSettings(resource).pythonPath;
+        }
         if (pathUtils.basename(path) === path) {
             // Value can be `python`, `python3`, `python3.9` etc.
             // Note the following triggers autoselection if no interpreter is explictly
