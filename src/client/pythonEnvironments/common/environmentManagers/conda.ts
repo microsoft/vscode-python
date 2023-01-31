@@ -226,14 +226,11 @@ export async function getPythonVersionFromConda(interpreterPath: string): Promis
 /**
  * Return the interpreter's filename for the given environment.
  */
-async function getInterpreterPath(condaEnvironmentPath: string): Promise<string | undefined> {
+export function getCondaInterpreterPath(condaEnvironmentPath: string): string {
     // where to find the Python binary within a conda env.
     const relativePath = getOSType() === OSType.Windows ? 'python.exe' : path.join('bin', 'python');
     const filePath = path.join(condaEnvironmentPath, relativePath);
-    if (await pathExists(filePath)) {
-        return filePath;
-    }
-    return undefined;
+    return filePath;
 }
 
 // Minimum version number of conda required to be able to use 'conda run' with '--no-capture-output' flag.
@@ -494,8 +491,8 @@ export class Conda {
      */
     // eslint-disable-next-line class-methods-use-this
     public async getInterpreterPathForEnvironment(condaEnv: CondaEnvInfo | { prefix: string }): Promise<string> {
-        const executablePath = await getInterpreterPath(condaEnv.prefix);
-        if (executablePath) {
+        const executablePath = getCondaInterpreterPath(condaEnv.prefix);
+        if (await pathExists(executablePath)) {
             traceVerbose('Found executable within conda env', JSON.stringify(condaEnv));
             return executablePath;
         }

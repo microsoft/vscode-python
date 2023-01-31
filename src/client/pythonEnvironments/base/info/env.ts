@@ -73,6 +73,7 @@ export function buildEnvInfo(init?: {
     if (init !== undefined) {
         updateEnv(env, init);
     }
+    env.id = getNormCaseEnvPath(env.executable.filename, env.location);
     return env;
 }
 
@@ -236,7 +237,7 @@ export function getEnvPath(interpreterPath: string, envFolderPath?: string): Env
 /**
  * Gets unique identifier for an environment.
  */
-export function getEnvID(interpreterPath: string, envFolderPath?: string): string {
+export function getNormCaseEnvPath(interpreterPath: string, envFolderPath?: string): string {
     return normCasePath(getEnvPath(interpreterPath, envFolderPath).path);
 }
 

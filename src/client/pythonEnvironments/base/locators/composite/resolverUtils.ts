@@ -12,10 +12,15 @@ import {
     UNKNOWN_PYTHON_VERSION,
     virtualEnvKinds,
 } from '../../info';
-import { buildEnvInfo, comparePythonVersionSpecificity, setEnvDisplayString, getEnvID } from '../../info/env';
+import { buildEnvInfo, comparePythonVersionSpecificity, setEnvDisplayString } from '../../info/env';
 import { getEnvironmentDirFromPath, getPythonVersionFromPath } from '../../../common/commonUtils';
-import { arePathsSame, getFileInfo, isParentPath } from '../../../common/externalDependencies';
-import { AnacondaCompanyName, Conda, isCondaEnvironment } from '../../../common/environmentManagers/conda';
+import { arePathsSame, getFileInfo, isParentPath, normCasePath } from '../../../common/externalDependencies';
+import {
+    AnacondaCompanyName,
+    Conda,
+    getCondaInterpreterPath,
+    isCondaEnvironment,
+} from '../../../common/environmentManagers/conda';
 import { getPyenvVersionsDir, parsePyenvVersion } from '../../../common/environmentManagers/pyenv';
 import { Architecture, getOSType, OSType } from '../../../../common/utils/platform';
 import { getPythonVersionFromPath as parsePythonVersionFromPath, parseVersion } from '../../info/pythonVersion';
@@ -57,7 +62,6 @@ export async function resolveBasicEnv(env: BasicEnvInfo): Promise<PythonEnvInfo>
         await updateEnvUsingRegistry(resolvedEnv);
     }
     setEnvDisplayString(resolvedEnv);
-    resolvedEnv.id = getEnvID(resolvedEnv.executable.filename, resolvedEnv.location);
     const { ctime, mtime } = await getFileInfo(resolvedEnv.executable.filename);
     resolvedEnv.executable.ctime = ctime;
     resolvedEnv.executable.mtime = mtime;
@@ -188,6 +192,11 @@ async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     const name = await conda?.getName(envPath);
     if (name) {
         info.name = name;
+    }
+    if (env.envPath && env.kind === PythonEnvKind.Conda && path.basename(executable) === executable) {
+        // For environments without python, set ID using the predicted executable path after python is installed.
+        const predictedExecutable = getCondaInterpreterPath(env.envPath);
+        info.id = normCasePath(predictedExecutable);
     }
     return info;
 }
