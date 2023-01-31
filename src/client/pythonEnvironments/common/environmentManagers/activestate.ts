@@ -90,7 +90,9 @@ export class ActiveState {
                 output = output.substring(0, output.length - 1);
             }
             traceVerbose(`${stateCommand} projects -o editor: ${output}`);
-            return JSON.parse(output);
+            const projects = JSON.parse(output);
+            ActiveState.setCachedProjectInfo(projects);
+            return projects;
         } catch (ex) {
             traceError(ex);
             return undefined;
@@ -106,7 +108,7 @@ export class ActiveState {
         return this.cachedProjectInfo;
     }
 
-    public static setCachedProjectInfo(projects: ProjectInfo[]): void {
+    private static setCachedProjectInfo(projects: ProjectInfo[]): void {
         this.cachedProjectInfo = projects;
     }
 }
