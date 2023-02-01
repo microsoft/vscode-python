@@ -12,9 +12,9 @@ import {
     UNKNOWN_PYTHON_VERSION,
     virtualEnvKinds,
 } from '../../info';
-import { buildEnvInfo, comparePythonVersionSpecificity, setEnvDisplayString } from '../../info/env';
+import { buildEnvInfo, comparePythonVersionSpecificity, setEnvDisplayString, getNormCaseEnvPath } from '../../info/env';
 import { getEnvironmentDirFromPath, getPythonVersionFromPath } from '../../../common/commonUtils';
-import { arePathsSame, getFileInfo, isParentPath, normCasePath } from '../../../common/externalDependencies';
+import { arePathsSame, getFileInfo, isParentPath } from '../../../common/externalDependencies';
 import {
     AnacondaCompanyName,
     Conda,
@@ -193,12 +193,12 @@ async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     if (name) {
         info.name = name;
     }
-    if (env.envPath && env.kind === PythonEnvKind.Conda && path.basename(executable) === executable) {
+    if (env.envPath && path.basename(executable) === executable) {
         // For environments without python, set ID using the predicted executable path after python is installed.
         // Another alternative could've been to set ID of all conda environments to the environment path, as that
         // remains constant even after python installation.
         const predictedExecutable = getCondaInterpreterPath(env.envPath);
-        info.id = normCasePath(predictedExecutable);
+        info.id = getNormCaseEnvPath(predictedExecutable, env.envPath);
     }
     return info;
 }

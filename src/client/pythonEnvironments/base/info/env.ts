@@ -198,6 +198,7 @@ function getMinimalPartialInfo(env: string | PythonEnvInfo | BasicEnvInfo): Part
             return undefined;
         }
         return {
+            id: '',
             executable: {
                 filename: env,
                 sysPrefix: '',
@@ -208,6 +209,7 @@ function getMinimalPartialInfo(env: string | PythonEnvInfo | BasicEnvInfo): Part
     }
     if ('executablePath' in env) {
         return {
+            id: '',
             executable: {
                 filename: env.executablePath,
                 sysPrefix: '',
@@ -237,7 +239,7 @@ export function getEnvPath(interpreterPath: string, envFolderPath?: string): Env
 /**
  * Gets general unique identifier for most environments.
  */
-function getNormCaseEnvPath(interpreterPath: string, envFolderPath?: string): string {
+export function getNormCaseEnvPath(interpreterPath: string, envFolderPath?: string): string {
     return normCasePath(getEnvPath(interpreterPath, envFolderPath).path);
 }
 
@@ -267,6 +269,11 @@ export function areSameEnv(
     const rightFilename = rightInfo.executable!.filename;
 
     if (getNormCaseEnvPath(leftFilename, leftInfo.location) === getNormCaseEnvPath(rightFilename, rightInfo.location)) {
+        return true;
+    }
+
+    if (leftInfo.id && leftInfo.id === rightInfo.id) {
+        // Env path changes for conda envs after python is installed into them, so compare ids.
         return true;
     }
 
