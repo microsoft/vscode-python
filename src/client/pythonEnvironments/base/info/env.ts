@@ -73,7 +73,7 @@ export function buildEnvInfo(init?: {
     if (init !== undefined) {
         updateEnv(env, init);
     }
-    env.id = getNormCaseEnvPath(env.executable.filename, env.location);
+    env.id = getEnvID(env.executable.filename, env.location);
     return env;
 }
 
@@ -239,7 +239,7 @@ export function getEnvPath(interpreterPath: string, envFolderPath?: string): Env
 /**
  * Gets general unique identifier for most environments.
  */
-export function getNormCaseEnvPath(interpreterPath: string, envFolderPath?: string): string {
+export function getEnvID(interpreterPath: string, envFolderPath?: string): string {
     return normCasePath(getEnvPath(interpreterPath, envFolderPath).path);
 }
 
@@ -268,12 +268,15 @@ export function areSameEnv(
     const leftFilename = leftInfo.executable!.filename;
     const rightFilename = rightInfo.executable!.filename;
 
-    if (getNormCaseEnvPath(leftFilename, leftInfo.location) === getNormCaseEnvPath(rightFilename, rightInfo.location)) {
+    if (leftInfo.id && leftInfo.id === rightInfo.id) {
+        // In case IDs are available, use it.
         return true;
     }
 
-    if (leftInfo.id && leftInfo.id === rightInfo.id) {
-        // Env path changes for conda envs after python is installed into them, so compare ids.
+    if (getEnvID(leftFilename, leftInfo.location) === getEnvID(rightFilename, rightInfo.location)) {
+        // Otherwise use ID function to get the ID. Note ID returned by function may itself change if executable of
+        // an environment changes, for eg. when conda installs python into the env. So only use it as a fallback if
+        // ID is not available.
         return true;
     }
 

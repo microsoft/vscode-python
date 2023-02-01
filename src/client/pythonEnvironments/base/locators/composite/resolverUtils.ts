@@ -12,7 +12,7 @@ import {
     UNKNOWN_PYTHON_VERSION,
     virtualEnvKinds,
 } from '../../info';
-import { buildEnvInfo, comparePythonVersionSpecificity, setEnvDisplayString, getNormCaseEnvPath } from '../../info/env';
+import { buildEnvInfo, comparePythonVersionSpecificity, setEnvDisplayString, getEnvID } from '../../info/env';
 import { getEnvironmentDirFromPath, getPythonVersionFromPath } from '../../../common/commonUtils';
 import { arePathsSame, getFileInfo, isParentPath } from '../../../common/externalDependencies';
 import {
@@ -198,7 +198,7 @@ async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
         // Another alternative could've been to set ID of all conda environments to the environment path, as that
         // remains constant even after python installation.
         const predictedExecutable = getCondaInterpreterPath(env.envPath);
-        info.id = getNormCaseEnvPath(predictedExecutable, env.envPath);
+        info.id = getEnvID(predictedExecutable, env.envPath);
     }
     return info;
 }
