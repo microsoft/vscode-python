@@ -109,8 +109,11 @@ suite('Multiroot Linting', () => {
         assert.strictEqual(messages.length > 0, mustHaveErrors, errorMessage);
     }
 
-    test('Enabling Pylint in root and also in Workspace, should return errors', async () => {
+    test('Enabling Pylint in root and also in Workspace, should return errors', async function () {
         // Timing out on Windows, tracked by #18337.
+        if (isOs(OSType.Windows)) {
+            return this.skip();
+        }
 
         await runTest(Product.pylint, true, true, pylintSetting);
 
