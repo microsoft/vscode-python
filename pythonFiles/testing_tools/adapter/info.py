@@ -27,7 +27,6 @@ class SingleTestPath(namedtuple("TestPath", "root relfile func sub")):
 
 
 class ParentInfo(namedtuple("ParentInfo", "id kind name root relpath parentid")):
-
     KINDS = ("folder", "file", "suite", "function", "subtest")
 
     def __new__(cls, id, kind, name, root=None, relpath=None, parentid=None):
