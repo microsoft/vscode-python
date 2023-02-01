@@ -33,21 +33,21 @@ suite('Multiroot Linting', () => {
     const flake8Setting = 'linting.flake8Enabled';
 
     let ioc: UnitTestIocContainer;
-    suiteSetup(function () {
+    suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
             this.skip();
         }
-        return initialize();
-    });
-    setup(async () => {
+        await initialize();
         await initializeDI();
         await initializeTest();
     });
-    suiteTeardown(closeActiveWindows);
-    teardown(async () => {
+    suiteTeardown(async () => {
         await ioc.dispose();
         await closeActiveWindows();
         PythonSettings.dispose();
+    });
+    teardown(async () => {
+        await closeActiveWindows();
     });
 
     async function initializeDI() {
@@ -109,11 +109,8 @@ suite('Multiroot Linting', () => {
         assert.strictEqual(messages.length > 0, mustHaveErrors, errorMessage);
     }
 
-    test('Enabling Pylint in root and also in Workspace, should return errors', async function () {
+    test('Enabling Pylint in root and also in Workspace, should return errors', async () => {
         // Timing out on Windows, tracked by #18337.
-        if (isOs(OSType.Windows)) {
-            return this.skip();
-        }
 
         await runTest(Product.pylint, true, true, pylintSetting);
 
