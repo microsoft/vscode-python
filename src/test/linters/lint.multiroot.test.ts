@@ -12,6 +12,14 @@ import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
 import { IConfigurationService, Product, ProductType } from '../../client/common/types';
 import { OSType } from '../../client/common/utils/platform';
+import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
+import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
+import {
+    IPythonPathUpdaterServiceManager,
+    IPythonPathUpdaterServiceFactory,
+} from '../../client/interpreter/configuration/types';
+import { IActivatedEnvironmentLaunch } from '../../client/interpreter/contracts';
+import { ActivatedEnvironmentLaunch } from '../../client/interpreter/virtualEnvs/activatedEnvLaunch';
 import { ILinter, ILinterManager } from '../../client/linters/types';
 import { isOs } from '../common';
 import { TEST_TIMEOUT } from '../constants';
@@ -50,6 +58,18 @@ suite('Multiroot Linting', () => {
         ioc.registerVariableTypes();
         ioc.registerFileSystemTypes();
         await ioc.registerMockInterpreterTypes();
+        ioc.serviceManager.addSingleton<IActivatedEnvironmentLaunch>(
+            IActivatedEnvironmentLaunch,
+            ActivatedEnvironmentLaunch,
+        );
+        ioc.serviceManager.addSingleton<IPythonPathUpdaterServiceManager>(
+            IPythonPathUpdaterServiceManager,
+            PythonPathUpdaterService,
+        );
+        ioc.serviceManager.addSingleton<IPythonPathUpdaterServiceFactory>(
+            IPythonPathUpdaterServiceFactory,
+            PythonPathUpdaterServiceFactory,
+        );
         ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
         ioc.serviceManager.addSingleton<IProductPathService>(
