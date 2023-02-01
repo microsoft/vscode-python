@@ -42,7 +42,7 @@ suite('Multiroot Linting', () => {
         await initializeTest();
     });
     suiteTeardown(async () => {
-        await ioc.dispose();
+        await ioc?.dispose();
         await closeActiveWindows();
         PythonSettings.dispose();
     });
