@@ -14,6 +14,7 @@ import {
     Uri,
     Location,
 } from 'vscode';
+import { splitLines } from '../../common/stringUtils';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
 import { traceError } from '../../logging';
@@ -138,11 +139,12 @@ export class WorkspaceTestAdapter {
                     rawTestExecData.result[keyTemp].outcome === 'subtest-failure' ||
                     rawTestExecData.result[keyTemp].outcome === 'passed-unexpected'
                 ) {
-                    const traceback = rawTestExecData.result[keyTemp].traceback
-                        ? rawTestExecData.result[keyTemp]
-                              .traceback!.splitLines({ trim: false, removeEmptyEntries: true })
-                              .join('\r\n')
-                        : '';
+                    const rawTraceback = rawTestExecData.result[keyTemp].traceback ?? '';
+                    const traceback = splitLines(rawTraceback, {
+                        trim: false,
+                        removeEmptyEntries: true,
+                    }).join('\r\n');
+
                     const text = `${rawTestExecData.result[keyTemp].test} failed: ${
                         rawTestExecData.result[keyTemp].message ?? rawTestExecData.result[keyTemp].outcome
                     }\r\n${traceback}\r\n`;

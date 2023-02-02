@@ -27,6 +27,7 @@ import {
     CONDA_ENV_CREATED_MARKER,
     CONDA_ENV_EXISTING_MARKER,
 } from './condaProgressAndTelemetry';
+import { splitLines } from '../../../common/stringUtils';
 
 function generateCommandArgs(version?: string, options?: CreateEnvironmentOptions): string[] {
     let addGitIgnore = true;
@@ -112,7 +113,7 @@ async function createCondaEnv(
     let condaEnvPath: string | undefined;
     out.subscribe(
         (value) => {
-            const output = value.out.splitLines().join('\r\n');
+            const output = splitLines(value.out).join('\r\n');
             traceLog(output);
             if (output.includes(CONDA_ENV_CREATED_MARKER) || output.includes(CONDA_ENV_EXISTING_MARKER)) {
                 condaEnvPath = getCondaEnvFromOutput(output);

@@ -21,6 +21,7 @@ import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
 import { traceError, traceVerbose } from '../../../logging';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
+import { splitLines } from '../../../common/stringUtils';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 export const CONDAPATH_SETTING_KEY = 'condaPath';
@@ -185,7 +186,7 @@ export async function getPythonVersionFromConda(interpreterPath: string): Promis
     for (const configPath of configPaths) {
         if (await pathExists(configPath)) {
             try {
-                const lines = (await readFile(configPath)).splitLines();
+                const lines = splitLines(await readFile(configPath));
 
                 // Sample data:
                 // +defaults/linux-64::pip-20.2.4-py38_0
