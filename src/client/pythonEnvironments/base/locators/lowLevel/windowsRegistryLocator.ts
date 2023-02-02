@@ -1,3 +1,4 @@
+/* eslint-disable no-continue */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -5,6 +6,7 @@ import { PythonEnvKind, PythonEnvSource } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../locator';
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
 import { traceError } from '../../../../logging';
+import { isMicrosoftStoreDir } from '../../../common/environmentManagers/microsoftStoreEnv';
 
 export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
     public readonly providerId: string = 'windows-registry';
@@ -15,6 +17,12 @@ export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
             const interpreters = await getRegistryInterpreters();
             for (const interpreter of interpreters) {
                 try {
+                    // Filter out Microsoft Store app directories. We have a store app locator that handles this.
+                    // The python.exe available in these directories might not be python. It can be a store install
+                    // shortcut that takes you to microsoft store.
+                    if (isMicrosoftStoreDir(interpreter.interpreterPath)) {
+                        continue;
+                    }
                     const env: BasicEnvInfo = {
                         kind: PythonEnvKind.OtherGlobal,
                         executablePath: interpreter.interpreterPath,

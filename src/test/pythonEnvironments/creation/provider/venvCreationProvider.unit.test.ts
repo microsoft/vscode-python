@@ -62,28 +62,36 @@ suite('venv Creation provider tests', () => {
 
     test('No workspace selected', async () => {
         pickWorkspaceFolderStub.resolves(undefined);
+        interpreterQuickPick
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny()))
+            .verifiable(typemoq.Times.never());
 
         assert.isUndefined(await venvProvider.createEnvironment());
         assert.isTrue(pickWorkspaceFolderStub.calledOnce);
+        interpreterQuickPick.verifyAll();
+        assert.isTrue(pickPackagesToInstallStub.notCalled);
     });
 
     test('No Python selected', async () => {
         pickWorkspaceFolderStub.resolves(workspace1);
 
         interpreterQuickPick
-            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
 
         assert.isUndefined(await venvProvider.createEnvironment());
+
+        assert.isTrue(pickWorkspaceFolderStub.calledOnce);
         interpreterQuickPick.verifyAll();
+        assert.isTrue(pickPackagesToInstallStub.notCalled);
     });
 
     test('User pressed Esc while selecting dependencies', async () => {
         pickWorkspaceFolderStub.resolves(workspace1);
 
         interpreterQuickPick
-            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(() => Promise.resolve('/usr/bin/python'))
             .verifiable(typemoq.Times.once());
 
@@ -97,7 +105,7 @@ suite('venv Creation provider tests', () => {
         pickWorkspaceFolderStub.resolves(workspace1);
 
         interpreterQuickPick
-            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(() => Promise.resolve('/usr/bin/python'))
             .verifiable(typemoq.Times.once());
 
@@ -160,7 +168,7 @@ suite('venv Creation provider tests', () => {
         pickWorkspaceFolderStub.resolves(workspace1);
 
         interpreterQuickPick
-            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(() => Promise.resolve('/usr/bin/python'))
             .verifiable(typemoq.Times.once());
 
@@ -217,7 +225,7 @@ suite('venv Creation provider tests', () => {
         pickWorkspaceFolderStub.resolves(workspace1);
 
         interpreterQuickPick
-            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(() => Promise.resolve('/usr/bin/python'))
             .verifiable(typemoq.Times.once());
 

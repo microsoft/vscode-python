@@ -32,6 +32,7 @@ import {
     IInterpreterQuickPick,
     IInterpreterQuickPickItem,
     IInterpreterSelector,
+    InterpreterQuickPickParams,
     IPythonPathUpdaterServiceManager,
     ISpecialQuickPickItem,
 } from '../../types';
@@ -127,12 +128,12 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs,
         filter?: (i: PythonEnvironment) => boolean,
-        params?: { placeholder?: string | null; title?: string | null },
+        params?: InterpreterQuickPickParams,
     ): Promise<void | InputStep<InterpreterStateArgs>> {
         // If the list is refreshing, it's crucial to maintain sorting order at all
         // times so that the visible items do not change.
         const preserveOrderWhenFiltering = !!this.interpreterService.refreshPromise;
-        const suggestions = this._getItems(state.workspace, filter);
+        const suggestions = this._getItems(state.workspace, filter, params);
         state.path = undefined;
         const currentInterpreterPathDisplay = this.pathUtils.getDisplayName(
             this.configurationService.getSettings(state.workspace).pythonPath,
@@ -183,10 +184,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
                             // Items are in the final state as all previous callbacks have finished executing.
                             quickPick.busy = false;
                             // Ensure we set a recommended item after refresh has finished.
-                            this.updateQuickPickItems(quickPick, {}, state.workspace, filter);
+                            this.updateQuickPickItems(quickPick, {}, state.workspace, filter, params);
                         });
                     }
-                    this.updateQuickPickItems(quickPick, event, state.workspace, filter);
+                    this.updateQuickPickItems(quickPick, event, state.workspace, filter, params);
                 },
             },
         });
@@ -208,14 +209,18 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         return undefined;
     }
 
-    public _getItems(resource: Resource, filter: ((i: PythonEnvironment) => boolean) | undefined): QuickPickType[] {
+    public _getItems(
+        resource: Resource,
+        filter: ((i: PythonEnvironment) => boolean) | undefined,
+        params?: InterpreterQuickPickParams,
+    ): QuickPickType[] {
         const suggestions: QuickPickType[] = [this.manualEntrySuggestion];
         const defaultInterpreterPathSuggestion = this.getDefaultInterpreterPathSuggestion(resource);
         if (defaultInterpreterPathSuggestion) {
             suggestions.push(defaultInterpreterPathSuggestion);
         }
-        const interpreterSuggestions = this.getSuggestions(resource, filter);
-        this.finalizeItems(interpreterSuggestions, resource);
+        const interpreterSuggestions = this.getSuggestions(resource, filter, params);
+        this.finalizeItems(interpreterSuggestions, resource, params);
         suggestions.push(...interpreterSuggestions);
         return suggestions;
     }
@@ -223,6 +228,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
     private getSuggestions(
         resource: Resource,
         filter: ((i: PythonEnvironment) => boolean) | undefined,
+        params?: InterpreterQuickPickParams,
     ): QuickPickType[] {
         const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
         const items = this.interpreterSelector
@@ -235,10 +241,13 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         const itemsWithFullName = this.interpreterSelector
             .getSuggestions(resource, true)
             .filter((i) => !filter || filter(i.interpreter));
-        const recommended = this.interpreterSelector.getRecommendedSuggestion(
-            itemsWithFullName,
-            this.workspaceService.getWorkspaceFolder(resource)?.uri,
-        );
+        let recommended: IInterpreterQuickPickItem | undefined;
+        if (!params?.skipRecommended) {
+            recommended = this.interpreterSelector.getRecommendedSuggestion(
+                itemsWithFullName,
+                this.workspaceService.getWorkspaceFolder(resource)?.uri,
+            );
+        }
         if (recommended && items[0].interpreter.id === recommended.interpreter.id) {
             items.shift();
         }
@@ -289,10 +298,11 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         event: PythonEnvironmentsChangedEvent,
         resource: Resource,
         filter: ((i: PythonEnvironment) => boolean) | undefined,
+        params?: InterpreterQuickPickParams,
     ) {
         // Active items are reset once we replace the current list with updated items, so save it.
         const activeItemBeforeUpdate = quickPick.activeItems.length > 0 ? quickPick.activeItems[0] : undefined;
-        quickPick.items = this.getUpdatedItems(quickPick.items, event, resource, filter);
+        quickPick.items = this.getUpdatedItems(quickPick.items, event, resource, filter, params);
         // Ensure we maintain the same active item as before.
         const activeItem = activeItemBeforeUpdate
             ? quickPick.items.find((item) => {
@@ -317,6 +327,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         event: PythonEnvironmentsChangedEvent,
         resource: Resource,
         filter: ((i: PythonEnvironment) => boolean) | undefined,
+        params?: InterpreterQuickPickParams,
     ): QuickPickType[] {
         const updatedItems = [...items.values()];
         const areItemsGrouped = items.find((item) => isSeparatorItem(item));
@@ -364,16 +375,18 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         if (envIndex !== -1 && event.new === undefined) {
             updatedItems.splice(envIndex, 1);
         }
-        this.finalizeItems(updatedItems, resource);
+        this.finalizeItems(updatedItems, resource, params);
         return updatedItems;
     }
 
-    private finalizeItems(items: QuickPickType[], resource: Resource) {
+    private finalizeItems(items: QuickPickType[], resource: Resource, params?: InterpreterQuickPickParams) {
         const interpreterSuggestions = this.interpreterSelector.getSuggestions(resource, true);
         const r = this.interpreterService.refreshPromise;
         if (!r) {
             if (interpreterSuggestions.length) {
-                this.setRecommendedItem(interpreterSuggestions, items, resource);
+                if (!params?.skipRecommended) {
+                    this.setRecommendedItem(interpreterSuggestions, items, resource);
+                }
                 // Add warning label to certain environments
                 items.forEach((item, i) => {
                     if (isInterpreterQuickPickItem(item) && isProblematicCondaEnvironment(item.interpreter)) {
@@ -513,7 +526,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
     public async getInterpreterViaQuickPick(
         workspace: Resource,
         filter: ((i: PythonEnvironment) => boolean) | undefined,
-        params?: { placeholder?: string | null; title?: string | null },
+        params?: InterpreterQuickPickParams,
     ): Promise<string | undefined> {
         const interpreterState: InterpreterStateArgs = { path: undefined, workspace };
         const multiStep = this.multiStepFactory.create<InterpreterStateArgs>();
