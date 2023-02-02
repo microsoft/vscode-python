@@ -5,18 +5,10 @@
 
 import * as path from 'path';
 import { dirname } from 'path';
-import {
-    arePathsSame,
-    getPythonSetting,
-    onDidChangePythonSetting,
-    pathExists,
-    shellExecute,
-} from '../externalDependencies';
+import { arePathsSame, pathExists, shellExecute } from '../externalDependencies';
 import { cache } from '../../../common/utils/decorators';
 import { traceError, traceVerbose } from '../../../logging';
 import { getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
-
-export const STATEPATH_SETTING_KEY = 'statePath';
 
 const STATE_GENERAL_TIMEOUT = 5000;
 
@@ -43,12 +35,6 @@ export class ActiveState {
         return ActiveState.statePromise;
     }
 
-    constructor() {
-        onDidChangePythonSetting(STATEPATH_SETTING_KEY, () => {
-            ActiveState.statePromise = undefined;
-        });
-    }
-
     public static getStateToolDir(): string | undefined {
         const home = getUserHomeDir();
         if (!home) {
@@ -71,14 +57,13 @@ export class ActiveState {
         return this.getProjectsCached();
     }
 
-    private static readonly defaultStateCommand: string = 'state';
+    private static readonly stateCommand: string = 'state';
 
     @cache(30_000, true, 10_000)
     // eslint-disable-next-line class-methods-use-this
     private async getProjectsCached(): Promise<ProjectInfo[] | undefined> {
         try {
-            const stateCommand = getPythonSetting<string>(STATEPATH_SETTING_KEY) ?? ActiveState.defaultStateCommand;
-            const result = await shellExecute(`${stateCommand} projects -o editor`, {
+            const result = await shellExecute(`${ActiveState.stateCommand} projects -o editor`, {
                 timeout: STATE_GENERAL_TIMEOUT,
             });
             if (!result) {
@@ -89,7 +74,7 @@ export class ActiveState {
                 // '\0' is a record separator.
                 output = output.substring(0, output.length - 1);
             }
-            traceVerbose(`${stateCommand} projects -o editor: ${output}`);
+            traceVerbose(`${ActiveState.stateCommand} projects -o editor: ${output}`);
             const projects = JSON.parse(output);
             ActiveState.setCachedProjectInfo(projects);
             return projects;

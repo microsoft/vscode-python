@@ -40,8 +40,6 @@ suite('ActiveState Locator', () => {
             sinon.stub(fsapi, 'pathExists').callsFake((dir: string) => dir === stateToolDir);
         }
 
-        sinon.stub(externalDependencies, 'getPythonSetting').returns(undefined);
-
         sinon.stub(externalDependencies, 'shellExecute').callsFake((command: string) => {
             if (command === 'state projects -o editor') {
                 return Promise.resolve<ExecutionResult<string>>({

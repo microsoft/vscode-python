@@ -10,7 +10,6 @@
     "condaPath": "placeholder",
     "pipenvPath": "placeholder",
     "poetryPath": "placeholder",
-    "statePath": "placeholder",
     "devOptions": false,
     "globalModuleInstallation": false,
     "languageServer": true,
