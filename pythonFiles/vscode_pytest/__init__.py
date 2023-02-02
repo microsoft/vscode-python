@@ -13,14 +13,6 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
-
-# sys.path.append("/Users/eleanorboyd/vscode-python/pythonFiles/lib/python")
-# import debugpy
-
-# debugpy.connect(5678)
-# debugpy.breakpoint()
-
-
 # Inherit from str so it's JSON serializable.
 class TestNodeTypeEnum(str, enum.Enum):
     class_ = "class"
@@ -53,7 +45,6 @@ DEFAULT_PORT = "45454"
 
 
 def pytest_collection_finish(session):
-    print("yes")
     # Called after collection has been performed.
     node: Union[TestNode, None] = build_test_tree(session)[0]
     cwd = pathlib.Path.cwd()
@@ -71,14 +62,7 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
     class_nodes_dict: dict[str, TestNode] = {}
 
     for test_case in session.items:
-        test_node: TestItem = create_test_node(
-            test_case
-        )  # TODO: this might need to be checked depending on doc test types
-        # Check parent node type, either Module or UnitTest class.
-        if test_case.parent.path == session.path:
-            print("session path hit")
-        if type(test_case) == DoctestItem:
-            print("testitem")
+        test_node: TestItem = create_test_node(test_case)
         if type(test_case.parent) == DoctestTextfile:
             try:
                 parent_test_case: TestNode = file_nodes_dict[test_case.parent]
@@ -107,28 +91,20 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
             except KeyError:
                 test_file_node: TestNode = create_file_node(parent_module)
                 file_nodes_dict[parent_module] = test_file_node
-            test_file_node["children"].append(test_class_node)  # trying this
+            test_file_node["children"].append(test_class_node)
             # Check if the class is already a child of the file node.
             if test_class_node not in test_file_node["children"]:
                 test_file_node["children"].append(test_class_node)
-
     created_files_folders_dict: dict[str, TestNode] = {}
-    f = open(
-        "/Users/eleanorboyd/vscode-python/pythonFiles/vscode_pytest/demofile3.txt", "w"
-    )
     for file_module, file_node in file_nodes_dict.items():
-        f.write(str(file_node.get("path")))
-        if session.path == file_module.path:
-            print("true")
-        else:
-            root_folder_node: TestNode = build_nested_folders(
-                file_module, file_node, created_files_folders_dict, session
-            )
-            # the final folder we get to is the highest folder in the path and therefore we add this as a child to the session.
-            if root_folder_node.get("id_") not in session_children_dict:
-                session_children_dict[root_folder_node.get("id_")] = root_folder_node
+        # Iterate through all the files that exist and construct them into nested folders.
+        root_folder_node: TestNode = build_nested_folders(
+            file_module, file_node, created_files_folders_dict, session
+        )
+        # The final folder we get to is the highest folder in the path and therefore we add this as a child to the session.
+        if root_folder_node.get("id_") not in session_children_dict:
+            session_children_dict[root_folder_node.get("id_")] = root_folder_node
     session_node["children"] = list(session_children_dict.values())
-    f.close()
     return session_node, errors
 
 
@@ -139,8 +115,6 @@ def build_nested_folders(
     session: pytest.Session,
 ) -> TestNode:
     prev_folder_node: TestNode = file_node
-    if session.path == file_module.path:
-        print("true")
 
     # Begin the i_path iteration one level above the current file.
     iterator_path: pathlib.Path = file_module.path.parent
@@ -162,7 +136,7 @@ def build_nested_folders(
 
 def create_test_node(
     test_case: pytest.Item,
-) -> TestItem:  # stickynote what is this type
+) -> TestItem:
     test_case_loc: str = (
         "" if test_case.location[1] is None else str(test_case.location[1] + 1)
     )
@@ -171,7 +145,7 @@ def create_test_node(
         "path": str(test_case.path),
         "lineno": test_case_loc,
         "type_": TestNodeTypeEnum.test,
-        "id_": test_case.nodeid,  # remove cast
+        "id_": test_case.nodeid,
         "runID": test_case.nodeid,
     }
 
