@@ -60,7 +60,6 @@ class TestOutcomeEnum(str, enum.Enum):
 
 
 class UnittestTestResult(unittest.TextTestResult):
-
     formatted: Dict[str, Dict[str, str | None]] = dict()
 
     def startTest(self, test: unittest.TestCase):

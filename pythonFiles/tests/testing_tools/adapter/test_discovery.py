@@ -11,7 +11,6 @@ from testing_tools.adapter.discovery import fix_nodeid, DiscoveredTests
 
 
 def _fix_nodeid(nodeid):
-
     nodeid = nodeid.replace("\\", "/")
     if not nodeid.startswith("./"):
         nodeid = "./" + nodeid

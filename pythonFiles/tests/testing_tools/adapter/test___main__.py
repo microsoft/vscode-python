@@ -115,7 +115,6 @@ class ParseDiscoverTests(unittest.TestCase):
 
 
 class MainTests(unittest.TestCase):
-
     # TODO: We could use an integration test for pytest.discover().
 
     def test_discover(self):

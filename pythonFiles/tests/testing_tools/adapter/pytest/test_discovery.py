@@ -46,7 +46,6 @@ class StubPyTest(util.StubProxy):
 
 
 class StubPlugin(util.StubProxy):
-
     _started = True
 
     def __init__(self, stub=None, tests=None):
@@ -66,7 +65,6 @@ class StubPlugin(util.StubProxy):
 
 
 class StubDiscoveredTests(util.StubProxy):
-
     NOT_FOUND = object()
 
     def __init__(self, stub=None):
@@ -105,7 +103,6 @@ class FakeMarker(object):
 
 
 class StubPytestItem(util.StubProxy):
-
     _debugging = False
     _hasfunc = True
 
@@ -218,6 +215,7 @@ def generate_parse_item(pathsep):
 
     else:
         raise NotImplementedError
+
     ##########
     def _fix_fileid(*args):
         return adapter_util.fix_fileid(
@@ -332,7 +330,6 @@ def fake_pytest_main(stub, use_fd, pytest_stdout):
 
 
 class DiscoverTests(unittest.TestCase):
-
     DEFAULT_ARGS = [
         "--collect-only",
     ]
