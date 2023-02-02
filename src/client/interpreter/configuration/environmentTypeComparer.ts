@@ -100,6 +100,9 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
                 // We're not sure if these envs were created for the workspace, so do not recommend them.
                 return false;
             }
+            if (i.version?.major === 2) {
+                return false;
+            }
             return true;
         });
         filteredInterpreters.sort(this.compare.bind(this));
