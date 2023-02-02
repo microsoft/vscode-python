@@ -42,7 +42,6 @@ export enum ModuleInstallerType {
     Pip = 'Pip',
     Poetry = 'Poetry',
     Pipenv = 'Pipenv',
-    ActiveState = 'ActiveState',
 }
 
 /**
