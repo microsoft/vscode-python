@@ -48,6 +48,8 @@ export namespace Diagnostics {
 }
 
 export namespace Common {
+    export const allow = l10n.t('Allow');
+    export const close = l10n.t('Close');
     export const bannerLabelYes = l10n.t('Yes');
     export const bannerLabelNo = l10n.t('No');
     export const yesPlease = l10n.t('Yes, please');
@@ -189,7 +191,7 @@ export namespace Interpreters {
     export const discovering = l10n.t('Discovering Python Interpreters');
     export const refreshing = l10n.t('Refreshing Python Interpreters');
     export const condaInheritEnvMessage = l10n.t(
-        'We noticed you\'re using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we recommend that you let the Python extension change "terminal.integrated.inheritEnv" to false in your user settings.',
+        'We noticed you\'re using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we recommend that you let the Python extension change "terminal.integrated.inheritEnv" to false in your user settings. [Learn more](https://aka.ms/AA66i8f).',
     );
     export const activatedCondaEnvLaunch = l10n.t(
         'We noticed VS Code was launched from an activated conda environment, would you like to select it?',
