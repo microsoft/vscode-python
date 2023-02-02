@@ -7,18 +7,18 @@ import sys
 from typing import List, Literal, Tuple, TypedDict, Union
 
 import pytest
-from _pytest.doctest import DoctestTextfile
+from _pytest.doctest import DoctestItem, DoctestTextfile
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
 
-sys.path.append("/Users/eleanorboyd/vscode-python/pythonFiles/lib/python")
-import debugpy
+# sys.path.append("/Users/eleanorboyd/vscode-python/pythonFiles/lib/python")
+# import debugpy
 
-debugpy.connect(5678)
-debugpy.breakpoint()
+# debugpy.connect(5678)
+# debugpy.breakpoint()
 
 
 # Inherit from str so it's JSON serializable.
@@ -75,6 +75,10 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
             test_case
         )  # TODO: this might need to be checked depending on doc test types
         # Check parent node type, either Module or UnitTest class.
+        if test_case.parent.path == session.path:
+            print("session path hit")
+        if type(test_case) == DoctestItem:
+            print("testitem")
         if type(test_case.parent) == DoctestTextfile:
             try:
                 parent_test_case: TestNode = file_nodes_dict[test_case.parent]
@@ -82,7 +86,7 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
                 parent_test_case: TestNode = create_doc_file_node(test_case.parent)
                 file_nodes_dict[test_case.parent] = parent_test_case
             parent_test_case["children"].append(test_node)
-        if type(test_case.parent) is pytest.Module:
+        elif type(test_case.parent) is pytest.Module:
             try:
                 parent_test_case: TestNode = file_nodes_dict[test_case.parent]
             except KeyError:
@@ -103,20 +107,28 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
             except KeyError:
                 test_file_node: TestNode = create_file_node(parent_module)
                 file_nodes_dict[parent_module] = test_file_node
-            test_file_node["children"].append(test_node)
+            test_file_node["children"].append(test_class_node)  # trying this
             # Check if the class is already a child of the file node.
             if test_class_node not in test_file_node["children"]:
                 test_file_node["children"].append(test_class_node)
 
     created_files_folders_dict: dict[str, TestNode] = {}
+    f = open(
+        "/Users/eleanorboyd/vscode-python/pythonFiles/vscode_pytest/demofile3.txt", "w"
+    )
     for file_module, file_node in file_nodes_dict.items():
-        root_folder_node: TestNode = build_nested_folders(
-            file_module, file_node, created_files_folders_dict, session
-        )
-        # the final folder we get to is the highest folder in the path and therefore we add this as a child to the session.
-        if root_folder_node.get("id_") not in session_children_dict:
-            session_children_dict[root_folder_node.get("id_")] = root_folder_node
+        f.write(str(file_node.get("path")))
+        if session.path == file_module.path:
+            print("true")
+        else:
+            root_folder_node: TestNode = build_nested_folders(
+                file_module, file_node, created_files_folders_dict, session
+            )
+            # the final folder we get to is the highest folder in the path and therefore we add this as a child to the session.
+            if root_folder_node.get("id_") not in session_children_dict:
+                session_children_dict[root_folder_node.get("id_")] = root_folder_node
     session_node["children"] = list(session_children_dict.values())
+    f.close()
     return session_node, errors
 
 
@@ -127,6 +139,9 @@ def build_nested_folders(
     session: pytest.Session,
 ) -> TestNode:
     prev_folder_node: TestNode = file_node
+    if session.path == file_module.path:
+        print("true")
+
     # Begin the i_path iteration one level above the current file.
     iterator_path: pathlib.Path = file_module.path.parent
     while iterator_path != session.path:
