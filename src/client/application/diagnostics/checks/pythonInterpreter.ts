@@ -34,7 +34,7 @@ const messages = {
         'No Python interpreter is selected. Please select a Python interpreter to enable features such as IntelliSense, linting, and debugging.',
     ),
     [DiagnosticCodes.InvalidPythonInterpreterDiagnostic]: l10n.t(
-        'An Invalid Python interpreter is selected{0}, please try changing it to enable features such as IntelliSense, linting, and debugging.',
+        'An Invalid Python interpreter is selected{0}, please try changing it to enable features such as IntelliSense, linting, and debugging. See output for more details regarding why the interpreter is invalid.',
     ),
 };
 
@@ -163,7 +163,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
 
     private getCommandPrompts(diagnostic: IDiagnostic): { prompt: string; command?: IDiagnosticCommand }[] {
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
-        return [
+        const prompts = [
             {
                 prompt: Common.selectPythonInterpreter,
                 command: commandFactory.createCommand(diagnostic, {
@@ -172,6 +172,16 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
                 }),
             },
         ];
+        if (diagnostic.code === DiagnosticCodes.InvalidPythonInterpreterDiagnostic) {
+            prompts.push({
+                prompt: Common.openOutputPanel,
+                command: commandFactory.createCommand(diagnostic, {
+                    type: 'executeVSCCommand',
+                    options: Commands.ViewOutput,
+                }),
+            });
+        }
+        return prompts;
     }
 }
 

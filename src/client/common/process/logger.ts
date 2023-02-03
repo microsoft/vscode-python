@@ -11,6 +11,7 @@ import { Logging } from '../utils/localize';
 import { getOSType, getUserHomeDir, OSType } from '../utils/platform';
 import { IProcessLogger, SpawnOptions } from './types';
 import { escapeRegExp } from 'lodash';
+import { replaceAll } from '../stringUtils';
 
 @injectable()
 export class ProcessLogger implements IProcessLogger {
@@ -57,7 +58,7 @@ function replaceMatchesWithCharacter(original: string, match: string, character:
         let pattern = escapeRegExp(match);
         if (getOSType() === OSType.Windows) {
             // Match both forward and backward slash versions of 'match' for Windows.
-            pattern = pattern.replaceAll('\\\\', '(\\\\|/)');
+            pattern = replaceAll(pattern, '\\\\', '(\\\\|/)');
         }
         let regex = new RegExp(pattern, 'ig');
         return regex;

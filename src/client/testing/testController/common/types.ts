@@ -151,6 +151,17 @@ export type TestCommandOptions = {
     testIds?: string[];
 };
 
+export type TestCommandOptionsPytest = {
+    workspaceFolder: Uri;
+    cwd: string;
+    commandStr: string;
+    token?: CancellationToken;
+    outChannel?: OutputChannel;
+    debugBool?: boolean;
+    testIds?: string[];
+    env: { [key: string]: string | undefined };
+};
+
 /**
  * Interface describing the server that will send test commands to the Python side, and process responses.
  *
@@ -161,10 +172,14 @@ export interface ITestServer {
     readonly onDataReceived: Event<DataReceivedEvent>;
     sendCommand(options: TestCommandOptions): Promise<void>;
     serverReady(): Promise<void>;
+    getPort(): number;
+    createUUID(cwd: string): string;
 }
 
 export interface ITestDiscoveryAdapter {
+    // ** Uncomment second line and comment out first line to use the new discovery method.
     discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
+    // discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload>
 }
 
 // interface for execution/runner adapter

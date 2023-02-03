@@ -5,6 +5,7 @@
 import { inject, injectable } from 'inversify';
 import { ICondaService, IComponentAdapter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { getEnvPath } from '../../pythonEnvironments/base/info/env';
 import { ModuleInstallerType } from '../../pythonEnvironments/info';
 import { ExecutionInfo, IConfigurationService, Product } from '../types';
 import { isResource } from '../utils/misc';
@@ -79,7 +80,7 @@ export class CondaInstaller extends ModuleInstaller {
 
         const pythonPath = isResource(resource)
             ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
-            : resource.id ?? '';
+            : getEnvPath(resource.path, resource.envPath).path ?? '';
         const condaLocatorService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
         const info = await condaLocatorService.getCondaEnvironment(pythonPath);
         const args = [flags & ModuleInstallFlags.upgrade ? 'update' : 'install'];
@@ -132,7 +133,7 @@ export class CondaInstaller extends ModuleInstaller {
         const condaService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
         const pythonPath = isResource(resource)
             ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
-            : resource.id ?? '';
+            : getEnvPath(resource.path, resource.envPath).path ?? '';
         return condaService.isCondaEnvironment(pythonPath);
     }
 }

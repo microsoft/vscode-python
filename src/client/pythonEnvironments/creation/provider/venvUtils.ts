@@ -9,7 +9,7 @@ import { CancellationToken, QuickPickItem, RelativePattern, WorkspaceFolder } fr
 import { CreateEnv } from '../../../common/utils/localize';
 import { showQuickPick } from '../../../common/vscodeApis/windowApis';
 import { findFiles } from '../../../common/vscodeApis/workspaceApis';
-import { traceError, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../../logging';
 
 const exclude = '**/{.venv*,.git,.nox,.tox,.conda,site-packages,__pypackages__}/**';
 async function getPipRequirementsFiles(
@@ -25,19 +25,26 @@ async function getPipRequirementsFiles(
     return files;
 }
 
-async function getTomlOptionalDeps(tomlPath: string): Promise<string[]> {
-    const content = await fs.readFile(tomlPath, 'utf-8');
-    const extras: string[] = [];
+function tomlParse(content: string): tomljs.JsonMap {
     try {
-        const toml = tomljs.parse(content);
-        if (toml.project && (toml.project as Record<string, Array<string>>)['optional-dependencies']) {
-            const deps = (toml.project as Record<string, Record<string, Array<string>>>)['optional-dependencies'];
-            for (const key of Object.keys(deps)) {
-                extras.push(key);
-            }
-        }
+        return tomljs.parse(content);
     } catch (err) {
         traceError('Failed to parse `pyproject.toml`:', err);
+    }
+    return {};
+}
+
+function tomlHasBuildSystem(toml: tomljs.JsonMap): boolean {
+    return toml['build-system'] !== undefined;
+}
+
+function getTomlOptionalDeps(toml: tomljs.JsonMap): string[] {
+    const extras: string[] = [];
+    if (toml.project && (toml.project as tomljs.JsonMap)['optional-dependencies']) {
+        const deps = (toml.project as tomljs.JsonMap)['optional-dependencies'];
+        for (const key of Object.keys(deps)) {
+            extras.push(key);
+        }
     }
     return extras;
 }
@@ -109,12 +116,15 @@ export async function pickPackagesToInstall(
 
     let extras: string[] = [];
     let tomlExists = false;
+    let hasBuildSystem = false;
     if (await fs.pathExists(tomlPath)) {
         tomlExists = true;
-        extras = await getTomlOptionalDeps(tomlPath);
+        const toml = tomlParse(await fs.readFile(tomlPath, 'utf-8'));
+        extras = getTomlOptionalDeps(toml);
+        hasBuildSystem = tomlHasBuildSystem(toml);
     }
 
-    if (tomlExists) {
+    if (tomlExists && hasBuildSystem) {
         if (extras.length === 0) {
             return { installType: 'toml', installList: [], source: tomlPath };
         }
@@ -124,6 +134,9 @@ export async function pickPackagesToInstall(
             return { installType: 'toml', installList, source: tomlPath };
         }
         return undefined;
+    }
+    if (tomlExists) {
+        traceInfo('Create env: Found toml without optional dependencies or build system.');
     }
 
     traceVerbose('Looking for pip requirements.');

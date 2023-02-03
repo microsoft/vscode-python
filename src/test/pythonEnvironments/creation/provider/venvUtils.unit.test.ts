@@ -46,10 +46,25 @@ suite('Venv Utils test', () => {
         });
     });
 
-    test('Toml found with no optional deps', async () => {
+    test('Toml found with no build system', async () => {
         findFilesStub.resolves([]);
         pathExistsStub.resolves(true);
         readFileStub.resolves('[project]\nname = "spam"\nversion = "2020.0.0"\n');
+
+        const actual = await pickPackagesToInstall(workspace1);
+        assert.isTrue(showQuickPickStub.notCalled);
+        assert.deepStrictEqual(actual, {
+            installType: 'none',
+            installList: [],
+        });
+    });
+
+    test('Toml found with no optional deps', async () => {
+        findFilesStub.resolves([]);
+        pathExistsStub.resolves(true);
+        readFileStub.resolves(
+            '[project]\nname = "spam"\nversion = "2020.0.0"\n[build-system]\nrequires = ["setuptools ~= 58.0", "cython ~= 0.29.0"]',
+        );
 
         const actual = await pickPackagesToInstall(workspace1);
         assert.isTrue(showQuickPickStub.notCalled);
@@ -64,7 +79,7 @@ suite('Venv Utils test', () => {
         findFilesStub.resolves([]);
         pathExistsStub.resolves(true);
         readFileStub.resolves(
-            '[project]\nname = "spam"\nversion = "2020.0.0"\n[project.optional-dependencies]\ntest = ["pytest"]\ndoc = ["sphinx", "furo"]',
+            '[project]\nname = "spam"\nversion = "2020.0.0"\n[build-system]\nrequires = ["setuptools ~= 58.0", "cython ~= 0.29.0"]\n[project.optional-dependencies]\ntest = ["pytest"]\ndoc = ["sphinx", "furo"]',
         );
 
         showQuickPickStub.resolves(undefined);
@@ -88,7 +103,7 @@ suite('Venv Utils test', () => {
         findFilesStub.resolves([]);
         pathExistsStub.resolves(true);
         readFileStub.resolves(
-            '[project]\nname = "spam"\nversion = "2020.0.0"\n[project.optional-dependencies]\ntest = ["pytest"]\ndoc = ["sphinx", "furo"]',
+            '[project]\nname = "spam"\nversion = "2020.0.0"\n[build-system]\nrequires = ["setuptools ~= 58.0", "cython ~= 0.29.0"]\n[project.optional-dependencies]\ntest = ["pytest"]\ndoc = ["sphinx", "furo"]',
         );
 
         showQuickPickStub.resolves([]);
@@ -116,7 +131,7 @@ suite('Venv Utils test', () => {
         findFilesStub.resolves([]);
         pathExistsStub.resolves(true);
         readFileStub.resolves(
-            '[project]\nname = "spam"\nversion = "2020.0.0"\n[project.optional-dependencies]\ntest = ["pytest"]\ndoc = ["sphinx", "furo"]',
+            '[project]\nname = "spam"\nversion = "2020.0.0"\n[build-system]\nrequires = ["setuptools ~= 58.0", "cython ~= 0.29.0"]\n[project.optional-dependencies]\ntest = ["pytest"]\ndoc = ["sphinx", "furo"]',
         );
 
         showQuickPickStub.resolves([{ label: 'doc' }]);
@@ -144,7 +159,7 @@ suite('Venv Utils test', () => {
         findFilesStub.resolves([]);
         pathExistsStub.resolves(true);
         readFileStub.resolves(
-            '[project]\nname = "spam"\nversion = "2020.0.0"\n[project.optional-dependencies]\ntest = ["pytest"]\ndoc = ["sphinx", "furo"]\ncov = ["pytest-cov"]',
+            '[project]\nname = "spam"\nversion = "2020.0.0"\n[build-system]\nrequires = ["setuptools ~= 58.0", "cython ~= 0.29.0"]\n[project.optional-dependencies]\ntest = ["pytest"]\ndoc = ["sphinx", "furo"]\ncov = ["pytest-cov"]',
         );
 
         showQuickPickStub.resolves([{ label: 'test' }, { label: 'cov' }]);

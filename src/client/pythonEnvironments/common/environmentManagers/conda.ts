@@ -21,6 +21,7 @@ import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
 import { traceError, traceVerbose } from '../../../logging';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
+import { splitLines } from '../../../common/stringUtils';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 export const CONDAPATH_SETTING_KEY = 'condaPath';
@@ -185,7 +186,7 @@ export async function getPythonVersionFromConda(interpreterPath: string): Promis
     for (const configPath of configPaths) {
         if (await pathExists(configPath)) {
             try {
-                const lines = (await readFile(configPath)).splitLines();
+                const lines = splitLines(await readFile(configPath));
 
                 // Sample data:
                 // +defaults/linux-64::pip-20.2.4-py38_0
@@ -226,14 +227,11 @@ export async function getPythonVersionFromConda(interpreterPath: string): Promis
 /**
  * Return the interpreter's filename for the given environment.
  */
-async function getInterpreterPath(condaEnvironmentPath: string): Promise<string | undefined> {
+export function getCondaInterpreterPath(condaEnvironmentPath: string): string {
     // where to find the Python binary within a conda env.
     const relativePath = getOSType() === OSType.Windows ? 'python.exe' : path.join('bin', 'python');
     const filePath = path.join(condaEnvironmentPath, relativePath);
-    if (await pathExists(filePath)) {
-        return filePath;
-    }
-    return undefined;
+    return filePath;
 }
 
 // Minimum version number of conda required to be able to use 'conda run' with '--no-capture-output' flag.
@@ -494,8 +492,8 @@ export class Conda {
      */
     // eslint-disable-next-line class-methods-use-this
     public async getInterpreterPathForEnvironment(condaEnv: CondaEnvInfo | { prefix: string }): Promise<string> {
-        const executablePath = await getInterpreterPath(condaEnv.prefix);
-        if (executablePath) {
+        const executablePath = getCondaInterpreterPath(condaEnv.prefix);
+        if (await pathExists(executablePath)) {
             traceVerbose('Found executable within conda env', JSON.stringify(condaEnv));
             return executablePath;
         }

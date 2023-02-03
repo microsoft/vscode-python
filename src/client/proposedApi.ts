@@ -304,7 +304,7 @@ export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment 
     const { path } = getEnvPath(env.executable.filename, env.location);
     const resolvedEnv: ResolvedEnvironment = {
         path,
-        id: getEnvID(path),
+        id: env.id!,
         executable: {
             uri: env.executable.filename === 'python' ? undefined : Uri.file(env.executable.filename),
             bitness: convertBitness(env.arch),

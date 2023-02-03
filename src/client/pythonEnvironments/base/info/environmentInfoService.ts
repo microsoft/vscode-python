@@ -7,7 +7,7 @@ import { createDeferred, Deferred, sleep } from '../../../common/utils/async';
 import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../../common/utils/workerPool';
 import { getInterpreterInfo, InterpreterInformation } from './interpreter';
 import { buildPythonExecInfo } from '../../exec';
-import { traceError, traceInfo } from '../../../logging';
+import { traceError, traceInfo, traceWarn } from '../../../logging';
 import { Conda, CONDA_ACTIVATION_TIMEOUT, isCondaEnvironment } from '../../common/environmentManagers/conda';
 import { PythonEnvInfo, PythonEnvKind } from '.';
 import { normCasePath } from '../../common/externalDependencies';
@@ -37,8 +37,16 @@ export interface IEnvironmentInfoService {
     resetInfo(searchLocation: Uri): void;
 }
 
-async function buildEnvironmentInfo(env: PythonEnvInfo): Promise<InterpreterInformation | undefined> {
-    const python = [env.executable.filename, '-I', OUTPUT_MARKER_SCRIPT];
+async function buildEnvironmentInfo(
+    env: PythonEnvInfo,
+    useIsolated = true,
+): Promise<InterpreterInformation | undefined> {
+    const python = [env.executable.filename];
+    if (useIsolated) {
+        python.push(...['-I', OUTPUT_MARKER_SCRIPT]);
+    } else {
+        python.push(...[OUTPUT_MARKER_SCRIPT]);
+    }
     const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(python, undefined, env.executable.filename));
     return interpreterInfo;
 }
@@ -134,7 +142,7 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
             );
         }
 
-        let reason: unknown;
+        let reason: Error | undefined;
         let r = await addToQueue(this.workerPool, env, priority).catch((err) => {
             reason = err;
             return undefined;
@@ -161,6 +169,16 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
                     return undefined;
                 });
             } else if (reason) {
+                if (reason.message.includes('Unknown option: -I')) {
+                    traceWarn(reason);
+                    traceError(
+                        'Support for Python 2.7 has been dropped by the Python extension so certain features may not work, upgrade to using Python 3.',
+                    );
+                    return buildEnvironmentInfo(env, false).catch((err) => {
+                        traceError(err);
+                        return undefined;
+                    });
+                }
                 traceError(reason);
             }
         }

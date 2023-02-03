@@ -1310,11 +1310,10 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.CONDA_INHERIT_ENV_PROMPT]: {
         /**
-         * `Yes` When 'Yes' option is selected
-         * `No` When 'No' option is selected
-         * `More info` When 'More Info' option is selected
+         * `Yes` When 'Allow' option is selected
+         * `Close` When 'Close' option is selected
          */
-        selection: 'Yes' | 'No' | 'More Info' | undefined;
+        selection: 'Allow' | 'Close' | undefined;
     };
     /**
      * Telemetry event sent with details when user clicks the prompt with the following message:

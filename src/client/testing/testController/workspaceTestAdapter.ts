@@ -14,6 +14,7 @@ import {
     Uri,
     Location,
 } from 'vscode';
+import { splitLines } from '../../common/stringUtils';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
 import { traceError } from '../../logging';
@@ -138,11 +139,12 @@ export class WorkspaceTestAdapter {
                     rawTestExecData.result[keyTemp].outcome === 'subtest-failure' ||
                     rawTestExecData.result[keyTemp].outcome === 'passed-unexpected'
                 ) {
-                    const traceback = rawTestExecData.result[keyTemp].traceback
-                        ? rawTestExecData.result[keyTemp]
-                              .traceback!.splitLines({ trim: false, removeEmptyEntries: true })
-                              .join('\r\n')
-                        : '';
+                    const rawTraceback = rawTestExecData.result[keyTemp].traceback ?? '';
+                    const traceback = splitLines(rawTraceback, {
+                        trim: false,
+                        removeEmptyEntries: true,
+                    }).join('\r\n');
+
                     const text = `${rawTestExecData.result[keyTemp].test} failed: ${
                         rawTestExecData.result[keyTemp].message ?? rawTestExecData.result[keyTemp].outcome
                     }\r\n${traceback}\r\n`;
@@ -196,6 +198,7 @@ export class WorkspaceTestAdapter {
         return Promise.resolve();
     }
 
+    // add `executionFactory?: IPythonExecutionFactory,` to the function for new pytest method
     public async discoverTests(
         testController: TestController,
         token?: CancellationToken,
@@ -216,8 +219,13 @@ export class WorkspaceTestAdapter {
 
         let rawTestData;
         try {
+            // ** First line is old way, section with if statement below is new way.
             rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri);
-
+            // if (executionFactory !== undefined) {
+            //     rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
+            // } else {
+            //     traceVerbose('executionFactory is undefined');
+            // }
             deferred.resolve();
         } catch (ex) {
             sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: this.testProvider, failed: true });
@@ -352,6 +360,7 @@ function populateTestTree(
                 testItem.canResolveChildren = false;
                 testItem.range = range;
                 testItem.tags = [RunTestTag, DebugTestTag];
+
                 testRoot!.children.add(testItem);
                 // add to our map
                 wstAdapter.runIdToTestItem.set(child.runID, testItem);
@@ -365,7 +374,6 @@ function populateTestTree(
 
                     node.canResolveChildren = true;
                     node.tags = [RunTestTag, DebugTestTag];
-
                     testRoot!.children.add(node);
                 }
                 populateTestTree(testController, child, node, wstAdapter, token);
