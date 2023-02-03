@@ -295,7 +295,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     ),
                 )
                 .returns(() => cmd)
-                .verifiable(typemoq.Times.once());
+                .verifiable(typemoq.Times.exactly(2));
 
             await diagnosticService.handle([diagnostic]);
 
@@ -304,6 +304,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([
                 { prompt: Common.selectPythonInterpreter, command: cmd },
+                { prompt: Common.openOutputPanel, command: cmd },
             ]);
             expect(messagePrompt!.onClose).be.equal(undefined, 'onClose handler should not be set.');
         });
