@@ -65,18 +65,18 @@ def build_test_tree(session) -> Tuple[Union[TestNode, None], List[str]]:
         test_node: TestItem = create_test_node(test_case)
         if type(test_case.parent) == DoctestTextfile:
             try:
-                parent_test_case: TestNode = file_nodes_dict[test_case.parent]
+                test_file_node: TestNode = file_nodes_dict[test_case.parent]
             except KeyError:
-                parent_test_case: TestNode = create_doc_file_node(test_case.parent)
-                file_nodes_dict[test_case.parent] = parent_test_case
-            parent_test_case["children"].append(test_node)
+                test_file_node: TestNode = create_doc_file_node(test_case.parent)
+                file_nodes_dict[test_case.parent] = test_file_node
+            test_file_node["children"].append(test_node)
         elif type(test_case.parent) is pytest.Module:
             try:
-                parent_test_case: TestNode = file_nodes_dict[test_case.parent]
+                test_file_node: TestNode = file_nodes_dict[test_case.parent]
             except KeyError:
-                parent_test_case: TestNode = create_file_node(test_case.parent)
-                file_nodes_dict[test_case.parent] = parent_test_case
-            parent_test_case["children"].append(test_node)
+                test_file_node: TestNode = create_file_node(test_case.parent)
+                file_nodes_dict[test_case.parent] = test_file_node
+            test_file_node["children"].append(test_node)
         else:  # should be a pytest.Class
             try:
                 test_class_node: TestNode = class_nodes_dict[test_case.parent.name]
