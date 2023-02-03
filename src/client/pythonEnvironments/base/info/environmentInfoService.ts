@@ -7,7 +7,7 @@ import { createDeferred, Deferred, sleep } from '../../../common/utils/async';
 import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../../common/utils/workerPool';
 import { getInterpreterInfo, InterpreterInformation } from './interpreter';
 import { buildPythonExecInfo } from '../../exec';
-import { traceError, traceInfo } from '../../../logging';
+import { traceError, traceInfo, traceWarn } from '../../../logging';
 import { Conda, CONDA_ACTIVATION_TIMEOUT, isCondaEnvironment } from '../../common/environmentManagers/conda';
 import { PythonEnvInfo, PythonEnvKind } from '.';
 import { normCasePath } from '../../common/externalDependencies';
@@ -170,6 +170,7 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
                 });
             } else if (reason) {
                 if (reason.message.includes('Unknown option: -I')) {
+                    traceWarn(reason);
                     traceError(
                         'Support for Python 2.7 has been dropped by the Python extension so certain features may not work, upgrade to using Python 3.',
                     );
