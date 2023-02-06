@@ -27,9 +27,11 @@ export class ISortExtensionPrompt {
     public constructor(private readonly serviceContainer: IServiceContainer) {}
 
     public async showPrompt(): Promise<boolean> {
-        if (isExtensionEnabled(ISORT_EXTENSION) || isExtensionDisabled(ISORT_EXTENSION)) {
+        const isEnabled = isExtensionEnabled(ISORT_EXTENSION);
+        if (isEnabled || isExtensionDisabled(ISORT_EXTENSION)) {
             sendTelemetryEvent(EventName.TOOLS_EXTENSIONS_ALREADY_INSTALLED, undefined, {
                 extensionId: ISORT_EXTENSION,
+                isEnabled,
             });
             return true;
         }

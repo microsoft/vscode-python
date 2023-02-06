@@ -8,7 +8,8 @@ import { IExperimentService, IExtensions, IPersistentState, IPersistentStateFact
 import { IServiceContainer } from '../../ioc/types';
 import { traceLog } from '../../logging';
 
-function isExtensionInstalledButDisabled(extensions: IExtensions, extensionId: string): boolean {
+export function isExtensionDisabled(serviceContainer: IServiceContainer, extensionId: string): boolean {
+    const extensions: IExtensions = serviceContainer.get<IExtensions>(IExtensions);
     // When debugging the python extension this `extensionPath` below will point to your repo.
     // If you are debugging this feature then set the `extensionPath` to right location after
     // the next line.
@@ -24,19 +25,6 @@ function isExtensionInstalledButDisabled(extensions: IExtensions, extensionId: s
         return found;
     }
     return false;
-}
-
-/**
- * Detects installations even if extension is disabled.
- */
-export function isExtensionInstalled(serviceContainer: IServiceContainer, extensionId: string): boolean {
-    const extensions: IExtensions = serviceContainer.get<IExtensions>(IExtensions);
-    const extension = extensions.getExtension(extensionId);
-    if (!extension) {
-        // The extension you are looking for might be disabled.
-        return isExtensionInstalledButDisabled(extensions, extensionId);
-    }
-    return extension !== undefined;
 }
 
 /**

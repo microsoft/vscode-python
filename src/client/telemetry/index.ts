@@ -2081,6 +2081,7 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.TOOLS_EXTENSIONS_ALREADY_INSTALLED]: {
         extensionId: 'ms-python.pylint' | 'ms-python.flake8' | 'ms-python.isort';
+        isEnabled: boolean;
     };
     /**
      * Telemetry event sent when install linter or formatter extension prompt is shown.

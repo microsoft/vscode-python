@@ -8,7 +8,7 @@ import { showInformationMessage } from '../../common/vscodeApis/windowApis';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { doNotShowPromptState, inToolsExtensionsExperiment, isExtensionInstalled } from './common';
+import { doNotShowPromptState, inToolsExtensionsExperiment, isExtensionDisabled, isExtensionEnabled } from './common';
 import { IToolsExtensionPrompt } from './types';
 
 export const PYLINT_EXTENSION = 'ms-python.pylint';
@@ -20,9 +20,11 @@ export class PylintExtensionPrompt implements IToolsExtensionPrompt {
     public constructor(private readonly serviceContainer: IServiceContainer) {}
 
     public async showPrompt(): Promise<boolean> {
-        if (isExtensionInstalled(this.serviceContainer, PYLINT_EXTENSION)) {
+        const isEnabled = isExtensionEnabled(this.serviceContainer, PYLINT_EXTENSION);
+        if (isEnabled || isExtensionDisabled(this.serviceContainer, PYLINT_EXTENSION)) {
             sendTelemetryEvent(EventName.TOOLS_EXTENSIONS_ALREADY_INSTALLED, undefined, {
                 extensionId: PYLINT_EXTENSION,
+                isEnabled,
             });
             return true;
         }
