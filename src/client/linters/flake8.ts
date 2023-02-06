@@ -17,8 +17,12 @@ export class Flake8 extends BaseLinter {
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
-        if ((await this.prompt.showPrompt()) && isExtensionEnabled(this.serviceContainer, FLAKE8_EXTENSION)) {
-            traceLog('LINTING: Skipping linting from Python extension, since Flake8 extension is installed.');
+        await this.prompt.showPrompt();
+
+        if (isExtensionEnabled(this.serviceContainer, FLAKE8_EXTENSION)) {
+            traceLog(
+                'LINTING: Skipping linting from Python extension, since Flake8 extension is installed and enabled.',
+            );
             return [];
         }
 
