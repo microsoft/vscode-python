@@ -3,20 +3,18 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
+import {
+    ExecutionFactoryCreateWithEnvironmentOptions,
+    IPythonExecutionFactory,
+    SpawnOptions,
+} from '../../../common/process/types';
 import { IConfigurationService } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import {
-    DataReceivedEvent,
-    ExecutionTestPayload,
-    ITestExecutionAdapter,
-    ITestServer,
-    TestCommandOptions,
-    TestExecutionCommand,
-} from '../common/types';
+import { DataReceivedEvent, ExecutionTestPayload, ITestExecutionAdapter, ITestServer } from '../common/types';
 
 /**
- * Wrapper Class for unittest test execution. This is where we call `runTestCommand`?
+ * Wrapper Class for pytest test execution. This is where we call `runTestCommand`?
  */
 
 export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
@@ -37,37 +35,69 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         }
     }
 
-    public async runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload> {
+    // ** Old version of discover tests.
+    // async runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload>{
+    //     traceVerbose(uri, testIds, debugBool);
+    //     this.deferred = createDeferred<ExecutionTestPayload>();
+    //     return this.deferred.promise;
+    // }
+
+    public async runTests(
+        uri: Uri,
+        testIds: string[],
+        debugBool?: boolean,
+        executionFactory?: IPythonExecutionFactory,
+    ): Promise<ExecutionTestPayload> {
         if (!this.deferred) {
+            this.deferred = createDeferred<ExecutionTestPayload>();
+            const relativePathToPytest = 'pythonFiles';
+            const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
+            this.configSettings.isTestExecution();
+            const uuid = this.testServer.createUUID(uri.fsPath);
             const settings = this.configSettings.getSettings(uri);
-            const { unittestArgs } = settings.testing;
+            const { pytestArgs } = settings.testing;
 
-            const command = buildExecutionCommand(unittestArgs);
-            this.cwd = uri.fsPath;
+            const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
+            const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
 
-            const options: TestCommandOptions = {
-                workspaceFolder: uri,
-                command,
-                cwd: this.cwd,
-                debugBool,
-                testIds,
+            const spawnOptions: SpawnOptions = {
+                cwd: uri.fsPath,
+                throwOnStdErr: true,
+                extraVariables: {
+                    PYTHONPATH: pythonPathCommand,
+                    TEST_UUID: uuid.toString(),
+                    TEST_PORT: this.testServer.getPort().toString(),
+                },
             };
 
-            this.deferred = createDeferred<ExecutionTestPayload>();
+            // Create the Python environment in which to execute the command.
+            const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
+                allowEnvironmentFetchExceptions: false,
+                resource: uri,
+            };
+            // need to check what will happen in the exec service is NOT defined and is null
+            const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
 
-            // send test command to server
-            // server fire onDataReceived event once it gets response
-            this.testServer.sendCommand(options);
+            const testIdsString = testIds.join(' ');
+            console.debug('what to do with debug bool?', debugBool);
+            try {
+                execService?.exec(
+                    ['-m', 'pytest', '-p', 'vscode_pytest', testIdsString].concat(pytestArgs),
+                    spawnOptions,
+                );
+            } catch (ex) {
+                console.error(ex);
+            }
         }
         return this.deferred.promise;
     }
 }
 
-function buildExecutionCommand(args: string[]): TestExecutionCommand {
-    const executionScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'execution.py');
+// function buildExecutionCommand(args: string[]): TestExecutionCommand {
+//     const executionScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'execution.py');
 
-    return {
-        script: executionScript,
-        args: ['--udiscovery', ...args],
-    };
-}
+//     return {
+//         script: executionScript,
+//         args: ['--udiscovery', ...args],
+//     };
+// }

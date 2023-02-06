@@ -35,20 +35,20 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     }
 
     // ** Old version of discover tests.
-    discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
-        traceVerbose(uri);
-        this.deferred = createDeferred<DiscoveredTestPayload>();
-        return this.deferred.promise;
-    }
-    // Uncomment this version of the function discoverTests to use the new discovery method.
-    // public async discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
-    //     const settings = this.configSettings.getSettings(uri);
-    //     const { pytestArgs } = settings.testing;
-    //     traceVerbose(pytestArgs);
-
-    //     this.cwd = uri.fsPath;
-    //     return this.runPytestDiscovery(uri, executionFactory);
+    // discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
+    //     traceVerbose(uri);
+    //     this.deferred = createDeferred<DiscoveredTestPayload>();
+    //     return this.deferred.promise;
     // }
+    // Uncomment this version of the function discoverTests to use the new discovery method.
+    public async discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
+        const settings = this.configSettings.getSettings(uri);
+        const { pytestArgs } = settings.testing;
+        traceVerbose(pytestArgs);
+
+        this.cwd = uri.fsPath;
+        return this.runPytestDiscovery(uri, executionFactory);
+    }
 
     async runPytestDiscovery(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
         if (!this.deferred) {
