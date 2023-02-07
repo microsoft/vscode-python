@@ -14,6 +14,7 @@ import { ExecutionResult } from '../../../../../client/common/process/types';
 import { createBasicEnv } from '../../common';
 import * as platform from '../../../../../client/common/utils/platform';
 import { ActiveState } from '../../../../../client/pythonEnvironments/common/environmentManagers/activestate';
+import { replaceAll } from '../../../../../client/common/stringUtils';
 
 suite('ActiveState Locator', () => {
     const testActiveStateDir = path.join(TEST_LAYOUT_ROOT, 'activestate');
@@ -45,14 +46,15 @@ suite('ActiveState Locator', () => {
         sinon.stub(externalDependencies, 'shellExecute').callsFake((command: string) => {
             if (command === 'state projects -o editor') {
                 return Promise.resolve<ExecutionResult<string>>({
-                    stdout: `[{"name":"test","organization":"test-org","local_checkouts":["does-not-matter"],"executables":["${path
-                        .join(testActiveStateDir, 'c09080d1', 'exec')
-                        .replaceAll(
-                            '\\',
-                            '\\\\',
-                        )}"]},{"name":"test2","organization":"test-org","local_checkouts":["does-not-matter2"],"executables":["${path
-                        .join(testActiveStateDir, '2af6390a', 'exec')
-                        .replaceAll('\\', '\\\\')}"]}]\n\0`,
+                    stdout: `[{"name":"test","organization":"test-org","local_checkouts":["does-not-matter"],"executables":["${replaceAll(
+                        path.join(testActiveStateDir, 'c09080d1', 'exec'),
+                        '\\',
+                        '\\\\',
+                    )}"]},{"name":"test2","organization":"test-org","local_checkouts":["does-not-matter2"],"executables":["${replaceAll(
+                        path.join(testActiveStateDir, '2af6390a', 'exec'),
+                        '\\',
+                        '\\\\',
+                    )}"]}]\n\0`,
                 });
             }
             return Promise.reject(new Error('Command failed'));
