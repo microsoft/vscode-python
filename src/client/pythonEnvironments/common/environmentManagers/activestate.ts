@@ -5,10 +5,18 @@
 
 import * as path from 'path';
 import { dirname } from 'path';
-import { arePathsSame, pathExists, shellExecute } from '../externalDependencies';
+import {
+    arePathsSame,
+    getPythonSetting,
+    onDidChangePythonSetting,
+    pathExists,
+    shellExecute,
+} from '../externalDependencies';
 import { cache } from '../../../common/utils/decorators';
 import { traceError, traceVerbose } from '../../../logging';
 import { getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
+
+export const ACTIVESTATETOOLPATH_SETTING_KEY = 'activeStateToolPath';
 
 const STATE_GENERAL_TIMEOUT = 5000;
 
@@ -35,6 +43,12 @@ export class ActiveState {
         return ActiveState.statePromise;
     }
 
+    constructor() {
+        onDidChangePythonSetting(ACTIVESTATETOOLPATH_SETTING_KEY, () => {
+            ActiveState.statePromise = undefined;
+        });
+    }
+
     public static getStateToolDir(): string | undefined {
         const home = getUserHomeDir();
         if (!home) {
@@ -47,7 +61,9 @@ export class ActiveState {
 
     private static async locate(): Promise<ActiveState | undefined> {
         const stateToolDir = this.getStateToolDir();
-        if (stateToolDir && (await pathExists(stateToolDir))) {
+        const stateCommand =
+            getPythonSetting<string>(ACTIVESTATETOOLPATH_SETTING_KEY) ?? ActiveState.defaultStateCommand;
+        if (stateToolDir && ((await pathExists(stateToolDir)) || stateCommand !== this.defaultStateCommand)) {
             return new ActiveState();
         }
         return undefined;
@@ -57,13 +73,15 @@ export class ActiveState {
         return this.getProjectsCached();
     }
 
-    private static readonly stateCommand: string = 'state';
+    private static readonly defaultStateCommand: string = 'state';
 
     @cache(30_000, true, 10_000)
     // eslint-disable-next-line class-methods-use-this
     private async getProjectsCached(): Promise<ProjectInfo[] | undefined> {
         try {
-            const result = await shellExecute(`${ActiveState.stateCommand} projects -o editor`, {
+            const stateCommand =
+                getPythonSetting<string>(ACTIVESTATETOOLPATH_SETTING_KEY) ?? ActiveState.defaultStateCommand;
+            const result = await shellExecute(`${stateCommand} projects -o editor`, {
                 timeout: STATE_GENERAL_TIMEOUT,
             });
             if (!result) {
@@ -74,7 +92,7 @@ export class ActiveState {
                 // '\0' is a record separator.
                 output = output.substring(0, output.length - 1);
             }
-            traceVerbose(`${ActiveState.stateCommand} projects -o editor: ${output}`);
+            traceVerbose(`${stateCommand} projects -o editor: ${output}`);
             const projects = JSON.parse(output);
             ActiveState.setCachedProjectInfo(projects);
             return projects;

@@ -25,6 +25,7 @@
     "python.command.python.launchTensorBoard.title": "Launch TensorBoard",
     "python.command.python.refreshTensorBoard.title": "Refresh TensorBoard",
     "python.menu.createNewFile.title": "Python File",
+    "python.activeStateToolPath.description": "Path to the State Tool executable for ActiveState runtimes (version 0.36+).",
     "python.autoComplete.extraPaths.description": "List of paths to libraries and the like that need to be imported by auto complete engine. E.g. when using Google App SDK, the paths are not in system path, hence need to be added into this list.",
     "python.condaPath.description": "Path to the conda executable to use for activation (version 4.4+).",
     "python.defaultInterpreterPath.description": "Path to default Python to use when extension loads up for the first time, no longer used once an interpreter is selected for the workspace. See [here](https://aka.ms/AAfekmf) to understand when this is used",
