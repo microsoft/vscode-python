@@ -4,6 +4,8 @@ import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { traceLog } from '../logging';
 import { BaseLinter } from './baseLinter';
+import { isExtensionEnabled } from './prompts/common';
+import { FLAKE8_EXTENSION } from './prompts/flake8Prompt';
 import { IToolsExtensionPrompt } from './prompts/types';
 import { ILintMessage } from './types';
 
@@ -15,8 +17,12 @@ export class Flake8 extends BaseLinter {
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
-        if (await this.prompt.showPrompt()) {
-            traceLog('LINTING: Skipping linting from Python extension, since Flake8 extension is installed.');
+        await this.prompt.showPrompt();
+
+        if (isExtensionEnabled(this.serviceContainer, FLAKE8_EXTENSION)) {
+            traceLog(
+                'LINTING: Skipping linting from Python extension, since Flake8 extension is installed and enabled.',
+            );
             return [];
         }
 

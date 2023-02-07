@@ -11,7 +11,13 @@ import { CancellationTokenSource, TextDocument, Uri, WorkspaceFolder } from 'vsc
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import '../../client/common/extensions';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import { IConfigurationService, IInstaller, ILintingSettings, IPythonSettings } from '../../client/common/types';
+import {
+    IConfigurationService,
+    IExtensions,
+    IInstaller,
+    ILintingSettings,
+    IPythonSettings,
+} from '../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
     IInterpreterAutoSelectionProxyService,
@@ -53,6 +59,7 @@ suite('Linting - Arguments', () => {
                     let serviceContainer: ServiceContainer;
                     let document: TypeMoq.IMock<TextDocument>;
                     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+                    let extensionsService: TypeMoq.IMock<IExtensions>;
                     const cancellationToken = new CancellationTokenSource().token;
                     suiteSetup(initialize);
                     setup(async () => {
@@ -121,6 +128,10 @@ suite('Linting - Arguments', () => {
 
                         const platformService = TypeMoq.Mock.ofType<IPlatformService>();
                         serviceManager.addSingletonInstance<IPlatformService>(IPlatformService, platformService.object);
+
+                        extensionsService = TypeMoq.Mock.ofType<IExtensions>();
+                        extensionsService.setup((e) => e.getExtension(TypeMoq.It.isAny())).returns(() => undefined);
+                        serviceManager.addSingletonInstance<IExtensions>(IExtensions, extensionsService.object);
 
                         lm = new LinterManager(configService.object);
                         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);

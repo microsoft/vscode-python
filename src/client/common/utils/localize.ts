@@ -466,6 +466,10 @@ export namespace ToolsExtensions {
     export const pylintPromptMessage = l10n.t(
         'Use the Pylint extension to enable easier configuration and new features such as quick fixes.',
     );
+    export const isortPromptMessage = l10n.t(
+        'To use sort imports, please install the isort extension. It provides easier configuration and new features such as code actions.',
+    );
     export const installPylintExtension = l10n.t('Install Pylint extension');
     export const installFlake8Extension = l10n.t('Install Flake8 extension');
+    export const installISortExtension = l10n.t('Install isort extension');
 }
