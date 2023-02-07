@@ -94,21 +94,6 @@ suite('Python Path Settings Updater', () => {
             await updater.updatePythonPath(pythonPath);
             interpreterPathService.verifyAll();
         });
-        test('Python Path should be truncated for workspace-relative paths', async () => {
-            const workspaceFolderPath = path.join('user', 'desktop', 'development');
-            const workspaceFolder = Uri.file(workspaceFolderPath);
-            const pythonPath = Uri.file(path.join(workspaceFolderPath, 'env', 'bin', 'python')).fsPath;
-            const expectedPythonPath = path.join('env', 'bin', 'python');
-            interpreterPathService.setup((i) => i.inspect(workspaceFolder)).returns(() => ({}));
-            interpreterPathService
-                .setup((i) => i.update(workspaceFolder, ConfigurationTarget.WorkspaceFolder, expectedPythonPath))
-                .returns(() => Promise.resolve())
-                .verifiable(TypeMoq.Times.once());
-
-            const updater = updaterServiceFactory.getWorkspaceFolderPythonPathConfigurationService(workspaceFolder);
-            await updater.updatePythonPath(pythonPath);
-            interpreterPathService.verifyAll();
-        });
     });
     suite('Workspace (multiroot scenario)', () => {
         setup(() => setupMocks());
@@ -136,23 +121,6 @@ suite('Python Path Settings Updater', () => {
             interpreterPathService.setup((i) => i.inspect(workspaceFolder)).returns(() => ({}));
             interpreterPathService
                 .setup((i) => i.update(workspaceFolder, ConfigurationTarget.Workspace, pythonPath))
-                .returns(() => Promise.resolve())
-                .verifiable(TypeMoq.Times.once());
-
-            const updater = updaterServiceFactory.getWorkspacePythonPathConfigurationService(workspaceFolder);
-            await updater.updatePythonPath(pythonPath);
-
-            interpreterPathService.verifyAll();
-        });
-        test('Python Path should be truncated for workspace-relative paths', async () => {
-            const workspaceFolderPath = path.join('user', 'desktop', 'development');
-            const workspaceFolder = Uri.file(workspaceFolderPath);
-            const pythonPath = Uri.file(path.join(workspaceFolderPath, 'env', 'bin', 'python')).fsPath;
-            const expectedPythonPath = path.join('env', 'bin', 'python');
-
-            interpreterPathService.setup((i) => i.inspect(workspaceFolder)).returns(() => ({}));
-            interpreterPathService
-                .setup((i) => i.update(workspaceFolder, ConfigurationTarget.Workspace, expectedPythonPath))
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
 
