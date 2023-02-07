@@ -1,5 +1,4 @@
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { ConfigurationTarget, l10n, Uri, window } from 'vscode';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { SystemVariables } from '../../common/variables/systemVariables';
@@ -28,7 +27,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         const pythonPathUpdater = this.getPythonUpdaterService(configTarget, wkspace);
         let failed = false;
         try {
-            await pythonPathUpdater.updatePythonPath(pythonPath ? path.normalize(pythonPath) : undefined);
+            await pythonPathUpdater.updatePythonPath(pythonPath);
         } catch (err) {
             failed = true;
             const reason = err as Error;
