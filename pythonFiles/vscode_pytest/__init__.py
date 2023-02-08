@@ -6,6 +6,7 @@ import traceback
 
 import pytest
 
+DEFAULT_PORT = "45454"
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
