@@ -25,12 +25,37 @@ class TestData(TypedDict):
     type_: Literal["class", "file", "folder", "test", "error"]
     id_: str
 
+    def __init__(
+        self,
+        name: str,
+        path: str,
+        type_: Literal["class", "file", "folder", "test", "doc_file"],
+        id_: str,
+    ):
+        self.name = name
+        self.path = path
+        self.type_ = type_
+        self.id_ = id_
+
 
 class TestItem(TestData):
     """A class defining test items."""
 
     lineno: str
     runID: str
+
+    def __init__(
+        self,
+        name: str,
+        path: str,
+        type_: Literal["class", "file", "folder", "test", "doc_file"],
+        id_: str,
+        lineno: str,
+        runID: str,
+    ):
+        super().__init__(name, path, type_, id_)
+        self.lineno = lineno
+        self.runID = runID
 
 
 class TestNode(TestData):
@@ -140,7 +165,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 break
             # Create a file node that has the class as a child.
             try:
-                test_file_node: TestNode = file_nodes_dict[parent_module]
+                test_file_node = file_nodes_dict[parent_module]
             except KeyError:
                 test_file_node = create_file_node(parent_module)
                 file_nodes_dict[parent_module] = test_file_node
@@ -190,11 +215,9 @@ def build_nested_folders(
     while iterator_path != session.path:
         curr_folder_name = iterator_path.name
         try:
-            curr_folder_node: TestNode = created_files_folders_dict[curr_folder_name]
+            curr_folder_node = created_files_folders_dict[curr_folder_name]
         except KeyError:
-            curr_folder_node: TestNode = create_folder_node(
-                curr_folder_name, iterator_path
-            )
+            curr_folder_node = create_folder_node(curr_folder_name, iterator_path)
             created_files_folders_dict[curr_folder_name] = curr_folder_node
         if prev_folder_node not in curr_folder_node["children"]:
             curr_folder_node["children"].append(prev_folder_node)
