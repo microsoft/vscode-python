@@ -5,14 +5,14 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 
-import { IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { PYTHON_WARNINGS } from '../../common/constants';
 import { IPlatformService } from '../../common/platform/types';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalHelper, TerminalShellType } from '../../common/terminal/types';
 import { ICurrentProcess, IDisposable, IExtensionContext, Resource } from '../../common/types';
-import { sleep } from '../../common/utils/async';
+import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { InMemoryCache } from '../../common/utils/cacheUtils';
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
@@ -32,6 +32,8 @@ import {
 } from '../../logging';
 import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda';
 import { StopWatch } from '../../common/utils/stopWatch';
+import { Interpreters } from '../../common/utils/localize';
+import { ProgressLocation, ProgressOptions } from 'vscode';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const CACHE_DURATION = 10 * 60 * 1000;
@@ -102,6 +104,7 @@ export class EnvironmentActivationServiceCache {
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
+    private deferred: Deferred<void> | undefined;
     private previousEnvVars = process.env;
     private readonly activatedEnvVariablesCache = new EnvironmentActivationServiceCache();
     constructor(
@@ -113,6 +116,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider,
         @inject(IExtensionContext) private context: IExtensionContext,
+        @inject(IApplicationShell) private shell: IApplicationShell,
     ) {
         this.envVarsService.onDidEnvironmentVariablesChange(
             () => this.activatedEnvVariablesCache.clear(),
@@ -122,8 +126,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
         this.interpreterService.onDidChangeInterpreter(
             async (resource) => {
+                this.showProgress();
                 this.activatedEnvVariablesCache.clear();
                 await this.initializeEnvironmentCollection(resource);
+                this.hideProgress();
             },
             this,
             this.disposables,
@@ -352,5 +358,31 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 this.context.environmentVariableCollection.replace(key, value);
             }
         }
+    }
+
+    @traceDecoratorVerbose('Display activating terminals')
+    private showProgress(): void {
+        if (!this.deferred) {
+            this.createProgress();
+        }
+    }
+
+    @traceDecoratorVerbose('Hide activating terminals')
+    private hideProgress(): void {
+        if (this.deferred) {
+            this.deferred.resolve();
+            this.deferred = undefined;
+        }
+    }
+
+    private createProgress() {
+        const progressOptions: ProgressOptions = {
+            location: ProgressLocation.Window,
+            title: Interpreters.activatingTerminals,
+        };
+        this.shell.withProgress(progressOptions, () => {
+            this.deferred = createDeferred();
+            return this.deferred.promise;
+        });
     }
 }
