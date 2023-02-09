@@ -101,7 +101,7 @@ suite('Activated Env Launch', async () => {
             pythonPathUpdaterService.verifyAll();
         });
 
-        test('Does not updates interpreter path if VSCode is not launched via CLI', async () => {
+        test('Does not update interpreter path if VSCode is not launched via CLI', async () => {
             delete process.env.VSCODE_CLI;
             process.env.CONDA_PREFIX = condaPrefix;
             process.env.CONDA_SHLVL = '1';
