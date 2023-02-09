@@ -9,7 +9,7 @@ import { IProcessServiceFactory } from '../../common/process/types';
 import { sleep } from '../../common/utils/async';
 import { cache } from '../../common/utils/decorators';
 import { Common, Interpreters } from '../../common/utils/localize';
-import { traceError, traceLog, traceWarn } from '../../logging';
+import { traceError, traceLog, traceVerbose, traceWarn } from '../../logging';
 import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -87,6 +87,11 @@ export class ActivatedEnvironmentLaunch implements IActivatedEnvironmentLaunch {
     private async _selectIfLaunchedViaActivatedEnv(doNotBlockOnSelection = false): Promise<string | undefined> {
         if (this.workspaceService.workspaceFile) {
             // Assuming multiroot workspaces cannot be directly launched via `code .` command.
+            return undefined;
+        }
+        if (process.env.VSCODE_CLI !== '1') {
+            // We only want to select the interpreter if VS Code was launched from the command line.
+            traceVerbose('VS Code was not launched from the command line, not selecting activated interpreter');
             return undefined;
         }
         const prefix = await this.getPrefixOfSelectedActivatedEnv();

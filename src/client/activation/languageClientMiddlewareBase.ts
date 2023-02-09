@@ -13,10 +13,10 @@ import {
 import { ConfigurationItem } from 'vscode-languageserver-protocol';
 
 import { HiddenFilePrefix } from '../common/constants';
-import { IConfigurationService } from '../common/types';
 import { createDeferred, isThenable } from '../common/utils/async';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
+import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { EventName } from '../telemetry/constants';
 import { LanguageServerType } from './types';
@@ -66,7 +66,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
                 return next(params, token);
             }
 
-            const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+            const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
             const envService = this.serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
 
             let settings = next(params, token);
@@ -87,9 +87,10 @@ export class LanguageClientMiddlewareBase implements Middleware {
                     const settingDict: LSPObject & { pythonPath: string; _envPYTHONPATH: string } = settings[
                         i
                     ] as LSPObject & { pythonPath: string; _envPYTHONPATH: string };
-
                     settingDict.pythonPath =
-                        (await this.getPythonPathOverride(uri)) ?? configService.getSettings(uri).pythonPath;
+                        (await this.getPythonPathOverride(uri)) ??
+                        (await interpreterService.getActiveInterpreter(uri))?.path ??
+                        'python';
 
                     const env = await envService.getEnvironmentVariables(uri);
                     const envPYTHONPATH = env.PYTHONPATH;

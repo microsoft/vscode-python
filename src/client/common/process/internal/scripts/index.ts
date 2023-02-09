@@ -58,23 +58,6 @@ export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJs
     return [args, parse];
 }
 
-// sortImports.py
-
-export function sortImports(filename: string, sortArgs?: string[]): [string[], (out: string) => string] {
-    const script = path.join(SCRIPTS_DIR, 'sortImports.py');
-    const args = [script, filename, '--diff'];
-    if (sortArgs) {
-        args.push(...sortArgs);
-    }
-
-    function parse(out: string) {
-        // It should just be a diff that the extension will use directly.
-        return out;
-    }
-
-    return [args, parse];
-}
-
 // normalizeSelection.py
 
 export function normalizeSelection(): [string[], (out: string) => string] {

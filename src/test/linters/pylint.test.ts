@@ -18,7 +18,7 @@ import { LanguageServerType } from '../../client/activation/types';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IPythonToolExecutionService } from '../../client/common/process/types';
-import { IConfigurationService, IInstaller, IPythonSettings } from '../../client/common/types';
+import { IConfigurationService, IExtensions, IInstaller, IPythonSettings } from '../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
     IInterpreterAutoSelectionProxyService,
@@ -40,6 +40,7 @@ suite('Linting - Pylint', () => {
     let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let serviceContainer: ServiceContainer;
+    let extensionsService: TypeMoq.IMock<IExtensions>;
 
     setup(() => {
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
@@ -49,6 +50,9 @@ suite('Linting - Pylint', () => {
 
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         platformService.setup((x) => x.isWindows).returns(() => false);
+
+        extensionsService = TypeMoq.Mock.ofType<IExtensions>();
+        extensionsService.setup((e) => e.getExtension(TypeMoq.It.isAny())).returns(() => undefined);
 
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         execService = TypeMoq.Mock.ofType<IPythonToolExecutionService>();
@@ -72,6 +76,7 @@ suite('Linting - Pylint', () => {
             IInterpreterAutoSelectionProxyService,
             MockAutoSelectionService,
         );
+        serviceManager.addSingletonInstance<IExtensions>(IExtensions, extensionsService.object);
 
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Jedi);

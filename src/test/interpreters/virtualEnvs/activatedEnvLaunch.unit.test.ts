@@ -29,7 +29,8 @@ suite('Activated Env Launch', async () => {
     let activatedEnvLaunch: ActivatedEnvironmentLaunch;
     let _promptIfApplicable: sinon.SinonStub;
 
-    suite('Method getPrefixOfSelectedActivatedEnv()', () => {
+    suite('Method selectIfLaunchedViaActivatedEnv()', () => {
+        const oldVSCodeCLI = process.env.VSCODE_CLI;
         const oldCondaPrefix = process.env.CONDA_PREFIX;
         const oldCondaShlvl = process.env.CONDA_SHLVL;
         const oldVirtualEnv = process.env.VIRTUAL_ENV;
@@ -41,6 +42,7 @@ suite('Activated Env Launch', async () => {
             processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
             _promptIfApplicable = sinon.stub(ActivatedEnvironmentLaunch.prototype, '_promptIfApplicable');
             _promptIfApplicable.returns(Promise.resolve());
+            process.env.VSCODE_CLI = '1';
         });
 
         teardown(() => {
@@ -58,6 +60,11 @@ suite('Activated Env Launch', async () => {
                 process.env.VIRTUAL_ENV = oldVirtualEnv;
             } else {
                 delete process.env.VIRTUAL_ENV;
+            }
+            if (oldVSCodeCLI) {
+                process.env.VSCODE_CLI = oldVSCodeCLI;
+            } else {
+                delete process.env.VSCODE_CLI;
             }
             sinon.restore();
         });
@@ -91,6 +98,39 @@ suite('Activated Env Launch', async () => {
             );
             const result = await activatedEnvLaunch.selectIfLaunchedViaActivatedEnv();
             expect(result).to.be.equal(condaPrefix, 'Incorrect value');
+            pythonPathUpdaterService.verifyAll();
+        });
+
+        test('Does not update interpreter path if VSCode is not launched via CLI', async () => {
+            delete process.env.VSCODE_CLI;
+            process.env.CONDA_PREFIX = condaPrefix;
+            process.env.CONDA_SHLVL = '1';
+            interpreterService
+                .setup((i) => i.getInterpreterDetails(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(({ envName: 'env' } as unknown) as PythonEnvironment));
+            workspaceService.setup((w) => w.workspaceFile).returns(() => undefined);
+            const workspaceFolder: WorkspaceFolder = { name: 'one', uri, index: 0 };
+            workspaceService.setup((w) => w.workspaceFolders).returns(() => [workspaceFolder]);
+            pythonPathUpdaterService
+                .setup((p) =>
+                    p.updatePythonPath(
+                        TypeMoq.It.isValue(condaPrefix),
+                        TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder),
+                        TypeMoq.It.isValue('load'),
+                        TypeMoq.It.isValue(uri),
+                    ),
+                )
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.never());
+            activatedEnvLaunch = new ActivatedEnvironmentLaunch(
+                workspaceService.object,
+                appShell.object,
+                pythonPathUpdaterService.object,
+                interpreterService.object,
+                processServiceFactory.object,
+            );
+            const result = await activatedEnvLaunch.selectIfLaunchedViaActivatedEnv();
+            expect(result).to.be.equal(undefined, 'Incorrect value');
             pythonPathUpdaterService.verifyAll();
         });
 
