@@ -25,37 +25,12 @@ class TestData(TypedDict):
     type_: Literal["class", "file", "folder", "test", "error"]
     id_: str
 
-    def __init__(
-        self,
-        name: str,
-        path: str,
-        type_: Literal["class", "file", "folder", "test", "doc_file"],
-        id_: str,
-    ):
-        self.name = name
-        self.path = path
-        self.type_ = type_
-        self.id_ = id_
-
 
 class TestItem(TestData):
     """A class defining test items."""
 
     lineno: str
     runID: str
-
-    def __init__(
-        self,
-        name: str,
-        path: str,
-        type_: Literal["class", "file", "folder", "test", "doc_file"],
-        id_: str,
-        lineno: str,
-        runID: str,
-    ):
-        super().__init__(name, path, type_, id_)
-        self.lineno = lineno
-        self.runID = runID
 
 
 class TestNode(TestData):
