@@ -4,11 +4,14 @@ import sys
 import traceback
 import unittest
 
+from ..unittestadapter.utils import config_django_env
+
 start_dir = sys.argv[1]
 pattern = sys.argv[2]
 top_level_dir = sys.argv[3] if len(sys.argv) >= 4 else None
 sys.path.insert(0, os.getcwd())
 
+config_django_env(start_dir)
 
 def get_sourceline(obj):
     try:

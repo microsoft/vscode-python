@@ -226,3 +226,26 @@ def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
         parsed_args.pattern,
         parsed_args.top_level_directory,
     )
+
+def config_django_env(start_dir) -> None:
+    """This will try to set DJANGO_SETTINGS_MODULE and call django.setup in order to make it possible to locate/run django unittests"""
+    from pathlib import Path
+    from ast import literal_eval
+    if Path(start_dir + "/manage.py").is_file():
+        with open(start_dir + "/manage.py", "r") as management_file:
+            contents = management_file.readlines()
+            if any(True for line in contents if line.strip().replace('"""', '') == "Django\'s command-line utility for administrative tasks."):
+                print("django management file found!")
+                for line in contents:
+                    if line.strip().startswith("os.environ.setdefault"):
+                        try:
+                            literal_eval(line.strip())
+                        except:
+                            pass
+                        else:
+                            eval(line.strip()) # this is the not recommended part!!!
+                            try:
+                                import django
+                                django.setup()
+                            except ModuleNotFoundError:
+                                pass

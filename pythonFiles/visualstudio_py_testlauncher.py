@@ -25,6 +25,8 @@ import sys
 import traceback
 import unittest
 
+from .unittestadapter.utils import config_django_env
+
 try:
     import thread
 except:
@@ -213,23 +215,6 @@ class ExitCommand(Exception):
 def signal_handler(signal, frame):
     raise ExitCommand()
 
-
-def config_django_env(start_dir):
-    from pathlib import Path
-    if Path(start_dir + "/manage.py").is_file():
-        with open(start_dir + "/manage.py", "r") as management_file:
-            contents = management_file.readlines()
-            if any(True for line in contents if line.strip().replace('"""', '') == "Django\'s command-line utility for administrative tasks."):
-                print("django management file found!")
-                for line in contents:
-                    if line.strip().startswith("os.environ.setdefault"):
-                        eval(line.strip()) # this is the not recommended part!!!
-                        try:
-                            import django
-                            django.setup()
-                        except ModuleNotFoundError:
-                            pass
-
 def main():
     import os
     import sys
@@ -393,7 +378,7 @@ def main():
             runner = unittest.TextTestRunner(
                 verbosity=opts.uvInt, resultclass=VsTestResult
             )
-        
+
         config_django_env(opts.ut or opts.us)
 
         result = runner.run(tests)
