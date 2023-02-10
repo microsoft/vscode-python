@@ -239,7 +239,7 @@ def config_django_env(start_dir) -> None:
                 for line in contents:
                     if line.strip().startswith("os.environ.setdefault"):
                         try:
-                            literal_eval(line.strip())
+                            literal_eval(line.strip().replace('os.environ.setdefault("DJANGO_SETTINGS_MODULE",', "", 1))
                         except:
                             pass
                         else:
