@@ -15,7 +15,8 @@ import { Flake8ExtensionPrompt, FLAKE8_EXTENSION } from '../../../client/linters
 import { IToolsExtensionPrompt } from '../../../client/linters/prompts/types';
 
 suite('Flake8 Extension prompt tests', () => {
-    let isExtensionInstalledStub: sinon.SinonStub;
+    let isExtensionEnabledStub: sinon.SinonStub;
+    let isExtensionDisabledStub: sinon.SinonStub;
     let doNotShowPromptStateStub: sinon.SinonStub;
     let inToolsExtensionsExperimentStub: sinon.SinonStub;
     let showInformationMessageStub: sinon.SinonStub;
@@ -26,7 +27,8 @@ suite('Flake8 Extension prompt tests', () => {
     let prompt: IToolsExtensionPrompt;
 
     setup(() => {
-        isExtensionInstalledStub = sinon.stub(promptCommons, 'isExtensionInstalled');
+        isExtensionEnabledStub = sinon.stub(promptCommons, 'isExtensionEnabled');
+        isExtensionDisabledStub = sinon.stub(promptCommons, 'isExtensionDisabled');
         doNotShowPromptStateStub = sinon.stub(promptCommons, 'doNotShowPromptState');
         inToolsExtensionsExperimentStub = sinon.stub(promptCommons, 'inToolsExtensionsExperiment');
         showInformationMessageStub = sinon.stub(windowsApis, 'showInformationMessage');
@@ -46,14 +48,23 @@ suite('Flake8 Extension prompt tests', () => {
         sinon.restore();
     });
 
-    test('Extension already installed', async () => {
-        isExtensionInstalledStub.returns(true);
+    test('Extension already installed and enabled', async () => {
+        isExtensionEnabledStub.returns(true);
+
+        assert.isTrue(await prompt.showPrompt());
+    });
+
+    test('Extension already installed, but disabled', async () => {
+        isExtensionEnabledStub.returns(false);
+        isExtensionDisabledStub.returns(true);
 
         assert.isTrue(await prompt.showPrompt());
     });
 
     test('Test do not show again persistent state', async () => {
-        isExtensionInstalledStub.returns(false);
+        isExtensionEnabledStub.returns(false);
+        isExtensionDisabledStub.returns(false);
+
         doNotState.setup((d) => d.value).returns(() => true);
         doNotShowPromptStateStub.returns(doNotState.object);
 
@@ -61,7 +72,9 @@ suite('Flake8 Extension prompt tests', () => {
     });
 
     test('User not in experiment', async () => {
-        isExtensionInstalledStub.returns(false);
+        isExtensionEnabledStub.returns(false);
+        isExtensionDisabledStub.returns(false);
+
         doNotState.setup((d) => d.value).returns(() => false);
         doNotShowPromptStateStub.returns(doNotState.object);
         inToolsExtensionsExperimentStub.resolves(false);
@@ -70,7 +83,9 @@ suite('Flake8 Extension prompt tests', () => {
     });
 
     test('User selected: install extension (insiders)', async () => {
-        isExtensionInstalledStub.returns(false);
+        isExtensionEnabledStub.returns(false);
+        isExtensionDisabledStub.returns(false);
+
         doNotState.setup((d) => d.value).returns(() => false);
         doNotShowPromptStateStub.returns(doNotState.object);
         inToolsExtensionsExperimentStub.resolves(true);
@@ -87,7 +102,9 @@ suite('Flake8 Extension prompt tests', () => {
     });
 
     test('User selected: install extension (stable)', async () => {
-        isExtensionInstalledStub.returns(false);
+        isExtensionEnabledStub.returns(false);
+        isExtensionDisabledStub.returns(false);
+
         doNotState.setup((d) => d.value).returns(() => false);
         doNotShowPromptStateStub.returns(doNotState.object);
         inToolsExtensionsExperimentStub.resolves(true);
@@ -104,7 +121,9 @@ suite('Flake8 Extension prompt tests', () => {
     });
 
     test('User selected: do not show again', async () => {
-        isExtensionInstalledStub.returns(false);
+        isExtensionEnabledStub.returns(false);
+        isExtensionDisabledStub.returns(false);
+
         doNotState.setup((d) => d.value).returns(() => false);
         doNotShowPromptStateStub.returns(doNotState.object);
         inToolsExtensionsExperimentStub.resolves(true);
@@ -120,7 +139,9 @@ suite('Flake8 Extension prompt tests', () => {
     });
 
     test('User selected: close', async () => {
-        isExtensionInstalledStub.returns(false);
+        isExtensionEnabledStub.returns(false);
+        isExtensionDisabledStub.returns(false);
+
         doNotState.setup((d) => d.value).returns(() => false);
         doNotShowPromptStateStub.returns(doNotState.object);
         inToolsExtensionsExperimentStub.resolves(true);

@@ -186,28 +186,28 @@ export class InterpreterService implements Disposable, IInterpreterService {
         // However we need not wait on the update to take place, as we can use the value directly.
         if (!path) {
             path = this.configService.getSettings(resource).pythonPath;
-        }
-        if (pathUtils.basename(path) === path) {
-            // Value can be `python`, `python3`, `python3.9` etc.
-            // Note the following triggers autoselection if no interpreter is explictly
-            // selected, i.e the value is `python`.
-            // During shutdown we might not be able to get items out of the service container.
-            const pythonExecutionFactory = this.serviceContainer.tryGet<IPythonExecutionFactory>(
-                IPythonExecutionFactory,
-            );
-            const pythonExecutionService = pythonExecutionFactory
-                ? await pythonExecutionFactory.create({ resource })
-                : undefined;
-            const fullyQualifiedPath = pythonExecutionService
-                ? await pythonExecutionService.getExecutablePath().catch((ex) => {
-                      traceError(ex);
-                  })
-                : undefined;
-            // Python path is invalid or python isn't installed.
-            if (!fullyQualifiedPath) {
-                return undefined;
+            if (pathUtils.basename(path) === path) {
+                // Value can be `python`, `python3`, `python3.9` etc.
+                // Note the following triggers autoselection if no interpreter is explictly
+                // selected, i.e the value is `python`.
+                // During shutdown we might not be able to get items out of the service container.
+                const pythonExecutionFactory = this.serviceContainer.tryGet<IPythonExecutionFactory>(
+                    IPythonExecutionFactory,
+                );
+                const pythonExecutionService = pythonExecutionFactory
+                    ? await pythonExecutionFactory.create({ resource })
+                    : undefined;
+                const fullyQualifiedPath = pythonExecutionService
+                    ? await pythonExecutionService.getExecutablePath().catch((ex) => {
+                          traceError(ex);
+                      })
+                    : undefined;
+                // Python path is invalid or python isn't installed.
+                if (!fullyQualifiedPath) {
+                    return undefined;
+                }
+                path = fullyQualifiedPath;
             }
-            path = fullyQualifiedPath;
         }
         return this.getInterpreterDetails(path);
     }
