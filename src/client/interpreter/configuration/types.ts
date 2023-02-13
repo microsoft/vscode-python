@@ -79,6 +79,11 @@ export interface InterpreterQuickPickParams {
      * Specify `true` to skip showing recommended python interpreter.
      */
     skipRecommended?: boolean;
+
+    /**
+     * Specify `true` to show back button.
+     */
+    showBackButton?: boolean;
 }
 
 export const IInterpreterQuickPick = Symbol('IInterpreterQuickPick');

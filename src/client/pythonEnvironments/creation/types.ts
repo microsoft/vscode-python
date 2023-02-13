@@ -8,6 +8,7 @@ export interface CreateEnvironmentProgress extends Progress<{ message?: string; 
 export interface CreateEnvironmentOptions {
     installPackages?: boolean;
     ignoreSourceControl?: boolean;
+    showBackButton?: boolean;
 }
 
 export interface CreateEnvironmentResult {

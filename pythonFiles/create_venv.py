@@ -154,13 +154,13 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     if pip_installed:
         upgrade_pip(venv_path)
 
-    if args.requirements:
-        print(f"VENV_INSTALLING_REQUIREMENTS: {args.requirements}")
-        install_requirements(venv_path, args.requirements)
-
     if args.toml:
         print(f"VENV_INSTALLING_PYPROJECT: {args.toml}")
         install_toml(venv_path, args.extras)
+
+    if args.requirements:
+        print(f"VENV_INSTALLING_REQUIREMENTS: {args.requirements}")
+        install_requirements(venv_path, args.requirements)
 
 
 if __name__ == "__main__":

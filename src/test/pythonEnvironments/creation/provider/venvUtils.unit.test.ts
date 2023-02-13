@@ -40,10 +40,7 @@ suite('Venv Utils test', () => {
 
         const actual = await pickPackagesToInstall(workspace1);
         assert.isTrue(showQuickPickStub.notCalled);
-        assert.deepStrictEqual(actual, {
-            installType: 'none',
-            installList: [],
-        });
+        assert.deepStrictEqual(actual, []);
     });
 
     test('Toml found with no build system', async () => {
@@ -53,10 +50,7 @@ suite('Venv Utils test', () => {
 
         const actual = await pickPackagesToInstall(workspace1);
         assert.isTrue(showQuickPickStub.notCalled);
-        assert.deepStrictEqual(actual, {
-            installType: 'none',
-            installList: [],
-        });
+        assert.deepStrictEqual(actual, []);
     });
 
     test('Toml found with no optional deps', async () => {
@@ -68,11 +62,12 @@ suite('Venv Utils test', () => {
 
         const actual = await pickPackagesToInstall(workspace1);
         assert.isTrue(showQuickPickStub.notCalled);
-        assert.deepStrictEqual(actual, {
-            installType: 'toml',
-            installList: [],
-            source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
-        });
+        assert.deepStrictEqual(actual, [
+            {
+                installType: 'toml',
+                source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
+            },
+        ]);
     });
 
     test('Toml found with deps, but user presses escape', async () => {
@@ -120,11 +115,12 @@ suite('Venv Utils test', () => {
                 undefined,
             ),
         );
-        assert.deepStrictEqual(actual, {
-            installType: 'toml',
-            installList: [],
-            source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
-        });
+        assert.deepStrictEqual(actual, [
+            {
+                installType: 'toml',
+                source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
+            },
+        ]);
     });
 
     test('Toml found with dependencies and user selects One', async () => {
@@ -148,11 +144,13 @@ suite('Venv Utils test', () => {
                 undefined,
             ),
         );
-        assert.deepStrictEqual(actual, {
-            installType: 'toml',
-            installList: ['doc'],
-            source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
-        });
+        assert.deepStrictEqual(actual, [
+            {
+                installType: 'toml',
+                installItem: 'doc',
+                source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
+            },
+        ]);
     });
 
     test('Toml found with dependencies and user selects Few', async () => {
@@ -176,11 +174,18 @@ suite('Venv Utils test', () => {
                 undefined,
             ),
         );
-        assert.deepStrictEqual(actual, {
-            installType: 'toml',
-            installList: ['test', 'cov'],
-            source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
-        });
+        assert.deepStrictEqual(actual, [
+            {
+                installType: 'toml',
+                installItem: 'test',
+                source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
+            },
+            {
+                installType: 'toml',
+                installItem: 'cov',
+                source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
+            },
+        ]);
     });
 
     test('Requirements found, but user presses escape', async () => {
@@ -245,10 +250,7 @@ suite('Venv Utils test', () => {
                 undefined,
             ),
         );
-        assert.deepStrictEqual(actual, {
-            installType: 'requirements',
-            installList: [],
-        });
+        assert.deepStrictEqual(actual, []);
         assert.isTrue(readFileStub.notCalled);
     });
 
@@ -281,10 +283,12 @@ suite('Venv Utils test', () => {
                 undefined,
             ),
         );
-        assert.deepStrictEqual(actual, {
-            installType: 'requirements',
-            installList: [path.join(workspace1.uri.fsPath, 'requirements.txt')],
-        });
+        assert.deepStrictEqual(actual, [
+            {
+                installType: 'requirements',
+                installItem: path.join(workspace1.uri.fsPath, 'requirements.txt'),
+            },
+        ]);
         assert.isTrue(readFileStub.notCalled);
     });
 
@@ -317,13 +321,16 @@ suite('Venv Utils test', () => {
                 undefined,
             ),
         );
-        assert.deepStrictEqual(actual, {
-            installType: 'requirements',
-            installList: [
-                path.join(workspace1.uri.fsPath, 'dev-requirements.txt'),
-                path.join(workspace1.uri.fsPath, 'test-requirements.txt'),
-            ],
-        });
+        assert.deepStrictEqual(actual, [
+            {
+                installType: 'requirements',
+                installItem: path.join(workspace1.uri.fsPath, 'dev-requirements.txt'),
+            },
+            {
+                installType: 'requirements',
+                installItem: path.join(workspace1.uri.fsPath, 'test-requirements.txt'),
+            },
+        ]);
         assert.isTrue(readFileStub.notCalled);
     });
 });
