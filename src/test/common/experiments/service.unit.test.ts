@@ -177,7 +177,7 @@ suite('Experimentation service', () => {
                     telemetryEvents.push(telemetry);
                 });
 
-            getTreatmentVariable = sinon.stub().returns(Promise.resolve(true));
+            getTreatmentVariable = sinon.stub().returns(true);
             sinon.stub(tasClient, 'getExperimentationService').returns(({
                 getTreatmentVariable,
             } as unknown) as tasClient.IExperimentationService);
@@ -201,6 +201,37 @@ suite('Experimentation service', () => {
             const result = experimentService.inExperimentSync(experiment);
 
             assert.isTrue(result);
+            sinon.assert.notCalled(sendTelemetryEventStub);
+            sinon.assert.calledOnce(getTreatmentVariable);
+        });
+
+        test('If in control group, return false', async () => {
+            sinon.restore();
+            sendTelemetryEventStub = sinon
+                .stub(Telemetry, 'sendTelemetryEvent')
+                .callsFake((eventName: string, _, properties: unknown) => {
+                    const telemetry = { eventName, properties };
+                    telemetryEvents.push(telemetry);
+                });
+
+            // Control group returns false.
+            getTreatmentVariable = sinon.stub().returns(false);
+            sinon.stub(tasClient, 'getExperimentationService').returns(({
+                getTreatmentVariable,
+            } as unknown) as tasClient.IExperimentationService);
+
+            configureApplicationEnvironment('stable', extensionVersion);
+
+            configureSettings(true, [], []);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                instance(stateFactory),
+            );
+            const result = experimentService.inExperimentSync(experiment);
+
+            assert.isFalse(result);
             sinon.assert.notCalled(sendTelemetryEventStub);
             sinon.assert.calledOnce(getTreatmentVariable);
         });
