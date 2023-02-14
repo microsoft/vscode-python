@@ -68,6 +68,7 @@ export class WorkspaceTestAdapter {
         this.vsIdToRunId = new Map<string, string>();
     }
 
+    // ** add executionFactory?: IPythonExecutionFactory, to the parameters
     public async executeTests(
         testController: TestController,
         runInstance: TestRun,
@@ -100,8 +101,18 @@ export class WorkspaceTestAdapter {
                 }
             });
 
-            // need to get the testItems runIds so that we can pass in here.
+            // ** First line is old way, section with if statement below is new way.
             rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri, testCaseIds, debugBool);
+            // if (executionFactory !== undefined) {
+            //     rawTestExecData = await this.executionAdapter.runTests(
+            //         this.workspaceUri,
+            //         testCaseIds,
+            //         debugBool,
+            //         executionFactory,
+            //     );
+            // } else {
+            //     traceVerbose('executionFactory is undefined');
+            // }
             deferred.resolve();
         } catch (ex) {
             // handle token and telemetry here
