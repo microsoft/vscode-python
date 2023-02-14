@@ -1,10 +1,14 @@
+/* eslint-disable max-classes-per-file */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
+
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 
+import { ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { PYTHON_WARNINGS } from '../../common/constants';
 import { IPlatformService } from '../../common/platform/types';
@@ -33,7 +37,6 @@ import {
 import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { Interpreters } from '../../common/utils/localize';
-import { ProgressLocation, ProgressOptions } from 'vscode';
 import { TerminalAutoActivation } from '../../common/experiments/groups';
 import { IExtensionSingleActivationService } from '../../activation/types';
 
@@ -55,6 +58,8 @@ const condaRetryMessages = [
     'The directory is not empty',
 ];
 
+type EnvironmentVariables = { [key: string]: string | undefined };
+
 /**
  * This class exists so that the environment variable fetching can be cached in between tests. Normally
  * this cache resides in memory for the duration of the EnvironmentActivationService's lifetime, but in the case
@@ -63,15 +68,19 @@ const condaRetryMessages = [
  */
 export class EnvironmentActivationServiceCache {
     private static useStatic = false;
+
     private static staticMap = new Map<string, InMemoryCache<NodeJS.ProcessEnv | undefined>>();
+
     private normalMap = new Map<string, InMemoryCache<NodeJS.ProcessEnv | undefined>>();
 
-    public static forceUseStatic() {
+    public static forceUseStatic(): void {
         EnvironmentActivationServiceCache.useStatic = true;
     }
-    public static forceUseNormal() {
+
+    public static forceUseNormal(): void {
         EnvironmentActivationServiceCache.useStatic = false;
     }
+
     public get(key: string): InMemoryCache<NodeJS.ProcessEnv | undefined> | undefined {
         if (EnvironmentActivationServiceCache.useStatic) {
             return EnvironmentActivationServiceCache.staticMap.get(key);
@@ -79,7 +88,7 @@ export class EnvironmentActivationServiceCache {
         return this.normalMap.get(key);
     }
 
-    public set(key: string, value: InMemoryCache<NodeJS.ProcessEnv | undefined>) {
+    public set(key: string, value: InMemoryCache<NodeJS.ProcessEnv | undefined>): void {
         if (EnvironmentActivationServiceCache.useStatic) {
             EnvironmentActivationServiceCache.staticMap.set(key, value);
         } else {
@@ -87,7 +96,7 @@ export class EnvironmentActivationServiceCache {
         }
     }
 
-    public delete(key: string) {
+    public delete(key: string): void {
         if (EnvironmentActivationServiceCache.useStatic) {
             EnvironmentActivationServiceCache.staticMap.delete(key);
         } else {
@@ -95,7 +104,7 @@ export class EnvironmentActivationServiceCache {
         }
     }
 
-    public clear() {
+    public clear(): void {
         // Don't clear during a test as the environment isn't going to change
         if (!EnvironmentActivationServiceCache.useStatic) {
             this.normalMap.clear();
@@ -110,10 +119,15 @@ export class EnvironmentActivationService
         untrustedWorkspace: false,
         virtualWorkspace: false,
     };
+
     private readonly disposables: IDisposable[] = [];
+
     private deferred: Deferred<void> | undefined;
-    private previousEnvVars = process.env;
+
+    private previousEnvVars = normCaseKeys(process.env);
+
     private readonly activatedEnvVariablesCache = new EnvironmentActivationServiceCache();
+
     constructor(
         @inject(ITerminalHelper) private readonly helper: ITerminalHelper,
         @inject(IPlatformService) private readonly platform: IPlatformService,
@@ -164,6 +178,7 @@ export class EnvironmentActivationService
     public dispose(): void {
         this.disposables.forEach((d) => d.dispose());
     }
+
     @traceDecoratorVerbose('getActivatedEnvironmentVariables', TraceOptions.Arguments)
     public async getActivatedEnvironmentVariables(
         resource: Resource,
@@ -203,6 +218,7 @@ export class EnvironmentActivationService
                 throw ex;
             });
     }
+
     public async getEnvironmentActivationShellCommands(
         resource: Resource,
         interpreter?: PythonEnvironment,
@@ -213,6 +229,7 @@ export class EnvironmentActivationService
         }
         return this.helper.getEnvironmentActivationShellCommands(resource, shellInfo.shellType, interpreter);
     }
+
     public async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
         interpreter?: PythonEnvironment,
@@ -220,11 +237,11 @@ export class EnvironmentActivationService
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const shellInfo = defaultShells[this.platform.osType];
         if (!shellInfo) {
-            return;
+            return undefined;
         }
         try {
             let command: string | undefined;
-            let [args, parse] = internalScripts.printEnvVariables();
+            const [args, parse] = internalScripts.printEnvVariables();
             args.forEach((arg, i) => {
                 args[i] = arg.toCommandArgumentForPythonExt();
             });
@@ -247,10 +264,10 @@ export class EnvironmentActivationService
                 );
                 traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
                 if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
-                    return;
+                    return undefined;
                 }
                 // Run the activate command collect the environment from it.
-                const activationCommand = this.fixActivationCommands(activationCommands).join(' && ');
+                const activationCommand = fixActivationCommands(activationCommands).join(' && ');
                 // In order to make sure we know where the environment output is,
                 // put in a dummy echo we can look for
                 command = `${activationCommand} && echo '${ENVIRONMENT_PREFIX}' && python ${args.join(' ')}`;
@@ -342,15 +359,13 @@ export class EnvironmentActivationService
                 throw e;
             }
         }
+        return undefined;
     }
 
-    protected fixActivationCommands(commands: string[]): string[] {
-        // Replace 'source ' with '. ' as that works in shell exec
-        return commands.map((cmd) => cmd.replace(/^source\s+/, '. '));
-    }
     @traceDecoratorError('Failed to parse Environment variables')
     @traceDecoratorVerbose('parseEnvironmentOutput', TraceOptions.None)
-    protected parseEnvironmentOutput(output: string, parse: (out: string) => NodeJS.ProcessEnv | undefined) {
+    // eslint-disable-next-line class-methods-use-this
+    private parseEnvironmentOutput(output: string, parse: (out: string) => NodeJS.ProcessEnv | undefined) {
         if (output.indexOf(ENVIRONMENT_PREFIX) === -1) {
             return parse(output);
         }
@@ -363,24 +378,31 @@ export class EnvironmentActivationService
         const env = await this.getActivatedEnvironmentVariables(resource);
         if (!env) {
             this.context.environmentVariableCollection.clear();
-            this.previousEnvVars = process.env;
+            this.previousEnvVars = normCaseKeys(process.env);
             return;
         }
         const previousEnv = this.previousEnvVars;
-        Object.keys(previousEnv).forEach((key) => {
-            // If the previous env var is not in the current env, then explicitly add it so it can cleared later.
-            if (!(key in env)) {
-                env[key] = '';
-            }
-        });
         this.previousEnvVars = env;
-        for (const key in env) {
+        Object.keys(env).forEach((key) => {
             const value = env[key];
             const prevValue = previousEnv[key];
-            if (value !== undefined && prevValue !== value) {
-                this.context.environmentVariableCollection.replace(key, value);
+            if (prevValue !== value) {
+                if (value !== undefined) {
+                    traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
+                    this.context.environmentVariableCollection.replace(key, value);
+                } else {
+                    traceVerbose(`Clearing environment variable ${key} from collection`);
+                    this.context.environmentVariableCollection.delete(key);
+                }
             }
-        }
+        });
+        Object.keys(previousEnv).forEach((key) => {
+            // If the previous env var is not in the current env, clear it from collection.
+            if (!(key in env)) {
+                traceVerbose(`Clearing environment variable ${key} from collection`);
+                this.context.environmentVariableCollection.delete(key);
+            }
+        });
     }
 
     @traceDecoratorVerbose('Display activating terminals')
@@ -408,4 +430,20 @@ export class EnvironmentActivationService
             return this.deferred.promise;
         });
     }
+}
+
+function normCaseKeys(env: EnvironmentVariables): EnvironmentVariables {
+    const result: EnvironmentVariables = {};
+    Object.keys(env).forEach((key) => {
+        // `os.environ` script used to get env vars normalizes keys to upper case:
+        // https://github.com/python/cpython/issues/101754
+        // So convert `process.env` keys to upper case to match.
+        result[key.toUpperCase()] = env[key];
+    });
+    return result;
+}
+
+function fixActivationCommands(commands: string[]): string[] {
+    // Replace 'source ' with '. ' as that works in shell exec
+    return commands.map((cmd) => cmd.replace(/^source\s+/, '. '));
 }
