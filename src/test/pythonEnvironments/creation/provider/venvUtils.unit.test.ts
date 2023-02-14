@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { assert } from 'chai';
+import { assert, use as chaiUse } from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 import * as fs from 'fs-extra';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
@@ -11,9 +12,11 @@ import { pickPackagesToInstall } from '../../../../client/pythonEnvironments/cre
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { CreateEnv } from '../../../../client/common/utils/localize';
 
+chaiUse(chaiAsPromised);
+
 suite('Venv Utils test', () => {
     let findFilesStub: sinon.SinonStub;
-    let showQuickPickStub: sinon.SinonStub;
+    let showQuickPickWithBackStub: sinon.SinonStub;
     let pathExistsStub: sinon.SinonStub;
     let readFileStub: sinon.SinonStub;
 
@@ -25,7 +28,7 @@ suite('Venv Utils test', () => {
 
     setup(() => {
         findFilesStub = sinon.stub(workspaceApis, 'findFiles');
-        showQuickPickStub = sinon.stub(windowApis, 'showQuickPick');
+        showQuickPickWithBackStub = sinon.stub(windowApis, 'showQuickPickWithBack');
         pathExistsStub = sinon.stub(fs, 'pathExists');
         readFileStub = sinon.stub(fs, 'readFile');
     });
@@ -39,7 +42,7 @@ suite('Venv Utils test', () => {
         pathExistsStub.resolves(false);
 
         const actual = await pickPackagesToInstall(workspace1);
-        assert.isTrue(showQuickPickStub.notCalled);
+        assert.isTrue(showQuickPickWithBackStub.notCalled);
         assert.deepStrictEqual(actual, []);
     });
 
@@ -49,7 +52,7 @@ suite('Venv Utils test', () => {
         readFileStub.resolves('[project]\nname = "spam"\nversion = "2020.0.0"\n');
 
         const actual = await pickPackagesToInstall(workspace1);
-        assert.isTrue(showQuickPickStub.notCalled);
+        assert.isTrue(showQuickPickWithBackStub.notCalled);
         assert.deepStrictEqual(actual, []);
     });
 
@@ -61,7 +64,7 @@ suite('Venv Utils test', () => {
         );
 
         const actual = await pickPackagesToInstall(workspace1);
-        assert.isTrue(showQuickPickStub.notCalled);
+        assert.isTrue(showQuickPickWithBackStub.notCalled);
         assert.deepStrictEqual(actual, [
             {
                 installType: 'toml',
@@ -77,11 +80,11 @@ suite('Venv Utils test', () => {
             '[project]\nname = "spam"\nversion = "2020.0.0"\n[build-system]\nrequires = ["setuptools ~= 58.0", "cython ~= 0.29.0"]\n[project.optional-dependencies]\ntest = ["pytest"]\ndoc = ["sphinx", "furo"]',
         );
 
-        showQuickPickStub.resolves(undefined);
+        showQuickPickWithBackStub.rejects(windowApis.MultiStepAction.Cancel);
 
-        const actual = await pickPackagesToInstall(workspace1);
+        await assert.isRejected(pickPackagesToInstall(workspace1));
         assert.isTrue(
-            showQuickPickStub.calledWithExactly(
+            showQuickPickWithBackStub.calledWithExactly(
                 [{ label: 'test' }, { label: 'doc' }],
                 {
                     placeHolder: CreateEnv.Venv.tomlExtrasQuickPickTitle,
@@ -91,7 +94,6 @@ suite('Venv Utils test', () => {
                 undefined,
             ),
         );
-        assert.deepStrictEqual(actual, undefined);
     });
 
     test('Toml found with dependencies and user selects None', async () => {
@@ -101,11 +103,11 @@ suite('Venv Utils test', () => {
             '[project]\nname = "spam"\nversion = "2020.0.0"\n[build-system]\nrequires = ["setuptools ~= 58.0", "cython ~= 0.29.0"]\n[project.optional-dependencies]\ntest = ["pytest"]\ndoc = ["sphinx", "furo"]',
         );
 
-        showQuickPickStub.resolves([]);
+        showQuickPickWithBackStub.resolves([]);
 
         const actual = await pickPackagesToInstall(workspace1);
         assert.isTrue(
-            showQuickPickStub.calledWithExactly(
+            showQuickPickWithBackStub.calledWithExactly(
                 [{ label: 'test' }, { label: 'doc' }],
                 {
                     placeHolder: CreateEnv.Venv.tomlExtrasQuickPickTitle,
@@ -130,11 +132,11 @@ suite('Venv Utils test', () => {
             '[project]\nname = "spam"\nversion = "2020.0.0"\n[build-system]\nrequires = ["setuptools ~= 58.0", "cython ~= 0.29.0"]\n[project.optional-dependencies]\ntest = ["pytest"]\ndoc = ["sphinx", "furo"]',
         );
 
-        showQuickPickStub.resolves([{ label: 'doc' }]);
+        showQuickPickWithBackStub.resolves([{ label: 'doc' }]);
 
         const actual = await pickPackagesToInstall(workspace1);
         assert.isTrue(
-            showQuickPickStub.calledWithExactly(
+            showQuickPickWithBackStub.calledWithExactly(
                 [{ label: 'test' }, { label: 'doc' }],
                 {
                     placeHolder: CreateEnv.Venv.tomlExtrasQuickPickTitle,
@@ -150,6 +152,10 @@ suite('Venv Utils test', () => {
                 installItem: 'doc',
                 source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
             },
+            {
+                installType: 'toml',
+                source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
+            },
         ]);
     });
 
@@ -160,11 +166,11 @@ suite('Venv Utils test', () => {
             '[project]\nname = "spam"\nversion = "2020.0.0"\n[build-system]\nrequires = ["setuptools ~= 58.0", "cython ~= 0.29.0"]\n[project.optional-dependencies]\ntest = ["pytest"]\ndoc = ["sphinx", "furo"]\ncov = ["pytest-cov"]',
         );
 
-        showQuickPickStub.resolves([{ label: 'test' }, { label: 'cov' }]);
+        showQuickPickWithBackStub.resolves([{ label: 'test' }, { label: 'cov' }]);
 
         const actual = await pickPackagesToInstall(workspace1);
         assert.isTrue(
-            showQuickPickStub.calledWithExactly(
+            showQuickPickWithBackStub.calledWithExactly(
                 [{ label: 'test' }, { label: 'doc' }, { label: 'cov' }],
                 {
                     placeHolder: CreateEnv.Venv.tomlExtrasQuickPickTitle,
@@ -185,10 +191,17 @@ suite('Venv Utils test', () => {
                 installItem: 'cov',
                 source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
             },
+            {
+                installType: 'toml',
+                source: path.join(workspace1.uri.fsPath, 'pyproject.toml'),
+            },
         ]);
     });
 
     test('Requirements found, but user presses escape', async () => {
+        pathExistsStub.resolves(true);
+        readFileStub.resolves('[project]\nname = "spam"\nversion = "2020.0.0"\n');
+
         let allow = true;
         findFilesStub.callsFake(() => {
             if (allow) {
@@ -201,13 +214,12 @@ suite('Venv Utils test', () => {
             }
             return Promise.resolve([]);
         });
-        pathExistsStub.resolves(false);
 
-        showQuickPickStub.resolves(undefined);
+        showQuickPickWithBackStub.rejects(windowApis.MultiStepAction.Cancel);
 
-        const actual = await pickPackagesToInstall(workspace1);
+        await assert.isRejected(pickPackagesToInstall(workspace1));
         assert.isTrue(
-            showQuickPickStub.calledWithExactly(
+            showQuickPickWithBackStub.calledWithExactly(
                 [{ label: 'requirements.txt' }, { label: 'dev-requirements.txt' }, { label: 'test-requirements.txt' }],
                 {
                     placeHolder: CreateEnv.Venv.requirementsQuickPickTitle,
@@ -217,8 +229,8 @@ suite('Venv Utils test', () => {
                 undefined,
             ),
         );
-        assert.deepStrictEqual(actual, undefined);
-        assert.isTrue(readFileStub.notCalled);
+        assert.isTrue(readFileStub.calledOnce);
+        assert.isTrue(pathExistsStub.calledOnce);
     });
 
     test('Requirements found and user selects None', async () => {
@@ -236,11 +248,11 @@ suite('Venv Utils test', () => {
         });
         pathExistsStub.resolves(false);
 
-        showQuickPickStub.resolves([]);
+        showQuickPickWithBackStub.resolves([]);
 
         const actual = await pickPackagesToInstall(workspace1);
         assert.isTrue(
-            showQuickPickStub.calledWithExactly(
+            showQuickPickWithBackStub.calledWithExactly(
                 [{ label: 'requirements.txt' }, { label: 'dev-requirements.txt' }, { label: 'test-requirements.txt' }],
                 {
                     placeHolder: CreateEnv.Venv.requirementsQuickPickTitle,
@@ -269,11 +281,11 @@ suite('Venv Utils test', () => {
         });
         pathExistsStub.resolves(false);
 
-        showQuickPickStub.resolves([{ label: 'requirements.txt' }]);
+        showQuickPickWithBackStub.resolves([{ label: 'requirements.txt' }]);
 
         const actual = await pickPackagesToInstall(workspace1);
         assert.isTrue(
-            showQuickPickStub.calledWithExactly(
+            showQuickPickWithBackStub.calledWithExactly(
                 [{ label: 'requirements.txt' }, { label: 'dev-requirements.txt' }, { label: 'test-requirements.txt' }],
                 {
                     placeHolder: CreateEnv.Venv.requirementsQuickPickTitle,
@@ -307,11 +319,11 @@ suite('Venv Utils test', () => {
         });
         pathExistsStub.resolves(false);
 
-        showQuickPickStub.resolves([{ label: 'dev-requirements.txt' }, { label: 'test-requirements.txt' }]);
+        showQuickPickWithBackStub.resolves([{ label: 'dev-requirements.txt' }, { label: 'test-requirements.txt' }]);
 
         const actual = await pickPackagesToInstall(workspace1);
         assert.isTrue(
-            showQuickPickStub.calledWithExactly(
+            showQuickPickWithBackStub.calledWithExactly(
                 [{ label: 'requirements.txt' }, { label: 'dev-requirements.txt' }, { label: 'test-requirements.txt' }],
                 {
                     placeHolder: CreateEnv.Venv.requirementsQuickPickTitle,

@@ -64,7 +64,7 @@ suite('Conda Creation provider tests', () => {
         getCondaBaseEnvStub.resolves('/usr/bin/conda');
         pickWorkspaceFolderStub.resolves(undefined);
 
-        assert.isUndefined(await condaProvider.createEnvironment());
+        await assert.isRejected(condaProvider.createEnvironment());
     });
 
     test('No python version picked selected', async () => {
