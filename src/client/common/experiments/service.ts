@@ -142,7 +142,7 @@ export class ExperimentService implements IExperimentService {
         // it means that the value for this experiment was not found on the server.
         const treatmentVariable = this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment);
 
-        return treatmentVariable !== undefined;
+        return treatmentVariable === true;
     }
 
     public async getExperimentValue<T extends boolean | number | string>(experiment: string): Promise<T | undefined> {
