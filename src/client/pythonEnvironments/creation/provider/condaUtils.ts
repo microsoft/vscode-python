@@ -3,11 +3,14 @@
 
 import { CancellationToken, QuickPickItem, Uri } from 'vscode';
 import { Common } from '../../../browser/localize';
+import { Octicons } from '../../../common/constants';
 import { CreateEnv } from '../../../common/utils/localize';
 import { executeCommand } from '../../../common/vscodeApis/commandApis';
-import { showErrorMessage, showQuickPick } from '../../../common/vscodeApis/windowApis';
+import { showErrorMessage, showQuickPickWithBack } from '../../../common/vscodeApis/windowApis';
 import { traceLog } from '../../../logging';
 import { Conda } from '../../common/environmentManagers/conda';
+
+const RECOMMENDED_CONDA_PYTHON = '3.10';
 
 export async function getCondaBaseEnv(): Promise<string | undefined> {
     const conda = await Conda.getConda();
@@ -36,16 +39,21 @@ export async function getCondaBaseEnv(): Promise<string | undefined> {
 }
 
 export async function pickPythonVersion(token?: CancellationToken): Promise<string | undefined> {
-    const items: QuickPickItem[] = ['3.10', '3.9', '3.8', '3.7'].map((v) => ({
-        label: `Python`,
+    const items: QuickPickItem[] = ['3.10', '3.11', '3.9', '3.8', '3.7'].map((v) => ({
+        label: v === RECOMMENDED_CONDA_PYTHON ? `${Octicons.Star} Python` : 'Python',
         description: v,
     }));
-    const version = await showQuickPick(
+    const selection = await showQuickPickWithBack(
         items,
         {
             placeHolder: CreateEnv.Conda.selectPythonQuickPickPlaceholder,
         },
         token,
     );
-    return version?.description;
+
+    if (selection) {
+        return (selection as QuickPickItem).description;
+    }
+
+    return undefined;
 }

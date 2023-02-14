@@ -4,7 +4,7 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { CancellationToken, QuickPickItem, WorkspaceFolder } from 'vscode';
-import { showErrorMessage, showQuickPick } from '../../../common/vscodeApis/windowApis';
+import { MultiStepAction, showErrorMessage, showQuickPickWithBack } from '../../../common/vscodeApis/windowApis';
 import { getWorkspaceFolders } from '../../../common/vscodeApis/workspaceApis';
 import { Common, CreateEnv } from '../../../common/utils/localize';
 import { executeCommand } from '../../../common/vscodeApis/commandApis';
@@ -36,10 +36,15 @@ export interface PickWorkspaceFolderOptions {
 
 export async function pickWorkspaceFolder(
     options?: PickWorkspaceFolderOptions,
+    context?: MultiStepAction,
 ): Promise<WorkspaceFolder | WorkspaceFolder[] | undefined> {
     const workspaces = getWorkspaceFolders();
 
     if (!workspaces || workspaces.length === 0) {
+        if (context === MultiStepAction.Back) {
+            // No workspaces and nothing to show, should just go to previous
+            throw MultiStepAction.Back;
+        }
         const result = await showErrorMessage(CreateEnv.noWorkspace, Common.openFolder);
         if (result === Common.openFolder) {
             await executeCommand('vscode.openFolder');
@@ -48,12 +53,17 @@ export async function pickWorkspaceFolder(
     }
 
     if (workspaces.length === 1) {
+        if (context === MultiStepAction.Back) {
+            // In this case there is no Quick Pick shown, should just go to previous
+            throw MultiStepAction.Back;
+        }
+
         return workspaces[0];
     }
 
     // This is multi-root scenario.
-    const selected = await showQuickPick(
-        getWorkspacesForQuickPick(workspaces),
+    const selected = await showQuickPickWithBack(
+        await getWorkspacesForQuickPick(workspaces),
         {
             placeHolder: CreateEnv.pickWorkspacePlaceholder,
             ignoreFocusOut: true,
@@ -63,13 +73,11 @@ export async function pickWorkspaceFolder(
     );
 
     if (selected) {
-        if (options?.allowMultiSelect) {
-            const details = ((selected as unknown) as QuickPickItem[])
-                .map((s: QuickPickItem) => s.detail)
-                .filter((s) => s !== undefined);
+        if (Array.isArray(selected)) {
+            const details = selected.map((s: QuickPickItem) => s.detail).filter((s) => s !== undefined);
             return workspaces.filter((w) => details.includes(w.uri.fsPath));
         }
-        return workspaces.filter((w) => w.uri.fsPath === selected.detail)[0];
+        return workspaces.filter((w) => w.uri.fsPath === (selected as QuickPickItem).detail)[0];
     }
 
     return undefined;

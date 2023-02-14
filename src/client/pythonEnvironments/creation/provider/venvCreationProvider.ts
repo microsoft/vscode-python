@@ -18,14 +18,15 @@ import {
 import { pickWorkspaceFolder } from '../common/workspaceSelection';
 import { IInterpreterQuickPick } from '../../../interpreter/configuration/types';
 import { EnvironmentType, PythonEnvironment } from '../../info';
-import { withProgress } from '../../../common/vscodeApis/windowApis';
+import { MultiStepAction, MultiStepNode, withProgress } from '../../../common/vscodeApis/windowApis';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { VenvProgressAndTelemetry, VENV_CREATED_MARKER, VENV_EXISTING_MARKER } from './venvProgressAndTelemetry';
 import { showErrorMessageWithLogs } from '../common/commonUtils';
 import { IPackageInstallSelection, pickPackagesToInstall } from './venvUtils';
+import { InputFlowAction } from '../../../common/utils/multiStepInput';
 
-function generateCommandArgs(installInfo?: IPackageInstallSelection, addGitIgnore?: boolean): string[] {
+function generateCommandArgs(installInfo?: IPackageInstallSelection[], addGitIgnore?: boolean): string[] {
     const command: string[] = [createVenvScript()];
 
     if (addGitIgnore) {
@@ -33,12 +34,23 @@ function generateCommandArgs(installInfo?: IPackageInstallSelection, addGitIgnor
     }
 
     if (installInfo) {
-        if (installInfo?.installType === 'toml') {
-            command.push('--toml', installInfo.source?.fileToCommandArgumentForPythonExt() || 'pyproject.toml');
-            installInfo.installList?.forEach((i) => command.push('--extras', i));
-        } else if (installInfo?.installType === 'requirements') {
-            installInfo.installList?.forEach((i) => command.push('--requirements', i));
+        if (installInfo.some((i) => i.installType === 'toml')) {
+            const source = installInfo.find((i) => i.installType === 'toml')?.source;
+            command.push('--toml', source?.fileToCommandArgumentForPythonExt() || 'pyproject.toml');
         }
+        const extras = installInfo.filter((i) => i.installType === 'toml').map((i) => i.installItem);
+        extras.forEach((r) => {
+            if (r) {
+                command.push('--extras', r);
+            }
+        });
+
+        const requirements = installInfo.filter((i) => i.installType === 'requirements').map((i) => i.installItem);
+        requirements.forEach((r) => {
+            if (r) {
+                command.push('--requirements', r);
+            }
+        });
     }
 
     return command;
@@ -115,23 +127,64 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
     constructor(private readonly interpreterQuickPick: IInterpreterQuickPick) {}
 
     public async createEnvironment(options?: CreateEnvironmentOptions): Promise<CreateEnvironmentResult | undefined> {
-        const workspace = (await pickWorkspaceFolder()) as WorkspaceFolder | undefined;
-        if (workspace === undefined) {
-            traceError('Workspace was not selected or found for creating virtual environment.');
-            return undefined;
-        }
+        let workspace: WorkspaceFolder | undefined;
+        const workspaceStep = new MultiStepNode(
+            undefined,
+            async (context?: MultiStepAction) => {
+                try {
+                    workspace = (await pickWorkspaceFolder(undefined, context)) as WorkspaceFolder | undefined;
+                } catch (ex) {
+                    if (ex === MultiStepAction.Back || ex === MultiStepAction.Cancel) {
+                        return ex;
+                    }
+                    throw ex;
+                }
 
-        const interpreter = await this.interpreterQuickPick.getInterpreterViaQuickPick(
-            workspace.uri,
-            (i: PythonEnvironment) =>
-                [EnvironmentType.System, EnvironmentType.MicrosoftStore, EnvironmentType.Global].includes(i.envType),
-            { skipRecommended: true },
+                if (workspace === undefined) {
+                    traceError('Workspace was not selected or found for creating virtual environment.');
+                    return MultiStepAction.Cancel;
+                }
+                return MultiStepAction.Continue;
+            },
+            undefined,
         );
 
-        if (!interpreter) {
-            traceError('Virtual env creation requires an interpreter.');
-            return undefined;
-        }
+        let interpreter: string | undefined;
+        const interpreterStep = new MultiStepNode(
+            workspaceStep,
+            async () => {
+                if (workspace) {
+                    try {
+                        interpreter = await this.interpreterQuickPick.getInterpreterViaQuickPick(
+                            workspace.uri,
+                            (i: PythonEnvironment) =>
+                                [
+                                    EnvironmentType.System,
+                                    EnvironmentType.MicrosoftStore,
+                                    EnvironmentType.Global,
+                                ].includes(i.envType),
+                            {
+                                skipRecommended: true,
+                                showBackButton: true,
+                            },
+                        );
+                    } catch (ex) {
+                        if (ex === InputFlowAction.back) {
+                            return MultiStepAction.Back;
+                        }
+                        interpreter = undefined;
+                    }
+                }
+
+                if (!interpreter) {
+                    traceError('Virtual env creation requires an interpreter.');
+                    return MultiStepAction.Cancel;
+                }
+                return MultiStepAction.Continue;
+            },
+            undefined,
+        );
+        workspaceStep.next = interpreterStep;
 
         let addGitIgnore = true;
         let installPackages = true;
@@ -139,16 +192,37 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
             addGitIgnore = options?.ignoreSourceControl !== undefined ? options.ignoreSourceControl : true;
             installPackages = options?.installPackages !== undefined ? options.installPackages : true;
         }
-        let installInfo: IPackageInstallSelection | undefined;
-        if (installPackages) {
-            installInfo = await pickPackagesToInstall(workspace);
-        }
-        const args = generateCommandArgs(installInfo, addGitIgnore);
+        let installInfo: IPackageInstallSelection[] | undefined;
+        const packagesStep = new MultiStepNode(
+            interpreterStep,
+            async () => {
+                if (workspace && installPackages) {
+                    try {
+                        installInfo = await pickPackagesToInstall(workspace);
+                    } catch (ex) {
+                        if (ex === MultiStepAction.Back || ex === MultiStepAction.Cancel) {
+                            return ex;
+                        }
+                        throw ex;
+                    }
+                    if (!installInfo) {
+                        traceInfo('Virtual env creation exited during dependencies selection.');
+                        return MultiStepAction.Cancel;
+                    }
+                }
 
-        if (!installInfo) {
-            traceInfo('Virtual env creation exited during dependencies selection.');
-            return undefined;
+                return MultiStepAction.Continue;
+            },
+            undefined,
+        );
+        interpreterStep.next = packagesStep;
+
+        const action = await MultiStepNode.run(workspaceStep);
+        if (action === MultiStepAction.Back || action === MultiStepAction.Cancel) {
+            throw action;
         }
+
+        const args = generateCommandArgs(installInfo, addGitIgnore);
 
         return withProgress(
             {
@@ -168,7 +242,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
 
                 let envPath: string | undefined;
                 try {
-                    if (interpreter) {
+                    if (interpreter && workspace) {
                         envPath = await createVenv(workspace, interpreter, args, progress, token);
                     }
                 } catch (ex) {
@@ -181,7 +255,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                     }
                 }
 
-                return { path: envPath, uri: workspace.uri };
+                return { path: envPath, uri: workspace?.uri };
             },
         );
     }

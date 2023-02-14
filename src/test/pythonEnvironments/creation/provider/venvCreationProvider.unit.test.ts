@@ -66,7 +66,7 @@ suite('venv Creation provider tests', () => {
             .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny()))
             .verifiable(typemoq.Times.never());
 
-        assert.isUndefined(await venvProvider.createEnvironment());
+        await assert.isRejected(venvProvider.createEnvironment());
         assert.isTrue(pickWorkspaceFolderStub.calledOnce);
         interpreterQuickPick.verifyAll();
         assert.isTrue(pickPackagesToInstallStub.notCalled);
@@ -80,7 +80,7 @@ suite('venv Creation provider tests', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
 
-        assert.isUndefined(await venvProvider.createEnvironment());
+        await assert.isRejected(venvProvider.createEnvironment());
 
         assert.isTrue(pickWorkspaceFolderStub.calledOnce);
         interpreterQuickPick.verifyAll();
@@ -97,11 +97,11 @@ suite('venv Creation provider tests', () => {
 
         pickPackagesToInstallStub.resolves(undefined);
 
-        assert.isUndefined(await venvProvider.createEnvironment());
+        await assert.isRejected(venvProvider.createEnvironment());
         assert.isTrue(pickPackagesToInstallStub.calledOnce);
     });
 
-    test('Create venv with python selected by user', async () => {
+    test('Create venv with python selected by user no packages selected', async () => {
         pickWorkspaceFolderStub.resolves(workspace1);
 
         interpreterQuickPick
@@ -109,10 +109,7 @@ suite('venv Creation provider tests', () => {
             .returns(() => Promise.resolve('/usr/bin/python'))
             .verifiable(typemoq.Times.once());
 
-        pickPackagesToInstallStub.resolves({
-            installType: 'none',
-            installList: [],
-        });
+        pickPackagesToInstallStub.resolves([]);
 
         const deferred = createDeferred();
         let _next: undefined | ((value: Output<string>) => void);
@@ -172,10 +169,7 @@ suite('venv Creation provider tests', () => {
             .returns(() => Promise.resolve('/usr/bin/python'))
             .verifiable(typemoq.Times.once());
 
-        pickPackagesToInstallStub.resolves({
-            installType: 'none',
-            installList: [],
-        });
+        pickPackagesToInstallStub.resolves([]);
 
         const deferred = createDeferred();
         let _error: undefined | ((error: unknown) => void);
@@ -229,10 +223,7 @@ suite('venv Creation provider tests', () => {
             .returns(() => Promise.resolve('/usr/bin/python'))
             .verifiable(typemoq.Times.once());
 
-        pickPackagesToInstallStub.resolves({
-            installType: 'none',
-            installList: [],
-        });
+        pickPackagesToInstallStub.resolves([]);
 
         const deferred = createDeferred();
         let _next: undefined | ((value: Output<string>) => void);

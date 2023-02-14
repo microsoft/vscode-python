@@ -7,7 +7,7 @@ import { flatten, isArray } from 'lodash';
 import * as path from 'path';
 import { CancellationToken, QuickPickItem, RelativePattern, WorkspaceFolder } from 'vscode';
 import { CreateEnv } from '../../../common/utils/localize';
-import { showQuickPick } from '../../../common/vscodeApis/windowApis';
+import { MultiStepAction, MultiStepNode, showQuickPickWithBack } from '../../../common/vscodeApis/windowApis';
 import { findFiles } from '../../../common/vscodeApis/workspaceApis';
 import { traceError, traceInfo, traceVerbose } from '../../../logging';
 
@@ -52,7 +52,7 @@ function getTomlOptionalDeps(toml: tomljs.JsonMap): string[] {
 async function pickTomlExtras(extras: string[], token?: CancellationToken): Promise<string[] | undefined> {
     const items: QuickPickItem[] = extras.map((e) => ({ label: e }));
 
-    const selection = await showQuickPick(
+    const selection = await showQuickPickWithBack(
         items,
         {
             placeHolder: CreateEnv.Venv.tomlExtrasQuickPickTitle,
@@ -84,7 +84,7 @@ async function pickRequirementsFiles(files: string[], token?: CancellationToken)
         })
         .map((e) => ({ label: e }));
 
-    const selection = await showQuickPick(
+    const selection = await showQuickPickWithBack(
         items,
         {
             placeHolder: CreateEnv.Venv.requirementsQuickPickTitle,
@@ -103,57 +103,117 @@ async function pickRequirementsFiles(files: string[], token?: CancellationToken)
 
 export interface IPackageInstallSelection {
     installType: 'toml' | 'requirements' | 'none';
-    installList: string[];
+    installItem?: string;
     source?: string;
 }
 
 export async function pickPackagesToInstall(
     workspaceFolder: WorkspaceFolder,
     token?: CancellationToken,
-): Promise<IPackageInstallSelection | undefined> {
+): Promise<IPackageInstallSelection[] | undefined> {
     const tomlPath = path.join(workspaceFolder.uri.fsPath, 'pyproject.toml');
-    traceVerbose(`Looking for toml pyproject.toml with optional dependencies at: ${tomlPath}`);
+    const packages: IPackageInstallSelection[] = [];
 
-    let extras: string[] = [];
-    let tomlExists = false;
-    let hasBuildSystem = false;
-    if (await fs.pathExists(tomlPath)) {
-        tomlExists = true;
-        const toml = tomlParse(await fs.readFile(tomlPath, 'utf-8'));
-        extras = getTomlOptionalDeps(toml);
-        hasBuildSystem = tomlHasBuildSystem(toml);
-    }
+    const tomlStep = new MultiStepNode(
+        undefined,
+        async (context?: MultiStepAction) => {
+            traceVerbose(`Looking for toml pyproject.toml with optional dependencies at: ${tomlPath}`);
 
-    if (tomlExists && hasBuildSystem) {
-        if (extras.length === 0) {
-            return { installType: 'toml', installList: [], source: tomlPath };
-        }
-        traceVerbose('Found toml with optional dependencies.');
-        const installList = await pickTomlExtras(extras, token);
-        if (installList) {
-            return { installType: 'toml', installList, source: tomlPath };
-        }
-        return undefined;
-    }
-    if (tomlExists) {
-        traceInfo('Create env: Found toml without optional dependencies or build system.');
-    }
+            let extras: string[] = [];
+            let hasBuildSystem = false;
 
-    traceVerbose('Looking for pip requirements.');
-    const requirementFiles = (await getPipRequirementsFiles(workspaceFolder, token))?.map((p) =>
-        path.relative(workspaceFolder.uri.fsPath, p),
+            if (await fs.pathExists(tomlPath)) {
+                const toml = tomlParse(await fs.readFile(tomlPath, 'utf-8'));
+                extras = getTomlOptionalDeps(toml);
+                hasBuildSystem = tomlHasBuildSystem(toml);
+
+                if (!hasBuildSystem) {
+                    traceInfo('Create env: Found toml without build system. So we will not use editable install.');
+                }
+                if (extras.length === 0) {
+                    traceInfo('Create env: Found toml without optional dependencies.');
+                }
+            } else if (context === MultiStepAction.Back) {
+                // This step is not really used so just go back
+                return MultiStepAction.Back;
+            }
+
+            if (hasBuildSystem) {
+                if (extras.length > 0) {
+                    traceVerbose('Create Env: Found toml with optional dependencies.');
+
+                    try {
+                        const installList = await pickTomlExtras(extras, token);
+                        if (installList) {
+                            if (installList.length > 0) {
+                                installList.forEach((i) => {
+                                    packages.push({ installType: 'toml', installItem: i, source: tomlPath });
+                                });
+                            }
+                            packages.push({ installType: 'toml', source: tomlPath });
+                        }
+                    } catch (ex) {
+                        if (ex === MultiStepAction.Back || ex === MultiStepAction.Cancel) {
+                            return ex;
+                        }
+                        throw ex;
+                    }
+                } else if (context === MultiStepAction.Back) {
+                    // This step is not really used so just go back
+                    return MultiStepAction.Back;
+                } else {
+                    // There are no extras to install and the context is to go to next step
+                    packages.push({ installType: 'toml', source: tomlPath });
+                }
+            } else if (context === MultiStepAction.Back) {
+                // This step is not really used because there is no build system in toml, so just go back
+                return MultiStepAction.Back;
+            }
+
+            return MultiStepAction.Continue;
+        },
+        undefined,
     );
 
-    if (requirementFiles && requirementFiles.length > 0) {
-        traceVerbose('Found pip requirements.');
-        const installList = (await pickRequirementsFiles(requirementFiles, token))?.map((p) =>
-            path.join(workspaceFolder.uri.fsPath, p),
-        );
-        if (installList) {
-            return { installType: 'requirements', installList };
-        }
-        return undefined;
+    const requirementsStep = new MultiStepNode(
+        tomlStep,
+        async (context?: MultiStepAction) => {
+            traceVerbose('Looking for pip requirements.');
+            const requirementFiles = (await getPipRequirementsFiles(workspaceFolder, token))?.map((p) =>
+                path.relative(workspaceFolder.uri.fsPath, p),
+            );
+
+            if (requirementFiles && requirementFiles.length > 0) {
+                traceVerbose('Found pip requirements.');
+                try {
+                    const result = await pickRequirementsFiles(requirementFiles, token);
+                    const installList = result?.map((p) => path.join(workspaceFolder.uri.fsPath, p));
+                    if (installList) {
+                        installList.forEach((i) => {
+                            packages.push({ installType: 'requirements', installItem: i });
+                        });
+                    }
+                } catch (ex) {
+                    if (ex === MultiStepAction.Back || ex === MultiStepAction.Cancel) {
+                        return ex;
+                    }
+                    throw ex;
+                }
+            } else if (context === MultiStepAction.Back) {
+                // This step is not really used, because there were no requirement files, so just go back
+                return MultiStepAction.Back;
+            }
+
+            return MultiStepAction.Continue;
+        },
+        undefined,
+    );
+    tomlStep.next = requirementsStep;
+
+    const action = await MultiStepNode.run(tomlStep);
+    if (action === MultiStepAction.Back || action === MultiStepAction.Cancel) {
+        throw action;
     }
 
-    return { installType: 'none', installList: [] };
+    return packages;
 }
