@@ -108,4 +108,5 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IEnvironmentActivationService,
         EnvironmentActivationService,
     );
+    serviceManager.addBinding(IEnvironmentActivationService, IExtensionSingleActivationService);
 }

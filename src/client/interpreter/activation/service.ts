@@ -11,7 +11,7 @@ import { IPlatformService } from '../../common/platform/types';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalHelper, TerminalShellType } from '../../common/terminal/types';
-import { ICurrentProcess, IDisposable, IExtensionContext, Resource } from '../../common/types';
+import { ICurrentProcess, IDisposable, IExperimentService, IExtensionContext, Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { InMemoryCache } from '../../common/utils/cacheUtils';
 import { OSType } from '../../common/utils/platform';
@@ -34,6 +34,8 @@ import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda
 import { StopWatch } from '../../common/utils/stopWatch';
 import { Interpreters } from '../../common/utils/localize';
 import { ProgressLocation, ProgressOptions } from 'vscode';
+import { TerminalAutoActivation } from '../../common/experiments/groups';
+import { IExtensionSingleActivationService } from '../../activation/types';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const CACHE_DURATION = 10 * 60 * 1000;
@@ -102,7 +104,12 @@ export class EnvironmentActivationServiceCache {
 }
 
 @injectable()
-export class EnvironmentActivationService implements IEnvironmentActivationService, IDisposable {
+export class EnvironmentActivationService
+    implements IEnvironmentActivationService, IExtensionSingleActivationService, IDisposable {
+    public readonly supportedWorkspaceTypes: { untrustedWorkspace: boolean; virtualWorkspace: boolean } = {
+        untrustedWorkspace: false,
+        virtualWorkspace: false,
+    };
     private readonly disposables: IDisposable[] = [];
     private deferred: Deferred<void> | undefined;
     private previousEnvVars = process.env;
@@ -117,13 +124,19 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider,
         @inject(IExtensionContext) private context: IExtensionContext,
         @inject(IApplicationShell) private shell: IApplicationShell,
+        @inject(IExperimentService) private experimentService: IExperimentService,
     ) {
         this.envVarsService.onDidEnvironmentVariablesChange(
             () => this.activatedEnvVariablesCache.clear(),
             this,
             this.disposables,
         );
+    }
 
+    public async activate(): Promise<void> {
+        if (!this.isEnvCollectionEnabled()) {
+            return;
+        }
         this.interpreterService.onDidChangeInterpreter(
             async (resource) => {
                 this.showProgress();
@@ -136,6 +149,16 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         );
 
         this.initializeEnvironmentCollection(undefined).ignoreErrors();
+    }
+
+    private isEnvCollectionEnabled() {
+        if (this.workspace.workspaceFile) {
+            return false;
+        }
+        if (!this.experimentService.inExperimentSync(TerminalAutoActivation.experiment)) {
+            // TODO: return false;
+        }
+        return true;
     }
 
     public dispose(): void {
