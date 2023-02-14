@@ -1,6 +1,6 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { lt, parse, SemVer } from 'semver';
+import { lt, SemVer } from 'semver';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
 import {
     arePathsSame,
@@ -552,9 +552,15 @@ export class Conda {
         if (!versionString) {
             return undefined;
         }
-        const version = parse(versionString, true);
-        if (version) {
-            return version;
+        const pattern = /(?<major>\d+)\.(?<minor>\d+)\.(?<micro>\d+)(?:.*)?/;
+        const match = versionString.match(pattern);
+        if (match && match.groups) {
+            const versionStringParsed = match.groups.major.concat('.', match.groups.minor, '.', match.groups.micro);
+
+            const semVarVersion: SemVer = new SemVer(versionStringParsed);
+            if (semVarVersion) {
+                return semVarVersion;
+            }
         }
         // Use a bogus version, at least to indicate the fact that a version was returned.
         // This ensures we still use conda for activation, installation etc.
