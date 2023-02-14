@@ -169,7 +169,11 @@ export async function handleCreateEnvironmentCommand(
     const action = await MultiStepNode.run(envTypeStep);
     if (options?.showBackButton) {
         if (action === MultiStepAction.Back || action === MultiStepAction.Cancel) {
-            throw action;
+            result = {
+                path: result?.path,
+                uri: result?.uri,
+                action: action === MultiStepAction.Back ? 'Back' : 'Cancel',
+            };
         }
     }
 

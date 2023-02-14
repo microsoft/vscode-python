@@ -14,6 +14,7 @@ export interface CreateEnvironmentOptions {
 export interface CreateEnvironmentResult {
     path: string | undefined;
     uri: Uri | undefined;
+    action?: 'Back' | 'Cancel';
 }
 
 export interface CreateEnvironmentProvider {

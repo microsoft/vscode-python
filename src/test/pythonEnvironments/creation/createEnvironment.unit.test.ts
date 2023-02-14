@@ -211,4 +211,56 @@ suite('Create Environments Tests', () => {
         assert.isTrue(startedEventTriggered);
         assert.isTrue(exitedEventTriggered);
     });
+
+    test('User clicked Back', async () => {
+        const provider1 = typemoq.Mock.ofType<CreateEnvironmentProvider>();
+        provider1.setup((p) => p.name).returns(() => 'test1');
+        provider1.setup((p) => p.id).returns(() => 'test-id1');
+        provider1.setup((p) => p.description).returns(() => 'test-description1');
+        provider1.setup((p) => p.createEnvironment(typemoq.It.isAny())).returns(() => Promise.resolve(undefined));
+
+        const provider2 = typemoq.Mock.ofType<CreateEnvironmentProvider>();
+        provider2.setup((p) => p.name).returns(() => 'test2');
+        provider2.setup((p) => p.id).returns(() => 'test-id2');
+        provider2.setup((p) => p.description).returns(() => 'test-description2');
+        provider2.setup((p) => p.createEnvironment(typemoq.It.isAny())).returns(() => Promise.resolve(undefined));
+
+        showQuickPickWithBackStub.returns(Promise.reject(windowApis.MultiStepAction.Back));
+
+        provider1.setup((p) => (p as any).then).returns(() => undefined);
+        provider2.setup((p) => (p as any).then).returns(() => undefined);
+        const result = await handleCreateEnvironmentCommand([provider1.object, provider2.object], {
+            showBackButton: true,
+        });
+
+        assert.deepStrictEqual(result, { path: undefined, uri: undefined, action: 'Back' });
+        assert.isTrue(showQuickPickStub.notCalled);
+        assert.isTrue(showQuickPickWithBackStub.calledOnce);
+    });
+
+    test('User pressed Escape', async () => {
+        const provider1 = typemoq.Mock.ofType<CreateEnvironmentProvider>();
+        provider1.setup((p) => p.name).returns(() => 'test1');
+        provider1.setup((p) => p.id).returns(() => 'test-id1');
+        provider1.setup((p) => p.description).returns(() => 'test-description1');
+        provider1.setup((p) => p.createEnvironment(typemoq.It.isAny())).returns(() => Promise.resolve(undefined));
+
+        const provider2 = typemoq.Mock.ofType<CreateEnvironmentProvider>();
+        provider2.setup((p) => p.name).returns(() => 'test2');
+        provider2.setup((p) => p.id).returns(() => 'test-id2');
+        provider2.setup((p) => p.description).returns(() => 'test-description2');
+        provider2.setup((p) => p.createEnvironment(typemoq.It.isAny())).returns(() => Promise.resolve(undefined));
+
+        showQuickPickWithBackStub.returns(Promise.reject(windowApis.MultiStepAction.Cancel));
+
+        provider1.setup((p) => (p as any).then).returns(() => undefined);
+        provider2.setup((p) => (p as any).then).returns(() => undefined);
+        const result = await handleCreateEnvironmentCommand([provider1.object, provider2.object], {
+            showBackButton: true,
+        });
+
+        assert.deepStrictEqual(result, { path: undefined, uri: undefined, action: 'Cancel' });
+        assert.isTrue(showQuickPickStub.notCalled);
+        assert.isTrue(showQuickPickWithBackStub.calledOnce);
+    });
 });
