@@ -162,7 +162,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = UNITTEST_PROVIDER;
             } else {
-                discoveryAdapter = new PytestTestDiscoveryAdapter(this.pythonTestServer, { ...this.configSettings });
+                discoveryAdapter = new PytestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);
                 executionAdapter = new PytestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
                 testProvider = PYTEST_PROVIDER;
             }
@@ -372,6 +372,20 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 tool: 'pytest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
+                            // ** new execution runner/adapter
+                            // const testAdapter =
+                            //     this.testAdapters.get(workspace.uri) ||
+                            //     (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                            // return testAdapter.executeTests(
+                            //     this.testController,
+                            //     runInstance,
+                            //     testItems,
+                            //     token,
+                            //     request.profile?.kind === TestRunProfileKind.Debug,
+                            //     this.pythonExecFactory,
+                            // );
+
+                            // below is old way of running pytest execution
                             return this.pytest.runTests(
                                 {
                                     includes: testItems,
@@ -402,7 +416,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             // );
 
                             // below is old way of running unittest execution
-
                             return this.unittest.runTests(
                                 {
                                     includes: testItems,

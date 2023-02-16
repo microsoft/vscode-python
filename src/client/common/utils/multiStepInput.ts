@@ -8,6 +8,7 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, QuickInput, QuickInputButton, QuickInputButtons, QuickPick, QuickPickItem, Event } from 'vscode';
 import { IApplicationShell } from '../application/types';
+import { createDeferred } from './async';
 
 // Borrowed from https://github.com/Microsoft/vscode-extension-samples/blob/master/quickinput-sample/src/multiStepInput.ts
 // Why re-invent the wheel :)
@@ -29,7 +30,7 @@ export type InputStep<T extends any> = (input: MultiStepInput<T>, state: T) => P
 
 type buttonCallbackType<T extends QuickPickItem> = (quickPick: QuickPick<T>) => void;
 
-type QuickInputButtonSetup = {
+export type QuickInputButtonSetup = {
     /**
      * Button for an action in a QuickPick.
      */
@@ -164,35 +165,41 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         // so do it after initialization. This ensures quickpick starts with the active
         // item in focus when this is true, instead of having scroll position at top.
         input.keepScrollPosition = keepScrollPosition;
-        try {
-            return await new Promise<MultiStepInputQuickPicResponseType<T, P>>((resolve, reject) => {
-                disposables.push(
-                    input.onDidTriggerButton(async (item) => {
-                        if (item === QuickInputButtons.Back) {
-                            reject(InputFlowAction.back);
-                        }
-                        if (customButtonSetups) {
-                            for (const customButtonSetup of customButtonSetups) {
-                                if (JSON.stringify(item) === JSON.stringify(customButtonSetup?.button)) {
-                                    await customButtonSetup?.callback(input);
-                                }
-                            }
-                        }
-                    }),
-                    input.onDidChangeSelection((selectedItems) => resolve(selectedItems[0])),
-                    input.onDidHide(() => {
-                        resolve(undefined);
-                    }),
-                );
-                if (acceptFilterBoxTextAsSelection) {
-                    disposables.push(
-                        input.onDidAccept(() => {
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            resolve(input.value as any);
-                        }),
-                    );
+
+        const deferred = createDeferred<T>();
+
+        disposables.push(
+            input.onDidTriggerButton(async (item) => {
+                if (item === QuickInputButtons.Back) {
+                    deferred.reject(InputFlowAction.back);
+                    input.hide();
                 }
-            });
+                if (customButtonSetups) {
+                    for (const customButtonSetup of customButtonSetups) {
+                        if (JSON.stringify(item) === JSON.stringify(customButtonSetup?.button)) {
+                            await customButtonSetup?.callback(input);
+                        }
+                    }
+                }
+            }),
+            input.onDidChangeSelection((selectedItems) => deferred.resolve(selectedItems[0])),
+            input.onDidHide(() => {
+                if (!deferred.completed) {
+                    deferred.resolve(undefined);
+                }
+            }),
+        );
+        if (acceptFilterBoxTextAsSelection) {
+            disposables.push(
+                input.onDidAccept(() => {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    deferred.resolve(input.value as any);
+                }),
+            );
+        }
+
+        try {
+            return await deferred.promise;
         } finally {
             disposables.forEach((d) => d.dispose());
         }
@@ -277,6 +284,9 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 if (err === InputFlowAction.back) {
                     this.steps.pop();
                     step = this.steps.pop();
+                    if (step === undefined) {
+                        throw err;
+                    }
                 } else if (err === InputFlowAction.resume) {
                     step = this.steps.pop();
                 } else if (err === InputFlowAction.cancel) {

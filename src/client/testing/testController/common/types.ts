@@ -12,6 +12,7 @@ import {
     Uri,
     WorkspaceFolder,
 } from 'vscode';
+// ** import { IPythonExecutionFactory } from '../../../common/process/types';
 import { TestDiscoveryOptions } from '../../common/types';
 
 export type TestRunInstanceOptions = TestRunOptions & {
@@ -179,12 +180,19 @@ export interface ITestServer {
 export interface ITestDiscoveryAdapter {
     // ** Uncomment second line and comment out first line to use the new discovery method.
     discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
-    // discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload>
+    // discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload>;
 }
 
 // interface for execution/runner adapter
 export interface ITestExecutionAdapter {
+    // ** Uncomment second line and comment out first line to use the new execution method.
     runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload>;
+    // runTests(
+    //     uri: Uri,
+    //     testIds: string[],
+    //     debugBool?: boolean,
+    //     executionFactory?: IPythonExecutionFactory,
+    // ): Promise<ExecutionTestPayload>;
 }
 
 // Same types as in pythonFiles/unittestadapter/utils.py
