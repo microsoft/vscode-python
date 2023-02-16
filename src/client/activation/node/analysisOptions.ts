@@ -45,13 +45,14 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
     private async isAutoIndentEnabled() {
         let editorConfig = this.getPythonSpecificEditorSection();
 
+        // Only explicitly enable formatOnType for those who are in the experiment
+        // but have not explicitly given a value for the setting
         if (!NodeLanguageServerAnalysisOptions.isConfigSettingSetByUser(editorConfig, FORMAT_ON_TYPE_CONFIG_SETTING)) {
             const inExperiment = await this.isInAutoIndentExperiment();
-
-            // only explicitly enable formatOnType for those who are in the experiment
-            // but have not explicitly given a value for the setting
             if (inExperiment) {
                 await NodeLanguageServerAnalysisOptions.setPythonSpecificFormatOnType(editorConfig, true);
+
+                // Refresh our view of the config settings.
                 editorConfig = this.getPythonSpecificEditorSection();
             }
         }
