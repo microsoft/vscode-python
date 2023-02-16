@@ -43,20 +43,39 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
     }
 
     private async isAutoIndentEnabled() {
-        const editorConfig = this.getPythonSpecificEditorSection();
-        const formatOnTypeInspect = editorConfig.inspect(FORMAT_ON_TYPE_CONFIG_SETTING);
-        const formatOnTypeSetForPython = formatOnTypeInspect?.globalLanguageValue !== undefined;
+        let editorConfig = this.getPythonSpecificEditorSection();
 
-        const inExperiment = await this.isInAutoIndentExperiment();
-        // only explicitly enable formatOnType for those who are in the experiment
+        // Only explicitly enable formatOnType for those who are in the experiment
         // but have not explicitly given a value for the setting
-        if (!formatOnTypeSetForPython && inExperiment) {
-            await NodeLanguageServerAnalysisOptions.setPythonSpecificFormatOnType(editorConfig, true);
+        if (!NodeLanguageServerAnalysisOptions.isConfigSettingSetByUser(editorConfig, FORMAT_ON_TYPE_CONFIG_SETTING)) {
+            const inExperiment = await this.isInAutoIndentExperiment();
+            if (inExperiment) {
+                await NodeLanguageServerAnalysisOptions.setPythonSpecificFormatOnType(editorConfig, true);
+
+                // Refresh our view of the config settings.
+                editorConfig = this.getPythonSpecificEditorSection();
+            }
         }
 
-        const formatOnTypeEffectiveValue = this.getPythonSpecificEditorSection().get(FORMAT_ON_TYPE_CONFIG_SETTING);
+        const formatOnTypeEffectiveValue = editorConfig.get(FORMAT_ON_TYPE_CONFIG_SETTING);
 
         return formatOnTypeEffectiveValue;
+    }
+
+    private static isConfigSettingSetByUser(configuration: WorkspaceConfiguration, setting: string): boolean {
+        const inspect = configuration.inspect(setting);
+        if (inspect === undefined) {
+            return false;
+        }
+
+        return (
+            inspect.globalValue !== undefined ||
+            inspect.workspaceValue !== undefined ||
+            inspect.workspaceFolderValue !== undefined ||
+            inspect.globalLanguageValue !== undefined ||
+            inspect.workspaceLanguageValue !== undefined ||
+            inspect.workspaceFolderLanguageValue !== undefined
+        );
     }
 
     private async isInAutoIndentExperiment(): Promise<boolean> {
