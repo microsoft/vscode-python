@@ -19,6 +19,7 @@ export enum EnvironmentType {
     MicrosoftStore = 'MicrosoftStore',
     Poetry = 'Poetry',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
+    ActiveState = 'ActiveState',
     Global = 'Global',
     System = 'System',
 }
@@ -113,6 +114,9 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType): string
         }
         case EnvironmentType.VirtualEnvWrapper: {
             return 'virtualenvwrapper';
+        }
+        case EnvironmentType.ActiveState: {
+            return 'activestate';
         }
         default: {
             return '';

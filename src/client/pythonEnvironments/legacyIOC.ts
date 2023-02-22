@@ -35,6 +35,7 @@ const convertedKinds = new Map(
         [PythonEnvKind.Poetry]: EnvironmentType.Poetry,
         [PythonEnvKind.Venv]: EnvironmentType.Venv,
         [PythonEnvKind.VirtualEnvWrapper]: EnvironmentType.VirtualEnvWrapper,
+        [PythonEnvKind.ActiveState]: EnvironmentType.ActiveState,
     }),
 );
 

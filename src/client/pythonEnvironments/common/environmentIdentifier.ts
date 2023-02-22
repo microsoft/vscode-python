@@ -15,6 +15,7 @@ import {
     isVirtualenvwrapperEnvironment as isVirtualEnvWrapperEnvironment,
 } from './environmentManagers/simplevirtualenvs';
 import { isMicrosoftStoreEnvironment } from './environmentManagers/microsoftStoreEnv';
+import { isActiveStateEnvironment } from './environmentManagers/activestate';
 
 function getIdentifiers(): Map<PythonEnvKind, (path: string) => Promise<boolean>> {
     const notImplemented = () => Promise.resolve(false);
@@ -32,6 +33,7 @@ function getIdentifiers(): Map<PythonEnvKind, (path: string) => Promise<boolean>
     identifier.set(PythonEnvKind.Venv, isVenvEnvironment);
     identifier.set(PythonEnvKind.VirtualEnvWrapper, isVirtualEnvWrapperEnvironment);
     identifier.set(PythonEnvKind.VirtualEnv, isVirtualEnvEnvironment);
+    identifier.set(PythonEnvKind.ActiveState, isActiveStateEnvironment);
     identifier.set(PythonEnvKind.Unknown, defaultTrue);
     identifier.set(PythonEnvKind.OtherGlobal, isGloballyInstalledEnv);
     return identifier;

@@ -75,6 +75,7 @@ export namespace EnvGroups {
     export const Venv = 'Venv';
     export const Poetry = 'Poetry';
     export const VirtualEnvWrapper = 'VirtualEnvWrapper';
+    export const ActiveState = 'ActiveState';
     export const Recommended = Common.recommended;
 }
 

@@ -30,6 +30,7 @@ import { parseVersionFromExecutable } from '../../info/executable';
 import { traceError, traceWarn } from '../../../../logging';
 import { isVirtualEnvironment } from '../../../common/environmentManagers/simplevirtualenvs';
 import { getWorkspaceFolderPaths } from '../../../../common/vscodeApis/workspaceApis';
+import { ActiveState } from '../../../common/environmentManagers/activestate';
 
 function getResolvers(): Map<PythonEnvKind, (env: BasicEnvInfo) => Promise<PythonEnvInfo>> {
     const resolvers = new Map<PythonEnvKind, (_: BasicEnvInfo) => Promise<PythonEnvInfo>>();
@@ -42,6 +43,7 @@ function getResolvers(): Map<PythonEnvKind, (env: BasicEnvInfo) => Promise<Pytho
     resolvers.set(PythonEnvKind.Conda, resolveCondaEnv);
     resolvers.set(PythonEnvKind.MicrosoftStore, resolveMicrosoftStoreEnv);
     resolvers.set(PythonEnvKind.Pyenv, resolvePyenvEnv);
+    resolvers.set(PythonEnvKind.ActiveState, resolveActiveStateEnv);
     return resolvers;
 }
 
@@ -245,6 +247,25 @@ async function resolvePyenvEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
         envInfo.name = name;
     }
     return envInfo;
+}
+
+async function resolveActiveStateEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
+    const info = buildEnvInfo({
+        kind: env.kind,
+        executable: env.executablePath,
+    });
+    const projects = await ActiveState.getState().then((v) => v?.getProjects());
+    if (projects) {
+        for (const project of projects) {
+            for (const dir of project.executables) {
+                if (arePathsSame(dir, path.dirname(env.executablePath))) {
+                    info.name = `${project.organization}/${project.name}`;
+                    return info;
+                }
+            }
+        }
+    }
+    return info;
 }
 
 async function isBaseCondaPyenvEnvironment(executablePath: string) {

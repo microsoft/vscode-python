@@ -15,6 +15,7 @@ export enum PythonEnvKind {
     MicrosoftStore = 'global-microsoft-store',
     Pyenv = 'global-pyenv',
     Poetry = 'poetry',
+    ActiveState = 'activestate',
     Custom = 'global-custom',
     OtherGlobal = 'global-other',
     // "virtual"

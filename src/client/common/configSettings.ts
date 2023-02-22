@@ -98,6 +98,8 @@ export class PythonSettings implements IPythonSettings {
 
     public venvFolders: string[] = [];
 
+    public activeStateToolPath = '';
+
     public condaPath = '';
 
     public pipenvPath = '';
@@ -254,6 +256,11 @@ export class PythonSettings implements IPythonSettings {
 
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
         this.venvFolders = systemVariables.resolveAny(pythonSettings.get<string[]>('venvFolders'))!;
+        const activeStateToolPath = systemVariables.resolveAny(pythonSettings.get<string>('activeStateToolPath'))!;
+        this.activeStateToolPath =
+            activeStateToolPath && activeStateToolPath.length > 0
+                ? getAbsolutePath(activeStateToolPath, workspaceRoot)
+                : activeStateToolPath;
         const condaPath = systemVariables.resolveAny(pythonSettings.get<string>('condaPath'))!;
         this.condaPath = condaPath && condaPath.length > 0 ? getAbsolutePath(condaPath, workspaceRoot) : condaPath;
         const pipenvPath = systemVariables.resolveAny(pythonSettings.get<string>('pipenvPath'))!;

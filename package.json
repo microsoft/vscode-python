@@ -376,6 +376,12 @@
         ],
         "configuration": {
             "properties": {
+                "python.activeStateToolPath": {
+                    "default": "state",
+                    "description": "%python.activeStateToolPath.description%",
+                    "scope": "machine-overridable",
+                    "type": "string"
+                },
                 "python.autoComplete.extraPaths": {
                     "default": [],
                     "description": "%python.autoComplete.extraPaths.description%",

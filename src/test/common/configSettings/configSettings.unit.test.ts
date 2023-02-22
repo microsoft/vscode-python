@@ -81,6 +81,7 @@ suite('Python Settings', async () => {
         for (const name of [
             'pythonPath',
             'venvPath',
+            'activeStateToolPath',
             'condaPath',
             'pipenvPath',
             'envFile',
@@ -139,11 +140,17 @@ suite('Python Settings', async () => {
     }
 
     suite('String settings', async () => {
-        ['venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'defaultInterpreterPath'].forEach(
-            async (settingName) => {
-                testIfValueIsUpdated(settingName, 'stringValue');
-            },
-        );
+        [
+            'venvPath',
+            'activeStateToolPath',
+            'condaPath',
+            'pipenvPath',
+            'envFile',
+            'poetryPath',
+            'defaultInterpreterPath',
+        ].forEach(async (settingName) => {
+            testIfValueIsUpdated(settingName, 'stringValue');
+        });
     });
 
     suite('Boolean settings', async () => {
