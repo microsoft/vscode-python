@@ -16,18 +16,16 @@ import {
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { traceLog, traceVerbose } from '../../../logging';
-import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { IDebugAdapterDescriptorFactory } from '../types';
 import { showErrorMessage } from '../../../common/vscodeApis/windowApis';
 import { Common, Interpreters } from '../../../common/utils/localize';
-import { IExperimentService, IPersistentStateFactory } from '../../../common/types';
+import { IPersistentStateFactory } from '../../../common/types';
 import { Commands } from '../../../common/constants';
 import { ICommandManager } from '../../../common/application/types';
-import { inTerminalEnvVarExperiment } from '../../../common/experiments/helpers';
-import { Conda } from '../../../pythonEnvironments/common/environmentManagers/conda';
 
 // persistent state names, exported to make use of in testing
 export enum debugStateKeys {
@@ -40,7 +38,6 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
-        @inject(IExperimentService) private experimentService: IExperimentService,
     ) {}
 
     public async createDebugAdapterDescriptor(
@@ -188,23 +185,6 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         if (interpreter) {
             if ((interpreter.version?.major ?? 0) < 3 || (interpreter.version?.minor ?? 0) <= 6) {
                 this.showDeprecatedPythonMessage();
-            }
-            if (interpreter.envType === EnvironmentType.Conda && inTerminalEnvVarExperiment(this.experimentService)) {
-                const conda = await Conda.getConda();
-                if (conda) {
-                    const args = await conda.getRunPythonArgs(
-                        {
-                            prefix: interpreter.envPath ?? '',
-                            name: interpreter.envName,
-                        },
-                        false,
-                        false,
-                        false,
-                    );
-                    if (args) {
-                        return args;
-                    }
-                }
             }
             return interpreter.path.length > 0 ? [interpreter.path] : [];
         }
