@@ -34,7 +34,7 @@ export class InstallPythonCommand implements IExtensionSingleActivationService {
             if (version.major > 8) {
                 // OS is not Windows 8, ms-windows-store URIs are available:
                 // https://docs.microsoft.com/en-us/windows/uwp/launch-resume/launch-store-app
-                this.browserService.launch('ms-windows-store://pdp/?ProductId=9PJPW5LDXLZ5');
+                this.browserService.launch('ms-windows-store://pdp/?ProductId=9NRWMJP3717K');
                 return;
             }
         }
