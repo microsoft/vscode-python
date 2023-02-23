@@ -70,17 +70,13 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     public get extensionName(): string {
         return this.packageJson.displayName;
     }
-    /**
-     * At the time of writing this API, the vscode.env.shell isn't officially released in stable version of VS Code.
-     * Using this in stable version seems to throw errors in VSC with messages being displayed to the user about use of
-     * unstable API.
-     * Solution - log and suppress the errors.
-     * @readonly
-     * @type {(string)}
-     * @memberof ApplicationEnvironment
-     */
+
     public get shell(): string {
         return vscode.env.shell;
+    }
+
+    public get onDidChangeShell(): vscode.Event<string> {
+        return vscode.env.onDidChangeShell;
     }
 
     public get packageJson(): any {

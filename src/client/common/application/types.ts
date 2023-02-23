@@ -1049,6 +1049,10 @@ export interface IApplicationEnvironment {
      */
     readonly shell: string;
     /**
+     * An {@link Event} which fires when the default shell changes.
+     */
+    readonly onDidChangeShell: Event<string>;
+    /**
      * Gets the vscode channel (whether 'insiders' or 'stable').
      */
     readonly channel: Channel;

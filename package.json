@@ -19,6 +19,7 @@
     "publisher": "ms-python",
     "enabledApiProposals": [
         "quickPickSortByLabel",
+        "envShellEvent",
         "testObserver"
     ],
     "author": {

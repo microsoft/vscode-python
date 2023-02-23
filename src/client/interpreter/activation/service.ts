@@ -163,6 +163,11 @@ export class EnvironmentActivationService
             this,
             this.disposables,
         );
+        this.applicationEnvironment.onDidChangeShell(
+            () => this.applyCollectionForSelectedShell(),
+            this,
+            this.disposables,
+        );
 
         this.initializeCollection(undefined).ignoreErrors();
     }
@@ -248,7 +253,7 @@ export class EnvironmentActivationService
                 args[i] = arg.toCommandArgumentForPythonExt();
             });
             if (interpreter?.envType === EnvironmentType.Conda) {
-                const conda = await Conda.getConda();
+                const conda = await Conda.getConda(shell);
                 const pythonArgv = await conda?.getRunPythonArgs({
                     name: interpreter.envName,
                     prefix: interpreter.envPath ?? '',
