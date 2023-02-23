@@ -13,7 +13,10 @@ import { getSearchPathEnvVarNames } from '../../../../common/utils/exec';
 
 export const IDebugEnvironmentVariablesService = Symbol('IDebugEnvironmentVariablesService');
 export interface IDebugEnvironmentVariablesService {
-    getEnvironmentVariables(args: LaunchRequestArguments): Promise<EnvironmentVariables>;
+    getEnvironmentVariables(
+        args: LaunchRequestArguments,
+        baseVars?: EnvironmentVariables,
+    ): Promise<EnvironmentVariables>;
 }
 
 @injectable()
@@ -23,7 +26,10 @@ export class DebugEnvironmentVariablesHelper implements IDebugEnvironmentVariabl
         @inject(ICurrentProcess) private process: ICurrentProcess,
     ) {}
 
-    public async getEnvironmentVariables(args: LaunchRequestArguments): Promise<EnvironmentVariables> {
+    public async getEnvironmentVariables(
+        args: LaunchRequestArguments,
+        baseVars?: EnvironmentVariables,
+    ): Promise<EnvironmentVariables> {
         const pathVariableName = getSearchPathEnvVarNames()[0];
 
         // Merge variables from both .env file and env json variables.
@@ -37,6 +43,9 @@ export class DebugEnvironmentVariablesHelper implements IDebugEnvironmentVariabl
         // "overwrite: true" to ensure that debug-configuration env variable values
         // take precedence over env file.
         this.envParser.mergeVariables(debugLaunchEnvVars, env, { overwrite: true });
+        if (baseVars) {
+            this.envParser.mergeVariables(baseVars, env);
+        }
 
         // Append the PYTHONPATH and PATH variables.
         this.envParser.appendPath(env, debugLaunchEnvVars[pathVariableName]);
