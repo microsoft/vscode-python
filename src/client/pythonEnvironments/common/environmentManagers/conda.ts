@@ -508,6 +508,7 @@ export class Conda {
         env: CondaEnvInfo,
         forShellExecution?: boolean,
         isolatedFlag = false,
+        useOutputMarker = true,
     ): Promise<string[] | undefined> {
         const condaVersion = await this.getCondaVersion();
         if (condaVersion && lt(condaVersion, CONDA_RUN_VERSION)) {
@@ -530,7 +531,10 @@ export class Conda {
         if (isolatedFlag) {
             python.push('-I');
         }
-        return [...python, OUTPUT_MARKER_SCRIPT];
+        if (useOutputMarker) {
+            python.push(OUTPUT_MARKER_SCRIPT);
+        }
+        return python;
     }
 
     /**
