@@ -9,7 +9,7 @@ import '../../common/extensions';
 import { inject, injectable } from 'inversify';
 
 import { ProgressLocation, ProgressOptions } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { PYTHON_WARNINGS } from '../../common/constants';
 import { IPlatformService } from '../../common/platform/types';
 import * as internalScripts from '../../common/process/internal/scripts';
@@ -39,6 +39,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { Interpreters } from '../../common/utils/localize';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
+import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const CACHE_DURATION = 10 * 60 * 1000;
@@ -139,6 +140,7 @@ export class EnvironmentActivationService
         @inject(IExtensionContext) private context: IExtensionContext,
         @inject(IApplicationShell) private shell: IApplicationShell,
         @inject(IExperimentService) private experimentService: IExperimentService,
+        @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
     ) {
         this.envVarsService.onDidEnvironmentVariablesChange(
             () => this.activatedEnvVariablesCache.clear(),
@@ -155,14 +157,14 @@ export class EnvironmentActivationService
             async (resource) => {
                 this.showProgress();
                 this.activatedEnvVariablesCache.clear();
-                await this.initializeEnvironmentCollection(resource);
+                await this.applyCollection(resource);
                 this.hideProgress();
             },
             this,
             this.disposables,
         );
 
-        this.initializeEnvironmentCollection(undefined).ignoreErrors();
+        this.initializeCollection(undefined).ignoreErrors();
     }
 
     private isEnvCollectionEnabled() {
@@ -178,13 +180,14 @@ export class EnvironmentActivationService
         resource: Resource,
         interpreter?: PythonEnvironment,
         allowExceptions?: boolean,
+        shell?: string,
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const stopWatch = new StopWatch();
         // Cache key = resource + interpreter.
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
         interpreter = interpreter ?? (await this.interpreterService.getActiveInterpreter(resource));
         const interpreterPath = this.platform.isWindows ? interpreter?.path.toLowerCase() : interpreter?.path;
-        const cacheKey = `${workspaceKey}_${interpreterPath}`;
+        const cacheKey = `${workspaceKey}_${interpreterPath}_${shell}`;
 
         if (this.activatedEnvVariablesCache.get(cacheKey)?.hasData) {
             return this.activatedEnvVariablesCache.get(cacheKey)!.data;
@@ -192,7 +195,7 @@ export class EnvironmentActivationService
 
         // Cache only if successful, else keep trying & failing if necessary.
         const cache = new InMemoryCache<NodeJS.ProcessEnv | undefined>(CACHE_DURATION);
-        return this.getActivatedEnvironmentVariablesImpl(resource, interpreter, allowExceptions)
+        return this.getActivatedEnvironmentVariablesImpl(resource, interpreter, allowExceptions, shell)
             .then((vars) => {
                 cache.data = vars;
                 this.activatedEnvVariablesCache.set(cacheKey, cache);
@@ -228,10 +231,15 @@ export class EnvironmentActivationService
         resource: Resource,
         interpreter?: PythonEnvironment,
         allowExceptions?: boolean,
+        shell?: string,
     ): Promise<NodeJS.ProcessEnv | undefined> {
-        const shellInfo = defaultShells[this.platform.osType];
+        let shellInfo = defaultShells[this.platform.osType];
         if (!shellInfo) {
             return undefined;
+        }
+        if (shell) {
+            const customShellType = identifyShellFromShellPath(shell);
+            shellInfo = { shellType: customShellType, shell };
         }
         try {
             let command: string | undefined;
@@ -368,9 +376,15 @@ export class EnvironmentActivationService
         return parse(js);
     }
 
-    private async initializeEnvironmentCollection(resource: Resource) {
-        const env = await this.getActivatedEnvironmentVariables(resource);
+    private async applyCollection(resource: Resource, shell?: string) {
+        const env = await this.getActivatedEnvironmentVariables(resource, undefined, undefined, shell);
         if (!env) {
+            if (shell) {
+                // Default shells are known to work, hence we can safely ignore errors. However commands to fetch
+                // env vars may fail in custom shells due to unknown reasons, so do not clear collection even on
+                // failure.
+                return;
+            }
             this.context.environmentVariableCollection.clear();
             this.previousEnvVars = normCaseKeys(process.env);
             return;
@@ -397,6 +411,19 @@ export class EnvironmentActivationService
                 this.context.environmentVariableCollection.delete(key);
             }
         });
+    }
+
+    private async initializeCollection(resource: Resource) {
+        await this.applyCollection(resource);
+        await this.applyCollectionForSelectedShell(resource);
+    }
+
+    private async applyCollectionForSelectedShell(resource: Resource) {
+        const customShellType = identifyShellFromShellPath(this.applicationEnvironment.shell);
+        if (customShellType !== defaultShells[this.platform.osType]?.shellType) {
+            // If the user has a custom shell which different from default shell, we need to re-apply the environment collection.
+            await this.applyCollection(resource, this.applicationEnvironment.shell);
+        }
     }
 
     @traceDecoratorVerbose('Display activating terminals')
