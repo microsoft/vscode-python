@@ -10,10 +10,16 @@ import {
     showQuickPickWithBack,
 } from '../../common/vscodeApis/windowApis';
 import { traceError, traceVerbose } from '../../logging';
-import { CreateEnvironmentOptions, CreateEnvironmentProvider, CreateEnvironmentResult } from './types';
+import {
+    CreateEnvironmentExitedEventArgs,
+    CreateEnvironmentOptions,
+    CreateEnvironmentProvider,
+    CreateEnvironmentResult,
+    CreateEnvironmentStartedEventArgs,
+} from './types';
 
-const onCreateEnvironmentStartedEvent = new EventEmitter<void>();
-const onCreateEnvironmentExitedEvent = new EventEmitter<CreateEnvironmentResult | undefined>();
+const onCreateEnvironmentStartedEvent = new EventEmitter<CreateEnvironmentStartedEventArgs>();
+const onCreateEnvironmentExitedEvent = new EventEmitter<CreateEnvironmentExitedEventArgs>();
 
 let startedEventCount = 0;
 
@@ -21,19 +27,19 @@ function isBusyCreatingEnvironment(): boolean {
     return startedEventCount > 0;
 }
 
-function fireStartedEvent(): void {
-    onCreateEnvironmentStartedEvent.fire();
+function fireStartedEvent(options?: CreateEnvironmentOptions): void {
+    onCreateEnvironmentStartedEvent.fire({ options });
     startedEventCount += 1;
 }
 
-function fireExitedEvent(result: CreateEnvironmentResult | undefined): void {
-    onCreateEnvironmentExitedEvent.fire(result);
+function fireExitedEvent(result?: CreateEnvironmentResult, options?: CreateEnvironmentOptions, error?: unknown): void {
+    onCreateEnvironmentExitedEvent.fire({ result, options, error });
     startedEventCount -= 1;
 }
 
 export function getCreationEvents(): {
-    onCreateEnvironmentStarted: Event<void>;
-    onCreateEnvironmentExited: Event<CreateEnvironmentResult | undefined>;
+    onCreateEnvironmentStarted: Event<CreateEnvironmentStartedEventArgs>;
+    onCreateEnvironmentExited: Event<CreateEnvironmentExitedEventArgs>;
     isCreatingEnvironment: () => boolean;
 } {
     return {
@@ -45,14 +51,12 @@ export function getCreationEvents(): {
 
 async function createEnvironment(
     provider: CreateEnvironmentProvider,
-    options: CreateEnvironmentOptions = {
-        ignoreSourceControl: true,
-        installPackages: true,
-    },
+    options: CreateEnvironmentOptions,
 ): Promise<CreateEnvironmentResult | undefined> {
     let result: CreateEnvironmentResult | undefined;
+    let err: unknown | undefined;
     try {
-        fireStartedEvent();
+        fireStartedEvent(options);
         result = await provider.createEnvironment(options);
     } catch (ex) {
         if (ex === QuickInputButtons.Back) {
@@ -61,9 +65,10 @@ async function createEnvironment(
                 return undefined;
             }
         }
-        throw ex;
+        err = ex;
+        throw err;
     } finally {
-        fireExitedEvent(result);
+        fireExitedEvent(result, options, err);
     }
     return result;
 }
@@ -110,17 +115,28 @@ async function showCreateEnvironmentQuickPick(
     return undefined;
 }
 
+function getOptionsWithDefaults(options?: CreateEnvironmentOptions): CreateEnvironmentOptions {
+    return {
+        installPackages: true,
+        ignoreSourceControl: true,
+        showBackButton: false,
+        selectEnvironment: true,
+        ...options,
+    };
+}
+
 export async function handleCreateEnvironmentCommand(
     providers: readonly CreateEnvironmentProvider[],
     options?: CreateEnvironmentOptions,
 ): Promise<CreateEnvironmentResult | undefined> {
+    const optionsWithDefaults = getOptionsWithDefaults(options);
     let selectedProvider: CreateEnvironmentProvider | undefined;
     const envTypeStep = new MultiStepNode(
         undefined,
         async (context?: MultiStepAction) => {
             if (providers.length > 0) {
                 try {
-                    selectedProvider = await showCreateEnvironmentQuickPick(providers, options);
+                    selectedProvider = await showCreateEnvironmentQuickPick(providers, optionsWithDefaults);
                 } catch (ex) {
                     if (ex === MultiStepAction.Back || ex === MultiStepAction.Cancel) {
                         return ex;
@@ -152,7 +168,7 @@ export async function handleCreateEnvironmentCommand(
             }
             if (selectedProvider) {
                 try {
-                    result = await createEnvironment(selectedProvider, options);
+                    result = await createEnvironment(selectedProvider, optionsWithDefaults);
                 } catch (ex) {
                     if (ex === MultiStepAction.Back || ex === MultiStepAction.Cancel) {
                         return ex;
