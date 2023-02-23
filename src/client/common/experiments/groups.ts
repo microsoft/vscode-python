@@ -7,6 +7,6 @@ export enum ShowToolsExtensionPrompt {
     experiment = 'pythonPromptNewToolsExt',
 }
 
-export enum TerminalAutoActivation {
-    experiment = 'pythonTerminalAutoActivation',
+export enum TerminalEnvVarActivation {
+    experiment = 'pythonTerminalEnvVarActivation',
 }

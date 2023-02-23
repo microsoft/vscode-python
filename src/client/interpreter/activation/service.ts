@@ -37,8 +37,8 @@ import {
 import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { Interpreters } from '../../common/utils/localize';
-import { TerminalAutoActivation } from '../../common/experiments/groups';
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const CACHE_DURATION = 10 * 60 * 1000;
@@ -166,13 +166,7 @@ export class EnvironmentActivationService
     }
 
     private isEnvCollectionEnabled() {
-        if (this.workspace.workspaceFile) {
-            return false;
-        }
-        if (!this.experimentService.inExperimentSync(TerminalAutoActivation.experiment)) {
-            // TODO: return false;
-        }
-        return true;
+        return inTerminalEnvVarExperiment(this.experimentService);
     }
 
     public dispose(): void {
