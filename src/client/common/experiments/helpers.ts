@@ -9,10 +9,12 @@ import { TerminalEnvVarActivation } from './groups';
 
 export function inTerminalEnvVarExperiment(experimentService: IExperimentService): boolean {
     if (workspace.workspaceFile) {
+        // Don't run experiment in multi-root workspaces for now, requires work on VSCode:
+        // https://github.com/microsoft/vscode/issues/171173
         return false;
     }
     if (!experimentService.inExperimentSync(TerminalEnvVarActivation.experiment)) {
-        // TODO: return false;
+        return false;
     }
     return true;
 }
