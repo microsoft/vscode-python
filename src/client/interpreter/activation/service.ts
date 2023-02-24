@@ -158,7 +158,7 @@ export class EnvironmentActivationService
             async (resource) => {
                 this.showProgress();
                 this.activatedEnvVariablesCache.clear();
-                await this.applyCollection(resource);
+                await this.applyCollectionForSelectedShell(resource);
                 this.hideProgress();
             },
             this,
@@ -174,7 +174,7 @@ export class EnvironmentActivationService
             this.disposables,
         );
 
-        this.initializeCollection(undefined).ignoreErrors();
+        this.applyCollectionForSelectedShell(undefined).ignoreErrors();
     }
 
     private isEnvCollectionEnabled() {
@@ -390,9 +390,9 @@ export class EnvironmentActivationService
         const env = await this.getActivatedEnvironmentVariables(resource, undefined, undefined, shell);
         if (!env) {
             if (shell) {
-                // Default shells are known to work, hence we can safely ignore errors. However commands to fetch
-                // env vars may fail in custom shells due to unknown reasons, so do not clear collection even on
-                // failure.
+                // Commands to fetch env vars may fail in custom shells due to unknown reasons, in that case
+                // fallback to default shells as they are known to work better.
+                await this.applyCollection(resource);
                 return;
             }
             this.context.environmentVariableCollection.clear();
@@ -423,17 +423,8 @@ export class EnvironmentActivationService
         });
     }
 
-    private async initializeCollection(resource: Resource) {
-        await this.applyCollection(resource);
-        await this.applyCollectionForSelectedShell(resource);
-    }
-
     private async applyCollectionForSelectedShell(resource: Resource, shell = this.applicationEnvironment.shell) {
-        const customShellType = identifyShellFromShellPath(shell);
-        if (customShellType !== defaultShells[this.platform.osType]?.shellType) {
-            // If the user has a custom shell which different from default shell, we need to re-apply the environment collection.
-            await this.applyCollection(resource, this.applicationEnvironment.shell);
-        }
+        await this.applyCollection(resource, shell);
     }
 
     @traceDecoratorVerbose('Display activating terminals')
