@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { parse } from 'semver';
 import * as vscode from 'vscode';
+import { traceError } from '../../logging';
 import { Channel } from '../constants';
 import { IPlatformService } from '../platform/types';
 import { ICurrentProcess, IPathUtils } from '../types';
@@ -76,7 +77,14 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     }
 
     public get onDidChangeShell(): vscode.Event<string> {
-        return vscode.env.onDidChangeShell;
+        try {
+            return vscode.env.onDidChangeShell;
+        } catch (ex) {
+            traceError('Failed to get onDidChangeShell API', ex);
+            // `onDidChangeShell` is a proposed API at the time of writing this, so wrap this in a try...catch
+            // block in case the API is removed or changed.
+            return new vscode.EventEmitter<string>().event;
+        }
     }
 
     public get packageJson(): any {
