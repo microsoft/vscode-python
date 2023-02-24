@@ -158,7 +158,7 @@ export class EnvironmentActivationService
             async (resource) => {
                 this.showProgress();
                 this.activatedEnvVariablesCache.clear();
-                await this.applyCollectionForSelectedShell(resource);
+                await this.applyCollection(resource);
                 this.hideProgress();
             },
             this,
@@ -168,13 +168,13 @@ export class EnvironmentActivationService
             async (shell: string) => {
                 // Pass in the shell where known instead of relying on the application environment, because of bug
                 // on VSCode: https://github.com/microsoft/vscode/issues/160694
-                await this.applyCollectionForSelectedShell(undefined, shell);
+                await this.applyCollection(undefined, shell);
             },
             this,
             this.disposables,
         );
 
-        this.applyCollectionForSelectedShell(undefined).ignoreErrors();
+        this.applyCollection(undefined).ignoreErrors();
     }
 
     private isEnvCollectionEnabled() {
@@ -386,10 +386,11 @@ export class EnvironmentActivationService
         return parse(js);
     }
 
-    private async applyCollection(resource: Resource, shell?: string) {
+    private async applyCollection(resource: Resource, shell = this.applicationEnvironment.shell) {
         const env = await this.getActivatedEnvironmentVariables(resource, undefined, undefined, shell);
         if (!env) {
-            if (shell) {
+            const shellType = identifyShellFromShellPath(shell);
+            if (defaultShells[this.platform.osType]?.shellType !== shellType) {
                 // Commands to fetch env vars may fail in custom shells due to unknown reasons, in that case
                 // fallback to default shells as they are known to work better.
                 await this.applyCollection(resource);
@@ -421,10 +422,6 @@ export class EnvironmentActivationService
                 this.context.environmentVariableCollection.delete(key);
             }
         });
-    }
-
-    private async applyCollectionForSelectedShell(resource: Resource, shell = this.applicationEnvironment.shell) {
-        await this.applyCollection(resource, shell);
     }
 
     @traceDecoratorVerbose('Display activating terminals')
