@@ -251,7 +251,7 @@ export class Conda {
      */
     private static condaPromise = new Map<string | undefined, Promise<Conda | undefined>>();
 
-    private condaInfoCached: Promise<CondaInfo> | undefined;
+    private condaInfoCached = new Map<string | undefined, Promise<CondaInfo> | undefined>();
 
     /**
      * Carries path to conda binary to be used for shell execution.
@@ -384,7 +384,7 @@ export class Conda {
         // Probe the candidates, and pick the first one that exists and does what we need.
         for await (const condaPath of getCandidates()) {
             traceVerbose(`Probing conda binary: ${condaPath}`);
-            let conda = new Conda(condaPath);
+            let conda = new Conda(condaPath, undefined, shellPath);
             try {
                 await conda.getInfo();
                 if (getOSType() === OSType.Windows && (isTestExecution() || condaPath !== customCondaPath)) {
@@ -421,10 +421,12 @@ export class Conda {
      * Corresponds to "conda info --json".
      */
     public async getInfo(useCache?: boolean): Promise<CondaInfo> {
-        if (!useCache || !this.condaInfoCached) {
-            this.condaInfoCached = this.getInfoImpl(this.command);
+        let condaInfoCached = this.condaInfoCached.get(this.shellPath);
+        if (!useCache || !condaInfoCached) {
+            condaInfoCached = this.getInfoImpl(this.command, this.shellPath);
+            this.condaInfoCached.set(this.shellPath, condaInfoCached);
         }
-        return this.condaInfoCached;
+        return condaInfoCached;
     }
 
     /**
@@ -432,10 +434,10 @@ export class Conda {
      */
     @cache(30_000, true, 10_000)
     // eslint-disable-next-line class-methods-use-this
-    private async getInfoImpl(command: string): Promise<CondaInfo> {
+    private async getInfoImpl(command: string, shellPath: string | undefined): Promise<CondaInfo> {
         const options: SpawnOptions = { timeout: CONDA_GENERAL_TIMEOUT };
-        if (this.shellPath) {
-            options.shell = this.shellPath;
+        if (shellPath) {
+            options.shell = shellPath;
         }
         const result = await exec(command, ['info', '--json'], options);
         traceVerbose(`${command} info --json: ${result.stdout}`);

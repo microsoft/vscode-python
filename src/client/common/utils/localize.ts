@@ -240,10 +240,6 @@ export namespace OutputChannelNames {
     export const pythonTest = l10n.t('Python Test Log');
 }
 
-export namespace Logging {
-    export const currentWorkingDirectory = l10n.t('cwd:');
-}
-
 export namespace Linters {
     export const selectLinter = l10n.t('Select Linter');
 }
