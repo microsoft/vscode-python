@@ -427,12 +427,14 @@
                         "enum": [
                             "All",
                             "pythonSurveyNotification",
-                            "pythonPromptNewToolsExt"
+                            "pythonPromptNewToolsExt",
+                            "pythonTerminalEnvVarActivation"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
                             "%python.experiments.pythonSurveyNotification.description%",
-                            "%python.experiments.pythonPromptNewToolsExt.description%"
+                            "%python.experiments.pythonPromptNewToolsExt.description%",
+                            "%python.experiments.pythonTerminalEnvVarActivation.description%"
                         ]
                     },
                     "scope": "machine",
@@ -446,12 +448,14 @@
                         "enum": [
                             "All",
                             "pythonSurveyNotification",
-                            "pythonPromptNewToolsExt"
+                            "pythonPromptNewToolsExt",
+                            "pythonTerminalEnvVarActivation"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
                             "%python.experiments.pythonSurveyNotification.description%",
-                            "%python.experiments.pythonPromptNewToolsExt.description%"
+                            "%python.experiments.pythonPromptNewToolsExt.description%",
+                            "%python.experiments.pythonTerminalEnvVarActivation.description%"
                         ]
                     },
                     "scope": "machine",
