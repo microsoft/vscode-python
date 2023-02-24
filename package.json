@@ -427,6 +427,11 @@
                             "All",
                             "pythonSurveyNotification",
                             "pythonPromptNewToolsExt"
+                        ],
+                        "enumDescriptions": [
+                            "%python.experiments.All.description%",
+                            "%python.experiments.pythonSurveyNotification.description%",
+                            "%python.experiments.pythonPromptNewToolsExt.description%"
                         ]
                     },
                     "scope": "machine",
@@ -441,6 +446,11 @@
                             "All",
                             "pythonSurveyNotification",
                             "pythonPromptNewToolsExt"
+                        ],
+                        "enumDescriptions": [
+                            "%python.experiments.All.description%",
+                            "%python.experiments.pythonSurveyNotification.description%",
+                            "%python.experiments.pythonPromptNewToolsExt.description%"
                         ]
                     },
                     "scope": "machine",
