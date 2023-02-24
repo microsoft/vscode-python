@@ -192,6 +192,10 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
                 throw ex;
             }
 
+            if (version === undefined) {
+                traceError('Python version was not selected for creating conda environment.');
+                return MultiStepAction.Cancel;
+            }
             return MultiStepAction.Continue;
         },
         undefined,
