@@ -164,7 +164,11 @@ export class EnvironmentActivationService
             this.disposables,
         );
         this.applicationEnvironment.onDidChangeShell(
-            () => this.applyCollectionForSelectedShell(),
+            async (shell: string) => {
+                // Pass in the shell where known instead of relying on the application environment, because of bug
+                // on VSCode: https://github.com/microsoft/vscode/issues/160694
+                await this.applyCollectionForSelectedShell(undefined, shell);
+            },
             this,
             this.disposables,
         );
@@ -423,8 +427,8 @@ export class EnvironmentActivationService
         await this.applyCollectionForSelectedShell(resource);
     }
 
-    private async applyCollectionForSelectedShell(resource: Resource) {
-        const customShellType = identifyShellFromShellPath(this.applicationEnvironment.shell);
+    private async applyCollectionForSelectedShell(resource: Resource, shell = this.applicationEnvironment.shell) {
+        const customShellType = identifyShellFromShellPath(shell);
         if (customShellType !== defaultShells[this.platform.osType]?.shellType) {
             // If the user has a custom shell which different from default shell, we need to re-apply the environment collection.
             await this.applyCollection(resource, this.applicationEnvironment.shell);
