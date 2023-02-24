@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import { traceLog } from '../../logging';
 import { IWorkspaceService } from '../application/types';
 import { isCI, isTestExecution } from '../constants';
-import { Logging } from '../utils/localize';
 import { getOSType, getUserHomeDir, OSType } from '../utils/platform';
 import { IProcessLogger, SpawnOptions } from './types';
 import { escapeRegExp } from 'lodash';
