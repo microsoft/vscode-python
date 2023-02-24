@@ -151,6 +151,7 @@ export class EnvironmentActivationService
 
     public async activate(): Promise<void> {
         if (!this.isEnvCollectionEnabled()) {
+            this.context.environmentVariableCollection.clear();
             return;
         }
         this.interpreterService.onDidChangeInterpreter(
