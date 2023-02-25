@@ -8,15 +8,14 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 
-import { ProgressLocation, ProgressOptions } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_WARNINGS } from '../../common/constants';
 import { IPlatformService } from '../../common/platform/types';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalHelper, TerminalShellType } from '../../common/terminal/types';
-import { ICurrentProcess, IDisposable, IExperimentService, IExtensionContext, Resource } from '../../common/types';
-import { createDeferred, Deferred, sleep } from '../../common/utils/async';
+import { ICurrentProcess, IDisposable, Resource } from '../../common/types';
+import { sleep } from '../../common/utils/async';
 import { InMemoryCache } from '../../common/utils/cacheUtils';
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
@@ -36,9 +35,6 @@ import {
 } from '../../logging';
 import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { Interpreters } from '../../common/utils/localize';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
@@ -58,8 +54,6 @@ const condaRetryMessages = [
     'The process cannot access the file because it is being used by another process',
     'The directory is not empty',
 ];
-
-type EnvironmentVariables = { [key: string]: string | undefined };
 
 /**
  * This class exists so that the environment variable fetching can be cached in between tests. Normally
@@ -114,18 +108,13 @@ export class EnvironmentActivationServiceCache {
 }
 
 @injectable()
-export class EnvironmentActivationService
-    implements IEnvironmentActivationService, IExtensionSingleActivationService, IDisposable {
+export class EnvironmentActivationService implements IEnvironmentActivationService, IDisposable {
     public readonly supportedWorkspaceTypes: { untrustedWorkspace: boolean; virtualWorkspace: boolean } = {
         untrustedWorkspace: false,
         virtualWorkspace: false,
     };
 
     private readonly disposables: IDisposable[] = [];
-
-    private deferred: Deferred<void> | undefined;
-
-    private previousEnvVars = normCaseKeys(process.env);
 
     private readonly activatedEnvVariablesCache = new EnvironmentActivationServiceCache();
 
@@ -137,48 +126,12 @@ export class EnvironmentActivationService
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider,
-        @inject(IExtensionContext) private context: IExtensionContext,
-        @inject(IApplicationShell) private shell: IApplicationShell,
-        @inject(IExperimentService) private experimentService: IExperimentService,
-        @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
     ) {
         this.envVarsService.onDidEnvironmentVariablesChange(
             () => this.activatedEnvVariablesCache.clear(),
             this,
             this.disposables,
         );
-    }
-
-    public async activate(): Promise<void> {
-        if (!this.isEnvCollectionEnabled()) {
-            this.context.environmentVariableCollection.clear();
-            return;
-        }
-        this.interpreterService.onDidChangeInterpreter(
-            async (resource) => {
-                this.showProgress();
-                this.activatedEnvVariablesCache.clear();
-                await this.applyCollection(resource);
-                this.hideProgress();
-            },
-            this,
-            this.disposables,
-        );
-        this.applicationEnvironment.onDidChangeShell(
-            async (shell: string) => {
-                // Pass in the shell where known instead of relying on the application environment, because of bug
-                // on VSCode: https://github.com/microsoft/vscode/issues/160694
-                await this.applyCollection(undefined, shell);
-            },
-            this,
-            this.disposables,
-        );
-
-        this.applyCollection(undefined).ignoreErrors();
-    }
-
-    private isEnvCollectionEnabled() {
-        return inTerminalEnvVarExperiment(this.experimentService);
     }
 
     public dispose(): void {
@@ -385,81 +338,6 @@ export class EnvironmentActivationService
         const js = output.substring(output.indexOf('{')).trim();
         return parse(js);
     }
-
-    private async applyCollection(resource: Resource, shell = this.applicationEnvironment.shell) {
-        const env = await this.getActivatedEnvironmentVariables(resource, undefined, undefined, shell);
-        if (!env) {
-            const shellType = identifyShellFromShellPath(shell);
-            if (defaultShells[this.platform.osType]?.shellType !== shellType) {
-                // Commands to fetch env vars may fail in custom shells due to unknown reasons, in that case
-                // fallback to default shells as they are known to work better.
-                await this.applyCollection(resource);
-                return;
-            }
-            this.context.environmentVariableCollection.clear();
-            this.previousEnvVars = normCaseKeys(process.env);
-            return;
-        }
-        const previousEnv = this.previousEnvVars;
-        this.previousEnvVars = env;
-        Object.keys(env).forEach((key) => {
-            const value = env[key];
-            const prevValue = previousEnv[key];
-            if (prevValue !== value) {
-                if (value !== undefined) {
-                    traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
-                    this.context.environmentVariableCollection.replace(key, value);
-                } else {
-                    traceVerbose(`Clearing environment variable ${key} from collection`);
-                    this.context.environmentVariableCollection.delete(key);
-                }
-            }
-        });
-        Object.keys(previousEnv).forEach((key) => {
-            // If the previous env var is not in the current env, clear it from collection.
-            if (!(key in env)) {
-                traceVerbose(`Clearing environment variable ${key} from collection`);
-                this.context.environmentVariableCollection.delete(key);
-            }
-        });
-    }
-
-    @traceDecoratorVerbose('Display activating terminals')
-    private showProgress(): void {
-        if (!this.deferred) {
-            this.createProgress();
-        }
-    }
-
-    @traceDecoratorVerbose('Hide activating terminals')
-    private hideProgress(): void {
-        if (this.deferred) {
-            this.deferred.resolve();
-            this.deferred = undefined;
-        }
-    }
-
-    private createProgress() {
-        const progressOptions: ProgressOptions = {
-            location: ProgressLocation.Window,
-            title: Interpreters.activatingTerminals,
-        };
-        this.shell.withProgress(progressOptions, () => {
-            this.deferred = createDeferred();
-            return this.deferred.promise;
-        });
-    }
-}
-
-function normCaseKeys(env: EnvironmentVariables): EnvironmentVariables {
-    const result: EnvironmentVariables = {};
-    Object.keys(env).forEach((key) => {
-        // `os.environ` script used to get env vars normalizes keys to upper case:
-        // https://github.com/python/cpython/issues/101754
-        // So convert `process.env` keys to upper case to match.
-        result[key.toUpperCase()] = env[key];
-    });
-    return result;
 }
 
 function fixActivationCommands(commands: string[]): string[] {
