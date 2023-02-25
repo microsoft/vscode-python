@@ -109,11 +109,6 @@ export class EnvironmentActivationServiceCache {
 
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService, IDisposable {
-    public readonly supportedWorkspaceTypes: { untrustedWorkspace: boolean; virtualWorkspace: boolean } = {
-        untrustedWorkspace: false,
-        virtualWorkspace: false,
-    };
-
     private readonly disposables: IDisposable[] = [];
 
     private readonly activatedEnvVariablesCache = new EnvironmentActivationServiceCache();

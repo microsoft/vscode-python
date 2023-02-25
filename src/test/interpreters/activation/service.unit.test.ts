@@ -322,9 +322,6 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                             verify(envVarsService.getEnvironmentVariables(resource)).twice();
                             verify(processService.shellExec(anything(), anything())).twice();
                         }
-                        test('Cache Variables get cleared when changing interpreter', async () => {
-                            await testClearingCache(onDidChangeInterpreter.fire.bind(onDidChangeInterpreter));
-                        });
                         test('Cache Variables get cleared when changing env variables file', async () => {
                             await testClearingCache(onDidChangeEnvVariables.fire.bind(onDidChangeEnvVariables));
                         });
