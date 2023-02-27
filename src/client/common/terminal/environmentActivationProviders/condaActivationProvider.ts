@@ -14,11 +14,6 @@ import { IPlatformService } from '../../platform/types';
 import { IConfigurationService } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
 
-// Version number of conda that requires we call activate with 'conda activate' instead of just 'activate'
-const CondaRequiredMajor = 4;
-const CondaRequiredMinor = 4;
-const CondaRequiredMinorForPowerShell = 6;
-
 /**
  * Support conda env activation (in the terminal).
  */
@@ -65,57 +60,38 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
 
         const condaEnv = envInfo.name.length > 0 ? envInfo.name : envInfo.path;
 
-        // Algorithm differs based on version
-        // Old version, just call activate directly.
-        // New version, call activate from the same path as our python path, then call it again to activate our environment.
-        // -- note that the 'default' conda location won't allow activate to work for the environment sometimes.
-        const versionInfo = await this.condaService.getCondaVersion();
-        if (versionInfo && versionInfo.major >= CondaRequiredMajor) {
-            // Conda added support for powershell in 4.6.
+        // New version.
+        const interpreterPath = await this.condaService.getInterpreterPathForEnvironment(envInfo);
+        const activatePath = await this.condaService.getActivationScriptFromInterpreter(interpreterPath, envInfo.name);
+        // eslint-disable-next-line camelcase
+        if (activatePath?.path) {
             if (
-                versionInfo.minor >= CondaRequiredMinorForPowerShell &&
-                (targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore)
+                this.platform.isWindows &&
+                targetShell !== TerminalShellType.bash &&
+                targetShell !== TerminalShellType.gitbash
             ) {
-                return _getPowershellCommands(condaEnv);
+                return [activatePath.path, `conda activate ${condaEnv.toCommandArgumentForPythonExt()}`];
             }
-            if (versionInfo.minor >= CondaRequiredMinor) {
-                // New version.
-                const interpreterPath = await this.condaService.getInterpreterPathForEnvironment(envInfo);
-                const activatePath = await this.condaService.getActivationScriptFromInterpreter(
-                    interpreterPath,
-                    envInfo.name,
-                );
+
+            const condaInfo = await this.condaService.getCondaInfo();
+
+            if (
+                activatePath.type !== 'global' ||
                 // eslint-disable-next-line camelcase
-                if (activatePath?.path) {
-                    if (
-                        this.platform.isWindows &&
-                        targetShell !== TerminalShellType.bash &&
-                        targetShell !== TerminalShellType.gitbash
-                    ) {
-                        return [activatePath.path, `conda activate ${condaEnv.toCommandArgumentForPythonExt()}`];
-                    }
-
-                    const condaInfo = await this.condaService.getCondaInfo();
-
-                    if (
-                        activatePath.type !== 'global' ||
-                        // eslint-disable-next-line camelcase
-                        condaInfo?.conda_shlvl === undefined ||
-                        condaInfo.conda_shlvl === -1
-                    ) {
-                        // activatePath is not the global activate path, or we don't have a shlvl, or it's -1（conda never sourced）.
-                        // and we need to source the activate path.
-                        if (activatePath.path === 'activate') {
-                            return [
-                                `source ${activatePath.path}`,
-                                `conda activate ${condaEnv.toCommandArgumentForPythonExt()}`,
-                            ];
-                        }
-                        return [`source ${activatePath.path} ${condaEnv.toCommandArgumentForPythonExt()}`];
-                    }
-                    return [`conda activate ${condaEnv.toCommandArgumentForPythonExt()}`];
+                condaInfo?.conda_shlvl === undefined ||
+                condaInfo.conda_shlvl === -1
+            ) {
+                // activatePath is not the global activate path, or we don't have a shlvl, or it's -1（conda never sourced）.
+                // and we need to source the activate path.
+                if (activatePath.path === 'activate') {
+                    return [
+                        `source ${activatePath.path}`,
+                        `conda activate ${condaEnv.toCommandArgumentForPythonExt()}`,
+                    ];
                 }
+                return [`source ${activatePath.path} ${condaEnv.toCommandArgumentForPythonExt()}`];
             }
+            return [`conda activate ${condaEnv.toCommandArgumentForPythonExt()}`];
         }
 
         switch (targetShell) {
