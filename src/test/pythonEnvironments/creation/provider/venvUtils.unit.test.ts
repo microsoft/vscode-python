@@ -80,7 +80,7 @@ suite('Venv Utils test', () => {
             '[project]\nname = "spam"\nversion = "2020.0.0"\n[build-system]\nrequires = ["setuptools ~= 58.0", "cython ~= 0.29.0"]\n[project.optional-dependencies]\ntest = ["pytest"]\ndoc = ["sphinx", "furo"]',
         );
 
-        showQuickPickWithBackStub.rejects(windowApis.MultiStepAction.Cancel);
+        showQuickPickWithBackStub.resolves(undefined);
 
         await assert.isRejected(pickPackagesToInstall(workspace1));
         assert.isTrue(
@@ -215,7 +215,7 @@ suite('Venv Utils test', () => {
             return Promise.resolve([]);
         });
 
-        showQuickPickWithBackStub.rejects(windowApis.MultiStepAction.Cancel);
+        showQuickPickWithBackStub.resolves(undefined);
 
         await assert.isRejected(pickPackagesToInstall(workspace1));
         assert.isTrue(

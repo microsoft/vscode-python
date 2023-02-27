@@ -151,6 +151,8 @@ export async function pickPackagesToInstall(
                                 });
                             }
                             packages.push({ installType: 'toml', source: tomlPath });
+                        } else {
+                            return MultiStepAction.Cancel;
                         }
                     } catch (ex) {
                         if (ex === MultiStepAction.Back || ex === MultiStepAction.Cancel) {
@@ -192,6 +194,8 @@ export async function pickPackagesToInstall(
                         installList.forEach((i) => {
                             packages.push({ installType: 'requirements', installItem: i });
                         });
+                    } else {
+                        return MultiStepAction.Cancel;
                     }
                 } catch (ex) {
                     if (ex === MultiStepAction.Back || ex === MultiStepAction.Cancel) {

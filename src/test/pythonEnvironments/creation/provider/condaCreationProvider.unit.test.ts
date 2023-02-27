@@ -76,7 +76,7 @@ suite('Conda Creation provider tests', () => {
         });
         pickPythonVersionStub.resolves(undefined);
 
-        assert.isUndefined(await condaProvider.createEnvironment());
+        await assert.isRejected(condaProvider.createEnvironment());
     });
 
     test('Create conda environment', async () => {
