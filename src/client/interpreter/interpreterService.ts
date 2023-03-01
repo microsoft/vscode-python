@@ -29,7 +29,7 @@ import {
     IInterpreterStatusbarVisibilityFilter,
     PythonEnvironmentsChangedEvent,
 } from './contracts';
-import { traceError, traceLog } from '../logging';
+import { traceError, traceLog, traceVerbose } from '../logging';
 import { Commands, PYTHON_LANGUAGE } from '../common/constants';
 import { reportActiveInterpreterChanged } from '../proposedApi';
 import { IPythonExecutionFactory } from '../common/process/types';
@@ -209,6 +209,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 path = fullyQualifiedPath;
             }
         }
+        traceVerbose('Getting details of Active Interpreter', path);
         return this.getInterpreterDetails(path);
     }
 

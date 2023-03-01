@@ -6,7 +6,7 @@
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter, Uri } from 'vscode';
-import { traceError } from '../logging';
+import { traceError, traceLog } from '../logging';
 import { IApplicationEnvironment, IWorkspaceService } from './application/types';
 import { PythonSettings } from './configSettings';
 import { isTestExecution } from './constants';
@@ -130,6 +130,7 @@ export class InterpreterPathService implements IInterpreterPathService {
             await persistentSetting.updateValue(pythonPath);
             this._didChangeInterpreterEmitter.fire({ uri: resource, configTarget });
         }
+        traceLog(`Updated ${configTarget} interpreter path to ${pythonPath} for ${resource?.fsPath}.`);
     }
 
     public getSettingKey(
