@@ -120,16 +120,39 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
                 undefined,
             );
         }
-        if (debugConfiguration.python === '${command:python.interpreterPath}' || !debugConfiguration.python) {
+
+        if (debugConfiguration.python === '${command:python.interpreterPath}') {
             this.pythonPathSource = PythonPathSource.settingsJson;
+            const interpreterPath =
+                (await this.interpreterService.getActiveInterpreter(workspaceFolder))?.path ??
+                this.configurationService.getSettings(workspaceFolder).pythonPath;
+            debugConfiguration.python = interpreterPath;
+        } else if (debugConfiguration.python === undefined) {
+            this.pythonPathSource = PythonPathSource.settingsJson;
+            debugConfiguration.python = debugConfiguration.pythonPath;
         } else {
             this.pythonPathSource = PythonPathSource.launchJson;
+            debugConfiguration.python = resolveVariables(
+                debugConfiguration.python ?? debugConfiguration.pythonPath,
+                workspaceFolder?.fsPath,
+                undefined,
+            );
         }
-        debugConfiguration.python = resolveVariables(
-            debugConfiguration.python ? debugConfiguration.python : undefined,
-            workspaceFolder?.fsPath,
-            undefined,
-        );
+
+        if (
+            debugConfiguration.debugAdapterPython === '${command:python.interpreterPath}' ||
+            debugConfiguration.debugAdapterPython === undefined
+        ) {
+            debugConfiguration.debugAdapterPython = debugConfiguration.pythonPath ?? debugConfiguration.python;
+        }
+        if (
+            debugConfiguration.debugLauncherPython === '${command:python.interpreterPath}' ||
+            debugConfiguration.debugLauncherPython === undefined
+        ) {
+            debugConfiguration.debugLauncherPython = debugConfiguration.pythonPath ?? debugConfiguration.python;
+        }
+
+        delete debugConfiguration.pythonPath;
     }
 
     protected static debugOption(debugOptions: DebugOptions[], debugOption: DebugOptions): void {
