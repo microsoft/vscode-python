@@ -149,6 +149,7 @@ export function buildProposedApi(
             }
             if (e.old) {
                 if (e.new) {
+                    traceVerbose('Python API env change detected', env.id, 'update');
                     onEnvironmentsChanged.fire({ type: 'update', env: convertEnvInfoAndGetReference(e.new) });
                     reportInterpretersChanged([
                         {
@@ -157,6 +158,7 @@ export function buildProposedApi(
                         },
                     ]);
                 } else {
+                    traceVerbose('Python API env change detected', env.id, 'remove');
                     onEnvironmentsChanged.fire({ type: 'remove', env: convertEnvInfoAndGetReference(e.old) });
                     reportInterpretersChanged([
                         {
@@ -166,6 +168,7 @@ export function buildProposedApi(
                     ]);
                 }
             } else if (e.new) {
+                traceVerbose('Python API env change detected', env.id, 'add');
                 onEnvironmentsChanged.fire({ type: 'add', env: convertEnvInfoAndGetReference(e.new) });
                 reportInterpretersChanged([
                     {

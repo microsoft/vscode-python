@@ -5,7 +5,7 @@ import { Event } from 'vscode';
 import { isTestExecution } from '../../../../common/constants';
 import { traceInfo, traceVerbose } from '../../../../logging';
 import { arePathsSame, getFileInfo, pathExists } from '../../../common/externalDependencies';
-import { PythonEnvInfo } from '../../info';
+import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { areEnvsDeepEqual, areSameEnv, getEnvPath } from '../../info/env';
 import {
     BasicPythonEnvCollectionChangedEvent,
@@ -126,6 +126,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             .reverse(); // Reversed so indexes do not change when deleting
         invalidIndexes.forEach((index) => {
             const env = this.envs.splice(index, 1)[0];
+            traceVerbose(`Removing invalid env from cache ${env.id}`);
             this.fire({ old: env, new: undefined });
         });
         if (envs) {
