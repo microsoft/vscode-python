@@ -126,6 +126,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             .reverse(); // Reversed so indexes do not change when deleting
         invalidIndexes.forEach((index) => {
             const env = this.envs.splice(index, 1)[0];
+            traceVerbose(`Removing invalid env from cache ${env.id}`);
             this.fire({ old: env, new: undefined });
         });
         if (envs) {
