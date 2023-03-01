@@ -31,6 +31,7 @@ import {
     QuickInputButtonSetup,
 } from '../../../../common/utils/multiStepInput';
 import { SystemVariables } from '../../../../common/variables/systemVariables';
+import { traceVerbose } from '../../../../logging';
 import { TriggerRefreshOptions } from '../../../../pythonEnvironments/base/locator';
 import { EnvironmentType, PythonEnvironment } from '../../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
@@ -555,6 +556,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
             // User may choose to have an empty string stored, so variable `interpreterState.path` may be
             // an empty string, in which case we should update.
             // Having the value `undefined` means user cancelled the quickpick, so we update nothing in that case.
+            traceVerbose('User selected an interpreter', interpreterState.path, 'setting it.');
             await this.pythonPathUpdaterService.updatePythonPath(interpreterState.path, configTarget, 'ui', wkspace);
         }
     }
