@@ -112,7 +112,12 @@ export async function showQuickPickWithBack<T extends QuickPickItem>(
         }),
         quickPick.onDidAccept(() => {
             if (!deferred.completed) {
-                deferred.resolve(quickPick.selectedItems.map((item) => item));
+                if (quickPick.canSelectMany) {
+                    deferred.resolve(quickPick.selectedItems.map((item) => item));
+                } else {
+                    deferred.resolve(quickPick.selectedItems[0]);
+                }
+
                 quickPick.hide();
             }
         }),
