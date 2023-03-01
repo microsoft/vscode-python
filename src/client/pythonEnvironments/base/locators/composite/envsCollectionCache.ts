@@ -5,7 +5,7 @@ import { Event } from 'vscode';
 import { isTestExecution } from '../../../../common/constants';
 import { traceInfo, traceVerbose } from '../../../../logging';
 import { arePathsSame, getFileInfo, pathExists } from '../../../common/externalDependencies';
-import { PythonEnvInfo, PythonEnvKind } from '../../info';
+import { PythonEnvInfo } from '../../info';
 import { areEnvsDeepEqual, areSameEnv, getEnvPath } from '../../info/env';
 import {
     BasicPythonEnvCollectionChangedEvent,
