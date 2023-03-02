@@ -102,7 +102,7 @@
     "python.sortImports.path.description": "Path to isort script, default using inner version",
     "python.tensorBoard.logDirectory.description": "Set this setting to your preferred TensorBoard log directory to skip log directory prompt when starting TensorBoard.",
     "python.terminal.activateEnvInCurrentTerminal.description": "Activate Python Environment in the current Terminal on load of the Extension.",
-    "python.terminal.activateEnvironment.description": "Activate Python Environment in Terminal created using the Extension.",
+    "python.terminal.activateEnvironment.description": "Activate Python Environment in all Terminals created.",
     "python.terminal.executeInFileDir.description": "When executing a file in the terminal, whether to use execute in the file's directory, instead of the current open folder.",
     "python.terminal.focusAfterLaunch.description": "When launching a python terminal, whether to focus the cursor on the terminal.",
     "python.terminal.launchArgs.description": "Python launch arguments to use when executing a file in the terminal.",
