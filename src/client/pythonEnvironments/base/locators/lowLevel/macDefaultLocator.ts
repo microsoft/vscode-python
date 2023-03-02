@@ -13,7 +13,7 @@ export function isMacDefaultPythonPath(pythonPath: string): boolean {
         return false;
     }
 
-    const defaultPaths = ['python', '/usr/bin/python'];
+    const defaultPaths = ['/usr/bin/python'];
 
     return defaultPaths.includes(pythonPath) || pythonPath.startsWith('/usr/bin/python2');
 }

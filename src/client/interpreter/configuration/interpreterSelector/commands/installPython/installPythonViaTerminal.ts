@@ -55,9 +55,13 @@ export class InstallPythonViaTerminal implements IExtensionSingleActivationServi
 
     public async _installPythonOnUnix(os: OSType.Linux | OSType.OSX): Promise<void> {
         const commands = await this.getCommands(os);
+        const installMessage =
+            os === OSType.OSX
+                ? Interpreters.installPythonTerminalMacMessage
+                : Interpreters.installPythonTerminalMessageLinux;
         const terminal = this.terminalManager.createTerminal({
             name: 'Python',
-            message: commands.length ? undefined : Interpreters.installPythonTerminalMessage,
+            message: commands.length ? undefined : installMessage,
         });
         terminal.show(true);
         await waitForTerminalToStartup();
@@ -69,28 +73,33 @@ export class InstallPythonViaTerminal implements IExtensionSingleActivationServi
 
     private async getCommands(os: OSType.Linux | OSType.OSX) {
         if (os === OSType.OSX) {
-            return this.packageManagerCommands[PackageManagers.brew];
+            return this.getCommandsForPackageManagers([PackageManagers.brew]);
         }
-        return this.getCommandsForLinux();
+        if (os === OSType.Linux) {
+            return this.getCommandsForPackageManagers([PackageManagers.apt, PackageManagers.dnf]);
+        }
+        throw new Error('OS not supported');
     }
 
-    private async getCommandsForLinux() {
-        for (const packageManager of [PackageManagers.apt, PackageManagers.dnf]) {
-            let isPackageAvailable = false;
-            try {
-                const which = require('which') as typeof whichTypes;
-                const resolvedPath = await which(packageManager);
-                traceVerbose(`Resolved path to ${packageManager} module:`, resolvedPath);
-                isPackageAvailable = resolvedPath.trim().length > 0;
-            } catch (ex) {
-                traceVerbose(`${packageManager} not found`, ex);
-                isPackageAvailable = false;
-            }
-            if (isPackageAvailable) {
+    private async getCommandsForPackageManagers(packageManagers: PackageManagers[]) {
+        for (const packageManager of packageManagers) {
+            if (await isPackageAvailable(packageManager)) {
                 return this.packageManagerCommands[packageManager];
             }
         }
         return [];
+    }
+}
+
+async function isPackageAvailable(packageManager: PackageManagers) {
+    try {
+        const which = require('which') as typeof whichTypes;
+        const resolvedPath = await which(packageManager);
+        traceVerbose(`Resolved path to ${packageManager} module:`, resolvedPath);
+        return resolvedPath.trim().length > 0;
+    } catch (ex) {
+        traceVerbose(`${packageManager} not found`, ex);
+        return false;
     }
 }
 

@@ -18,8 +18,6 @@ suite('isMacDefaultPythonPath', () => {
     });
 
     const testCases: { path: string; os: osUtils.OSType; expected: boolean }[] = [
-        { path: 'python', os: osUtils.OSType.OSX, expected: true },
-        { path: 'python', os: osUtils.OSType.Windows, expected: false },
         { path: '/usr/bin/python', os: osUtils.OSType.OSX, expected: true },
         { path: '/usr/bin/python', os: osUtils.OSType.Linux, expected: false },
         { path: '/usr/bin/python2', os: osUtils.OSType.OSX, expected: true },
