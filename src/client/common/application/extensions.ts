@@ -11,6 +11,7 @@ import * as path from 'path';
 import { IExtensions } from '../types';
 import { IFileSystem } from '../platform/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
+import { traceVerbose } from '../../logging';
 
 /**
  * Provides functions for tracking the list of extensions that VSCode has installed.
@@ -39,6 +40,7 @@ export class Extensions implements IExtensions {
     public async determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }> {
         const { stack } = new Error();
         if (stack) {
+            traceVerbose('Print all extensions', JSON.stringify(this.all));
             const pythonExtRoot = path.join(EXTENSION_ROOT_DIR.toLowerCase(), path.sep);
             const frames = stack
                 .split('\n')
