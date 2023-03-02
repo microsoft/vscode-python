@@ -96,7 +96,7 @@ suite('Install Python via Terminal', () => {
         await installPythonCommand.activate();
         await installCommandHandler!();
 
-        expect(message).to.be.equal(Interpreters.installPythonTerminalMessage);
+        expect(message).to.be.equal(Interpreters.installPythonTerminalMessageLinux);
     });
 
     test('Sends expected commands on Mac when InstallPythonOnMac command is executed if no dnf is available', async () => {

@@ -204,8 +204,12 @@ export namespace Interpreters {
     export const selectInterpreterTip = l10n.t(
         'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar',
     );
-    export const installPythonTerminalMessage = l10n.t(
+    export const installPythonTerminalMessageLinux = l10n.t(
         '💡 Please try installing the python package using your package manager. Alternatively you can also download it from https://www.python.org/downloads',
+    );
+
+    export const installPythonTerminalMacMessage = l10n.t(
+        '💡 Brew does not seem to be available. Please try to download Python from https://www.python.org/downloads. Alternatively, you can install the python package using some other package manager which is available.',
     );
     export const changePythonInterpreter = l10n.t('Change Python Interpreter');
     export const selectedPythonInterpreter = l10n.t('Selected Python Interpreter');
