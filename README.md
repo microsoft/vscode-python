@@ -80,7 +80,7 @@ Learn more about the rich features of the Python extension:
 
 -   [Environments](https://code.visualstudio.com/docs/python/environments): Automatically activate and switch between virtualenv, venv, pipenv, conda and pyenv environments
 
--   [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring): Restructure your Python code with variable extraction and method extraction. Additionally, we provide componentized support to enable additional refactoring, such as import sorting, through extensions such as [isort](https://marketplace.visualstudio.com/items?itemName=ms-python.isort) and [Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff). 
+-   [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring): Restructure your Python code with variable extraction and method extraction. Additionally, there is componentized support to enable additional refactoring, such as import sorting, through extensions including [isort](https://marketplace.visualstudio.com/items?itemName=ms-python.isort) and [Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff). 
 
 
 
