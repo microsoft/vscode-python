@@ -121,7 +121,7 @@ suite('Install Python via Terminal', () => {
         expect(message).to.be.equal(undefined);
     });
 
-    test('Creates terminal with appropriate message when InstallPythonOnMac command is executed if brew is available', async () => {
+    test('Creates terminal with appropriate message when InstallPythonOnMac command is executed if brew is not available', async () => {
         let installCommandHandler: () => Promise<void>;
         when(cmdManager.registerCommand(Commands.InstallPythonOnMac, anything())).thenCall((_, cb) => {
             installCommandHandler = cb;
@@ -135,6 +135,6 @@ suite('Install Python via Terminal', () => {
 
         await installCommandHandler!();
 
-        expect(message).to.be.equal(Interpreters.installPythonTerminalMessageLinux);
+        expect(message).to.be.equal(Interpreters.installPythonTerminalMacMessage);
     });
 });
