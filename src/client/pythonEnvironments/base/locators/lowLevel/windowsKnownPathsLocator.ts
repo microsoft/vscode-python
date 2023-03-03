@@ -16,6 +16,7 @@ import { Locators } from '../../locators';
 import { getEnvs } from '../../locatorUtils';
 import { PythonEnvsChangedEvent } from '../../watcher';
 import { DirFilesLocator } from './filesLocator';
+import { traceVerbose } from '../../../../logging';
 
 /**
  * A locator for Windows locators found under the $PATH env var.
@@ -93,6 +94,7 @@ function getDirFilesLocator(
     // take a naive approach.
     async function* iterEnvs(query: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
         yield* await getEnvs(locator.iterEnvs(query));
+        traceVerbose('Finished searching for windows path interpreters');
     }
     return {
         providerId: locator.providerId,

@@ -70,6 +70,7 @@ export class PoetryLocator extends LazyResourceBasedLocator {
             });
 
             yield* iterable(chain(envGenerators));
+            traceVerbose(`Finished searching for poetry envs`);
         }
 
         return iterator(this.root);
