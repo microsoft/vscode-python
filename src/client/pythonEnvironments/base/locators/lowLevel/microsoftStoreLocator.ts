@@ -12,6 +12,7 @@ import {
     isStorePythonInstalled,
     getMicrosoftStoreAppsRoot,
 } from '../../../common/environmentManagers/microsoftStoreEnv';
+import { traceVerbose } from '../../../../logging';
 
 /**
  * This is a glob pattern which matches following file names:
@@ -91,6 +92,7 @@ export class MicrosoftStoreLocator extends FSWatchingLocator {
                 kind,
                 executablePath,
             }));
+            traceVerbose(`Finished searching for windows store envs`);
         };
         return iterator(this.kind);
     }

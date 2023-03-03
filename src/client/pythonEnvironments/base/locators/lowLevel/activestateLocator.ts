@@ -40,5 +40,6 @@ export class ActiveStateLocator extends LazyResourceBasedLocator {
                 }
             }
         }
+        traceVerbose(`Finished searching for active state environments`);
     }
 }

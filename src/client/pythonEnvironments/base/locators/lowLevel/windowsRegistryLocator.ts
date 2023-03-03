@@ -5,7 +5,7 @@
 import { PythonEnvKind, PythonEnvSource } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../locator';
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
-import { traceError } from '../../../../logging';
+import { traceError, traceVerbose } from '../../../../logging';
 import { isMicrosoftStoreDir } from '../../../common/environmentManagers/microsoftStoreEnv';
 
 export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
@@ -33,6 +33,7 @@ export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
                     traceError(`Failed to process environment: ${interpreter}`, ex);
                 }
             }
+            traceVerbose('Finished searching for windows registry interpreters');
         };
         return iterator();
     }

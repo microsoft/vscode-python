@@ -36,7 +36,7 @@ import {
 import { EnvsCollectionService } from './base/locators/composite/envsCollectionService';
 import { IDisposable } from '../common/types';
 import { traceError } from '../logging';
-import { ActiveStateLocator } from './base/locators/lowLevel/activestateLocator';
+import { ActiveStateLocator } from './base/locators/lowLevel/activeStateLocator';
 
 /**
  * Set up the Python environments component (during extension activation).'

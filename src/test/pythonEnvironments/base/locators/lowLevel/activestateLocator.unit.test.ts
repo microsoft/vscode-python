@@ -7,7 +7,7 @@ import * as fsapi from 'fs-extra';
 import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
 import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
-import { ActiveStateLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/activestateLocator';
+import { ActiveStateLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/activeStateLocator';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertBasicEnvsEqual } from '../envTestUtils';
 import { ExecutionResult } from '../../../../../client/common/process/types';
