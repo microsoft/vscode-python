@@ -11,13 +11,15 @@ import * as path from 'path';
 import { IExtensions } from '../types';
 import { IFileSystem } from '../platform/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
-import { traceVerbose } from '../../logging';
 
 /**
  * Provides functions for tracking the list of extensions that VSCode has installed.
  */
 @injectable()
 export class Extensions implements IExtensions {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private _cachedExtensions?: readonly Extension<any>[];
+
     constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,8 +31,9 @@ export class Extensions implements IExtensions {
         return extensions.onDidChange;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private _cachedExtensions?: readonly Extension<any>[];
+    public getExtension(extensionId: string): Extension<unknown> | undefined {
+        return extensions.getExtension(extensionId);
+    }
 
     private get cachedExtensions() {
         if (!this._cachedExtensions) {
@@ -42,10 +45,6 @@ export class Extensions implements IExtensions {
         return this._cachedExtensions;
     }
 
-    public getExtension(extensionId: string): Extension<unknown> | undefined {
-        return extensions.getExtension(extensionId);
-    }
-
     /**
      * Code borrowed from:
      * https://github.com/microsoft/vscode-jupyter/blob/67fe33d072f11d6443cf232a06bed0ac5e24682c/src/platform/common/application/extensions.node.ts
@@ -53,9 +52,6 @@ export class Extensions implements IExtensions {
     public async determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }> {
         const { stack } = new Error();
         if (stack) {
-            const a = this.all;
-            const b = this.cachedExtensions;
-            // traceVerbose('Print all extensions', JSON.stringify(this.all));
             const pythonExtRoot = path.join(EXTENSION_ROOT_DIR.toLowerCase(), path.sep);
             const frames = stack
                 .split('\n')
@@ -68,6 +64,7 @@ export class Extensions implements IExtensions {
                 })
                 .filter((item) => item && !item.toLowerCase().startsWith(pythonExtRoot))
                 .filter((item) =>
+                    // Use cached list of extensions as we need this to be fast.
                     this.cachedExtensions.some(
                         (ext) => item!.includes(ext.extensionUri.path) || item!.includes(ext.extensionUri.fsPath),
                     ),
