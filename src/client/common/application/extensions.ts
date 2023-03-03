@@ -29,6 +29,19 @@ export class Extensions implements IExtensions {
         return extensions.onDidChange;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private _cachedExtensions?: readonly Extension<any>[];
+
+    private get cachedExtensions() {
+        if (!this._cachedExtensions) {
+            this._cachedExtensions = extensions.all;
+            extensions.onDidChange(() => {
+                this._cachedExtensions = extensions.all;
+            });
+        }
+        return this._cachedExtensions;
+    }
+
     public getExtension(extensionId: string): Extension<unknown> | undefined {
         return extensions.getExtension(extensionId);
     }
@@ -40,7 +53,9 @@ export class Extensions implements IExtensions {
     public async determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }> {
         const { stack } = new Error();
         if (stack) {
-            traceVerbose('Print all extensions', JSON.stringify(this.all));
+            const a = this.all;
+            const b = this.cachedExtensions;
+            // traceVerbose('Print all extensions', JSON.stringify(this.all));
             const pythonExtRoot = path.join(EXTENSION_ROOT_DIR.toLowerCase(), path.sep);
             const frames = stack
                 .split('\n')
@@ -53,7 +68,7 @@ export class Extensions implements IExtensions {
                 })
                 .filter((item) => item && !item.toLowerCase().startsWith(pythonExtRoot))
                 .filter((item) =>
-                    this.all.some(
+                    this.cachedExtensions.some(
                         (ext) => item!.includes(ext.extensionUri.path) || item!.includes(ext.extensionUri.fsPath),
                     ),
                 ) as string[];
