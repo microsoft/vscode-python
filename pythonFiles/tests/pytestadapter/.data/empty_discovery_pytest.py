@@ -2,5 +2,5 @@
 # Licensed under the MIT License.
 
 
-def test_function(string):
+def function_function(string):
     return string

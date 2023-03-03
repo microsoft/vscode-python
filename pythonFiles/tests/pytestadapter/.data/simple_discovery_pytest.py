@@ -3,4 +3,4 @@
 
 
 def test_function(string):
-    return string
+    assert string == string

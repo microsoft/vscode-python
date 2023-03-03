@@ -37,6 +37,23 @@ def test_syntax_error(tmp_path):
     assert len(actual["errors"]) == 2
 
 
+# def test_empty_collect():
+#     result = runner(
+#         ["--collect-only", os.fspath(TEST_DATA_PATH / "empty_discovery_pytest.py")]
+#     )
+#     # append to a file named "test.txt"
+#     assert result is not None
+#     assert result.get("tests") == empty_discovery_pytest_expected_output
+
+# def test_simple_collect():
+#     result = runner(
+#         ["--collect-only", os.fspath(TEST_DATA_PATH / "simple_discovery_pytest.py")]
+#     )
+#     # append to a file named "test.txt"
+#     assert result is not None
+#     assert result.get("tests") == simple_discovery_pytest_expected_output
+
+
 def test_parameterized_error_collect():
     """Tests pytest discovery on specific file that incorrectly uses parametrize.
 
