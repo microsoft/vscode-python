@@ -125,20 +125,16 @@ export function buildProposedApi(
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
     const envVarsProvider = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
     function sendApiTelemetry(apiName: string, args?: unknown) {
-        setTimeout(() =>
-            extensions
-                .determineExtensionFromCallStack()
-                .then((info) => {
-                    sendTelemetryEvent(EventName.PYTHON_ENVIRONMENTS_API, undefined, {
-                        apiName,
-                        extensionId: info.extensionId,
-                    });
-                    traceVerbose(
-                        `Extension ${info.extensionId} accessed ${apiName} with args: ${JSON.stringify(args)}`,
-                    );
-                })
-                .ignoreErrors(),
-        );
+        extensions
+            .determineExtensionFromCallStack()
+            .then((info) => {
+                sendTelemetryEvent(EventName.PYTHON_ENVIRONMENTS_API, undefined, {
+                    apiName,
+                    extensionId: info.extensionId,
+                });
+                traceVerbose(`Extension ${info.extensionId} accessed ${apiName} with args: ${JSON.stringify(args)}`);
+            })
+            .ignoreErrors();
     }
     disposables.push(
         discoveryApi.onChanged((e) => {
