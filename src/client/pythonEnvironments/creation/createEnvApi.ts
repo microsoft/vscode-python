@@ -9,7 +9,12 @@ import { IInterpreterQuickPick } from '../../interpreter/configuration/types';
 import { getCreationEvents, handleCreateEnvironmentCommand } from './createEnvironment';
 import { condaCreationProvider } from './provider/condaCreationProvider';
 import { VenvCreationProvider } from './provider/venvCreationProvider';
-import { CreateEnvironmentOptions, CreateEnvironmentProvider, CreateEnvironmentResult } from './types';
+import {
+    CreateEnvironmentExitedEventArgs,
+    CreateEnvironmentOptions,
+    CreateEnvironmentProvider,
+    CreateEnvironmentResult,
+} from './types';
 import { showInformationMessage } from '../../common/vscodeApis/windowApis';
 import { CreateEnv } from '../../common/utils/localize';
 
@@ -62,10 +67,10 @@ export function registerCreateEnvironmentFeatures(
     disposables.push(registerCreateEnvironmentProvider(new VenvCreationProvider(interpreterQuickPick)));
     disposables.push(registerCreateEnvironmentProvider(condaCreationProvider()));
     disposables.push(
-        onCreateEnvironmentExited(async (e: CreateEnvironmentResult | undefined) => {
-            if (e && e.path) {
-                await interpreterPathService.update(e.uri, ConfigurationTarget.WorkspaceFolder, e.path);
-                showInformationMessage(`${CreateEnv.informEnvCreation} ${pathUtils.getDisplayName(e.path)}`);
+        onCreateEnvironmentExited(async (e: CreateEnvironmentExitedEventArgs) => {
+            if (e.result?.path && e.options?.selectEnvironment) {
+                await interpreterPathService.update(e.result.uri, ConfigurationTarget.WorkspaceFolder, e.result.path);
+                showInformationMessage(`${CreateEnv.informEnvCreation} ${pathUtils.getDisplayName(e.result.path)}`);
             }
         }),
     );
