@@ -6,17 +6,25 @@ import { Progress, Uri } from 'vscode';
 export interface CreateEnvironmentProgress extends Progress<{ message?: string; increment?: number }> {}
 
 export interface CreateEnvironmentOptions {
-    // Default `true`. If `true`, the environment creation handler is expected to install packages.
+    /**
+     * Default `true`. If `true`, the environment creation handler is expected to install packages.
+     */
     installPackages?: boolean;
 
-    // Default `true`. If `true`, the environment creation provider is expected to add the environment to ignore list
-    // for the source control.
+    /**
+     * Default `true`. If `true`, the environment creation provider is expected to add the environment to ignore list
+     * for the source control.
+     */
     ignoreSourceControl?: boolean;
 
-    // Default `false`. If `true` the creation provider should show back button when showing QuickPick or QuickInput.
+    /**
+     * Default `false`. If `true` the creation provider should show back button when showing QuickPick or QuickInput.
+     */
     showBackButton?: boolean;
 
-    // Default `true`. If `true`, the environment will be selected as the environment to be used for the workspace.
+    /**
+     * Default `true`. If `true`, the environment will be selected as the environment to be used for the workspace.
+     */
     selectEnvironment?: boolean;
 }
 
