@@ -169,11 +169,16 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
                     return undefined;
                 });
             } else if (reason) {
-                if (reason.message.includes('Unknown option: -I')) {
+                if (
+                    reason.message.includes('Unknown option: -I') ||
+                    reason.message.includes("ModuleNotFoundError: No module named 'encodings'")
+                ) {
                     traceWarn(reason);
-                    traceError(
-                        'Support for Python 2.7 has been dropped by the Python extension so certain features may not work, upgrade to using Python 3.',
-                    );
+                    if (reason.message.includes('Unknown option: -I')) {
+                        traceError(
+                            'Support for Python 2.7 has been dropped by the Python extension so certain features may not work, upgrade to using Python 3.',
+                        );
+                    }
                     return buildEnvironmentInfo(env, false).catch((err) => {
                         traceError(err);
                         return undefined;
