@@ -205,6 +205,9 @@ suite('Unit Tests - Debug Launcher', () => {
         if (!expected.python) {
             expected.python = 'python';
         }
+        if (!expected.clientOS) {
+            expected.clientOS = isOs(OSType.Windows) ? 'windows' : 'unix';
+        }
         if (!expected.debugAdapterPython) {
             expected.debugAdapterPython = 'python';
         }
