@@ -11,7 +11,6 @@ import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors
 import { IExtensionContext, IExperimentService, Resource, IDisposableRegistry } from '../../common/types';
 import { Deferred, createDeferred } from '../../common/utils/async';
 import { Interpreters } from '../../common/utils/localize';
-import { EnvironmentVariables } from '../../common/variables/types';
 import { traceDecoratorVerbose, traceVerbose } from '../../logging';
 import { IInterpreterService } from '../contracts';
 import { defaultShells } from './service';
@@ -19,14 +18,14 @@ import { IEnvironmentActivationService } from './types';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionSingleActivationService {
-    public readonly supportedWorkspaceTypes: { untrustedWorkspace: boolean; virtualWorkspace: boolean } = {
+    public readonly supportedWorkspaceTypes = {
         untrustedWorkspace: false,
         virtualWorkspace: false,
     };
 
     private deferred: Deferred<void> | undefined;
 
-    private previousEnvVars = normCaseKeys(process.env);
+    private previousEnvVars = _normCaseKeys(process.env);
 
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
@@ -47,7 +46,7 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
         this.interpreterService.onDidChangeInterpreter(
             async (resource) => {
                 this.showProgress();
-                await this.applyCollection(resource);
+                await this._applyCollection(resource);
                 this.hideProgress();
             },
             this,
@@ -58,17 +57,17 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
                 this.showProgress();
                 // Pass in the shell where known instead of relying on the application environment, because of bug
                 // on VSCode: https://github.com/microsoft/vscode/issues/160694
-                await this.applyCollection(undefined, shell);
+                await this._applyCollection(undefined, shell);
                 this.hideProgress();
             },
             this,
             this.disposables,
         );
 
-        this.applyCollection(undefined).ignoreErrors();
+        this._applyCollection(undefined).ignoreErrors();
     }
 
-    private async applyCollection(resource: Resource, shell = this.applicationEnvironment.shell) {
+    public async _applyCollection(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
         const env = await this.environmentActivationService.getActivatedEnvironmentVariables(
             resource,
             undefined,
@@ -77,14 +76,15 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
         );
         if (!env) {
             const shellType = identifyShellFromShellPath(shell);
-            if (defaultShells[this.platform.osType]?.shellType !== shellType) {
+            const defaultShell = defaultShells[this.platform.osType];
+            if (defaultShell?.shellType !== shellType) {
                 // Commands to fetch env vars may fail in custom shells due to unknown reasons, in that case
                 // fallback to default shells as they are known to work better.
-                await this.applyCollection(resource);
+                await this._applyCollection(resource, defaultShell?.shell);
                 return;
             }
             this.context.environmentVariableCollection.clear();
-            this.previousEnvVars = normCaseKeys(process.env);
+            this.previousEnvVars = _normCaseKeys(process.env);
             return;
         }
         const previousEnv = this.previousEnvVars;
@@ -138,8 +138,8 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
     }
 }
 
-function normCaseKeys(env: EnvironmentVariables): EnvironmentVariables {
-    const result: EnvironmentVariables = {};
+export function _normCaseKeys(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+    const result: NodeJS.ProcessEnv = {};
     Object.keys(env).forEach((key) => {
         // `os.environ` script used to get env vars normalizes keys to upper case:
         // https://github.com/python/cpython/issues/101754
