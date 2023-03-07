@@ -556,7 +556,7 @@ dual_level_nested_folder_expected_output = {
     "id_": TEST_DATA_PATH,
 }
 
-# This is the expected output for the double_nested_folder tests
+# This is the expected output for the double_nested_folder tests.
 # └── double_nested_folder
 #    └── nested_folder_one
 #        └── nested_folder_two
@@ -610,4 +610,51 @@ double_nested_folder_expected_output = {
         }
     ],
     "id_": TEST_DATA_PATH,
+}
+
+# This is the expected output for the nested_folder tests.
+# └── parametrize_tests.py
+#    └── test_adding[3+5-8]
+#    └── test_adding[2+4-6]
+#    └── test_adding[6+9-16]
+
+parametrize_tests_expected_output = {
+    "name": ".data",
+    "path": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data",
+    "type_": "folder",
+    "children": [
+        {
+            "name": "parametrize_tests.py",
+            "path": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data/parametrize_tests.py",
+            "type_": "file",
+            "id_": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data/parametrize_tests.py",
+            "children": [
+                {
+                    "name": "test_adding[3+5-8]",
+                    "path": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data/parametrize_tests.py",
+                    "lineno": "5",
+                    "type_": "test",
+                    "id_": "parametrize_tests.py::test_adding[3+5-8]",
+                    "runID": "parametrize_tests.py::test_adding[3+5-8]",
+                },
+                {
+                    "name": "test_adding[2+4-6]",
+                    "path": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data/parametrize_tests.py",
+                    "lineno": "5",
+                    "type_": "test",
+                    "id_": "parametrize_tests.py::test_adding[2+4-6]",
+                    "runID": "parametrize_tests.py::test_adding[2+4-6]",
+                },
+                {
+                    "name": "test_adding[6+9-16]",
+                    "path": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data/parametrize_tests.py",
+                    "lineno": "5",
+                    "type_": "test",
+                    "id_": "parametrize_tests.py::test_adding[6+9-16]",
+                    "runID": "parametrize_tests.py::test_adding[6+9-16]",
+                },
+            ],
+        }
+    ],
+    "id_": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data",
 }
