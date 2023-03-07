@@ -2,5 +2,5 @@
 # Licensed under the MIT License.
 
 
-def test_function(string)
-    assert string == string
+def test_function()
+    assert True
