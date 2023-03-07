@@ -26,11 +26,9 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         const options = [DebugOptions.RedirectOutput];
         if (osType === platform.OSType.Windows) {
             options.push(DebugOptions.FixFilePathCase);
-            options.push(DebugOptions.WindowsClient);
-        } else {
-            options.push(DebugOptions.UnixClient);
         }
         options.push(DebugOptions.ShowReturnValue);
+
         return options;
     }
 
@@ -76,6 +74,10 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             }
         }
 
+        function getClientOS() {
+            return osType === platform.OSType.Windows ? 'windows' : 'unix';
+        }
+
         function setupWorkspaces(folders: string[]) {
             const workspaceFolders = folders.map(createMoqWorkspaceFolder);
             getWorkspaceFoldersStub.returns(workspaceFolders);
@@ -119,6 +121,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
             expect(debugConfig).to.have.property('request', 'attach');
+            expect(debugConfig).to.have.property('clientOS', getClientOS());
             expect(debugConfig).to.have.property('debugOptions').deep.equal(debugOptionsAvailable);
         });
 
@@ -134,6 +137,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.least(3);
             expect(debugConfig).to.have.property('request', 'attach');
+            expect(debugConfig).to.have.property('clientOS', getClientOS());
             expect(debugConfig).to.have.property('debugOptions').deep.equal(debugOptionsAvailable);
             expect(debugConfig).to.have.property('host', 'localhost');
         });
@@ -148,6 +152,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.least(3);
             expect(debugConfig).to.have.property('request', 'attach');
+            expect(debugConfig).to.have.property('clientOS', getClientOS());
             expect(debugConfig).to.have.property('debugOptions').deep.equal(debugOptionsAvailable);
             expect(debugConfig).to.have.property('host', 'localhost');
         });
@@ -164,6 +169,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.least(3);
             expect(debugConfig).to.have.property('request', 'attach');
+            expect(debugConfig).to.have.property('clientOS', getClientOS());
             expect(debugConfig).to.have.property('debugOptions').deep.equal(debugOptionsAvailable);
             expect(debugConfig).to.not.have.property('localRoot');
             expect(debugConfig).to.have.property('host', 'localhost');
@@ -181,6 +187,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.least(3);
             expect(debugConfig).to.have.property('request', 'attach');
+            expect(debugConfig).to.have.property('clientOS', getClientOS());
             expect(debugConfig).to.have.property('debugOptions').deep.equal(debugOptionsAvailable);
             expect(debugConfig).to.have.property('host', 'localhost');
         });
@@ -486,6 +493,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 debugOptions,
             });
 
+            expect(debugConfig).to.have.property('clientOS', getClientOS());
             expect(debugConfig).to.have.property('debugOptions').to.be.deep.equal(expectedDebugOptions);
         });
 
