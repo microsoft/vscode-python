@@ -59,6 +59,7 @@ interface ICommonDebugArguments {
     subProcess?: boolean;
     // An absolute path to local directory with source.
     pathMappings?: PathMapping[];
+    clientOS?: 'windows' | 'unix';
 }
 interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     workspaceFolder?: string;
