@@ -19,6 +19,7 @@
     "publisher": "ms-python",
     "enabledApiProposals": [
         "quickPickSortByLabel",
+        "envShellEvent",
         "testObserver"
     ],
     "author": {
@@ -40,7 +41,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.75.0-20230123"
+        "vscode": "^1.76.0"
     },
     "keywords": [
         "python",
@@ -426,12 +427,14 @@
                         "enum": [
                             "All",
                             "pythonSurveyNotification",
-                            "pythonPromptNewToolsExt"
+                            "pythonPromptNewToolsExt",
+                            "pythonTerminalEnvVarActivation"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
                             "%python.experiments.pythonSurveyNotification.description%",
-                            "%python.experiments.pythonPromptNewToolsExt.description%"
+                            "%python.experiments.pythonPromptNewToolsExt.description%",
+                            "%python.experiments.pythonTerminalEnvVarActivation.description%"
                         ]
                     },
                     "scope": "machine",
@@ -445,12 +448,14 @@
                         "enum": [
                             "All",
                             "pythonSurveyNotification",
-                            "pythonPromptNewToolsExt"
+                            "pythonPromptNewToolsExt",
+                            "pythonTerminalEnvVarActivation"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
                             "%python.experiments.pythonSurveyNotification.description%",
-                            "%python.experiments.pythonPromptNewToolsExt.description%"
+                            "%python.experiments.pythonPromptNewToolsExt.description%",
+                            "%python.experiments.pythonTerminalEnvVarActivation.description%"
                         ]
                     },
                     "scope": "machine",
@@ -1868,7 +1873,7 @@
         "@types/stack-trace": "0.0.29",
         "@types/tmp": "^0.0.33",
         "@types/uuid": "^8.3.4",
-        "@types/vscode": "^1.74.0",
+        "@types/vscode": "^1.75.0",
         "@types/which": "^2.0.1",
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",

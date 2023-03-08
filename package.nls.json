@@ -37,6 +37,7 @@
     "python.experiments.All.description": "Combined list of all experiments.",
     "python.experiments.pythonSurveyNotification.description": "Denotes the Python Survey Notification experiment.",
     "python.experiments.pythonPromptNewToolsExt.description": "Denotes the Python Prompt New Tools Extension experiment.",
+    "python.experiments.pythonTerminalEnvVarActivation.description": "Enables use of environment variables to activate terminals instead of sending activation commands.",
     "python.formatting.autopep8Args.description": "Arguments passed in. Each argument is a separate item in the array.",
     "python.formatting.autopep8Path.description": "Path to autopep8, you can use a custom version of autopep8 by modifying this setting to include the full path.",
     "python.formatting.blackArgs.description": "Arguments passed in. Each argument is a separate item in the array.",

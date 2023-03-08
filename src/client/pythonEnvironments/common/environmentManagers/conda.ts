@@ -22,6 +22,7 @@ import { isTestExecution } from '../../../common/constants';
 import { traceError, traceVerbose } from '../../../logging';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
 import { splitLines } from '../../../common/stringUtils';
+import { SpawnOptions } from '../../../common/process/types';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 export const CONDAPATH_SETTING_KEY = 'condaPath';
@@ -248,9 +249,9 @@ export class Conda {
      * need a Conda instance should use getConda() to obtain it, and should never access
      * this property directly.
      */
-    private static condaPromise: Promise<Conda | undefined> | undefined;
+    private static condaPromise = new Map<string | undefined, Promise<Conda | undefined>>();
 
-    private condaInfoCached: Promise<CondaInfo> | undefined;
+    private condaInfoCached = new Map<string | undefined, Promise<CondaInfo> | undefined>();
 
     /**
      * Carries path to conda binary to be used for shell execution.
@@ -263,18 +264,18 @@ export class Conda {
      * @param command - Command used to spawn conda. This has the same meaning as the
      * first argument of spawn() - i.e. it can be a full path, or just a binary name.
      */
-    constructor(readonly command: string, shellCommand?: string) {
+    constructor(readonly command: string, shellCommand?: string, private readonly shellPath?: string) {
         this.shellCommand = shellCommand ?? command;
         onDidChangePythonSetting(CONDAPATH_SETTING_KEY, () => {
-            Conda.condaPromise = undefined;
+            Conda.condaPromise = new Map<string | undefined, Promise<Conda | undefined>>();
         });
     }
 
-    public static async getConda(): Promise<Conda | undefined> {
-        if (Conda.condaPromise === undefined || isTestExecution()) {
-            Conda.condaPromise = Conda.locate();
+    public static async getConda(shellPath?: string): Promise<Conda | undefined> {
+        if (Conda.condaPromise.get(shellPath) === undefined || isTestExecution()) {
+            Conda.condaPromise.set(shellPath, Conda.locate(shellPath));
         }
-        return Conda.condaPromise;
+        return Conda.condaPromise.get(shellPath);
     }
 
     /**
@@ -283,7 +284,7 @@ export class Conda {
      *
      * @return A Conda instance corresponding to the binary, if successful; otherwise, undefined.
      */
-    private static async locate(): Promise<Conda | undefined> {
+    private static async locate(shellPath?: string): Promise<Conda | undefined> {
         traceVerbose(`Searching for conda.`);
         const home = getUserHomeDir();
         const customCondaPath = getPythonSetting<string>(CONDAPATH_SETTING_KEY);
@@ -383,7 +384,7 @@ export class Conda {
         // Probe the candidates, and pick the first one that exists and does what we need.
         for await (const condaPath of getCandidates()) {
             traceVerbose(`Probing conda binary: ${condaPath}`);
-            let conda = new Conda(condaPath);
+            let conda = new Conda(condaPath, undefined, shellPath);
             try {
                 await conda.getInfo();
                 if (getOSType() === OSType.Windows && (isTestExecution() || condaPath !== customCondaPath)) {
@@ -392,9 +393,9 @@ export class Conda {
                     const condaBatFile = await getCondaBatFile(condaPath);
                     try {
                         if (condaBatFile) {
-                            const condaBat = new Conda(condaBatFile);
+                            const condaBat = new Conda(condaBatFile, undefined, shellPath);
                             await condaBat.getInfo();
-                            conda = new Conda(condaPath, condaBatFile);
+                            conda = new Conda(condaPath, condaBatFile, shellPath);
                         }
                     } catch (ex) {
                         traceVerbose('Failed to spawn conda bat file', condaBatFile, ex);
@@ -420,10 +421,12 @@ export class Conda {
      * Corresponds to "conda info --json".
      */
     public async getInfo(useCache?: boolean): Promise<CondaInfo> {
-        if (!useCache || !this.condaInfoCached) {
-            this.condaInfoCached = this.getInfoImpl(this.command);
+        let condaInfoCached = this.condaInfoCached.get(this.shellPath);
+        if (!useCache || !condaInfoCached) {
+            condaInfoCached = this.getInfoImpl(this.command, this.shellPath);
+            this.condaInfoCached.set(this.shellPath, condaInfoCached);
         }
-        return this.condaInfoCached;
+        return condaInfoCached;
     }
 
     /**
@@ -431,8 +434,12 @@ export class Conda {
      */
     @cache(30_000, true, 10_000)
     // eslint-disable-next-line class-methods-use-this
-    private async getInfoImpl(command: string): Promise<CondaInfo> {
-        const result = await exec(command, ['info', '--json'], { timeout: CONDA_GENERAL_TIMEOUT });
+    private async getInfoImpl(command: string, shellPath: string | undefined): Promise<CondaInfo> {
+        const options: SpawnOptions = { timeout: CONDA_GENERAL_TIMEOUT };
+        if (shellPath) {
+            options.shell = shellPath;
+        }
+        const result = await exec(command, ['info', '--json'], options);
         traceVerbose(`${command} info --json: ${result.stdout}`);
         return JSON.parse(result.stdout);
     }

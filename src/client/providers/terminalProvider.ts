@@ -4,8 +4,9 @@
 import { Disposable, Terminal } from 'vscode';
 import { IActiveResourceService, ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
+import { inTerminalEnvVarExperiment } from '../common/experiments/helpers';
 import { ITerminalActivator, ITerminalServiceFactory } from '../common/terminal/types';
-import { IConfigurationService } from '../common/types';
+import { IConfigurationService, IExperimentService } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
@@ -24,9 +25,14 @@ export class TerminalProvider implements Disposable {
     @swallowExceptions('Failed to initialize terminal provider')
     public async initialize(currentTerminal: Terminal | undefined): Promise<void> {
         const configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
         const pythonSettings = configuration.getSettings(this.activeResourceService.getActiveResource());
 
-        if (currentTerminal && pythonSettings.terminal.activateEnvInCurrentTerminal) {
+        if (
+            currentTerminal &&
+            pythonSettings.terminal.activateEnvInCurrentTerminal &&
+            !inTerminalEnvVarExperiment(experimentService)
+        ) {
             const hideFromUser =
                 'hideFromUser' in currentTerminal.creationOptions && currentTerminal.creationOptions.hideFromUser;
             if (!hideFromUser) {

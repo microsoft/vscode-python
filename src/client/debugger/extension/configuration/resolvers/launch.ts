@@ -9,6 +9,8 @@ import { InvalidPythonPathInDebuggerServiceId } from '../../../../application/di
 import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../../../application/diagnostics/types';
 import { IConfigurationService } from '../../../../common/types';
 import { getOSType, OSType } from '../../../../common/utils/platform';
+import { EnvironmentVariables } from '../../../../common/variables/types';
+import { IEnvironmentActivationService } from '../../../../interpreter/activation/types';
 import { IInterpreterService } from '../../../../interpreter/contracts';
 import { DebuggerTypeName } from '../../../constants';
 import { DebugOptions, DebugPurpose, LaunchRequestArguments } from '../../../types';
@@ -24,6 +26,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IDebugEnvironmentVariablesService) private readonly debugEnvHelper: IDebugEnvironmentVariablesService,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
+        @inject(IEnvironmentActivationService) private environmentActivationService: IEnvironmentActivationService,
     ) {
         super(configurationService, interpreterService);
     }
@@ -81,6 +84,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         workspaceFolder: Uri | undefined,
         debugConfiguration: LaunchRequestArguments,
     ): Promise<void> {
+        const isPythonSet = debugConfiguration.python !== undefined;
         if (debugConfiguration.python === undefined) {
             debugConfiguration.python = debugConfiguration.pythonPath;
         }
@@ -99,10 +103,17 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             const settings = this.configurationService.getSettings(workspaceFolder);
             debugConfiguration.envFile = settings.envFile;
         }
+        let baseEnvVars: EnvironmentVariables | undefined;
+        if (isPythonSet) {
+            baseEnvVars = await this.environmentActivationService.getActivatedEnvironmentVariables(
+                workspaceFolder,
+                await this.interpreterService.getInterpreterDetails(debugConfiguration.python ?? ''),
+            );
+        }
         // Extract environment variables from .env file in the vscode context and
         // set the "env" debug configuration argument. This expansion should be
         // done here before handing of the environment settings to the debug adapter
-        debugConfiguration.env = await this.debugEnvHelper.getEnvironmentVariables(debugConfiguration);
+        debugConfiguration.env = await this.debugEnvHelper.getEnvironmentVariables(debugConfiguration, baseEnvVars);
 
         if (typeof debugConfiguration.stopOnEntry !== 'boolean') {
             debugConfiguration.stopOnEntry = false;

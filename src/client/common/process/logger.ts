@@ -7,11 +7,11 @@ import { inject, injectable } from 'inversify';
 import { traceLog } from '../../logging';
 import { IWorkspaceService } from '../application/types';
 import { isCI, isTestExecution } from '../constants';
-import { Logging } from '../utils/localize';
 import { getOSType, getUserHomeDir, OSType } from '../utils/platform';
 import { IProcessLogger, SpawnOptions } from './types';
 import { escapeRegExp } from 'lodash';
 import { replaceAll } from '../stringUtils';
+import { identifyShellFromShellPath } from '../terminal/shellDetectors/baseShellDetector';
 
 @injectable()
 export class ProcessLogger implements IProcessLogger {
@@ -27,8 +27,11 @@ export class ProcessLogger implements IProcessLogger {
             ? [fileOrCommand, ...args].map((e) => e.trimQuotes().toCommandArgumentForPythonExt()).join(' ')
             : fileOrCommand;
         const info = [`> ${this.getDisplayCommands(command)}`];
-        if (options && options.cwd) {
-            info.push(`${Logging.currentWorkingDirectory} ${this.getDisplayCommands(options.cwd)}`);
+        if (options?.cwd) {
+            info.push(`cwd: ${this.getDisplayCommands(options.cwd)}`);
+        }
+        if (typeof options?.shell === 'string') {
+            info.push(`shell: ${identifyShellFromShellPath(options?.shell)}`);
         }
 
         info.forEach((line) => {

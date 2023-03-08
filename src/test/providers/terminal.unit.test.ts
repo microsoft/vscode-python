@@ -7,9 +7,15 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Terminal, Uri } from 'vscode';
 import { IActiveResourceService, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { Commands } from '../../client/common/constants';
+import { TerminalEnvVarActivation } from '../../client/common/experiments/groups';
 import { TerminalService } from '../../client/common/terminal/service';
 import { ITerminalActivator, ITerminalServiceFactory } from '../../client/common/terminal/types';
-import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../client/common/types';
+import {
+    IConfigurationService,
+    IExperimentService,
+    IPythonSettings,
+    ITerminalSettings,
+} from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { TerminalProvider } from '../../client/providers/terminalProvider';
 
@@ -18,13 +24,17 @@ suite('Terminal Provider', () => {
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let workspace: TypeMoq.IMock<IWorkspaceService>;
     let activeResourceService: TypeMoq.IMock<IActiveResourceService>;
+    let experimentService: TypeMoq.IMock<IExperimentService>;
     let terminalProvider: TerminalProvider;
     const resource = Uri.parse('a');
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
+        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
+        experimentService.setup((e) => e.inExperimentSync(TerminalEnvVarActivation.experiment)).returns(() => false);
         activeResourceService = TypeMoq.Mock.ofType<IActiveResourceService>();
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
+        serviceContainer.setup((c) => c.get(IExperimentService)).returns(() => experimentService.object);
         serviceContainer.setup((c) => c.get(ICommandManager)).returns(() => commandManager.object);
         serviceContainer.setup((c) => c.get(IWorkspaceService)).returns(() => workspace.object);
         serviceContainer.setup((c) => c.get(IActiveResourceService)).returns(() => activeResourceService.object);

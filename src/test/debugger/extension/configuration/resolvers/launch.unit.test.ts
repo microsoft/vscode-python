@@ -21,6 +21,7 @@ import { getInfoPerOS } from './common';
 import * as platform from '../../../../../client/common/utils/platform';
 import * as windowApis from '../../../../../client/common/vscodeApis/windowApis';
 import * as workspaceApis from '../../../../../client/common/vscodeApis/workspaceApis';
+import { IEnvironmentActivationService } from '../../../../../client/interpreter/activation/types';
 
 getInfoPerOS().forEach(([osName, osType, path]) => {
     if (osType === platform.OSType.Unknown) {
@@ -31,12 +32,13 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         let debugProvider: DebugConfigurationProvider;
         let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
         let helper: TypeMoq.IMock<IInterpreterHelper>;
+        const envVars = { FOO: 'BAR' };
 
         let diagnosticsService: TypeMoq.IMock<IInvalidPythonPathInDebuggerService>;
         let configService: TypeMoq.IMock<IConfigurationService>;
         let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
         let interpreterService: TypeMoq.IMock<IInterpreterService>;
-
+        let environmentActivationService: TypeMoq.IMock<IEnvironmentActivationService>;
         let getActiveTextEditorStub: sinon.SinonStub;
         let getOSTypeStub: sinon.SinonStub;
         let getWorkspaceFolderStub: sinon.SinonStub;
@@ -63,6 +65,10 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         }
 
         function setupIoc(pythonPath: string, workspaceFolder?: WorkspaceFolder) {
+            environmentActivationService = TypeMoq.Mock.ofType<IEnvironmentActivationService>();
+            environmentActivationService
+                .setup((e) => e.getActivatedEnvironmentVariables(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(envVars));
             configService = TypeMoq.Mock.ofType<IConfigurationService>();
             diagnosticsService = TypeMoq.Mock.ofType<IInvalidPythonPathInDebuggerService>();
             debugEnvHelper = TypeMoq.Mock.ofType<IDebugEnvironmentVariablesService>();
@@ -88,7 +94,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             }
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
             debugEnvHelper
-                .setup((x) => x.getEnvironmentVariables(TypeMoq.It.isAny()))
+                .setup((x) => x.getEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve({}));
 
             debugProvider = new LaunchConfigurationResolver(
@@ -96,6 +102,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 configService.object,
                 debugEnvHelper.object,
                 interpreterService.object,
+                environmentActivationService.object,
             );
         }
 

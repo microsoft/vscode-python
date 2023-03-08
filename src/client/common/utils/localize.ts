@@ -193,6 +193,7 @@ export namespace Interpreters {
     export const condaInheritEnvMessage = l10n.t(
         'We noticed you\'re using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we recommend that you let the Python extension change "terminal.integrated.inheritEnv" to false in your user settings. [Learn more](https://aka.ms/AA66i8f).',
     );
+    export const activatingTerminals = l10n.t('Reactivating terminals...');
     export const activatedCondaEnvLaunch = l10n.t(
         'We noticed VS Code was launched from an activated conda environment, would you like to select it?',
     );
@@ -241,10 +242,6 @@ export namespace OutputChannelNames {
     export const languageServer = l10n.t('Python Language Server');
     export const python = l10n.t('Python');
     export const pythonTest = l10n.t('Python Test Log');
-}
-
-export namespace Logging {
-    export const currentWorkingDirectory = l10n.t('cwd:');
 }
 
 export namespace Linters {

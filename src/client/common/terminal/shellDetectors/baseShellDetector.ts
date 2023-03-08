@@ -54,22 +54,26 @@ export abstract class BaseShellDetector implements IShellDetector {
         terminal?: Terminal,
     ): TerminalShellType | undefined;
     public identifyShellFromShellPath(shellPath: string): TerminalShellType {
-        // Remove .exe extension so shells can be more consistently detected
-        // on Windows (including Cygwin).
-        const basePath = shellPath.replace(/\.exe$/, '');
-
-        const shell = Array.from(detectableShells.keys()).reduce((matchedShell, shellToDetect) => {
-            if (matchedShell === TerminalShellType.other) {
-                const pat = detectableShells.get(shellToDetect);
-                if (pat && pat.test(basePath)) {
-                    return shellToDetect;
-                }
-            }
-            return matchedShell;
-        }, TerminalShellType.other);
-
-        traceVerbose(`Shell path '${shellPath}', base path '${basePath}'`);
-        traceVerbose(`Shell path identified as shell '${shell}'`);
-        return shell;
+        return identifyShellFromShellPath(shellPath);
     }
+}
+
+export function identifyShellFromShellPath(shellPath: string): TerminalShellType {
+    // Remove .exe extension so shells can be more consistently detected
+    // on Windows (including Cygwin).
+    const basePath = shellPath.replace(/\.exe$/, '');
+
+    const shell = Array.from(detectableShells.keys()).reduce((matchedShell, shellToDetect) => {
+        if (matchedShell === TerminalShellType.other) {
+            const pat = detectableShells.get(shellToDetect);
+            if (pat && pat.test(basePath)) {
+                return shellToDetect;
+            }
+        }
+        return matchedShell;
+    }, TerminalShellType.other);
+
+    traceVerbose(`Shell path '${shellPath}', base path '${basePath}'`);
+    traceVerbose(`Shell path identified as shell '${shell}'`);
+    return shell;
 }

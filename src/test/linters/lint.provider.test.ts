@@ -24,6 +24,7 @@ import {
     IPersistentStateFactory,
     IPythonSettings,
     Product,
+    Resource,
     WORKSPACE_MEMENTO,
 } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
@@ -171,12 +172,12 @@ suite('Linting - Provider', () => {
     });
 
     test('Lint on change interpreters', async () => {
-        const e = new vscode.EventEmitter<void>();
+        const e = new vscode.EventEmitter<Resource>();
         interpreterService.setup((x) => x.onDidChangeInterpreter).returns(() => e.event);
 
         const linterProvider = new LinterProvider(serviceContainer);
         await linterProvider.activate();
-        e.fire();
+        e.fire(undefined);
         engine.verify((x) => x.lintOpenPythonFiles(), TypeMoq.Times.once());
     });
 

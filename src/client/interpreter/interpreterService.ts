@@ -58,7 +58,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.pyenvs.getRefreshPromise();
     }
 
-    public get onDidChangeInterpreter(): Event<void> {
+    public get onDidChangeInterpreter(): Event<Uri | undefined> {
         return this.didChangeInterpreterEmitter.event;
     }
 
@@ -80,7 +80,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     private readonly interpreterPathService: IInterpreterPathService;
 
-    private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
+    private readonly didChangeInterpreterEmitter = new EventEmitter<Uri | undefined>();
 
     private readonly didChangeInterpreterInformation = new EventEmitter<PythonEnvironment>();
 
@@ -226,7 +226,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.didChangeInterpreterConfigurationEmitter.fire(resource);
         if (this._pythonPathSetting === '' || this._pythonPathSetting !== pySettings.pythonPath) {
             this._pythonPathSetting = pySettings.pythonPath;
-            this.didChangeInterpreterEmitter.fire();
+            this.didChangeInterpreterEmitter.fire(resource);
             reportActiveInterpreterChanged({
                 path: pySettings.pythonPath,
                 resource: this.serviceContainer.get<IWorkspaceService>(IWorkspaceService).getWorkspaceFolder(resource),

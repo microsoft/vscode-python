@@ -6,6 +6,7 @@
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
 import { EnvironmentActivationService } from './activation/service';
+import { TerminalEnvVarCollectionService } from './activation/terminalEnvVarCollectionService';
 import { IEnvironmentActivationService } from './activation/types';
 import { InterpreterAutoSelectionService } from './autoSelection/index';
 import { InterpreterAutoSelectionProxyService } from './autoSelection/proxy';
@@ -107,5 +108,9 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IEnvironmentActivationService>(
         IEnvironmentActivationService,
         EnvironmentActivationService,
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        TerminalEnvVarCollectionService,
     );
 }

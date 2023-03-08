@@ -28,6 +28,7 @@ import { LaunchOptions } from '../../../client/testing/common/types';
 import { ITestingSettings } from '../../../client/testing/configuration/types';
 import { TestProvider } from '../../../client/testing/types';
 import { isOs, OSType } from '../../common';
+import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 
 use(chaiAsPromised);
 
@@ -39,12 +40,18 @@ suite('Unit Tests - Debug Launcher', () => {
     let settings: TypeMoq.IMock<IPythonSettings>;
     let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
+    let environmentActivationService: TypeMoq.IMock<IEnvironmentActivationService>;
     let getWorkspaceFolderStub: sinon.SinonStub;
     let getWorkspaceFoldersStub: sinon.SinonStub;
     let pathExistsStub: sinon.SinonStub;
     let readFileStub: sinon.SinonStub;
+    const envVars = { FOO: 'BAR' };
 
     setup(async () => {
+        environmentActivationService = TypeMoq.Mock.ofType<IEnvironmentActivationService>();
+        environmentActivationService
+            .setup((e) => e.getActivatedEnvironmentVariables(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(envVars));
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         const configService = TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
@@ -94,6 +101,7 @@ suite('Unit Tests - Debug Launcher', () => {
             configService,
             debugEnvHelper.object,
             interpreterService.object,
+            environmentActivationService.object,
         );
     }
     function setupDebugManager(
@@ -110,7 +118,7 @@ suite('Unit Tests - Debug Launcher', () => {
         expected.args = debugArgs;
 
         debugEnvHelper
-            .setup((d) => d.getEnvironmentVariables(TypeMoq.It.isAny()))
+            .setup((x) => x.getEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(expected.env));
 
         debugService
