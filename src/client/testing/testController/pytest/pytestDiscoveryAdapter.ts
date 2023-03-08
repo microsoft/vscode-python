@@ -69,7 +69,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 TEST_PORT: this.testServer.getPort().toString(),
             },
         };
-
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,

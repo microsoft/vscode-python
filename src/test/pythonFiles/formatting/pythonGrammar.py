@@ -3,6 +3,7 @@
 
 import inspect
 import sys
+import test
 
 # different import patterns to check that __annotations__ does not interfere
 # with import machinery
@@ -13,10 +14,8 @@ from collections import ChainMap
 
 # testing import *
 from sys import *
+from test import ann_module2
 from test.support import check_syntax_error
-
-import test_dual_level_nested_folder_collect_test
-from test_dual_level_nested_folder_collect_test import ann_module2
 
 # These are shared with test_tokenize and other test modules.
 #
@@ -270,7 +269,6 @@ class CNS:
 
 
 class GrammarTests(unittest.TestCase):
-
     check_syntax_error = check_syntax_error
 
     # single_input: NEWLINE | simple_stmt | compound_stmt NEWLINE
@@ -385,7 +383,7 @@ class GrammarTests(unittest.TestCase):
 
     def test_var_annot_module_semantics(self):
         with self.assertRaises(AttributeError):
-            print(test_dual_level_nested_folder_collect_test.__annotations__)
+            print(test.__annotations__)
         self.assertEqual(
             ann_module.__annotations__,
             {1: 2, "x": int, "y": str, "f": typing.Tuple[int, int]},
@@ -655,6 +653,7 @@ class GrammarTests(unittest.TestCase):
             pass
         else:
             self.fail("Bytes should not work as keyword argument names")
+
         # keyword only argument tests
         def pos0key1(*, key):
             return key
@@ -743,6 +742,7 @@ class GrammarTests(unittest.TestCase):
             f.__annotations__,
             {"b": 1, "c": 2, "e": 3, "g": 6, "h": 7, "j": 9, "k": 11, "return": 12},
         )
+
         # Check for issue #20625 -- annotations mangling
         class Spam:
             def f(self, *, __kw: 1):
@@ -753,6 +753,7 @@ class GrammarTests(unittest.TestCase):
 
         self.assertEqual(Spam.f.__annotations__, {"_Spam__kw": 1})
         self.assertEqual(Ham.f.__annotations__, {"_Spam__kw": 1})
+
         # Check for SF Bug #1697248 - mixing decorators and a return annotation
         def null(x):
             return x
@@ -1211,6 +1212,7 @@ class GrammarTests(unittest.TestCase):
         # 'yield from' does not
         check_syntax_error(self, "def g(): yield from (), 1")
         check_syntax_error(self, "def g(): x = yield from (), 1")
+
         # Requires parentheses as subexpression
         def g():
             1, (yield 1)
@@ -1220,6 +1222,7 @@ class GrammarTests(unittest.TestCase):
 
         check_syntax_error(self, "def g(): 1, yield 1")
         check_syntax_error(self, "def g(): 1, yield from ()")
+
         # Requires parentheses as call argument
         def g():
             f((yield 1))
@@ -1580,9 +1583,7 @@ class GrammarTests(unittest.TestCase):
         # Test cases should include: commas with 1 and 2 colons
         d = {}
         d[1] = 1
-        d[
-            1,
-        ] = 2
+        d[1,] = 2
         d[1, 2] = 3
         d[1, 2, 3] = 4
         L = list(d)
