@@ -622,18 +622,18 @@ double_nested_folder_expected_output = {
 
 parametrize_tests_expected_output = {
     "name": ".data",
-    "path": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data",
+    "path": TEST_DATA_PATH,
     "type_": "folder",
     "children": [
         {
             "name": "parametrize_tests.py",
-            "path": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data/parametrize_tests.py",
+            "path": f"{TEST_DATA_PATH}/parametrize_tests.py",
             "type_": "file",
             "id_": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data/parametrize_tests.py",
             "children": [
                 {
                     "name": "test_adding[3+5-8]",
-                    "path": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data/parametrize_tests.py",
+                    "path": f"{TEST_DATA_PATH}/parametrize_tests.py",
                     "lineno": "5",
                     "type_": "test",
                     "id_": "parametrize_tests.py::test_adding[3+5-8]",
@@ -641,7 +641,7 @@ parametrize_tests_expected_output = {
                 },
                 {
                     "name": "test_adding[2+4-6]",
-                    "path": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data/parametrize_tests.py",
+                    "path": f"{TEST_DATA_PATH}/parametrize_tests.py",
                     "lineno": "5",
                     "type_": "test",
                     "id_": "parametrize_tests.py::test_adding[2+4-6]",
@@ -649,7 +649,7 @@ parametrize_tests_expected_output = {
                 },
                 {
                     "name": "test_adding[6+9-16]",
-                    "path": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data/parametrize_tests.py",
+                    "path": f"{TEST_DATA_PATH}/parametrize_tests.py",
                     "lineno": "5",
                     "type_": "test",
                     "id_": "parametrize_tests.py::test_adding[6+9-16]",
@@ -658,5 +658,5 @@ parametrize_tests_expected_output = {
             ],
         }
     ],
-    "id_": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data",
+    "id_": f"{TEST_DATA_PATH}/parametrize_tests.py",
 }
