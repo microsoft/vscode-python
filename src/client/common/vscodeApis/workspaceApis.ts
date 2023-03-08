@@ -4,7 +4,10 @@
 import {
     CancellationToken,
     ConfigurationScope,
+    Disposable,
     GlobPattern,
+    TextDocument,
+    TextDocumentChangeEvent,
     Uri,
     workspace,
     WorkspaceConfiguration,
@@ -40,4 +43,16 @@ export function findFiles(
     token?: CancellationToken,
 ): Thenable<Uri[]> {
     return workspace.findFiles(include, exclude, maxResults, token);
+}
+
+export function getOpenTextDocuments(): readonly TextDocument[] {
+    return workspace.textDocuments;
+}
+
+export function onDidOpenTextDocument(handler: (doc: TextDocument) => void): Disposable {
+    return workspace.onDidOpenTextDocument(handler);
+}
+
+export function onDidChangeTextDocument(handler: (e: TextDocumentChangeEvent) => void): Disposable {
+    return workspace.onDidChangeTextDocument(handler);
 }

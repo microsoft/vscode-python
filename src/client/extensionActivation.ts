@@ -62,6 +62,7 @@ import { WorkspaceService } from './common/application/workspace';
 import { DynamicPythonDebugConfigurationService } from './debugger/extension/configuration/dynamicdebugConfigurationService';
 import { registerCreateEnvironmentFeatures } from './pythonEnvironments/creation/createEnvApi';
 import { IInterpreterQuickPick } from './interpreter/configuration/types';
+import { registerPyProjectTomlCreateEnvFeatures } from './pythonEnvironments/creation/pyprojectTomlCreateEnv';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -105,6 +106,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     );
     const pathUtils = ext.legacyIOC.serviceContainer.get<IPathUtils>(IPathUtils);
     registerCreateEnvironmentFeatures(ext.disposables, interpreterQuickPick, interpreterPathService, pathUtils);
+    registerPyProjectTomlCreateEnvFeatures(ext.disposables);
 }
 
 /// //////////////////////////
