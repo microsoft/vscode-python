@@ -28,6 +28,8 @@ import { NoneLSExtensionManager } from './noneLSExtensionManager';
 import { PylanceLSExtensionManager } from './pylanceLSExtensionManager';
 import { ILanguageServerExtensionManager, ILanguageServerWatcher } from './types';
 import { LspNotebooksExperiment } from '../activation/node/lspNotebooksExperiment';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
 
 @injectable()
 /**
@@ -184,6 +186,7 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
 
     public async restartLanguageServers(): Promise<void> {
         this.workspaceLanguageServers.forEach(async (_, resourceString) => {
+            sendTelemetryEvent(EventName.LANGUAGE_SERVER_RESTART, undefined, { reason: 'notebooksExperiment' });
             const resource = Uri.parse(resourceString);
             await this.stopLanguageServer(resource);
             await this.startLanguageServer(this.languageServerType, resource);

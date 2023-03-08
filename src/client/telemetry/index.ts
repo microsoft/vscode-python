@@ -1476,6 +1476,17 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.LANGUAGE_SERVER_REQUEST]: unknown;
     /**
+     * Telemetry send when Language Server is restarted.
+     */
+    /* __GDPR__
+       "language_server_restart" : {
+          "reason" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.LANGUAGE_SERVER_RESTART]: {
+        reason: 'command' | 'settings' | 'notebooksExperiment';
+    };
+    /**
      * Telemetry event sent when Jedi Language Server is started for workspace (workspace folder in case of multi-root)
      */
     /* __GDPR__
