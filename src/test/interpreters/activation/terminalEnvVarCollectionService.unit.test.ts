@@ -3,14 +3,15 @@
 
 'use strict';
 
-import { expect } from 'chai';
+import * as sinon from 'sinon';
+import { assert, expect } from 'chai';
 import { cloneDeep } from 'lodash';
 import { mock, instance, when, anything, verify, reset } from 'ts-mockito';
-import { EnvironmentVariableCollection, ProgressLocation } from 'vscode';
+import { EnvironmentVariableCollection, ProgressLocation, Uri } from 'vscode';
 import { IApplicationShell, IApplicationEnvironment } from '../../../client/common/application/types';
 import { TerminalEnvVarActivation } from '../../../client/common/experiments/groups';
 import { IPlatformService } from '../../../client/common/platform/types';
-import { IExtensionContext, IExperimentService } from '../../../client/common/types';
+import { IExtensionContext, IExperimentService, Resource } from '../../../client/common/types';
 import { Interpreters } from '../../../client/common/utils/localize';
 import { getOSType } from '../../../client/common/utils/platform';
 import { defaultShells } from '../../../client/interpreter/activation/service';
@@ -66,6 +67,65 @@ suite('Terminal Environment Variable Collection Service', () => {
             [],
             instance(environmentActivationService),
         );
+    });
+
+    teardown(() => {
+        sinon.restore();
+    });
+
+    test('Apply activated variables to the collection on activation', async () => {
+        const applyCollectionStub = sinon.stub(terminalEnvVarCollectionService, '_applyCollection');
+        applyCollectionStub.resolves();
+        when(interpreterService.onDidChangeInterpreter(anything(), anything(), anything())).thenReturn();
+        when(applicationEnvironment.onDidChangeShell(anything(), anything(), anything())).thenReturn();
+        await terminalEnvVarCollectionService.activate();
+        assert(applyCollectionStub.calledOnce, 'Collection not applied on activation');
+    });
+
+    test('When not in experiment, do not apply activated variables to the collection and clear it instead', async () => {
+        reset(experimentService);
+        when(experimentService.inExperimentSync(TerminalEnvVarActivation.experiment)).thenReturn(false);
+        const applyCollectionStub = sinon.stub(terminalEnvVarCollectionService, '_applyCollection');
+        applyCollectionStub.resolves();
+        when(interpreterService.onDidChangeInterpreter(anything(), anything(), anything())).thenReturn();
+        when(applicationEnvironment.onDidChangeShell(anything(), anything(), anything())).thenReturn();
+
+        await terminalEnvVarCollectionService.activate();
+
+        verify(interpreterService.onDidChangeInterpreter(anything(), anything(), anything())).never();
+        verify(applicationEnvironment.onDidChangeShell(anything(), anything(), anything())).never();
+        assert(applyCollectionStub.notCalled, 'Collection should not be applied on activation');
+
+        verify(collection.clear()).once();
+    });
+
+    test('When interpreter changes, apply new activated variables to the collection', async () => {
+        const applyCollectionStub = sinon.stub(terminalEnvVarCollectionService, '_applyCollection');
+        applyCollectionStub.resolves();
+        const resource = Uri.file('x');
+        let callback: (resource: Resource) => Promise<void>;
+        when(interpreterService.onDidChangeInterpreter(anything(), anything(), anything())).thenCall((cb) => {
+            callback = cb;
+        });
+        when(applicationEnvironment.onDidChangeShell(anything(), anything(), anything())).thenReturn();
+        await terminalEnvVarCollectionService.activate();
+
+        await callback!(resource);
+        assert(applyCollectionStub.calledWithExactly(resource));
+    });
+
+    test('When selected shell changes, apply new activated variables to the collection', async () => {
+        const applyCollectionStub = sinon.stub(terminalEnvVarCollectionService, '_applyCollection');
+        applyCollectionStub.resolves();
+        let callback: (shell: string) => Promise<void>;
+        when(applicationEnvironment.onDidChangeShell(anything(), anything(), anything())).thenCall((cb) => {
+            callback = cb;
+        });
+        when(interpreterService.onDidChangeInterpreter(anything(), anything(), anything())).thenReturn();
+        await terminalEnvVarCollectionService.activate();
+
+        await callback!(customShell);
+        assert(applyCollectionStub.calledWithExactly(undefined, customShell));
     });
 
     test('If activated variables are returned for custom shell, apply it correctly to the collection', async () => {
