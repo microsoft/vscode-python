@@ -50,7 +50,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
 
         const workspaceFolder = LaunchConfigurationResolver.getWorkspaceFolder(folder);
         await this.resolveAndUpdatePaths(workspaceFolder, debugConfiguration);
-        if (debugConfiguration.clienOS === undefined) {
+        if (debugConfiguration.clientOS === undefined) {
             debugConfiguration.clientOS = getOSType() === OSType.Windows ? 'windows' : 'unix';
         }
         return debugConfiguration;
