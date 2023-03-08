@@ -2,6 +2,7 @@ import http.client
 import json
 import os
 import pathlib
+import ssl
 import sys
 import traceback
 
@@ -369,16 +370,14 @@ def post_response(cwd: str, session_node: TestNode) -> None:
     testPort: Union[str, int] = os.getenv("TEST_PORT", 45454)
     # testuuid: Union[str, None] = os.getenv("TEST_UUID")
     # addr = "localhost", int(testPort)
-    data = (json.dumps(payload)).encode("utf-8")
+    # data = (json.dumps(payload)).encode("utf-8")
     headers = {
-        "Content-Length": len(data),
+        "Content-Length": str(len(payload)),
         "Content-Type": "application/json",
         "Request-uuid": os.getenv("TEST_UUID"),
     }
-    for k, v in headers.items():
-        headers[k] = json.dumps(v).encode("utf-8")
-    conn = http.client.HTTPSConnection("localhost", int(testPort))
-    conn.request("POST", "/endpoint", body=payload, headers=headers)
+    conn = http.client.HTTPSConnection("localhost", int(testPort), context=ssl._create_unverified_context())
+    conn.request("POST", "/", body=json.dumps(payload), headers=headers)
     conn.close()
 
 {data}"""
