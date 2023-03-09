@@ -487,24 +487,24 @@ doctest_pytest_expected_output = {
 
 dual_level_nested_folder_expected_output = {
     "name": ".data",
-    "path": TEST_DATA_PATH,
+    "path": TEST_DATA_PATH_STR,
     "type_": "folder",
     "children": [
         {
             "name": "dual_level_nested_folder",
-            "path": f"{TEST_DATA_PATH}/dual_level_nested_folder",
+            "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder",
             "type_": "folder",
-            "id_": f"{TEST_DATA_PATH}/dual_level_nested_folder",
+            "id_": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder",
             "children": [
                 {
                     "name": "test_top_folder.py",
-                    "path": f"{TEST_DATA_PATH}/dual_level_nested_folder/test_top_folder.py",
+                    "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/test_top_folder.py",
                     "type_": "file",
-                    "id_": f"{TEST_DATA_PATH}/dual_level_nested_folder/test_top_folder.py",
+                    "id_": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/test_top_folder.py",
                     "children": [
                         {
                             "name": "test_top_function_t",
-                            "path": f"{TEST_DATA_PATH}/dual_level_nested_folder/test_top_folder.py",
+                            "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/test_top_folder.py",
                             "lineno": "6",
                             "type_": "test",
                             "id_": "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
@@ -512,7 +512,7 @@ dual_level_nested_folder_expected_output = {
                         },
                         {
                             "name": "test_top_function_f",
-                            "path": f"{TEST_DATA_PATH}/dual_level_nested_folder/test_top_folder.py",
+                            "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/test_top_folder.py",
                             "lineno": "11",
                             "type_": "test",
                             "id_": "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
@@ -522,19 +522,19 @@ dual_level_nested_folder_expected_output = {
                 },
                 {
                     "name": "nested_folder_one",
-                    "path": f"{TEST_DATA_PATH}/dual_level_nested_folder/nested_folder_one",
+                    "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/nested_folder_one",
                     "type_": "folder",
-                    "id_": f"{TEST_DATA_PATH}/dual_level_nested_folder/nested_folder_one",
+                    "id_": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/nested_folder_one",
                     "children": [
                         {
                             "name": "test_bottom_folder.py",
-                            "path": f"{TEST_DATA_PATH}/dual_level_nested_folder/nested_folder_one/test_bottom_folder.py",
+                            "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/nested_folder_one/test_bottom_folder.py",
                             "type_": "file",
-                            "id_": f"{TEST_DATA_PATH}/dual_level_nested_folder/nested_folder_one/test_bottom_folder.py",
+                            "id_": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/nested_folder_one/test_bottom_folder.py",
                             "children": [
                                 {
                                     "name": "test_bottom_function_t",
-                                    "path": f"{TEST_DATA_PATH}/dual_level_nested_folder/nested_folder_one/test_bottom_folder.py",
+                                    "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/nested_folder_one/test_bottom_folder.py",
                                     "lineno": "5",
                                     "type_": "test",
                                     "id_": "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
@@ -542,7 +542,7 @@ dual_level_nested_folder_expected_output = {
                                 },
                                 {
                                     "name": "test_bottom_function_f",
-                                    "path": f"{TEST_DATA_PATH}/dual_level_nested_folder/nested_folder_one/test_bottom_folder.py",
+                                    "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/nested_folder_one/test_bottom_folder.py",
                                     "lineno": "9",
                                     "type_": "test",
                                     "id_": "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
@@ -555,7 +555,7 @@ dual_level_nested_folder_expected_output = {
             ],
         }
     ],
-    "id_": TEST_DATA_PATH,
+    "id_": TEST_DATA_PATH_STR,
 }
 
 # This is the expected output for the double_nested_folder tests.
@@ -567,36 +567,36 @@ dual_level_nested_folder_expected_output = {
 
 double_nested_folder_expected_output = {
     "name": ".data",
-    "path": TEST_DATA_PATH,
+    "path": TEST_DATA_PATH_STR,
     "type_": "folder",
     "children": [
         {
             "name": "double_nested_folder",
-            "path": f"{TEST_DATA_PATH}/double_nested_folder",
+            "path": f"{TEST_DATA_PATH_STR}/double_nested_folder",
             "type_": "folder",
-            "id_": f"{TEST_DATA_PATH}/double_nested_folder",
+            "id_": f"{TEST_DATA_PATH_STR}/double_nested_folder",
             "children": [
                 {
                     "name": "nested_folder_one",
-                    "path": f"{TEST_DATA_PATH}/double_nested_folder/nested_folder_one",
+                    "path": f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one",
                     "type_": "folder",
-                    "id_": f"{TEST_DATA_PATH}/double_nested_folder/nested_folder_one",
+                    "id_": f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one",
                     "children": [
                         {
                             "name": "nested_folder_two",
-                            "path": f"{TEST_DATA_PATH}/double_nested_folder/nested_folder_one/nested_folder_two",
+                            "path": f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two",
                             "type_": "folder",
-                            "id_": f"{TEST_DATA_PATH}/double_nested_folder/nested_folder_one/nested_folder_two",
+                            "id_": f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two",
                             "children": [
                                 {
                                     "name": "test_nest.py",
-                                    "path": f"{TEST_DATA_PATH}/double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py",
+                                    "path": f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py",
                                     "type_": "file",
-                                    "id_": f"{TEST_DATA_PATH}/double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py",
+                                    "id_": f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py",
                                     "children": [
                                         {
                                             "name": "test_function",
-                                            "path": f"{TEST_DATA_PATH}/double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py",
+                                            "path": f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py",
                                             "lineno": "5",
                                             "type_": "test",
                                             "id_": "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function",
@@ -611,7 +611,7 @@ double_nested_folder_expected_output = {
             ],
         }
     ],
-    "id_": TEST_DATA_PATH,
+    "id_": TEST_DATA_PATH_STR,
 }
 
 # This is the expected output for the nested_folder tests.
@@ -622,35 +622,35 @@ double_nested_folder_expected_output = {
 
 parametrize_tests_expected_output = {
     "name": ".data",
-    "path": TEST_DATA_PATH,
+    "path": TEST_DATA_PATH_STR,
     "type_": "folder",
     "children": [
         {
             "name": "parametrize_tests.py",
-            "path": f"{TEST_DATA_PATH}/parametrize_tests.py",
+            "path": f"{TEST_DATA_PATH_STR}/parametrize_tests.py",
             "type_": "file",
-            "id_": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data/parametrize_tests.py",
+            "id_": f"{TEST_DATA_PATH_STR}/parametrize_tests.py",
             "children": [
                 {
                     "name": "test_adding[3+5-8]",
-                    "path": f"{TEST_DATA_PATH}/parametrize_tests.py",
-                    "lineno": "5",
+                    "path": f"{TEST_DATA_PATH_STR}/parametrize_tests.py",
+                    "lineno": "7",
                     "type_": "test",
                     "id_": "parametrize_tests.py::test_adding[3+5-8]",
                     "runID": "parametrize_tests.py::test_adding[3+5-8]",
                 },
                 {
                     "name": "test_adding[2+4-6]",
-                    "path": f"{TEST_DATA_PATH}/parametrize_tests.py",
-                    "lineno": "5",
+                    "path": f"{TEST_DATA_PATH_STR}/parametrize_tests.py",
+                    "lineno": "7",
                     "type_": "test",
                     "id_": "parametrize_tests.py::test_adding[2+4-6]",
                     "runID": "parametrize_tests.py::test_adding[2+4-6]",
                 },
                 {
                     "name": "test_adding[6+9-16]",
-                    "path": f"{TEST_DATA_PATH}/parametrize_tests.py",
-                    "lineno": "5",
+                    "path": f"{TEST_DATA_PATH_STR}/parametrize_tests.py",
+                    "lineno": "7",
                     "type_": "test",
                     "id_": "parametrize_tests.py::test_adding[6+9-16]",
                     "runID": "parametrize_tests.py::test_adding[6+9-16]",
@@ -658,5 +658,5 @@ parametrize_tests_expected_output = {
             ],
         }
     ],
-    "id_": f"{TEST_DATA_PATH}/parametrize_tests.py",
+    "id_": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data",
 }
