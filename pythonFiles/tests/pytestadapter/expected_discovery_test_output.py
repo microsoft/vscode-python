@@ -657,7 +657,7 @@ parametrize_tests_expected_output = {
                     "name": "test_adding[3+5-8]",
                     "path": parameterize_tests_path,
                     "lineno": find_test_line_no(
-                        "parametrize_tests.py::test_adding",
+                        "test_adding[3+5-8]",
                         parameterize_tests_path,
                     ),
                     "type_": "test",
@@ -668,7 +668,7 @@ parametrize_tests_expected_output = {
                     "name": "test_adding[2+4-6]",
                     "path": parameterize_tests_path,
                     "lineno": find_test_line_no(
-                        "parametrize_tests.py::test_adding",
+                        "test_adding[2+4-6]",
                         parameterize_tests_path,
                     ),
                     "type_": "test",
@@ -679,7 +679,7 @@ parametrize_tests_expected_output = {
                     "name": "test_adding[6+9-16]",
                     "path": parameterize_tests_path,
                     "lineno": find_test_line_no(
-                        "parametrize_tests.py::test_adding",
+                        "test_adding[6+9-16]",
                         parameterize_tests_path,
                     ),
                     "type_": "test",
