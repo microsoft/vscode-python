@@ -65,5 +65,8 @@
         "--max-line-length=88"
     ],
     "typescript.preferences.importModuleSpecifier": "relative",
-    "debug.javascript.usePreview": false
+    "debug.javascript.usePreview": false,
+    "cSpell.words": [
+        "fspath"
+    ]
 }

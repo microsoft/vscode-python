@@ -136,18 +136,14 @@ def pytest_sessionfinish(session, exitstatus):
 
 def pytest_internalerror(excrepr, excinfo):
     errors.append(traceback.format_exc())
-    print("pytest_internalerror")
 
 
 def pytest_exception_interact(node, call, report):
-    # im worried this will not have a traceback to format, might need to use call.result or call.report
     errors.append(call.result)
-    print("pytest_exception_interact")
 
 
 def pytest_keyboard_interrupt(excinfo):
     errors.append(traceback.format_exc())
-    print("pytest_keyboard_interrupt")
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -158,8 +154,6 @@ def pytest_sessionfinish(session, exitstatus):
     session -- the pytest session object.
     exitstatus -- the status code of the session.
     """
-    # move all logic here as this is the final step that is reached
-    print("session")
     cwd = pathlib.Path.cwd()
     try:
         session_node: Union[TestNode, None] = build_test_tree(session)[0]
