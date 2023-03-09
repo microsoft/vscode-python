@@ -20,14 +20,14 @@ let languageClient: LanguageClient | undefined;
 let pylanceApi: PylanceApi | undefined;
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-    const pylanceExtension = vscode.extensions.getExtension(PYLANCE_EXTENSION_ID);
+    const pylanceExtension = vscode.extensions.getExtension<PylanceApi>(PYLANCE_EXTENSION_ID);
     if (pylanceExtension) {
         await runPylance(context, pylanceExtension);
         return;
     }
 
     const changeDisposable = vscode.extensions.onDidChange(async () => {
-        const newPylanceExtension = vscode.extensions.getExtension(PYLANCE_EXTENSION_ID);
+        const newPylanceExtension = vscode.extensions.getExtension<PylanceApi>(PYLANCE_EXTENSION_ID);
         if (newPylanceExtension) {
             changeDisposable.dispose();
             await runPylance(context, newPylanceExtension);
@@ -53,12 +53,12 @@ export async function deactivate(): Promise<void> {
 
 async function runPylance(
     context: vscode.ExtensionContext,
-    pylanceExtension: vscode.Extension<unknown>,
+    pylanceExtension: vscode.Extension<PylanceApi>,
 ): Promise<void> {
     context.subscriptions.push(createStatusItem());
 
     pylanceExtension = await getActivatedExtension(pylanceExtension);
-    const api = pylanceExtension.exports as PylanceApi;
+    const api = pylanceExtension.exports;
     if (api.client && api.client.isEnabled()) {
         pylanceApi = api;
         await api.client.start();
