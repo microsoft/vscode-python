@@ -1,8 +1,6 @@
-import http.client
 import json
 import os
 import pathlib
-import ssl
 import sys
 import traceback
 
