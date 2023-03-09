@@ -492,28 +492,34 @@ dual_level_nested_folder_expected_output = {
     "children": [
         {
             "name": "dual_level_nested_folder",
-            "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder",
+            "path": dual_level_nested_folder_path,
             "type_": "folder",
-            "id_": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder",
+            "id_": dual_level_nested_folder_path,
             "children": [
                 {
                     "name": "test_top_folder.py",
-                    "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/test_top_folder.py",
+                    "path": test_top_folder_path,
                     "type_": "file",
-                    "id_": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/test_top_folder.py",
+                    "id_": test_top_folder_path,
                     "children": [
                         {
                             "name": "test_top_function_t",
-                            "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/test_top_folder.py",
-                            "lineno": "6",
+                            "path": test_top_folder_path,
+                            "lineno": find_test_line_no(
+                                "test_top_function_t",
+                                test_top_folder_path,
+                            ),
                             "type_": "test",
                             "id_": "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
                             "runID": "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
                         },
                         {
                             "name": "test_top_function_f",
-                            "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/test_top_folder.py",
-                            "lineno": "11",
+                            "path": test_top_folder_path,
+                            "lineno": find_test_line_no(
+                                "test_top_function_f",
+                                test_top_folder_path,
+                            ),
                             "type_": "test",
                             "id_": "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
                             "runID": "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
@@ -522,28 +528,34 @@ dual_level_nested_folder_expected_output = {
                 },
                 {
                     "name": "nested_folder_one",
-                    "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/nested_folder_one",
+                    "path": test_nested_folder_one_path,
                     "type_": "folder",
-                    "id_": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/nested_folder_one",
+                    "id_": test_nested_folder_one_path,
                     "children": [
                         {
                             "name": "test_bottom_folder.py",
-                            "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/nested_folder_one/test_bottom_folder.py",
+                            "path": test_bottom_folder_path,
                             "type_": "file",
-                            "id_": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/nested_folder_one/test_bottom_folder.py",
+                            "id_": test_bottom_folder_path,
                             "children": [
                                 {
                                     "name": "test_bottom_function_t",
-                                    "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/nested_folder_one/test_bottom_folder.py",
-                                    "lineno": "6",
+                                    "path": test_bottom_folder_path,
+                                    "lineno": find_test_line_no(
+                                        "test_bottom_function_t",
+                                        test_bottom_folder_path,
+                                    ),
                                     "type_": "test",
                                     "id_": "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
                                     "runID": "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
                                 },
                                 {
                                     "name": "test_bottom_function_f",
-                                    "path": f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/nested_folder_one/test_bottom_folder.py",
-                                    "lineno": "11",
+                                    "path": test_bottom_folder_path,
+                                    "lineno": find_test_line_no(
+                                        "test_bottom_function_f",
+                                        test_bottom_folder_path,
+                                    ),
                                     "type_": "test",
                                     "id_": "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
                                     "runID": "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
@@ -564,7 +576,14 @@ dual_level_nested_folder_expected_output = {
 #        └── nested_folder_two
 #            └── test_nest.py
 #                └── test_function
-
+double_nested_folder_path = f"{TEST_DATA_PATH_STR}/double_nested_folder"
+double_nested_folder_one_path = (
+    f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one"
+)
+double_nested_folder_two_path = (
+    f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two"
+)
+double_nested_test_nest_path = f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py"
 double_nested_folder_expected_output = {
     "name": ".data",
     "path": TEST_DATA_PATH_STR,
@@ -578,26 +597,29 @@ double_nested_folder_expected_output = {
             "children": [
                 {
                     "name": "nested_folder_one",
-                    "path": f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one",
+                    "path": double_nested_folder_one_path,
                     "type_": "folder",
-                    "id_": f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one",
+                    "id_": double_nested_folder_one_path,
                     "children": [
                         {
                             "name": "nested_folder_two",
-                            "path": f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two",
+                            "path": double_nested_folder_two_path,
                             "type_": "folder",
-                            "id_": f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two",
+                            "id_": double_nested_folder_two_path,
                             "children": [
                                 {
                                     "name": "test_nest.py",
-                                    "path": f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py",
+                                    "path": double_nested_test_nest_path,
                                     "type_": "file",
-                                    "id_": f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py",
+                                    "id_": double_nested_test_nest_path,
                                     "children": [
                                         {
                                             "name": "test_function",
-                                            "path": f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py",
-                                            "lineno": "6",
+                                            "path": double_nested_test_nest_path,
+                                            "lineno": find_test_line_no(
+                                                "test_function",
+                                                double_nested_test_nest_path,
+                                            ),
                                             "type_": "test",
                                             "id_": "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function",
                                             "runID": "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function",
@@ -619,7 +641,7 @@ double_nested_folder_expected_output = {
 #    └── test_adding[3+5-8]
 #    └── test_adding[2+4-6]
 #    └── test_adding[6+9-16]
-
+parameterize_tests_path = f"{TEST_DATA_PATH_STR}/parametrize_tests.py"
 parametrize_tests_expected_output = {
     "name": ".data",
     "path": TEST_DATA_PATH_STR,
@@ -627,30 +649,39 @@ parametrize_tests_expected_output = {
     "children": [
         {
             "name": "parametrize_tests.py",
-            "path": f"{TEST_DATA_PATH_STR}/parametrize_tests.py",
+            "path": parameterize_tests_path,
             "type_": "file",
-            "id_": f"{TEST_DATA_PATH_STR}/parametrize_tests.py",
+            "id_": parameterize_tests_path,
             "children": [
                 {
                     "name": "test_adding[3+5-8]",
-                    "path": f"{TEST_DATA_PATH_STR}/parametrize_tests.py",
-                    "lineno": "7",
+                    "path": parameterize_tests_path,
+                    "lineno": find_test_line_no(
+                        "parametrize_tests.py::test_adding",
+                        parameterize_tests_path,
+                    ),
                     "type_": "test",
                     "id_": "parametrize_tests.py::test_adding[3+5-8]",
                     "runID": "parametrize_tests.py::test_adding[3+5-8]",
                 },
                 {
                     "name": "test_adding[2+4-6]",
-                    "path": f"{TEST_DATA_PATH_STR}/parametrize_tests.py",
-                    "lineno": "7",
+                    "path": parameterize_tests_path,
+                    "lineno": find_test_line_no(
+                        "parametrize_tests.py::test_adding",
+                        parameterize_tests_path,
+                    ),
                     "type_": "test",
                     "id_": "parametrize_tests.py::test_adding[2+4-6]",
                     "runID": "parametrize_tests.py::test_adding[2+4-6]",
                 },
                 {
                     "name": "test_adding[6+9-16]",
-                    "path": f"{TEST_DATA_PATH_STR}/parametrize_tests.py",
-                    "lineno": "7",
+                    "path": parameterize_tests_path,
+                    "lineno": find_test_line_no(
+                        "parametrize_tests.py::test_adding",
+                        parameterize_tests_path,
+                    ),
                     "type_": "test",
                     "id_": "parametrize_tests.py::test_adding[6+9-16]",
                     "runID": "parametrize_tests.py::test_adding[6+9-16]",
@@ -663,7 +694,7 @@ parametrize_tests_expected_output = {
 
 # This is the expected output for the text_docstring.txt tests.
 # └── text_docstring.txt
-
+text_docstring_path = f"{TEST_DATA_PATH_STR}/text_docstring.txt"
 doctest_pytest_expected_output = {
     "name": ".data",
     "path": TEST_DATA_PATH_STR,
@@ -671,14 +702,17 @@ doctest_pytest_expected_output = {
     "children": [
         {
             "name": "text_docstring.txt",
-            "path": f"{TEST_DATA_PATH_STR}/text_docstring.txt",
+            "path": text_docstring_path,
             "type_": "doc_file",
-            "id_": f"{TEST_DATA_PATH_STR}/text_docstring.txt",
+            "id_": text_docstring_path,
             "children": [
                 {
                     "name": "text_docstring.txt",
-                    "path": f"{TEST_DATA_PATH_STR}/text_docstring.txt",
-                    "lineno": "1",
+                    "path": text_docstring_path,
+                    "lineno": find_test_line_no(
+                        "text_docstring.txt",
+                        text_docstring_path,
+                    ),
                     "type_": "test",
                     "id_": "text_docstring.txt::text_docstring.txt",
                     "runID": "text_docstring.txt::text_docstring.txt",
