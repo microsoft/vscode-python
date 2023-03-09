@@ -658,5 +658,5 @@ parametrize_tests_expected_output = {
             ],
         }
     ],
-    "id_": "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data",
+    "id_": TEST_DATA_PATH_STR,
 }
