@@ -5,7 +5,6 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { ConfigurationChangeEvent, Uri, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import { JediLanguageServerManager } from '../../client/activation/jedi/manager';
-import { LspNotebooksExperiment } from '../../client/activation/node/lspNotebooksExperiment';
 import { NodeLanguageServerManager } from '../../client/activation/node/manager';
 import { ILanguageServerOutputChannel, LanguageServerType } from '../../client/activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
