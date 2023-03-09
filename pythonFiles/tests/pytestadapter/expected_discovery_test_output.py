@@ -661,26 +661,30 @@ parametrize_tests_expected_output = {
     "id_": TEST_DATA_PATH_STR,
 }
 
-doctest_pytest_expected_output = {'name': '.data',
-    'path': TEST_DATA_PATH_STR,
-    'type_': 'folder',
-    'children':[
+# This is the expected output for the text_docstring.txt tests.
+# └── text_docstring.txt
+
+doctest_pytest_expected_output = {
+    "name": ".data",
+    "path": TEST_DATA_PATH_STR,
+    "type_": "folder",
+    "children": [
         {
-            'name': 'text_docstring.txt',
-            'path': f'{TEST_DATA_PATH_STR}/text_docstring.txt',
-            'type_': 'doc_file',
-            'id_': f'{TEST_DATA_PATH_STR}/text_docstring.txt',
-            'children': [
+            "name": "text_docstring.txt",
+            "path": f"{TEST_DATA_PATH_STR}/text_docstring.txt",
+            "type_": "doc_file",
+            "id_": f"{TEST_DATA_PATH_STR}/text_docstring.txt",
+            "children": [
                 {
-                    'name': 'text_docstring.txt',
-                    'path': f'{TEST_DATA_PATH_STR}/text_docstring.txt',
-                    'lineno': '1',
-                    'type_': 'test',
-                    'id_': 'text_docstring.txt::text_docstring.txt',
-                    'runID': 'text_docstring.txt::text_docstring.txt'
+                    "name": "text_docstring.txt",
+                    "path": f"{TEST_DATA_PATH_STR}/text_docstring.txt",
+                    "lineno": "1",
+                    "type_": "test",
+                    "id_": "text_docstring.txt::text_docstring.txt",
+                    "runID": "text_docstring.txt::text_docstring.txt",
                 }
-            ]
+            ],
         }
     ],
-    'id_': TEST_DATA_PATH_STR
+    "id_": TEST_DATA_PATH_STR,
 }
