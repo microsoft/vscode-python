@@ -9,7 +9,7 @@ import { dirname } from 'path';
 import { CancellationToken, Event, Extension, Memento, Uri } from 'vscode';
 import type { SemVer } from 'semver';
 import { IWorkspaceService } from '../common/application/types';
-import { JUPYTER_EXTENSION_ID } from '../common/constants';
+import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../common/constants';
 import { InterpreterUri, ModuleInstallFlags } from '../common/installer/types';
 import {
     GLOBAL_MEMENTO,
@@ -34,7 +34,7 @@ import {
 } from '../interpreter/contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './types';
-
+import { PylanceApi } from '../activation/node/pylanceApi';
 /**
  * This allows Python extension to update Product enum without breaking Jupyter.
  * I.e. we have a strict contract, else using numbers (in enums) is bound to break across products.
@@ -184,6 +184,8 @@ type JupyterExtensionApi = {
 export class JupyterExtensionIntegration {
     private jupyterExtension: Extension<JupyterExtensionApi> | undefined;
 
+    private pylanceExtension: Extension<PylanceApi> | undefined;
+
     private jupyterPythonPathFunction: ((uri: Uri) => Promise<string | undefined>) | undefined;
 
     private getNotebookUriForTextDocumentUriFunction: ((textDocumentUri: Uri) => Uri | undefined) | undefined;
@@ -300,6 +302,16 @@ export class JupyterExtensionIntegration {
     }
 
     private async getExtensionApi(): Promise<JupyterExtensionApi | undefined> {
+        if (!this.pylanceExtension) {
+            const pylanceExtension = this.extensions.getExtension<PylanceApi>(PYLANCE_EXTENSION_ID);
+
+            if (pylanceExtension && !pylanceExtension.isActive) {
+                await pylanceExtension.activate();
+            }
+
+            this.pylanceExtension = pylanceExtension;
+        }
+
         if (!this.jupyterExtension) {
             const jupyterExtension = this.extensions.getExtension<JupyterExtensionApi>(JUPYTER_EXTENSION_ID);
             if (!jupyterExtension) {
@@ -316,8 +328,18 @@ export class JupyterExtensionIntegration {
         return undefined;
     }
 
+    private getPylanceApi(): PylanceApi | undefined {
+        const api = this.pylanceExtension?.exports;
+        return api && api.notebook && api.client && api.client.isEnabled() ? api : undefined;
+    }
+
     private registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>) {
         this.jupyterPythonPathFunction = func;
+
+        const api = this.getPylanceApi();
+        if (api) {
+            api.notebook!.registerJupyterPythonPathFunction(func);
+        }
     }
 
     public getJupyterPythonPathFunction(): ((uri: Uri) => Promise<string | undefined>) | undefined {
@@ -326,6 +348,11 @@ export class JupyterExtensionIntegration {
 
     public registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void {
         this.getNotebookUriForTextDocumentUriFunction = func;
+
+        const api = this.getPylanceApi();
+        if (api) {
+            api.notebook!.registerGetNotebookUriForTextDocumentUriFunction(func);
+        }
     }
 
     public getGetNotebookUriForTextDocumentUriFunction(): ((textDocumentUri: Uri) => Uri | undefined) | undefined {

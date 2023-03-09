@@ -36,7 +36,7 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddleware {
         this.jupyterExtensionIntegration = serviceContainer.get<JupyterExtensionIntegration>(
             JupyterExtensionIntegration,
         );
-        if (!this.notebookAddon && this.lspNotebooksExperiment.isInNotebooksExperimentWithInteractiveWindowSupport()) {
+        if (!this.notebookAddon) {
             this.notebookAddon = new LspInteractiveWindowMiddlewareAddon(
                 this.getClient,
                 this.jupyterExtensionIntegration,
@@ -44,32 +44,21 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddleware {
         }
     }
 
-    protected shouldCreateHidingMiddleware(jupyterDependencyManager: IJupyterExtensionDependencyManager): boolean {
-        return (
-            super.shouldCreateHidingMiddleware(jupyterDependencyManager) &&
-            !this.lspNotebooksExperiment.isInNotebooksExperiment()
-        );
-    }
-
     protected async onExtensionChange(jupyterDependencyManager: IJupyterExtensionDependencyManager): Promise<void> {
         if (jupyterDependencyManager && jupyterDependencyManager.isJupyterExtensionInstalled) {
             await this.lspNotebooksExperiment.onJupyterInstalled();
         }
 
-        if (this.lspNotebooksExperiment.isInNotebooksExperimentWithInteractiveWindowSupport()) {
-            if (!this.notebookAddon) {
-                this.notebookAddon = new LspInteractiveWindowMiddlewareAddon(
-                    this.getClient,
-                    this.jupyterExtensionIntegration,
-                );
-            }
-        } else {
-            super.onExtensionChange(jupyterDependencyManager);
+        if (!this.notebookAddon) {
+            this.notebookAddon = new LspInteractiveWindowMiddlewareAddon(
+                this.getClient,
+                this.jupyterExtensionIntegration,
+            );
         }
     }
 
     protected async getPythonPathOverride(uri: Uri | undefined): Promise<string | undefined> {
-        if (!uri || !this.lspNotebooksExperiment.isInNotebooksExperiment()) {
+        if (!uri) {
             return undefined;
         }
 

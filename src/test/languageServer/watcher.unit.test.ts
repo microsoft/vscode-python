@@ -80,7 +80,6 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
-            {} as LspNotebooksExperiment,
             disposables,
         );
 
@@ -130,7 +129,6 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
-            {} as LspNotebooksExperiment,
             disposables,
         );
         watcher.register();
@@ -176,7 +174,6 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
-            {} as LspNotebooksExperiment,
             disposables,
         );
         watcher.register();
@@ -253,7 +250,6 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
-            {} as LspNotebooksExperiment,
             disposables,
         );
         watcher.register();
@@ -330,7 +326,6 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
-            {} as LspNotebooksExperiment,
             disposables,
         );
         watcher.register();
@@ -410,7 +405,6 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
-            {} as LspNotebooksExperiment,
             disposables,
         );
         watcher.register();
@@ -480,7 +474,6 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
-            {} as LspNotebooksExperiment,
             disposables,
         );
         watcher.register();
@@ -544,7 +537,6 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
-            {} as LspNotebooksExperiment,
             disposables,
         );
         watcher.register();
@@ -608,7 +600,6 @@ suite('Language server watcher', () => {
             ({
                 showWarningMessage: () => Promise.resolve(undefined),
             } as unknown) as IApplicationShell,
-            {} as LspNotebooksExperiment,
             disposables,
         );
         watcher.register();
@@ -667,7 +658,6 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
-            {} as LspNotebooksExperiment,
             disposables,
         );
         watcher.register();
@@ -757,7 +747,6 @@ suite('Language server watcher', () => {
                 ({
                     showWarningMessage: () => Promise.resolve(undefined),
                 } as unknown) as IApplicationShell,
-                {} as LspNotebooksExperiment,
                 disposables,
             );
             watcher.register();
@@ -837,7 +826,6 @@ suite('Language server watcher', () => {
                 ({
                     showWarningMessage: () => Promise.resolve(undefined),
                 } as unknown) as IApplicationShell,
-                {} as LspNotebooksExperiment,
                 disposables,
             );
             watcher.register();
@@ -926,7 +914,6 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
-            {} as LspNotebooksExperiment,
             disposables,
         );
         watcher.register();
@@ -1007,7 +994,6 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
-            {} as LspNotebooksExperiment,
             disposables,
         );
         watcher.register();
@@ -1091,7 +1077,6 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
-            {} as LspNotebooksExperiment,
             disposables,
         );
         watcher.register();
@@ -1175,7 +1160,6 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IExtensions,
             {} as IApplicationShell,
-            {} as LspNotebooksExperiment,
             disposables,
         );
         watcher.register();

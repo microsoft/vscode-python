@@ -42,7 +42,7 @@ export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
         );
     }
 
-    protected shouldCreateHidingMiddleware(jupyterDependencyManager: IJupyterExtensionDependencyManager): boolean {
+    private shouldCreateHidingMiddleware(jupyterDependencyManager: IJupyterExtensionDependencyManager): boolean {
         return jupyterDependencyManager && jupyterDependencyManager.isJupyterExtensionInstalled;
     }
 

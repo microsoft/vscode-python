@@ -9,6 +9,7 @@ import {
     LanguageClientOptions,
 } from 'vscode-languageclient/node';
 
+import { Extension } from 'vscode';
 import { IExperimentService, IExtensions, IInterpreterPathService, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -95,7 +96,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         const extension = await this.getPylanceExtension();
         this.lsVersion = extension?.packageJSON.version || '0';
 
-        const api = extension?.exports as PylanceApi | undefined;
+        const api = extension?.exports;
         if (api && api.client && api.client.isEnabled()) {
             this.pylanceApi = api;
             await api.client.start();
@@ -220,8 +221,8 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         );
     }
 
-    private async getPylanceExtension() {
-        const extension = this.extensions.getExtension(PYLANCE_EXTENSION_ID);
+    private async getPylanceExtension(): Promise<Extension<PylanceApi> | undefined> {
+        const extension = this.extensions.getExtension<PylanceApi>(PYLANCE_EXTENSION_ID);
         if (!extension) {
             return undefined;
         }
