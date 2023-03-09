@@ -10,7 +10,6 @@ class TestExample(unittest.TestCase):
     def test_true_unittest(self):  # test_marker--test_true_unittest
         assert True
 
-
 # This test's id is unittest_pytest_same_file.py::test_true_pytest.
 # Test type is pytest and this test passes.
 def test_true_pytest():  # test_marker--test_true_pytest

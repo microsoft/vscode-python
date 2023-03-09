@@ -505,7 +505,7 @@ dual_level_nested_folder_expected_output = {
                         {
                             "name": "test_top_function_t",
                             "path": f"{TEST_DATA_PATH}/dual_level_nested_folder/test_top_folder.py",
-                            "lineno": "5",
+                            "lineno": "6",
                             "type_": "test",
                             "id_": "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
                             "runID": "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
@@ -513,7 +513,7 @@ dual_level_nested_folder_expected_output = {
                         {
                             "name": "test_top_function_f",
                             "path": f"{TEST_DATA_PATH}/dual_level_nested_folder/test_top_folder.py",
-                            "lineno": "9",
+                            "lineno": "11",
                             "type_": "test",
                             "id_": "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
                             "runID": "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
