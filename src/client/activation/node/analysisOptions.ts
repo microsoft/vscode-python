@@ -10,7 +10,6 @@ import { IExperimentService } from '../../common/types';
 
 import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
 import { ILanguageServerOutputChannel } from '../types';
-import { LspNotebooksExperiment } from './lspNotebooksExperiment';
 import { traceWarn } from '../../logging';
 
 const EDITOR_CONFIG_SECTION = 'editor';
@@ -22,7 +21,6 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         lsOutputChannel: ILanguageServerOutputChannel,
         workspace: IWorkspaceService,
         private readonly experimentService: IExperimentService,
-        private readonly lspNotebooksExperiment: LspNotebooksExperiment,
     ) {
         super(lsOutputChannel, workspace);
     }
@@ -36,8 +34,6 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         return ({
             experimentationSupport: true,
             trustedWorkspaceSupport: true,
-            lspNotebooksSupport: this.lspNotebooksExperiment.isInNotebooksExperiment(),
-            lspInteractiveWindowSupport: this.lspNotebooksExperiment.isInNotebooksExperimentWithInteractiveWindowSupport(),
             autoIndentSupport: await this.isAutoIndentEnabled(),
         } as unknown) as LanguageClientOptions;
     }

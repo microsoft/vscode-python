@@ -5,7 +5,6 @@ import { promptForPylanceInstall } from '../activation/common/languageServerChan
 import { NodeLanguageServerAnalysisOptions } from '../activation/node/analysisOptions';
 import { NodeLanguageClientFactory } from '../activation/node/languageClientFactory';
 import { NodeLanguageServerProxy } from '../activation/node/languageServerProxy';
-import { LspNotebooksExperiment } from '../activation/node/lspNotebooksExperiment';
 import { NodeLanguageServerManager } from '../activation/node/manager';
 import { ILanguageServerOutputChannel } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
@@ -49,13 +48,11 @@ export class PylanceLSExtensionManager implements IDisposable, ILanguageServerEx
         fileSystem: IFileSystem,
         private readonly extensions: IExtensions,
         readonly applicationShell: IApplicationShell,
-        lspNotebooksExperiment: LspNotebooksExperiment,
     ) {
         this.analysisOptions = new NodeLanguageServerAnalysisOptions(
             outputChannel,
             workspaceService,
             experimentService,
-            lspNotebooksExperiment,
         );
         this.clientFactory = new NodeLanguageClientFactory(fileSystem, extensions);
         this.serverProxy = new NodeLanguageServerProxy(

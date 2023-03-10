@@ -9,6 +9,7 @@ import {
     LanguageClientOptions,
 } from 'vscode-languageclient/node';
 
+import { Extension } from 'vscode';
 import { IExperimentService, IExtensions, IInterpreterPathService, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -20,6 +21,7 @@ import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 import { traceDecoratorError, traceDecoratorVerbose, traceError } from '../../logging';
 import { IWorkspaceService } from '../../common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
+import { PylanceApi } from './pylanceApi';
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 namespace InExperiment {
@@ -56,6 +58,8 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
 
     private lsVersion: string | undefined;
 
+    private pylanceApi: PylanceApi | undefined;
+
     constructor(
         private readonly factory: ILanguageClientFactory,
         private readonly experimentService: IExperimentService,
@@ -89,8 +93,15 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         interpreter: PythonEnvironment | undefined,
         options: LanguageClientOptions,
     ): Promise<void> {
-        const extension = this.extensions.getExtension(PYLANCE_EXTENSION_ID);
+        const extension = await this.getPylanceExtension();
         this.lsVersion = extension?.packageJSON.version || '0';
+
+        const api = extension?.exports;
+        if (api && api.client && api.client.isEnabled()) {
+            this.pylanceApi = api;
+            await api.client.start();
+            return;
+        }
 
         this.cancellationStrategy = new FileBasedCancellationStrategy();
         options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
@@ -111,6 +122,12 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
 
     @traceDecoratorVerbose('Disposing language server')
     public async stop(): Promise<void> {
+        if (this.pylanceApi) {
+            const api = this.pylanceApi;
+            this.pylanceApi = undefined;
+            await api.client!.stop();
+        }
+
         while (this.disposables.length > 0) {
             const d = this.disposables.shift()!;
             d.dispose();
@@ -202,5 +219,18 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
                 isTrusted: this.workspace.isTrusted,
             })),
         );
+    }
+
+    private async getPylanceExtension(): Promise<Extension<PylanceApi> | undefined> {
+        const extension = this.extensions.getExtension<PylanceApi>(PYLANCE_EXTENSION_ID);
+        if (!extension) {
+            return undefined;
+        }
+
+        if (!extension.isActive) {
+            await extension.activate();
+        }
+
+        return extension;
     }
 }

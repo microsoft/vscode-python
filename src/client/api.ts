@@ -5,8 +5,11 @@
 
 import { noop } from 'lodash';
 import { Uri, Event } from 'vscode';
+import { BaseLanguageClient } from 'vscode-languageclient';
+import { LanguageClient } from 'vscode-languageclient/node';
+import { PYLANCE_NAME } from './activation/node/languageClientFactory';
 import { IExtensionApi } from './apiTypes';
-import { isTestExecution } from './common/constants';
+import { isTestExecution, PYTHON_LANGUAGE } from './common/constants';
 import { IConfigurationService, Resource } from './common/types';
 import { IEnvironmentVariablesProvider } from './common/variables/types';
 import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
@@ -33,6 +36,9 @@ export function buildApi(
         pylance: {
             getPythonPathVar: (resource?: Uri) => Promise<string | undefined>;
             readonly onDidEnvironmentVariablesChange: Event<Uri | undefined>;
+            createClient(...args: any[]): BaseLanguageClient;
+            start(client: BaseLanguageClient): Promise<void>;
+            stop(client: BaseLanguageClient): Promise<void>;
         };
     } = {
         // 'ready' will propagate the exception, but we must log it here first.
@@ -83,6 +89,10 @@ export function buildApi(
                 return envs.PYTHONPATH;
             },
             onDidEnvironmentVariablesChange: envService.onDidEnvironmentVariablesChange,
+            createClient: (...args: any[]): BaseLanguageClient =>
+                new LanguageClient(PYTHON_LANGUAGE, PYLANCE_NAME, args[0], args[1]),
+            start: (client: BaseLanguageClient): Promise<void> => client.start(),
+            stop: (client: BaseLanguageClient): Promise<void> => client.stop(),
         },
     };
 

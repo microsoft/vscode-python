@@ -10,22 +10,24 @@ import { LanguageServerType } from '../activation/types';
 import { AppinsightsKey, PYLANCE_EXTENSION_ID } from '../common/constants';
 import { EventName } from '../telemetry/constants';
 import { createStatusItem } from './intellisenseStatus';
+import { PylanceApi } from '../activation/node/pylanceApi';
 
 interface BrowserConfig {
     distUrl: string; // URL to Pylance's dist folder.
 }
 
 let languageClient: LanguageClient | undefined;
+let pylanceApi: PylanceApi | undefined;
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-    const pylanceExtension = vscode.extensions.getExtension(PYLANCE_EXTENSION_ID);
+    const pylanceExtension = vscode.extensions.getExtension<PylanceApi>(PYLANCE_EXTENSION_ID);
     if (pylanceExtension) {
         await runPylance(context, pylanceExtension);
         return;
     }
 
     const changeDisposable = vscode.extensions.onDidChange(async () => {
-        const newPylanceExtension = vscode.extensions.getExtension(PYLANCE_EXTENSION_ID);
+        const newPylanceExtension = vscode.extensions.getExtension<PylanceApi>(PYLANCE_EXTENSION_ID);
         if (newPylanceExtension) {
             changeDisposable.dispose();
             await runPylance(context, newPylanceExtension);
@@ -34,17 +36,35 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 }
 
 export async function deactivate(): Promise<void> {
-    const client = languageClient;
-    languageClient = undefined;
+    if (pylanceApi) {
+        const api = pylanceApi;
+        pylanceApi = undefined;
+        await api.client!.stop();
+    }
 
-    await client?.stop();
-    await client?.dispose();
+    if (languageClient) {
+        const client = languageClient;
+        languageClient = undefined;
+
+        await client.stop();
+        await client.dispose();
+    }
 }
 
 async function runPylance(
     context: vscode.ExtensionContext,
-    pylanceExtension: vscode.Extension<unknown>,
+    pylanceExtension: vscode.Extension<PylanceApi>,
 ): Promise<void> {
+    context.subscriptions.push(createStatusItem());
+
+    pylanceExtension = await getActivatedExtension(pylanceExtension);
+    const api = pylanceExtension.exports;
+    if (api.client && api.client.isEnabled()) {
+        pylanceApi = api;
+        await api.client.start();
+        return;
+    }
+
     const { extensionUri, packageJSON } = pylanceExtension;
     const distUrl = vscode.Uri.joinPath(extensionUri, 'dist');
 
@@ -111,8 +131,6 @@ async function runPylance(
         );
 
         await client.start();
-
-        context.subscriptions.push(createStatusItem());
     } catch (e) {
         console.log(e);
     }
@@ -195,4 +213,12 @@ function sendTelemetryEventBrowser(
     } else {
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
+}
+
+async function getActivatedExtension<T>(extension: vscode.Extension<T>): Promise<vscode.Extension<T>> {
+    if (!extension.isActive) {
+        await extension.activate();
+    }
+
+    return extension;
 }
