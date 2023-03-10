@@ -44,6 +44,11 @@ export class NodeLanguageClientMiddleware extends LanguageClientMiddleware {
         }
     }
 
+    // eslint-disable-next-line class-methods-use-this
+    protected shouldCreateHidingMiddleware(_: IJupyterExtensionDependencyManager): boolean {
+        return false;
+    }
+
     protected async onExtensionChange(jupyterDependencyManager: IJupyterExtensionDependencyManager): Promise<void> {
         if (jupyterDependencyManager && jupyterDependencyManager.isJupyterExtensionInstalled) {
             await this.lspNotebooksExperiment.onJupyterInstalled();
