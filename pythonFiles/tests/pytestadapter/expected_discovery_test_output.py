@@ -703,7 +703,7 @@ doctest_pytest_expected_output = {
         {
             "name": "text_docstring.txt",
             "path": text_docstring_path,
-            "type_": "doc_file",
+            "type_": "file",
             "id_": text_docstring_path,
             "children": [
                 {

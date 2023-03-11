@@ -132,7 +132,6 @@ def pytest_sessionfinish(session, exitstatus):
 #     print("report", report)
 
 
-
 def pytest_internalerror(excrepr, excinfo):
     errors.append(traceback.format_exc())
 
