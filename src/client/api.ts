@@ -5,9 +5,10 @@
 
 import { noop } from 'lodash';
 import { Uri, Event } from 'vscode';
-import { BaseLanguageClient } from 'vscode-languageclient';
+import { BaseLanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/node';
 import { PYLANCE_NAME } from './activation/node/languageClientFactory';
+import { ILanguageServerOutputChannel } from './activation/types';
 import { IExtensionApi } from './apiTypes';
 import { isTestExecution, PYTHON_LANGUAGE } from './common/constants';
 import { IConfigurationService, Resource } from './common/types';
@@ -28,6 +29,8 @@ export function buildApi(
     serviceManager.addSingleton<JupyterExtensionIntegration>(JupyterExtensionIntegration, JupyterExtensionIntegration);
     const jupyterIntegration = serviceContainer.get<JupyterExtensionIntegration>(JupyterExtensionIntegration);
     const envService = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
+    const outputChannel = serviceContainer.get<ILanguageServerOutputChannel>(ILanguageServerOutputChannel);
+
     const api: IExtensionApi & {
         /**
          * @deprecated Temporarily exposed for Pylance until we expose this API generally. Will be removed in an
@@ -89,8 +92,14 @@ export function buildApi(
                 return envs.PYTHONPATH;
             },
             onDidEnvironmentVariablesChange: envService.onDidEnvironmentVariablesChange,
-            createClient: (...args: any[]): BaseLanguageClient =>
-                new LanguageClient(PYTHON_LANGUAGE, PYLANCE_NAME, args[0], args[1]),
+            createClient: (...args: any[]): BaseLanguageClient => {
+                // Make sure we share output channel so that we can share one with
+                // Jedi as well.
+                const clientOptions = args[1] as LanguageClientOptions;
+                clientOptions.outputChannel = clientOptions.outputChannel ?? outputChannel.channel;
+
+                return new LanguageClient(PYTHON_LANGUAGE, PYLANCE_NAME, args[0], clientOptions);
+            },
             start: (client: BaseLanguageClient): Promise<void> => client.start(),
             stop: (client: BaseLanguageClient): Promise<void> => client.stop(),
         },
