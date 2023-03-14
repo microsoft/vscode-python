@@ -82,7 +82,7 @@
         "walkthroughs": [
             {
                 "id": "pythonWelcome",
-                "title": "Get started with Python development",
+                "title": "Get Started with Python Development",
                 "description": "Your first steps to set up a Python project with all the powerful tools and features that the Python extension has to offer!",
                 "when": "workspacePlatform != webworker",
                 "steps": [
@@ -169,7 +169,7 @@
             },
             {
                 "id": "pythonDataScienceWelcome",
-                "title": "Get started with Python for Data Science",
+                "title": "Get Started with Python for Data Science",
                 "description": "Your first steps to getting started with a Data Science project with Python!",
                 "when": "false",
                 "steps": [
