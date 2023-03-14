@@ -13,6 +13,7 @@ import { PlatformService } from '../../../client/common/platform/platformService
 import { IPlatformService } from '../../../client/common/platform/types';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../../client/common/terminal/environmentActivationProviders/commandPrompt';
+import { Nushell } from '../../../client/common/terminal/environmentActivationProviders/nushell';
 import { CondaActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
 import { PipEnvActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
 import { PyEnvActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
@@ -42,6 +43,7 @@ suite('Terminal Service helpers', () => {
     let condaActivationProvider: ITerminalActivationCommandProvider;
     let bashActivationProvider: ITerminalActivationCommandProvider;
     let cmdActivationProvider: ITerminalActivationCommandProvider;
+    let nushellActivationProvider: ITerminalActivationCommandProvider;
     let pyenvActivationProvider: ITerminalActivationCommandProvider;
     let pipenvActivationProvider: ITerminalActivationCommandProvider;
     let pythonSettings: PythonSettings;
@@ -67,6 +69,7 @@ suite('Terminal Service helpers', () => {
         condaActivationProvider = mock(CondaActivationCommandProvider);
         bashActivationProvider = mock(Bash);
         cmdActivationProvider = mock(CommandPromptAndPowerShell);
+        nushellActivationProvider = mock(Nushell);
         pyenvActivationProvider = mock(PyEnvActivationCommandProvider);
         pipenvActivationProvider = mock(PipEnvActivationCommandProvider);
         pythonSettings = mock(PythonSettings);
@@ -80,6 +83,7 @@ suite('Terminal Service helpers', () => {
             instance(condaActivationProvider),
             instance(bashActivationProvider),
             instance(cmdActivationProvider),
+            instance(nushellActivationProvider),
             instance(pyenvActivationProvider),
             instance(pipenvActivationProvider),
             [instance(mockDetector)],
