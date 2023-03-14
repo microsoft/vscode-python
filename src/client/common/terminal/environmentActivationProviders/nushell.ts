@@ -9,13 +9,12 @@ import { ActivationScripts, VenvBaseActivationCommandProvider } from './baseActi
 // For a given shell the scripts are in order of precedence.
 const SCRIPTS: ActivationScripts = {
     [TerminalShellType.nushell]: ['activate.nu'],
-} as ActivationScripts;
+};
 
 export function getAllScripts(): string[] {
     const scripts: string[] = [];
-    for (const key of Object.keys(SCRIPTS)) {
-        const shell = key as TerminalShellType;
-        for (const name of SCRIPTS[shell]) {
+    for (const names of Object.values(SCRIPTS)) {
+        for (const name of names) {
             if (!scripts.includes(name)) {
                 scripts.push(name);
             }

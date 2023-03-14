@@ -66,7 +66,7 @@ abstract class BaseActivationCommandProvider implements ITerminalActivationComma
     ): Promise<string[] | undefined>;
 }
 
-export type ActivationScripts = Record<TerminalShellType, string[]>;
+export type ActivationScripts = Partial<Record<TerminalShellType, string[]>>;
 
 export abstract class VenvBaseActivationCommandProvider extends BaseActivationCommandProvider {
     public isShellSupported(targetShell: TerminalShellType): boolean {
