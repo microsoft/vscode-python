@@ -150,12 +150,9 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         if (!found) {
             this.envs.push(env);
             this.fire({ new: env });
-        } else if (hasLatestInfo) {
-            const isValidated = this.validatedEnvs.has(env.id!);
-            if (!isValidated) {
-                // Update cache only if we have latest info and the env is not already validated.
-                this.updateEnv(found, env, true);
-            }
+        } else if (hasLatestInfo && !this.validatedEnvs.has(env.id!)) {
+            // Update cache if we have latest info and the env is not already validated.
+            this.updateEnv(found, env, true);
         }
         if (hasLatestInfo) {
             traceVerbose(`Flushing env to cache ${env.id}`);

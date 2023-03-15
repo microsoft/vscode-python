@@ -265,6 +265,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 .then(async () => {
                     // Fetch interpreter details so the cache is updated to include the newly installed Python.
                     await this.getInterpreterDetails(pythonPath);
+                    // Fire an event as the executable for the environment has changed.
                     this.didChangeInterpreterEmitter.fire(workspaceFolder?.uri);
                     reportActiveInterpreterChanged({
                         path: pythonPath,
