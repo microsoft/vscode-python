@@ -50,23 +50,7 @@ export class InstallFormatterPrompt implements IInstallFormatterPrompt {
 
         let selection: string | undefined;
 
-        if (formatter === 'black' && !black) {
-            this.shownThisSession = true;
-            selection = await showInformationMessage(
-                ToolsExtensions.installBlackFormatterPrompt,
-                'Black',
-                'Autopep8',
-                Common.doNotShowAgain,
-            );
-        } else if (formatter === 'autopep8' && !autopep8) {
-            this.shownThisSession = true;
-            selection = await showInformationMessage(
-                ToolsExtensions.installAutopep8FormatterPrompt,
-                'Black',
-                'Autopep8',
-                Common.doNotShowAgain,
-            );
-        } else if (black || autopep8) {
+        if (black || autopep8) {
             this.shownThisSession = true;
             if (black && autopep8) {
                 selection = await showInformationMessage(
@@ -94,6 +78,22 @@ export class InstallFormatterPrompt implements IInstallFormatterPrompt {
                     selection = 'Autopep8';
                 }
             }
+        } else if (formatter === 'black' && !black) {
+            this.shownThisSession = true;
+            selection = await showInformationMessage(
+                ToolsExtensions.installBlackFormatterPrompt,
+                'Black',
+                'Autopep8',
+                Common.doNotShowAgain,
+            );
+        } else if (formatter === 'autopep8' && !autopep8) {
+            this.shownThisSession = true;
+            selection = await showInformationMessage(
+                ToolsExtensions.installAutopep8FormatterPrompt,
+                'Black',
+                'Autopep8',
+                Common.doNotShowAgain,
+            );
         }
 
         if (selection === 'Black') {

@@ -5,7 +5,7 @@ import { ConfigurationTarget, Uri } from 'vscode';
 import { ShowFormatterExtensionPrompt } from '../../common/experiments/groups';
 import { IExperimentService, IPersistentState, IPersistentStateFactory } from '../../common/types';
 import { executeCommand } from '../../common/vscodeApis/commandApis';
-import { isInsider, getExtension } from '../../common/vscodeApis/extensionsApi';
+import { isInsider } from '../../common/vscodeApis/extensionsApi';
 import { getConfiguration, getWorkspaceFolder } from '../../common/vscodeApis/workspaceApis';
 import { IServiceContainer } from '../../ioc/types';
 
@@ -34,11 +34,5 @@ export async function installFormatterExtension(extensionId: string, resource?: 
         installPreReleaseVersion: isInsider(),
     });
 
-    const extension = getExtension(extensionId);
-    if (!extension) {
-        return;
-    }
-
-    await extension.activate();
     await updateDefaultFormatter(extensionId, resource);
 }
