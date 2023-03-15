@@ -1,104 +1,128 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationTarget, Uri } from 'vscode';
-import {
-    IApplicationEnvironment,
-    IApplicationShell,
-    ICommandManager,
-    IWorkspaceService,
-} from '../../common/application/types';
-import { ShowFormatterExtensionPrompt } from '../../common/experiments/groups';
-import { IExperimentService, IExtensions, IPersistentStateFactory } from '../../common/types';
+import { Uri } from 'vscode';
+import { IDisposableRegistry } from '../../common/types';
 import { Common, ToolsExtensions } from '../../common/utils/localize';
+import { isExtensionEnabled } from '../../common/vscodeApis/extensionsApi';
+import { showInformationMessage } from '../../common/vscodeApis/windowApis';
+import { getConfiguration, onDidSaveTextDocument } from '../../common/vscodeApis/workspaceApis';
 import { IServiceContainer } from '../../ioc/types';
+import {
+    doNotShowPromptState,
+    inFormatterExtensionExperiment,
+    installFormatterExtension,
+    updateDefaultFormatter,
+} from './promptUtils';
 import { AUTOPEP8_EXTENSION, BLACK_EXTENSION, IInstallFormatterPrompt } from './types';
 
 const SHOW_FORMATTER_INSTALL_PROMPT_DONOTSHOW_KEY = 'showFormatterExtensionInstallPrompt';
 
-export class SelectFormatterPrompt implements IInstallFormatterPrompt {
+export class InstallFormatterPrompt implements IInstallFormatterPrompt {
     private shownThisSession = false;
 
-    private readonly extensions: IExtensions;
-
-    private readonly workspaceService: IWorkspaceService;
-
-    constructor(private readonly serviceContainer: IServiceContainer) {
-        this.extensions = this.serviceContainer.get<IExtensions>(IExtensions);
-        this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    }
+    constructor(private readonly serviceContainer: IServiceContainer) {}
 
     public async showInstallFormatterPrompt(resource?: Uri): Promise<void> {
-        const experiment = this.serviceContainer.get<IExperimentService>(IExperimentService);
-        if (!(await experiment.inExperiment(ShowFormatterExtensionPrompt.experiment))) {
+        if (!(await inFormatterExtensionExperiment(this.serviceContainer))) {
             return;
         }
 
-        const persistFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const promptState = persistFactory.createWorkspacePersistentState<boolean>(
-            SHOW_FORMATTER_INSTALL_PROMPT_DONOTSHOW_KEY,
-            false,
-        );
+        const promptState = doNotShowPromptState(SHOW_FORMATTER_INSTALL_PROMPT_DONOTSHOW_KEY, this.serviceContainer);
         if (this.shownThisSession || promptState.value) {
             return;
         }
 
-        const config = this.workspaceService.getConfiguration('python', resource);
+        const config = getConfiguration('python', resource);
         const formatter = config.get<string>('formatting.provider', 'none');
-
         if (!['autopep8', 'black'].includes(formatter)) {
             return;
         }
 
-        const black = this.extensions.getExtension(BLACK_EXTENSION);
-        const autopep8 = this.extensions.getExtension(AUTOPEP8_EXTENSION);
-
-        const appShell: IApplicationShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.shownThisSession = true;
-
-        if (formatter === 'black' && !black) {
-            const selection = await appShell.showInformationMessage(
-                ToolsExtensions.installBlackFormatterPrompt,
-                Common.install,
-                Common.doNotShowAgain,
-            );
-            if (selection === Common.doNotShowAgain) {
-                await promptState.updateValue(true);
-            } else if (selection === Common.install) {
-                await this.installExtension(BLACK_EXTENSION);
-            }
-        } else if (formatter === 'autopep8' && !autopep8) {
-            const selection = await appShell.showInformationMessage(
-                ToolsExtensions.installAutopep8FormatterPrompt,
-                Common.install,
-                Common.doNotShowAgain,
-            );
-            if (selection === Common.doNotShowAgain) {
-                await promptState.updateValue(true);
-            } else if (selection === Common.install) {
-                await this.installExtension(AUTOPEP8_EXTENSION);
-            }
-        }
-    }
-
-    private async installExtension(extensionId: string, resource?: Uri): Promise<void> {
-        const appEnv = this.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
-        const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
-        await commandManager.executeCommand('workbench.extensions.installExtension', extensionId, {
-            installPreReleaseVersion: appEnv.extensionChannel === 'insiders',
-        });
-
-        const extension = this.extensions.getExtension(extensionId);
-        if (!extension) {
+        const editorConfig = getConfiguration('editor', { uri: resource, languageId: 'python' });
+        const defaultFormatter = editorConfig.get<string>('defaultFormatter', '');
+        if ([BLACK_EXTENSION, AUTOPEP8_EXTENSION].includes(defaultFormatter)) {
             return;
         }
 
-        await extension.activate();
+        const black = isExtensionEnabled(BLACK_EXTENSION);
+        const autopep8 = isExtensionEnabled(AUTOPEP8_EXTENSION);
 
-        const config = this.workspaceService.getConfiguration('editor', resource);
-        const scope = this.workspaceService.getWorkspaceFolder(resource)
-            ? ConfigurationTarget.Workspace
-            : ConfigurationTarget.Global;
-        await config.update('defaultFormatter', extensionId, scope, true);
+        let selection: string | undefined;
+
+        if (formatter === 'black' && !black) {
+            this.shownThisSession = true;
+            selection = await showInformationMessage(
+                ToolsExtensions.installBlackFormatterPrompt,
+                'Black',
+                'Autopep8',
+                Common.doNotShowAgain,
+            );
+        } else if (formatter === 'autopep8' && !autopep8) {
+            this.shownThisSession = true;
+            selection = await showInformationMessage(
+                ToolsExtensions.installAutopep8FormatterPrompt,
+                'Black',
+                'Autopep8',
+                Common.doNotShowAgain,
+            );
+        } else if (black || autopep8) {
+            this.shownThisSession = true;
+            if (black && autopep8) {
+                selection = await showInformationMessage(
+                    ToolsExtensions.selectMultipleFormattersPrompt,
+                    'Black',
+                    'Autopep8',
+                    Common.doNotShowAgain,
+                );
+            } else if (black) {
+                selection = await showInformationMessage(
+                    ToolsExtensions.selectBlackFormatterPrompt,
+                    Common.bannerLabelYes,
+                    Common.doNotShowAgain,
+                );
+                if (selection === Common.bannerLabelYes) {
+                    selection = 'Black';
+                }
+            } else if (autopep8) {
+                selection = await showInformationMessage(
+                    ToolsExtensions.selectAutopep8FormatterPrompt,
+                    Common.bannerLabelYes,
+                    Common.doNotShowAgain,
+                );
+                if (selection === Common.bannerLabelYes) {
+                    selection = 'Autopep8';
+                }
+            }
+        }
+
+        if (selection === 'Black') {
+            if (black) {
+                await updateDefaultFormatter(BLACK_EXTENSION, resource);
+            } else {
+                await installFormatterExtension(BLACK_EXTENSION, resource);
+            }
+        } else if (selection === 'Autopep8') {
+            if (autopep8) {
+                await updateDefaultFormatter(AUTOPEP8_EXTENSION, resource);
+            } else {
+                await installFormatterExtension(AUTOPEP8_EXTENSION, resource);
+            }
+        } else if (selection === Common.doNotShowAgain) {
+            await promptState.updateValue(true);
+        }
     }
+}
+
+export function registerInstallFormatterPrompt(serviceContainer: IServiceContainer): void {
+    const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+    const installFormatterPrompt = new InstallFormatterPrompt(serviceContainer);
+    disposables.push(
+        onDidSaveTextDocument(async (e) => {
+            const editorConfig = getConfiguration('editor', { uri: e.uri, languageId: 'python' });
+            if (e.languageId === 'python' && editorConfig.get<boolean>('formatOnSave')) {
+                await installFormatterPrompt.showInstallFormatterPrompt(e.uri);
+            }
+        }),
+    );
 }
