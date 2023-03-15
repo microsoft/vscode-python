@@ -43,7 +43,7 @@ export class Bash extends VenvBaseActivationCommandProvider {
     ): Promise<string[] | undefined> {
         const scriptFile = await this.findScriptFile(pythonPath, targetShell);
         if (!scriptFile) {
-            return;
+            return undefined;
         }
         return [`source ${scriptFile.fileToCommandArgumentForPythonExt()}`];
     }

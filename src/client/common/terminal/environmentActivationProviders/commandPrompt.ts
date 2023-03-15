@@ -37,6 +37,7 @@ export function getAllScripts(pathJoin: (...p: string[]) => string): string[] {
 @injectable()
 export class CommandPromptAndPowerShell extends VenvBaseActivationCommandProvider {
     protected readonly scripts: ActivationScripts;
+
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
         this.scripts = {};
@@ -61,21 +62,23 @@ export class CommandPromptAndPowerShell extends VenvBaseActivationCommandProvide
     ): Promise<string[] | undefined> {
         const scriptFile = await this.findScriptFile(pythonPath, targetShell);
         if (!scriptFile) {
-            return;
+            return undefined;
         }
 
         if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.bat')) {
             return [scriptFile.fileToCommandArgumentForPythonExt()];
-        } else if (
+        }
+        if (
             (targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore) &&
             scriptFile.endsWith('Activate.ps1')
         ) {
             return [`& ${scriptFile.fileToCommandArgumentForPythonExt()}`];
-        } else if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('Activate.ps1')) {
+        }
+        if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('Activate.ps1')) {
             // lets not try to run the powershell file from command prompt (user may not have powershell)
             return [];
-        } else {
-            return;
         }
+
+        return undefined;
     }
 }

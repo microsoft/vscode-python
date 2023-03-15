@@ -33,7 +33,7 @@ export class Nushell extends VenvBaseActivationCommandProvider {
     ): Promise<string[] | undefined> {
         const scriptFile = await this.findScriptFile(pythonPath, targetShell);
         if (!scriptFile) {
-            return;
+            return undefined;
         }
         return [`overlay activate ${scriptFile.fileToCommandArgumentForPythonExt()}`];
     }
