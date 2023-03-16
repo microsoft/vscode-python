@@ -24,27 +24,29 @@ import { noop } from '../../../../core';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { SimpleLocator } from '../../common';
 import { assertEnvEqual, assertEnvsEqual, createFile, deleteFile } from '../envTestUtils';
+import { OSType, getOSType } from '../../../../common';
 
 suite('Python envs locator - Environments Collection', async () => {
     let collectionService: EnvsCollectionService;
     let storage: PythonEnvInfo[];
 
     const updatedName = 'updatedName';
+    const pathToCondaPython = getOSType() === OSType.Windows ? 'python.exe' : path.join('bin', 'python');
     const condaEnvWithoutPython = createEnv(
         'python',
         undefined,
         undefined,
         path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython', 'condaLackingPython'),
         PythonEnvKind.Conda,
-        path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython', 'condaLackingPython', 'python.exe'),
+        path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython', 'condaLackingPython', pathToCondaPython),
     );
     const condaEnvWithPython = createEnv(
-        path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython', 'condaLackingPython', 'python.exe'),
+        path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython', 'condaLackingPython', pathToCondaPython),
         undefined,
         undefined,
         path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython', 'condaLackingPython'),
         PythonEnvKind.Conda,
-        path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython', 'condaLackingPython', 'python.exe'),
+        path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython', 'condaLackingPython', pathToCondaPython),
     );
 
     function applyChangeEventToEnvList(envs: PythonEnvInfo[], event: PythonEnvCollectionChangedEvent) {
