@@ -62,6 +62,7 @@ import { WorkspaceService } from './common/application/workspace';
 import { DynamicPythonDebugConfigurationService } from './debugger/extension/configuration/dynamicdebugConfigurationService';
 import { registerCreateEnvironmentFeatures } from './pythonEnvironments/creation/createEnvApi';
 import { IInterpreterQuickPick } from './interpreter/configuration/types';
+import { registerInstallFormatterPrompt } from './providers/prompts/installFormatterPrompt';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -206,13 +207,15 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
                 });
 
             // register a dynamic configuration provider for 'python' debug type
-            context.subscriptions.push(
+            disposables.push(
                 debug.registerDebugConfigurationProvider(
                     DebuggerTypeName,
                     serviceContainer.get<DynamicPythonDebugConfigurationService>(IDynamicDebugConfigurationService),
                     DebugConfigurationProviderTriggerKind.Dynamic,
                 ),
             );
+
+            registerInstallFormatterPrompt(serviceContainer);
         }
     }
 
