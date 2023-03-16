@@ -191,6 +191,9 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
                 this.validatedEnvs.delete(env.id!);
                 return undefined;
             }
+            // Do not attempt to validate these envs as they lack an executable, and consider them as validated by default.
+            this.validatedEnvs.add(env.id!);
+            return env;
         }
         if (env) {
             if (this.validatedEnvs.has(env.id!)) {
