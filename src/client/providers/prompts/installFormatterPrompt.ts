@@ -24,7 +24,7 @@ export class InstallFormatterPrompt implements IInstallFormatterPrompt {
     constructor(private readonly serviceContainer: IServiceContainer) {}
 
     public async showInstallFormatterPrompt(resource?: Uri): Promise<void> {
-        if (!(await inFormatterExtensionExperiment(this.serviceContainer))) {
+        if (!inFormatterExtensionExperiment(this.serviceContainer)) {
             return;
         }
 

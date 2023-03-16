@@ -487,10 +487,10 @@ export namespace ToolsExtensions {
     );
 
     export const installBlackFormatterPrompt = l10n.t(
-        'You triggered formatting with Black, would you like to install one of the formatter extensions? This will also set it as the default formatter for python.',
+        'You triggered formatting with Black, would you like to install one of our new formatter extensions? This will also set it as the default formatter for Python.',
     );
 
     export const installAutopep8FormatterPrompt = l10n.t(
-        'You triggered formatting with Autopep8, would you like to install one of the formatter extension? This will also set it as the default formatter for python.',
+        'You triggered formatting with Autopep8, would you like to install one of our new formatter extension? This will also set it as the default formatter for Python.',
     );
 }

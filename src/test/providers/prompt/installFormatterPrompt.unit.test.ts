@@ -31,7 +31,7 @@ suite('Formatter Extension prompt tests', () => {
 
     setup(() => {
         inFormatterExtensionExperimentStub = sinon.stub(promptUtils, 'inFormatterExtensionExperiment');
-        inFormatterExtensionExperimentStub.resolves(true);
+        inFormatterExtensionExperimentStub.returns(true);
 
         doNotShowPromptStateStub = sinon.stub(promptUtils, 'doNotShowPromptState');
         persistState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
@@ -61,7 +61,7 @@ suite('Formatter Extension prompt tests', () => {
     });
 
     test('Not in experiment', async () => {
-        inFormatterExtensionExperimentStub.resolves(false);
+        inFormatterExtensionExperimentStub.returns(false);
 
         await prompt.showInstallFormatterPrompt();
         assert.isTrue(doNotShowPromptStateStub.notCalled);

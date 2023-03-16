@@ -9,9 +9,9 @@ import { isInsider } from '../../common/vscodeApis/extensionsApi';
 import { getConfiguration, getWorkspaceFolder } from '../../common/vscodeApis/workspaceApis';
 import { IServiceContainer } from '../../ioc/types';
 
-export function inFormatterExtensionExperiment(serviceContainer: IServiceContainer): Promise<boolean> {
+export function inFormatterExtensionExperiment(serviceContainer: IServiceContainer): boolean {
     const experiment = serviceContainer.get<IExperimentService>(IExperimentService);
-    return experiment.inExperiment(ShowFormatterExtensionPrompt.experiment);
+    return experiment.inExperimentSync(ShowFormatterExtensionPrompt.experiment);
 }
 
 export function doNotShowPromptState(key: string, serviceContainer: IServiceContainer): IPersistentState<boolean> {
