@@ -9,6 +9,7 @@ import {
     ProgressLocation,
     ProgressOptions,
     Uri,
+    WorkspaceFolder,
 } from 'vscode';
 import '../common/extensions';
 import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../common/application/types';
@@ -96,7 +97,13 @@ export class InterpreterService implements Disposable, IInterpreterService {
     public async refresh(resource?: Uri): Promise<void> {
         const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
         await interpreterDisplay.refresh(resource);
-        this.ensureEnvironmentContainsPython(this.configService.getSettings(resource).pythonPath).ignoreErrors();
+        const workspaceFolder = this.serviceContainer
+            .get<IWorkspaceService>(IWorkspaceService)
+            .getWorkspaceFolder(resource);
+        this.ensureEnvironmentContainsPython(
+            this.configService.getSettings(resource).pythonPath,
+            workspaceFolder,
+        ).ignoreErrors();
     }
 
     public initialize(): void {
@@ -227,18 +234,21 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (this._pythonPathSetting === '' || this._pythonPathSetting !== pySettings.pythonPath) {
             this._pythonPathSetting = pySettings.pythonPath;
             this.didChangeInterpreterEmitter.fire(resource);
+            const workspaceFolder = this.serviceContainer
+                .get<IWorkspaceService>(IWorkspaceService)
+                .getWorkspaceFolder(resource);
             reportActiveInterpreterChanged({
                 path: pySettings.pythonPath,
-                resource: this.serviceContainer.get<IWorkspaceService>(IWorkspaceService).getWorkspaceFolder(resource),
+                resource: workspaceFolder,
             });
             const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
             interpreterDisplay.refresh().catch((ex) => traceError('Python Extension: display.refresh', ex));
-            await this.ensureEnvironmentContainsPython(this._pythonPathSetting);
+            await this.ensureEnvironmentContainsPython(this._pythonPathSetting, workspaceFolder);
         }
     }
 
     @cache(-1, true)
-    private async ensureEnvironmentContainsPython(pythonPath: string) {
+    private async ensureEnvironmentContainsPython(pythonPath: string, workspaceFolder: WorkspaceFolder | undefined) {
         const installer = this.serviceContainer.get<IInstaller>(IInstaller);
         if (!(await installer.isInstalled(Product.python))) {
             // If Python is not installed into the environment, install it.
@@ -251,7 +261,18 @@ export class InterpreterService implements Disposable, IInterpreterService {
             traceLog('Conda envs without Python are known to not work well; fixing conda environment...');
             const promise = installer.install(Product.python, await this.getInterpreterDetails(pythonPath));
             shell.withProgress(progressOptions, () => promise);
-            promise.then(() => this.triggerRefresh().ignoreErrors());
+            promise
+                .then(async () => {
+                    // Fetch interpreter details so the cache is updated to include the newly installed Python.
+                    await this.getInterpreterDetails(pythonPath);
+                    // Fire an event as the executable for the environment has changed.
+                    this.didChangeInterpreterEmitter.fire(workspaceFolder?.uri);
+                    reportActiveInterpreterChanged({
+                        path: pythonPath,
+                        resource: workspaceFolder,
+                    });
+                })
+                .ignoreErrors();
         }
     }
 }

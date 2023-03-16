@@ -104,7 +104,7 @@ export class SimpleLocator<I = PythonEnvInfo> extends Locator<I> {
     constructor(
         private envs: I[],
         public callbacks: {
-            resolve?: null | ((env: PythonEnvInfo) => Promise<PythonEnvInfo | undefined>);
+            resolve?: null | ((env: PythonEnvInfo | string) => Promise<PythonEnvInfo | undefined>);
             before?(): Promise<void>;
             after?(): Promise<void>;
             onUpdated?: Event<PythonEnvUpdatedEvent<I> | ProgressNotificationEvent>;
@@ -112,6 +112,7 @@ export class SimpleLocator<I = PythonEnvInfo> extends Locator<I> {
             afterEach?(e: I): Promise<void>;
             onQuery?(query: PythonLocatorQuery | undefined, envs: I[]): Promise<I[]>;
         } = {},
+        private options?: { resolveAsString?: boolean },
     ) {
         super();
     }
@@ -172,7 +173,7 @@ export class SimpleLocator<I = PythonEnvInfo> extends Locator<I> {
         if (this.callbacks?.resolve === null) {
             return undefined;
         }
-        return this.callbacks.resolve(envInfo);
+        return this.callbacks.resolve(this.options?.resolveAsString ? env : envInfo);
     }
 }
 

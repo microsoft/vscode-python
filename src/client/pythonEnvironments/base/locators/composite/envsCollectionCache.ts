@@ -5,13 +5,14 @@ import { Event } from 'vscode';
 import { isTestExecution } from '../../../../common/constants';
 import { traceInfo, traceVerbose } from '../../../../logging';
 import { arePathsSame, getFileInfo, pathExists } from '../../../common/externalDependencies';
-import { PythonEnvInfo } from '../../info';
+import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { areEnvsDeepEqual, areSameEnv, getEnvPath } from '../../info/env';
 import {
     BasicPythonEnvCollectionChangedEvent,
     PythonEnvCollectionChangedEvent,
     PythonEnvsWatcher,
 } from '../../watcher';
+import { getCondaInterpreterPath } from '../../../common/environmentManagers/conda';
 
 export interface IEnvsCollectionCache {
     /**
@@ -146,14 +147,17 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
 
     public addEnv(env: PythonEnvInfo, hasLatestInfo?: boolean): void {
         const found = this.envs.find((e) => areSameEnv(e, env));
+        if (!found) {
+            this.envs.push(env);
+            this.fire({ new: env });
+        } else if (hasLatestInfo && !this.validatedEnvs.has(env.id!)) {
+            // Update cache if we have latest info and the env is not already validated.
+            this.updateEnv(found, env, true);
+        }
         if (hasLatestInfo) {
             traceVerbose(`Flushing env to cache ${env.id}`);
             this.validatedEnvs.add(env.id!);
             this.flush(env).ignoreErrors(); // If we have latest info, flush it so it can be saved.
-        }
-        if (!found) {
-            this.envs.push(env);
-            this.fire({ new: env });
         }
     }
 
@@ -177,6 +181,20 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
     public async getLatestInfo(path: string): Promise<PythonEnvInfo | undefined> {
         // `path` can either be path to environment or executable path
         const env = this.envs.find((e) => arePathsSame(e.location, path)) ?? this.envs.find((e) => areSameEnv(e, path));
+        if (
+            env?.kind === PythonEnvKind.Conda &&
+            getEnvPath(env.executable.filename, env.location).pathType === 'envFolderPath'
+        ) {
+            if (await pathExists(getCondaInterpreterPath(env.location))) {
+                // This is a conda env without python in cache which actually now has a valid python, so return
+                // `undefined` and delete value from cache as cached value is not the latest anymore.
+                this.validatedEnvs.delete(env.id!);
+                return undefined;
+            }
+            // Do not attempt to validate these envs as they lack an executable, and consider them as validated by default.
+            this.validatedEnvs.add(env.id!);
+            return env;
+        }
         if (env) {
             if (this.validatedEnvs.has(env.id!)) {
                 traceVerbose(`Found cached env for ${path}`);
