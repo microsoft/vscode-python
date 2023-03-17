@@ -475,11 +475,11 @@ export namespace ToolsExtensions {
     export const installISortExtension = l10n.t('Install isort extension');
 
     export const selectBlackFormatterPrompt = l10n.t(
-        'You have Black formatter extension installed, would you like to use that as the default formatter?',
+        'You have the Black formatter extension installed, would you like to use that as the default formatter?',
     );
 
     export const selectAutopep8FormatterPrompt = l10n.t(
-        'You have Autopep8 formatter extension installed, would you like to use that as the default formatter?',
+        'You have the Autopep8 formatter extension installed, would you like to use that as the default formatter?',
     );
 
     export const selectMultipleFormattersPrompt = l10n.t(
