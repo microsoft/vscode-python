@@ -184,6 +184,7 @@ export interface IPythonSettings {
     readonly pythonPath: string;
     readonly venvPath: string;
     readonly venvFolders: string[];
+    readonly activeStateToolPath: string;
     readonly condaPath: string;
     readonly pipenvPath: string;
     readonly poetryPath: string;

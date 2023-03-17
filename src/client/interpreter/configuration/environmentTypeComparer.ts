@@ -4,6 +4,7 @@
 import { injectable, inject } from 'inversify';
 import { Resource } from '../../common/types';
 import { Architecture } from '../../common/utils/platform';
+import { isActiveStateEnvironmentForWorkspace } from '../../pythonEnvironments/common/environmentManagers/activestate';
 import { isParentPath } from '../../pythonEnvironments/common/externalDependencies';
 import { EnvironmentType, PythonEnvironment, virtualEnvTypes } from '../../pythonEnvironments/info';
 import { PythonVersion } from '../../pythonEnvironments/info/pythonVersion';
@@ -93,11 +94,22 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
             if (isProblematicCondaEnvironment(i)) {
                 return false;
             }
+            if (
+                i.envType === EnvironmentType.ActiveState &&
+                (!i.path ||
+                    !workspaceUri ||
+                    !isActiveStateEnvironmentForWorkspace(i.path, workspaceUri.folderUri.fsPath))
+            ) {
+                return false;
+            }
             if (getEnvLocationHeuristic(i, workspaceUri?.folderUri.fsPath || '') === EnvLocationHeuristic.Local) {
                 return true;
             }
             if (virtualEnvTypes.includes(i.envType)) {
                 // We're not sure if these envs were created for the workspace, so do not recommend them.
+                return false;
+            }
+            if (i.version?.major === 2) {
                 return false;
             }
             return true;
@@ -234,6 +246,7 @@ function getPrioritizedEnvironmentType(): EnvironmentType[] {
         EnvironmentType.VirtualEnvWrapper,
         EnvironmentType.Venv,
         EnvironmentType.VirtualEnv,
+        EnvironmentType.ActiveState,
         EnvironmentType.Conda,
         EnvironmentType.Pyenv,
         EnvironmentType.MicrosoftStore,

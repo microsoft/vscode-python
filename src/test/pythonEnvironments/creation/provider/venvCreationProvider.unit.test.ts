@@ -22,6 +22,7 @@ import { createDeferred } from '../../../../client/common/utils/async';
 import { Output } from '../../../../client/common/process/types';
 import { VENV_CREATED_MARKER } from '../../../../client/pythonEnvironments/creation/provider/venvProgressAndTelemetry';
 import { CreateEnv } from '../../../../client/common/utils/localize';
+import * as venvUtils from '../../../../client/pythonEnvironments/creation/provider/venvUtils';
 
 chaiUse(chaiAsPromised);
 
@@ -33,12 +34,20 @@ suite('venv Creation provider tests', () => {
     let execObservableStub: sinon.SinonStub;
     let withProgressStub: sinon.SinonStub;
     let showErrorMessageWithLogsStub: sinon.SinonStub;
+    let pickPackagesToInstallStub: sinon.SinonStub;
+
+    const workspace1 = {
+        uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
+        name: 'workspace1',
+        index: 0,
+    };
 
     setup(() => {
         pickWorkspaceFolderStub = sinon.stub(wsSelect, 'pickWorkspaceFolder');
         execObservableStub = sinon.stub(rawProcessApis, 'execObservable');
         interpreterQuickPick = typemoq.Mock.ofType<IInterpreterQuickPick>();
         withProgressStub = sinon.stub(windowApis, 'withProgress');
+        pickPackagesToInstallStub = sinon.stub(venvUtils, 'pickPackagesToInstall');
 
         showErrorMessageWithLogsStub = sinon.stub(commonUtils, 'showErrorMessageWithLogs');
         showErrorMessageWithLogsStub.resolves();
@@ -53,39 +62,54 @@ suite('venv Creation provider tests', () => {
 
     test('No workspace selected', async () => {
         pickWorkspaceFolderStub.resolves(undefined);
+        interpreterQuickPick
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny()))
+            .verifiable(typemoq.Times.never());
 
-        assert.isUndefined(await venvProvider.createEnvironment());
+        await assert.isRejected(venvProvider.createEnvironment());
         assert.isTrue(pickWorkspaceFolderStub.calledOnce);
+        interpreterQuickPick.verifyAll();
+        assert.isTrue(pickPackagesToInstallStub.notCalled);
     });
 
     test('No Python selected', async () => {
-        pickWorkspaceFolderStub.resolves({
-            uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
-            name: 'workspace1',
-            index: 0,
-        });
-
-        interpreterQuickPick
-            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny()))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(typemoq.Times.once());
-
-        assert.isUndefined(await venvProvider.createEnvironment());
-        interpreterQuickPick.verifyAll();
-    });
-
-    test('Create venv with python selected by user', async () => {
-        const workspace1 = {
-            uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
-            name: 'workspace1',
-            index: 0,
-        };
         pickWorkspaceFolderStub.resolves(workspace1);
 
         interpreterQuickPick
-            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(typemoq.Times.once());
+
+        await assert.isRejected(venvProvider.createEnvironment());
+
+        assert.isTrue(pickWorkspaceFolderStub.calledOnce);
+        interpreterQuickPick.verifyAll();
+        assert.isTrue(pickPackagesToInstallStub.notCalled);
+    });
+
+    test('User pressed Esc while selecting dependencies', async () => {
+        pickWorkspaceFolderStub.resolves(workspace1);
+
+        interpreterQuickPick
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(() => Promise.resolve('/usr/bin/python'))
             .verifiable(typemoq.Times.once());
+
+        pickPackagesToInstallStub.resolves(undefined);
+
+        await assert.isRejected(venvProvider.createEnvironment());
+        assert.isTrue(pickPackagesToInstallStub.calledOnce);
+    });
+
+    test('Create venv with python selected by user no packages selected', async () => {
+        pickWorkspaceFolderStub.resolves(workspace1);
+
+        interpreterQuickPick
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns(() => Promise.resolve('/usr/bin/python'))
+            .verifiable(typemoq.Times.once());
+
+        pickPackagesToInstallStub.resolves([]);
 
         const deferred = createDeferred();
         let _next: undefined | ((value: Output<string>) => void);
@@ -138,16 +162,14 @@ suite('venv Creation provider tests', () => {
     });
 
     test('Create venv failed', async () => {
-        pickWorkspaceFolderStub.resolves({
-            uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
-            name: 'workspace1',
-            index: 0,
-        });
+        pickWorkspaceFolderStub.resolves(workspace1);
 
         interpreterQuickPick
-            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(() => Promise.resolve('/usr/bin/python'))
             .verifiable(typemoq.Times.once());
+
+        pickPackagesToInstallStub.resolves([]);
 
         const deferred = createDeferred();
         let _error: undefined | ((error: unknown) => void);
@@ -194,17 +216,14 @@ suite('venv Creation provider tests', () => {
     });
 
     test('Create venv failed (non-zero exit code)', async () => {
-        const workspace1 = {
-            uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
-            name: 'workspace1',
-            index: 0,
-        };
         pickWorkspaceFolderStub.resolves(workspace1);
 
         interpreterQuickPick
-            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(() => Promise.resolve('/usr/bin/python'))
             .verifiable(typemoq.Times.once());
+
+        pickPackagesToInstallStub.resolves([]);
 
         const deferred = createDeferred();
         let _next: undefined | ((value: Output<string>) => void);

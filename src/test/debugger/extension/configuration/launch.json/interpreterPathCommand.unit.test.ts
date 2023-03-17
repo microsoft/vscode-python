@@ -5,25 +5,23 @@
 
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
-import { CommandManager } from '../../../../../client/common/application/commandManager';
-import { ICommandManager } from '../../../../../client/common/application/types';
-import { Commands } from '../../../../../client/common/constants';
 import { IDisposable } from '../../../../../client/common/types';
+import * as commandApis from '../../../../../client/common/vscodeApis/commandApis';
 import { InterpreterPathCommand } from '../../../../../client/debugger/extension/configuration/launch.json/interpreterPathCommand';
 import { IInterpreterService } from '../../../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../../../client/pythonEnvironments/info';
 
 suite('Interpreter Path Command', () => {
-    let cmdManager: ICommandManager;
     let interpreterService: IInterpreterService;
     let interpreterPathCommand: InterpreterPathCommand;
+    let registerCommandStub: sinon.SinonStub;
     setup(() => {
-        cmdManager = mock(CommandManager);
         interpreterService = mock<IInterpreterService>();
-        interpreterPathCommand = new InterpreterPathCommand(instance(cmdManager), instance(interpreterService), []);
+        registerCommandStub = sinon.stub(commandApis, 'registerCommand');
+        interpreterPathCommand = new InterpreterPathCommand(instance(interpreterService), []);
     });
 
     teardown(() => {
@@ -32,15 +30,13 @@ suite('Interpreter Path Command', () => {
 
     test('Ensure command is registered with the correct callback handler', async () => {
         let getInterpreterPathHandler = (_param: unknown) => undefined;
-        when(cmdManager.registerCommand(Commands.GetSelectedInterpreterPath, anything())).thenCall((_, cb) => {
+        registerCommandStub.callsFake((_, cb) => {
             getInterpreterPathHandler = cb;
             return TypeMoq.Mock.ofType<IDisposable>().object;
         });
-
         await interpreterPathCommand.activate();
 
-        verify(cmdManager.registerCommand(Commands.GetSelectedInterpreterPath, anything())).once();
-
+        sinon.assert.calledOnce(registerCommandStub);
         const getSelectedInterpreterPath = sinon.stub(InterpreterPathCommand.prototype, '_getSelectedInterpreterPath');
         getInterpreterPathHandler([]);
         assert(getSelectedInterpreterPath.calledOnceWith([]));

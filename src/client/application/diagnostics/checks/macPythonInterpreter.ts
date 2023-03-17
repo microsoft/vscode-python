@@ -3,9 +3,8 @@
 
 // eslint-disable-next-line max-classes-per-file
 import { inject, injectable } from 'inversify';
-import { DiagnosticSeverity } from 'vscode';
+import { DiagnosticSeverity, l10n } from 'vscode';
 import '../../../common/extensions';
-import * as nls from 'vscode-nls';
 import { IPlatformService } from '../../../common/platform/types';
 import {
     IConfigurationService,
@@ -23,11 +22,8 @@ import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '.
 import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService } from '../types';
 import { Common } from '../../../common/utils/localize';
 
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-
 const messages = {
-    [DiagnosticCodes.MacInterpreterSelected]: localize(
-        'DiagnosticCodes.MacInterpreterSelected',
+    [DiagnosticCodes.MacInterpreterSelected]: l10n.t(
         'The selected macOS system install of Python is not recommended, some functionality in the extension will be limited. [Install another version of Python](https://www.python.org/downloads) or select a different interpreter for the best experience. [Learn more](https://aka.ms/AA7jfor).',
     ),
 };

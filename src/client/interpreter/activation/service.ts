@@ -1,6 +1,9 @@
+/* eslint-disable max-classes-per-file */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
+
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
@@ -32,6 +35,7 @@ import {
 } from '../../logging';
 import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda';
 import { StopWatch } from '../../common/utils/stopWatch';
+import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const CACHE_DURATION = 10 * 60 * 1000;
@@ -59,15 +63,19 @@ const condaRetryMessages = [
  */
 export class EnvironmentActivationServiceCache {
     private static useStatic = false;
+
     private static staticMap = new Map<string, InMemoryCache<NodeJS.ProcessEnv | undefined>>();
+
     private normalMap = new Map<string, InMemoryCache<NodeJS.ProcessEnv | undefined>>();
 
-    public static forceUseStatic() {
+    public static forceUseStatic(): void {
         EnvironmentActivationServiceCache.useStatic = true;
     }
-    public static forceUseNormal() {
+
+    public static forceUseNormal(): void {
         EnvironmentActivationServiceCache.useStatic = false;
     }
+
     public get(key: string): InMemoryCache<NodeJS.ProcessEnv | undefined> | undefined {
         if (EnvironmentActivationServiceCache.useStatic) {
             return EnvironmentActivationServiceCache.staticMap.get(key);
@@ -75,7 +83,7 @@ export class EnvironmentActivationServiceCache {
         return this.normalMap.get(key);
     }
 
-    public set(key: string, value: InMemoryCache<NodeJS.ProcessEnv | undefined>) {
+    public set(key: string, value: InMemoryCache<NodeJS.ProcessEnv | undefined>): void {
         if (EnvironmentActivationServiceCache.useStatic) {
             EnvironmentActivationServiceCache.staticMap.set(key, value);
         } else {
@@ -83,7 +91,7 @@ export class EnvironmentActivationServiceCache {
         }
     }
 
-    public delete(key: string) {
+    public delete(key: string): void {
         if (EnvironmentActivationServiceCache.useStatic) {
             EnvironmentActivationServiceCache.staticMap.delete(key);
         } else {
@@ -91,7 +99,7 @@ export class EnvironmentActivationServiceCache {
         }
     }
 
-    public clear() {
+    public clear(): void {
         // Don't clear during a test as the environment isn't going to change
         if (!EnvironmentActivationServiceCache.useStatic) {
             this.normalMap.clear();
@@ -102,7 +110,9 @@ export class EnvironmentActivationServiceCache {
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
+
     private readonly activatedEnvVariablesCache = new EnvironmentActivationServiceCache();
+
     constructor(
         @inject(ITerminalHelper) private readonly helper: ITerminalHelper,
         @inject(IPlatformService) private readonly platform: IPlatformService,
@@ -117,29 +127,25 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             this,
             this.disposables,
         );
-
-        this.interpreterService.onDidChangeInterpreter(
-            () => this.activatedEnvVariablesCache.clear(),
-            this,
-            this.disposables,
-        );
     }
 
     public dispose(): void {
         this.disposables.forEach((d) => d.dispose());
     }
+
     @traceDecoratorVerbose('getActivatedEnvironmentVariables', TraceOptions.Arguments)
     public async getActivatedEnvironmentVariables(
         resource: Resource,
         interpreter?: PythonEnvironment,
         allowExceptions?: boolean,
+        shell?: string,
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const stopWatch = new StopWatch();
         // Cache key = resource + interpreter.
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
         interpreter = interpreter ?? (await this.interpreterService.getActiveInterpreter(resource));
         const interpreterPath = this.platform.isWindows ? interpreter?.path.toLowerCase() : interpreter?.path;
-        const cacheKey = `${workspaceKey}_${interpreterPath}`;
+        const cacheKey = `${workspaceKey}_${interpreterPath}_${shell}`;
 
         if (this.activatedEnvVariablesCache.get(cacheKey)?.hasData) {
             return this.activatedEnvVariablesCache.get(cacheKey)!.data;
@@ -147,7 +153,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
         // Cache only if successful, else keep trying & failing if necessary.
         const cache = new InMemoryCache<NodeJS.ProcessEnv | undefined>(CACHE_DURATION);
-        return this.getActivatedEnvironmentVariablesImpl(resource, interpreter, allowExceptions)
+        return this.getActivatedEnvironmentVariablesImpl(resource, interpreter, allowExceptions, shell)
             .then((vars) => {
                 cache.data = vars;
                 this.activatedEnvVariablesCache.set(cacheKey, cache);
@@ -167,6 +173,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 throw ex;
             });
     }
+
     public async getEnvironmentActivationShellCommands(
         resource: Resource,
         interpreter?: PythonEnvironment,
@@ -177,23 +184,29 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
         return this.helper.getEnvironmentActivationShellCommands(resource, shellInfo.shellType, interpreter);
     }
+
     public async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
         interpreter?: PythonEnvironment,
         allowExceptions?: boolean,
+        shell?: string,
     ): Promise<NodeJS.ProcessEnv | undefined> {
-        const shellInfo = defaultShells[this.platform.osType];
+        let shellInfo = defaultShells[this.platform.osType];
         if (!shellInfo) {
-            return;
+            return undefined;
+        }
+        if (shell) {
+            const customShellType = identifyShellFromShellPath(shell);
+            shellInfo = { shellType: customShellType, shell };
         }
         try {
             let command: string | undefined;
-            let [args, parse] = internalScripts.printEnvVariables();
+            const [args, parse] = internalScripts.printEnvVariables();
             args.forEach((arg, i) => {
                 args[i] = arg.toCommandArgumentForPythonExt();
             });
             if (interpreter?.envType === EnvironmentType.Conda) {
-                const conda = await Conda.getConda();
+                const conda = await Conda.getConda(shell);
                 const pythonArgv = await conda?.getRunPythonArgs({
                     name: interpreter.envName,
                     prefix: interpreter.envPath ?? '',
@@ -211,10 +224,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 );
                 traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
                 if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
-                    return;
+                    return undefined;
                 }
                 // Run the activate command collect the environment from it.
-                const activationCommand = this.fixActivationCommands(activationCommands).join(' && ');
+                const activationCommand = fixActivationCommands(activationCommands).join(' && ');
                 // In order to make sure we know where the environment output is,
                 // put in a dummy echo we can look for
                 command = `${activationCommand} && echo '${ENVIRONMENT_PREFIX}' && python ${args.join(' ')}`;
@@ -306,15 +319,13 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 throw e;
             }
         }
+        return undefined;
     }
 
-    protected fixActivationCommands(commands: string[]): string[] {
-        // Replace 'source ' with '. ' as that works in shell exec
-        return commands.map((cmd) => cmd.replace(/^source\s+/, '. '));
-    }
     @traceDecoratorError('Failed to parse Environment variables')
     @traceDecoratorVerbose('parseEnvironmentOutput', TraceOptions.None)
-    protected parseEnvironmentOutput(output: string, parse: (out: string) => NodeJS.ProcessEnv | undefined) {
+    // eslint-disable-next-line class-methods-use-this
+    private parseEnvironmentOutput(output: string, parse: (out: string) => NodeJS.ProcessEnv | undefined) {
         if (output.indexOf(ENVIRONMENT_PREFIX) === -1) {
             return parse(output);
         }
@@ -322,4 +333,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         const js = output.substring(output.indexOf('{')).trim();
         return parse(js);
     }
+}
+
+function fixActivationCommands(commands: string[]): string[] {
+    // Replace 'source ' with '. ' as that works in shell exec
+    return commands.map((cmd) => cmd.replace(/^source\s+/, '. '));
 }

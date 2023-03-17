@@ -1,66 +1,85 @@
 All dates should align with VS Code's [iteration](https://github.com/microsoft/vscode/labels/iteration-plan) and [endgame](https://github.com/microsoft/vscode/labels/endgame-plan) plans.
 
-# Feature freeze (Monday @ 17:00 America/Vancouver, XXX XX)
+Feature freeze is Monday @ 17:00 America/Vancouver, XXX XX.
 
--   [ ] Announce the feature freeze on both Teams and e-mail, leave enough time for teams to surface any last minute issues that need to get in before freeze. Make sure debugger and Language Server teams are looped in as well.
+
+NOTE: the number of this release is in the issue title and can be substituted in wherever you see [YYYY.minor].
+
 
 # Release candidate (Monday, XXX XX)
 
-NOTE: Third Party Notices are automatically added by our build pipelines using https://tools.opensource.microsoft.com/notice.
+NOTE: Third Party Notices are automatically added by our build pipelines using  https://tools.opensource.microsoft.com/notice.
 
--   [ ] Update `main` for the release
-    -   [ ] Change the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) to the next **even** number and switch the `-dev` to `-rc` (🤖)
-    -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) is up-to-date, you should now see changes to the`package.json` and `package-lock.json` (🤖)
-    -   [ ] Check [`pypi.org`](https://pypi.org/search/?q=debugpy) and update the version of `debugpy` in `install_debugpy.py` if necessary.
-    -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/main/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
-    -   [ ] Get approval on PR then merge pull request into `main`
--   [ ] Create the [`release` branch](https://github.com/microsoft/vscode-python/branches)
-    -   [ ] If there are `release` branches that are two versions old you can delete them at this time
-    -   [ ] Click `draft new release` then create a tag for this release matching the `release/YYYY.XX` format
-    -   [ ] Click `generate release notes`
-    -   [ ] Create a new `release/YYYY.XX` branch from `main`
--   [ ] Create a draft [GitHub release](https://github.com/microsoft/vscode-python/releases) for the release notes (🤖)
--   [ ] Update `main` post-release (🤖)
-    -   [ ] Bump the minor version number to the next ("YYYY.[minor+1]") release in the `main` branch to an **odd** number and switch the `-rc` to `-dev`(🤖)
-    -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) is up-to-date, you should now see changes to the`package.json` and `package-lock.json` (🤖)
-    -   [ ] Create a pull request against `main`
-    -   [ ] Get approval on PR then merge pull request into `main`
--   [ ] Announce the code freeze is over on the same channels, not required if this occurs on normal release cadence
--   [ ] Update Component Governance (Notes are in the team OneNote under Python VS Code → Dev Process → Component Governance).
-    -   [ ] Check pipeline on Azure DevOps under [`monacotools/Monaco/Compliance/Component Governance`](https://dev.azure.com/monacotools/Monaco/_componentGovernance/192726?_a=alerts&typeId=11825783&alerts-view-option=active)
-    -   [ ] Make sure there are no active alerts
-    -   [ ] Manually add any repository/embedded/CG-incompatible dependencies
--   [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
--   [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post. Contact the PM team for this.
+### Step 1:
+##### Bump the version of `main` to be a release candidate (also updating debugpy dependences, third party notices, and package-lock.json).❄️ (steps with ❄️ will dictate this step happens while main is frozen 🥶)
+
+-   [ ] checkout to `main` on your local machine and run `git fetch` to ensure your local is up to date with the remote repo.
+-   [ ] Create a new branch called  **`bump-release-[YYYY.minor]`**.
+-   [ ] Change the version in `package.json` to the next **even** number and switch the `-dev` to `-rc`. (🤖)
+-   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(you should now see changes to the `package.json` and `package-lock.json` at this point which update the version number **only**)_. (🤖)
+-   [ ] Check [debugpy on PyPI](https://pypi.org/project/debugpy/) for a new release and update the version of debugpy in [`install_debugpy.py`](https://github.com/microsoft/vscode-python/blob/main/pythonFiles/install_debugpy.py) if necessary.
+-   [ ] Update `ThirdPartyNotices-Repository.txt` as appropriate. You can check by looking at the [commit history](https://github.com/microsoft/vscode-python/commits/main) and scrolling through to see if there's anything listed there which might have pulled in some code directly into the repository from somewhere else. If you are still unsure you can check with the team.
+-   [ ] Create a PR from your branch  **`bump-release-[YYYY.minor]`** to `main`. Add the `"no change-log"` tag to the PR so it does not show up on the release notes before merging it.
+
+NOTE: this PR will fail the test in our internal release pipeline called `VS Code (pre-release)` because the version specified in `main` is (temporarily) an invalid pre-release version. This is expected as this will be resolved below.
+
+
+### Step 2: Creating your release branch ❄️
+-   [ ] Create a release branch by creating a new branch called **`release/YYYY.minor`** branch from `main`. This branch is now the candidate for our release which will be the base from which we will release.
+
+NOTE: If there are release branches that are two versions old you can delete them at this time.
+
+### Step 3 Create a draft GitHub release for the release notes (🤖) ❄️
+
+-   [ ] Create a new [GitHub release](https://github.com/microsoft/vscode-python/releases/new).
+-   [ ] Specify a new tag called `YYYY.minor.0`.
+-   [ ] Have the `target` for the github release be your release branch called **`release/YYYY.minor`**.
+-   [ ] Create the release notes by specifying the previous tag for the last stable release and click `Generate release notes`. Quickly check that it only contain notes from what is new in this release.
+-   [ ] Click `Save draft`.
+
+### Step 4: Return `main` to dev and unfreeze (❄️ ➡ 💧)
+NOTE: The purpose of this step is ensuring that main always is on a dev version number for every night's 🌃 pre-release. Therefore it is imperative that you do this directly after the previous steps to reset the version in main to a dev version **before** a pre-release goes out.
+-   [ ] Create a branch called **`bump-dev-version-YYYY.[minor+1]`**.
+-   [ ] Bump the minor version number in the `package.json` to the next `YYYY.[minor+1]` which will be an odd number, and switch the `-rc` to `-dev`.(🤖)
+-   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(you should now see changes to the `package.json` and `package-lock.json` only relating to the new version number)_ . (🤖)
+-   [ ] Create a PR from this branch against `main` and merge it.
+
+NOTE: this PR should make all CI relating to `main` be passing again (such as the failures stemming from step 1).
+
+### Step 5: Notifications and Checks on External Release Factors
+-   [ ] Check [Component Governance](https://dev.azure.com/monacotools/Monaco/_componentGovernance/192726?_a=alerts&typeId=11825783&alerts-view-option=active) to make sure there are no active alerts.
+-   [ ] Manually add/fix any 3rd-party licenses as appropriate based on what the internal build pipeline detects.
+-   [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython).
+-   [ ] Contact the PM team to begin drafting a blog post.
+
 
 # Release (Wednesday, XXX XX)
 
-## Preparation
+### Step 6: Take the release branch from a candidate to the finalized release
+-   [ ] Make sure the [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls) for the [documentation](https://code.visualstudio.com/docs/python/python-tutorial) -- including the [WOW](https://code.visualstudio.com/docs/languages/python) page -- are ready.
+-   [ ] Check to make sure any final updates to the **`release/YYYY.minor`** branch have been merged.
+-   [ ] Create a branch against  **`release/YYYY.minor`** called **`finalized-release-[YYYY.minor]`**.
+-   [ ] Update the version in `package.json` to remove the `-rc` (🤖) from the version.
+-   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(the only update should be the version number if `package-lock.json` has been kept up-to-date)_. (🤖)
+-   [ ] Update `ThirdPartyNotices-Repository.txt` manually if necessary.
+-   [ ] Create a PR from **`finalized-release-[YYYY.minor]`** against `release/YYYY.minor` and merge it.
 
--   [ ] Make sure the [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls) for the [documentation](https://code.visualstudio.com/docs/python/python-tutorial) -- including the [WOW](https://code.visualstudio.com/docs/languages/python) page -- are ready
--   [ ] Final updates to the `release-YYYY.minor` branch
-    -   [ ] Create a branch against `release-YYYY.minor` for a pull request
-    -   [ ] Update the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) to remove the `-rc` (🤖)
-    -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) is up-to-date (the only update should be the version number if `package-lock.json` has been kept up-to-date) (🤖)
-    -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/main/ThirdPartyNotices-Repository.txt) manually if necessary
-    -   [ ] Create pull request against `release/YYYY.minor` (🤖)
-    -   [ ] Merge pull request into `release/YYYY.minor`
 
-## Release
-
--   [ ] Make sure [CI](https://github.com/microsoft/vscode-python/actions?query=workflow:%22Build%22) is passing for Release branch (🤖).
--   [ ] Run the [CD](https://dev.azure.com/monacotools/Monaco/_build?definitionId=299) pipeline on the `release/yyyy.minor` branch.
--   [ ] Check to ensure VS Code release has gone out before moving onto publishing the python extension
-    -   [ ] Press the approve button if everything looks good to publish to market place.
--   [ ] Create a [GitHub release](https://github.com/microsoft/vscode-python/releases) (🤖)
-    -   [ ] Update the release notes
-    -   [ ] Take the release out of draft
--   [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
--   [ ] Publish the [blog](http://aka.ms/pythonblog) post
--   [ ] Determine if a hotfix is needed
--   [ ] Merge the release branch back into `main`. Don't overwrite the main branch version. (🤖)
+### Step 7: Execute the Release
+-   [ ] Make sure CI is passing for **`release/YYYY.minor`** release branch (🤖).
+-   [ ] Run the [CD](https://dev.azure.com/monacotools/Monaco/_build?definitionId=299) pipeline on the **`release/YYYY.minor`** branch.
+    -   [ ] Click `run pipeline`.
+	-   [ ] for `branch/tag` select the release branch which is **`release/YYYY.minor`**.
+	-   NOTE: Please opt to release the python extension close to when VS Code is released to align when release notes go out. When we bump the VS Code engine number, our extension will not go out to stable until the VS Code stable release but this only occurs when we bump the engine number.
+-   [ ] 🧍🧍 Get approval on the release on the [CD](https://dev.azure.com/monacotools/Monaco/_build?definitionId=299).
+-   [ ] Click "approve" in the publish step of [CD](https://dev.azure.com/monacotools/Monaco/_build?definitionId=299) to publish the release to the marketplace.  🎉
+-   [ ] Take the Github release out of draft.
+-   [ ] Publish documentation changes.
+-   [ ] Contact the PM team to publish the blog post.
+-   [ ] Determine if a hotfix is needed.
+-   [ ] Merge the release branch **`release/YYYY.minor`**  back into `main`. (This step is only required if changes were merged into the release branch. If the only change made on the release branch is the version, this is not necessary. Overall you need to ensure you DO NOT overwrite the version on the `main` branch.)
 
 ## Prep for the _next_ release
 
--   [ ] Create a new [release plan](https://raw.githubusercontent.com/microsoft/vscode-python/main/.github/release_plan.md) (🤖)
+-   [ ] Create a new [release plan](https://raw.githubusercontent.com/microsoft/vscode-python/main/.github/release_plan.md). (🤖)
 -   [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-python/labels/release%20plan) (🤖)

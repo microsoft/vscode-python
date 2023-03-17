@@ -6,7 +6,6 @@ import { WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { DocumentFilter } from 'vscode-languageclient/node';
 
 import { NodeLanguageServerAnalysisOptions } from '../../../client/activation/node/analysisOptions';
-import { LspNotebooksExperiment } from '../../../client/activation/node/lspNotebooksExperiment';
 import { ILanguageServerOutputChannel } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { PYTHON, PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -33,7 +32,6 @@ suite('Pylance Language Server - Analysis Options', () => {
     let lsOutputChannel: typemoq.IMock<ILanguageServerOutputChannel>;
     let workspace: typemoq.IMock<IWorkspaceService>;
     let experimentService: IExperimentService;
-    let lspNotebooksExperiment: typemoq.IMock<LspNotebooksExperiment>;
 
     setup(() => {
         outputChannel = typemoq.Mock.ofType<IOutputChannel>().object;
@@ -45,14 +43,7 @@ suite('Pylance Language Server - Analysis Options', () => {
         lsOutputChannel = typemoq.Mock.ofType<ILanguageServerOutputChannel>();
         lsOutputChannel.setup((l) => l.channel).returns(() => outputChannel);
         experimentService = typemoq.Mock.ofType<IExperimentService>().object;
-        lspNotebooksExperiment = typemoq.Mock.ofType<LspNotebooksExperiment>();
-        lspNotebooksExperiment.setup((l) => l.isInNotebooksExperiment()).returns(() => false);
-        analysisOptions = new TestClass(
-            lsOutputChannel.object,
-            workspace.object,
-            experimentService,
-            lspNotebooksExperiment.object,
-        );
+        analysisOptions = new TestClass(lsOutputChannel.object, workspace.object, experimentService);
     });
 
     test('Workspace folder is undefined', () => {

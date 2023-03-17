@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
+import { CancellationToken, DebugConfiguration, WorkspaceFolder } from 'vscode';
 
 export const IDebugConfigurationResolver = Symbol('IDebugConfigurationResolver');
 export interface IDebugConfigurationResolver<T extends DebugConfiguration> {
@@ -18,10 +18,4 @@ export interface IDebugConfigurationResolver<T extends DebugConfiguration> {
         debugConfiguration: T,
         token?: CancellationToken,
     ): Promise<T | undefined>;
-}
-
-export const ILaunchJsonReader = Symbol('ILaunchJsonReader');
-export interface ILaunchJsonReader {
-    getConfigurationsForWorkspace(workspace: WorkspaceFolder): Promise<DebugConfiguration[]>;
-    getConfigurationsByUri(uri?: Uri): Promise<DebugConfiguration[]>;
 }

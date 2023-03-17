@@ -44,5 +44,5 @@ nodeLanguageServer.*/**
 dist/**
 # translation files
 *.xlf
-*.nls.*.json
-*.i18n.json
+package.nls.*.json
+l10n/

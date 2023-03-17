@@ -3,13 +3,18 @@
 
 import { ConfigurationTarget, Disposable } from 'vscode';
 import { Commands } from '../../common/constants';
-import { IDisposableRegistry, IInterpreterPathService } from '../../common/types';
+import { IDisposableRegistry, IInterpreterPathService, IPathUtils } from '../../common/types';
 import { registerCommand } from '../../common/vscodeApis/commandApis';
 import { IInterpreterQuickPick } from '../../interpreter/configuration/types';
 import { getCreationEvents, handleCreateEnvironmentCommand } from './createEnvironment';
 import { condaCreationProvider } from './provider/condaCreationProvider';
 import { VenvCreationProvider } from './provider/venvCreationProvider';
-import { CreateEnvironmentOptions, CreateEnvironmentProvider, CreateEnvironmentResult } from './types';
+import {
+    CreateEnvironmentExitedEventArgs,
+    CreateEnvironmentOptions,
+    CreateEnvironmentProvider,
+    CreateEnvironmentResult,
+} from './types';
 import { showInformationMessage } from '../../common/vscodeApis/windowApis';
 import { CreateEnv } from '../../common/utils/localize';
 
@@ -48,6 +53,7 @@ export function registerCreateEnvironmentFeatures(
     disposables: IDisposableRegistry,
     interpreterQuickPick: IInterpreterQuickPick,
     interpreterPathService: IInterpreterPathService,
+    pathUtils: IPathUtils,
 ): void {
     disposables.push(
         registerCommand(
@@ -61,10 +67,10 @@ export function registerCreateEnvironmentFeatures(
     disposables.push(registerCreateEnvironmentProvider(new VenvCreationProvider(interpreterQuickPick)));
     disposables.push(registerCreateEnvironmentProvider(condaCreationProvider()));
     disposables.push(
-        onCreateEnvironmentExited(async (e: CreateEnvironmentResult | undefined) => {
-            if (e && e.path) {
-                await interpreterPathService.update(e.uri, ConfigurationTarget.WorkspaceFolder, e.path);
-                showInformationMessage(`${CreateEnv.informEnvCreation} ${e.path}`);
+        onCreateEnvironmentExited(async (e: CreateEnvironmentExitedEventArgs) => {
+            if (e.result?.path && e.options?.selectEnvironment) {
+                await interpreterPathService.update(e.result.uri, ConfigurationTarget.WorkspaceFolder, e.result.path);
+                showInformationMessage(`${CreateEnv.informEnvCreation} ${pathUtils.getDisplayName(e.result.path)}`);
             }
         }),
     );

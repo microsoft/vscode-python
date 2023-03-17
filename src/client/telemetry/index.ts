@@ -2,11 +2,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import TelemetryReporter from '@vscode/extension-telemetry/lib/telemetryReporter';
+import TelemetryReporter from '@vscode/extension-telemetry';
 
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
-import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
+import { AppinsightsKey, isTestExecution, isUnitTestExecution } from '../common/constants';
 import type { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { isPromise } from '../common/utils/async';
@@ -80,14 +80,9 @@ function getTelemetryReporter() {
     if (!isTestExecution() && telemetryReporter) {
         return telemetryReporter;
     }
-    const extensionId = PVSC_EXTENSION_ID;
-
-    const { extensions } = require('vscode') as typeof import('vscode');
-    const extension = extensions.getExtension(extensionId)!;
-    const extensionVersion = extension.packageJSON.version;
 
     const Reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
-    telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true, [
+    telemetryReporter = new Reporter(AppinsightsKey, [
         {
             lookup: /(errorName|errorMessage|errorStack)/g,
         },
@@ -1304,8 +1299,9 @@ export interface IEventNamePropertyMapping {
         environmentsWithoutPython?: number;
     };
     /**
-     * Telemetry event sent with details when user clicks the prompt with the following message
-     * `Prompt message` :- 'We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the "terminal.integrated.inheritEnv" setting to be changed to false. Would you like to update this setting?'
+     * Telemetry event sent with details when user clicks the prompt with the following message:
+     *
+     * 'We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the "terminal.integrated.inheritEnv" setting to be changed to false. Would you like to update this setting?'
      */
     /* __GDPR__
        "conda_inherit_env_prompt" : {
@@ -1314,11 +1310,27 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.CONDA_INHERIT_ENV_PROMPT]: {
         /**
+         * `Yes` When 'Allow' option is selected
+         * `Close` When 'Close' option is selected
+         */
+        selection: 'Allow' | 'Close' | undefined;
+    };
+    /**
+     * Telemetry event sent with details when user clicks the prompt with the following message:
+     *
+     * 'We noticed VS Code was launched from an activated conda environment, would you like to select it?'
+     */
+    /* __GDPR__
+       "activated_conda_env_launch" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+     */
+    [EventName.ACTIVATED_CONDA_ENV_LAUNCH]: {
+        /**
          * `Yes` When 'Yes' option is selected
          * `No` When 'No' option is selected
-         * `More info` When 'More Info' option is selected
          */
-        selection: 'Yes' | 'No' | 'More Info' | undefined;
+        selection: 'Yes' | 'No' | undefined;
     };
     /**
      * Telemetry event sent with details when user clicks a button in the virtual environment prompt.
@@ -1463,6 +1475,17 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.LANGUAGE_SERVER_REQUEST]: unknown;
+    /**
+     * Telemetry send when Language Server is restarted.
+     */
+    /* __GDPR__
+       "language_server_restart" : {
+          "reason" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.LANGUAGE_SERVER_RESTART]: {
+        reason: 'command' | 'settings' | 'notebooksExperiment';
+    };
     /**
      * Telemetry event sent when Jedi Language Server is started for workspace (workspace folder in case of multi-root)
      */
@@ -2068,7 +2091,8 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.TOOLS_EXTENSIONS_ALREADY_INSTALLED]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8' | 'ms-python.isort';
+        isEnabled: boolean;
     };
     /**
      * Telemetry event sent when install linter or formatter extension prompt is shown.
@@ -2079,7 +2103,7 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.TOOLS_EXTENSIONS_PROMPT_SHOWN]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8' | 'ms-python.isort';
     };
     /**
      * Telemetry event sent when clicking to install linter or formatter extension from the suggestion prompt.
@@ -2090,7 +2114,7 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.TOOLS_EXTENSIONS_INSTALL_SELECTED]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8' | 'ms-python.isort';
     };
     /**
      * Telemetry event sent when dismissing prompt suggesting to install the linter or formatter extension.
@@ -2102,7 +2126,7 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.TOOLS_EXTENSIONS_PROMPT_DISMISSED]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
+        extensionId: 'ms-python.pylint' | 'ms-python.flake8' | 'ms-python.isort';
         dismissType: 'close' | 'doNotShow';
     };
     /* __GDPR__

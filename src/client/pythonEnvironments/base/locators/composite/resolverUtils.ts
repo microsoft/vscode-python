@@ -15,7 +15,12 @@ import {
 import { buildEnvInfo, comparePythonVersionSpecificity, setEnvDisplayString, getEnvID } from '../../info/env';
 import { getEnvironmentDirFromPath, getPythonVersionFromPath } from '../../../common/commonUtils';
 import { arePathsSame, getFileInfo, isParentPath } from '../../../common/externalDependencies';
-import { AnacondaCompanyName, Conda, isCondaEnvironment } from '../../../common/environmentManagers/conda';
+import {
+    AnacondaCompanyName,
+    Conda,
+    getCondaInterpreterPath,
+    isCondaEnvironment,
+} from '../../../common/environmentManagers/conda';
 import { getPyenvVersionsDir, parsePyenvVersion } from '../../../common/environmentManagers/pyenv';
 import { Architecture, getOSType, OSType } from '../../../../common/utils/platform';
 import { getPythonVersionFromPath as parsePythonVersionFromPath, parseVersion } from '../../info/pythonVersion';
@@ -25,6 +30,7 @@ import { parseVersionFromExecutable } from '../../info/executable';
 import { traceError, traceWarn } from '../../../../logging';
 import { isVirtualEnvironment } from '../../../common/environmentManagers/simplevirtualenvs';
 import { getWorkspaceFolderPaths } from '../../../../common/vscodeApis/workspaceApis';
+import { ActiveState } from '../../../common/environmentManagers/activestate';
 
 function getResolvers(): Map<PythonEnvKind, (env: BasicEnvInfo) => Promise<PythonEnvInfo>> {
     const resolvers = new Map<PythonEnvKind, (_: BasicEnvInfo) => Promise<PythonEnvInfo>>();
@@ -37,6 +43,7 @@ function getResolvers(): Map<PythonEnvKind, (env: BasicEnvInfo) => Promise<Pytho
     resolvers.set(PythonEnvKind.Conda, resolveCondaEnv);
     resolvers.set(PythonEnvKind.MicrosoftStore, resolveMicrosoftStoreEnv);
     resolvers.set(PythonEnvKind.Pyenv, resolvePyenvEnv);
+    resolvers.set(PythonEnvKind.ActiveState, resolveActiveStateEnv);
     return resolvers;
 }
 
@@ -57,7 +64,6 @@ export async function resolveBasicEnv(env: BasicEnvInfo): Promise<PythonEnvInfo>
         await updateEnvUsingRegistry(resolvedEnv);
     }
     setEnvDisplayString(resolvedEnv);
-    resolvedEnv.id = getEnvID(resolvedEnv.executable.filename, resolvedEnv.location);
     const { ctime, mtime } = await getFileInfo(resolvedEnv.executable.filename);
     resolvedEnv.executable.ctime = ctime;
     resolvedEnv.executable.mtime = mtime;
@@ -189,6 +195,13 @@ async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     if (name) {
         info.name = name;
     }
+    if (env.envPath && path.basename(executable) === executable) {
+        // For environments without python, set ID using the predicted executable path after python is installed.
+        // Another alternative could've been to set ID of all conda environments to the environment path, as that
+        // remains constant even after python installation.
+        const predictedExecutable = getCondaInterpreterPath(env.envPath);
+        info.id = getEnvID(predictedExecutable, env.envPath);
+    }
     return info;
 }
 
@@ -234,6 +247,25 @@ async function resolvePyenvEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
         envInfo.name = name;
     }
     return envInfo;
+}
+
+async function resolveActiveStateEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
+    const info = buildEnvInfo({
+        kind: env.kind,
+        executable: env.executablePath,
+    });
+    const projects = await ActiveState.getState().then((v) => v?.getProjects());
+    if (projects) {
+        for (const project of projects) {
+            for (const dir of project.executables) {
+                if (arePathsSame(dir, path.dirname(env.executablePath))) {
+                    info.name = `${project.organization}/${project.name}`;
+                    return info;
+                }
+            }
+        }
+    }
+    return info;
 }
 
 async function isBaseCondaPyenvEnvironment(executablePath: string) {

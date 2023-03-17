@@ -38,5 +38,6 @@ export class CondaEnvironmentLocator extends FSWatchingLocator {
                 traceError(`Failed to process conda env: ${JSON.stringify(env)}`, ex);
             }
         }
+        traceVerbose(`Finished searching for conda environments`);
     }
 }

@@ -1,51 +1,73 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import '../../setupNls';
 import * as vscode from 'vscode';
 import TelemetryReporter from '@vscode/extension-telemetry';
 import { LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/browser';
 import { LanguageClientMiddlewareBase } from '../activation/languageClientMiddlewareBase';
 import { LanguageServerType } from '../activation/types';
-import { AppinsightsKey, PVSC_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../common/constants';
+import { AppinsightsKey, PYLANCE_EXTENSION_ID } from '../common/constants';
 import { EventName } from '../telemetry/constants';
 import { createStatusItem } from './intellisenseStatus';
+import { PylanceApi } from '../activation/node/pylanceApi';
+import { buildApi, IBrowserExtensionApi } from './api';
 
 interface BrowserConfig {
     distUrl: string; // URL to Pylance's dist folder.
 }
 
 let languageClient: LanguageClient | undefined;
+let pylanceApi: PylanceApi | undefined;
 
-export async function activate(context: vscode.ExtensionContext): Promise<void> {
-    const pylanceExtension = vscode.extensions.getExtension(PYLANCE_EXTENSION_ID);
+export async function activate(context: vscode.ExtensionContext): Promise<IBrowserExtensionApi> {
+    const pylanceExtension = vscode.extensions.getExtension<PylanceApi>(PYLANCE_EXTENSION_ID);
     if (pylanceExtension) {
         await runPylance(context, pylanceExtension);
-        return;
+        return buildApi();
     }
 
     const changeDisposable = vscode.extensions.onDidChange(async () => {
-        const newPylanceExtension = vscode.extensions.getExtension(PYLANCE_EXTENSION_ID);
+        const newPylanceExtension = vscode.extensions.getExtension<PylanceApi>(PYLANCE_EXTENSION_ID);
         if (newPylanceExtension) {
             changeDisposable.dispose();
             await runPylance(context, newPylanceExtension);
         }
     });
+
+    return buildApi();
 }
 
 export async function deactivate(): Promise<void> {
-    const client = languageClient;
-    languageClient = undefined;
+    if (pylanceApi) {
+        const api = pylanceApi;
+        pylanceApi = undefined;
+        await api.client!.stop();
+    }
 
-    await client?.stop();
-    await client?.dispose();
+    if (languageClient) {
+        const client = languageClient;
+        languageClient = undefined;
+
+        await client.stop();
+        await client.dispose();
+    }
 }
 
 async function runPylance(
     context: vscode.ExtensionContext,
-    pylanceExtension: vscode.Extension<unknown>,
+    pylanceExtension: vscode.Extension<PylanceApi>,
 ): Promise<void> {
+    context.subscriptions.push(createStatusItem());
+
+    pylanceExtension = await getActivatedExtension(pylanceExtension);
+    const api = pylanceExtension.exports;
+    if (api.client && api.client.isEnabled()) {
+        pylanceApi = api;
+        await api.client.start();
+        return;
+    }
+
     const { extensionUri, packageJSON } = pylanceExtension;
     const distUrl = vscode.Uri.joinPath(extensionUri, 'dist');
 
@@ -77,7 +99,7 @@ async function runPylance(
             ],
             synchronize: {
                 // Synchronize the setting section to the server.
-                configurationSection: ['python'],
+                configurationSection: ['python', 'jupyter.runStartupCommands'],
             },
             middleware,
         };
@@ -112,8 +134,6 @@ async function runPylance(
         );
 
         await client.start();
-
-        context.subscriptions.push(createStatusItem());
     } catch (e) {
         console.log(e);
     }
@@ -127,16 +147,10 @@ function getTelemetryReporter() {
     if (telemetryReporter) {
         return telemetryReporter;
     }
-    const extensionId = PVSC_EXTENSION_ID;
-
-    // eslint-disable-next-line global-require
-    const { extensions } = require('vscode') as typeof import('vscode');
-    const extension = extensions.getExtension(extensionId)!;
-    const extensionVersion = extension.packageJSON.version;
 
     // eslint-disable-next-line global-require
     const Reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
-    telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true, [
+    telemetryReporter = new Reporter(AppinsightsKey, [
         {
             lookup: /(errorName|errorMessage|errorStack)/g,
         },
@@ -202,4 +216,12 @@ function sendTelemetryEventBrowser(
     } else {
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
+}
+
+async function getActivatedExtension<T>(extension: vscode.Extension<T>): Promise<vscode.Extension<T>> {
+    if (!extension.isActive) {
+        await extension.activate();
+    }
+
+    return extension;
 }

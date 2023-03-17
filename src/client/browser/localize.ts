@@ -3,21 +3,20 @@
 
 'use strict';
 
+import { l10n } from 'vscode';
+
 /* eslint-disable @typescript-eslint/no-namespace */
 
 // IMPORTANT: Do not import any node fs related modules here, as they do not work in browser.
-import * as nls from 'vscode-nls';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export namespace LanguageService {
     export const statusItem = {
-        name: localize('LanguageService.statusItem.name', 'Python IntelliSense Status'),
-        text: localize('LanguageService.statusItem.text', 'Partial Mode'),
-        detail: localize('LanguageService.statusItem.detail', 'Limited IntelliSense provided by Pylance'),
+        name: l10n.t('Python IntelliSense Status'),
+        text: l10n.t('Partial Mode'),
+        detail: l10n.t('Limited IntelliSense provided by Pylance'),
     };
 }
 
 export namespace Common {
-    export const learnMore = localize('Common.learnMore', 'Learn more');
+    export const learnMore = l10n.t('Learn more');
 }

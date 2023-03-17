@@ -14,7 +14,7 @@ import { PosixKnownPathsLocator } from '../../../../../client/pythonEnvironments
 import { createBasicEnv } from '../../common';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertBasicEnvsEqual } from '../envTestUtils';
-import { isMacDefaultPythonPath } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/macDefaultLocator';
+import { isMacDefaultPythonPath } from '../../../../../client/pythonEnvironments/common/environmentManagers/macDefault';
 
 suite('Posix Known Path Locator', () => {
     let getPathEnvVar: sinon.SinonStub;

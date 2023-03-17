@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { parse } from 'semver';
 import * as vscode from 'vscode';
+import { traceError } from '../../logging';
 import { Channel } from '../constants';
 import { IPlatformService } from '../platform/types';
 import { ICurrentProcess, IPathUtils } from '../types';
@@ -70,17 +71,20 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     public get extensionName(): string {
         return this.packageJson.displayName;
     }
-    /**
-     * At the time of writing this API, the vscode.env.shell isn't officially released in stable version of VS Code.
-     * Using this in stable version seems to throw errors in VSC with messages being displayed to the user about use of
-     * unstable API.
-     * Solution - log and suppress the errors.
-     * @readonly
-     * @type {(string)}
-     * @memberof ApplicationEnvironment
-     */
+
     public get shell(): string {
         return vscode.env.shell;
+    }
+
+    public get onDidChangeShell(): vscode.Event<string> {
+        try {
+            return vscode.env.onDidChangeShell;
+        } catch (ex) {
+            traceError('Failed to get onDidChangeShell API', ex);
+            // `onDidChangeShell` is a proposed API at the time of writing this, so wrap this in a try...catch
+            // block in case the API is removed or changed.
+            return new vscode.EventEmitter<string>().event;
+        }
     }
 
     public get packageJson(): any {

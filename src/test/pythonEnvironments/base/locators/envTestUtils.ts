@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as fsapi from 'fs-extra';
 import * as assert from 'assert';
 import { exec } from 'child_process';
-import { zip } from 'lodash';
+import { cloneDeep, zip } from 'lodash';
 import { promisify } from 'util';
 import { PythonEnvInfo, PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../../client/pythonEnvironments/base/info';
 import { getEmptyVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
@@ -40,17 +41,30 @@ export function assertVersionsEqual(actual: PythonVersion | undefined, expected:
     assert.deepStrictEqual(actual, expected);
 }
 
+export async function createFile(filename: string, text = ''): Promise<string> {
+    await fsapi.writeFile(filename, text);
+    return filename;
+}
+
+export async function deleteFile(filename: string): Promise<void> {
+    await fsapi.remove(filename);
+}
+
 export function assertEnvEqual(actual: PythonEnvInfo | undefined, expected: PythonEnvInfo | undefined): void {
     assert.notStrictEqual(actual, undefined);
     assert.notStrictEqual(expected, undefined);
 
     if (actual) {
+        // Make sure to clone so we do not alter the original object
+        actual = cloneDeep(actual);
+        expected = cloneDeep(expected);
         // No need to match these, so reset them
         actual.executable.ctime = -1;
         actual.executable.mtime = -1;
-
         actual.version = normalizeVersion(actual.version);
         if (expected) {
+            expected.executable.ctime = -1;
+            expected.executable.mtime = -1;
             expected.version = normalizeVersion(expected.version);
             delete expected.id;
         }

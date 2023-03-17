@@ -10,10 +10,10 @@ import { Commands } from '../../common/constants';
 import { IDisposableRegistry } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ILaunchJsonReader } from './configuration/types';
 import { DebugPurpose, LaunchRequestArguments } from '../types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { noop } from '../../common/utils/misc';
+import { getConfigurationsByUri } from './configuration/launch.json/launchJsonReader';
 
 @injectable()
 export class DebugCommands implements IExtensionSingleActivationService {
@@ -22,7 +22,6 @@ export class DebugCommands implements IExtensionSingleActivationService {
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDebugService) private readonly debugService: IDebugService,
-        @inject(ILaunchJsonReader) private readonly launchJsonReader: ILaunchJsonReader,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
     ) {}
@@ -36,15 +35,15 @@ export class DebugCommands implements IExtensionSingleActivationService {
                     this.commandManager.executeCommand(Commands.TriggerEnvironmentSelection, file).then(noop, noop);
                     return;
                 }
-                const config = await this.getDebugConfiguration(file);
+                const config = await DebugCommands.getDebugConfiguration(file);
                 this.debugService.startDebugging(undefined, config);
             }),
         );
         return Promise.resolve();
     }
 
-    private async getDebugConfiguration(uri?: Uri): Promise<DebugConfiguration> {
-        const configs = (await this.launchJsonReader.getConfigurationsByUri(uri)).filter((c) => c.request === 'launch');
+    private static async getDebugConfiguration(uri?: Uri): Promise<DebugConfiguration> {
+        const configs = (await getConfigurationsByUri(uri)).filter((c) => c.request === 'launch');
         for (const config of configs) {
             if ((config as LaunchRequestArguments).purpose?.includes(DebugPurpose.DebugInTerminal)) {
                 if (!config.program && !config.module && !config.code) {

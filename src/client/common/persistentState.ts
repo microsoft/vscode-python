@@ -6,7 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { traceError } from '../logging';
+import { traceError, traceVerbose, traceWarn } from '../logging';
 import { ICommandManager } from './application/types';
 import { Commands } from './constants';
 import {
@@ -41,12 +41,23 @@ export class PersistentState<T> implements IPersistentState<T> {
         }
     }
 
-    public async updateValue(newValue: T): Promise<void> {
+    public async updateValue(newValue: T, retryOnce = true): Promise<void> {
         try {
             if (this.expiryDurationMs) {
                 await this.storage.update(this.key, { data: newValue, expiry: Date.now() + this.expiryDurationMs });
             } else {
                 await this.storage.update(this.key, newValue);
+            }
+            if (retryOnce && JSON.stringify(this.value) != JSON.stringify(newValue)) {
+                // Due to a VSCode bug sometimes the changes are not reflected in the storage, atleast not immediately.
+                // It is noticed however that if we reset the storage first and then update it, it works.
+                // https://github.com/microsoft/vscode/issues/171827
+                traceVerbose('Storage update failed for key', this.key, ' retrying by resetting first');
+                await this.updateValue(undefined as any, false);
+                await this.updateValue(newValue, false);
+                if (JSON.stringify(this.value) != JSON.stringify(newValue)) {
+                    traceWarn('Retry failed, storage update failed for key', this.key);
+                }
             }
         } catch (ex) {
             traceError('Error while updating storage for key:', this.key, ex);

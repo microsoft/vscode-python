@@ -26,7 +26,11 @@ import { IConfigurationService, IDisposableRegistry, IInterpreterPathService } f
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { IComponentAdapter, IInterpreterService } from '../../../client/interpreter/contracts';
+import {
+    IActivatedEnvironmentLaunch,
+    IComponentAdapter,
+    IInterpreterService,
+} from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
@@ -73,6 +77,7 @@ suite('Process - PythonExecutionFactory', () => {
         suite(title(resource, interpreter), () => {
             let factory: PythonExecutionFactory;
             let activationHelper: IEnvironmentActivationService;
+            let activatedEnvironmentLaunch: IActivatedEnvironmentLaunch;
             let processFactory: IProcessServiceFactory;
             let configService: IConfigurationService;
             let processLogger: IProcessLogger;
@@ -122,6 +127,11 @@ suite('Process - PythonExecutionFactory', () => {
                 when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(
                     instance(interpreterService),
                 );
+                activatedEnvironmentLaunch = mock<IActivatedEnvironmentLaunch>();
+                when(activatedEnvironmentLaunch.selectIfLaunchedViaActivatedEnv()).thenResolve();
+                when(serviceContainer.get<IActivatedEnvironmentLaunch>(IActivatedEnvironmentLaunch)).thenReturn(
+                    instance(activatedEnvironmentLaunch),
+                );
                 when(serviceContainer.get<IComponentAdapter>(IComponentAdapter)).thenReturn(instance(pyenvs));
                 when(serviceContainer.tryGet<IInterpreterService>(IInterpreterService)).thenReturn(
                     instance(interpreterService),
@@ -153,7 +163,22 @@ suite('Process - PythonExecutionFactory', () => {
                 verify(pythonSettings.pythonPath).once();
             });
 
-            test('If interpreter is explicitly set, ensure we use it', async () => {
+            test('If interpreter is explicitly set to `python`, ensure we use it', async () => {
+                const pythonSettings = mock(PythonSettings);
+                when(processFactory.create(resource)).thenResolve(processService.object);
+                when(activationHelper.getActivatedEnvironmentVariables(resource)).thenResolve({ x: '1' });
+                reset(interpreterPathExpHelper);
+                when(interpreterPathExpHelper.get(anything())).thenReturn('python');
+                when(autoSelection.autoSelectInterpreter(anything())).thenResolve();
+                when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
+
+                const service = await factory.create({ resource, pythonPath: 'python' });
+
+                expect(service).to.not.equal(undefined);
+                verify(autoSelection.autoSelectInterpreter(anything())).once();
+            });
+
+            test('Otherwise if interpreter is explicitly set, ensure we use it', async () => {
                 const pythonSettings = mock(PythonSettings);
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(activationHelper.getActivatedEnvironmentVariables(resource)).thenResolve({ x: '1' });

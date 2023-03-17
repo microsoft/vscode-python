@@ -7,7 +7,7 @@ import { FSWatchingLocator } from './fsWatchingLocator';
 import { getInterpreterPathFromDir } from '../../../common/commonUtils';
 import { getSubDirs } from '../../../common/externalDependencies';
 import { getPyenvVersionsDir } from '../../../common/environmentManagers/pyenv';
-import { traceError } from '../../../../logging';
+import { traceError, traceVerbose } from '../../../../logging';
 
 /**
  * Gets all the pyenv environments.
@@ -33,6 +33,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<BasicEnvInfo> {
             }
         }
     }
+    traceVerbose('Finished searching for pyenv environments');
 }
 
 export class PyenvLocator extends FSWatchingLocator {

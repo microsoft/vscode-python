@@ -18,9 +18,10 @@ import { PythonPathSource } from '../../../../../client/debugger/extension/types
 import { ConsoleType, DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterHelper, IInterpreterService } from '../../../../../client/interpreter/contracts';
 import { getInfoPerOS } from './common';
-import * as common from '../../../../../client/debugger/extension/configuration/utils/common';
-import * as workspaceFoldersFile from '../../../../../client/debugger/extension/configuration/utils/workspaceFolder';
 import * as platform from '../../../../../client/common/utils/platform';
+import * as windowApis from '../../../../../client/common/vscodeApis/windowApis';
+import * as workspaceApis from '../../../../../client/common/vscodeApis/workspaceApis';
+import { IEnvironmentActivationService } from '../../../../../client/interpreter/activation/types';
 
 getInfoPerOS().forEach(([osName, osType, path]) => {
     if (osType === platform.OSType.Unknown) {
@@ -31,20 +32,21 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         let debugProvider: DebugConfigurationProvider;
         let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
         let helper: TypeMoq.IMock<IInterpreterHelper>;
+        const envVars = { FOO: 'BAR' };
 
         let diagnosticsService: TypeMoq.IMock<IInvalidPythonPathInDebuggerService>;
         let configService: TypeMoq.IMock<IConfigurationService>;
         let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
         let interpreterService: TypeMoq.IMock<IInterpreterService>;
-
+        let environmentActivationService: TypeMoq.IMock<IEnvironmentActivationService>;
         let getActiveTextEditorStub: sinon.SinonStub;
         let getOSTypeStub: sinon.SinonStub;
         let getWorkspaceFolderStub: sinon.SinonStub;
 
         setup(() => {
-            getActiveTextEditorStub = sinon.stub(common, 'getActiveTextEditor');
+            getActiveTextEditorStub = sinon.stub(windowApis, 'getActiveTextEditor');
             getOSTypeStub = sinon.stub(platform, 'getOSType');
-            getWorkspaceFolderStub = sinon.stub(workspaceFoldersFile, 'getWorkspaceFolders');
+            getWorkspaceFolderStub = sinon.stub(workspaceApis, 'getWorkspaceFolders');
             getOSTypeStub.returns(osType);
         });
 
@@ -58,7 +60,15 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             return folder.object;
         }
 
+        function getClientOS() {
+            return osType === platform.OSType.Windows ? 'windows' : 'unix';
+        }
+
         function setupIoc(pythonPath: string, workspaceFolder?: WorkspaceFolder) {
+            environmentActivationService = TypeMoq.Mock.ofType<IEnvironmentActivationService>();
+            environmentActivationService
+                .setup((e) => e.getActivatedEnvironmentVariables(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(envVars));
             configService = TypeMoq.Mock.ofType<IConfigurationService>();
             diagnosticsService = TypeMoq.Mock.ofType<IInvalidPythonPathInDebuggerService>();
             debugEnvHelper = TypeMoq.Mock.ofType<IDebugEnvironmentVariablesService>();
@@ -84,7 +94,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             }
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
             debugEnvHelper
-                .setup((x) => x.getEnvironmentVariables(TypeMoq.It.isAny()))
+                .setup((x) => x.getEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve({}));
 
             debugProvider = new LaunchConfigurationResolver(
@@ -92,6 +102,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 configService.object,
                 debugEnvHelper.object,
                 interpreterService.object,
+                environmentActivationService.object,
             );
         }
 
@@ -160,6 +171,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
             expect(debugConfig).to.have.property('type', 'python');
             expect(debugConfig).to.have.property('request', 'launch');
+            expect(debugConfig).to.have.property('clientOS', getClientOS());
             expect(debugConfig).to.not.have.property('pythonPath');
             expect(debugConfig).to.have.property('python', pythonPath);
             expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
@@ -188,6 +200,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
             expect(debugConfig).to.have.property('type', 'python');
             expect(debugConfig).to.have.property('request', 'launch');
+            expect(debugConfig).to.have.property('clientOS', getClientOS());
             expect(debugConfig).to.not.have.property('pythonPath');
             expect(debugConfig).to.have.property('python', pythonPath);
             expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
@@ -215,6 +228,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
             expect(debugConfig).to.have.property('type', 'python');
             expect(debugConfig).to.have.property('request', 'launch');
+            expect(debugConfig).to.have.property('clientOS', getClientOS());
             expect(debugConfig).to.not.have.property('pythonPath');
             expect(debugConfig).to.have.property('python', pythonPath);
             expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
@@ -239,6 +253,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
             expect(debugConfig).to.have.property('type', 'python');
+            expect(debugConfig).to.have.property('clientOS', getClientOS());
             expect(debugConfig).to.not.have.property('pythonPath');
             expect(debugConfig).to.have.property('python', pythonPath);
             expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
@@ -264,6 +279,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
             expect(debugConfig).to.have.property('type', 'python');
             expect(debugConfig).to.have.property('request', 'launch');
+            expect(debugConfig).to.have.property('clientOS', getClientOS());
             expect(debugConfig).to.not.have.property('pythonPath');
             expect(debugConfig).to.have.property('python', pythonPath);
             expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
@@ -290,6 +306,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
             expect(debugConfig).to.have.property('type', 'python');
             expect(debugConfig).to.have.property('request', 'launch');
+            expect(debugConfig).to.have.property('clientOS', getClientOS());
             expect(debugConfig).to.not.have.property('pythonPath');
             expect(debugConfig).to.have.property('python', pythonPath);
             expect(debugConfig).to.have.property('debugAdapterPython', pythonPath);
@@ -692,6 +709,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             });
 
             expect(debugConfig).to.have.property('console', 'integratedTerminal');
+            expect(debugConfig).to.have.property('clientOS', getClientOS());
             expect(debugConfig).to.have.property('stopOnEntry', false);
             expect(debugConfig).to.have.property('showReturnValue', true);
             expect(debugConfig).to.have.property('debugOptions');
@@ -717,6 +735,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             });
 
             expect(debugConfig).to.have.property('stopOnEntry', false);
+            expect(debugConfig).to.have.property('clientOS', getClientOS());
             expect(debugConfig).to.have.property('showReturnValue', true);
             expect(debugConfig).to.have.property('debugOptions');
             expect((debugConfig as DebugConfiguration).debugOptions).to.be.deep.equal([]);
@@ -736,6 +755,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             });
 
             expect(debugConfig).to.have.property('console', 'integratedTerminal');
+            expect(debugConfig).to.have.property('clientOS', getClientOS());
             expect(debugConfig).to.have.property('stopOnEntry', false);
             expect(debugConfig).to.have.property('showReturnValue', true);
             expect(debugConfig).to.have.property('redirectOutput', true);

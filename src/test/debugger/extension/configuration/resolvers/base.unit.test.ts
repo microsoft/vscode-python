@@ -15,9 +15,9 @@ import { IConfigurationService } from '../../../../../client/common/types';
 import { BaseConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/base';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterService } from '../../../../../client/interpreter/contracts';
-import * as workspaceFolder from '../../../../../client/debugger/extension/configuration/utils/workspaceFolder';
-import * as helper from '../../../../../client/debugger/extension/configuration/resolvers/helper';
 import { PythonEnvironment } from '../../../../../client/pythonEnvironments/info';
+import * as workspaceApis from '../../../../../client/common/vscodeApis/workspaceApis';
+import * as helper from '../../../../../client/debugger/extension/configuration/resolvers/helper';
 
 suite('Debugging - Config Resolver', () => {
     class BaseResolver extends BaseConfigurationResolver<AttachRequestArguments | LaunchRequestArguments> {
@@ -68,15 +68,15 @@ suite('Debugging - Config Resolver', () => {
     let configurationService: IConfigurationService;
     let interpreterService: IInterpreterService;
     let getWorkspaceFoldersStub: sinon.SinonStub;
-    let workspaceStub: sinon.SinonStub;
+    let getWorkspaceFolderStub: sinon.SinonStub;
     let getProgramStub: sinon.SinonStub;
 
     setup(() => {
         configurationService = mock(ConfigurationService);
         interpreterService = mock<IInterpreterService>();
         resolver = new BaseResolver(instance(configurationService), instance(interpreterService));
-        getWorkspaceFoldersStub = sinon.stub(workspaceFolder, 'getWorkspaceFolders');
-        workspaceStub = sinon.stub(workspaceFolder, 'getWorkspaceFolder');
+        getWorkspaceFoldersStub = sinon.stub(workspaceApis, 'getWorkspaceFolders');
+        getWorkspaceFolderStub = sinon.stub(workspaceApis, 'getWorkspaceFolder');
         getProgramStub = sinon.stub(helper, 'getProgram');
     });
     teardown(() => {
@@ -116,7 +116,7 @@ suite('Debugging - Config Resolver', () => {
 
         getProgramStub.returns(undefined);
 
-        workspaceStub.returns(folder);
+        getWorkspaceFolderStub.returns(folder);
 
         getWorkspaceFoldersStub.returns(folders);
 
@@ -134,7 +134,7 @@ suite('Debugging - Config Resolver', () => {
 
         getWorkspaceFoldersStub.returns(folders);
 
-        workspaceStub.returns(folder2);
+        getWorkspaceFolderStub.returns(folder2);
 
         const uri = resolver.getWorkspaceFolder(undefined);
 
@@ -149,7 +149,7 @@ suite('Debugging - Config Resolver', () => {
         getProgramStub.returns(programPath);
         getWorkspaceFoldersStub.returns(folders);
 
-        workspaceStub.returns(undefined);
+        getWorkspaceFolderStub.returns(undefined);
 
         const uri = resolver.getWorkspaceFolder(undefined);
 
@@ -158,7 +158,7 @@ suite('Debugging - Config Resolver', () => {
     test('Do nothing if debug configuration is undefined', async () => {
         await resolver.resolveAndUpdatePythonPath(undefined, (undefined as unknown) as LaunchRequestArguments);
     });
-    test('pythonPath in debug config must point to pythonPath in settings if pythonPath in config is not set', async () => {
+    test('python in debug config must point to pythonPath in settings if pythonPath in config is not set', async () => {
         const config = {};
         const pythonPath = path.join('1', '2', '3');
 
@@ -168,11 +168,11 @@ suite('Debugging - Config Resolver', () => {
 
         await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
 
-        expect(config).to.have.property('pythonPath', pythonPath);
+        expect(config).to.have.property('python', pythonPath);
     });
-    test('pythonPath in debug config must point to pythonPath in settings  if pythonPath in config is ${command:python.interpreterPath}', async () => {
+    test('python in debug config must point to pythonPath in settings if pythonPath in config is ${command:python.interpreterPath}', async () => {
         const config = {
-            pythonPath: '${command:python.interpreterPath}',
+            python: '${command:python.interpreterPath}',
         };
         const pythonPath = path.join('1', '2', '3');
 
@@ -182,8 +182,113 @@ suite('Debugging - Config Resolver', () => {
 
         await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
 
-        expect(config.pythonPath).to.equal(pythonPath);
+        expect(config.python).to.equal(pythonPath);
     });
+
+    test('config should only contain python and not pythonPath after resolving', async () => {
+        const config = { pythonPath: '${command:python.interpreterPath}', python: '${command:python.interpreterPath}' };
+        const pythonPath = path.join('1', '2', '3');
+
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
+        expect(config).to.not.have.property('pythonPath');
+        expect(config).to.have.property('python', pythonPath);
+    });
+
+    test('config should convert pythonPath to python, only if python is not set', async () => {
+        const config = { pythonPath: '${command:python.interpreterPath}', python: undefined };
+        const pythonPath = path.join('1', '2', '3');
+
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
+        expect(config).to.not.have.property('pythonPath');
+        expect(config).to.have.property('python', pythonPath);
+    });
+
+    test('config should not change python if python is different than pythonPath', async () => {
+        const expected = path.join('1', '2', '4');
+        const config = { pythonPath: '${command:python.interpreterPath}', python: expected };
+        const pythonPath = path.join('1', '2', '3');
+
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
+        expect(config).to.not.have.property('pythonPath');
+        expect(config).to.have.property('python', expected);
+    });
+
+    test('config should get python from interpreter service is nothing is set', async () => {
+        const config = {};
+        const pythonPath = path.join('1', '2', '3');
+
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
+        expect(config).to.not.have.property('pythonPath');
+        expect(config).to.have.property('python', pythonPath);
+    });
+
+    test('config should contain debugAdapterPython and debugLauncherPython', async () => {
+        const config = {};
+        const pythonPath = path.join('1', '2', '3');
+
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
+        expect(config).to.not.have.property('pythonPath');
+        expect(config).to.have.property('python', pythonPath);
+        expect(config).to.have.property('debugAdapterPython', pythonPath);
+        expect(config).to.have.property('debugLauncherPython', pythonPath);
+    });
+
+    test('config should not change debugAdapterPython and debugLauncherPython if already set', async () => {
+        const debugAdapterPythonPath = path.join('1', '2', '4');
+        const debugLauncherPythonPath = path.join('1', '2', '5');
+
+        const config = { debugAdapterPython: debugAdapterPythonPath, debugLauncherPython: debugLauncherPythonPath };
+        const pythonPath = path.join('1', '2', '3');
+
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
+        expect(config).to.not.have.property('pythonPath');
+        expect(config).to.have.property('python', pythonPath);
+        expect(config).to.have.property('debugAdapterPython', debugAdapterPythonPath);
+        expect(config).to.have.property('debugLauncherPython', debugLauncherPythonPath);
+    });
+
+    test('config should not resolve debugAdapterPython and debugLauncherPython', async () => {
+        const config = {
+            debugAdapterPython: '${command:python.interpreterPath}',
+            debugLauncherPython: '${command:python.interpreterPath}',
+        };
+        const pythonPath = path.join('1', '2', '3');
+
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
+        expect(config).to.not.have.property('pythonPath');
+        expect(config).to.have.property('python', pythonPath);
+        expect(config).to.have.property('debugAdapterPython', pythonPath);
+        expect(config).to.have.property('debugLauncherPython', pythonPath);
+    });
+
     const localHostTestMatrix: Record<string, boolean> = {
         localhost: true,
         '127.0.0.1': true,

@@ -96,15 +96,22 @@ suite('Install Python via Terminal', () => {
         await installPythonCommand.activate();
         await installCommandHandler!();
 
-        expect(message).to.be.equal(Interpreters.installPythonTerminalMessage);
+        expect(message).to.be.equal(Interpreters.installPythonTerminalMessageLinux);
     });
 
-    test('Sends expected commands on Mac when InstallPythonOnMac command is executed if no dnf is available', async () => {
+    test('Sends expected commands on Mac when InstallPythonOnMac command is executed if brew is available', async () => {
         let installCommandHandler: () => Promise<void>;
         when(cmdManager.registerCommand(Commands.InstallPythonOnMac, anything())).thenCall((_, cb) => {
             installCommandHandler = cb;
             return TypeMoq.Mock.ofType<IDisposable>().object;
         });
+        rewiremock('which').with((cmd: string) => {
+            if (cmd === 'brew') {
+                return 'path/to/brew';
+            }
+            throw new Error('Command not found');
+        });
+
         await installPythonCommand.activate();
         when(terminalService.sendText('brew install python3')).thenResolve();
 
@@ -112,5 +119,22 @@ suite('Install Python via Terminal', () => {
 
         verify(terminalService.sendText('brew install python3')).once();
         expect(message).to.be.equal(undefined);
+    });
+
+    test('Creates terminal with appropriate message when InstallPythonOnMac command is executed if brew is not available', async () => {
+        let installCommandHandler: () => Promise<void>;
+        when(cmdManager.registerCommand(Commands.InstallPythonOnMac, anything())).thenCall((_, cb) => {
+            installCommandHandler = cb;
+            return TypeMoq.Mock.ofType<IDisposable>().object;
+        });
+        rewiremock('which').with((_cmd: string) => {
+            throw new Error('Command not found');
+        });
+
+        await installPythonCommand.activate();
+
+        await installCommandHandler!();
+
+        expect(message).to.be.equal(Interpreters.installPythonTerminalMacMessage);
     });
 });

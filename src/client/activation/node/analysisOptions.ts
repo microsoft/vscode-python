@@ -10,7 +10,7 @@ import { IExperimentService } from '../../common/types';
 
 import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
 import { ILanguageServerOutputChannel } from '../types';
-import { LspNotebooksExperiment } from './lspNotebooksExperiment';
+import { traceWarn } from '../../logging';
 
 const EDITOR_CONFIG_SECTION = 'editor';
 const FORMAT_ON_TYPE_CONFIG_SETTING = 'formatOnType';
@@ -21,9 +21,12 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         lsOutputChannel: ILanguageServerOutputChannel,
         workspace: IWorkspaceService,
         private readonly experimentService: IExperimentService,
-        private readonly lspNotebooksExperiment: LspNotebooksExperiment,
     ) {
         super(lsOutputChannel, workspace);
+    }
+
+    protected getConfigSectionsToSynchronize(): string[] {
+        return [...super.getConfigSectionsToSynchronize(), 'jupyter.runStartupCommands'];
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -31,31 +34,44 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         return ({
             experimentationSupport: true,
             trustedWorkspaceSupport: true,
-            lspNotebooksSupport: this.lspNotebooksExperiment.isInNotebooksExperiment(),
-            lspInteractiveWindowSupport: this.lspNotebooksExperiment.isInNotebooksExperimentWithInteractiveWindowSupport(),
             autoIndentSupport: await this.isAutoIndentEnabled(),
         } as unknown) as LanguageClientOptions;
     }
 
     private async isAutoIndentEnabled() {
-        const editorConfig = this.getPythonSpecificEditorSection();
-        let formatOnTypeEffectiveValue = editorConfig.get(FORMAT_ON_TYPE_CONFIG_SETTING);
-        const formatOnTypeInspect = editorConfig.inspect(FORMAT_ON_TYPE_CONFIG_SETTING);
-        const formatOnTypeSetForPython = formatOnTypeInspect?.globalLanguageValue !== undefined;
+        let editorConfig = this.getPythonSpecificEditorSection();
 
-        const inExperiment = await this.isInAutoIndentExperiment();
-
-        if (inExperiment !== formatOnTypeSetForPython) {
+        // Only explicitly enable formatOnType for those who are in the experiment
+        // but have not explicitly given a value for the setting
+        if (!NodeLanguageServerAnalysisOptions.isConfigSettingSetByUser(editorConfig, FORMAT_ON_TYPE_CONFIG_SETTING)) {
+            const inExperiment = await this.isInAutoIndentExperiment();
             if (inExperiment) {
                 await NodeLanguageServerAnalysisOptions.setPythonSpecificFormatOnType(editorConfig, true);
-            } else if (formatOnTypeInspect?.globalLanguageValue !== false) {
-                await NodeLanguageServerAnalysisOptions.setPythonSpecificFormatOnType(editorConfig, undefined);
-            }
 
-            formatOnTypeEffectiveValue = this.getPythonSpecificEditorSection().get(FORMAT_ON_TYPE_CONFIG_SETTING);
+                // Refresh our view of the config settings.
+                editorConfig = this.getPythonSpecificEditorSection();
+            }
         }
 
-        return inExperiment && formatOnTypeEffectiveValue;
+        const formatOnTypeEffectiveValue = editorConfig.get(FORMAT_ON_TYPE_CONFIG_SETTING);
+
+        return formatOnTypeEffectiveValue;
+    }
+
+    private static isConfigSettingSetByUser(configuration: WorkspaceConfiguration, setting: string): boolean {
+        const inspect = configuration.inspect(setting);
+        if (inspect === undefined) {
+            return false;
+        }
+
+        return (
+            inspect.globalValue !== undefined ||
+            inspect.workspaceValue !== undefined ||
+            inspect.workspaceFolderValue !== undefined ||
+            inspect.globalLanguageValue !== undefined ||
+            inspect.workspaceLanguageValue !== undefined ||
+            inspect.workspaceFolderLanguageValue !== undefined
+        );
     }
 
     private async isInAutoIndentExperiment(): Promise<boolean> {
@@ -75,11 +91,15 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
         editorConfig: WorkspaceConfiguration,
         value: boolean | undefined,
     ) {
-        await editorConfig.update(
-            FORMAT_ON_TYPE_CONFIG_SETTING,
-            value,
-            ConfigurationTarget.Global,
-            /* overrideInLanguage */ true,
-        );
+        try {
+            await editorConfig.update(
+                FORMAT_ON_TYPE_CONFIG_SETTING,
+                value,
+                ConfigurationTarget.Global,
+                /* overrideInLanguage */ true,
+            );
+        } catch (ex) {
+            traceWarn(`Failed to set formatOnType to ${value}`);
+        }
     }
 }

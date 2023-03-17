@@ -9,6 +9,7 @@ import { IWorkspaceService } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { IPythonToolExecutionService } from '../common/process/types';
+import { splitLines } from '../common/stringUtils';
 import {
     ExecutionInfo,
     Flake8CategorySeverity,
@@ -184,7 +185,7 @@ export abstract class BaseLinter implements ILinter {
         _token: vscode.CancellationToken,
         regEx: string,
     ): Promise<ILintMessage[]> {
-        const outputLines = output.splitLines({ removeEmptyEntries: false, trim: false });
+        const outputLines = splitLines(output, { removeEmptyEntries: false, trim: false });
         return this.parseLines(outputLines, regEx);
     }
 

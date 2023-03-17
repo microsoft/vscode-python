@@ -69,6 +69,13 @@ def main(package_json: pathlib.Path, argv: Sequence[str]) -> None:
 
     major, minor, micro, suffix = parse_version(package["version"])
 
+    current_year = datetime.datetime.now().year
+    if int(major) != current_year:
+        raise ValueError(
+            f"Major version [{major}] must be the current year [{current_year}].",
+            f"If changing major version after new year's, change to {current_year}.1.0",
+        )
+
     if args.release and not is_even(minor):
         raise ValueError(
             f"Release version should have EVEN numbered minor version: {package['version']}"

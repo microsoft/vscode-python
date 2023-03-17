@@ -19,6 +19,7 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
 import { traceError, traceVerbose } from '../../../logging';
+import { splitLines } from '../../../common/stringUtils';
 
 /**
  * Global virtual env dir for a project is named as:
@@ -213,7 +214,7 @@ export class Poetry {
          */
         const activated = '(Activated)';
         const res = await Promise.all(
-            result.stdout.splitLines().map(async (line) => {
+            splitLines(result.stdout).map(async (line) => {
                 if (line.endsWith(activated)) {
                     line = line.slice(0, -activated.length);
                 }

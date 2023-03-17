@@ -491,6 +491,17 @@ suite('Conda and its environments are located correctly', () => {
         expect(eq(version!, '4.8.0')).to.equal(true);
     });
 
+    test('Conda version works for dev versions of conda', async () => {
+        files = {
+            conda: JSON.stringify(condaInfo('23.1.0.post7+d5281f611')),
+        };
+        condaVersionOutput = 'conda 23.1.0.post7+d5281f611';
+        const conda = await Conda.getConda();
+        const version = await conda?.getCondaVersion();
+        expect(version).to.not.equal(undefined);
+        expect(eq(version!, '23.1.0')).to.equal(true);
+    });
+
     test('Conda run args returns `undefined` for conda version below 4.9.0', async () => {
         files = {
             conda: JSON.stringify(condaInfo('4.8.0')),

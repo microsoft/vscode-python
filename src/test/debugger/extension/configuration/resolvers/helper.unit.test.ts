@@ -7,15 +7,15 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
 import { TextDocument, TextEditor } from 'vscode';
-import * as common from '../../../../../client/debugger/extension/configuration/utils/common';
-import { getProgram } from '../../../../../client/debugger/extension/configuration/resolvers/helper';
 import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
+import * as windowApis from '../../../../../client/common/vscodeApis/windowApis';
+import { getProgram } from '../../../../../client/debugger/extension/configuration/resolvers/helper';
 
 suite('Debugging - Helpers', () => {
     let getActiveTextEditorStub: sinon.SinonStub;
 
     setup(() => {
-        getActiveTextEditorStub = sinon.stub(common, 'getActiveTextEditor');
+        getActiveTextEditorStub = sinon.stub(windowApis, 'getActiveTextEditor');
     });
     teardown(() => {
         sinon.restore();

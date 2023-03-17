@@ -5,8 +5,7 @@
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import { WorkspaceFolder } from 'vscode';
-import * as nls from 'vscode-nls';
+import { l10n, WorkspaceFolder } from 'vscode';
 import { DebugConfigStrings } from '../../../../common/utils/localize';
 import { MultiStepInput } from '../../../../common/utils/multiStepInput';
 import { sendTelemetryEvent } from '../../../../telemetry';
@@ -15,8 +14,6 @@ import { DebuggerTypeName } from '../../../constants';
 import { LaunchRequestArguments } from '../../../types';
 import { DebugConfigurationState, DebugConfigurationType } from '../../types';
 import { resolveVariables } from '../utils/common';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 const workspaceFolderToken = '${workspaceFolder}';
 
@@ -43,8 +40,7 @@ export async function buildPyramidLaunchConfiguration(
         const selectedIniPath = await input.showInputBox({
             title: DebugConfigStrings.pyramid.enterDevelopmentIniPath.title,
             value: defaultIni,
-            prompt: localize(
-                'debug.pyramidEnterDevelopmentIniPathPrompt',
+            prompt: l10n.t(
                 'Enter the path to development.ini ({0} points to the root of the current workspace folder)',
                 workspaceFolderToken,
             ),

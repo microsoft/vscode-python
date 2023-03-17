@@ -198,6 +198,7 @@ function getMinimalPartialInfo(env: string | PythonEnvInfo | BasicEnvInfo): Part
             return undefined;
         }
         return {
+            id: '',
             executable: {
                 filename: env,
                 sysPrefix: '',
@@ -208,6 +209,7 @@ function getMinimalPartialInfo(env: string | PythonEnvInfo | BasicEnvInfo): Part
     }
     if ('executablePath' in env) {
         return {
+            id: '',
             executable: {
                 filename: env.executablePath,
                 sysPrefix: '',
@@ -235,7 +237,7 @@ export function getEnvPath(interpreterPath: string, envFolderPath?: string): Env
 }
 
 /**
- * Gets unique identifier for an environment.
+ * Gets general unique identifier for most environments.
  */
 export function getEnvID(interpreterPath: string, envFolderPath?: string): string {
     return normCasePath(getEnvPath(interpreterPath, envFolderPath).path);
@@ -266,7 +268,15 @@ export function areSameEnv(
     const leftFilename = leftInfo.executable!.filename;
     const rightFilename = rightInfo.executable!.filename;
 
+    if (leftInfo.id && leftInfo.id === rightInfo.id) {
+        // In case IDs are available, use it.
+        return true;
+    }
+
     if (getEnvID(leftFilename, leftInfo.location) === getEnvID(rightFilename, rightInfo.location)) {
+        // Otherwise use ID function to get the ID. Note ID returned by function may itself change if executable of
+        // an environment changes, for eg. when conda installs python into the env. So only use it as a fallback if
+        // ID is not available.
         return true;
     }
 

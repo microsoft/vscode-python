@@ -14,7 +14,6 @@ env:
   ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
   VSIX_NAME: ms-python-insiders.vsix
   TEST_RESULTS_DIRECTORY: .
-  DISABLE_TRANSLATIONS: true
   # Force a path with spaces and to test extension works in these scenarios
   # Unicode characters are causing 2.7 failures so skip that for now.
   special-working-directory: './path with spaces'
@@ -266,15 +265,6 @@ jobs:
           run: npm run testSingleWorkspace
           working-directory: ${{ env.special-working-directory }}
         if: matrix.test-suite == 'single-workspace'
-
-      - name: Run multi-workspace tests
-        env:
-          CI_PYTHON_VERSION: ${{ matrix.python }}
-        uses: GabrielBB/xvfb-action@v1.6
-        with:
-          run: npm run testMultiWorkspace
-          working-directory: ${{ env.special-working-directory }}
-        if: matrix.test-suite == 'multi-workspace'
 
       - name: Run debugger tests
         env:

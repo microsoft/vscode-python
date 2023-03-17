@@ -4,6 +4,7 @@
 import { injectable, inject, named } from 'inversify';
 import { Location, TestController, TestItem, TestMessage, TestRun, TestRunProfileKind } from 'vscode';
 import * as internalScripts from '../../../common/process/internal/scripts';
+import { splitLines } from '../../../common/stringUtils';
 import { IOutputChannel } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { traceError, traceInfo } from '../../../logging';
@@ -21,6 +22,10 @@ interface ITestData {
     outcome: string;
     traceback: string;
     subtest?: string;
+}
+
+function getTracebackForOutput(traceback: string): string {
+    return splitLines(traceback, { trim: false, removeEmptyEntries: true }).join('\r\n');
 }
 
 @injectable()
@@ -111,9 +116,7 @@ export class UnittestRunner implements ITestsRunner {
                     runInstance.appendOutput(fixLogLines(text));
                     counts.passed += 1;
                 } else if (data.outcome === 'failed' || data.outcome === 'passed-unexpected') {
-                    const traceback = data.traceback
-                        ? data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n')
-                        : '';
+                    const traceback = data.traceback ? getTracebackForOutput(data.traceback) : '';
                     const text = `${rawTestCase.rawId} Failed: ${data.message ?? data.outcome}\r\n${traceback}\r\n`;
                     const message = new TestMessage(text);
 
@@ -128,9 +131,7 @@ export class UnittestRunner implements ITestsRunner {
                         stopTesting = true;
                     }
                 } else if (data.outcome === 'error') {
-                    const traceback = data.traceback
-                        ? data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n')
-                        : '';
+                    const traceback = data.traceback ? getTracebackForOutput(data.traceback) : '';
                     const text = `${rawTestCase.rawId} Failed with Error: ${data.message}\r\n${traceback}\r\n`;
                     const message = new TestMessage(text);
 
@@ -145,9 +146,7 @@ export class UnittestRunner implements ITestsRunner {
                         stopTesting = true;
                     }
                 } else if (data.outcome === 'skipped') {
-                    const traceback = data.traceback
-                        ? data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n')
-                        : '';
+                    const traceback = data.traceback ? getTracebackForOutput(data.traceback) : '';
                     const text = `${rawTestCase.rawId} Skipped: ${data.message}\r\n${traceback}\r\n`;
                     runInstance.skipped(testCase);
                     runInstance.appendOutput(fixLogLines(text));
@@ -196,9 +195,7 @@ export class UnittestRunner implements ITestsRunner {
 
                     if (data.subtest) {
                         runInstance.appendOutput(fixLogLines(`${data.subtest} Failed\r\n`));
-                        const traceback = data.traceback
-                            ? data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n')
-                            : '';
+                        const traceback = data.traceback ? getTracebackForOutput(data.traceback) : '';
                         const text = `${data.subtest} Failed: ${data.message ?? data.outcome}\r\n${traceback}\r\n`;
                         runInstance.appendOutput(fixLogLines(text));
 
@@ -226,9 +223,7 @@ export class UnittestRunner implements ITestsRunner {
                     runInstance.errored(testCase, message);
                 }
             } else if (data.outcome === 'error') {
-                const traceback = data.traceback
-                    ? data.traceback.splitLines({ trim: false, removeEmptyEntries: true }).join('\r\n')
-                    : '';
+                const traceback = data.traceback ? getTracebackForOutput(data.traceback) : '';
                 const text = `${data.test} Failed with Error: ${data.message}\r\n${traceback}\r\n`;
                 runInstance.appendOutput(fixLogLines(text));
             }

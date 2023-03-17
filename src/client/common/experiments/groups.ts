@@ -6,3 +6,11 @@ export enum ShowExtensionSurveyPrompt {
 export enum ShowToolsExtensionPrompt {
     experiment = 'pythonPromptNewToolsExt',
 }
+
+export enum TerminalEnvVarActivation {
+    experiment = 'pythonTerminalEnvVarActivation',
+}
+
+export enum ShowFormatterExtensionPrompt {
+    experiment = 'pythonPromptNewFormatterExt',
+}

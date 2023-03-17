@@ -8,7 +8,7 @@ import { showInformationMessage } from '../../common/vscodeApis/windowApis';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { isExtensionInstalled, doNotShowPromptState, inToolsExtensionsExperiment } from './common';
+import { doNotShowPromptState, inToolsExtensionsExperiment, isExtensionDisabled, isExtensionEnabled } from './common';
 import { IToolsExtensionPrompt } from './types';
 
 export const FLAKE8_EXTENSION = 'ms-python.flake8';
@@ -20,9 +20,11 @@ export class Flake8ExtensionPrompt implements IToolsExtensionPrompt {
     public constructor(private readonly serviceContainer: IServiceContainer) {}
 
     public async showPrompt(): Promise<boolean> {
-        if (isExtensionInstalled(this.serviceContainer, FLAKE8_EXTENSION)) {
+        const isEnabled = isExtensionEnabled(this.serviceContainer, FLAKE8_EXTENSION);
+        if (isEnabled || isExtensionDisabled(this.serviceContainer, FLAKE8_EXTENSION)) {
             sendTelemetryEvent(EventName.TOOLS_EXTENSIONS_ALREADY_INSTALLED, undefined, {
                 extensionId: FLAKE8_EXTENSION,
+                isEnabled,
             });
             return true;
         }

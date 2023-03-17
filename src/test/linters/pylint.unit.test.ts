@@ -8,7 +8,7 @@ import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import { IConfigurationService, IPythonSettings } from '../../client/common/types';
+import { IConfigurationService, IExtensions, IPythonSettings } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { IToolsExtensionPrompt } from '../../client/linters/prompts/types';
 import { Pylint } from '../../client/linters/pylint';
@@ -22,6 +22,7 @@ suite('Pylint - Function runLinter()', () => {
     let manager: TypeMoq.IMock<ILinterManager>;
     let _info: TypeMoq.IMock<ILinterInfo>;
     let platformService: TypeMoq.IMock<IPlatformService>;
+    let extensionsService: TypeMoq.IMock<IExtensions>;
     let run: sinon.SinonStub;
     let parseMessagesSeverity: sinon.SinonStub;
     let extensionPrompt: TypeMoq.IMock<IToolsExtensionPrompt>;
@@ -77,6 +78,7 @@ suite('Pylint - Function runLinter()', () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        extensionsService = TypeMoq.Mock.ofType<IExtensions>();
         manager = TypeMoq.Mock.ofType<ILinterManager>();
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ILinterManager))).returns(() => manager.object);
         serviceContainer
@@ -89,6 +91,7 @@ suite('Pylint - Function runLinter()', () => {
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
             .returns(() => platformService.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IExtensions))).returns(() => extensionsService.object);
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         fileSystem
             .setup((x) => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))

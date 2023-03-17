@@ -2,9 +2,8 @@
 
 import { inject, injectable } from 'inversify';
 import * as semver from 'semver';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, l10n, Uri } from 'vscode';
 import '../extensions';
-import * as nls from 'vscode-nls';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { LinterId } from '../../linters/types';
@@ -41,8 +40,6 @@ import { traceError, traceInfo } from '../../logging';
 import { isParentPath } from '../platform/fs-paths';
 
 export { Product } from '../types';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // Products which may not be available to install from certain package registries, keyed by product name
 // Installer implementations can check this to determine a suitable installation channel for a product
@@ -252,25 +249,16 @@ export class FormatterInstaller extends BaseInstaller {
         const formatterNames = formatters.map((formatter) => ProductNames.get(formatter)!);
         const productName = ProductNames.get(product)!;
         formatterNames.splice(formatterNames.indexOf(productName), 1);
-        const useOptions = formatterNames.map((name) => localize('products.useFormatter', 'Use {0}', name));
+        const useOptions = formatterNames.map((name) => l10n.t('Use {0}', name));
         const yesChoice = Common.bannerLabelYes;
 
         const options = [...useOptions, Common.doNotShowAgain];
-        let message = localize(
-            'products.formatterNotInstalled',
-            'Formatter {0} is not installed. Install?',
-            productName,
-        );
+        let message = l10n.t('Formatter {0} is not installed. Install?', productName);
         if (this.isExecutableAModule(product, resource)) {
             options.splice(0, 0, yesChoice);
         } else {
             const executable = this.getExecutableNameFromSettings(product, resource);
-            message = localize(
-                'products.invalidFormatterPath',
-                'Path to the {0} formatter is invalid ({1})',
-                productName,
-                executable,
-            );
+            message = l10n.t('Path to the {0} formatter is invalid ({1})', productName, executable);
         }
 
         const item = await this.appShell.showErrorMessage(message, ...options);
@@ -339,17 +327,12 @@ export class LinterInstaller extends BaseInstaller {
 
         const options = [selectLinter, doNotShowAgain];
 
-        let message = localize('Linter.notInstalled', 'Linter {0} is not installed.', productName);
+        let message = l10n.t('Linter {0} is not installed.', productName);
         if (this.isExecutableAModule(product, resource)) {
             options.splice(0, 0, install);
         } else {
             const executable = this.getExecutableNameFromSettings(product, resource);
-            message = localize(
-                'Linter.invalidPath',
-                'Path to the {0} linter is invalid ({1})',
-                productName,
-                executable,
-            );
+            message = l10n.t('Path to the {0} linter is invalid ({1})', productName, executable);
         }
         const response = await this.appShell.showErrorMessage(message, ...options);
         if (response === install) {
@@ -404,21 +387,12 @@ export class TestFrameworkInstaller extends BaseInstaller {
         const productName = ProductNames.get(product)!;
 
         const options: string[] = [];
-        let message = localize(
-            'TestFramework.notIstalled',
-            'Test framework {0} is not installed. Install?',
-            productName,
-        );
+        let message = l10n.t('Test framework {0} is not installed. Install?', productName);
         if (this.isExecutableAModule(product, resource)) {
             options.push(...[Common.bannerLabelYes, Common.bannerLabelNo]);
         } else {
             const executable = this.getExecutableNameFromSettings(product, resource);
-            message = localize(
-                'TestFramework.invalidPath',
-                'Path to the {0} test framework is invalid ({1})',
-                productName,
-                executable,
-            );
+            message = l10n.t('Path to the {0} test framework is invalid ({1})', productName, executable);
         }
 
         const item = await this.appShell.showErrorMessage(message, ...options);
@@ -529,8 +503,7 @@ export class DataScienceInstaller extends BaseInstaller {
         if (!installerModule) {
             this.appShell
                 .showErrorMessage(
-                    localize(
-                        'Installer.couldNotInstallLibrary',
+                    l10n.t(
                         'Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.',
                         moduleName,
                     ),
@@ -575,11 +548,7 @@ export class DataScienceInstaller extends BaseInstaller {
     ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const item = await this.appShell.showErrorMessage(
-            localize(
-                'Installer.dataScienceInstallPrompt',
-                'Data Science library {0} is not installed. Install?',
-                productName,
-            ),
+            l10n.t('Data Science library {0} is not installed. Install?', productName),
             Common.bannerLabelYes,
             Common.bannerLabelNo,
         );

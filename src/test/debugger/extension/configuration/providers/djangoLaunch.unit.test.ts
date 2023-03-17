@@ -14,8 +14,8 @@ import { MultiStepInput } from '../../../../../client/common/utils/multiStepInpu
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
 import { DebugConfigurationState } from '../../../../../client/debugger/extension/types';
 import { resolveVariables } from '../../../../../client/debugger/extension/configuration/utils/common';
-import * as workspaceFolder from '../../../../../client/debugger/extension/configuration/utils/workspaceFolder';
 import * as djangoLaunch from '../../../../../client/debugger/extension/configuration/providers/djangoLaunch';
+import * as workspaceApis from '../../../../../client/common/vscodeApis/workspaceApis';
 
 suite('Debugging - Configuration Provider Django', () => {
     let pathExistsStub: sinon.SinonStub;
@@ -27,7 +27,7 @@ suite('Debugging - Configuration Provider Django', () => {
         input = mock<MultiStepInput<DebugConfigurationState>>(MultiStepInput);
         pathExistsStub = sinon.stub(fs, 'pathExists');
         pathSeparatorStub = sinon.stub(path, 'sep');
-        workspaceStub = sinon.stub(workspaceFolder, 'getWorkspaceFolder');
+        workspaceStub = sinon.stub(workspaceApis, 'getWorkspaceFolder');
     });
     teardown(() => {
         sinon.restore();

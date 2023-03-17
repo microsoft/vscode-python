@@ -6,8 +6,8 @@
 
 'use strict';
 
-import { WorkspaceFolder, window, TextEditor } from 'vscode';
-import { getWorkspaceFolder } from './workspaceFolder';
+import { WorkspaceFolder } from 'vscode';
+import { getWorkspaceFolder } from '../../../../common/vscodeApis/workspaceApis';
 
 /**
  * @returns whether the provided parameter is a JavaScript String or not.
@@ -26,9 +26,9 @@ export function resolveVariables(
     folder: WorkspaceFolder | undefined,
 ): string | undefined {
     if (value) {
-        const workspace = folder ? getWorkspaceFolder(folder.uri) : undefined;
+        const workspaceFolder = folder ? getWorkspaceFolder(folder.uri) : undefined;
         const variablesObject: { [key: string]: any } = {};
-        variablesObject.workspaceFolder = workspace ? workspace.uri.fsPath : rootFolder;
+        variablesObject.workspaceFolder = workspaceFolder ? workspaceFolder.uri.fsPath : rootFolder;
 
         const regexp = /\$\{(.*?)\}/g;
         return value.replace(regexp, (match: string, name: string) => {
@@ -40,9 +40,4 @@ export function resolveVariables(
         });
     }
     return value;
-}
-
-export function getActiveTextEditor(): TextEditor | undefined {
-    const { activeTextEditor } = window;
-    return activeTextEditor;
 }

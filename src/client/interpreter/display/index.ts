@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import {
     Disposable,
+    l10n,
     LanguageStatusItem,
     LanguageStatusSeverity,
     StatusBarAlignment,
@@ -13,7 +14,7 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import { Commands, PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
 import { IDisposableRegistry, IPathUtils, Resource } from '../../common/types';
-import { InterpreterQuickPickList } from '../../common/utils/localize';
+import { InterpreterQuickPickList, Interpreters } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { traceLog } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -23,15 +24,13 @@ import {
     IInterpreterService,
     IInterpreterStatusbarVisibilityFilter,
 } from '../contracts';
-import * as nls from 'vscode-nls';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Based on https://github.com/microsoft/vscode-python/issues/18040#issuecomment-992567670.
  * This is to ensure the item appears right after the Python language status item.
  */
 const STATUS_BAR_ITEM_PRIORITY = 100.09999;
+
 @injectable()
 export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingleActivationService {
     public supportedWorkspaceTypes: { untrustedWorkspace: boolean; virtualWorkspace: boolean } = {
@@ -81,9 +80,10 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
             this.disposableRegistry.push(this.languageStatus);
         } else {
             const [alignment, priority] = [StatusBarAlignment.Right, STATUS_BAR_ITEM_PRIORITY];
-            this.statusBar = application.createStatusBarItem(alignment, priority);
+            this.statusBar = application.createStatusBarItem(alignment, priority, 'python.selectedInterpreterDisplay');
             this.statusBar.command = Commands.Set_Interpreter;
             this.disposableRegistry.push(this.statusBar);
+            this.statusBar.name = Interpreters.selectedPythonInterpreter;
         }
     }
 
@@ -106,7 +106,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
         }
     }
     private onDidChangeInterpreterInformation(info: PythonEnvironment) {
-        if (!this.currentlySelectedInterpreterPath || this.currentlySelectedInterpreterPath === info.path) {
+        if (this.currentlySelectedInterpreterPath === info.path) {
             this.updateDisplay(this.currentlySelectedWorkspaceFolder).ignoreErrors();
         }
     }
@@ -126,8 +126,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
                 this.statusBar.tooltip = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath);
                 if (this.currentlySelectedInterpreterPath !== interpreter.path) {
                     traceLog(
-                        localize(
-                            'Interpreters.sttausBarPythonInterpreterPath',
+                        l10n.t(
                             'Python interpreter path: {0}',
                             this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath),
                         ),
@@ -151,8 +150,7 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
                 this.languageStatus.detail = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath);
                 if (this.currentlySelectedInterpreterPath !== interpreter.path) {
                     traceLog(
-                        localize(
-                            'Interpreters.pythonInterpreterPath',
+                        l10n.t(
                             'Python interpreter path: {0}',
                             this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath),
                         ),

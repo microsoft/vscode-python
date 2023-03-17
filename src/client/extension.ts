@@ -28,7 +28,6 @@ initializeFileLogging(logDispose);
 //===============================================
 // loading starts here
 
-import '../setupNls';
 import { ProgressLocation, ProgressOptions, window } from 'vscode';
 import { buildApi } from './api';
 import { IApplicationShell, IWorkspaceService } from './common/application/types';
@@ -43,10 +42,10 @@ import { IStartupDurations } from './types';
 import { runAfterActivation } from './common/utils/runAfterActivation';
 import { IInterpreterService } from './interpreter/contracts';
 import { IExtensionApi } from './apiTypes';
-import { buildProposedApi } from './proposedApi';
 import { WorkspaceService } from './common/application/workspace';
 import { disposeAll } from './common/utils/resourceLifecycle';
 import { ProposedExtensionAPI } from './proposedApiTypes';
+import { buildProposedApi } from './proposedApi';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -157,7 +156,12 @@ async function activateUnsafe(
         runAfterActivation();
     });
 
-    const api = buildApi(activationPromise, ext.legacyIOC.serviceManager, ext.legacyIOC.serviceContainer);
+    const api = buildApi(
+        activationPromise,
+        ext.legacyIOC.serviceManager,
+        ext.legacyIOC.serviceContainer,
+        components.pythonEnvs,
+    );
     const proposedApi = buildProposedApi(components.pythonEnvs, ext.legacyIOC.serviceContainer);
     return [{ ...api, ...proposedApi }, activationPromise, ext.legacyIOC.serviceContainer];
 }

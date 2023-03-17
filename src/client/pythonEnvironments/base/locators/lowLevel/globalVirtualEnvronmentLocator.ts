@@ -134,6 +134,7 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
             });
 
             yield* iterable(chain(envGenerators));
+            traceVerbose(`Finished searching for global virtual envs`);
         }
 
         return iterator();

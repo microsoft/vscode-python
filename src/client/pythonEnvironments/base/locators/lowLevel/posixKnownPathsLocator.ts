@@ -8,8 +8,8 @@ import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../locator';
 import { commonPosixBinPaths, getPythonBinFromPosixPaths } from '../../../common/posixUtils';
 import { isPyenvShimDir } from '../../../common/environmentManagers/pyenv';
 import { getOSType, OSType } from '../../../../common/utils/platform';
-import { isMacDefaultPythonPath } from './macDefaultLocator';
-import { traceError } from '../../../../logging';
+import { isMacDefaultPythonPath } from '../../../common/environmentManagers/macDefault';
+import { traceError, traceVerbose } from '../../../../logging';
 
 export class PosixKnownPathsLocator extends Locator<BasicEnvInfo> {
     public readonly providerId = 'posixKnownPaths';
@@ -44,6 +44,7 @@ export class PosixKnownPathsLocator extends Locator<BasicEnvInfo> {
                     traceError(`Failed to process environment: ${bin}`, ex);
                 }
             }
+            traceVerbose('Finished searching for interpreters in posix paths locator');
         };
         return iterator(this.kind);
     }

@@ -3,8 +3,7 @@
 
 import * as path from 'path';
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Uri, WorkspaceFoldersChangeEvent } from 'vscode';
-import * as nls from 'vscode-nls';
+import { ConfigurationChangeEvent, l10n, Uri, WorkspaceFoldersChangeEvent } from 'vscode';
 import { LanguageServerChangeHandler } from '../activation/common/languageServerChangeHandler';
 import { IExtensionActivationService, ILanguageServerOutputChannel, LanguageServerType } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
@@ -28,9 +27,8 @@ import { JediLSExtensionManager } from './jediLSExtensionManager';
 import { NoneLSExtensionManager } from './noneLSExtensionManager';
 import { PylanceLSExtensionManager } from './pylanceLSExtensionManager';
 import { ILanguageServerExtensionManager, ILanguageServerWatcher } from './types';
-import { LspNotebooksExperiment } from '../activation/node/lspNotebooksExperiment';
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
 
 @injectable()
 /**
@@ -66,7 +64,6 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) readonly applicationShell: IApplicationShell,
-        @inject(LspNotebooksExperiment) private readonly lspNotebooksExperiment: LspNotebooksExperiment,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
     ) {
         this.workspaceInterpreters = new Map();
@@ -187,6 +184,7 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
 
     public async restartLanguageServers(): Promise<void> {
         this.workspaceLanguageServers.forEach(async (_, resourceString) => {
+            sendTelemetryEvent(EventName.LANGUAGE_SERVER_RESTART, undefined, { reason: 'notebooksExperiment' });
             const resource = Uri.parse(resourceString);
             await this.stopLanguageServer(resource);
             await this.startLanguageServer(this.languageServerType, resource);
@@ -247,7 +245,6 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
                     this.fileSystem,
                     this.extensions,
                     this.applicationShell,
-                    this.lspNotebooksExperiment,
                 );
                 break;
             case LanguageServerType.None:
@@ -265,11 +262,11 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
         return lsManager;
     }
 
-    private async refreshLanguageServer(resource?: Resource): Promise<void> {
+    private async refreshLanguageServer(resource?: Resource, forced?: boolean): Promise<void> {
         const lsResource = this.getWorkspaceUri(resource);
         const languageServerType = this.configurationService.getSettings(lsResource).languageServer;
 
-        if (languageServerType !== this.languageServerType) {
+        if (languageServerType !== this.languageServerType || forced) {
             await this.stopLanguageServer(resource);
             await this.startLanguageServer(languageServerType, lsResource);
         }
@@ -286,6 +283,8 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
         workspacesUris.forEach(async (resource) => {
             if (event.affectsConfiguration(`python.languageServer`, resource)) {
                 await this.refreshLanguageServer(resource);
+            } else if (event.affectsConfiguration(`python.analysis.pylanceLspClientEnabled`, resource)) {
+                await this.refreshLanguageServer(resource, /* forced */ true);
             }
         });
     }
@@ -380,7 +379,7 @@ function logStartup(languageServerType: LanguageServerType, resource: Uri): void
 
     switch (languageServerType) {
         case LanguageServerType.Jedi:
-            outputLine = localize('LanguageService.startingJedi', 'Starting Jedi language server for {0}.', basename);
+            outputLine = l10n.t('Starting Jedi language server for {0}.', basename);
             break;
         case LanguageServerType.Node:
             outputLine = LanguageService.startingPylance;

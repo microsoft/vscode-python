@@ -146,7 +146,6 @@ src/client/interpreter/configuration/services/workspaceUpdaterService.ts
 src/client/interpreter/configuration/services/workspaceFolderUpdaterService.ts
 src/client/interpreter/helpers.ts
 src/client/interpreter/virtualEnvs/condaInheritEnvPrompt.ts
-src/client/interpreter/activation/service.ts
 src/client/interpreter/display/index.ts
 
 src/client/api.ts
@@ -172,7 +171,6 @@ src/client/formatters/baseFormatter.ts
 src/client/testing/serviceRegistry.ts
 src/client/testing/main.ts
 src/client/testing/configurationFactory.ts
-src/client/testing/common/debugLauncher.ts
 src/client/testing/common/constants.ts
 src/client/testing/common/testUtils.ts
 src/client/testing/common/socketServer.ts

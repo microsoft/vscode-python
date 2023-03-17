@@ -8,6 +8,10 @@ import * as path from 'path';
 import { CancellationToken, DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
 import { IConfigurationService } from '../../../../common/types';
 import { getOSType, OSType } from '../../../../common/utils/platform';
+import {
+    getWorkspaceFolder as getVSCodeWorkspaceFolder,
+    getWorkspaceFolders,
+} from '../../../../common/vscodeApis/workspaceApis';
 import { IInterpreterService } from '../../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
@@ -16,7 +20,6 @@ import { AttachRequestArguments, DebugOptions, LaunchRequestArguments, PathMappi
 import { PythonPathSource } from '../../types';
 import { IDebugConfigurationResolver } from '../types';
 import { resolveVariables } from '../utils/common';
-import { getWorkspaceFolder as getVSCodeWorkspaceFolder, getWorkspaceFolders } from '../utils/workspaceFolder';
 import { getProgram } from './helper';
 
 @injectable()
@@ -43,6 +46,9 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         debugConfiguration: DebugConfiguration,
         _token?: CancellationToken,
     ): Promise<T | undefined> {
+        if (debugConfiguration.clientOS === undefined) {
+            debugConfiguration.clientOS = getOSType() === OSType.Windows ? 'windows' : 'unix';
+        }
         return debugConfiguration as T;
     }
 
@@ -117,16 +123,39 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
                 undefined,
             );
         }
-        if (debugConfiguration.python === '${command:python.interpreterPath}' || !debugConfiguration.python) {
+
+        if (debugConfiguration.python === '${command:python.interpreterPath}') {
             this.pythonPathSource = PythonPathSource.settingsJson;
+            const interpreterPath =
+                (await this.interpreterService.getActiveInterpreter(workspaceFolder))?.path ??
+                this.configurationService.getSettings(workspaceFolder).pythonPath;
+            debugConfiguration.python = interpreterPath;
+        } else if (debugConfiguration.python === undefined) {
+            this.pythonPathSource = PythonPathSource.settingsJson;
+            debugConfiguration.python = debugConfiguration.pythonPath;
         } else {
             this.pythonPathSource = PythonPathSource.launchJson;
+            debugConfiguration.python = resolveVariables(
+                debugConfiguration.python ?? debugConfiguration.pythonPath,
+                workspaceFolder?.fsPath,
+                undefined,
+            );
         }
-        debugConfiguration.python = resolveVariables(
-            debugConfiguration.python ? debugConfiguration.python : undefined,
-            workspaceFolder?.fsPath,
-            undefined,
-        );
+
+        if (
+            debugConfiguration.debugAdapterPython === '${command:python.interpreterPath}' ||
+            debugConfiguration.debugAdapterPython === undefined
+        ) {
+            debugConfiguration.debugAdapterPython = debugConfiguration.pythonPath ?? debugConfiguration.python;
+        }
+        if (
+            debugConfiguration.debugLauncherPython === '${command:python.interpreterPath}' ||
+            debugConfiguration.debugLauncherPython === undefined
+        ) {
+            debugConfiguration.debugLauncherPython = debugConfiguration.pythonPath ?? debugConfiguration.python;
+        }
+
+        delete debugConfiguration.pythonPath;
     }
 
     protected static debugOption(debugOptions: DebugOptions[], debugOption: DebugOptions): void {

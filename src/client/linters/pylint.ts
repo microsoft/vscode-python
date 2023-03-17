@@ -7,6 +7,8 @@ import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { traceError, traceLog } from '../logging';
 import { BaseLinter } from './baseLinter';
+import { isExtensionEnabled } from './prompts/common';
+import { PYLINT_EXTENSION } from './prompts/pylintPrompt';
 import { IToolsExtensionPrompt } from './prompts/types';
 import { ILintMessage } from './types';
 
@@ -26,8 +28,12 @@ export class Pylint extends BaseLinter {
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
-        if (await this.prompt.showPrompt()) {
-            traceLog('LINTING: Skipping linting from Python extension, since Pylint extension is installed.');
+        await this.prompt.showPrompt();
+
+        if (isExtensionEnabled(this.serviceContainer, PYLINT_EXTENSION)) {
+            traceLog(
+                'LINTING: Skipping linting from Python extension, since Pylint extension is installed and enabled.',
+            );
             return [];
         }
 

@@ -10,7 +10,7 @@ import { IComponentAdapter, ICondaService, PythonEnvironmentsChangedEvent } from
 import { IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from './base/info';
 import { IDiscoveryAPI, PythonLocatorQuery, TriggerRefreshOptions } from './base/locator';
-import { isMacDefaultPythonPath } from './base/locators/lowLevel/macDefaultLocator';
+import { isMacDefaultPythonPath } from './common/environmentManagers/macDefault';
 import { isParentPath } from './common/externalDependencies';
 import { EnvironmentType, PythonEnvironment } from './info';
 import { toSemverLikeVersion } from './base/info/pythonVersion';
@@ -35,6 +35,7 @@ const convertedKinds = new Map(
         [PythonEnvKind.Poetry]: EnvironmentType.Poetry,
         [PythonEnvKind.Venv]: EnvironmentType.Venv,
         [PythonEnvKind.VirtualEnvWrapper]: EnvironmentType.VirtualEnvWrapper,
+        [PythonEnvKind.ActiveState]: EnvironmentType.ActiveState,
     }),
 );
 

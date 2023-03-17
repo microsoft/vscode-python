@@ -19,7 +19,7 @@ import { createCondaScript } from '../../../common/process/internal/scripts';
 import { Common, CreateEnv } from '../../../common/utils/localize';
 import { getCondaBaseEnv, pickPythonVersion } from './condaUtils';
 import { showErrorMessageWithLogs } from '../common/commonUtils';
-import { withProgress } from '../../../common/vscodeApis/windowApis';
+import { MultiStepAction, MultiStepNode, withProgress } from '../../../common/vscodeApis/windowApis';
 import { EventName } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry';
 import {
@@ -27,6 +27,7 @@ import {
     CONDA_ENV_CREATED_MARKER,
     CONDA_ENV_EXISTING_MARKER,
 } from './condaProgressAndTelemetry';
+import { splitLines } from '../../../common/stringUtils';
 
 function generateCommandArgs(version?: string, options?: CreateEnvironmentOptions): string[] {
     let addGitIgnore = true;
@@ -112,7 +113,7 @@ async function createCondaEnv(
     let condaEnvPath: string | undefined;
     out.subscribe(
         (value) => {
-            const output = value.out.splitLines().join('\r\n');
+            const output = splitLines(value.out).join('\r\n');
             traceLog(output);
             if (output.includes(CONDA_ENV_CREATED_MARKER) || output.includes(CONDA_ENV_EXISTING_MARKER)) {
                 condaEnvPath = getCondaEnvFromOutput(output);
@@ -156,16 +157,54 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
         return undefined;
     }
 
-    const workspace = (await pickWorkspaceFolder()) as WorkspaceFolder | undefined;
-    if (!workspace) {
-        traceError('Workspace was not selected or found for creating virtual env.');
-        return undefined;
-    }
+    let workspace: WorkspaceFolder | undefined;
+    const workspaceStep = new MultiStepNode(
+        undefined,
+        async (context?: MultiStepAction) => {
+            try {
+                workspace = (await pickWorkspaceFolder(undefined, context)) as WorkspaceFolder | undefined;
+            } catch (ex) {
+                if (ex === MultiStepAction.Back || ex === MultiStepAction.Cancel) {
+                    return ex;
+                }
+                throw ex;
+            }
 
-    const version = await pickPythonVersion();
-    if (!version) {
-        traceError('Conda environments for use with python extension require Python.');
-        return undefined;
+            if (workspace === undefined) {
+                traceError('Workspace was not selected or found for creating conda environment.');
+                return MultiStepAction.Cancel;
+            }
+            return MultiStepAction.Continue;
+        },
+        undefined,
+    );
+
+    let version: string | undefined;
+    const versionStep = new MultiStepNode(
+        workspaceStep,
+        async () => {
+            try {
+                version = await pickPythonVersion();
+            } catch (ex) {
+                if (ex === MultiStepAction.Back || ex === MultiStepAction.Cancel) {
+                    return ex;
+                }
+                throw ex;
+            }
+
+            if (version === undefined) {
+                traceError('Python version was not selected for creating conda environment.');
+                return MultiStepAction.Cancel;
+            }
+            return MultiStepAction.Continue;
+        },
+        undefined,
+    );
+    workspaceStep.next = versionStep;
+
+    const action = await MultiStepNode.run(workspaceStep);
+    if (action === MultiStepAction.Back || action === MultiStepAction.Cancel) {
+        throw action;
     }
 
     return withProgress(
@@ -190,13 +229,15 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
                     environmentType: 'conda',
                     pythonVersion: version,
                 });
-                envPath = await createCondaEnv(
-                    workspace,
-                    getExecutableCommand(conda),
-                    generateCommandArgs(version, options),
-                    progress,
-                    token,
-                );
+                if (workspace) {
+                    envPath = await createCondaEnv(
+                        workspace,
+                        getExecutableCommand(conda),
+                        generateCommandArgs(version, options),
+                        progress,
+                        token,
+                    );
+                }
             } catch (ex) {
                 traceError(ex);
                 hasError = true;
@@ -206,7 +247,7 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
                     showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
                 }
             }
-            return { path: envPath, uri: workspace.uri };
+            return { path: envPath, uri: workspace?.uri };
         },
     );
 }

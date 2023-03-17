@@ -20,7 +20,8 @@
       "errorname" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
       "errorstack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
       "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "method" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+      "method" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "modulehash" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
    }
 */
 /* __GDPR__
@@ -204,7 +205,7 @@
 */
 /* __GDPR__
    "language_server/installed_packages" : {
-      "packages" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "packagesbitarray" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "packageslowercase" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "resolverid" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
    }
@@ -300,20 +301,25 @@
 */
 /* __GDPR__
    "language_server/settings" : {
+      "addimportexactmatchonly" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "autoimportcompletions" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "autosearchpaths" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "completefunctionparens" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "disableworkspacesymbol" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "enableextractcodeaction" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "extracommitchars" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "formatontype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "functionReturnInlayTypeHints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "hasconfigfile" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "hasextrapaths" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "importformat" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "includeusersymbolsinautoimport" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "indexing" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "lspinteractivewindows" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "lspnotebooks" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "movesymbol" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "openfilesonly" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "pytestparameterinlaytypehints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "typecheckingmode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "useimportheuristic" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "uselibrarycodefortypes" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },

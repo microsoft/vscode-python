@@ -100,6 +100,14 @@ import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST, TEST_TIMEOUT } from '../initialize';
+import { IActivatedEnvironmentLaunch } from '../../client/interpreter/contracts';
+import { ActivatedEnvironmentLaunch } from '../../client/interpreter/virtualEnvs/activatedEnvLaunch';
+import {
+    IPythonPathUpdaterServiceFactory,
+    IPythonPathUpdaterServiceManager,
+} from '../../client/interpreter/configuration/types';
+import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
+import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
 
 suite('Installer', () => {
     let ioc: UnitTestIocContainer;
@@ -168,6 +176,18 @@ suite('Installer', () => {
             IProductPathService,
             TestFrameworkProductPathService,
             ProductType.TestFramework,
+        );
+        ioc.serviceManager.addSingleton<IActivatedEnvironmentLaunch>(
+            IActivatedEnvironmentLaunch,
+            ActivatedEnvironmentLaunch,
+        );
+        ioc.serviceManager.addSingleton<IPythonPathUpdaterServiceManager>(
+            IPythonPathUpdaterServiceManager,
+            PythonPathUpdaterService,
+        );
+        ioc.serviceManager.addSingleton<IPythonPathUpdaterServiceFactory>(
+            IPythonPathUpdaterServiceFactory,
+            PythonPathUpdaterServiceFactory,
         );
         ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
         ioc.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);

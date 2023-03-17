@@ -656,13 +656,16 @@ suite('Linting Scenarios', () => {
     // Note that these aren't actually unit tests.  Instead they are
     // integration tests with heavy usage of mocks.
 
-    let isExtensionInstalledStub: sinon.SinonStub;
+    let isExtensionEnabledStub: sinon.SinonStub;
+    let isExtensionDisabledStub: sinon.SinonStub;
     let doNotShowPromptStateStub: sinon.SinonStub;
     let persistentState: TypeMoq.IMock<IPersistentState<boolean>>;
     setup(() => {
-        isExtensionInstalledStub = sinon.stub(promptApis, 'isExtensionInstalled');
+        isExtensionEnabledStub = sinon.stub(promptApis, 'isExtensionEnabled');
+        isExtensionDisabledStub = sinon.stub(promptApis, 'isExtensionDisabled');
         // For these tests we assume that linter extensions are not installed.
-        isExtensionInstalledStub.returns(false);
+        isExtensionEnabledStub.returns(false);
+        isExtensionDisabledStub.returns(false);
 
         persistentState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         persistentState.setup((p) => p.value).returns(() => true);

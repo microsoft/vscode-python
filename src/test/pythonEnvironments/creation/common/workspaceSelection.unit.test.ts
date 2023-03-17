@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { assert } from 'chai';
+import { assert, expect, use as chaiUse } from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 import * as sinon from 'sinon';
 // import * as typemoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
@@ -11,13 +12,15 @@ import { pickWorkspaceFolder } from '../../../../client/pythonEnvironments/creat
 import * as windowApis from '../../../../client/common/vscodeApis/windowApis';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 
+chaiUse(chaiAsPromised);
+
 suite('Create environment workspace selection tests', () => {
-    let showQuickPickStub: sinon.SinonStub;
+    let showQuickPickWithBackStub: sinon.SinonStub;
     let getWorkspaceFoldersStub: sinon.SinonStub;
     let showErrorMessageStub: sinon.SinonStub;
 
     setup(() => {
-        showQuickPickStub = sinon.stub(windowApis, 'showQuickPick');
+        showQuickPickWithBackStub = sinon.stub(windowApis, 'showQuickPickWithBack');
         getWorkspaceFoldersStub = sinon.stub(workspaceApis, 'getWorkspaceFolders');
         showErrorMessageStub = sinon.stub(windowApis, 'showErrorMessage');
     });
@@ -38,7 +41,7 @@ suite('Create environment workspace selection tests', () => {
         assert.isTrue(showErrorMessageStub.calledOnce);
     });
 
-    test('User did not select workspace', async () => {
+    test('User did not select workspace or user hit escape', async () => {
         const workspaces: WorkspaceFolder[] = [
             {
                 uri: Uri.file('some_folder'),
@@ -53,8 +56,27 @@ suite('Create environment workspace selection tests', () => {
         ];
 
         getWorkspaceFoldersStub.returns(workspaces);
-        showQuickPickStub.returns(undefined);
+        showQuickPickWithBackStub.returns(undefined);
         assert.isUndefined(await pickWorkspaceFolder());
+    });
+
+    test('User clicked on the back button', async () => {
+        const workspaces: WorkspaceFolder[] = [
+            {
+                uri: Uri.file('some_folder'),
+                name: 'some_folder',
+                index: 0,
+            },
+            {
+                uri: Uri.file('some_folder2'),
+                name: 'some_folder2',
+                index: 1,
+            },
+        ];
+
+        getWorkspaceFoldersStub.returns(workspaces);
+        showQuickPickWithBackStub.throws(windowApis.MultiStepAction.Back);
+        expect(pickWorkspaceFolder()).to.eventually.be.rejectedWith(windowApis.MultiStepAction.Back);
     });
 
     test('single workspace scenario', async () => {
@@ -67,7 +89,7 @@ suite('Create environment workspace selection tests', () => {
         ];
 
         getWorkspaceFoldersStub.returns(workspaces);
-        showQuickPickStub.returns({
+        showQuickPickWithBackStub.returns({
             label: workspaces[0].name,
             detail: workspaces[0].uri.fsPath,
             description: undefined,
@@ -75,7 +97,7 @@ suite('Create environment workspace selection tests', () => {
 
         const workspace = await pickWorkspaceFolder();
         assert.deepEqual(workspace, workspaces[0]);
-        assert(showQuickPickStub.notCalled);
+        assert(showQuickPickWithBackStub.notCalled);
     });
 
     test('Multi-workspace scenario with single workspace selected', async () => {
@@ -108,7 +130,7 @@ suite('Create environment workspace selection tests', () => {
         ];
 
         getWorkspaceFoldersStub.returns(workspaces);
-        showQuickPickStub.returns({
+        showQuickPickWithBackStub.returns({
             label: workspaces[1].name,
             detail: workspaces[1].uri.fsPath,
             description: undefined,
@@ -116,7 +138,7 @@ suite('Create environment workspace selection tests', () => {
 
         const workspace = await pickWorkspaceFolder();
         assert.deepEqual(workspace, workspaces[1]);
-        assert(showQuickPickStub.calledOnce);
+        assert(showQuickPickWithBackStub.calledOnce);
     });
 
     test('Multi-workspace scenario with multiple workspaces selected', async () => {
@@ -149,7 +171,7 @@ suite('Create environment workspace selection tests', () => {
         ];
 
         getWorkspaceFoldersStub.returns(workspaces);
-        showQuickPickStub.returns([
+        showQuickPickWithBackStub.returns([
             {
                 label: workspaces[1].name,
                 detail: workspaces[1].uri.fsPath,
@@ -164,6 +186,6 @@ suite('Create environment workspace selection tests', () => {
 
         const workspace = await pickWorkspaceFolder({ allowMultiSelect: true });
         assert.deepEqual(workspace, [workspaces[1], workspaces[3]]);
-        assert(showQuickPickStub.calledOnce);
+        assert(showQuickPickWithBackStub.calledOnce);
     });
 });

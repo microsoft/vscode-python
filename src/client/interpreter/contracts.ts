@@ -76,7 +76,7 @@ export interface IInterpreterService {
     readonly refreshPromise: Promise<void> | undefined;
     readonly onDidChangeInterpreters: Event<PythonEnvironmentsChangedEvent>;
     onDidChangeInterpreterConfiguration: Event<Uri | undefined>;
-    onDidChangeInterpreter: Event<void>;
+    onDidChangeInterpreter: Event<Uri | undefined>;
     onDidChangeInterpreterInformation: Event<PythonEnvironment>;
     /**
      * Note this API does not trigger the refresh but only works with the current refresh if any. Information
@@ -122,3 +122,8 @@ export type WorkspacePythonPath = {
     folderUri: Uri;
     configTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder;
 };
+
+export const IActivatedEnvironmentLaunch = Symbol('IActivatedEnvironmentLaunch');
+export interface IActivatedEnvironmentLaunch {
+    selectIfLaunchedViaActivatedEnv(doNotBlockOnSelection?: boolean): Promise<string | undefined>;
+}
