@@ -20,7 +20,8 @@
       "errorname" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
       "errorstack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
       "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "method" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+      "method" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "modulehash" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
    }
 */
 /* __GDPR__
