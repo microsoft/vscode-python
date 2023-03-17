@@ -1939,6 +1939,5 @@
     },
     "extensionPack": [
         "ms-python.vscode-pylance",
-        "ms-python.isort"
     ]
 }
