@@ -18,11 +18,14 @@ import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import { JupyterExtensionIntegration } from './jupyter/jupyterIntegration';
 import { traceError } from './logging';
+import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
+import { buildEnvironmentApi } from './environmentApi';
 
 export function buildApi(
     ready: Promise<any>,
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer,
+    discoveryApi: IDiscoveryAPI,
 ): IExtensionApi {
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -42,6 +45,42 @@ export function buildApi(
             createClient(...args: any[]): BaseLanguageClient;
             start(client: BaseLanguageClient): Promise<void>;
             stop(client: BaseLanguageClient): Promise<void>;
+        };
+    } & {
+        /**
+         * @deprecated Use IExtensionApi.environments API instead.
+         *
+         * Return internal settings within the extension which are stored in VSCode storage
+         */
+        settings: {
+            /**
+             * An event that is emitted when execution details (for a resource) change. For instance, when interpreter configuration changes.
+             */
+            readonly onDidChangeExecutionDetails: Event<Uri | undefined>;
+            /**
+             * Returns all the details the consumer needs to execute code within the selected environment,
+             * corresponding to the specified resource taking into account any workspace-specific settings
+             * for the workspace to which this resource belongs.
+             * @param {Resource} [resource] A resource for which the setting is asked for.
+             * * When no resource is provided, the setting scoped to the first workspace folder is returned.
+             * * If no folder is present, it returns the global setting.
+             * @returns {({ execCommand: string[] | undefined })}
+             */
+            getExecutionDetails(
+                resource?: Resource,
+            ): {
+                /**
+                 * E.g of execution commands returned could be,
+                 * * `['<path to the interpreter set in settings>']`
+                 * * `['<path to the interpreter selected by the extension when setting is not set>']`
+                 * * `['conda', 'run', 'python']` which is used to run from within Conda environments.
+                 * or something similar for some other Python environments.
+                 *
+                 * @type {(string[] | undefined)} When return value is `undefined`, it means no interpreter is set.
+                 * Otherwise, join the items returned using space to construct the full execution command.
+                 */
+                execCommand: string[] | undefined;
+            };
         };
     } = {
         // 'ready' will propagate the exception, but we must log it here first.
@@ -103,6 +142,7 @@ export function buildApi(
             start: (client: BaseLanguageClient): Promise<void> => client.start(),
             stop: (client: BaseLanguageClient): Promise<void> => client.stop(),
         },
+        environments: buildEnvironmentApi(discoveryApi, serviceContainer),
     };
 
     // In test environment return the DI Container.

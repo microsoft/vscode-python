@@ -16,12 +16,12 @@ import {
 } from '../client/common/types';
 import { IServiceContainer } from '../client/ioc/types';
 import {
-    buildProposedApi,
+    buildEnvironmentApi,
     convertCompleteEnvInfo,
     convertEnvInfo,
     EnvironmentReference,
     reportActiveInterpreterChanged,
-} from '../client/proposedApi';
+} from '../client/environmentApi';
 import { IDiscoveryAPI, ProgressNotificationEvent } from '../client/pythonEnvironments/base/locator';
 import { buildEnvInfo } from '../client/pythonEnvironments/base/info/env';
 import { sleep } from './core';
@@ -29,17 +29,17 @@ import { PythonEnvKind, PythonEnvSource } from '../client/pythonEnvironments/bas
 import { Architecture } from '../client/common/utils/platform';
 import { PythonEnvCollectionChangedEvent } from '../client/pythonEnvironments/base/watcher';
 import { normCasePath } from '../client/common/platform/fs-paths';
-import {
-    ActiveEnvironmentPathChangeEvent,
-    EnvironmentsChangeEvent,
-    EnvironmentVariablesChangeEvent,
-    ProposedExtensionAPI,
-} from '../client/proposedApiTypes';
 import { IWorkspaceService } from '../client/common/application/types';
 import { IEnvironmentVariablesProvider } from '../client/common/variables/types';
 import * as workspaceApis from '../client/common/vscodeApis/workspaceApis';
+import {
+    ActiveEnvironmentPathChangeEvent,
+    EnvironmentVariablesChangeEvent,
+    EnvironmentsChangeEvent,
+    IExtensionApi,
+} from '../client/apiTypes';
 
-suite('Proposed Extension API', () => {
+suite('Python Environment API', () => {
     const workspacePath = 'path/to/workspace';
     const workspaceFolder = {
         name: 'workspace',
@@ -57,7 +57,7 @@ suite('Proposed Extension API', () => {
     let onDidChangeEnvironments: EventEmitter<PythonEnvCollectionChangedEvent>;
     let onDidChangeEnvironmentVariables: EventEmitter<Uri | undefined>;
 
-    let proposed: ProposedExtensionAPI;
+    let environmentApi: IExtensionApi['environments'];
 
     setup(() => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
@@ -95,7 +95,7 @@ suite('Proposed Extension API', () => {
         discoverAPI.setup((d) => d.onProgress).returns(() => onDidChangeRefreshState.event);
         discoverAPI.setup((d) => d.onChanged).returns(() => onDidChangeEnvironments.event);
 
-        proposed = buildProposedApi(discoverAPI.object, serviceContainer.object);
+        environmentApi = buildEnvironmentApi(discoverAPI.object, serviceContainer.object);
     });
 
     teardown(() => {
@@ -109,7 +109,7 @@ suite('Proposed Extension API', () => {
         const envVars = { PATH: 'path' };
         envVarsProvider.setup((e) => e.getEnvironmentVariablesSync(resource)).returns(() => envVars);
         const events: EnvironmentVariablesChangeEvent[] = [];
-        proposed.environments.onDidEnvironmentVariablesChange((e) => {
+        environmentApi.onDidEnvironmentVariablesChange((e) => {
             events.push(e);
         });
         onDidChangeEnvironmentVariables.fire(resource);
@@ -121,7 +121,7 @@ suite('Proposed Extension API', () => {
         const resource = undefined;
         const envVars = { PATH: 'path' };
         envVarsProvider.setup((e) => e.getEnvironmentVariablesSync(resource)).returns(() => envVars);
-        const vars = proposed.environments.getEnvironmentVariables(resource);
+        const vars = environmentApi.getEnvironmentVariables(resource);
         assert.deepEqual(vars, envVars);
     });
 
@@ -129,7 +129,7 @@ suite('Proposed Extension API', () => {
         const resource = Uri.file('x');
         const envVars = { PATH: 'path' };
         envVarsProvider.setup((e) => e.getEnvironmentVariablesSync(resource)).returns(() => envVars);
-        const vars = proposed.environments.getEnvironmentVariables(resource);
+        const vars = environmentApi.getEnvironmentVariables(resource);
         assert.deepEqual(vars, envVars);
     });
 
@@ -138,13 +138,13 @@ suite('Proposed Extension API', () => {
         const folder = ({ uri: resource } as unknown) as WorkspaceFolder;
         const envVars = { PATH: 'path' };
         envVarsProvider.setup((e) => e.getEnvironmentVariablesSync(resource)).returns(() => envVars);
-        const vars = proposed.environments.getEnvironmentVariables(folder);
+        const vars = environmentApi.getEnvironmentVariables(folder);
         assert.deepEqual(vars, envVars);
     });
 
     test('Provide an event to track when active environment details change', async () => {
         const events: ActiveEnvironmentPathChangeEvent[] = [];
-        proposed.environments.onDidChangeActiveEnvironmentPath((e) => {
+        environmentApi.onDidChangeActiveEnvironmentPath((e) => {
             events.push(e);
         });
         reportActiveInterpreterChanged({ path: 'path/to/environment', resource: undefined });
@@ -159,7 +159,7 @@ suite('Proposed Extension API', () => {
         configService
             .setup((c) => c.getSettings(undefined))
             .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
-        const actual = proposed.environments.getActiveEnvironmentPath();
+        const actual = environmentApi.getActiveEnvironmentPath();
         assert.deepEqual(actual, {
             id: normCasePath(pythonPath),
             path: pythonPath,
@@ -171,7 +171,7 @@ suite('Proposed Extension API', () => {
         configService
             .setup((c) => c.getSettings(undefined))
             .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
-        const actual = proposed.environments.getActiveEnvironmentPath();
+        const actual = environmentApi.getActiveEnvironmentPath();
         assert.deepEqual(actual, {
             id: 'DEFAULT_PYTHON',
             path: pythonPath,
@@ -184,7 +184,7 @@ suite('Proposed Extension API', () => {
         configService
             .setup((c) => c.getSettings(resource))
             .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
-        const actual = proposed.environments.getActiveEnvironmentPath(resource);
+        const actual = environmentApi.getActiveEnvironmentPath(resource);
         assert.deepEqual(actual, {
             id: normCasePath(pythonPath),
             path: pythonPath,
@@ -195,7 +195,7 @@ suite('Proposed Extension API', () => {
         const pythonPath = 'this/is/a/test/path';
         discoverAPI.setup((p) => p.resolveEnv(pythonPath)).returns(() => Promise.resolve(undefined));
 
-        const actual = await proposed.environments.resolveEnvironment(pythonPath);
+        const actual = await environmentApi.resolveEnvironment(pythonPath);
         expect(actual).to.be.equal(undefined);
     });
 
@@ -215,7 +215,7 @@ suite('Proposed Extension API', () => {
         });
         discoverAPI.setup((p) => p.resolveEnv(pythonPath)).returns(() => Promise.resolve(env));
 
-        const actual = await proposed.environments.resolveEnvironment(pythonPath);
+        const actual = await environmentApi.resolveEnvironment(pythonPath);
         assert.deepEqual((actual as EnvironmentReference).internal, convertCompleteEnvInfo(env));
     });
 
@@ -241,13 +241,13 @@ suite('Proposed Extension API', () => {
         });
         discoverAPI.setup((p) => p.resolveEnv(pythonPath)).returns(() => Promise.resolve(env));
 
-        const actual = await proposed.environments.resolveEnvironment(convertCompleteEnvInfo(partialEnv));
+        const actual = await environmentApi.resolveEnvironment(convertCompleteEnvInfo(partialEnv));
         assert.deepEqual((actual as EnvironmentReference).internal, convertCompleteEnvInfo(env));
     });
 
     test('environments: no pythons found', () => {
         discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
-        const actual = proposed.environments.known;
+        const actual = environmentApi.known;
         expect(actual).to.be.deep.equal([]);
     });
 
@@ -325,7 +325,7 @@ suite('Proposed Extension API', () => {
             },
         ];
         discoverAPI.setup((d) => d.getEnvs()).returns(() => envs);
-        const actual = proposed.environments.known;
+        const actual = environmentApi.known;
         const actualEnvs = actual?.map((a) => (a as EnvironmentReference).internal);
         assert.deepEqual(
             actualEnvs?.sort((a, b) => a.id.localeCompare(b.id)),
@@ -337,7 +337,7 @@ suite('Proposed Extension API', () => {
         let events: EnvironmentsChangeEvent[] = [];
         let eventValues: EnvironmentsChangeEvent[] = [];
         let expectedEvents: EnvironmentsChangeEvent[] = [];
-        proposed.environments.onDidChangeEnvironments((e) => {
+        environmentApi.onDidChangeEnvironments((e) => {
             events.push(e);
         });
         const envs = [
@@ -431,7 +431,7 @@ suite('Proposed Extension API', () => {
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
-        await proposed.environments.updateActiveEnvironmentPath('this/is/a/test/python/path');
+        await environmentApi.updateActiveEnvironmentPath('this/is/a/test/python/path');
 
         interpreterPathService.verifyAll();
     });
@@ -442,7 +442,7 @@ suite('Proposed Extension API', () => {
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
-        await proposed.environments.updateActiveEnvironmentPath({
+        await environmentApi.updateActiveEnvironmentPath({
             id: normCasePath('this/is/a/test/python/path'),
             path: 'this/is/a/test/python/path',
         });
@@ -457,7 +457,7 @@ suite('Proposed Extension API', () => {
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
-        await proposed.environments.updateActiveEnvironmentPath('this/is/a/test/python/path', uri);
+        await environmentApi.updateActiveEnvironmentPath('this/is/a/test/python/path', uri);
 
         interpreterPathService.verifyAll();
     });
@@ -474,7 +474,7 @@ suite('Proposed Extension API', () => {
             index: 0,
         };
 
-        await proposed.environments.updateActiveEnvironmentPath('this/is/a/test/python/path', workspace);
+        await environmentApi.updateActiveEnvironmentPath('this/is/a/test/python/path', workspace);
 
         interpreterPathService.verifyAll();
     });
@@ -485,7 +485,7 @@ suite('Proposed Extension API', () => {
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
-        await proposed.environments.refreshEnvironments();
+        await environmentApi.refreshEnvironments();
 
         discoverAPI.verifyAll();
     });
@@ -496,7 +496,7 @@ suite('Proposed Extension API', () => {
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
-        await proposed.environments.refreshEnvironments({ forceRefresh: true });
+        await environmentApi.refreshEnvironments({ forceRefresh: true });
 
         discoverAPI.verifyAll();
     });

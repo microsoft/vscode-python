@@ -32,7 +32,7 @@ import {
 } from './contracts';
 import { traceError, traceLog } from '../logging';
 import { Commands, PYTHON_LANGUAGE } from '../common/constants';
-import { reportActiveInterpreterChanged } from '../proposedApi';
+import { reportActiveInterpreterChanged } from '../environmentApi';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { Interpreters } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';

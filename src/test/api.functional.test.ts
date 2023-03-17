@@ -6,18 +6,17 @@
 import { assert, expect } from 'chai';
 import * as path from 'path';
 import { instance, mock, when } from 'ts-mockito';
-import * as Typemoq from 'typemoq';
-import { Event, Uri } from 'vscode';
 import { buildApi } from '../client/api';
 import { ConfigurationService } from '../client/common/configuration/service';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
-import { IConfigurationService } from '../client/common/types';
+import { IConfigurationService, IDisposableRegistry } from '../client/common/types';
 import { IEnvironmentVariablesProvider } from '../client/common/variables/types';
 import { IInterpreterService } from '../client/interpreter/contracts';
 import { InterpreterService } from '../client/interpreter/interpreterService';
 import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
+import { IDiscoveryAPI } from '../client/pythonEnvironments/base/locator';
 
 suite('Extension API', () => {
     const debuggerPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy');
@@ -28,6 +27,7 @@ suite('Extension API', () => {
     let serviceManager: IServiceManager;
     let configurationService: IConfigurationService;
     let interpreterService: IInterpreterService;
+    let discoverAPI: IDiscoveryAPI;
     let environmentVariablesProvider: IEnvironmentVariablesProvider;
 
     setup(() => {
@@ -36,6 +36,7 @@ suite('Extension API', () => {
         configurationService = mock(ConfigurationService);
         interpreterService = mock(InterpreterService);
         environmentVariablesProvider = mock<IEnvironmentVariablesProvider>();
+        discoverAPI = mock<IDiscoveryAPI>();
 
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
             instance(configurationService),
@@ -44,42 +45,7 @@ suite('Extension API', () => {
             instance(environmentVariablesProvider),
         );
         when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
-    });
-
-    test('Execution details settings API returns expected object if interpreter is set', async () => {
-        const resource = Uri.parse('a');
-        when(configurationService.getSettings(resource)).thenReturn({ pythonPath: 'settingValue' } as any);
-
-        const execDetails = buildApi(
-            Promise.resolve(),
-            instance(serviceManager),
-            instance(serviceContainer),
-        ).settings.getExecutionDetails(resource);
-
-        assert.deepEqual(execDetails, { execCommand: ['settingValue'] });
-    });
-
-    test('Execution details settings API returns `undefined` if interpreter is set', async () => {
-        const resource = Uri.parse('a');
-        when(configurationService.getSettings(resource)).thenReturn({ pythonPath: '' } as any);
-
-        const execDetails = buildApi(
-            Promise.resolve(),
-            instance(serviceManager),
-            instance(serviceContainer),
-        ).settings.getExecutionDetails(resource);
-
-        assert.deepEqual(execDetails, { execCommand: undefined });
-    });
-
-    test('Provide a callback which is called when interpreter setting changes', async () => {
-        const expectedEvent = Typemoq.Mock.ofType<Event<Uri | undefined>>().object;
-        when(interpreterService.onDidChangeInterpreterConfiguration).thenReturn(expectedEvent);
-
-        const result = buildApi(Promise.resolve(), instance(serviceManager), instance(serviceContainer)).settings
-            .onDidChangeExecutionDetails;
-
-        assert.deepEqual(result, expectedEvent);
+        when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
     });
 
     test('Test debug launcher args (no-wait)', async () => {
@@ -89,6 +55,7 @@ suite('Extension API', () => {
             Promise.resolve(),
             instance(serviceManager),
             instance(serviceContainer),
+            instance(discoverAPI),
         ).debug.getRemoteLauncherCommand(debuggerHost, debuggerPort, waitForAttach);
         const expectedArgs = [
             debuggerPath.fileToCommandArgumentForPythonExt(),
@@ -106,6 +73,7 @@ suite('Extension API', () => {
             Promise.resolve(),
             instance(serviceManager),
             instance(serviceContainer),
+            instance(discoverAPI),
         ).debug.getRemoteLauncherCommand(debuggerHost, debuggerPort, waitForAttach);
         const expectedArgs = [
             debuggerPath.fileToCommandArgumentForPythonExt(),
@@ -122,6 +90,7 @@ suite('Extension API', () => {
             Promise.resolve(),
             instance(serviceManager),
             instance(serviceContainer),
+            instance(discoverAPI),
         ).debug.getDebuggerPackagePath();
 
         assert.strictEqual(pkgPath, debuggerPath);

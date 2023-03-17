@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { Uri, Event } from 'vscode';
-import { Resource } from './proposedApiTypes';
 import { PythonEnvKind, EnvPathType } from './pythonEnvironments/base/info';
 import { ProgressNotificationEvent, GetRefreshEnvironmentsOptions } from './pythonEnvironments/base/locator';
+import { Resource } from './apiTypes';
 
 export interface EnvironmentDetailsOptions {
     useCache: boolean;

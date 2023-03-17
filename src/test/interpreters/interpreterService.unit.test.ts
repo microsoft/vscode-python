@@ -35,7 +35,7 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { PYTHON_PATH } from '../common';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
-import * as proposedApi from '../../client/proposedApi';
+import * as proposedApi from '../../client/environmentApi';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
