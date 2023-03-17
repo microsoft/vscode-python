@@ -16,12 +16,12 @@ import {
 } from '../client/common/types';
 import { IServiceContainer } from '../client/ioc/types';
 import {
-    buildProposedApi,
+    buildEnvironmentApi,
     convertCompleteEnvInfo,
     convertEnvInfo,
     EnvironmentReference,
     reportActiveInterpreterChanged,
-} from '../client/proposedApi';
+} from '../client/environmentApi';
 import { IDiscoveryAPI, ProgressNotificationEvent } from '../client/pythonEnvironments/base/locator';
 import { buildEnvInfo } from '../client/pythonEnvironments/base/info/env';
 import { sleep } from './core';
@@ -95,7 +95,7 @@ suite('Proposed Extension API', () => {
         discoverAPI.setup((d) => d.onProgress).returns(() => onDidChangeRefreshState.event);
         discoverAPI.setup((d) => d.onChanged).returns(() => onDidChangeEnvironments.event);
 
-        proposed = buildProposedApi(discoverAPI.object, serviceContainer.object);
+        proposed = buildEnvironmentApi(discoverAPI.object, serviceContainer.object);
     });
 
     teardown(() => {

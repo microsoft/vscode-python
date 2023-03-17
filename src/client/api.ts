@@ -18,11 +18,14 @@ import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import { JupyterExtensionIntegration } from './jupyter/jupyterIntegration';
 import { traceError } from './logging';
+import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
+import { buildEnvironmentApi } from './environmentApi';
 
 export function buildApi(
     ready: Promise<any>,
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer,
+    discoveryApi: IDiscoveryAPI,
 ): IExtensionApi {
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -103,6 +106,7 @@ export function buildApi(
             start: (client: BaseLanguageClient): Promise<void> => client.start(),
             stop: (client: BaseLanguageClient): Promise<void> => client.stop(),
         },
+        environments: buildEnvironmentApi(discoveryApi, serviceContainer),
     };
 
     // In test environment return the DI Container.
