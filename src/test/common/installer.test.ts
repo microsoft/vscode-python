@@ -53,6 +53,7 @@ import { TerminalActivator } from '../../client/common/terminal/activator';
 import { PowershellTerminalActivationFailedHandler } from '../../client/common/terminal/activator/powershellFailedHandler';
 import { Bash } from '../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../client/common/terminal/environmentActivationProviders/commandPrompt';
+import { Nushell } from '../../client/common/terminal/environmentActivationProviders/nushell';
 import { CondaActivationCommandProvider } from '../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
 import { PipEnvActivationCommandProvider } from '../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
 import { PyEnvActivationCommandProvider } from '../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
@@ -219,6 +220,11 @@ suite('Installer', () => {
             ITerminalActivationCommandProvider,
             CommandPromptAndPowerShell,
             TerminalActivationProviders.commandPromptAndPowerShell,
+        );
+        ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+            ITerminalActivationCommandProvider,
+            Nushell,
+            TerminalActivationProviders.nushell,
         );
         ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
             ITerminalActivationCommandProvider,
