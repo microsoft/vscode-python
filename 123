@@ -1,0 +1,119 @@
+# -*-coding:utf-8 -*-
+# File       : 自动钓鱼.py
+# Time       ：2023/3/15 13:17
+# Author     ：周谷暘
+# version    ：python 3.9
+# Description：
+
+import pyautogui
+import time
+from time import sleep
+a = 0
+while a < 95:
+    for i in range(0, 1, 1):
+        print('……第%a次钓鱼中……！!' %(1 + a))
+        time.sleep(1)
+    try:
+        print('点击钓鱼')
+        number_location = pyautogui.locateOnScreen('yubiao2.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+        #print(number2_location)  # 返回屏幕所在位置
+        # 利用center()函数获取目标图像在系统中的中心坐标位置
+        x, y = pyautogui.center(number_location)
+        #print('center()', x, y)
+        # 对识别出的目标图像进行点击
+        # 参数x,y代表坐标位置，clicks代表点击次数,button可以设置为左键或者右键
+        pyautogui.click(x=x, y=y, clicks=1, button='left')
+        number1_location = pyautogui.locateOnScreen('chushou.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+        number2_location = pyautogui.locateOnScreen('tijiao.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+        #number3_location = pyautogui.locateOnScreen('queren.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+        #number4_location = pyautogui.locateOnScreen('paole.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+        #number5_location = pyautogui.locateOnScreen('duanle.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+        for i in range(0, 15, 1):
+            if number1_location or number2_location == None:
+                print('鱼儿还没上钩，请耐心等待……')
+                number1_location = pyautogui.locateOnScreen('chushou.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+                number2_location = pyautogui.locateOnScreen('tijiao.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+                number4_location = pyautogui.locateOnScreen('paole.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+                number5_location = pyautogui.locateOnScreen('duanle.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+                if number4_location != None:
+                    print('鱼儿逃跑了')
+                    print()
+                    break
+                if number5_location != None:
+                    print('鱼线断了')
+                    print()
+                    break
+                if number1_location != None:
+                    try:
+                        print('点击出售')
+                        number1_location = pyautogui.locateOnScreen('chushou.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+                        # print(number1_location)  # 返回屏幕所在位置
+                        # 利用center()函数获取目标图像在系统中的中心坐标位置
+                        x, y = pyautogui.center(number1_location)
+                        # print('center()', x, y)
+                        # 对识别出的目标图像进行点击
+                        # 参数x,y代表坐标位置，clicks代表点击次数,button可以设置为左键或者右键
+                        pyautogui.click(x=x, y=y, clicks=1, button='left')
+                    except TypeError:
+                        print("此处是点击出售的问题")
+
+                    print()
+                    number3_location = pyautogui.locateOnScreen('queren.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+                    if number3_location == None:
+                        # print('不用确认')
+                        break
+                    else:
+                        try:
+                            print('点击确认')
+                            number3_location = pyautogui.locateOnScreen('queren.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+                            # print(number1_location)  # 返回屏幕所在位置
+                            # 利用center()函数获取目标图像在系统中的中心坐标位置
+                            x, y = pyautogui.center(number3_location)
+                            # print('center()', x, y)
+                            # 对识别出的目标图像进行点击
+                            # 参数x,y代表坐标位置，clicks代表点击次数,button可以设置为左键或者右键
+                            pyautogui.click(x=x, y=y, clicks=1, button='left')
+                            number3_location = pyautogui.locateOnScreen('queren.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+                            print()
+                            sleep(1.5)
+                            if number3_location != None:
+                                print('再次点击确认')
+                                number3_location = pyautogui.locateOnScreen('queren.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+                                # print(number1_location)  # 返回屏幕所在位置
+                                # 利用center()函数获取目标图像在系统中的中心坐标位置
+                                x, y = pyautogui.center(number3_location)
+                                # print('center()', x, y)
+                                # 对识别出的目标图像进行点击
+                                # 参数x,y代表坐标位置，clicks代表点击次数,button可以设置为左键或者右键
+                                pyautogui.click(x=x, y=y, clicks=1, button='left')
+                                print()
+                            else:
+                                break
+                        except TypeError:
+                            print('此处是点击确定出的问题')
+                        time.sleep(2)
+                        print()
+                        break
+                elif number2_location != None:
+                    try:
+                        print('点击提交')
+                        number2_location = pyautogui.locateOnScreen('tijiao.png', grayscale=False, confidence=0.9)  # 传入按钮的图片
+                        # print(number2_location)  # 返回屏幕所在位置
+                        # 利用center()函数获取目标图像在系统中的中心坐标位置
+                        x, y = pyautogui.center(number2_location)
+                        # print('center()', x, y)
+                        # 对识别出的目标图像进行点击
+                        # 参数x,y代表坐标位置，clicks代表点击次数,button可以设置为左键或者右键
+                        pyautogui.click(x=x, y=y, clicks=1, button='left')
+                    except TypeError:
+                        print("此处是点击提交的问题")
+                    for i in range(0, 1, 1):
+                        print('……提交成功……！！%i秒' % (1 - i))
+                        print()
+                        time.sleep(1)
+
+    except TypeError:
+        print("钓鱼异常！")
+        a -= 1
+    a += 1
+print('已完成%a次钓鱼，体力不足，过段时间再继续吧。' %a)
