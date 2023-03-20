@@ -18,6 +18,7 @@
     },
     "publisher": "ms-python",
     "enabledApiProposals": [
+        "contribEditorContentMenu",
         "quickPickSortByLabel",
         "envShellEvent",
         "testObserver"
@@ -41,7 +42,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.76.0"
+        "vscode": "^1.77.0-20230309"
     },
     "keywords": [
         "python",
@@ -1686,6 +1687,18 @@
                     "command": "python.viewOutput",
                     "title": "%python.command.python.viewOutput.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported"
+                }
+            ],
+            "editor/content": [
+                {
+                    "group": "Python",
+                    "command": "python.createEnvironment",
+                    "when": "resourceLangId == pip-requirements && !virtualWorkspace && shellExecutionSupported"
+                },
+                {
+                    "group": "Python",
+                    "command": "python.createEnvironment",
+                    "when": "resourceFilename == pyproject.toml && pipInstallableToml && !virtualWorkspace && shellExecutionSupported"
                 }
             ],
             "editor/context": [

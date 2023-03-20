@@ -101,6 +101,11 @@ async function pickRequirementsFiles(files: string[], token?: CancellationToken)
     return undefined;
 }
 
+export function isPipInstallableToml(tomlContent: string): boolean {
+    const toml = tomlParse(tomlContent);
+    return tomlHasBuildSystem(toml);
+}
+
 export interface IPackageInstallSelection {
     installType: 'toml' | 'requirements' | 'none';
     installItem?: string;

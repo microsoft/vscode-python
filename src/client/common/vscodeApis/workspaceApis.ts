@@ -43,3 +43,15 @@ export function onDidSaveTextDocument(
 ): vscode.Disposable {
     return vscode.workspace.onDidSaveTextDocument(listener, thisArgs, disposables);
 }
+
+export function getOpenTextDocuments(): readonly vscode.TextDocument[] {
+    return vscode.workspace.textDocuments;
+}
+
+export function onDidOpenTextDocument(handler: (doc: vscode.TextDocument) => void): vscode.Disposable {
+    return vscode.workspace.onDidOpenTextDocument(handler);
+}
+
+export function onDidChangeTextDocument(handler: (e: vscode.TextDocumentChangeEvent) => void): vscode.Disposable {
+    return vscode.workspace.onDidChangeTextDocument(handler);
+}
