@@ -440,7 +440,7 @@ export namespace CreateEnv {
         export const created = l10n.t('Environment created...');
         export const installingPackages = l10n.t('Installing packages...');
         export const errorCreatingEnvironment = l10n.t('Error while creating virtual environment.');
-        export const selectPythonQuickPickTitle = l10n.t('Select a python to use for environment creation');
+        export const selectPythonPlaceHolder = l10n.t('Select a python to create the virtual environment');
         export const providerDescription = l10n.t('Creates a `.venv` virtual environment in the current workspace');
         export const error = l10n.t('Creating virtual environment failed with error.');
         export const tomlExtrasQuickPickTitle = l10n.t('Select optional dependencies to install from pyproject.toml');
