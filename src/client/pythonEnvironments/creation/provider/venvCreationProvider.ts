@@ -166,6 +166,8 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                             {
                                 skipRecommended: true,
                                 showBackButton: true,
+                                placeholder: CreateEnv.Venv.selectPythonPlaceHolder,
+                                title: null,
                             },
                         );
                     } catch (ex) {
