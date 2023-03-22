@@ -12,7 +12,6 @@ import { ILanguageServerOutputChannel } from './activation/types';
 import { IExtensionApi } from './apiTypes';
 import { isTestExecution, PYTHON_LANGUAGE } from './common/constants';
 import { IConfigurationService, Resource } from './common/types';
-import { IEnvironmentVariablesProvider } from './common/variables/types';
 import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
@@ -20,6 +19,8 @@ import { JupyterExtensionIntegration } from './jupyter/jupyterIntegration';
 import { traceError } from './logging';
 import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { buildEnvironmentApi } from './environmentApi';
+import { ApiForPylance } from './pylanceApi';
+import { getTelemetryReporter } from './telemetry';
 
 export function buildApi(
     ready: Promise<any>,
@@ -31,7 +32,6 @@ export function buildApi(
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     serviceManager.addSingleton<JupyterExtensionIntegration>(JupyterExtensionIntegration, JupyterExtensionIntegration);
     const jupyterIntegration = serviceContainer.get<JupyterExtensionIntegration>(JupyterExtensionIntegration);
-    const envService = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
     const outputChannel = serviceContainer.get<ILanguageServerOutputChannel>(ILanguageServerOutputChannel);
 
     const api: IExtensionApi & {
@@ -39,13 +39,7 @@ export function buildApi(
          * @deprecated Temporarily exposed for Pylance until we expose this API generally. Will be removed in an
          * iteration or two.
          */
-        pylance: {
-            getPythonPathVar: (resource?: Uri) => Promise<string | undefined>;
-            readonly onDidEnvironmentVariablesChange: Event<Uri | undefined>;
-            createClient(...args: any[]): BaseLanguageClient;
-            start(client: BaseLanguageClient): Promise<void>;
-            stop(client: BaseLanguageClient): Promise<void>;
-        };
+        pylance: ApiForPylance;
     } & {
         /**
          * @deprecated Use IExtensionApi.environments API instead.
@@ -126,11 +120,6 @@ export function buildApi(
                 : (noop as any),
         },
         pylance: {
-            getPythonPathVar: async (resource?: Uri) => {
-                const envs = await envService.getEnvironmentVariables(resource);
-                return envs.PYTHONPATH;
-            },
-            onDidEnvironmentVariablesChange: envService.onDidEnvironmentVariablesChange,
             createClient: (...args: any[]): BaseLanguageClient => {
                 // Make sure we share output channel so that we can share one with
                 // Jedi as well.
@@ -141,6 +130,7 @@ export function buildApi(
             },
             start: (client: BaseLanguageClient): Promise<void> => client.start(),
             stop: (client: BaseLanguageClient): Promise<void> => client.stop(),
+            getTelemetryReporter: () => getTelemetryReporter(),
         },
         environments: buildEnvironmentApi(discoveryApi, serviceContainer),
     };
