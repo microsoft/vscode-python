@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
+import { inject, injectable } from 'inversify';
 import { IDisposableRegistry } from '../../common/types';
 import { Common, ToolsExtensions } from '../../common/utils/localize';
 import { isExtensionEnabled } from '../../common/vscodeApis/extensionsApi';
@@ -18,31 +19,32 @@ import { AUTOPEP8_EXTENSION, BLACK_EXTENSION, IInstallFormatterPrompt } from './
 
 const SHOW_FORMATTER_INSTALL_PROMPT_DONOTSHOW_KEY = 'showFormatterExtensionInstallPrompt';
 
+@injectable()
 export class InstallFormatterPrompt implements IInstallFormatterPrompt {
     private shownThisSession = false;
 
-    constructor(private readonly serviceContainer: IServiceContainer) {}
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
 
-    public async showInstallFormatterPrompt(resource?: Uri): Promise<void> {
+    public async showInstallFormatterPrompt(resource?: Uri): Promise<boolean> {
         if (!inFormatterExtensionExperiment(this.serviceContainer)) {
-            return;
+            return false;
         }
 
         const promptState = doNotShowPromptState(SHOW_FORMATTER_INSTALL_PROMPT_DONOTSHOW_KEY, this.serviceContainer);
         if (this.shownThisSession || promptState.value) {
-            return;
+            return false;
         }
 
         const config = getConfiguration('python', resource);
         const formatter = config.get<string>('formatting.provider', 'none');
         if (!['autopep8', 'black'].includes(formatter)) {
-            return;
+            return false;
         }
 
         const editorConfig = getConfiguration('editor', { uri: resource, languageId: 'python' });
         const defaultFormatter = editorConfig.get<string>('defaultFormatter', '');
         if ([BLACK_EXTENSION, AUTOPEP8_EXTENSION].includes(defaultFormatter)) {
-            return;
+            return false;
         }
 
         const black = isExtensionEnabled(BLACK_EXTENSION);
@@ -111,12 +113,14 @@ export class InstallFormatterPrompt implements IInstallFormatterPrompt {
         } else if (selection === Common.doNotShowAgain) {
             await promptState.updateValue(true);
         }
+
+        return this.shownThisSession;
     }
 }
 
 export function registerInstallFormatterPrompt(serviceContainer: IServiceContainer): void {
     const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-    const installFormatterPrompt = new InstallFormatterPrompt(serviceContainer);
+    const installFormatterPrompt = serviceContainer.get<IInstallFormatterPrompt>(IInstallFormatterPrompt);
     disposables.push(
         onDidSaveTextDocument(async (e) => {
             const editorConfig = getConfiguration('editor', { uri: e.uri, languageId: 'python' });
