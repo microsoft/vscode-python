@@ -3,15 +3,15 @@
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import { Extension, extensions } from 'vscode';
+import * as vscode from 'vscode';
 import { PVSC_EXTENSION_ID } from '../constants';
 
-export function getExtension<T = unknown>(extensionId: string): Extension<T> | undefined {
-    return extensions.getExtension(extensionId);
+export function getExtension<T = unknown>(extensionId: string): vscode.Extension<T> | undefined {
+    return vscode.extensions.getExtension(extensionId);
 }
 
 export function isExtensionEnabled(extensionId: string): boolean {
-    return extensions.getExtension(extensionId) !== undefined;
+    return vscode.extensions.getExtension(extensionId) !== undefined;
 }
 
 export function isExtensionDisabled(extensionId: string): boolean {
@@ -27,4 +27,8 @@ export function isExtensionDisabled(extensionId: string): boolean {
         return found;
     }
     return false;
+}
+
+export function isInsider(): boolean {
+    return vscode.env.appName.includes('Insider');
 }

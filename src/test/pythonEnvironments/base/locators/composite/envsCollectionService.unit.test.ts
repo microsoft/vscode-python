@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -22,13 +23,31 @@ import * as externalDependencies from '../../../../../client/pythonEnvironments/
 import { noop } from '../../../../core';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { SimpleLocator } from '../../common';
-import { assertEnvEqual, assertEnvsEqual } from '../envTestUtils';
+import { assertEnvEqual, assertEnvsEqual, createFile, deleteFile } from '../envTestUtils';
+import { OSType, getOSType } from '../../../../common';
 
 suite('Python envs locator - Environments Collection', async () => {
     let collectionService: EnvsCollectionService;
     let storage: PythonEnvInfo[];
 
     const updatedName = 'updatedName';
+    const pathToCondaPython = getOSType() === OSType.Windows ? 'python.exe' : path.join('bin', 'python');
+    const condaEnvWithoutPython = createEnv(
+        'python',
+        undefined,
+        undefined,
+        path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython', 'condaLackingPython'),
+        PythonEnvKind.Conda,
+        path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython', 'condaLackingPython', pathToCondaPython),
+    );
+    const condaEnvWithPython = createEnv(
+        path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython', 'condaLackingPython', pathToCondaPython),
+        undefined,
+        undefined,
+        path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython', 'condaLackingPython'),
+        PythonEnvKind.Conda,
+        path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython', 'condaLackingPython', pathToCondaPython),
+    );
 
     function applyChangeEventToEnvList(envs: PythonEnvInfo[], event: PythonEnvCollectionChangedEvent) {
         const env = event.old ?? event.new;
@@ -49,8 +68,17 @@ suite('Python envs locator - Environments Collection', async () => {
         return envs;
     }
 
-    function createEnv(executable: string, searchLocation?: Uri, name?: string, location?: string) {
-        return buildEnvInfo({ executable, searchLocation, name, location });
+    function createEnv(
+        executable: string,
+        searchLocation?: Uri,
+        name?: string,
+        location?: string,
+        kind?: PythonEnvKind,
+        id?: string,
+    ) {
+        const env = buildEnvInfo({ executable, searchLocation, name, location, kind });
+        env.id = id ?? env.id;
+        return env;
     }
 
     function getLocatorEnvs() {
@@ -77,12 +105,7 @@ suite('Python envs locator - Environments Collection', async () => {
             path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project1', '.venv', 'Scripts', 'python.exe'),
             Uri.file(TEST_LAYOUT_ROOT),
         );
-        const envCached3 = createEnv(
-            'python',
-            undefined,
-            undefined,
-            path.join(TEST_LAYOUT_ROOT, 'envsWithoutPython', 'condaLackingPython'),
-        );
+        const envCached3 = condaEnvWithoutPython;
         return [cachedEnvForWorkspace, envCached1, envCached2, envCached3];
     }
 
@@ -123,7 +146,8 @@ suite('Python envs locator - Environments Collection', async () => {
         collectionService = new EnvsCollectionService(cache, parentLocator);
     });
 
-    teardown(() => {
+    teardown(async () => {
+        await deleteFile(condaEnvWithPython.executable.filename); //  Restore to the original state
         sinon.restore();
     });
 
@@ -404,7 +428,7 @@ suite('Python envs locator - Environments Collection', async () => {
         env.executable.mtime = 100;
         sinon.stub(externalDependencies, 'getFileInfo').resolves({ ctime: 100, mtime: 100 });
         const parentLocator = new SimpleLocator([], {
-            resolve: async (e: PythonEnvInfo) => {
+            resolve: async (e: any) => {
                 if (env.executable.filename === e.executable.filename) {
                     return resolvedViaLocator;
                 }
@@ -434,7 +458,7 @@ suite('Python envs locator - Environments Collection', async () => {
                 waitDeferred.resolve();
                 await deferred.promise;
             },
-            resolve: async (e: PythonEnvInfo) => {
+            resolve: async (e: any) => {
                 if (env.executable.filename === e.executable.filename) {
                     return resolvedViaLocator;
                 }
@@ -464,7 +488,7 @@ suite('Python envs locator - Environments Collection', async () => {
         env.executable.mtime = 90;
         sinon.stub(externalDependencies, 'getFileInfo').resolves({ ctime: 100, mtime: 100 });
         const parentLocator = new SimpleLocator([], {
-            resolve: async (e: PythonEnvInfo) => {
+            resolve: async (e: any) => {
                 if (env.executable.filename === e.executable.filename) {
                     return resolvedViaLocator;
                 }
@@ -483,7 +507,7 @@ suite('Python envs locator - Environments Collection', async () => {
     test('resolveEnv() adds env to cache after resolving using downstream locator', async () => {
         const resolvedViaLocator = buildEnvInfo({ executable: 'Resolved via locator' });
         const parentLocator = new SimpleLocator([], {
-            resolve: async (e: PythonEnvInfo) => {
+            resolve: async (e: any) => {
                 if (resolvedViaLocator.executable.filename === e.executable.filename) {
                     return resolvedViaLocator;
                 }
@@ -498,6 +522,49 @@ suite('Python envs locator - Environments Collection', async () => {
         const resolved = await collectionService.resolveEnv(resolvedViaLocator.executable.filename);
         const envs = collectionService.getEnvs();
         assertEnvsEqual(envs, [resolved]);
+    });
+
+    test('resolveEnv() uses underlying locator once conda envs without python get a python installed', async () => {
+        const cachedEnvs = [condaEnvWithoutPython];
+        const parentLocator = new SimpleLocator(
+            [],
+            {
+                resolve: async (e) => {
+                    if (condaEnvWithoutPython.location === (e as string)) {
+                        return condaEnvWithPython;
+                    }
+                    return undefined;
+                },
+            },
+            { resolveAsString: true },
+        );
+        const cache = await createCollectionCache({
+            get: () => cachedEnvs,
+            store: async () => noop(),
+        });
+        collectionService = new EnvsCollectionService(cache, parentLocator);
+        let resolved = await collectionService.resolveEnv(condaEnvWithoutPython.location);
+        assertEnvEqual(resolved, condaEnvWithoutPython); // Ensure cache is used to resolve such envs.
+
+        condaEnvWithPython.executable.ctime = 100;
+        condaEnvWithPython.executable.mtime = 100;
+        sinon.stub(externalDependencies, 'getFileInfo').resolves({ ctime: 100, mtime: 100 });
+
+        const events: PythonEnvCollectionChangedEvent[] = [];
+        collectionService.onChanged((e) => {
+            events.push(e);
+        });
+
+        await createFile(condaEnvWithPython.executable.filename); // Install Python into the env
+
+        resolved = await collectionService.resolveEnv(condaEnvWithoutPython.location);
+        assertEnvEqual(resolved, condaEnvWithPython); // Ensure it resolves latest info.
+
+        // Verify conda env without python in cache is replaced with updated info.
+        const envs = collectionService.getEnvs();
+        assertEnvsEqual(envs, [condaEnvWithPython]);
+
+        expect(events.length).to.equal(1, 'Update event should be fired');
     });
 
     test('Ensure events from downstream locators do not trigger new refreshes if a refresh is already scheduled', async () => {

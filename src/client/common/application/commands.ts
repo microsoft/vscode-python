@@ -62,7 +62,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.quickOpen']: [string];
     ['workbench.action.openWalkthrough']: [string | { category: string; step: string }, boolean | undefined];
     ['workbench.extensions.installExtension']: [
-        Uri | 'ms-python.python',
+        Uri | string,
         (
             | {
                   installOnlyNewlyAddedFromExtensionPackVSIX?: boolean;

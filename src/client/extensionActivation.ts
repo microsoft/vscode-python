@@ -62,6 +62,8 @@ import { WorkspaceService } from './common/application/workspace';
 import { DynamicPythonDebugConfigurationService } from './debugger/extension/configuration/dynamicdebugConfigurationService';
 import { registerCreateEnvironmentFeatures } from './pythonEnvironments/creation/createEnvApi';
 import { IInterpreterQuickPick } from './interpreter/configuration/types';
+import { registerInstallFormatterPrompt } from './providers/prompts/installFormatterPrompt';
+import { registerPyProjectTomlCreateEnvFeatures } from './pythonEnvironments/creation/pyprojectTomlCreateEnv';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -105,6 +107,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     );
     const pathUtils = ext.legacyIOC.serviceContainer.get<IPathUtils>(IPathUtils);
     registerCreateEnvironmentFeatures(ext.disposables, interpreterQuickPick, interpreterPathService, pathUtils);
+    registerPyProjectTomlCreateEnvFeatures(ext.disposables);
 }
 
 /// //////////////////////////
@@ -206,13 +209,15 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
                 });
 
             // register a dynamic configuration provider for 'python' debug type
-            context.subscriptions.push(
+            disposables.push(
                 debug.registerDebugConfigurationProvider(
                     DebuggerTypeName,
                     serviceContainer.get<DynamicPythonDebugConfigurationService>(IDynamicDebugConfigurationService),
                     DebugConfigurationProviderTriggerKind.Dynamic,
                 ),
             );
+
+            registerInstallFormatterPrompt(serviceContainer);
         }
     }
 

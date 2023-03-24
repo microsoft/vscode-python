@@ -10,3 +10,7 @@ export enum ShowToolsExtensionPrompt {
 export enum TerminalEnvVarActivation {
     experiment = 'pythonTerminalEnvVarActivation',
 }
+
+export enum ShowFormatterExtensionPrompt {
+    experiment = 'pythonPromptNewFormatterExt',
+}

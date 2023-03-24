@@ -11,6 +11,7 @@ import { AppinsightsKey, PYLANCE_EXTENSION_ID } from '../common/constants';
 import { EventName } from '../telemetry/constants';
 import { createStatusItem } from './intellisenseStatus';
 import { PylanceApi } from '../activation/node/pylanceApi';
+import { buildApi, IBrowserExtensionApi } from './api';
 
 interface BrowserConfig {
     distUrl: string; // URL to Pylance's dist folder.
@@ -19,11 +20,15 @@ interface BrowserConfig {
 let languageClient: LanguageClient | undefined;
 let pylanceApi: PylanceApi | undefined;
 
-export async function activate(context: vscode.ExtensionContext): Promise<void> {
+export function activate(context: vscode.ExtensionContext): Promise<IBrowserExtensionApi> {
+    const reporter = getTelemetryReporter();
+
+    const activationPromise = Promise.resolve(buildApi(reporter));
     const pylanceExtension = vscode.extensions.getExtension<PylanceApi>(PYLANCE_EXTENSION_ID);
     if (pylanceExtension) {
-        await runPylance(context, pylanceExtension);
-        return;
+        // Make sure we run pylance once we activated core extension.
+        activationPromise.then(() => runPylance(context, pylanceExtension));
+        return activationPromise;
     }
 
     const changeDisposable = vscode.extensions.onDidChange(async () => {
@@ -33,6 +38,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             await runPylance(context, newPylanceExtension);
         }
     });
+
+    return activationPromise;
 }
 
 export async function deactivate(): Promise<void> {

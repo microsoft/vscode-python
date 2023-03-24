@@ -206,11 +206,11 @@ export namespace Interpreters {
         'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar',
     );
     export const installPythonTerminalMessageLinux = l10n.t(
-        '💡 Please try installing the python package using your package manager. Alternatively you can also download it from https://www.python.org/downloads',
+        '💡 Please try installing the Python package using your package manager. Alternatively you can also download it from https://www.python.org/downloads',
     );
 
     export const installPythonTerminalMacMessage = l10n.t(
-        '💡 Brew does not seem to be available. Please try to download Python from https://www.python.org/downloads. Alternatively, you can install the python package using some other package manager which is available.',
+        '💡 Brew does not seem to be available. Please try to download Python from https://www.python.org/downloads. Alternatively, you can install the Python package using some other available package manager.',
     );
     export const changePythonInterpreter = l10n.t('Change Python Interpreter');
     export const selectedPythonInterpreter = l10n.t('Selected Python Interpreter');
@@ -440,7 +440,7 @@ export namespace CreateEnv {
         export const created = l10n.t('Environment created...');
         export const installingPackages = l10n.t('Installing packages...');
         export const errorCreatingEnvironment = l10n.t('Error while creating virtual environment.');
-        export const selectPythonQuickPickTitle = l10n.t('Select a python to use for environment creation');
+        export const selectPythonPlaceHolder = l10n.t('Select a Python installation to create the virtual environment');
         export const providerDescription = l10n.t('Creates a `.venv` virtual environment in the current workspace');
         export const error = l10n.t('Creating virtual environment failed with error.');
         export const tomlExtrasQuickPickTitle = l10n.t('Select optional dependencies to install from pyproject.toml');
@@ -473,4 +473,24 @@ export namespace ToolsExtensions {
     export const installPylintExtension = l10n.t('Install Pylint extension');
     export const installFlake8Extension = l10n.t('Install Flake8 extension');
     export const installISortExtension = l10n.t('Install isort extension');
+
+    export const selectBlackFormatterPrompt = l10n.t(
+        'You have the Black formatter extension installed, would you like to use that as the default formatter?',
+    );
+
+    export const selectAutopep8FormatterPrompt = l10n.t(
+        'You have the Autopep8 formatter extension installed, would you like to use that as the default formatter?',
+    );
+
+    export const selectMultipleFormattersPrompt = l10n.t(
+        'You have multiple formatters installed, would you like to select one as the default formatter?',
+    );
+
+    export const installBlackFormatterPrompt = l10n.t(
+        'You triggered formatting with Black, would you like to install one of our new formatter extensions? This will also set it as the default formatter for Python.',
+    );
+
+    export const installAutopep8FormatterPrompt = l10n.t(
+        'You triggered formatting with Autopep8, would you like to install one of our new formatter extension? This will also set it as the default formatter for Python.',
+    );
 }
