@@ -35,6 +35,6 @@ export class Nushell extends VenvBaseActivationCommandProvider {
         if (!scriptFile) {
             return undefined;
         }
-        return [`overlay activate ${scriptFile.fileToCommandArgumentForPythonExt()}`];
+        return [`overlay use ${scriptFile.fileToCommandArgumentForPythonExt()}`];
     }
 }
