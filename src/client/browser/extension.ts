@@ -20,13 +20,15 @@ interface BrowserConfig {
 let languageClient: LanguageClient | undefined;
 let pylanceApi: PylanceApi | undefined;
 
-export async function activate(context: vscode.ExtensionContext): Promise<IBrowserExtensionApi> {
+export function activate(context: vscode.ExtensionContext): Promise<IBrowserExtensionApi> {
     const reporter = getTelemetryReporter();
 
+    const activationPromise = Promise.resolve(buildApi(reporter));
     const pylanceExtension = vscode.extensions.getExtension<PylanceApi>(PYLANCE_EXTENSION_ID);
     if (pylanceExtension) {
-        await runPylance(context, pylanceExtension);
-        return buildApi(reporter);
+        // Make sure we run pylance once we activated core extension.
+        activationPromise.then(() => runPylance(context, pylanceExtension));
+        return activationPromise;
     }
 
     const changeDisposable = vscode.extensions.onDidChange(async () => {
@@ -37,7 +39,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<IBrows
         }
     });
 
-    return buildApi(reporter);
+    return activationPromise;
 }
 
 export async function deactivate(): Promise<void> {
