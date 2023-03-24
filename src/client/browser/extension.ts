@@ -25,8 +25,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<IBrows
 
     const pylanceExtension = vscode.extensions.getExtension<PylanceApi>(PYLANCE_EXTENSION_ID);
     if (pylanceExtension) {
-        await runPylance(context, pylanceExtension);
-        return buildApi(reporter);
+        const promise = Promise.resolve(buildApi(reporter));
+
+        // Make sure we run pylance once we activated core extension.
+        promise.then(() => runPylance(context, pylanceExtension));
+        return promise;
     }
 
     const changeDisposable = vscode.extensions.onDidChange(async () => {
