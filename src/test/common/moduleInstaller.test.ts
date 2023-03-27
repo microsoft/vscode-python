@@ -38,8 +38,6 @@ import { ProductInstaller } from '../../client/common/installer/productInstaller
 import { IModuleInstaller } from '../../client/common/installer/types';
 import { InterpreterPathService } from '../../client/common/interpreterPathService';
 import { BrowserService } from '../../client/common/net/browser';
-import { FileDownloader } from '../../client/common/net/fileDownloader';
-import { HttpClient } from '../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { PathUtils } from '../../client/common/platform/pathUtils';
@@ -77,8 +75,6 @@ import {
     IEditorUtils,
     IExperimentService,
     IExtensions,
-    IFileDownloader,
-    IHttpClient,
     IInstaller,
     IInterpreterPathService,
     IPathUtils,
@@ -211,8 +207,6 @@ suite('Module Installer', () => {
                 JupyterExtensionDependencyManager,
             );
             ioc.serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
-            ioc.serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
-            ioc.serviceManager.addSingleton<IFileDownloader>(IFileDownloader, FileDownloader);
             ioc.serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
             ioc.serviceManager.addSingleton<ITerminalActivator>(ITerminalActivator, TerminalActivator);
             ioc.serviceManager.addSingleton<ITerminalActivationHandler>(

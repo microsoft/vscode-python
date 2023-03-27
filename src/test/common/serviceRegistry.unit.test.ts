@@ -32,7 +32,6 @@ import { EditorUtils } from '../../client/common/editor';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import { InterpreterPathService } from '../../client/common/interpreterPathService';
 import { BrowserService } from '../../client/common/net/browser';
-import { HttpClient } from '../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
@@ -65,7 +64,6 @@ import {
     ICurrentProcess,
     IEditorUtils,
     IExtensions,
-    IHttpClient,
     IInstaller,
     IInterpreterPathService,
     IPathUtils,
@@ -104,7 +102,6 @@ suite('Common - Service Registry', () => {
             [IApplicationEnvironment, ApplicationEnvironment],
             [ILanguageService, LanguageService],
             [IBrowserService, BrowserService],
-            [IHttpClient, HttpClient],
             [IEditorUtils, EditorUtils],
             [ITerminalActivator, TerminalActivator],
             [ITerminalActivationHandler, PowershellTerminalActivationFailedHandler],
