@@ -20,8 +20,6 @@ exports.nodeModulesToExternalize = [
     'unicode/category/Mc',
     'unicode/category/Nd',
     'unicode/category/Pc',
-    'request',
-    'request-progress',
     'source-map-support',
     'diff-match-patch',
     'sudo-prompt',

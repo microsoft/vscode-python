@@ -4,7 +4,6 @@
 'use strict';
 
 import { Socket } from 'net';
-import { Request as RequestResult } from 'request';
 import {
     CancellationToken,
     ConfigurationChangeEvent,
@@ -359,41 +358,6 @@ export type DownloadOptions = {
      */
     extension: 'tmp' | string;
 };
-
-export const IFileDownloader = Symbol('IFileDownloader');
-/**
- * File downloader, that'll display progress in the status bar.
- *
- * @export
- * @interface IFileDownloader
- */
-export interface IFileDownloader {
-    /**
-     * Download file and display progress in statusbar.
-     * Optionnally display progress in the provided output channel.
-     *
-     * @param {string} uri
-     * @param {DownloadOptions} options
-     * @returns {Promise<string>}
-     * @memberof IFileDownloader
-     */
-    downloadFile(uri: string, options: DownloadOptions): Promise<string>;
-}
-
-export const IHttpClient = Symbol('IHttpClient');
-export interface IHttpClient {
-    downloadFile(uri: string): Promise<RequestResult>;
-    /**
-     * Downloads file from uri as string and parses them into JSON objects
-     * @param uri The uri to download the JSON from
-     * @param strict Set `false` to allow trailing comma and comments in the JSON, defaults to `true`
-     */
-    getJSON<T>(uri: string, strict?: boolean): Promise<T>;
-    /**
-     * Returns the url is valid (i.e. return status code of 200).
-     */
-    exists(uri: string): Promise<boolean>;
-}
 
 export const IExtensionContext = Symbol('ExtensionContext');
 export interface IExtensionContext extends ExtensionContext {}
