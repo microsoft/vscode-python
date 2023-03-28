@@ -76,15 +76,13 @@ export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
     }
 }
 
+type DefaultShellDiagnostics =
+    | DiagnosticCodes.InvalidComspecDiagnostic
+    | DiagnosticCodes.IncompletePathVarDiagnostic
+    | DiagnosticCodes.DefaultShellErrorDiagnostic;
+
 export class DefaultShellDiagnostic extends BaseDiagnostic {
-    constructor(
-        code:
-            | DiagnosticCodes.InvalidComspecDiagnostic
-            | DiagnosticCodes.IncompletePathVarDiagnostic
-            | DiagnosticCodes.DefaultShellErrorDiagnostic,
-        resource: Resource,
-        scope = DiagnosticScope.Global,
-    ) {
+    constructor(code: DefaultShellDiagnostics, resource: Resource, scope = DiagnosticScope.Global) {
         super(code, messages[code], DiagnosticSeverity.Error, scope, resource, undefined, 'always');
     }
 }
@@ -106,6 +104,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
                 DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
                 DiagnosticCodes.InvalidComspecDiagnostic,
                 DiagnosticCodes.IncompletePathVarDiagnostic,
+                DiagnosticCodes.DefaultShellErrorDiagnostic,
             ],
             serviceContainer,
             disposableRegistry,
@@ -191,8 +190,8 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if ((ex as any).errno === -4058) {
                 // ENOENT (-4058) error is thrown by Node when the default shell is invalid.
+                traceError('ComSpec is likely set to an invalid value', getEnvironmentVariable('ComSpec'));
                 if (await this.isComspecInvalid()) {
-                    traceError('ComSpec is set to an invalid value', getEnvironmentVariable('ComSpec'));
                     return [new DefaultShellDiagnostic(DiagnosticCodes.InvalidComspecDiagnostic, resource)];
                 }
                 if (this.isPathVarIncomplete()) {
@@ -262,35 +261,22 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
 
     private getCommandPrompts(diagnostic: IDiagnostic): { prompt: string; command?: IDiagnosticCommand }[] {
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
-        if (diagnostic.code === DiagnosticCodes.InvalidComspecDiagnostic) {
+        if (
+            diagnostic.code === DiagnosticCodes.InvalidComspecDiagnostic ||
+            diagnostic.code === DiagnosticCodes.IncompletePathVarDiagnostic ||
+            diagnostic.code === DiagnosticCodes.DefaultShellErrorDiagnostic
+        ) {
+            const links: Record<DefaultShellDiagnostics, string> = {
+                InvalidComspecDiagnostic: 'https://aka.ms/AAk3djo',
+                IncompletePathVarDiagnostic: 'https://aka.ms/AAk744c',
+                DefaultShellErrorDiagnostic: 'https://aka.ms/AAk7qix',
+            };
             return [
                 {
                     prompt: Common.seeInstructions,
                     command: commandFactory.createCommand(diagnostic, {
                         type: 'launch',
-                        options: 'https://aka.ms/AAk3djo',
-                    }),
-                },
-            ];
-        }
-        if (diagnostic.code === DiagnosticCodes.IncompletePathVarDiagnostic) {
-            return [
-                {
-                    prompt: Common.seeInstructions,
-                    command: commandFactory.createCommand(diagnostic, {
-                        type: 'launch',
-                        options: 'https://aka.ms/AAk744c',
-                    }),
-                },
-            ];
-        }
-        if (diagnostic.code === DiagnosticCodes.DefaultShellErrorDiagnostic) {
-            return [
-                {
-                    prompt: Common.seeInstructions,
-                    command: commandFactory.createCommand(diagnostic, {
-                        type: 'launch',
-                        options: 'https://aka.ms/AAk7qix',
+                        options: links[diagnostic.code],
                     }),
                 },
             ];
