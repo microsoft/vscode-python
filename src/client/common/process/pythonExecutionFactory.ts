@@ -145,7 +145,7 @@ function createPythonService(procService: IProcessService, env: IPythonEnvironme
     const procs = createPythonProcessService(procService, env);
     return {
         getInterpreterInformation: () => env.getInterpreterInformation(),
-        getExecutablePath: () => env.getExecutablePath(),
+        getExecutablePath: (options?: { throwOnError?: boolean }) => env.getExecutablePath(options),
         isModuleInstalled: (m) => env.isModuleInstalled(m),
         getModuleVersion: (m) => env.getModuleVersion(m),
         getExecutionInfo: (a) => env.getExecutionInfo(a),

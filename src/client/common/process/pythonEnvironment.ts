@@ -47,7 +47,7 @@ class PythonEnvironment implements IPythonEnvironment {
         return this.cachedInterpreterInformation;
     }
 
-    public async getExecutablePath(): Promise<string | undefined> {
+    public async getExecutablePath(options?: { throwOnError?: boolean }): Promise<string | undefined> {
         // If we've passed the python file, then return the file.
         // This is because on mac if using the interpreter /usr/bin/python2.7 we can get a different value for the path
         if (await this.deps.isValidExecutable(this.pythonPath)) {
@@ -59,7 +59,7 @@ class PythonEnvironment implements IPythonEnvironment {
             return result;
         }
         const python = this.getExecutionInfo();
-        const promise = getExecutablePath(python, this.deps.shellExec);
+        const promise = getExecutablePath(python, this.deps.shellExec, options);
         cachedExecutablePath.set(this.pythonPath, promise);
         return promise;
     }

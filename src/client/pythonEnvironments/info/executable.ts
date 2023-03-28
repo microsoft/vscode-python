@@ -17,7 +17,7 @@ import { copyPythonExecInfo, PythonExecInfo } from '../exec';
 export async function getExecutablePath(
     python: PythonExecInfo,
     shellExec: ShellExecFunc,
-    timeout?: number,
+    options?: { throwOnError?: boolean },
 ): Promise<string | undefined> {
     try {
         const [args, parse] = getExecutable();
@@ -28,7 +28,7 @@ export async function getExecutablePath(
             (p, c) => (p ? `${p} ${c.toCommandArgumentForPythonExt()}` : `${c.toCommandArgumentForPythonExt()}`),
             '',
         );
-        const result = await shellExec(quoted, { timeout: timeout ?? 15000 });
+        const result = await shellExec(quoted, { timeout: 15000 });
         const executable = parse(result.stdout.trim());
         if (executable === '') {
             throw new Error(`${quoted} resulted in empty stdout`);
@@ -36,6 +36,9 @@ export async function getExecutablePath(
         return executable;
     } catch (ex) {
         traceError(ex);
+        if (options?.throwOnError) {
+            throw ex;
+        }
         return undefined;
     }
 }

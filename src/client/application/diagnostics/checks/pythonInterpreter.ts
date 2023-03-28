@@ -28,6 +28,10 @@ import { EventName } from '../../../telemetry/constants';
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { cache } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
+import { IPythonExecutionFactory } from '../../../common/process/types';
+import { getOSType, OSType } from '../../../common/utils/platform';
+import { IFileSystem } from '../../../common/platform/types';
+import { traceError } from '../../../logging';
 
 const messages = {
     [DiagnosticCodes.NoPythonInterpretersDiagnostic]: l10n.t(
@@ -35,6 +39,9 @@ const messages = {
     ),
     [DiagnosticCodes.InvalidPythonInterpreterDiagnostic]: l10n.t(
         'An Invalid Python interpreter is selected{0}, please try changing it to enable features such as IntelliSense, linting, and debugging. See output for more details regarding why the interpreter is invalid.',
+    ),
+    [DiagnosticCodes.InvalidComspecDiagnostic]: l10n.t(
+        "The environment variable 'Comspec' seems to be set to an invalid value. Please correct it to carry valid path to Command Prompt to enable features such as IntelliSense, linting, and debugging. See instructions which might help.",
     ),
 };
 
@@ -61,6 +68,12 @@ export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
     }
 }
 
+export class DefaultShellDiagnostic extends BaseDiagnostic {
+    constructor(code: DiagnosticCodes.InvalidComspecDiagnostic, resource: Resource, scope = DiagnosticScope.Global) {
+        super(code, messages[code], DiagnosticSeverity.Error, scope, resource, undefined, 'always');
+    }
+}
+
 export const InvalidPythonInterpreterServiceId = 'InvalidPythonInterpreterServiceId';
 
 @injectable()
@@ -73,7 +86,11 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
         super(
-            [DiagnosticCodes.NoPythonInterpretersDiagnostic, DiagnosticCodes.InvalidPythonInterpreterDiagnostic],
+            [
+                DiagnosticCodes.NoPythonInterpretersDiagnostic,
+                DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
+                DiagnosticCodes.InvalidComspecDiagnostic,
+            ],
             serviceContainer,
             disposableRegistry,
             false,
@@ -103,6 +120,13 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
     public async _manualDiagnose(resource: Resource): Promise<IDiagnostic[]> {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
+        if (!currentInterpreter) {
+            const diagnostics = await this.diagnoseDefaultShell(resource);
+            if (diagnostics.length) {
+                return diagnostics;
+            }
+        }
         const hasInterpreters = await interpreterService.hasInterpreters();
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         const isInterpreterSetToDefault = interpreterPathService.get(resource) === 'python';
@@ -118,7 +142,6 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
             ];
         }
 
-        const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
         if (!currentInterpreter) {
             return [
                 new InvalidPythonInterpreterDiagnostic(
@@ -163,6 +186,17 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
 
     private getCommandPrompts(diagnostic: IDiagnostic): { prompt: string; command?: IDiagnosticCommand }[] {
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
+        if (diagnostic.code === DiagnosticCodes.InvalidComspecDiagnostic) {
+            return [
+                {
+                    prompt: Common.instructions,
+                    command: commandFactory.createCommand(diagnostic, {
+                        type: 'launch',
+                        options: 'https://aka.ms/AAk3djo',
+                    }),
+                },
+            ];
+        }
         const prompts = [
             {
                 prompt: Common.selectPythonInterpreter,
@@ -182,6 +216,32 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
             });
         }
         return prompts;
+    }
+
+    private async diagnoseDefaultShell(resource: Resource): Promise<IDiagnostic[]> {
+        if (getOSType() !== OSType.Windows) {
+            return [];
+        }
+        const executionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const executionService = await executionFactory.create({ resource });
+        try {
+            await executionService.getExecutablePath({ throwOnError: true });
+        } catch (ex) {
+            if ((ex as Error).message?.includes('4058')) {
+                // ENOENT (-4058) error is thrown by Node when the default shell is invalid.
+                if (await this.isComspecInvalid()) {
+                    traceError('ComSpec is set to an invalid value', process.env.ComSpec);
+                    return [new DefaultShellDiagnostic(DiagnosticCodes.InvalidComspecDiagnostic, resource)];
+                }
+            }
+        }
+        return [];
+    }
+
+    private async isComspecInvalid() {
+        const comSpec = process.env.ComSpec ?? '';
+        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        return fs.fileExists(comSpec);
     }
 }
 
