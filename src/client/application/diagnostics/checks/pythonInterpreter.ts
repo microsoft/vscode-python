@@ -32,8 +32,8 @@ import { getEnvironmentVariable, getOSType, OSType } from '../../../common/utils
 import { IFileSystem } from '../../../common/platform/types';
 import { traceError } from '../../../logging';
 import { getExecutable } from '../../../common/process/internal/python';
-import { shellExec } from '../../../common/process/rawProcessApis';
 import { getSearchPathEnvVarNames } from '../../../common/utils/exec';
+import { IProcessServiceFactory } from '../../../common/process/types';
 
 const messages = {
     [DiagnosticCodes.NoPythonInterpretersDiagnostic]: l10n.t(
@@ -235,7 +235,9 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
             (p, c) => (p ? `${p} ${c.toCommandArgumentForPythonExt()}` : `${c.toCommandArgumentForPythonExt()}`),
             '',
         );
-        return shellExec(quoted, { timeout: 15000 });
+        const processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+        const service = await processServiceFactory.create();
+        return service.shellExec(quoted, { timeout: 15000 });
     }
 
     @cache(1000, true) // This is to handle throttling of multiple events.
