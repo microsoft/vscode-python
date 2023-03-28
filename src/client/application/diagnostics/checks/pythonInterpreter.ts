@@ -49,7 +49,7 @@ const messages = {
         'We detected an issue with "Path" environment variable that breaks features such as IntelliSense, linting and debugging. Please edit it to make sure it contains the "SystemRoot" subdirectories.',
     ),
     [DiagnosticCodes.DefaultShellErrorDiagnostic]: l10n.t(
-        'We detected an issue with your default shell that breaks features such as IntelliSense, linting and debugging. Try resetting "Comspec" and "Path" environment variables to fix it.',
+        'We detected an issue with your default shell that breaks features such as IntelliSense, linting and debugging. Try resetting "ComSpec" and "Path" environment variables to fix it.',
     ),
 };
 
@@ -176,6 +176,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
     }
 
     private async diagnoseDefaultShell(resource: Resource): Promise<IDiagnostic[]> {
+        await this.isPathVarIncomplete();
         if (getOSType() !== OSType.Windows) {
             return [];
         }
