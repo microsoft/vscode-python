@@ -48,6 +48,9 @@ const messages = {
     [DiagnosticCodes.IncompletePathVarDiagnostic]: l10n.t(
         'We detected an issue with "Path" environment variable that breaks features such as IntelliSense, linting and debugging. Please edit it to make sure it contains the "SystemRoot" subdirectories.',
     ),
+    [DiagnosticCodes.DefaultShellErrorDiagnostic]: l10n.t(
+        'We detected an issue with your default shell that breaks features such as IntelliSense, linting and debugging. Try resetting "Comspec" and "Path" environment variables to fix it.',
+    ),
 };
 
 export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
@@ -75,7 +78,10 @@ export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
 
 export class DefaultShellDiagnostic extends BaseDiagnostic {
     constructor(
-        code: DiagnosticCodes.InvalidComspecDiagnostic | DiagnosticCodes.IncompletePathVarDiagnostic,
+        code:
+            | DiagnosticCodes.InvalidComspecDiagnostic
+            | DiagnosticCodes.IncompletePathVarDiagnostic
+            | DiagnosticCodes.DefaultShellErrorDiagnostic,
         resource: Resource,
         scope = DiagnosticScope.Global,
     ) {
@@ -170,6 +176,69 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
         return false;
     }
 
+    private async diagnoseDefaultShell(resource: Resource): Promise<IDiagnostic[]> {
+        if (getOSType() !== OSType.Windows) {
+            return [];
+        }
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
+        if (currentInterpreter) {
+            return [];
+        }
+        try {
+            await this.shellExecPython();
+        } catch (ex) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if ((ex as any).errno === -4058) {
+                // ENOENT (-4058) error is thrown by Node when the default shell is invalid.
+                if (await this.isComspecInvalid()) {
+                    traceError('ComSpec is set to an invalid value', getEnvironmentVariable('ComSpec'));
+                    return [new DefaultShellDiagnostic(DiagnosticCodes.InvalidComspecDiagnostic, resource)];
+                }
+                if (this.isPathVarIncomplete()) {
+                    traceError('PATH env var appears to be incomplete', process.env.Path, process.env.PATH);
+                    return [new DefaultShellDiagnostic(DiagnosticCodes.IncompletePathVarDiagnostic, resource)];
+                }
+                return [new DefaultShellDiagnostic(DiagnosticCodes.DefaultShellErrorDiagnostic, resource)];
+            }
+        }
+        return [];
+    }
+
+    private async isComspecInvalid() {
+        const comSpec = getEnvironmentVariable('ComSpec') ?? '';
+        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        return fs.fileExists(comSpec).then((exists) => !exists);
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    private isPathVarIncomplete() {
+        const envVars = getSearchPathEnvVarNames();
+        const systemRoot = getEnvironmentVariable('SystemRoot') ?? 'C:\\WINDOWS';
+        for (const envVar of envVars) {
+            const value = getEnvironmentVariable(envVar);
+            if (value?.includes(systemRoot)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @cache(-1, true)
+    // eslint-disable-next-line class-methods-use-this
+    private async shellExecPython() {
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        const { pythonPath } = configurationService.getSettings();
+        const [args] = getExecutable();
+        const argv = [pythonPath, ...args];
+        // Concat these together to make a set of quoted strings
+        const quoted = argv.reduce(
+            (p, c) => (p ? `${p} ${c.toCommandArgumentForPythonExt()}` : `${c.toCommandArgumentForPythonExt()}`),
+            '',
+        );
+        return shellExec(quoted, { timeout: 15000 });
+    }
+
     @cache(1000, true) // This is to handle throttling of multiple events.
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         if (diagnostics.length === 0) {
@@ -215,6 +284,17 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
                 },
             ];
         }
+        if (diagnostic.code === DiagnosticCodes.DefaultShellErrorDiagnostic) {
+            return [
+                {
+                    prompt: Common.seeInstructions,
+                    command: commandFactory.createCommand(diagnostic, {
+                        type: 'launch',
+                        options: 'https://aka.ms/AAk744c',
+                    }),
+                },
+            ];
+        }
         const prompts = [
             {
                 prompt: Common.selectPythonInterpreter,
@@ -234,68 +314,6 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
             });
         }
         return prompts;
-    }
-
-    private async diagnoseDefaultShell(resource: Resource): Promise<IDiagnostic[]> {
-        if (getOSType() !== OSType.Windows) {
-            return [];
-        }
-        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
-        if (currentInterpreter) {
-            return [];
-        }
-        try {
-            await this.shellExecPython();
-        } catch (ex) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if ((ex as any).errno === -4058) {
-                // ENOENT (-4058) error is thrown by Node when the default shell is invalid.
-                if (await this.isComspecInvalid()) {
-                    traceError('ComSpec is set to an invalid value', getEnvironmentVariable('ComSpec'));
-                    return [new DefaultShellDiagnostic(DiagnosticCodes.InvalidComspecDiagnostic, resource)];
-                }
-                if (this.isPathVarIncomplete()) {
-                    traceError('PATH env var appears to be incomplete', process.env.Path, process.env.PATH);
-                    return [new DefaultShellDiagnostic(DiagnosticCodes.IncompletePathVarDiagnostic, resource)];
-                }
-            }
-        }
-        return [];
-    }
-
-    private async isComspecInvalid() {
-        const comSpec = getEnvironmentVariable('ComSpec') ?? '';
-        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        return fs.fileExists(comSpec).then((exists) => !exists);
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    private isPathVarIncomplete() {
-        const envVars = getSearchPathEnvVarNames();
-        const systemRoot = getEnvironmentVariable('SystemRoot') ?? 'C:\\WINDOWS';
-        for (const envVar of envVars) {
-            const value = getEnvironmentVariable(envVar);
-            if (value?.includes(systemRoot)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @cache(-1, true)
-    // eslint-disable-next-line class-methods-use-this
-    private async shellExecPython() {
-        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const { pythonPath } = configurationService.getSettings();
-        const [args] = getExecutable();
-        const argv = [pythonPath, ...args];
-        // Concat these together to make a set of quoted strings
-        const quoted = argv.reduce(
-            (p, c) => (p ? `${p} ${c.toCommandArgumentForPythonExt()}` : `${c.toCommandArgumentForPythonExt()}`),
-            '',
-        );
-        return shellExec(quoted, { timeout: 15000 });
     }
 }
 
