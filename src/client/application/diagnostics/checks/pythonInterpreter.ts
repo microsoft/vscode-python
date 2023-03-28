@@ -290,7 +290,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
                     prompt: Common.seeInstructions,
                     command: commandFactory.createCommand(diagnostic, {
                         type: 'launch',
-                        options: 'https://aka.ms/AAk744c',
+                        options: 'https://aka.ms/AAk7qix',
                     }),
                 },
             ];
