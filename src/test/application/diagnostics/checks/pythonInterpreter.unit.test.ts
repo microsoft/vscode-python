@@ -42,6 +42,7 @@ import { noop } from '../../../../client/common/utils/misc';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
+import { getOSType, OSType } from '../../../common';
 import { sleep } from '../../../core';
 
 suite('Application Diagnostics - Checks Python Interpreter', () => {
@@ -222,7 +223,10 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 'not the same',
             );
         });
-        test('Should return comspec diagnostics if comspec is configured incorrectly', async () => {
+        test('Should return comspec diagnostics if comspec is configured incorrectly', async function () {
+            if (getOSType() !== OSType.Windows) {
+                return this.skip();
+            }
             // No interpreter should exist if comspec is incorrectly configured.
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
@@ -243,7 +247,10 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 'not the same',
             );
         });
-        test('Should return incomplete path diagnostics if `Path` variable is incomplete and execution fails', async () => {
+        test('Should return incomplete path diagnostics if `Path` variable is incomplete and execution fails', async function () {
+            if (getOSType() !== OSType.Windows) {
+                return this.skip();
+            }
             // No interpreter should exist if execution is failing.
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
@@ -260,7 +267,10 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 'not the same',
             );
         });
-        test('Should return default shell error diagnostic if execution fails but we do not identify the cause', async () => {
+        test('Should return default shell error diagnostic if execution fails but we do not identify the cause', async function () {
+            if (getOSType() !== OSType.Windows) {
+                return this.skip();
+            }
             // No interpreter should exist if execution is failing.
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
@@ -273,6 +283,32 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             const diagnostics = await diagnosticService._manualDiagnose(undefined);
             expect(diagnostics).to.be.deep.equal(
                 [new DefaultShellDiagnostic(DiagnosticCodes.DefaultShellErrorDiagnostic, undefined)],
+                'not the same',
+            );
+        });
+        test('Should return invalid interpreter diagnostics on non-Windows if there is no current interpreter and execution fails', async function () {
+            if (getOSType() === OSType.Windows) {
+                return this.skip();
+            }
+            interpreterService.setup((i) => i.hasInterpreters()).returns(() => Promise.resolve(false));
+            // No interpreter should exist if execution is failing.
+            interpreterService
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
+                .returns(() => {
+                    return Promise.resolve(undefined);
+                });
+            processService
+                .setup((p) => p.shellExec(typemoq.It.isAny(), typemoq.It.isAny()))
+                .returns(() => Promise.reject({ errno: -4058 }));
+            const diagnostics = await diagnosticService._manualDiagnose(undefined);
+            expect(diagnostics).to.be.deep.equal(
+                [
+                    new InvalidPythonInterpreterDiagnostic(
+                        DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
+                        undefined,
+                        workspaceService.object,
+                    ),
+                ],
                 'not the same',
             );
         });
