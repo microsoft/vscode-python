@@ -13,6 +13,8 @@ export enum DiagnosticCodes {
     EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic = 'EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic',
     InvalidPythonInterpreterDiagnostic = 'InvalidPythonInterpreterDiagnostic',
     InvalidComspecDiagnostic = 'InvalidComspecDiagnostic',
+    IncompletePathVarDiagnostic = 'IncompletePathVarDiagnostic',
+    DefaultShellErrorDiagnostic = 'DefaultShellErrorDiagnostic',
     LSNotSupportedDiagnostic = 'LSNotSupportedDiagnostic',
     PythonPathDeprecatedDiagnostic = 'PythonPathDeprecatedDiagnostic',
     JustMyCodeDiagnostic = 'JustMyCodeDiagnostic',

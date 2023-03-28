@@ -28,11 +28,12 @@ import { EventName } from '../../../telemetry/constants';
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { cache } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
-import { getOSType, OSType } from '../../../common/utils/platform';
+import { getEnvironmentVariable, getOSType, OSType } from '../../../common/utils/platform';
 import { IFileSystem } from '../../../common/platform/types';
 import { traceError } from '../../../logging';
 import { getExecutable } from '../../../common/process/internal/python';
 import { shellExec } from '../../../common/process/rawProcessApis';
+import { getSearchPathEnvVarNames } from '../../../common/utils/exec';
 
 const messages = {
     [DiagnosticCodes.NoPythonInterpretersDiagnostic]: l10n.t(
@@ -43,6 +44,9 @@ const messages = {
     ),
     [DiagnosticCodes.InvalidComspecDiagnostic]: l10n.t(
         'We detected an issue with one of your environment variables that breaks features such as IntelliSense, linting and debugging. Try setting the "ComSpec" variable to a valid Command Prompt path in your system to fix it.',
+    ),
+    [DiagnosticCodes.IncompletePathVarDiagnostic]: l10n.t(
+        'We detected an issue with "Path" environment variable that breaks features such as IntelliSense, linting and debugging. Please edit it to make sure it contains the "SystemRoot" subdirectories.',
     ),
 };
 
@@ -70,7 +74,11 @@ export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
 }
 
 export class DefaultShellDiagnostic extends BaseDiagnostic {
-    constructor(code: DiagnosticCodes.InvalidComspecDiagnostic, resource: Resource, scope = DiagnosticScope.Global) {
+    constructor(
+        code: DiagnosticCodes.InvalidComspecDiagnostic | DiagnosticCodes.IncompletePathVarDiagnostic,
+        resource: Resource,
+        scope = DiagnosticScope.Global,
+    ) {
         super(code, messages[code], DiagnosticSeverity.Error, scope, resource, undefined, 'always');
     }
 }
@@ -91,6 +99,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
                 DiagnosticCodes.NoPythonInterpretersDiagnostic,
                 DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
                 DiagnosticCodes.InvalidComspecDiagnostic,
+                DiagnosticCodes.IncompletePathVarDiagnostic,
             ],
             serviceContainer,
             disposableRegistry,
@@ -121,7 +130,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const diagnostics = await this.diagnoseDefaultShell(resource);
-        if (diagnostics.length) {
+        if (diagnostics.length > 0) {
             return diagnostics;
         }
         const hasInterpreters = await interpreterService.hasInterpreters();
@@ -195,6 +204,17 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
                 },
             ];
         }
+        if (diagnostic.code === DiagnosticCodes.IncompletePathVarDiagnostic) {
+            return [
+                {
+                    prompt: Common.seeInstructions,
+                    command: commandFactory.createCommand(diagnostic, {
+                        type: 'launch',
+                        options: 'https://aka.ms/AAk744c',
+                    }),
+                },
+            ];
+        }
         const prompts = [
             {
                 prompt: Common.selectPythonInterpreter,
@@ -232,8 +252,12 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
             if ((ex as any).errno === -4058) {
                 // ENOENT (-4058) error is thrown by Node when the default shell is invalid.
                 if (await this.isComspecInvalid()) {
-                    traceError('ComSpec is set to an invalid value', process.env.ComSpec);
+                    traceError('ComSpec is set to an invalid value', getEnvironmentVariable('ComSpec'));
                     return [new DefaultShellDiagnostic(DiagnosticCodes.InvalidComspecDiagnostic, resource)];
+                }
+                if (this.isPathVarIncomplete()) {
+                    traceError('PATH env var appears to be incomplete', process.env.Path, process.env.PATH);
+                    return [new DefaultShellDiagnostic(DiagnosticCodes.IncompletePathVarDiagnostic, resource)];
                 }
             }
         }
@@ -241,9 +265,22 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
     }
 
     private async isComspecInvalid() {
-        const comSpec = process.env.ComSpec ?? '';
+        const comSpec = getEnvironmentVariable('ComSpec') ?? '';
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         return fs.fileExists(comSpec).then((exists) => !exists);
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    private isPathVarIncomplete() {
+        const envVars = getSearchPathEnvVarNames();
+        const systemRoot = getEnvironmentVariable('SystemRoot') ?? 'C:\\WINDOWS';
+        for (const envVar of envVars) {
+            const value = getEnvironmentVariable(envVar);
+            if (value?.includes(systemRoot)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @cache(-1, true)
