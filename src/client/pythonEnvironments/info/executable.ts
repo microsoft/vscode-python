@@ -14,11 +14,7 @@ import { copyPythonExecInfo, PythonExecInfo } from '../exec';
  * @param python - the information to use when running Python
  * @param shellExec - the function to use to run Python
  */
-export async function getExecutablePath(
-    python: PythonExecInfo,
-    shellExec: ShellExecFunc,
-    options?: { throwOnError?: boolean },
-): Promise<string | undefined> {
+export async function getExecutablePath(python: PythonExecInfo, shellExec: ShellExecFunc): Promise<string | undefined> {
     try {
         const [args, parse] = getExecutable();
         const info = copyPythonExecInfo(python, args);
@@ -36,9 +32,6 @@ export async function getExecutablePath(
         return executable;
     } catch (ex) {
         traceError(ex);
-        if (options?.throwOnError) {
-            throw ex;
-        }
         return undefined;
     }
 }
