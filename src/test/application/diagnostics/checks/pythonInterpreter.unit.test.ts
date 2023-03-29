@@ -280,6 +280,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             processService
                 .setup((p) => p.shellExec(typemoq.It.isAny(), typemoq.It.isAny()))
                 .returns(() => Promise.reject({ errno: -4058 }));
+            process.env.Path = 'C:\\Windows\\System32';
             const diagnostics = await diagnosticService._manualDiagnose(undefined);
             expect(diagnostics).to.be.deep.equal(
                 [new DefaultShellDiagnostic(DiagnosticCodes.DefaultShellErrorDiagnostic, undefined)],

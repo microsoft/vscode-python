@@ -34,6 +34,7 @@ import { traceError } from '../../../logging';
 import { getExecutable } from '../../../common/process/internal/python';
 import { getSearchPathEnvVarNames } from '../../../common/utils/exec';
 import { IProcessServiceFactory } from '../../../common/process/types';
+import { normCasePath } from '../../../common/platform/fs-paths';
 
 const messages = {
     [DiagnosticCodes.NoPythonInterpretersDiagnostic]: l10n.t(
@@ -46,7 +47,7 @@ const messages = {
         'We detected an issue with one of your environment variables that breaks features such as IntelliSense, linting and debugging. Try setting the "ComSpec" variable to a valid Command Prompt path in your system to fix it.',
     ),
     [DiagnosticCodes.IncompletePathVarDiagnostic]: l10n.t(
-        'We detected an issue with "Path" environment variable that breaks features such as IntelliSense, linting and debugging. Please edit it to make sure it contains the "SystemRoot" subdirectories.',
+        'We detected an issue with "Path" environment variable that breaks features such as IntelliSense, linting and debugging. Please edit it to make sure it contains the "System32" subdirectories.',
     ),
     [DiagnosticCodes.DefaultShellErrorDiagnostic]: l10n.t(
         'We detected an issue with your default shell that breaks features such as IntelliSense, linting and debugging. Try resetting "ComSpec" and "Path" environment variables to fix it.',
@@ -176,7 +177,6 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
     }
 
     private async diagnoseDefaultShell(resource: Resource): Promise<IDiagnostic[]> {
-        await this.isPathVarIncomplete();
         if (getOSType() !== OSType.Windows) {
             return [];
         }
@@ -215,9 +215,10 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
     private isPathVarIncomplete() {
         const envVars = getSearchPathEnvVarNames();
         const systemRoot = getEnvironmentVariable('SystemRoot') ?? 'C:\\WINDOWS';
+        const system32 = path.join(systemRoot, 'system32');
         for (const envVar of envVars) {
             const value = getEnvironmentVariable(envVar);
-            if (value?.includes(systemRoot)) {
+            if (value && normCasePath(value).includes(normCasePath(system32))) {
                 return false;
             }
         }
