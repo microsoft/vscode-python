@@ -49,6 +49,7 @@ export namespace Diagnostics {
 
 export namespace Common {
     export const allow = l10n.t('Allow');
+    export const seeInstructions = l10n.t('See Instructions');
     export const close = l10n.t('Close');
     export const bannerLabelYes = l10n.t('Yes');
     export const bannerLabelNo = l10n.t('No');

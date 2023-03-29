@@ -9,6 +9,7 @@ import { EventEmitter, Uri } from 'vscode';
 import { BaseDiagnosticsService } from '../../../../client/application/diagnostics/base';
 import { InvalidLaunchJsonDebuggerDiagnostic } from '../../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
 import {
+    DefaultShellDiagnostic,
     InvalidPythonInterpreterDiagnostic,
     InvalidPythonInterpreterService,
 } from '../../../../client/application/diagnostics/checks/pythonInterpreter';
@@ -27,13 +28,21 @@ import {
 import { CommandsWithoutArgs } from '../../../../client/common/application/commands';
 import { ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
 import { Commands } from '../../../../client/common/constants';
-import { IPlatformService } from '../../../../client/common/platform/types';
-import { IDisposable, IDisposableRegistry, IInterpreterPathService, Resource } from '../../../../client/common/types';
+import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
+import { IProcessService, IProcessServiceFactory } from '../../../../client/common/process/types';
+import {
+    IConfigurationService,
+    IDisposable,
+    IDisposableRegistry,
+    IInterpreterPathService,
+    Resource,
+} from '../../../../client/common/types';
 import { Common } from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
-import { IInterpreterHelper, IInterpreterService } from '../../../../client/interpreter/contracts';
+import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
+import { getOSType, OSType } from '../../../common';
 import { sleep } from '../../../core';
 
 suite('Application Diagnostics - Checks Python Interpreter', () => {
@@ -44,13 +53,28 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
     let platformService: typemoq.IMock<IPlatformService>;
     let workspaceService: typemoq.IMock<IWorkspaceService>;
     let commandManager: typemoq.IMock<ICommandManager>;
-    let helper: typemoq.IMock<IInterpreterHelper>;
+    let configService: typemoq.IMock<IConfigurationService>;
+    let fs: typemoq.IMock<IFileSystem>;
     let serviceContainer: typemoq.IMock<IServiceContainer>;
+    let processService: typemoq.IMock<IProcessService>;
     let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
+    const oldComSpec = process.env.ComSpec;
+    const oldPath = process.env.Path;
     function createContainer() {
+        fs = typemoq.Mock.ofType<IFileSystem>();
+        fs.setup((f) => f.fileExists(process.env.ComSpec ?? 'exists')).returns(() => Promise.resolve(true));
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
+        processService = typemoq.Mock.ofType<IProcessService>();
+        const processServiceFactory = typemoq.Mock.ofType<IProcessServiceFactory>();
+        processServiceFactory.setup((p) => p.create()).returns(() => Promise.resolve(processService.object));
+        serviceContainer
+            .setup((s) => s.get(typemoq.It.isValue(IProcessServiceFactory)))
+            .returns(() => processServiceFactory.object);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        processService.setup((p) => (p as any).then).returns(() => undefined);
         workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
         commandManager = typemoq.Mock.ofType<ICommandManager>();
+        serviceContainer.setup((s) => s.get(typemoq.It.isValue(IFileSystem))).returns(() => fs.object);
         serviceContainer.setup((s) => s.get(typemoq.It.isValue(ICommandManager))).returns(() => commandManager.object);
         workspaceService.setup((w) => w.workspaceFile).returns(() => undefined);
         serviceContainer
@@ -82,8 +106,11 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         serviceContainer
             .setup((s) => s.get(typemoq.It.isValue(IInterpreterPathService)))
             .returns(() => interpreterPathService.object);
-        helper = typemoq.Mock.ofType<IInterpreterHelper>();
-        serviceContainer.setup((s) => s.get(typemoq.It.isValue(IInterpreterHelper))).returns(() => helper.object);
+        configService = typemoq.Mock.ofType<IConfigurationService>();
+        configService.setup((c) => c.getSettings()).returns(() => ({ pythonPath: 'pythonPath' } as any));
+        serviceContainer
+            .setup((s) => s.get(typemoq.It.isValue(IConfigurationService)))
+            .returns(() => configService.object);
         serviceContainer.setup((s) => s.get(typemoq.It.isValue(IDisposableRegistry))).returns(() => []);
         return serviceContainer.object;
     }
@@ -100,6 +127,11 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 }
             })(createContainer(), []);
             (diagnosticService as any)._clear();
+        });
+
+        teardown(() => {
+            process.env.ComSpec = oldComSpec;
+            process.env.Path = oldPath;
         });
 
         test('Registers command to trigger environment prompts', async () => {
@@ -191,7 +223,96 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 'not the same',
             );
         });
-        test('Should return invalid diagnostics if there are interpreters but no current interpreter', async () => {
+        test('Should return comspec diagnostics if comspec is configured incorrectly', async function () {
+            if (getOSType() !== OSType.Windows) {
+                return this.skip();
+            }
+            // No interpreter should exist if comspec is incorrectly configured.
+            interpreterService
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
+                .returns(() => {
+                    return Promise.resolve(undefined);
+                });
+            // Should fail with this error code if comspec is incorrectly configured.
+            processService
+                .setup((p) => p.shellExec(typemoq.It.isAny(), typemoq.It.isAny()))
+                .returns(() => Promise.reject({ errno: -4058 }));
+            // Should be set to an invalid value in this case.
+            process.env.ComSpec = 'doesNotExist';
+            fs.setup((f) => f.fileExists('doesNotExist')).returns(() => Promise.resolve(false));
+
+            const diagnostics = await diagnosticService._manualDiagnose(undefined);
+            expect(diagnostics).to.be.deep.equal(
+                [new DefaultShellDiagnostic(DiagnosticCodes.InvalidComspecDiagnostic, undefined)],
+                'not the same',
+            );
+        });
+        test('Should return incomplete path diagnostics if `Path` variable is incomplete and execution fails', async function () {
+            if (getOSType() !== OSType.Windows) {
+                return this.skip();
+            }
+            // No interpreter should exist if execution is failing.
+            interpreterService
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
+                .returns(() => {
+                    return Promise.resolve(undefined);
+                });
+            processService
+                .setup((p) => p.shellExec(typemoq.It.isAny(), typemoq.It.isAny()))
+                .returns(() => Promise.reject({ errno: -4058 }));
+            process.env.Path = 'SystemRootDoesNotExist';
+            const diagnostics = await diagnosticService._manualDiagnose(undefined);
+            expect(diagnostics).to.be.deep.equal(
+                [new DefaultShellDiagnostic(DiagnosticCodes.IncompletePathVarDiagnostic, undefined)],
+                'not the same',
+            );
+        });
+        test('Should return default shell error diagnostic if execution fails but we do not identify the cause', async function () {
+            if (getOSType() !== OSType.Windows) {
+                return this.skip();
+            }
+            // No interpreter should exist if execution is failing.
+            interpreterService
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
+                .returns(() => {
+                    return Promise.resolve(undefined);
+                });
+            processService
+                .setup((p) => p.shellExec(typemoq.It.isAny(), typemoq.It.isAny()))
+                .returns(() => Promise.reject({ errno: -4058 }));
+            const diagnostics = await diagnosticService._manualDiagnose(undefined);
+            expect(diagnostics).to.be.deep.equal(
+                [new DefaultShellDiagnostic(DiagnosticCodes.DefaultShellErrorDiagnostic, undefined)],
+                'not the same',
+            );
+        });
+        test('Should return invalid interpreter diagnostics on non-Windows if there is no current interpreter and execution fails', async function () {
+            if (getOSType() === OSType.Windows) {
+                return this.skip();
+            }
+            interpreterService.setup((i) => i.hasInterpreters()).returns(() => Promise.resolve(false));
+            // No interpreter should exist if execution is failing.
+            interpreterService
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
+                .returns(() => {
+                    return Promise.resolve(undefined);
+                });
+            processService
+                .setup((p) => p.shellExec(typemoq.It.isAny(), typemoq.It.isAny()))
+                .returns(() => Promise.reject({ errno: -4058 }));
+            const diagnostics = await diagnosticService._manualDiagnose(undefined);
+            expect(diagnostics).to.be.deep.equal(
+                [
+                    new InvalidPythonInterpreterDiagnostic(
+                        DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
+                        undefined,
+                        workspaceService.object,
+                    ),
+                ],
+                'not the same',
+            );
+        });
+        test('Should return invalid interpreter diagnostics if there are interpreters but no current interpreter', async () => {
             interpreterService
                 .setup((i) => i.hasInterpreters())
                 .returns(() => Promise.resolve(true))
@@ -200,8 +321,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => {
                     return Promise.resolve(undefined);
-                })
-                .verifiable(typemoq.Times.once());
+                });
 
             const diagnostics = await diagnosticService._manualDiagnose(undefined);
             expect(diagnostics).to.be.deep.equal(
@@ -214,24 +334,124 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 ],
                 'not the same',
             );
-            interpreterService.verifyAll();
         });
         test('Should return empty diagnostics if there are interpreters and a current interpreter', async () => {
-            interpreterService
-                .setup((i) => i.hasInterpreters())
-                .returns(() => Promise.resolve(true))
-                .verifiable(typemoq.Times.once());
+            interpreterService.setup((i) => i.hasInterpreters()).returns(() => Promise.resolve(true));
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => {
                     return Promise.resolve({ envType: EnvironmentType.Unknown } as any);
-                })
-                .verifiable(typemoq.Times.once());
+                });
 
             const diagnostics = await diagnosticService._manualDiagnose(undefined);
             expect(diagnostics).to.be.deep.equal([], 'not the same');
-            interpreterService.verifyAll();
         });
+
+        test('Handling comspec diagnostic should launch expected browser link', async () => {
+            const diagnostic = new DefaultShellDiagnostic(DiagnosticCodes.InvalidComspecDiagnostic, undefined);
+            const cmd = ({} as any) as IDiagnosticCommand;
+            let messagePrompt: MessageCommandPrompt | undefined;
+            messageHandler
+                .setup((i) => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
+                .callback((_d, p: MessageCommandPrompt) => (messagePrompt = p))
+                .returns(() => Promise.resolve())
+                .verifiable(typemoq.Times.once());
+            commandFactory
+                .setup((f) =>
+                    f.createCommand(
+                        typemoq.It.isAny(),
+                        typemoq.It.isObjectWith<CommandOption<'launch', string>>({
+                            type: 'launch',
+                            options: 'https://aka.ms/AAk3djo',
+                        }),
+                    ),
+                )
+                .returns(() => cmd)
+                .verifiable(typemoq.Times.once());
+
+            await diagnosticService.handle([diagnostic]);
+
+            messageHandler.verifyAll();
+            commandFactory.verifyAll();
+            expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
+            expect(messagePrompt!.commandPrompts).to.be.deep.equal([
+                {
+                    prompt: Common.seeInstructions,
+                    command: cmd,
+                },
+            ]);
+        });
+
+        test('Handling incomplete path diagnostic should launch expected browser link', async () => {
+            const diagnostic = new DefaultShellDiagnostic(DiagnosticCodes.IncompletePathVarDiagnostic, undefined);
+            const cmd = ({} as any) as IDiagnosticCommand;
+            let messagePrompt: MessageCommandPrompt | undefined;
+            messageHandler
+                .setup((i) => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
+                .callback((_d, p: MessageCommandPrompt) => (messagePrompt = p))
+                .returns(() => Promise.resolve())
+                .verifiable(typemoq.Times.once());
+            commandFactory
+                .setup((f) =>
+                    f.createCommand(
+                        typemoq.It.isAny(),
+                        typemoq.It.isObjectWith<CommandOption<'launch', string>>({
+                            type: 'launch',
+                            options: 'https://aka.ms/AAk744c',
+                        }),
+                    ),
+                )
+                .returns(() => cmd)
+                .verifiable(typemoq.Times.once());
+
+            await diagnosticService.handle([diagnostic]);
+
+            messageHandler.verifyAll();
+            commandFactory.verifyAll();
+            expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
+            expect(messagePrompt!.commandPrompts).to.be.deep.equal([
+                {
+                    prompt: Common.seeInstructions,
+                    command: cmd,
+                },
+            ]);
+        });
+
+        test('Handling default shell error diagnostic should launch expected browser link', async () => {
+            const diagnostic = new DefaultShellDiagnostic(DiagnosticCodes.DefaultShellErrorDiagnostic, undefined);
+            const cmd = ({} as any) as IDiagnosticCommand;
+            let messagePrompt: MessageCommandPrompt | undefined;
+            messageHandler
+                .setup((i) => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
+                .callback((_d, p: MessageCommandPrompt) => (messagePrompt = p))
+                .returns(() => Promise.resolve())
+                .verifiable(typemoq.Times.once());
+            commandFactory
+                .setup((f) =>
+                    f.createCommand(
+                        typemoq.It.isAny(),
+                        typemoq.It.isObjectWith<CommandOption<'launch', string>>({
+                            type: 'launch',
+                            options: 'https://aka.ms/AAk7qix',
+                        }),
+                    ),
+                )
+                .returns(() => cmd)
+                .verifiable(typemoq.Times.once());
+
+            await diagnosticService.handle([diagnostic]);
+
+            messageHandler.verifyAll();
+            commandFactory.verifyAll();
+            expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
+            expect(messagePrompt!.commandPrompts).to.be.deep.equal([
+                {
+                    prompt: Common.seeInstructions,
+                    command: cmd,
+                },
+            ]);
+        });
+
         test('Handling no interpreters diagnostic should return select interpreter cmd', async () => {
             const diagnostic = new InvalidPythonInterpreterDiagnostic(
                 DiagnosticCodes.NoPythonInterpretersDiagnostic,
