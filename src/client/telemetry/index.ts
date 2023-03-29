@@ -2054,7 +2054,7 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.ENVIRONMENT_INSTALLING_PACKAGES]: {
         environmentType: 'venv' | 'conda';
-        using: 'requirements.txt' | 'pyproject.toml' | 'environment.yml';
+        using: 'requirements.txt' | 'pyproject.toml' | 'environment.yml' | 'pipUpgrade';
     };
     /**
      * Telemetry event sent after installing packages.
@@ -2067,7 +2067,7 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.ENVIRONMENT_INSTALLED_PACKAGES]: {
         environmentType: 'venv' | 'conda';
-        using: 'requirements.txt' | 'pyproject.toml' | 'environment.yml';
+        using: 'requirements.txt' | 'pyproject.toml' | 'environment.yml' | 'pipUpgrade';
     };
     /**
      * Telemetry event sent if installing packages failed.

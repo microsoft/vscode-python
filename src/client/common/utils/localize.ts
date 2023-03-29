@@ -439,6 +439,7 @@ export namespace CreateEnv {
     export namespace Venv {
         export const creating = l10n.t('Creating venv...');
         export const created = l10n.t('Environment created...');
+        export const upgradingPip = l10n.t('Upgrading pip...');
         export const installingPackages = l10n.t('Installing packages...');
         export const errorCreatingEnvironment = l10n.t('Error while creating virtual environment.');
         export const selectPythonPlaceHolder = l10n.t('Select a Python installation to create the virtual environment');

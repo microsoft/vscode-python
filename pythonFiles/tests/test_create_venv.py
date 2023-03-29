@@ -100,7 +100,7 @@ def test_install_packages(install_type):
         nonlocal pip_upgraded, installing
         if args[1:] == ["-m", "pip", "install", "--upgrade", "pip"]:
             pip_upgraded = True
-            assert error_message == "CREATE_VENV.PIP_UPGRADE_FAILED"
+            assert error_message == "CREATE_VENV.UPGRADE_PIP_FAILED"
         elif args[1:-1] == ["-m", "pip", "install", "-r"]:
             installing = "requirements"
             assert error_message == "CREATE_VENV.PIP_FAILED_INSTALL_REQUIREMENTS"
@@ -146,22 +146,16 @@ def test_toml_args(extras, expected):
 @pytest.mark.parametrize(
     ("extras", "expected"),
     [
-        ([], None),
+        ([], []),
         (
             ["requirements/test.txt"],
-            [sys.executable, "-m", "pip", "install", "-r", "requirements/test.txt"],
+            [[sys.executable, "-m", "pip", "install", "-r", "requirements/test.txt"]],
         ),
         (
             ["requirements/test.txt", "requirements/doc.txt"],
             [
-                sys.executable,
-                "-m",
-                "pip",
-                "install",
-                "-r",
-                "requirements/test.txt",
-                "-r",
-                "requirements/doc.txt",
+                [sys.executable, "-m", "pip", "install", "-r", "requirements/test.txt"],
+                [sys.executable, "-m", "pip", "install", "-r", "requirements/doc.txt"],
             ],
         ),
     ],
@@ -169,11 +163,11 @@ def test_toml_args(extras, expected):
 def test_requirements_args(extras, expected):
     importlib.reload(create_venv)
 
-    actual = None
+    actual = []
 
     def run_process(args, error_message):
         nonlocal actual
-        actual = args
+        actual.append(args)
 
     create_venv.run_process = run_process
 
