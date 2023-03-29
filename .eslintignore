@@ -148,7 +148,6 @@ src/client/interpreter/helpers.ts
 src/client/interpreter/virtualEnvs/condaInheritEnvPrompt.ts
 src/client/interpreter/display/index.ts
 
-src/client/api.ts
 src/client/extension.ts
 src/client/sourceMapSupport.ts
 src/client/startupTelemetry.ts
