@@ -37,7 +37,9 @@ Extensions installed through the marketplace are subject to the [Marketplace Ter
 
 ## Jupyter Notebook quick start
 
-The Python extension and the [Jupyter extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) work together to give you a great Notebook experience in VS Code.
+The Python extension no longer offers support for Jupyter notebooks out of the box. However, it works with the [Jupyter extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) to provide you a great Python notebook experience in VS Code.
+
+- Install the [Jupyter extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter).
 
 -   Open or create a Jupyter Notebook file (.ipynb) and start coding in our Notebook Editor!
 
