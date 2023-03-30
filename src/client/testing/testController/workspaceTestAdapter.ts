@@ -17,7 +17,7 @@ import {
 import { splitLines } from '../../common/stringUtils';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
-import { traceError } from '../../logging';
+import { traceError, traceVerbose } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestProvider } from '../types';
@@ -36,6 +36,7 @@ import {
     ITestExecutionAdapter,
 } from './common/types';
 import { fixLogLines } from './common/utils';
+import { IPythonExecutionFactory } from '../../common/process/types';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -75,6 +76,7 @@ export class WorkspaceTestAdapter {
         includes: TestItem[],
         token?: CancellationToken,
         debugBool?: boolean,
+        executionFactory?: IPythonExecutionFactory,
     ): Promise<void> {
         if (this.executing) {
             return this.executing.promise;
@@ -102,17 +104,17 @@ export class WorkspaceTestAdapter {
             });
 
             // ** First line is old way, section with if statement below is new way.
-            rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri, testCaseIds, debugBool);
-            // if (executionFactory !== undefined) {
-            //     rawTestExecData = await this.executionAdapter.runTests(
-            //         this.workspaceUri,
-            //         testCaseIds,
-            //         debugBool,
-            //         executionFactory,
-            //     );
-            // } else {
-            //     traceVerbose('executionFactory is undefined');
-            // }
+            // rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri, testCaseIds, debugBool);
+            if (executionFactory !== undefined) {
+                rawTestExecData = await this.executionAdapter.runTests(
+                    this.workspaceUri,
+                    testCaseIds,
+                    debugBool,
+                    executionFactory,
+                );
+            } else {
+                traceVerbose('executionFactory is undefined');
+            }
             deferred.resolve();
         } catch (ex) {
             // handle token and telemetry here
@@ -215,6 +217,7 @@ export class WorkspaceTestAdapter {
         token?: CancellationToken,
         isMultiroot?: boolean,
         workspaceFilePath?: string,
+        executionFactory?: IPythonExecutionFactory,
     ): Promise<void> {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: this.testProvider });
 
@@ -231,12 +234,12 @@ export class WorkspaceTestAdapter {
         let rawTestData;
         try {
             // ** First line is old way, section with if statement below is new way.
-            rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri);
-            // if (executionFactory !== undefined) {
-            //     rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
-            // } else {
-            //     traceVerbose('executionFactory is undefined');
-            // }
+            // rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri);
+            if (executionFactory !== undefined) {
+                rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
+            } else {
+                traceVerbose('executionFactory is undefined');
+            }
             deferred.resolve();
         } catch (ex) {
             sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: this.testProvider, failed: true });

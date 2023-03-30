@@ -64,6 +64,8 @@
         // Match what black does.
         "--max-line-length=88"
     ],
+    "isort.importStrategy": "fromEnvironment",
+    "black-formatter.importStrategy": "fromEnvironment",
     "typescript.preferences.importModuleSpecifier": "relative",
     "debug.javascript.usePreview": false
 }

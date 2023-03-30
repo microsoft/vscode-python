@@ -25,28 +25,29 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
-    public onDataReceivedHandler({ uuid, data }: DataReceivedEvent): void {
+    public onDataReceivedHandler({ cwd, data, uuid }: DataReceivedEvent): void {
         const deferred = this.promiseMap.get(uuid);
         if (deferred) {
             deferred.resolve(JSON.parse(data));
-            this.promiseMap.delete(uuid);
+            this.promiseMap.remove(uuid);
         }
     }
 
     // ** Old version of discover tests.
-    discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
-        traceVerbose(uri);
-        this.deferred = createDeferred<DiscoveredTestPayload>();
-        return this.deferred.promise;
-    }
-    // Uncomment this version of the function discoverTests to use the new discovery method.
-    // public async discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
-    //     const settings = this.configSettings.getSettings(uri);
-    //     const { pytestArgs } = settings.testing;
-    //     traceVerbose(pytestArgs);
-
-    //     return this.runPytestDiscovery(uri, executionFactory);
+    // discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
+    //     traceVerbose(uri);
+    //     this.deferred = createDeferred<DiscoveredTestPayload>();
+    //     return this.deferred.promise;
     // }
+    // Uncomment this version of the function discoverTests to use the new discovery method.
+    public async discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
+        const settings = this.configSettings.getSettings(uri);
+        const { pytestArgs } = settings.testing;
+        traceVerbose(pytestArgs);
+
+        this.cwd = uri.fsPath;
+        return this.runPytestDiscovery(uri, executionFactory);
+    }
 
     async runPytestDiscovery(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
         const deferred = createDeferred<DiscoveredTestPayload>();
@@ -69,6 +70,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 TEST_PORT: this.testServer.getPort().toString(),
             },
         };
+
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
