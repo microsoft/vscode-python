@@ -25,11 +25,12 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
-    public onDataReceivedHandler({ cwd, data, uuid }: DataReceivedEvent): void {
+    public onDataReceivedHandler({ cwd, uuid, data }: DataReceivedEvent): void {
+        console.log('cwd: ', cwd, this.cwd);
         const deferred = this.promiseMap.get(uuid);
         if (deferred) {
             deferred.resolve(JSON.parse(data));
-            this.promiseMap.remove(uuid);
+            this.promiseMap.delete(uuid);
         }
     }
 
