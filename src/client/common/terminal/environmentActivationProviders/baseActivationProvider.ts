@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -48,6 +49,7 @@ abstract class BaseActivationCommandProvider implements ITerminalActivationComma
     constructor(@inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer) {}
 
     public abstract isShellSupported(targetShell: TerminalShellType): boolean;
+
     public async getActivationCommands(
         resource: Uri | undefined,
         targetShell: TerminalShellType,
@@ -60,13 +62,14 @@ abstract class BaseActivationCommandProvider implements ITerminalActivationComma
         }
         return this.getActivationCommandsForInterpreter(interpreter.path, targetShell);
     }
+
     public abstract getActivationCommandsForInterpreter(
         pythonPath: string,
         targetShell: TerminalShellType,
     ): Promise<string[] | undefined>;
 }
 
-export type ActivationScripts = Record<TerminalShellType, string[]>;
+export type ActivationScripts = Partial<Record<TerminalShellType, string[]>>;
 
 export abstract class VenvBaseActivationCommandProvider extends BaseActivationCommandProvider {
     public isShellSupported(targetShell: TerminalShellType): boolean {

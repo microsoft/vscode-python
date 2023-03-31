@@ -14,6 +14,7 @@ import { ITerminalActivationCommandProvider, TerminalShellType } from '../types'
 export class PyEnvActivationCommandProvider implements ITerminalActivationCommandProvider {
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
 
+    // eslint-disable-next-line class-methods-use-this
     public isShellSupported(_targetShell: TerminalShellType): boolean {
         return true;
     }
@@ -23,7 +24,7 @@ export class PyEnvActivationCommandProvider implements ITerminalActivationComman
             .get<IInterpreterService>(IInterpreterService)
             .getActiveInterpreter(resource);
         if (!interpreter || interpreter.envType !== EnvironmentType.Pyenv || !interpreter.envName) {
-            return;
+            return undefined;
         }
 
         return [`pyenv shell ${interpreter.envName.toCommandArgumentForPythonExt()}`];
@@ -37,7 +38,7 @@ export class PyEnvActivationCommandProvider implements ITerminalActivationComman
             .get<IInterpreterService>(IInterpreterService)
             .getInterpreterDetails(pythonPath);
         if (!interpreter || interpreter.envType !== EnvironmentType.Pyenv || !interpreter.envName) {
-            return;
+            return undefined;
         }
 
         return [`pyenv shell ${interpreter.envName.toCommandArgumentForPythonExt()}`];

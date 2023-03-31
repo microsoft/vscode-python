@@ -12,6 +12,7 @@ import { IFileSystem, IPlatformService } from '../../../client/common/platform/t
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../../client/common/terminal/environmentActivationProviders/commandPrompt';
+import { Nushell } from '../../../client/common/terminal/environmentActivationProviders/nushell';
 import {
     CondaActivationCommandProvider,
     _getPowershellCommands,
@@ -110,6 +111,7 @@ suite('Terminal Environment Activation conda', () => {
             ),
             instance(bash),
             mock(CommandPromptAndPowerShell),
+            mock(Nushell),
             mock(PyEnvActivationCommandProvider),
             mock(PipEnvActivationCommandProvider),
             [],

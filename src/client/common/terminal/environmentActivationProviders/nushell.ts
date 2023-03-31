@@ -8,17 +8,7 @@ import { ActivationScripts, VenvBaseActivationCommandProvider } from './baseActi
 
 // For a given shell the scripts are in order of precedence.
 const SCRIPTS: ActivationScripts = {
-    // Group 1
-    [TerminalShellType.wsl]: ['activate.sh', 'activate'],
-    [TerminalShellType.ksh]: ['activate.sh', 'activate'],
-    [TerminalShellType.zsh]: ['activate.sh', 'activate'],
-    [TerminalShellType.gitbash]: ['activate.sh', 'activate'],
-    [TerminalShellType.bash]: ['activate.sh', 'activate'],
-    // Group 2
-    [TerminalShellType.tcshell]: ['activate.csh'],
-    [TerminalShellType.cshell]: ['activate.csh'],
-    // Group 3
-    [TerminalShellType.fish]: ['activate.fish'],
+    [TerminalShellType.nushell]: ['activate.nu'],
 };
 
 export function getAllScripts(): string[] {
@@ -34,7 +24,7 @@ export function getAllScripts(): string[] {
 }
 
 @injectable()
-export class Bash extends VenvBaseActivationCommandProvider {
+export class Nushell extends VenvBaseActivationCommandProvider {
     protected readonly scripts = SCRIPTS;
 
     public async getActivationCommandsForInterpreter(
@@ -45,6 +35,6 @@ export class Bash extends VenvBaseActivationCommandProvider {
         if (!scriptFile) {
             return undefined;
         }
-        return [`source ${scriptFile.fileToCommandArgumentForPythonExt()}`];
+        return [`overlay use ${scriptFile.fileToCommandArgumentForPythonExt()}`];
     }
 }
