@@ -19,14 +19,11 @@ import { DataReceivedEvent, DiscoveredTestPayload, ITestDiscoveryAdapter, ITestS
 export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     private promiseMap: Map<string, Deferred<DiscoveredTestPayload | undefined>> = new Map();
 
-    private deferred: Deferred<DiscoveredTestPayload> | undefined;
-
     constructor(public testServer: ITestServer, public configSettings: IConfigurationService) {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
-    public onDataReceivedHandler({ cwd, uuid, data }: DataReceivedEvent): void {
-        console.log('cwd: ', cwd, this.cwd);
+    public onDataReceivedHandler({ uuid, data }: DataReceivedEvent): void {
         const deferred = this.promiseMap.get(uuid);
         if (deferred) {
             deferred.resolve(JSON.parse(data));
@@ -46,7 +43,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const { pytestArgs } = settings.testing;
         traceVerbose(pytestArgs);
 
-        this.cwd = uri.fsPath;
         return this.runPytestDiscovery(uri, executionFactory);
     }
 
