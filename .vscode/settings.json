@@ -66,6 +66,4 @@
     ],
     "isort.importStrategy": "fromEnvironment",
     "black-formatter.importStrategy": "fromEnvironment",
-    "typescript.preferences.importModuleSpecifier": "relative",
-    "debug.javascript.usePreview": false
-}
+    "typescript.preferences.importModuleSpecifier": "relative",}
