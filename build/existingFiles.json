@@ -379,6 +379,7 @@
     "src/test/common/socketStream.test.ts",
     "src/test/common/terminals/activation.bash.unit.test.ts",
     "src/test/common/terminals/activation.commandPrompt.unit.test.ts",
+    "src/test/common/terminals/activation.nushell.unit.test.ts",
     "src/test/common/terminals/activation.conda.unit.test.ts",
     "src/test/common/terminals/activation.unit.test.ts",
     "src/test/common/terminals/activator/base.unit.test.ts",

@@ -90,14 +90,12 @@ def install_requirements(venv_path: str, requirements: List[str]) -> None:
     if not requirements:
         return
 
-    print(f"VENV_INSTALLING_REQUIREMENTS: {requirements}")
-    args = []
     for requirement in requirements:
-        args += ["-r", requirement]
-    run_process(
-        [venv_path, "-m", "pip", "install"] + args,
-        "CREATE_VENV.PIP_FAILED_INSTALL_REQUIREMENTS",
-    )
+        print(f"VENV_INSTALLING_REQUIREMENTS: {requirement}")
+        run_process(
+            [venv_path, "-m", "pip", "install", "-r", requirement],
+            "CREATE_VENV.PIP_FAILED_INSTALL_REQUIREMENTS",
+        )
     print("CREATE_VENV.PIP_INSTALLED_REQUIREMENTS")
 
 
@@ -111,10 +109,12 @@ def install_toml(venv_path: str, extras: List[str]) -> None:
 
 
 def upgrade_pip(venv_path: str) -> None:
+    print("CREATE_VENV.UPGRADING_PIP")
     run_process(
         [venv_path, "-m", "pip", "install", "--upgrade", "pip"],
-        "CREATE_VENV.PIP_UPGRADE_FAILED",
+        "CREATE_VENV.UPGRADE_PIP_FAILED",
     )
+    print("CREATE_VENV.UPGRADED_PIP")
 
 
 def add_gitignore(name: str) -> None:
