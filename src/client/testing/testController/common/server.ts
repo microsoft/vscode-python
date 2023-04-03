@@ -13,7 +13,7 @@ import { traceLog } from '../../../logging';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
-import { jsonRPCHeaders, jsonRPCContent, JSONRPC_UUID_HEADER } from './utils';
+import { jsonRPCProcessor } from './utils';
 
 export class PythonTestServer implements ITestServer, Disposable {
     private _onDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
@@ -42,7 +42,6 @@ export class PythonTestServer implements ITestServer, Disposable {
                         } else {
                             traceLog(`Error processing test server request: uuid not found`);
                             this._onDataReceived.fire({ uuid: '', data: '' });
-                            return;
                         }
                     }
                 } catch (ex) {
@@ -60,13 +59,13 @@ export class PythonTestServer implements ITestServer, Disposable {
             traceLog(`Error starting test server: ${ex}`);
         });
         this.server.on('close', () => {
-            traceLog('Test server closed.');
+            traceLog('Test server closed');
         });
         this.server.on('listening', () => {
-            traceLog('Test server listening.');
+            traceLog('Test server listening');
         });
         this.server.on('connection', () => {
-            traceLog('Test server connected to a client.');
+            traceLog('Test server connection');
         });
     }
 
