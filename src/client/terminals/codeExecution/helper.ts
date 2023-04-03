@@ -5,7 +5,7 @@ import '../../common/extensions';
 import { inject, injectable } from 'inversify';
 import { l10n, Position, Range, TextEditor, Uri } from 'vscode';
 
-import { IApplicationShell, IDocumentManager } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { IProcessServiceFactory } from '../../common/process/types';
@@ -14,6 +14,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
 import { traceError } from '../../logging';
+import { Resource } from '../../common/types';
 
 @injectable()
 export class CodeExecutionHelper implements ICodeExecutionHelper {
@@ -25,7 +26,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
     private readonly interpreterService: IInterpreterService;
 
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
@@ -119,11 +120,17 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         return code;
     }
 
-    public async saveFileIfDirty(file: Uri): Promise<void> {
+    public async saveFileIfDirty(file: Uri): Promise<Resource> {
         const docs = this.documentManager.textDocuments.filter((d) => d.uri.path === file.path);
         if (docs.length === 1 && docs[0].isDirty) {
-            await docs[0].save();
+            const deferred = createDeferred<Uri>();
+            this.documentManager.onDidSaveTextDocument((e) => deferred.resolve(e.uri));
+            const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+            await commandManager.executeCommand('workbench.action.files.save', file);
+            const savedFileUri = await deferred.promise;
+            return savedFileUri;
         }
+        return undefined;
     }
 }
 

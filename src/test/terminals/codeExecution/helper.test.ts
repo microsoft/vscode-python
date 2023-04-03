@@ -8,8 +8,8 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { Position, Range, Selection, TextDocument, TextEditor, TextLine, Uri } from 'vscode';
-import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
+import { EventEmitter, Position, Range, Selection, TextDocument, TextEditor, TextLine, Uri } from 'vscode';
+import { IApplicationShell, ICommandManager, IDocumentManager } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import '../../../client/common/extensions';
 import { ProcessService } from '../../../client/common/process/proc';
@@ -37,6 +37,7 @@ suite('Terminal - Code Execution Helper', () => {
     let editor: TypeMoq.IMock<TextEditor>;
     let processService: TypeMoq.IMock<IProcessService>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
+    let commandManager: TypeMoq.IMock<ICommandManager>;
     const workingPython: PythonEnvironment = {
         path: PYTHON_PATH,
         version: new SemVer('3.6.6-final'),
@@ -49,6 +50,7 @@ suite('Terminal - Code Execution Helper', () => {
 
     setup(() => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
         const envVariablesProvider = TypeMoq.Mock.ofType<IEnvironmentVariablesProvider>();
@@ -79,6 +81,7 @@ suite('Terminal - Code Execution Helper', () => {
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IApplicationShell), TypeMoq.It.isAny()))
             .returns(() => applicationShell.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ICommandManager))).returns(() => commandManager.object);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny()))
             .returns(() => envVariablesProvider.object);
@@ -364,15 +367,24 @@ suite('Terminal - Code Execution Helper', () => {
             .setup((d) => d.textDocuments)
             .returns(() => [document.object])
             .verifiable(TypeMoq.Times.once());
-        document.setup((doc) => doc.isUntitled).returns(() => false);
+        const saveEmitter = new EventEmitter<TextDocument>();
+        documentManager.setup((d) => d.onDidSaveTextDocument).returns(() => saveEmitter.event);
+        document.setup((doc) => doc.isUntitled).returns(() => true);
         document.setup((doc) => doc.isDirty).returns(() => true);
         document.setup((doc) => doc.languageId).returns(() => PYTHON_LANGUAGE);
-        const expectedUri = Uri.file('one.py');
-        document.setup((doc) => doc.uri).returns(() => expectedUri);
+        const untitledUri = Uri.file('Untitled-1');
+        document.setup((doc) => doc.uri).returns(() => untitledUri);
+        const savedDocument = TypeMoq.Mock.ofType<TextDocument>();
+        const expectedSavedUri = Uri.file('one.py');
+        savedDocument.setup((doc) => doc.uri).returns(() => expectedSavedUri);
+        commandManager
+            .setup((c) => c.executeCommand('workbench.action.files.save', untitledUri))
+            .callback(() => saveEmitter.fire(savedDocument.object))
+            .returns(() => Promise.resolve());
 
-        await helper.saveFileIfDirty(expectedUri);
-        documentManager.verifyAll();
-        document.verify((doc) => doc.save(), TypeMoq.Times.once());
+        const savedUri = await helper.saveFileIfDirty(untitledUri);
+
+        expect(savedUri?.fsPath).to.be.equal(expectedSavedUri.fsPath);
     });
 
     test('File will be not saved if file is not dirty', async () => {

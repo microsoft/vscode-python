@@ -91,11 +91,14 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         sendTelemetryEvent(EventName.EXECUTION_CODE, undefined, { scope: 'file', trigger });
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
         file = file instanceof Uri ? file : undefined;
-        const fileToExecute = file ? file : await codeExecutionHelper.getFileToExecute();
+        let fileToExecute = file ? file : await codeExecutionHelper.getFileToExecute();
         if (!fileToExecute) {
             return;
         }
-        await codeExecutionHelper.saveFileIfDirty(fileToExecute);
+        const fileAfterSave = await codeExecutionHelper.saveFileIfDirty(fileToExecute);
+        if (fileAfterSave) {
+            fileToExecute = fileAfterSave;
+        }
 
         try {
             const contents = await this.fileSystem.readFile(fileToExecute.fsPath);

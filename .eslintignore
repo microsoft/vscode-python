@@ -148,7 +148,6 @@ src/client/interpreter/helpers.ts
 src/client/interpreter/virtualEnvs/condaInheritEnvPrompt.ts
 src/client/interpreter/display/index.ts
 
-src/client/api.ts
 src/client/extension.ts
 src/client/sourceMapSupport.ts
 src/client/startupTelemetry.ts
@@ -208,10 +207,6 @@ src/client/common/terminal/shellDetectors/vscEnvironmentShellDetector.ts
 src/client/common/terminal/shellDetectors/terminalNameShellDetector.ts
 src/client/common/terminal/shellDetectors/settingsShellDetector.ts
 src/client/common/terminal/shellDetectors/baseShellDetector.ts
-src/client/common/terminal/environmentActivationProviders/baseActivationProvider.ts
-src/client/common/terminal/environmentActivationProviders/commandPrompt.ts
-src/client/common/terminal/environmentActivationProviders/bash.ts
-src/client/common/terminal/environmentActivationProviders/pyenvActivationProvider.ts
 src/client/common/utils/decorators.ts
 src/client/common/utils/enum.ts
 src/client/common/utils/platform.ts

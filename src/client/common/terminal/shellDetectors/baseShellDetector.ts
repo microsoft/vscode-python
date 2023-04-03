@@ -30,6 +30,7 @@ const IS_POWERSHELL_CORE = /(pwsh$)/i;
 const IS_FISH = /(fish$)/i;
 const IS_CSHELL = /(csh$)/i;
 const IS_TCSHELL = /(tcsh$)/i;
+const IS_NUSHELL = /(nu$)/i;
 const IS_XONSH = /(xonsh$)/i;
 
 const detectableShells = new Map<TerminalShellType, RegExp>();
@@ -43,6 +44,7 @@ detectableShells.set(TerminalShellType.commandPrompt, IS_COMMAND);
 detectableShells.set(TerminalShellType.fish, IS_FISH);
 detectableShells.set(TerminalShellType.tcshell, IS_TCSHELL);
 detectableShells.set(TerminalShellType.cshell, IS_CSHELL);
+detectableShells.set(TerminalShellType.nushell, IS_NUSHELL);
 detectableShells.set(TerminalShellType.powershellCore, IS_POWERSHELL_CORE);
 detectableShells.set(TerminalShellType.xonsh, IS_XONSH);
 
