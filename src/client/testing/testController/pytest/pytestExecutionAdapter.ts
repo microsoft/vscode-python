@@ -12,20 +12,19 @@ import { DataReceivedEvent, ExecutionTestPayload, ITestExecutionAdapter, ITestSe
  */
 
 export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
-    private deferred: Deferred<ExecutionTestPayload> | undefined;
+    private promiseMap: Map<string, Deferred<ExecutionTestPayload | undefined>> = new Map();
 
-    private cwd: string | undefined;
+    private deferred: Deferred<ExecutionTestPayload> | undefined;
 
     constructor(public testServer: ITestServer, public configSettings: IConfigurationService) {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
-    public onDataReceivedHandler({ cwd, data }: DataReceivedEvent): void {
-        if (this.deferred && cwd === this.cwd) {
-            const testData: ExecutionTestPayload = JSON.parse(data);
-
-            this.deferred.resolve(testData);
-            this.deferred = undefined;
+    public onDataReceivedHandler({ uuid, data }: DataReceivedEvent): void {
+        const deferred = this.promiseMap.get(uuid);
+        if (deferred) {
+            deferred.resolve(JSON.parse(data));
+            this.promiseMap.delete(uuid);
         }
     }
 
@@ -42,48 +41,45 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     //         debugBool?: boolean,
     //         executionFactory?: IPythonExecutionFactory,
     //     ): Promise<ExecutionTestPayload> {
-    //         if (!this.deferred) {
-    //             this.deferred = createDeferred<ExecutionTestPayload>();
-    //             const relativePathToPytest = 'pythonFiles';
-    //             const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
-    //             this.configSettings.isTestExecution();
-    //             const uuid = this.testServer.createUUID(uri.fsPath);
-    //             const settings = this.configSettings.getSettings(uri);
-    //             const { pytestArgs } = settings.testing;
+    //         const deferred = createDeferred<ExecutionTestPayload>();
+    //         const relativePathToPytest = 'pythonFiles';
+    //         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
+    //         this.configSettings.isTestExecution();
+    //         const uuid = this.testServer.createUUID(uri.fsPath);
+    //         this.promiseMap.set(uuid, deferred);
+    //         const settings = this.configSettings.getSettings(uri);
+    //         const { pytestArgs } = settings.testing;
 
-    //             const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
-    //             const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
+    //         const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
+    //         const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
 
-    //             const spawnOptions: SpawnOptions = {
-    //                 cwd: uri.fsPath,
-    //                 throwOnStdErr: true,
-    //                 extraVariables: {
-    //                     PYTHONPATH: pythonPathCommand,
-    //                     TEST_UUID: uuid.toString(),
-    //                     TEST_PORT: this.testServer.getPort().toString(),
-    //                 },
-    //             };
+    //         const spawnOptions: SpawnOptions = {
+    //             cwd: uri.fsPath,
+    //             throwOnStdErr: true,
+    //             extraVariables: {
+    //                 PYTHONPATH: pythonPathCommand,
+    //                 TEST_UUID: uuid.toString(),
+    //                 TEST_PORT: this.testServer.getPort().toString(),
+    //             },
+    //         };
 
-    //             // Create the Python environment in which to execute the command.
-    //             const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
-    //                 allowEnvironmentFetchExceptions: false,
-    //                 resource: uri,
-    //             };
-    //             // need to check what will happen in the exec service is NOT defined and is null
-    //             const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
+    //         // Create the Python environment in which to execute the command.
+    //         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
+    //             allowEnvironmentFetchExceptions: false,
+    //             resource: uri,
+    //         };
+    //         // need to check what will happen in the exec service is NOT defined and is null
+    //         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
 
-    //             const testIdsString = testIds.join(' ');
-    //             console.debug('what to do with debug bool?', debugBool);
-    //             try {
-    //                 execService?.exec(
-    //                     ['-m', 'pytest', '-p', 'vscode_pytest', testIdsString].concat(pytestArgs),
-    //                     spawnOptions,
-    //                 );
-    //             } catch (ex) {
-    //                 console.error(ex);
-    //             }
+    //         const testIdsString = testIds.join(' ');
+    //         console.debug('what to do with debug bool?', debugBool);
+    //         try {
+    //             execService?.exec(['-m', 'pytest', '-p', 'vscode_pytest', testIdsString].concat(pytestArgs), spawnOptions);
+    //         } catch (ex) {
+    //             console.error(ex);
     //         }
-    //         return this.deferred.promise;
+
+    //         return deferred.promise;
     //     }
     // }
 

@@ -46,12 +46,12 @@ export class PythonTestServer implements ITestServer, Disposable {
                 // If yes, process the response, if not, ignore it.
                 const cwd = this.uuids.get(uuid);
                 if (cwd) {
-                    this._onDataReceived.fire({ cwd, data });
+                    this._onDataReceived.fire({ uuid, data });
                     this.uuids.delete(uuid);
                 }
             } catch (ex) {
                 traceLog(`Error processing test server request: ${ex} observe`);
-                this._onDataReceived.fire({ cwd: '', data: '' });
+                this._onDataReceived.fire({ uuid: '', data: '' });
             }
         };
 
@@ -142,7 +142,7 @@ export class PythonTestServer implements ITestServer, Disposable {
         } catch (ex) {
             this.uuids.delete(uuid);
             this._onDataReceived.fire({
-                cwd: options.cwd,
+                uuid,
                 data: JSON.stringify({
                     status: 'error',
                     errors: [(ex as Error).message],
