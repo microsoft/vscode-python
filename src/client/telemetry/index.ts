@@ -2014,7 +2014,7 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.ENVIRONMENT_CREATING]: {
-        environmentType: 'venv' | 'conda';
+        environmentType: 'venv' | 'conda' | 'microvenv';
         pythonVersion: string | undefined;
     };
     /**
@@ -2027,7 +2027,7 @@ export interface IEventNamePropertyMapping {
         }
      */
     [EventName.ENVIRONMENT_CREATED]: {
-        environmentType: 'venv' | 'conda';
+        environmentType: 'venv' | 'conda' | 'microvenv';
         reason: 'created' | 'existing';
     };
     /**
@@ -2040,7 +2040,7 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.ENVIRONMENT_FAILED]: {
-        environmentType: 'venv' | 'conda';
+        environmentType: 'venv' | 'conda' | 'microvenv';
         reason: 'noVenv' | 'noPip' | 'other';
     };
     /**
@@ -2053,8 +2053,8 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.ENVIRONMENT_INSTALLING_PACKAGES]: {
-        environmentType: 'venv' | 'conda';
-        using: 'requirements.txt' | 'pyproject.toml' | 'environment.yml' | 'pipUpgrade';
+        environmentType: 'venv' | 'conda' | 'microvenv';
+        using: 'requirements.txt' | 'pyproject.toml' | 'environment.yml' | 'pipUpgrade' | 'pipInstall' | 'pipDownload';
     };
     /**
      * Telemetry event sent after installing packages.
@@ -2079,8 +2079,8 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.ENVIRONMENT_INSTALLING_PACKAGES_FAILED]: {
-        environmentType: 'venv' | 'conda';
-        using: 'pipUpgrade' | 'requirements.txt' | 'pyproject.toml' | 'environment.yml';
+        environmentType: 'venv' | 'conda' | 'microvenv';
+        using: 'pipUpgrade' | 'requirements.txt' | 'pyproject.toml' | 'environment.yml' | 'pipDownload' | 'pipInstall';
     };
     /**
      * Telemetry event sent when a linter or formatter extension is already installed.

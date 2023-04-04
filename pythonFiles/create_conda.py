@@ -9,7 +9,7 @@ import sys
 from typing import Optional, Sequence, Union
 
 CONDA_ENV_NAME = ".conda"
-CWD = pathlib.PurePath(os.getcwd())
+CWD = pathlib.Path.cwd()
 
 
 class VenvError(Exception):
