@@ -13,7 +13,7 @@ import { traceLog } from '../../../logging';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
-import { jsonRPCProcessor } from './utils';
+import { jsonRPCHeaders, jsonRPCContent, JSONRPC_UUID_HEADER } from './utils';
 
 export class PythonTestServer implements ITestServer, Disposable {
     private _onDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
@@ -33,18 +33,21 @@ export class PythonTestServer implements ITestServer, Disposable {
                     let rawData: string = data.toString();
 
                     while (rawData.length > 0) {
-                        const { headers, extractedData, remainingRawData } = jsonRPCProcessor(rawData);
-                        rawData = remainingRawData;
-                        const uuid = headers.get('Request-uuid');
+                        const rpcHeaders = jsonRPCHeaders(rawData);
+                        const uuid = rpcHeaders.headers.get(JSONRPC_UUID_HEADER);
+                        rawData = rpcHeaders.remainingRawData;
                         if (uuid) {
+                            const rpcContent = jsonRPCContent(rpcHeaders.headers, rawData);
+                            rawData = rpcContent.remainingRawData;
                             const cwd = this.uuids.get(uuid);
                             if (cwd) {
-                                this._onDataReceived.fire({ uuid, data: extractedData });
+                                this._onDataReceived.fire({ uuid, data: rpcContent.extractedJSON });
                                 this.uuids.delete(uuid);
                             }
                         } else {
                             traceLog(`Error processing test server request: uuid not found`);
                             this._onDataReceived.fire({ uuid: '', data: '' });
+                            return;
                         }
                     }
                 } catch (ex) {

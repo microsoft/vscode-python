@@ -5,13 +5,21 @@ export function fixLogLines(content: string): string {
     const lines = content.split(/\r?\n/g);
     return `${lines.join('\r\n')}\r\n`;
 }
-export interface IJSONRPCMessage {
-    headers: Map<string, string>;
-    extractedData: string;
+export interface IJSONRPCContent {
+    extractedJSON: string;
     remainingRawData: string;
 }
 
-export function jsonRPCProcessor(rawData: string): IJSONRPCMessage {
+export interface IJSONRPCHeaders {
+    headers: Map<string, string>;
+    remainingRawData: string;
+}
+
+export const JSONRPC_UUID_HEADER = 'Request-uuid';
+export const JSONRPC_CONTENT_LENGTH_HEADER = 'Content-Length';
+export const JSONRPC_CONTENT_TYPE_HEADER = 'Content-Type';
+
+export function jsonRPCHeaders(rawData: string): IJSONRPCHeaders {
     const lines = rawData.split('\n');
     let remainingRawData = '';
     const headerMap = new Map<string, string>();
@@ -22,17 +30,23 @@ export function jsonRPCProcessor(rawData: string): IJSONRPCMessage {
             break;
         }
         const [key, value] = line.split(':');
-        if (['Content-Length', 'Content-Type', 'Request-uuid'].includes(key)) {
+        if ([JSONRPC_UUID_HEADER, JSONRPC_CONTENT_LENGTH_HEADER, JSONRPC_CONTENT_TYPE_HEADER].includes(key)) {
             headerMap.set(key.trim(), value.trim());
         }
     }
 
-    const length = parseInt(headerMap.get('Content-Length') ?? '0', 10);
-    const data = remainingRawData.slice(0, length);
-    remainingRawData = remainingRawData.slice(length);
     return {
         headers: headerMap,
-        extractedData: data,
+        remainingRawData,
+    };
+}
+
+export function jsonRPCContent(headers: Map<string, string>, rawData: string): IJSONRPCContent {
+    const length = parseInt(headers.get('Content-Length') ?? '0', 10);
+    const data = rawData.slice(0, length);
+    const remainingRawData = rawData.slice(length);
+    return {
+        extractedJSON: data,
         remainingRawData,
     };
 }
