@@ -20,9 +20,6 @@ import debugpy
 from testing_tools import socket_manager
 from typing_extensions import Literal
 
-debugpy.connect(5678)
-breakpoint()
-
 
 class TestData(TypedDict):
     """A general class that all test objects inherit from."""
