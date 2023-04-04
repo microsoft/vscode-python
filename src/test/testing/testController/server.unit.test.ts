@@ -155,4 +155,108 @@ suite('Python Test Server', () => {
         await deferred.promise;
         assert.deepStrictEqual(eventData, '');
     });
+
+    test('If the server receives data, it should not fire an event if it is an unknown uuid', async () => {
+        const deferred = createDeferred();
+        const options = {
+            command: { script: 'myscript', args: ['-foo', 'foo'] },
+            workspaceFolder: Uri.file('/foo/bar'),
+            cwd: '/foo/bar',
+        };
+
+        let response;
+
+        server = new PythonTestServer(stubExecutionFactory, debugLauncher);
+        await server.serverReady();
+
+        server.onDataReceived(({ data }) => {
+            response = data;
+            deferred.resolve();
+        });
+
+        await server.sendCommand(options);
+
+        // Send data back.
+        const port = server.getPort();
+        const requestOptions = {
+            hostname: 'localhost',
+            method: 'POST',
+            port,
+            headers: { 'Request-uuid': fakeUuid },
+        };
+        // request.hasHeader()
+        const request = http.request(requestOptions, (res) => {
+            res.setEncoding('utf8');
+        });
+        const postData = JSON.stringify({ status: 'success', uuid: fakeUuid, payload: 'foo' });
+        request.write(postData);
+        request.end();
+
+        await deferred.promise;
+
+        assert.deepStrictEqual(response, postData);
+    });
+
+    test('If the server receives data, it should not fire an event if there is no uuid', async () => {
+        const deferred = createDeferred();
+        const options = {
+            command: { script: 'myscript', args: ['-foo', 'foo'] },
+            workspaceFolder: Uri.file('/foo/bar'),
+            cwd: '/foo/bar',
+        };
+
+        let response;
+
+        server = new PythonTestServer(stubExecutionFactory, debugLauncher);
+        await server.serverReady();
+
+        server.onDataReceived(({ data }) => {
+            response = data;
+            deferred.resolve();
+        });
+
+        await server.sendCommand(options);
+
+        // Send data back.
+        const port = server.getPort();
+        const requestOptions = {
+            hostname: 'localhost',
+            method: 'POST',
+            port,
+            headers: { 'Request-uuid': 'some-other-uuid' },
+        };
+        const requestOptions2 = {
+            hostname: 'localhost',
+            method: 'POST',
+            port,
+            headers: { 'Request-uuid': fakeUuid },
+        };
+        const requestOne = http.request(requestOptions, (res) => {
+            res.setEncoding('utf8');
+        });
+        const postDataOne = JSON.stringify({ status: 'success', uuid: 'some-other-uuid', payload: 'foo' });
+        requestOne.write(postDataOne);
+        requestOne.end();
+
+        const requestTwo = http.request(requestOptions2, (res) => {
+            res.setEncoding('utf8');
+        });
+        const postDataTwo = JSON.stringify({ status: 'success', uuid: fakeUuid, payload: 'foo' });
+        requestTwo.write(postDataTwo);
+        requestTwo.end();
+
+        await deferred.promise;
+
+        assert.deepStrictEqual(response, postDataTwo);
+    });
+    test('jsonRPCProcessor', async () => {
+        const rawDataString = '';
+        const expected: IJSONRPCMessage = {
+            headers: new Map<string, string>(),
+            extractedData: 'string',
+            remainingRawData: 'string',
+        };
+        const output: IJSONRPCMessage = jsonRPCProcessor(rawDataString);
+        assert.deepStrictEqual(output, expected);
+    });
 });
