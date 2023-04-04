@@ -19,7 +19,7 @@ import {
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.
  */
 export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
-    private deferred: Deferred<DiscoveredTestPayload> | undefined;
+    private promiseMap: Map<string, Deferred<DiscoveredTestPayload | undefined>> = new Map();
 
     private cwd: string | undefined;
 
@@ -27,38 +27,36 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
-    public onDataReceivedHandler({ cwd, data }: DataReceivedEvent): void {
-        if (this.deferred && cwd === this.cwd) {
-            const testData: DiscoveredTestPayload = JSON.parse(data);
-
-            this.deferred.resolve(testData);
-            this.deferred = undefined;
+    public onDataReceivedHandler({ uuid, data }: DataReceivedEvent): void {
+        const deferred = this.promiseMap.get(uuid);
+        if (deferred) {
+            deferred.resolve(JSON.parse(data));
+            this.promiseMap.delete(uuid);
         }
     }
 
     public async discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
-        if (!this.deferred) {
-            const settings = this.configSettings.getSettings(uri);
-            const { unittestArgs } = settings.testing;
+        const deferred = createDeferred<DiscoveredTestPayload>();
+        const settings = this.configSettings.getSettings(uri);
+        const { unittestArgs } = settings.testing;
 
-            const command = buildDiscoveryCommand(unittestArgs);
+        const command = buildDiscoveryCommand(unittestArgs);
 
-            this.cwd = uri.fsPath;
+        this.cwd = uri.fsPath;
 
-            const options: TestCommandOptions = {
-                workspaceFolder: uri,
-                command,
-                cwd: this.cwd,
-            };
+        const options: TestCommandOptions = {
+            workspaceFolder: uri,
+            command,
+            cwd: this.cwd,
+        };
+        const uuid = this.testServer.createUUID(uri.fsPath);
+        this.promiseMap.set(uuid, deferred);
 
-            this.deferred = createDeferred<DiscoveredTestPayload>();
+        // Send the test command to the server.
+        // The server will fire an onDataReceived event once it gets a response.
+        this.testServer.sendCommand(options);
 
-            // Send the test command to the server.
-            // The server will fire an onDataReceived event once it gets a response.
-            this.testServer.sendCommand(options);
-        }
-
-        return this.deferred.promise;
+        return deferred.promise;
     }
 }
 

@@ -31,6 +31,7 @@ suite('Unittest test discovery adapter', () => {
             onDataReceived: () => {
                 // no body
             },
+            createUUID: () => '123456789',
         } as unknown) as ITestServer;
 
         const uri = Uri.file('/foo/bar');
@@ -54,15 +55,16 @@ suite('Unittest test discovery adapter', () => {
             onDataReceived: () => {
                 // no body
             },
+            createUUID: () => '123456789',
         } as unknown) as ITestServer;
 
         const uri = Uri.file('/foo/bar');
         const data = { status: 'success' };
-
+        const uuid = '123456789';
         const adapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings);
         const promise = adapter.discoverTests(uri);
 
-        adapter.onDataReceivedHandler({ cwd: uri.fsPath, data: JSON.stringify(data) });
+        adapter.onDataReceivedHandler({ uuid, data: JSON.stringify(data) });
 
         const result = await promise;
 
@@ -70,6 +72,8 @@ suite('Unittest test discovery adapter', () => {
     });
 
     test("onDataReceivedHandler should ignore the data if the cwd from the payload does not match the test adapter's cwd", async () => {
+        const correctUuid = '123456789';
+        const incorrectUuid = '987654321';
         const stubTestServer = ({
             sendCommand(): Promise<void> {
                 return Promise.resolve();
@@ -77,6 +81,7 @@ suite('Unittest test discovery adapter', () => {
             onDataReceived: () => {
                 // no body
             },
+            createUUID: () => correctUuid,
         } as unknown) as ITestServer;
 
         const uri = Uri.file('/foo/bar');
@@ -85,10 +90,10 @@ suite('Unittest test discovery adapter', () => {
         const promise = adapter.discoverTests(uri);
 
         const data = { status: 'success' };
-        adapter.onDataReceivedHandler({ cwd: 'some/other/path', data: JSON.stringify(data) });
+        adapter.onDataReceivedHandler({ uuid: incorrectUuid, data: JSON.stringify(data) });
 
         const nextData = { status: 'error' };
-        adapter.onDataReceivedHandler({ cwd: uri.fsPath, data: JSON.stringify(nextData) });
+        adapter.onDataReceivedHandler({ uuid: correctUuid, data: JSON.stringify(nextData) });
 
         const result = await promise;
 

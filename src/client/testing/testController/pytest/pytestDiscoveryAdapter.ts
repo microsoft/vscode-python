@@ -17,20 +17,19 @@ import { DataReceivedEvent, DiscoveredTestPayload, ITestDiscoveryAdapter, ITestS
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
  */
 export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
-    private deferred: Deferred<DiscoveredTestPayload> | undefined;
+    private promiseMap: Map<string, Deferred<DiscoveredTestPayload | undefined>> = new Map();
 
-    private cwd: string | undefined;
+    private deferred: Deferred<DiscoveredTestPayload> | undefined;
 
     constructor(public testServer: ITestServer, public configSettings: IConfigurationService) {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
-    public onDataReceivedHandler({ cwd, data }: DataReceivedEvent): void {
-        if (this.deferred && cwd === this.cwd) {
-            const testData: DiscoveredTestPayload = JSON.parse(data);
-
-            this.deferred.resolve(testData);
-            this.deferred = undefined;
+    public onDataReceivedHandler({ uuid, data }: DataReceivedEvent): void {
+        const deferred = this.promiseMap.get(uuid);
+        if (deferred) {
+            deferred.resolve(JSON.parse(data));
+            this.promiseMap.delete(uuid);
         }
     }
 
@@ -51,43 +50,43 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     // }
 
     async runPytestDiscovery(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
-        if (!this.deferred) {
-            this.deferred = createDeferred<DiscoveredTestPayload>();
-            const relativePathToPytest = 'pythonFiles';
-            const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
-            const uuid = this.testServer.createUUID(uri.fsPath);
-            const settings = this.configSettings.getSettings(uri);
-            const { pytestArgs } = settings.testing;
+        const deferred = createDeferred<DiscoveredTestPayload>();
+        this.deferred = createDeferred<DiscoveredTestPayload>();
+        const relativePathToPytest = 'pythonFiles';
+        const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
+        const uuid = this.testServer.createUUID(uri.fsPath);
+        const settings = this.configSettings.getSettings(uri);
+        const { pytestArgs } = settings.testing;
 
-            const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
-            const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
+        const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
+        const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
 
-            const spawnOptions: SpawnOptions = {
-                cwd: uri.fsPath,
-                throwOnStdErr: true,
-                extraVariables: {
-                    PYTHONPATH: pythonPathCommand,
-                    TEST_UUID: uuid.toString(),
-                    TEST_PORT: this.testServer.getPort().toString(),
-                },
-            };
+        const spawnOptions: SpawnOptions = {
+            cwd: uri.fsPath,
+            throwOnStdErr: true,
+            extraVariables: {
+                PYTHONPATH: pythonPathCommand,
+                TEST_UUID: uuid.toString(),
+                TEST_PORT: this.testServer.getPort().toString(),
+            },
+        };
 
-            // Create the Python environment in which to execute the command.
-            const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
-                allowEnvironmentFetchExceptions: false,
-                resource: uri,
-            };
-            const execService = await executionFactory.createActivatedEnvironment(creationOptions);
+        // Create the Python environment in which to execute the command.
+        const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
+            allowEnvironmentFetchExceptions: false,
+            resource: uri,
+        };
+        const execService = await executionFactory.createActivatedEnvironment(creationOptions);
 
-            try {
-                execService.exec(
-                    ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs),
-                    spawnOptions,
-                );
-            } catch (ex) {
-                console.error(ex);
-            }
+        try {
+            execService.exec(
+                ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs),
+                spawnOptions,
+            );
+        } catch (ex) {
+            console.error(ex);
         }
-        return this.deferred.promise;
+
+        return deferred.promise;
     }
 }

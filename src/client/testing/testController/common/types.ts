@@ -128,7 +128,7 @@ export type RawDiscoveredTests = {
 // New test discovery adapter types
 
 export type DataReceivedEvent = {
-    cwd: string;
+    uuid: string;
     data: string;
 };
 
