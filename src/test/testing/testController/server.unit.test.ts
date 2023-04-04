@@ -11,6 +11,7 @@ import { createDeferred } from '../../../client/common/utils/async';
 import { PythonTestServer } from '../../../client/testing/testController/common/server';
 import * as logging from '../../../client/logging';
 import { ITestDebugLauncher } from '../../../client/testing/common/types';
+import { IJSONRPCMessage, jsonRPCProcessor } from '../../../client/testing/testController/common/utils';
 
 suite('Python Test Server', () => {
     const fakeUuid = 'fake-uuid';
@@ -291,5 +292,15 @@ suite('Python Test Server', () => {
         await deferred.promise;
 
         assert.deepStrictEqual(response, postDataTwo);
+    });
+    test('jsonRPCProcessor', async () => {
+        const rawDataString = '';
+        const expected: IJSONRPCMessage = {
+            headers: new Map<string, string>(),
+            extractedData: 'string',
+            remainingRawData: 'string',
+        };
+        const output: IJSONRPCMessage = jsonRPCProcessor(rawDataString);
+        assert.deepStrictEqual(output, expected);
     });
 });
