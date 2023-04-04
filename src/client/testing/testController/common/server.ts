@@ -59,13 +59,13 @@ export class PythonTestServer implements ITestServer, Disposable {
             traceLog(`Error starting test server: ${ex}`);
         });
         this.server.on('close', () => {
-            traceLog('Test server closed');
+            traceLog('Test server closed.');
         });
         this.server.on('listening', () => {
-            traceLog('Test server listening');
+            traceLog('Test server listening.');
         });
         this.server.on('connection', () => {
-            traceLog('Test server connection');
+            traceLog('Test server connected to a client.');
         });
     }
 
