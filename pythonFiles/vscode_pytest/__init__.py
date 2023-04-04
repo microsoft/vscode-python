@@ -6,7 +6,6 @@ import traceback
 
 import pytest
 
-DEFAULT_PORT = "45454"
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
@@ -15,10 +14,6 @@ from typing import Any, Dict, List, Optional, Union
 
 from testing_tools import socket_manager
 from typing_extensions import Literal, TypedDict
-
-import debugpy
-from testing_tools import socket_manager
-from typing_extensions import Literal
 
 
 class TestData(TypedDict):
@@ -149,8 +144,7 @@ def pytest_keyboard_interrupt(excinfo):
 
 
 def pytest_sessionfinish(session, exitstatus):
-    """
-    A pytest hook that is called after pytest has fulled finished.
+    """A pytest hook that is called after pytest has fulled finished.
 
     Keyword arguments:
     session -- the pytest session object.
@@ -174,9 +168,9 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     session -- the pytest session object.
     """
     session_node = create_session_node(session)
-    session_children_dict: Dict[str, TestNode] = {}
-    file_nodes_dict: Dict[Any, TestNode] = {}
-    class_nodes_dict: Dict[str, TestNode] = {}
+    session_children_dict: TypedDict[str, TestNode] = {}
+    file_nodes_dict: TypedDict[Any, TestNode] = {}
+    class_nodes_dict: TypedDict[str, TestNode] = {}
 
     for test_case in session.items:
         test_node = create_test_node(test_case)
@@ -208,7 +202,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 parent_test_case = create_file_node(test_case.parent)
                 file_nodes_dict[test_case.parent] = parent_test_case
             parent_test_case["children"].append(test_node)
-    created_files_folders_dict: Dict[str, TestNode] = {}
+    created_files_folders_dict: TypedDict[str, TestNode] = {}
     for file_module, file_node in file_nodes_dict.items():
         # Iterate through all the files that exist and construct them into nested folders.
         root_folder_node: TestNode = build_nested_folders(
@@ -226,7 +220,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
 def build_nested_folders(
     file_module: Any,
     file_node: TestNode,
-    created_files_folders_dict: Dict[str, TestNode],
+    created_files_folders_dict: TypedDict[str, TestNode],
     session: pytest.Session,
 ) -> TestNode:
     """Takes a file or folder and builds the nested folder structure for it.

@@ -505,7 +505,7 @@ dual_level_nested_folder_expected_output = {
                         {
                             "name": "test_top_function_t",
                             "path": test_top_folder_path,
-                            "lineno": find_test_line_no(
+                            "lineno": find_test_line_number(
                                 "test_top_function_t",
                                 test_top_folder_path,
                             ),
@@ -516,7 +516,7 @@ dual_level_nested_folder_expected_output = {
                         {
                             "name": "test_top_function_f",
                             "path": test_top_folder_path,
-                            "lineno": find_test_line_no(
+                            "lineno": find_test_line_number(
                                 "test_top_function_f",
                                 test_top_folder_path,
                             ),
@@ -541,7 +541,7 @@ dual_level_nested_folder_expected_output = {
                                 {
                                     "name": "test_bottom_function_t",
                                     "path": test_bottom_folder_path,
-                                    "lineno": find_test_line_no(
+                                    "lineno": find_test_line_number(
                                         "test_bottom_function_t",
                                         test_bottom_folder_path,
                                     ),
@@ -552,7 +552,7 @@ dual_level_nested_folder_expected_output = {
                                 {
                                     "name": "test_bottom_function_f",
                                     "path": test_bottom_folder_path,
-                                    "lineno": find_test_line_no(
+                                    "lineno": find_test_line_number(
                                         "test_bottom_function_f",
                                         test_bottom_folder_path,
                                     ),
@@ -616,7 +616,7 @@ double_nested_folder_expected_output = {
                                         {
                                             "name": "test_function",
                                             "path": double_nested_test_nest_path,
-                                            "lineno": find_test_line_no(
+                                            "lineno": find_test_line_number(
                                                 "test_function",
                                                 double_nested_test_nest_path,
                                             ),
@@ -656,7 +656,7 @@ parametrize_tests_expected_output = {
                 {
                     "name": "test_adding[3+5-8]",
                     "path": parameterize_tests_path,
-                    "lineno": find_test_line_no(
+                    "lineno": find_test_line_number(
                         "test_adding[3+5-8]",
                         parameterize_tests_path,
                     ),
@@ -667,7 +667,7 @@ parametrize_tests_expected_output = {
                 {
                     "name": "test_adding[2+4-6]",
                     "path": parameterize_tests_path,
-                    "lineno": find_test_line_no(
+                    "lineno": find_test_line_number(
                         "test_adding[2+4-6]",
                         parameterize_tests_path,
                     ),
@@ -678,7 +678,7 @@ parametrize_tests_expected_output = {
                 {
                     "name": "test_adding[6+9-16]",
                     "path": parameterize_tests_path,
-                    "lineno": find_test_line_no(
+                    "lineno": find_test_line_number(
                         "test_adding[6+9-16]",
                         parameterize_tests_path,
                     ),
@@ -709,7 +709,7 @@ doctest_pytest_expected_output = {
                 {
                     "name": "text_docstring.txt",
                     "path": text_docstring_path,
-                    "lineno": find_test_line_no(
+                    "lineno": find_test_line_number(
                         "text_docstring.txt",
                         text_docstring_path,
                     ),

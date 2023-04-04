@@ -58,6 +58,9 @@ def test_parameterized_error_collect():
     """Tests pytest discovery on specific file that incorrectly uses parametrize.
 
     The json should still be returned but the errors list should be present.
+
+    Keyword arguments:
+    tmp_path -- pytest fixture that creates a temporary directory.
     """
     file_path_str = "error_parametrize_discovery.py"
     actual = runner(["--collect-only", file_path_str])
@@ -68,8 +71,6 @@ def test_parameterized_error_collect():
     assert len(actual["errors"]) == 2
 
 
-# For the following tests, the expected output includes the line number that the test is on.
-# Therefore if the test file is changed (lines are added or deleted), the expected output will need to be updated to match.
 @pytest.mark.parametrize(
     "file, expected_const",
     [
