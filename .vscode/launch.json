@@ -160,9 +160,7 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--grep", "pytest test discovery adapter",
-                // "--grep", "Unittest test discovery adapter", // "discoverTests should send the discovery command to the test server",
-                // "--grep", "onDataReceivedHandler should ignore the data if the cwd from the payload does not match the test adapter's cwd",
+                //"--grep", "<suite name>",
                 "--timeout=300000"
             ],
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
