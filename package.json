@@ -1703,6 +1703,19 @@
             ],
             "editor/context": [
                 {
+                    "submenu": "python.run",
+                    "group": "Python",
+                    "when": "editorLangId == python && !virtualWorkspace && shellExecutionSupported"
+                },
+                {
+                    "command": "python.sortImports",
+                    "group": "Refactor",
+                    "title": "%python.command.python.sortImports.title%",
+                    "when": "editorLangId == python && !notebookEditorFocused && !virtualWorkspace && shellExecutionSupported"
+                }
+            ],
+            "python.run": [
+                {
                     "command": "python.execInTerminal",
                     "group": "Python",
                     "when": "resourceLangId == python && !virtualWorkspace && shellExecutionSupported"
@@ -1716,12 +1729,6 @@
                     "command": "python.execSelectionInTerminal",
                     "group": "Python",
                     "when": "editorFocus && editorLangId == python && !virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "command": "python.sortImports",
-                    "group": "Refactor",
-                    "title": "%python.command.python.sortImports.title%",
-                    "when": "editorLangId == python && !notebookEditorFocused && !virtualWorkspace && shellExecutionSupported"
                 }
             ],
             "editor/title": [
@@ -1767,6 +1774,13 @@
                 }
             ]
         },
+        "submenus": [
+            {
+                "id": "python.run",
+                "label": "%python.editor.context.submenu.runPython%",
+                "icon": "$(play)"
+            }
+        ],
         "viewsWelcome": [
             {
                 "view": "testing",

@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import { DiagnosticSeverity, l10n } from 'vscode';
 import '../../../common/extensions';
 import * as path from 'path';
-import { IDisposableRegistry, IInterpreterPathService, Resource } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, IInterpreterPathService, Resource } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
@@ -28,6 +28,13 @@ import { EventName } from '../../../telemetry/constants';
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { cache } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
+import { getEnvironmentVariable, getOSType, OSType } from '../../../common/utils/platform';
+import { IFileSystem } from '../../../common/platform/types';
+import { traceError } from '../../../logging';
+import { getExecutable } from '../../../common/process/internal/python';
+import { getSearchPathEnvVarNames } from '../../../common/utils/exec';
+import { IProcessServiceFactory } from '../../../common/process/types';
+import { normCasePath } from '../../../common/platform/fs-paths';
 
 const messages = {
     [DiagnosticCodes.NoPythonInterpretersDiagnostic]: l10n.t(
@@ -35,6 +42,15 @@ const messages = {
     ),
     [DiagnosticCodes.InvalidPythonInterpreterDiagnostic]: l10n.t(
         'An Invalid Python interpreter is selected{0}, please try changing it to enable features such as IntelliSense, linting, and debugging. See output for more details regarding why the interpreter is invalid.',
+    ),
+    [DiagnosticCodes.InvalidComspecDiagnostic]: l10n.t(
+        'We detected an issue with one of your environment variables that breaks features such as IntelliSense, linting and debugging. Try setting the "ComSpec" variable to a valid Command Prompt path in your system to fix it.',
+    ),
+    [DiagnosticCodes.IncompletePathVarDiagnostic]: l10n.t(
+        'We detected an issue with "Path" environment variable that breaks features such as IntelliSense, linting and debugging. Please edit it to make sure it contains the "System32" subdirectories.',
+    ),
+    [DiagnosticCodes.DefaultShellErrorDiagnostic]: l10n.t(
+        'We detected an issue with your default shell that breaks features such as IntelliSense, linting and debugging. Try resetting "ComSpec" and "Path" environment variables to fix it.',
     ),
 };
 
@@ -61,6 +77,17 @@ export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
     }
 }
 
+type DefaultShellDiagnostics =
+    | DiagnosticCodes.InvalidComspecDiagnostic
+    | DiagnosticCodes.IncompletePathVarDiagnostic
+    | DiagnosticCodes.DefaultShellErrorDiagnostic;
+
+export class DefaultShellDiagnostic extends BaseDiagnostic {
+    constructor(code: DefaultShellDiagnostics, resource: Resource, scope = DiagnosticScope.Global) {
+        super(code, messages[code], DiagnosticSeverity.Error, scope, resource, undefined, 'always');
+    }
+}
+
 export const InvalidPythonInterpreterServiceId = 'InvalidPythonInterpreterServiceId';
 
 @injectable()
@@ -73,7 +100,13 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
         super(
-            [DiagnosticCodes.NoPythonInterpretersDiagnostic, DiagnosticCodes.InvalidPythonInterpreterDiagnostic],
+            [
+                DiagnosticCodes.NoPythonInterpretersDiagnostic,
+                DiagnosticCodes.InvalidPythonInterpreterDiagnostic,
+                DiagnosticCodes.InvalidComspecDiagnostic,
+                DiagnosticCodes.IncompletePathVarDiagnostic,
+                DiagnosticCodes.DefaultShellErrorDiagnostic,
+            ],
             serviceContainer,
             disposableRegistry,
             false,
@@ -95,14 +128,17 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
         );
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    public async diagnose(_resource: Resource): Promise<IDiagnostic[]> {
-        return [];
+    public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
+        return this.diagnoseDefaultShell(resource);
     }
 
     public async _manualDiagnose(resource: Resource): Promise<IDiagnostic[]> {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const diagnostics = await this.diagnoseDefaultShell(resource);
+        if (diagnostics.length > 0) {
+            return diagnostics;
+        }
         const hasInterpreters = await interpreterService.hasInterpreters();
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         const isInterpreterSetToDefault = interpreterPathService.get(resource) === 'python';
@@ -140,6 +176,72 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
         return false;
     }
 
+    private async diagnoseDefaultShell(resource: Resource): Promise<IDiagnostic[]> {
+        if (getOSType() !== OSType.Windows) {
+            return [];
+        }
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
+        if (currentInterpreter) {
+            return [];
+        }
+        try {
+            await this.shellExecPython();
+        } catch (ex) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if ((ex as any).errno === -4058) {
+                // ENOENT (-4058) error is thrown by Node when the default shell is invalid.
+                traceError('ComSpec is likely set to an invalid value', getEnvironmentVariable('ComSpec'));
+                if (await this.isComspecInvalid()) {
+                    return [new DefaultShellDiagnostic(DiagnosticCodes.InvalidComspecDiagnostic, resource)];
+                }
+                if (this.isPathVarIncomplete()) {
+                    traceError('PATH env var appears to be incomplete', process.env.Path, process.env.PATH);
+                    return [new DefaultShellDiagnostic(DiagnosticCodes.IncompletePathVarDiagnostic, resource)];
+                }
+                return [new DefaultShellDiagnostic(DiagnosticCodes.DefaultShellErrorDiagnostic, resource)];
+            }
+        }
+        return [];
+    }
+
+    private async isComspecInvalid() {
+        const comSpec = getEnvironmentVariable('ComSpec') ?? '';
+        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        return fs.fileExists(comSpec).then((exists) => !exists);
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    private isPathVarIncomplete() {
+        const envVars = getSearchPathEnvVarNames();
+        const systemRoot = getEnvironmentVariable('SystemRoot') ?? 'C:\\WINDOWS';
+        const system32 = path.join(systemRoot, 'system32');
+        for (const envVar of envVars) {
+            const value = getEnvironmentVariable(envVar);
+            if (value && normCasePath(value).includes(normCasePath(system32))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @cache(-1, true)
+    // eslint-disable-next-line class-methods-use-this
+    private async shellExecPython() {
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        const { pythonPath } = configurationService.getSettings();
+        const [args] = getExecutable();
+        const argv = [pythonPath, ...args];
+        // Concat these together to make a set of quoted strings
+        const quoted = argv.reduce(
+            (p, c) => (p ? `${p} ${c.toCommandArgumentForPythonExt()}` : `${c.toCommandArgumentForPythonExt()}`),
+            '',
+        );
+        const processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+        const service = await processServiceFactory.create();
+        return service.shellExec(quoted, { timeout: 15000 });
+    }
+
     @cache(1000, true) // This is to handle throttling of multiple events.
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         if (diagnostics.length === 0) {
@@ -163,6 +265,26 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService
 
     private getCommandPrompts(diagnostic: IDiagnostic): { prompt: string; command?: IDiagnosticCommand }[] {
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
+        if (
+            diagnostic.code === DiagnosticCodes.InvalidComspecDiagnostic ||
+            diagnostic.code === DiagnosticCodes.IncompletePathVarDiagnostic ||
+            diagnostic.code === DiagnosticCodes.DefaultShellErrorDiagnostic
+        ) {
+            const links: Record<DefaultShellDiagnostics, string> = {
+                InvalidComspecDiagnostic: 'https://aka.ms/AAk3djo',
+                IncompletePathVarDiagnostic: 'https://aka.ms/AAk744c',
+                DefaultShellErrorDiagnostic: 'https://aka.ms/AAk7qix',
+            };
+            return [
+                {
+                    prompt: Common.seeInstructions,
+                    command: commandFactory.createCommand(diagnostic, {
+                        type: 'launch',
+                        options: links[diagnostic.code],
+                    }),
+                },
+            ];
+        }
         const prompts = [
             {
                 prompt: Common.selectPythonInterpreter,
