@@ -1,0 +1,100 @@
+name: Triage "info-needed" label
+
+on:
+  issue_comment:
+    types: [created]
+
+env:
+  TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25","eleanorjboyd", "brettcannon"]'
+
+jobs:
+  add_label:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'triage-needed') && !contains(github.event.issue.labels.*.name, 'info-needed')
+    env:
+      KEYWORDS: '["\\?", "please", "kindly", "let me know", "try", "can you", "could you", "would you", "may I", "provide", "let us know", "tell me", "give me", "send me", "what", "when", "where", "why", "how"]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Check for author
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = await github.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            const commentAuthor = context.payload.comment.user.login;
+            const commentBody = context.payload.comment.body;
+            const isTeamMember = ${{ env.TRIAGERS }}.includes(commentAuthor);
+
+            const keywords = ${{ env.KEYWORDS }};
+            const isRequestForInfo = new RegExp(keywords.join('|'), 'i').test(commentBody);
+
+            const shouldAddLabel = isTeamMember && commentAuthor !== issue.data.user.login && isRequestForInfo;
+
+            if (shouldAddLabel) {
+              await github.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: ['info-needed']
+              });
+            }
+
+  remove_label:
+    if: contains(github.event.issue.labels.*.name, 'info-needed') && contains(github.event.issue.labels.*.name, 'triage-needed')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Check for author
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = await github.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            const commentAuthor = context.payload.comment.user.login;
+            const issueAuthor = issue.data.user.login;
+            if (commentAuthor === issueAuthor) {
+              await github.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: 'info-needed'
+              });
+              return;
+            }
+            if (${{ env.TRIAGERS }}.includes(commentAuthor)) {
+              // If one of triagers made a comment, ignore it
+              return;
+            }
+            // Loop through all the comments on the issue in reverse order and find the last username that a TRIAGER mentioned
+            // If the comment author is the last mentioned username, remove the "info-needed" label
+            const comments = await github.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            for (const comment of comments.data.slice().reverse()) {
+              if (!${{ env.TRIAGERS }}.includes(comment.user.login)) {
+                continue;
+              }
+              const matches = comment.body.match(/@\w+/g) || [];
+              const mentionedUsernames = matches.map(match => match.replace('@', ''));
+              if (mentionedUsernames.includes(commentAuthor)) {
+                await github.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  name: 'info-needed'
+                });
+                break;
+              }
+            }
