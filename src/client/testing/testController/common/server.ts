@@ -87,7 +87,7 @@ export class PythonTestServer implements ITestServer, Disposable {
     }
 
     async sendCommand(options: TestCommandOptions): Promise<void> {
-        const uuid = this.createUUID(options.cwd);
+        const { uuid } = options;
         const spawnOptions: SpawnOptions = {
             token: options.token,
             cwd: options.cwd,

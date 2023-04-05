@@ -53,6 +53,7 @@ suite('Python Test Server', () => {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
             cwd: '/foo/bar',
+            uuid: fakeUuid,
         };
 
         server = new PythonTestServer(stubExecutionFactory, debugLauncher);
@@ -75,6 +76,7 @@ suite('Python Test Server', () => {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
             cwd: '/foo/bar',
+            uuid: fakeUuid,
             outChannel,
         };
 
@@ -101,6 +103,7 @@ suite('Python Test Server', () => {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
             cwd: '/foo/bar',
+            uuid: fakeUuid,
         };
 
         server = new PythonTestServer(stubExecutionFactory, debugLauncher);
@@ -122,6 +125,7 @@ suite('Python Test Server', () => {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
             cwd: '/foo/bar',
+            uuid: fakeUuid,
         };
 
         let response;
@@ -163,6 +167,7 @@ suite('Python Test Server', () => {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
             cwd: '/foo/bar',
+            uuid: fakeUuid,
         };
 
         let response;
@@ -205,6 +210,7 @@ suite('Python Test Server', () => {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
             cwd: '/foo/bar',
+            uuid: '987654321',
         };
 
         let response;
@@ -246,6 +252,7 @@ suite('Python Test Server', () => {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
             cwd: '/foo/bar',
+            uuid: fakeUuid,
         };
 
         let response;

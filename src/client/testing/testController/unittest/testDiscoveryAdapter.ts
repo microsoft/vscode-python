@@ -43,13 +43,15 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const command = buildDiscoveryCommand(unittestArgs);
 
         this.cwd = uri.fsPath;
+        const uuid = this.testServer.createUUID(uri.fsPath);
 
         const options: TestCommandOptions = {
             workspaceFolder: uri,
             command,
             cwd: this.cwd,
+            uuid,
         };
-        const uuid = this.testServer.createUUID(uri.fsPath);
+
         this.promiseMap.set(uuid, deferred);
 
         // Send the test command to the server.
