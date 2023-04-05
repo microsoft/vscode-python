@@ -44,6 +44,7 @@ suite('Unittest test discovery adapter', () => {
             workspaceFolder: uri,
             cwd: uri.fsPath,
             command: { script, args: ['--udiscovery', '-v', '-s', '.', '-p', 'test*'] },
+            uuid: '123456789',
         });
     });
 

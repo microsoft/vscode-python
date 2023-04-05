@@ -48,11 +48,12 @@ suite('Python Test Server', () => {
         server.dispose();
     });
 
-    test('sendCommand should add the port and uuid to the command being sent', async () => {
+    test('sendCommand should add the port to the command being sent', async () => {
         const options = {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
             cwd: '/foo/bar',
+            uuid: fakeUuid,
         };
 
         server = new PythonTestServer(stubExecutionFactory, debugLauncher);
@@ -75,6 +76,7 @@ suite('Python Test Server', () => {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
             cwd: '/foo/bar',
+            uuid: fakeUuid,
             outChannel,
         };
 
@@ -101,6 +103,7 @@ suite('Python Test Server', () => {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
             cwd: '/foo/bar',
+            uuid: fakeUuid,
         };
 
         server = new PythonTestServer(stubExecutionFactory, debugLauncher);
@@ -116,53 +119,13 @@ suite('Python Test Server', () => {
         assert.deepStrictEqual(eventData!.errors, ['Failed to execute']);
     });
 
-    test('If the server receives data, it should fire an event if it is a known uuid', async () => {
-        const deferred = createDeferred();
-        const options = {
-            command: { script: 'myscript', args: ['-foo', 'foo'] },
-            workspaceFolder: Uri.file('/foo/bar'),
-            cwd: '/foo/bar',
-        };
-
-        let response;
-
-        server = new PythonTestServer(stubExecutionFactory, debugLauncher);
-        await server.serverReady();
-
-        server.onDataReceived(({ data }) => {
-            response = data;
-            deferred.resolve();
-        });
-
-        await server.sendCommand(options);
-
-        // Send data back.
-        const port = server.getPort();
-        const requestOptions = {
-            hostname: 'localhost',
-            method: 'POST',
-            port,
-            headers: { 'Request-uuid': fakeUuid },
-        };
-
-        const request = http.request(requestOptions, (res) => {
-            res.setEncoding('utf8');
-        });
-
-        const postData = JSON.stringify({ status: 'success', uuid: fakeUuid });
-        request.write(postData);
-        request.end();
-
-        await deferred.promise;
-
-        assert.deepStrictEqual(response, postData);
-    });
     test('If the server receives malformed data, it should display a log message, and not fire an event', async () => {
         const deferred = createDeferred();
         const options = {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
             cwd: '/foo/bar',
+            uuid: fakeUuid,
         };
 
         let response;
@@ -197,99 +160,5 @@ suite('Python Test Server', () => {
 
         sinon.assert.calledOnce(traceLogStub);
         assert.deepStrictEqual(response, '');
-    });
-
-    test('If the server receives data, it should not fire an event if it is an unknown uuid', async () => {
-        const deferred = createDeferred();
-        const options = {
-            command: { script: 'myscript', args: ['-foo', 'foo'] },
-            workspaceFolder: Uri.file('/foo/bar'),
-            cwd: '/foo/bar',
-        };
-
-        let response;
-
-        server = new PythonTestServer(stubExecutionFactory, debugLauncher);
-        await server.serverReady();
-
-        server.onDataReceived(({ data }) => {
-            response = data;
-            deferred.resolve();
-        });
-
-        await server.sendCommand(options);
-
-        // Send data back.
-        const port = server.getPort();
-        const requestOptions = {
-            hostname: 'localhost',
-            method: 'POST',
-            port,
-            headers: { 'Request-uuid': fakeUuid },
-        };
-        // request.hasHeader()
-        const request = http.request(requestOptions, (res) => {
-            res.setEncoding('utf8');
-        });
-        const postData = JSON.stringify({ status: 'success', uuid: fakeUuid, payload: 'foo' });
-        request.write(postData);
-        request.end();
-
-        await deferred.promise;
-
-        assert.deepStrictEqual(response, postData);
-    });
-
-    test('If the server receives data, it should not fire an event if there is no uuid', async () => {
-        const deferred = createDeferred();
-        const options = {
-            command: { script: 'myscript', args: ['-foo', 'foo'] },
-            workspaceFolder: Uri.file('/foo/bar'),
-            cwd: '/foo/bar',
-        };
-
-        let response;
-
-        server = new PythonTestServer(stubExecutionFactory, debugLauncher);
-        await server.serverReady();
-
-        server.onDataReceived(({ data }) => {
-            response = data;
-            deferred.resolve();
-        });
-
-        await server.sendCommand(options);
-
-        // Send data back.
-        const port = server.getPort();
-        const requestOptions = {
-            hostname: 'localhost',
-            method: 'POST',
-            port,
-            headers: { 'Request-uuid': 'some-other-uuid' },
-        };
-        const requestOptions2 = {
-            hostname: 'localhost',
-            method: 'POST',
-            port,
-            headers: { 'Request-uuid': fakeUuid },
-        };
-        const requestOne = http.request(requestOptions, (res) => {
-            res.setEncoding('utf8');
-        });
-        const postDataOne = JSON.stringify({ status: 'success', uuid: 'some-other-uuid', payload: 'foo' });
-        requestOne.write(postDataOne);
-        requestOne.end();
-
-        const requestTwo = http.request(requestOptions2, (res) => {
-            res.setEncoding('utf8');
-        });
-        const postDataTwo = JSON.stringify({ status: 'success', uuid: fakeUuid, payload: 'foo' });
-        requestTwo.write(postDataTwo);
-        requestTwo.end();
-
-        await deferred.promise;
-
-        assert.deepStrictEqual(response, postDataTwo);
     });
 });

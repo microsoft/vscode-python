@@ -146,6 +146,7 @@ export type TestCommandOptions = {
     workspaceFolder: Uri;
     cwd: string;
     command: TestDiscoveryCommand | TestExecutionCommand;
+    uuid: string;
     token?: CancellationToken;
     outChannel?: OutputChannel;
     debugBool?: boolean;
