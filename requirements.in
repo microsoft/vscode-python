@@ -5,3 +5,6 @@
 
 # Unittest test adapter
 typing-extensions==4.5.0
+
+# Fallback env creator for debian
+microvenv

@@ -10,7 +10,8 @@ import sys
 from typing import List, Optional, Sequence, Union
 
 VENV_NAME = ".venv"
-CWD = pathlib.PurePath(os.getcwd())
+CWD = pathlib.Path.cwd()
+MICROVENV_SCRIPT_PATH = pathlib.Path(__file__).parent / "create_microvenv.py"
 
 
 class VenvError(Exception):
@@ -130,22 +131,39 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         argv = []
     args = parse_args(argv)
 
+    use_micro_venv = False
     if not is_installed("venv"):
-        raise VenvError("CREATE_VENV.VENV_NOT_FOUND")
+        if sys.platform == "win32":
+            raise VenvError("CREATE_VENV.VENV_NOT_FOUND")
+        else:
+            use_micro_venv = True
 
     pip_installed = is_installed("pip")
     deps_needed = args.requirements or args.extras or args.toml
-    if deps_needed and not pip_installed:
+    if deps_needed and not pip_installed and not use_micro_venv:
         raise VenvError("CREATE_VENV.PIP_NOT_FOUND")
 
     if venv_exists(args.name):
         venv_path = get_venv_path(args.name)
         print(f"EXISTING_VENV:{venv_path}")
     else:
-        run_process(
-            [sys.executable, "-m", "venv", args.name],
-            "CREATE_VENV.VENV_FAILED_CREATION",
-        )
+        if use_micro_venv:
+            run_process(
+                [
+                    sys.executable,
+                    os.fspath(MICROVENV_SCRIPT_PATH),
+                    "--install-pip",
+                    "--name",
+                    args.name,
+                ],
+                "CREATE_VENV.MICROVENV_FAILED_CREATION",
+            )
+            pip_installed = True
+        else:
+            run_process(
+                [sys.executable, "-m", "venv", args.name],
+                "CREATE_VENV.VENV_FAILED_CREATION",
+            )
         venv_path = get_venv_path(args.name)
         print(f"CREATED_VENV:{venv_path}")
         if args.git_ignore:

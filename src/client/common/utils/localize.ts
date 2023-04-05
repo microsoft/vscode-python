@@ -438,7 +438,11 @@ export namespace CreateEnv {
 
     export namespace Venv {
         export const creating = l10n.t('Creating venv...');
+        export const creatingMicrovenv = l10n.t('Creating microvenv...');
         export const created = l10n.t('Environment created...');
+        export const existing = l10n.t('Using existing environment...');
+        export const downloadingPip = l10n.t('Downloading pip...');
+        export const installingPip = l10n.t('Installing pip...');
         export const upgradingPip = l10n.t('Upgrading pip...');
         export const installingPackages = l10n.t('Installing packages...');
         export const errorCreatingEnvironment = l10n.t('Error while creating virtual environment.');

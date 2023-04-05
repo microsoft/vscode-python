@@ -2,13 +2,46 @@
 # Licensed under the MIT License.
 
 import importlib
+import os
 import sys
 
 import create_venv
 import pytest
 
 
-def test_venv_not_installed():
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows does not have micro venv fallback."
+)
+def test_venv_not_installed_unix():
+    importlib.reload(create_venv)
+    create_venv.is_installed = lambda module: module != "venv"
+    run_process_called = False
+
+    def run_process(args, error_message):
+        nonlocal run_process_called
+        if "--install-pip" in args:
+            run_process_called = True
+            assert args == [
+                sys.executable,
+                os.fspath(create_venv.MICROVENV_SCRIPT_PATH),
+                "--install-pip",
+                "--name",
+                ".test_venv",
+            ]
+            assert error_message == "CREATE_VENV.MICROVENV_FAILED_CREATION"
+
+    create_venv.run_process = run_process
+
+    create_venv.main(["--name", ".test_venv"])
+
+    # run_process is called when the venv does not exist
+    assert run_process_called == True
+
+
+@pytest.mark.skipif(
+    sys.platform != "win32", reason="Windows does not have microvenv fallback."
+)
+def test_venv_not_installed_windows():
     importlib.reload(create_venv)
     create_venv.is_installed = lambda module: module != "venv"
     with pytest.raises(create_venv.VenvError) as e:
