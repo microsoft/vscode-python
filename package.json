@@ -1693,12 +1693,12 @@
                 {
                     "group": "Python",
                     "command": "python.createEnvironment",
-                    "when": "resourceLangId == pip-requirements && !virtualWorkspace && shellExecutionSupported"
+                    "when": "resourceLangId == pip-requirements && !virtualWorkspace && shellExecutionSupported && !inDiffEditor"
                 },
                 {
                     "group": "Python",
                     "command": "python.createEnvironment",
-                    "when": "resourceFilename == pyproject.toml && pipInstallableToml && !virtualWorkspace && shellExecutionSupported"
+                    "when": "resourceFilename == pyproject.toml && pipInstallableToml && !virtualWorkspace && shellExecutionSupported  && !inDiffEditor"
                 }
             ],
             "editor/context": [
