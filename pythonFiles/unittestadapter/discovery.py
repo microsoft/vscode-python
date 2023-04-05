@@ -121,13 +121,12 @@ if __name__ == "__main__":
 
     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
     addr = ("localhost", port)
-    with socket_manager.SocketManager(addr) as s:
-        data = json.dumps(payload)
-        request = f"""POST / HTTP/1.1
-Host: localhost:{port}
-Content-Length: {len(data)}
+    data = json.dumps(payload)
+    request = f"""Content-Length: {len(data)}
 Content-Type: application/json
 Request-uuid: {uuid}
 
 {data}"""
-        result = s.socket.sendall(request.encode("utf-8"))  # type: ignore
+    with socket_manager.SocketManager(addr) as s:
+        if s.socket is not None:
+            s.socket.sendall(request.encode("utf-8"))
