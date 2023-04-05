@@ -132,15 +132,37 @@ def pytest_sessionfinish(session, exitstatus):
 
 
 def pytest_internalerror(excrepr, excinfo):
-    errors.append(traceback.format_exc())
+    """A pytest hook that is called when an internal error occurs.
+
+    Keyword arguments:
+    excrepr -- the exception representation.
+    excinfo -- the exception information of type ExceptionInfo.
+    """
+    # call.excinfo.exconly() returns the exception as a string.
+    ERRORS.append(excinfo.exconly())
 
 
 def pytest_exception_interact(node, call, report):
-    errors.append(call.result)
+    """A pytest hook that is called when an exception is raised which could be handled.
+
+    Keyword arguments:
+    node -- the node that raised the exception.
+    call -- the call object.
+    report -- the report object of either type CollectReport or TestReport.
+    """
+    # call.excinfo is the captured exception of the call, if it raised as type ExceptionInfo.
+    # call.excinfo.exconly() returns the exception as a string.
+    ERRORS.append(call.execinfo.exconly())
 
 
 def pytest_keyboard_interrupt(excinfo):
-    errors.append(traceback.format_exc())
+    """A pytest hook that is called when a keyboard interrupt is raised.
+
+    Keyword arguments:
+    excinfo -- the exception information of type ExceptionInfo.
+    """
+    # The function execonly() return the exception as a string.
+    ERRORS.append(excinfo.exconly())
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -154,11 +176,17 @@ def pytest_sessionfinish(session, exitstatus):
     try:
         session_node: Union[TestNode, None] = build_test_tree(session)[0]
         if not session_node:
-            raise NameError("Session node is None.")
-        post_response(os.fsdecode(cwd), session_node, errors)
+            raise VSCodePytestError(
+                "Something went wrong following pytest finish, \
+                    no session node was created."
+            )
+        post_response(os.fsdecode(cwd), session_node, ERRORS)
     except Exception as e:
-        errors.append(traceback.format_exc())
-        post_response(os.fsdecode(cwd), TestNode(), errors)
+        ERRORS.append(
+            f"Error message: {e.message()}. \
+                Traceback: {(traceback.format_exc() if e.__traceback__ else '')}"
+        )
+        post_response(os.fsdecode(cwd), TestNode(), ERRORS)
 
 
 def build_test_tree(session: pytest.Session) -> TestNode:
