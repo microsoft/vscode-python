@@ -155,7 +155,6 @@ suite('Python Test Server', () => {
         await deferred.promise;
         assert.deepStrictEqual(eventData, '');
     });
-
     test('If the server receives data, it should not fire an event if it is an unknown uuid', async () => {
         const deferred = createDeferred();
         const options = {
