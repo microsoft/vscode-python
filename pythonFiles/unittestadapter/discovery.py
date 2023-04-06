@@ -127,6 +127,10 @@ Content-Type: application/json
 Request-uuid: {uuid}
 
 {data}"""
-    with socket_manager.SocketManager(addr) as s:
-        if s.socket is not None:
-            s.socket.sendall(request.encode("utf-8"))
+    try:
+        with socket_manager.SocketManager(addr) as s:
+            if s.socket is not None:
+                s.socket.sendall(request.encode("utf-8"))
+    except Exception as e:
+        print(f"Error sending response: {e}")
+        print(f"Request data: {request}")
