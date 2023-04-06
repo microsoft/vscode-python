@@ -48,8 +48,6 @@ src/test/testing/common/services/configSettingService.unit.test.ts
 
 src/test/common/exitCIAfterTestReporter.ts
 
-src/test/common/net/fileDownloader.unit.test.ts
-src/test/common/net/httpClient.unit.test.ts
 
 src/test/common/terminals/activator/index.unit.test.ts
 src/test/common/terminals/activator/base.unit.test.ts
@@ -76,7 +74,6 @@ src/test/common/platform/filesystem.test.ts
 
 src/test/common/utils/cacheUtils.unit.test.ts
 src/test/common/utils/decorators.unit.test.ts
-src/test/common/utils/localize.functional.test.ts
 src/test/common/utils/version.unit.test.ts
 
 src/test/common/configSettings/configSettings.unit.test.ts
@@ -108,7 +105,6 @@ src/test/common/interpreterPathService.unit.test.ts
 
 src/test/pythonFiles/formatting/dummy.ts
 
-src/test/debugger/extension/banner.unit.test.ts
 src/test/debugger/extension/adapter/adapter.test.ts
 src/test/debugger/extension/adapter/outdatedDebuggerPrompt.unit.test.ts
 src/test/debugger/extension/adapter/factory.unit.test.ts
@@ -124,7 +120,6 @@ src/test/telemetry/index.unit.test.ts
 src/test/telemetry/envFileTelemetry.unit.test.ts
 
 src/test/application/diagnostics/checks/macPythonInterpreter.unit.test.ts
-src/test/application/diagnostics/checks/pythonPathDeprecated.unit.test.ts
 src/test/application/diagnostics/checks/pythonInterpreter.unit.test.ts
 src/test/application/diagnostics/checks/invalidLaunchJsonDebugger.unit.test.ts
 src/test/application/diagnostics/checks/powerShellActivation.unit.test.ts
@@ -139,7 +134,6 @@ src/test/performance/load.perf.test.ts
 
 src/client/interpreter/configuration/interpreterSelector/commands/base.ts
 src/client/interpreter/configuration/interpreterSelector/commands/resetInterpreter.ts
-src/client/interpreter/configuration/interpreterSelector/commands/setShebangInterpreter.ts
 src/client/interpreter/configuration/pythonPathUpdaterServiceFactory.ts
 src/client/interpreter/configuration/services/globalUpdaterService.ts
 src/client/interpreter/configuration/services/workspaceUpdaterService.ts
@@ -177,12 +171,9 @@ src/client/testing/common/runner.ts
 
 src/client/common/helpers.ts
 src/client/common/net/browser.ts
-src/client/common/net/fileDownloader.ts
-src/client/common/net/httpClient.ts
 src/client/common/net/socket/socketCallbackHandler.ts
 src/client/common/net/socket/socketServer.ts
 src/client/common/net/socket/SocketStream.ts
-src/client/common/asyncDisposableRegistry.ts
 src/client/common/editor.ts
 src/client/common/contextKey.ts
 src/client/common/experiments/telemetry.ts
