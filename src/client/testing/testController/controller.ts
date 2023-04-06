@@ -228,35 +228,35 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 // Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
                 // ** uncomment ~231 - 241 to NEW new test discovery mechanism
-                const workspace = this.workspaceService.getWorkspaceFolder(uri);
-                traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
-                const testAdapter =
-                    this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                testAdapter.discoverTests(
-                    this.testController,
-                    this.refreshCancellation.token,
-                    this.testAdapters.size > 1,
-                    this.workspaceService.workspaceFile?.fsPath,
-                    this.pythonExecFactory,
-                );
+                // const workspace = this.workspaceService.getWorkspaceFolder(uri);
+                // traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
+                // const testAdapter =
+                //     this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                // testAdapter.discoverTests(
+                //     this.testController,
+                //     this.refreshCancellation.token,
+                //     this.testAdapters.size > 1,
+                //     this.workspaceService.workspaceFile?.fsPath,
+                //     this.pythonExecFactory,
+                // );
                 // uncomment ~243 to use OLD test discovery mechanism
-                // await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+                await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else if (settings.testing.unittestEnabled) {
                 // ** Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
                 // uncomment ~248 - 258 to NEW new test discovery mechanism
                 const workspace = this.workspaceService.getWorkspaceFolder(uri);
                 traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
-                const testAdapter =
-                    this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                testAdapter.discoverTests(
-                    this.testController,
-                    this.refreshCancellation.token,
-                    this.testAdapters.size > 1,
-                    this.workspaceService.workspaceFile?.fsPath,
-                );
+                // const testAdapter =
+                //     this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                // testAdapter.discoverTests(
+                //     this.testController,
+                //     this.refreshCancellation.token,
+                //     this.testAdapters.size > 1,
+                //     this.workspaceService.workspaceFile?.fsPath,
+                // );
                 // uncomment ~260 to use OLD test discovery mechanism
-                // await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+                await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
             } else {
                 if (this.sendTestDisabledTelemetry) {
                     this.sendTestDisabledTelemetry = false;
