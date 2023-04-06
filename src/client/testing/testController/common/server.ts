@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as http from 'http';
 import * as net from 'net';
 import * as crypto from 'crypto';
 import { Disposable, Event, EventEmitter } from 'vscode';
@@ -14,52 +13,65 @@ import { traceLog } from '../../../logging';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
+import { jsonRPCHeaders, jsonRPCContent, JSONRPC_UUID_HEADER } from './utils';
 
 export class PythonTestServer implements ITestServer, Disposable {
     private _onDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
 
     private uuids: Map<string, string>;
 
-    private server: http.Server;
+    private server: net.Server;
 
     private ready: Promise<void>;
 
     constructor(private executionFactory: IPythonExecutionFactory, private debugLauncher: ITestDebugLauncher) {
         this.uuids = new Map();
 
-        const requestListener: http.RequestListener = async (request, response) => {
-            const buffers = [];
+        this.server = net.createServer((socket: net.Socket) => {
+            socket.on('data', (data: Buffer) => {
+                try {
+                    let rawData: string = data.toString();
 
-            try {
-                for await (const chunk of request) {
-                    buffers.push(chunk);
+                    while (rawData.length > 0) {
+                        const rpcHeaders = jsonRPCHeaders(rawData);
+                        const uuid = rpcHeaders.headers.get(JSONRPC_UUID_HEADER);
+                        rawData = rpcHeaders.remainingRawData;
+                        if (uuid) {
+                            const rpcContent = jsonRPCContent(rpcHeaders.headers, rawData);
+                            rawData = rpcContent.remainingRawData;
+                            const cwd = this.uuids.get(uuid);
+                            if (cwd) {
+                                this._onDataReceived.fire({ uuid, data: rpcContent.extractedJSON });
+                                this.uuids.delete(uuid);
+                            }
+                        } else {
+                            traceLog(`Error processing test server request: uuid not found`);
+                            this._onDataReceived.fire({ uuid: '', data: '' });
+                            return;
+                        }
+                    }
+                } catch (ex) {
+                    traceLog(`Error processing test server request: ${ex} observe`);
+                    this._onDataReceived.fire({ uuid: '', data: '' });
                 }
-
-                const data = Buffer.concat(buffers).toString();
-                // grab the uuid from the header
-                const indexRequestuuid = request.rawHeaders.indexOf('Request-uuid');
-                const uuid = request.rawHeaders[indexRequestuuid + 1];
-                response.end();
-
-                JSON.parse(data);
-                // Check if the uuid we received exists in the list of active ones.
-                // If yes, process the response, if not, ignore it.
-                const cwd = this.uuids.get(uuid);
-                if (cwd) {
-                    this._onDataReceived.fire({ uuid, data });
-                    this.uuids.delete(uuid);
-                }
-            } catch (ex) {
-                traceLog(`Error processing test server request: ${ex} observe`);
-                this._onDataReceived.fire({ uuid: '', data: '' });
-            }
-        };
-
-        this.server = http.createServer(requestListener);
+            });
+        });
         this.ready = new Promise((resolve, _reject) => {
             this.server.listen(undefined, 'localhost', () => {
                 resolve();
             });
+        });
+        this.server.on('error', (ex) => {
+            traceLog(`Error starting test server: ${ex}`);
+        });
+        this.server.on('close', () => {
+            traceLog('Test server closed.');
+        });
+        this.server.on('listening', () => {
+            traceLog('Test server listening.');
+        });
+        this.server.on('connection', () => {
+            traceLog('Test server connected to a client.');
         });
     }
 
