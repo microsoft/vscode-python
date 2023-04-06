@@ -17,17 +17,15 @@ sys.path.insert(0, PYTHON_FILES)
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
 from testing_tools import socket_manager
-from typing_extensions import NotRequired
+from typing_extensions import NotRequired, TypeAlias, TypedDict
 from unittestadapter.utils import parse_unittest_args
-
-from typing_extensions import NotRequired, TypedDict, TypeAlias
 
 DEFAULT_PORT = "45454"
 
 
 def parse_execution_cli_args(
     args: List[str],
-) -> Union[Tuple[int, str], Union[None, List[str]]]:
+) -> Tuple[int, Union[str, None], List[str]]:
     """Parse command-line arguments that should be processed by the script.
 
     So far this includes the port number that it needs to connect to, the uuid passed by the TS side,
@@ -64,7 +62,7 @@ class TestOutcomeEnum(str, enum.Enum):
 
 
 class UnittestTestResult(unittest.TextTestResult):
-    formatted: Dict[str, Union[Dict[str, str], None]] = dict()
+    formatted: Dict[str, Dict[str, Union[str, None]]] = dict()
 
     def startTest(self, test: unittest.TestCase):
         super(UnittestTestResult, self).startTest(test)
