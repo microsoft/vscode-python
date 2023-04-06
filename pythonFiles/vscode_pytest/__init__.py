@@ -161,7 +161,7 @@ def pytest_keyboard_interrupt(excinfo):
     Keyword arguments:
     excinfo -- the exception information of type ExceptionInfo.
     """
-    # The function execonly() return the exception as a string.
+    # The function execonly() returns the exception as a string.
     ERRORS.append(excinfo.exconly())
 
 
@@ -174,19 +174,18 @@ def pytest_sessionfinish(session, exitstatus):
     """
     cwd = pathlib.Path.cwd()
     try:
-        session_node: Union[TestNode, None] = build_test_tree(session)[0]
+        session_node: Union[TestNode, None] = build_test_tree(session)
         if not session_node:
             raise VSCodePytestError(
                 "Something went wrong following pytest finish, \
                     no session node was created"
             )
-        post_response(os.fsdecode(cwd), session_node, ERRORS)
+        post_response(os.fsdecode(cwd), session_node)
     except Exception as e:
         ERRORS.append(
-            f"Error message: {e.message()}. \
-                Traceback: {(traceback.format_exc() if e.__traceback__ else '')}"
+            f"Error Occurred, traceback: {(traceback.format_exc() if e.__traceback__ else '')}"
         )
-        post_response(os.fsdecode(cwd), TestNode(), ERRORS)
+        post_response(os.fsdecode(cwd), TestNode())
 
 
 def build_test_tree(session: pytest.Session) -> TestNode:
