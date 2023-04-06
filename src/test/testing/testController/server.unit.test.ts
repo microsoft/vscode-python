@@ -7,11 +7,9 @@ import * as sinon from 'sinon';
 import * as crypto from 'crypto';
 import { OutputChannel, Uri } from 'vscode';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
-import { createDeferred } from '../../../client/common/utils/async';
 import { PythonTestServer } from '../../../client/testing/testController/common/server';
-import * as logging from '../../../client/logging';
 import { ITestDebugLauncher } from '../../../client/testing/common/types';
-import { ITestServer } from '../../../client/testing/testController/common/types';
+import { createDeferred } from '../../../client/common/utils/async';
 
 suite('Python Test Server', () => {
     const fakeUuid = 'fake-uuid';
@@ -22,13 +20,11 @@ suite('Python Test Server', () => {
     let sandbox: sinon.SinonSandbox;
     let execArgs: string[];
     let v4Stub: sinon.SinonStub;
-    let traceLogStub: sinon.SinonStub;
     let debugLauncher: ITestDebugLauncher;
 
     setup(() => {
         sandbox = sinon.createSandbox();
         v4Stub = sandbox.stub(crypto, 'randomUUID');
-        traceLogStub = sandbox.stub(logging, 'traceLog');
 
         v4Stub.returns(fakeUuid);
         stubExecutionService = ({
@@ -121,8 +117,9 @@ suite('Python Test Server', () => {
     });
 
     test('If the server receives malformed data, it should display a log message, and not fire an event', async () => {
-        let eventData: { status: string; errors: string[] };
-        // const socket = new net.Socket();
+        let eventData: string | undefined;
+        const client = new net.Socket();
+        const deferred = createDeferred();
 
         const options = {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
@@ -131,46 +128,31 @@ suite('Python Test Server', () => {
             uuid: fakeUuid,
         };
 
-        server = new PythonTestServer(stubExecutionFactory, debugLauncher);
-        await server.serverReady();
-        server.onDataReceived(({ data }) => {
-            eventData = JSON.parse(data);
-        });
-
-        const socketS = new net.Socket();
-        socketS.on('connect', () => {
-            console.log('Socket connected, local port:', socketS.localPort);
-            socketS.write('malformed data');
-        });
-        socketS.once('connect', () => {
-            console.log('Socket connected to server!');
-        });
-        socketS.on('error', (error) => {
-            console.log('Socket connection error:', error);
-        });
-        if (socketS.localPort) {
-            console.log('Socket is already connected');
-        } else {
-            console.log('Waiting for socket to connect...');
-            socketS.on('connect', () => {
-                console.log('Socket connected!');
-            });
-        }
         stubExecutionService = ({
             exec: async () => {
-                console.log('exec called');
-                await socketS.on('connect', () => {
-                    console.log('Socket connected to server!');
-                });
+                client.connect(server.getPort());
                 return Promise.resolve({ stdout: '', stderr: '' });
             },
         } as unknown) as IPythonExecutionService;
 
+        server = new PythonTestServer(stubExecutionFactory, debugLauncher);
+        await server.serverReady();
+        server.onDataReceived(({ data }) => {
+            eventData = data;
+            deferred.resolve();
+        });
+
+        client.on('connect', () => {
+            console.log('Socket connected, local port:', client.localPort);
+            client.write('malformed data');
+            client.end();
+        });
+        client.on('error', (error) => {
+            console.log('Socket connection error:', error);
+        });
+
         await server.sendCommand(options);
-
-        console.log('socketS.localPort: ', socketS.localPort);
-
-        socketS.end();
-        console.log('eventData');
+        await deferred.promise;
+        assert.deepStrictEqual(eventData, '');
     });
 });
