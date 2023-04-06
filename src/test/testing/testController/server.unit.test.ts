@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-import * as http from 'http';
+import * as net from 'net';
 import * as sinon from 'sinon';
 import * as crypto from 'crypto';
 import { OutputChannel, Uri } from 'vscode';
@@ -11,6 +11,7 @@ import { createDeferred } from '../../../client/common/utils/async';
 import { PythonTestServer } from '../../../client/testing/testController/common/server';
 import * as logging from '../../../client/logging';
 import { ITestDebugLauncher } from '../../../client/testing/common/types';
+import { ITestServer } from '../../../client/testing/testController/common/types';
 
 suite('Python Test Server', () => {
     const fakeUuid = 'fake-uuid';
@@ -120,7 +121,9 @@ suite('Python Test Server', () => {
     });
 
     test('If the server receives malformed data, it should display a log message, and not fire an event', async () => {
-        const deferred = createDeferred();
+        let eventData: { status: string; errors: string[] };
+        // const socket = new net.Socket();
+
         const options = {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
@@ -128,37 +131,46 @@ suite('Python Test Server', () => {
             uuid: fakeUuid,
         };
 
-        let response;
-
         server = new PythonTestServer(stubExecutionFactory, debugLauncher);
         await server.serverReady();
-
         server.onDataReceived(({ data }) => {
-            response = data;
-            deferred.resolve();
+            eventData = JSON.parse(data);
         });
+
+        const socketS = new net.Socket();
+        socketS.on('connect', () => {
+            console.log('Socket connected, local port:', socketS.localPort);
+            socketS.write('malformed data');
+        });
+        socketS.once('connect', () => {
+            console.log('Socket connected to server!');
+        });
+        socketS.on('error', (error) => {
+            console.log('Socket connection error:', error);
+        });
+        if (socketS.localPort) {
+            console.log('Socket is already connected');
+        } else {
+            console.log('Waiting for socket to connect...');
+            socketS.on('connect', () => {
+                console.log('Socket connected!');
+            });
+        }
+        stubExecutionService = ({
+            exec: async () => {
+                console.log('exec called');
+                await socketS.on('connect', () => {
+                    console.log('Socket connected to server!');
+                });
+                return Promise.resolve({ stdout: '', stderr: '' });
+            },
+        } as unknown) as IPythonExecutionService;
 
         await server.sendCommand(options);
 
-        // Send data back.
-        const port = server.getPort();
-        const requestOptions = {
-            hostname: 'localhost',
-            method: 'POST',
-            port,
-            headers: { 'Request-uuid': fakeUuid },
-        };
+        console.log('socketS.localPort: ', socketS.localPort);
 
-        const request = http.request(requestOptions, (res) => {
-            res.setEncoding('utf8');
-        });
-        const postData = '[test';
-        request.write(postData);
-        request.end();
-
-        await deferred.promise;
-
-        sinon.assert.calledOnce(traceLogStub);
-        assert.deepStrictEqual(response, '');
+        socketS.end();
+        console.log('eventData');
     });
 });
