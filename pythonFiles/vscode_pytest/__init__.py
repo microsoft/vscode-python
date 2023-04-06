@@ -178,7 +178,7 @@ def pytest_sessionfinish(session, exitstatus):
         if not session_node:
             raise VSCodePytestError(
                 "Something went wrong following pytest finish, \
-                    no session node was created."
+                    no session node was created"
             )
         post_response(os.fsdecode(cwd), session_node, ERRORS)
     except Exception as e:
