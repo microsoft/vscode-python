@@ -36,7 +36,6 @@ import {
     ITestExecutionAdapter,
 } from './common/types';
 import { fixLogLines } from './common/utils';
-import { IPythonExecutionFactory } from '../../common/process/types';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.

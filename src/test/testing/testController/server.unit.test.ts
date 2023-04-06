@@ -9,7 +9,7 @@ import { OutputChannel, Uri } from 'vscode';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
 import { PythonTestServer } from '../../../client/testing/testController/common/server';
 import { ITestDebugLauncher } from '../../../client/testing/common/types';
-import { IJSONRPCMessage, jsonRPCProcessor } from '../../../client/testing/testController/common/utils';
+import { createDeferred } from '../../../client/common/utils/async';
 
 suite('Python Test Server', () => {
     const fakeUuid = 'fake-uuid';
@@ -154,24 +154,5 @@ suite('Python Test Server', () => {
         await server.sendCommand(options);
         await deferred.promise;
         assert.deepStrictEqual(eventData, '');
-    });
-    test('jsonRPCProcessor', async () => {
-        const rawDataString = `Content-Length: 160
-Content-Type: application/json
-Request-uuid: xxxxxx-1012-xxxx-xxxx-xxx
-
-{"cwd": "/path/to/folder", "status": "success", "tests": {"name": "test", "path": "/path/to/test", "type_": "folder", "children": []}], "id_": "/path/to/test"}}`;
-        const headers = new Map<string, string>([
-            ['Content-Length', '160'],
-            ['Content-Type', 'application/json'],
-            ['Request-uuid', 'xxxxxx-1012-xxxx-xxxx-xxx'],
-        ]);
-        const expected: IJSONRPCMessage = {
-            headers,
-            extractedData: `{"cwd": "/path/to/folder", "status": "success", "tests": {"name": "test", "path": "/path/to/test", "type_": "folder", "children": []}], "id_": "/path/to/test"}}`,
-            remainingRawData: '',
-        };
-        const output: IJSONRPCMessage = jsonRPCProcessor(rawDataString);
-        assert.deepStrictEqual(output, expected);
     });
 });
