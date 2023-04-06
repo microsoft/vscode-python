@@ -56,8 +56,8 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
         // Send the test command to the server.
         // The server will fire an onDataReceived event once it gets a response.
-
         this.testServer.sendCommand(options);
+
         return deferred.promise;
     }
 }

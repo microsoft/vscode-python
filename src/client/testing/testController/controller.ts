@@ -245,8 +245,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 // ** Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
                 // uncomment ~248 - 258 to NEW new test discovery mechanism
-                const workspace = this.workspaceService.getWorkspaceFolder(uri);
-                traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
+                // const workspace = this.workspaceService.getWorkspaceFolder(uri);
+                // traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
                 // const testAdapter =
                 //     this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
                 // testAdapter.discoverTests(
