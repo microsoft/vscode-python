@@ -11,7 +11,7 @@ import socket
 import subprocess
 import sys
 import uuid
-from typing import Dict, List, Union
+from typing import List, Union
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 from typing_extensions import TypedDict
