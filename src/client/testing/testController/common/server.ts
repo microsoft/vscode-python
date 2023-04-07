@@ -18,15 +18,13 @@ import { jsonRPCHeaders, jsonRPCContent, JSONRPC_UUID_HEADER } from './utils';
 export class PythonTestServer implements ITestServer, Disposable {
     private _onDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
 
-    private uuids: Map<string, string>;
+    private uuids: Array<string> = [];
 
     private server: net.Server;
 
     private ready: Promise<void>;
 
     constructor(private executionFactory: IPythonExecutionFactory, private debugLauncher: ITestDebugLauncher) {
-        this.uuids = new Map();
-
         this.server = net.createServer((socket: net.Socket) => {
             socket.on('data', (data: Buffer) => {
                 try {
@@ -36,14 +34,11 @@ export class PythonTestServer implements ITestServer, Disposable {
                         const rpcHeaders = jsonRPCHeaders(rawData);
                         const uuid = rpcHeaders.headers.get(JSONRPC_UUID_HEADER);
                         rawData = rpcHeaders.remainingRawData;
-                        if (uuid) {
+                        if (uuid && this.uuids.includes(uuid)) {
                             const rpcContent = jsonRPCContent(rpcHeaders.headers, rawData);
                             rawData = rpcContent.remainingRawData;
-                            const cwd = this.uuids.get(uuid);
-                            if (cwd) {
-                                this._onDataReceived.fire({ uuid, data: rpcContent.extractedJSON });
-                                this.uuids.delete(uuid);
-                            }
+                            this._onDataReceived.fire({ uuid, data: rpcContent.extractedJSON });
+                            this.uuids = this.uuids.filter((u) => u !== uuid);
                         } else {
                             traceLog(`Error processing test server request: uuid not found`);
                             this._onDataReceived.fire({ uuid: '', data: '' });
@@ -83,9 +78,9 @@ export class PythonTestServer implements ITestServer, Disposable {
         return (this.server.address() as net.AddressInfo).port;
     }
 
-    public createUUID(cwd: string): string {
+    public createUUID(): string {
         const uuid = crypto.randomUUID();
-        this.uuids.set(uuid, cwd);
+        this.uuids.push(uuid);
         return uuid;
     }
 
@@ -152,7 +147,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                 await execService.exec(args, spawnOptions);
             }
         } catch (ex) {
-            this.uuids.delete(uuid);
+            this.uuids = this.uuids.filter((u) => u !== uuid);
             this._onDataReceived.fire({
                 uuid,
                 data: JSON.stringify({
