@@ -87,20 +87,11 @@ def test_single_ids_run() -> None:
     assert all(item in actual for item in ("cwd", "status"))
     assert actual["status"] == "success"
     assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    if "result" in actual:
-        result = actual["result"]
-        assert len(result) == 1
-        if id in result:
-            id_result = result[id]
-            assert id_result is not None
-            if "outcome" in id_result and id_result["outcome"] == "success":
-                # success
-                pass
-            else:
-                raise AssertionError(
-                    "actual['result'][{}]['outcome'] is not 'success'".format(id)
-                )
-        else:
-            raise AssertionError("id not in actual['result']")
-    else:
-        raise AssertionError("actual['result'] is not present")
+    assert "result" in actual
+    result = actual["result"]
+    assert len(result) == 1
+    assert id in result
+    id_result = result[id]
+    assert id_result is not None
+    assert "outcome" in id_result
+    assert id_result["outcome"] == "success"
