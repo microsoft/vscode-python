@@ -9,7 +9,7 @@ import sys
 import traceback
 import unittest
 from types import TracebackType
-from typing import Dict, List, Optional, Tuple, Type, TypeAlias, TypedDict
+from typing import Dict, List, Optional, Tuple, Type, Union
 
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -17,13 +17,15 @@ sys.path.insert(0, PYTHON_FILES)
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
 from testing_tools import socket_manager
-from typing_extensions import NotRequired
+from typing_extensions import NotRequired, TypeAlias, TypedDict
 from unittestadapter.utils import parse_unittest_args
 
 DEFAULT_PORT = "45454"
 
 
-def parse_execution_cli_args(args: List[str]) -> Tuple[int, str | None, List[str]]:
+def parse_execution_cli_args(
+    args: List[str],
+) -> Tuple[int, Union[str, None], List[str]]:
     """Parse command-line arguments that should be processed by the script.
 
     So far this includes the port number that it needs to connect to, the uuid passed by the TS side,
@@ -43,9 +45,9 @@ def parse_execution_cli_args(args: List[str]) -> Tuple[int, str | None, List[str
     return (int(parsed_args.port), parsed_args.uuid, parsed_args.testids)
 
 
-ErrorType = (
-    Tuple[Type[BaseException], BaseException, TracebackType] | Tuple[None, None, None]
-)
+ErrorType = Union[
+    Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]
+]
 
 
 class TestOutcomeEnum(str, enum.Enum):
@@ -60,7 +62,7 @@ class TestOutcomeEnum(str, enum.Enum):
 
 
 class UnittestTestResult(unittest.TextTestResult):
-    formatted: Dict[str, Dict[str, str | None]] = dict()
+    formatted: Dict[str, Dict[str, Union[str, None]]] = dict()
 
     def startTest(self, test: unittest.TestCase):
         super(UnittestTestResult, self).startTest(test)
@@ -98,7 +100,10 @@ class UnittestTestResult(unittest.TextTestResult):
         self.formatResult(test, TestOutcomeEnum.unexpected_success)
 
     def addSubTest(
-        self, test: unittest.TestCase, subtest: unittest.TestCase, err: ErrorType | None
+        self,
+        test: unittest.TestCase,
+        subtest: unittest.TestCase,
+        err: Union[ErrorType, None],
     ):
         super(UnittestTestResult, self).addSubTest(test, subtest, err)
         self.formatResult(
@@ -112,8 +117,8 @@ class UnittestTestResult(unittest.TextTestResult):
         self,
         test: unittest.TestCase,
         outcome: str,
-        error: ErrorType | None = None,
-        subtest: unittest.TestCase | None = None,
+        error: Union[ErrorType, None] = None,
+        subtest: Union[unittest.TestCase, None] = None,
     ):
         tb = None
         if error and error[2] is not None:
@@ -141,7 +146,7 @@ class TestExecutionStatus(str, enum.Enum):
     success = "success"
 
 
-TestResultTypeAlias: TypeAlias = Dict[str, Dict[str, str | None]]
+TestResultTypeAlias: TypeAlias = Dict[str, Dict[str, Union[str, None]]]
 
 
 class PayloadDict(TypedDict):
