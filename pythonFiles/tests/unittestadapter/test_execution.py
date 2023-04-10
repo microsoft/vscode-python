@@ -161,11 +161,11 @@ def test_multiple_ids_run(test_ids, pattern, cwd, expected_outcome) -> None:
     """
     The following are all successful tests of different formats.
 
-    # 1. Two tests with the `pattern` as specific file
-        # 2. Two test files in the same folder `unittest_folder`
-        # 3. Folder with two different file patterns, this test gathers pattern `*test`
-        # 4. Folder with two different file patterns, this test gathers pattern `test_*`
-        # 5. Test file on the same level as a folder with a test file
+    # 1. Two tests with the `pattern` specified as a file
+        # 2. Two test files in the same folder called `unittest_folder`
+        # 3. A folder with two different test file patterns, this test gathers pattern `*test`
+        # 4. A folder with two different test file patterns, this test gathers pattern `test_*`
+        # 5. A nested structure where a test file is on the same level as a folder containing a test file
         # 6. Test file with two test classes
 
     All tests should have the outcome of `success`.
