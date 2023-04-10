@@ -4,8 +4,7 @@
 from typing import List
 
 import pytest
-
-from pythonFiles.unittestadapter.execution import parse_execution_cli_args, run_tests
+from unittestadapter.execution import parse_execution_cli_args, run_tests
 
 TEST_DATA_FOLDER_PATH = 'pythonFiles/tests/unittestadapter/.data'
 
