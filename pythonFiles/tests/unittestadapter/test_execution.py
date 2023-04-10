@@ -77,7 +77,9 @@ def test_single_ids_run() -> None:
     This single test passes so the outcome should be 'success'.
     """
     id = "discovery_simple.DiscoverySimple.test_one"
-    actual = run_tests(os.fspath(TEST_DATA_PATH), [id], "discovery_simple*", None, "fake-uuid")
+    actual = run_tests(
+        os.fspath(TEST_DATA_PATH), [id], "discovery_simple*", None, "fake-uuid"
+    )
     assert actual
     assert all(item in actual for item in ("cwd", "status"))
     assert actual["status"] == "success"
