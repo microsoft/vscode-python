@@ -206,10 +206,10 @@ def run_tests(
 
     if error is not None:
         payload["error"] = error
+    else:
+        status = TestExecutionStatus.success
 
     payload["status"] = status
-
-    # print(f"payload: \n{json.dumps(payload, indent=4)}")
 
     return payload
 
