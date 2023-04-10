@@ -6,21 +6,38 @@ from typing import List
 import pytest
 from unittestadapter.execution import parse_execution_cli_args, run_tests
 
-TEST_DATA_FOLDER_PATH = 'pythonFiles/tests/unittestadapter/.data'
+TEST_DATA_FOLDER_PATH = "pythonFiles/tests/unittestadapter/.data"
+
 
 @pytest.mark.parametrize(
     "args, expected",
     [
         (
-            ['--port', '111', '--uuid', 'fake-uuid', '--testids', 'test_file.test_class.test_method'],
+            [
+                "--port",
+                "111",
+                "--uuid",
+                "fake-uuid",
+                "--testids",
+                "test_file.test_class.test_method",
+            ],
             (111, "fake-uuid", ["test_file.test_class.test_method"]),
         ),
         (
-            ['--port', '111', '--uuid', 'fake-uuid', '--testids', ''],
+            ["--port", "111", "--uuid", "fake-uuid", "--testids", ""],
             (111, "fake-uuid", [""]),
         ),
         (
-            ['--port', '111', '--uuid', 'fake-uuid', '--testids', 'test_file.test_class.test_method', '-v', '-s'],
+            [
+                "--port",
+                "111",
+                "--uuid",
+                "fake-uuid",
+                "--testids",
+                "test_file.test_class.test_method",
+                "-v",
+                "-s",
+            ],
             (111, "fake-uuid", ["test_file.test_class.test_method"]),
         ),
     ],
@@ -33,38 +50,61 @@ def test_parse_execution_cli_args(args: List[str], expected: List[str]) -> None:
     assert actual == expected
 
 
-
 def test_no_ids_run() -> None:
     """This test runs on an empty array of test_ids, therefore it should return
     an empty dict for the result.
     """
     start_dir = TEST_DATA_FOLDER_PATH
     testids = []
-    pattern = 'discovery_simple*'
-    actual = run_tests(start_dir, testids, pattern, None, 'fake-uuid')
+    pattern = "discovery_simple*"
+    actual = run_tests(start_dir, testids, pattern, None, "fake-uuid")
     assert actual
-    assert all(item in actual for item in ("cwd", "status", "result"))
+    assert all(item in actual for item in ("cwd", "status"))
     assert actual["status"] == "success"
-    assert actual["cwd"] == '/Users/eleanorboyd/vscode-python/pythonFiles/tests/unittestadapter/.data'
-    assert len(actual["result"]) == 0
+    assert (
+        actual["cwd"]
+        == "/Users/eleanorboyd/vscode-python/pythonFiles/tests/unittestadapter/.data"
+    )
+    if "result" in actual:
+        assert len(actual["result"]) == 0
+    else:
+        raise AssertionError("actual['result'] is None")
+
 
 def test_single_ids_run() -> None:
     """This test runs on a single test_id, therefore it should return
-    a dict with a single key-value pair for the result. 
-    
+    a dict with a single key-value pair for the result.
+
     This single test passes so the outcome should be 'success'.
     """
     start_dir = TEST_DATA_FOLDER_PATH
-    id = 'discovery_simple.DiscoverySimple.test_one'
+    id = "discovery_simple.DiscoverySimple.test_one"
     testids = [id]
-    pattern = 'discovery_simple*'
+    pattern = "discovery_simple*"
     top_level_dir = None
-    uuid = 'fake-uuid'
+    uuid = "fake-uuid"
     actual = run_tests(start_dir, testids, pattern, top_level_dir, uuid)
     assert actual
-    assert all(item in actual for item in ("cwd", "status", "result"))
+    assert all(item in actual for item in ("cwd", "status"))
     assert actual["status"] == "success"
-    assert actual["cwd"] == '/Users/eleanorboyd/vscode-python/pythonFiles/tests/unittestadapter/.data'
-    assert len(actual["result"]) == 1
-    assert actual["result"][id]
-    assert actual["result"][id]['outcome'] == 'success'
+    assert (
+        actual["cwd"]
+        == "/Users/eleanorboyd/vscode-python/pythonFiles/tests/unittestadapter/.data"
+    )
+    if "result" in actual:
+        result = actual["result"]
+        assert len(result) == 1
+        if id in result:
+            id_result = result[id]
+            assert id_result is not None
+            if "outcome" in id_result and id_result["outcome"] == "success":
+                # success
+                pass
+            else:
+                raise AssertionError(
+                    "actual['result'][{}]['outcome'] is not 'success'".format(id)
+                )
+        else:
+            raise AssertionError("id not in actual['result']")
+    else:
+        raise AssertionError("actual['result'] is not present")

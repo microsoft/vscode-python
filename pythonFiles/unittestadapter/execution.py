@@ -210,7 +210,7 @@ def run_tests(
         status = TestExecutionStatus.success
 
     payload["status"] = status
-    
+
     return payload
 
 
