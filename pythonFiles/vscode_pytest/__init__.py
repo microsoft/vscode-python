@@ -195,9 +195,9 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     session -- the pytest session object.
     """
     session_node = create_session_node(session)
-    session_children_dict: dict[str, TestNode] = {}
-    file_nodes_dict: dict[Any, TestNode] = {}
-    class_nodes_dict: dict[str, TestNode] = {}
+    session_children_dict: Dict[str, TestNode] = {}
+    file_nodes_dict: Dict[Any, TestNode] = {}
+    class_nodes_dict: Dict[str, TestNode] = {}
 
     for test_case in session.items:
         test_node = create_test_node(test_case)
@@ -229,7 +229,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 parent_test_case = create_file_node(test_case.parent)
                 file_nodes_dict[test_case.parent] = parent_test_case
             parent_test_case["children"].append(test_node)
-    created_files_folders_dict: dict[str, TestNode] = {}
+    created_files_folders_dict: Dict[str, TestNode] = {}
     for file_module, file_node in file_nodes_dict.items():
         # Iterate through all the files that exist and construct them into nested folders.
         root_folder_node: TestNode = build_nested_folders(
@@ -247,7 +247,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
 def build_nested_folders(
     file_module: Any,
     file_node: TestNode,
-    created_files_folders_dict: dict[str, TestNode],
+    created_files_folders_dict: Dict[str, TestNode],
     session: pytest.Session,
 ) -> TestNode:
     """Takes a file or folder and builds the nested folder structure for it.
@@ -258,12 +258,12 @@ def build_nested_folders(
     created_files_folders_dict -- Dictionary of all the folders and files that have been created.
     session -- the pytest session object.
     """
-    prev_folder_node: TestNode = file_node
+    prev_folder_node = file_node
 
     # Begin the iterator_path one level above the current file.
     iterator_path = file_module.path.parent
     while iterator_path != session.path:
-        curr_folder_name: str = iterator_path.name
+        curr_folder_name = iterator_path.name
         try:
             curr_folder_node: TestNode = created_files_folders_dict[curr_folder_name]
         except KeyError:
@@ -366,7 +366,7 @@ class PayloadDict(TypedDict):
     cwd: str
     status: Literal["success", "error"]
     tests: Optional[TestNode]
-    errors: Optional[list[str]]
+    errors: Optional[List[str]]
 
 
 def post_response(cwd: str, session_node: TestNode) -> None:
