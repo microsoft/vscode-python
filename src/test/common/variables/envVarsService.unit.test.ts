@@ -10,17 +10,16 @@ import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IPathUtils } from '../../../client/common/types';
 import { EnvironmentVariablesService, parseEnvFile } from '../../../client/common/variables/environment';
+import { getSearchPathEnvVarNames } from '../../../client/common/utils/exec';
 
 use(chaiAsPromised);
 
 type PathVar = 'Path' | 'PATH';
-const PATHS = [
-    'Path', // Windows
-    'PATH', // non-Windows
-];
+const PATHS = getSearchPathEnvVarNames();
 
-suite('Environment Variables Service', () => {
+suite('xEnvironment Variables Service', () => {
     const filename = 'x/y/z/.env';
+    const processEnvPath = getSearchPathEnvVarNames()[0];
     let pathUtils: TypeMoq.IMock<IPathUtils>;
     let fs: TypeMoq.IMock<IFileSystem>;
     let variablesService: EnvironmentVariablesService;
@@ -208,7 +207,7 @@ PYTHON=${BINDIR}/python3\n\
                 expect(vars2).to.have.property('TWO', 'TWO', 'Incorrect value');
                 expect(vars2).to.have.property('THREE', '3', 'Variable not merged');
                 expect(vars2).to.have.property('PYTHONPATH', 'PYTHONPATH', 'Incorrect value');
-                expect(vars2).to.have.property(pathVariable, 'PATH', 'Incorrect value');
+                expect(vars2).to.have.property(processEnvPath, 'PATH', 'Incorrect value');
                 verifyAll();
             });
 
@@ -226,7 +225,7 @@ PYTHON=${BINDIR}/python3\n\
                 expect(target).to.have.property('TWO', 'TWO', 'Incorrect value');
                 expect(target).to.have.property('THREE', '3', 'Variable not merged');
                 expect(target).to.have.property('PYTHONPATH', 'PYTHONPATH', 'Incorrect value');
-                expect(target).to.have.property(pathVariable, 'PATH', 'Incorrect value');
+                expect(target).to.have.property(processEnvPath, 'PATH', 'Incorrect value');
                 verifyAll();
             });
         });
@@ -266,17 +265,17 @@ PYTHON=${BINDIR}/python3\n\
                 variablesService.appendPath(vars);
                 expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
                 expect(vars).to.have.property('ONE', '1', 'Incorrect value');
-                expect(vars).to.have.property(pathVariable, 'PATH', 'Incorrect value');
+                expect(vars).to.have.property(processEnvPath, 'PATH', 'Incorrect value');
 
                 variablesService.appendPath(vars, '');
                 expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
                 expect(vars).to.have.property('ONE', '1', 'Incorrect value');
-                expect(vars).to.have.property(pathVariable, 'PATH', 'Incorrect value');
+                expect(vars).to.have.property(processEnvPath, 'PATH', 'Incorrect value');
 
                 variablesService.appendPath(vars, ' ', '');
                 expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
                 expect(vars).to.have.property('ONE', '1', 'Incorrect value');
-                expect(vars).to.have.property(pathVariable, 'PATH', 'Incorrect value');
+                expect(vars).to.have.property(processEnvPath, 'PATH', 'Incorrect value');
 
                 verifyAll();
             });
@@ -291,7 +290,11 @@ PYTHON=${BINDIR}/python3\n\
 
                 expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
                 expect(vars).to.have.property('ONE', '1', 'Incorrect value');
-                expect(vars).to.have.property(pathVariable, `PATH${path.delimiter}${pathToAppend}`, 'Incorrect value');
+                expect(vars).to.have.property(
+                    processEnvPath,
+                    `PATH${path.delimiter}${pathToAppend}`,
+                    'Incorrect value',
+                );
                 verifyAll();
             });
         });

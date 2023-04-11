@@ -10,6 +10,7 @@ import { EventName } from '../../telemetry/constants';
 import { IFileSystem } from '../platform/types';
 import { IPathUtils } from '../types';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
+import { normCase } from '../platform/fs-paths';
 
 @injectable()
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
@@ -61,6 +62,9 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         if (!target) {
             return;
         }
+        const reference = target;
+        target = normCaseKeys(target);
+        source = normCaseKeys(source);
         const settingsNotToMerge = ['PYTHONPATH', this.pathVariable];
         Object.keys(source).forEach((setting) => {
             if (settingsNotToMerge.indexOf(setting) >= 0) {
@@ -70,6 +74,8 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
                 target[setting] = source[setting];
             }
         });
+        restoreKeys(target);
+        matchTarget(reference, target);
     }
 
     public appendPythonPath(vars: EnvironmentVariables, ...pythonPaths: string[]) {
@@ -80,18 +86,24 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         return this.appendPaths(vars, this.pathVariable, ...paths);
     }
 
-    private get pathVariable(): 'Path' | 'PATH' {
+    private get pathVariable(): string {
         if (!this._pathVariable) {
             this._pathVariable = this.pathUtils.getPathVariableName();
         }
-        return this._pathVariable!;
+        return normCase(this._pathVariable)!;
     }
 
-    private appendPaths(
-        vars: EnvironmentVariables,
-        variableName: 'PATH' | 'Path' | 'PYTHONPATH',
-        ...pathsToAppend: string[]
-    ) {
+    private appendPaths(vars: EnvironmentVariables, variableName: string, ...pathsToAppend: string[]) {
+        const reference = vars;
+        vars = normCaseKeys(vars);
+        variableName = normCase(variableName);
+        vars = this._appendPaths(vars, variableName, ...pathsToAppend);
+        restoreKeys(vars);
+        matchTarget(reference, vars);
+        return vars;
+    }
+
+    private _appendPaths(vars: EnvironmentVariables, variableName: string, ...pathsToAppend: string[]) {
         const valueToAppend = pathsToAppend
             .filter((item) => typeof item === 'string' && item.trim().length > 0)
             .map((item) => item.trim())
@@ -182,4 +194,41 @@ function substituteEnvVars(
     }
 
     return value.replace(/\\\$/g, '$');
+}
+
+export function normCaseKeys(env: EnvironmentVariables): EnvironmentVariables {
+    const normalizedEnv: EnvironmentVariables = {};
+    Object.keys(env).forEach((key) => {
+        const normalizedKey = normCase(key);
+        normalizedEnv[normalizedKey] = env[key];
+    });
+    return normalizedEnv;
+}
+
+export function restoreKeys(env: EnvironmentVariables) {
+    const processEnvKeys = Object.keys(process.env);
+    processEnvKeys.forEach((processEnvKey) => {
+        const originalKey = normCase(processEnvKey);
+        if (originalKey !== processEnvKey && env[originalKey] !== undefined) {
+            env[processEnvKey] = env[originalKey];
+            delete env[originalKey];
+        }
+    });
+}
+
+export function matchTarget(reference: EnvironmentVariables, target: EnvironmentVariables): void {
+    Object.keys(reference).forEach((key) => {
+        if (target.hasOwnProperty(key)) {
+            reference[key] = target[key];
+        } else {
+            delete reference[key];
+        }
+    });
+
+    // Add any new keys from target to reference
+    Object.keys(target).forEach((key) => {
+        if (!reference.hasOwnProperty(key)) {
+            reference[key] = target[key];
+        }
+    });
 }

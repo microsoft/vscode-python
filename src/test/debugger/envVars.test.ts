@@ -15,6 +15,7 @@ import { ConsoleType, LaunchRequestArguments } from '../../client/debugger/types
 import { isOs, OSType } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
+import { normCase } from '../../client/common/platform/fs-paths';
 
 use(chaiAsPromised);
 
@@ -109,9 +110,9 @@ suite('Resolving Environment Variables when Debugging', () => {
     });
 
     async function testJsonEnvVariables(console: ConsoleType, expectedNumberOfVariables: number) {
-        const prop1 = shortid.generate();
-        const prop2 = shortid.generate();
-        const prop3 = shortid.generate();
+        const prop1 = normCase(shortid.generate());
+        const prop2 = normCase(shortid.generate());
+        const prop3 = normCase(shortid.generate());
         const env: Record<string, string> = {};
         env[prop1] = prop1;
         env[prop2] = prop2;

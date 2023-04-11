@@ -48,7 +48,10 @@ export class DebugEnvironmentVariablesHelper implements IDebugEnvironmentVariabl
         }
 
         // Append the PYTHONPATH and PATH variables.
-        this.envParser.appendPath(env, debugLaunchEnvVars[pathVariableName]);
+        this.envParser.appendPath(
+            env,
+            debugLaunchEnvVars[pathVariableName] ?? debugLaunchEnvVars[pathVariableName.toUpperCase()],
+        );
         this.envParser.appendPythonPath(env, debugLaunchEnvVars.PYTHONPATH);
 
         if (typeof env[pathVariableName] === 'string' && env[pathVariableName]!.length > 0) {
