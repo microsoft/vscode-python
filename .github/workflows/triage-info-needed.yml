@@ -14,8 +14,6 @@ jobs:
     env:
       KEYWORDS: '["\\?", "please", "kindly", "let me know", "try", "can you", "could you", "would you", "may I", "provide", "let us know", "tell me", "give me", "send me", "what", "when", "where", "why", "how"]'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
       - name: Check for author
         uses: actions/github-script@v6
         with:
@@ -48,8 +46,6 @@ jobs:
     if: contains(github.event.issue.labels.*.name, 'info-needed') && contains(github.event.issue.labels.*.name, 'triage-needed')
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
       - name: Check for author
         uses: actions/github-script@v6
         with:
