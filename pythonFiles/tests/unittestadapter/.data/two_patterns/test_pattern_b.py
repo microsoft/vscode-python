@@ -2,13 +2,11 @@
 # Licensed under the MIT License.
 import unittest
 
+# Test class for the two file pattern test. This file is pattern test*.py.
+# The test_ids_multiple_runs function should return a dictionary with a "success" status,
+# and the two tests with their outcome as "success".
 
 class DiscoveryB(unittest.TestCase):
-    """Test class for the two file pattern test. This file is pattern test*.py.
-
-    The test_ids_multiple_runs function should return a dictionary with a "success" status,
-    and the two tests with their outcome as "success".
-    """
 
     def test_one_b(self) -> None:
         self.assertGreater(2, 1)

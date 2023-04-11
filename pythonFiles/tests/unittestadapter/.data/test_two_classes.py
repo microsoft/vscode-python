@@ -4,8 +4,7 @@
 import unittest
 
 # Test class which runs for the test_multiple_ids_run test with the two class parameters.
-
-# Both test functions will be returned in a dictionary with a "success" status 
+# Both test functions will be returned in a dictionary with a "success" status,
 # and the two tests with their outcome as "success".
 
 

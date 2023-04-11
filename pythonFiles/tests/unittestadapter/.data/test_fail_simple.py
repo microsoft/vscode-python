@@ -3,6 +3,9 @@
 
 import unittest
 
+# Test class for the test_fail_simple test.
+# The test_failed_tests function should return a dictionary with a "success" status
+# and the two tests with their outcome as "failed".
 
 class RunFailSimple(unittest.TestCase):
     """Test class for the test_fail_simple test.
