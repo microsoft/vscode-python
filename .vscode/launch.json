@@ -255,7 +255,8 @@
             "justMyCode": true
         },
         {
-            "name": "Pytest Module",
+            "name": "Debug pytest plugin tests",
+
             "type": "python",
             "request": "launch",
             "module": "pytest",
