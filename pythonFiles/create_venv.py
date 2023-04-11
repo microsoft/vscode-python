@@ -160,6 +160,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     use_micro_venv = False
     venv_installed = is_installed("venv")
     pip_installed = is_installed("pip")
+    ensure_pip_installed = is_installed("ensurepip")
 
     if not venv_installed:
         if sys.platform == "win32":
@@ -184,9 +185,9 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
                 ],
                 "CREATE_VENV.MICROVENV_FAILED_CREATION",
             )
-        elif not pip_installed:
-            # `venv` was found but `pip` was not found. We create a venv without
-            # `pip` in it. We will later install `pip`
+        elif not pip_installed or not ensure_pip_installed:
+            # `venv` was found but `pip` or `ensurepip` was not found.
+            # We create a venv without `pip` in it. We will later install `pip`.
             run_process(
                 [sys.executable, "-m", "venv", "--without-pip", args.name],
                 "CREATE_VENV.VENV_FAILED_CREATION",
@@ -205,7 +206,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             add_gitignore(args.name)
 
     # At this point we have a .venv. Now we handle installing `pip`.
-    if pip_installed:
+    if pip_installed and ensure_pip_installed:
         # We upgrade pip if it is already installed.
         upgrade_pip(venv_path)
     else:
