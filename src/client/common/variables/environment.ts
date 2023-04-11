@@ -97,6 +97,13 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         const reference = vars;
         vars = normCaseKeys(vars);
         variableName = normCase(variableName);
+        vars = this._appendPaths(vars, variableName, ...pathsToAppend);
+        restoreKeys(vars);
+        matchTarget(reference, vars);
+        return vars;
+    }
+
+    private _appendPaths(vars: EnvironmentVariables, variableName: string, ...pathsToAppend: string[]) {
         const valueToAppend = pathsToAppend
             .filter((item) => typeof item === 'string' && item.trim().length > 0)
             .map((item) => item.trim())
@@ -111,9 +118,6 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         } else {
             vars[variableName] = valueToAppend;
         }
-        restoreKeys(vars);
-
-        matchTarget(reference, vars);
         return vars;
     }
 }
