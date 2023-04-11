@@ -25,10 +25,10 @@ const CREATING_MICROVENV_MARKER = 'CREATE_MICROVENV.CREATING_MICROVENV';
 const CREATE_MICROVENV_FAILED_MARKER = 'CREATE_VENV.MICROVENV_FAILED_CREATION';
 const CREATE_MICROVENV_FAILED_MARKER2 = 'CREATE_MICROVENV.MICROVENV_FAILED_CREATION';
 const MICROVENV_CREATED_MARKER = 'CREATE_MICROVENV.CREATED_MICROVENV';
-const INSTALLING_PIP_MARKER = 'CREATE_MICROVENV.INSTALLING_PIP';
-const INSTALL_PIP_FAILED_MARKER = 'CREATE_MICROVENV.INSTALL_PIP_FAILED';
-const DOWNLOADING_PIP_MARKER = 'CREATE_MICROVENV.DOWNLOADING_PIP';
-const DOWNLOAD_PIP_FAILED_MARKER = 'CREATE_MICROVENV.DOWNLOAD_PIP_FAILED';
+const INSTALLING_PIP_MARKER = 'CREATE_VENV.INSTALLING_PIP';
+const INSTALL_PIP_FAILED_MARKER = 'CREATE_VENV.INSTALL_PIP_FAILED';
+const DOWNLOADING_PIP_MARKER = 'CREATE_VENV.DOWNLOADING_PIP';
+const DOWNLOAD_PIP_FAILED_MARKER = 'CREATE_VENV.DOWNLOAD_PIP_FAILED';
 
 export class VenvProgressAndTelemetry {
     private readonly processed = new Set<string>();
@@ -266,7 +266,7 @@ export class VenvProgressAndTelemetry {
             (progress: CreateEnvironmentProgress) => {
                 progress.report({ message: CreateEnv.Venv.upgradingPip });
                 sendTelemetryEvent(EventName.ENVIRONMENT_INSTALLING_PACKAGES, undefined, {
-                    environmentType: 'microvenv',
+                    environmentType: 'venv',
                     using: 'pipUpgrade',
                 });
                 return undefined;
