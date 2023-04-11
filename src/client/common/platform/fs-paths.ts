@@ -145,7 +145,11 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
 }
 
 export function normCasePath(filePath: string): string {
-    return getOSType() === OSType.Windows ? nodepath.normalize(filePath).toUpperCase() : nodepath.normalize(filePath);
+    return normCase(nodepath.normalize(filePath));
+}
+
+export function normCase(s: string): string {
+    return getOSType() === OSType.Windows ? s.toUpperCase() : s;
 }
 
 /**
