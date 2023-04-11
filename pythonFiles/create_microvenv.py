@@ -6,7 +6,6 @@ import os
 import pathlib
 import subprocess
 import sys
-import urllib.request as url_lib
 from typing import Optional, Sequence
 
 VENV_NAME = ".venv"
@@ -30,13 +29,6 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--install-pip",
-        action="store_true",
-        default=False,
-        help="Install pip into the virtual environment.",
-    )
-
-    parser.add_argument(
         "--name",
         default=VENV_NAME,
         type=str,
@@ -54,31 +46,6 @@ def create_microvenv(name: str):
     )
 
 
-def download_pip_pyz(name: str):
-    url = "https://bootstrap.pypa.io/pip/pip.pyz"
-    print("CREATE_MICROVENV.DOWNLOADING_PIP")
-
-    try:
-        with url_lib.urlopen(url) as response:
-            pip_pyz_path = os.fspath(CWD / name / "pip.pyz")
-            with open(pip_pyz_path, "wb") as out_file:
-                data = response.read()
-                out_file.write(data)
-                out_file.flush()
-    except Exception:
-        raise MicroVenvError("CREATE_MICROVENV.DOWNLOAD_PIP_FAILED")
-
-
-def install_pip(name: str):
-    pip_pyz_path = os.fspath(CWD / name / "pip.pyz")
-    executable = os.fspath(CWD / name / "bin" / "python")
-    print("CREATE_MICROVENV.INSTALLING_PIP")
-    run_process(
-        [executable, pip_pyz_path, "install", "pip"],
-        "CREATE_MICROVENV.INSTALL_PIP_FAILED",
-    )
-
-
 def main(argv: Optional[Sequence[str]] = None) -> None:
     if argv is None:
         argv = []
@@ -87,10 +54,6 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     print("CREATE_MICROVENV.CREATING_MICROVENV")
     create_microvenv(args.name)
     print("CREATE_MICROVENV.CREATED_MICROVENV")
-
-    if args.install_pip:
-        download_pip_pyz(args.name)
-        install_pip(args.name)
 
 
 if __name__ == "__main__":
