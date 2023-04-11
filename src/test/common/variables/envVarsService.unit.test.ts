@@ -17,7 +17,7 @@ use(chaiAsPromised);
 type PathVar = 'Path' | 'PATH';
 const PATHS = getSearchPathEnvVarNames();
 
-suite('xEnvironment Variables Service', () => {
+suite('Environment Variables Service', () => {
     const filename = 'x/y/z/.env';
     const processEnvPath = getSearchPathEnvVarNames()[0];
     let pathUtils: TypeMoq.IMock<IPathUtils>;
