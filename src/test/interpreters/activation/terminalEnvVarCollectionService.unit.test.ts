@@ -11,7 +11,13 @@ import { EnvironmentVariableCollection, ProgressLocation, Uri } from 'vscode';
 import { IApplicationShell, IApplicationEnvironment } from '../../../client/common/application/types';
 import { TerminalEnvVarActivation } from '../../../client/common/experiments/groups';
 import { IPlatformService } from '../../../client/common/platform/types';
-import { IExtensionContext, IExperimentService, Resource } from '../../../client/common/types';
+import {
+    IExtensionContext,
+    IExperimentService,
+    Resource,
+    IConfigurationService,
+    IPythonSettings,
+} from '../../../client/common/types';
 import { Interpreters } from '../../../client/common/utils/localize';
 import { getOSType } from '../../../client/common/utils/platform';
 import { defaultShells } from '../../../client/interpreter/activation/service';
@@ -57,6 +63,10 @@ suite('Terminal Environment Variable Collection Service', () => {
             })
             .thenResolve();
         environmentActivationService = mock<IEnvironmentActivationService>();
+        const configService = mock<IConfigurationService>();
+        when(configService.getSettings(anything())).thenReturn(({
+            terminal: { activateEnvironment: true },
+        } as unknown) as IPythonSettings);
         terminalEnvVarCollectionService = new TerminalEnvVarCollectionService(
             instance(platform),
             instance(interpreterService),
@@ -66,6 +76,7 @@ suite('Terminal Environment Variable Collection Service', () => {
             instance(applicationEnvironment),
             [],
             instance(environmentActivationService),
+            instance(configService),
         );
     });
 
