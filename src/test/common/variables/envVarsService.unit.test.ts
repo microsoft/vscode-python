@@ -15,10 +15,7 @@ import { getSearchPathEnvVarNames } from '../../../client/common/utils/exec';
 use(chaiAsPromised);
 
 type PathVar = 'Path' | 'PATH';
-const PATHS = [
-    'Path', // Windows
-    'PATH', // non-Windows
-];
+const PATHS = getSearchPathEnvVarNames();
 
 suite('xEnvironment Variables Service', () => {
     const filename = 'x/y/z/.env';
