@@ -44,7 +44,7 @@ export class DebugEnvironmentVariablesHelper implements IDebugEnvironmentVariabl
         // take precedence over env file.
         this.envParser.mergeVariables(debugLaunchEnvVars, env, { overwrite: true });
         if (baseVars) {
-            this.envParser.mergeVariables(baseVars, env);
+            this.envParser.mergeVariables(baseVars, env, { mergeAll: true });
         }
 
         // Append the PYTHONPATH and PATH variables.
