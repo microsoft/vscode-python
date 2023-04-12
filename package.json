@@ -83,24 +83,24 @@
         "walkthroughs": [
             {
                 "id": "pythonWelcome",
-                "title": "Get Started with Python Development",
-                "description": "Your first steps to set up a Python project with all the powerful tools and features that the Python extension has to offer!",
+                "title": "%walkthrough.pythonWelcome.title%",
+                "description": "%walkthrough.pythonWelcome.description%",
                 "when": "workspacePlatform != webworker",
                 "steps": [
                     {
                         "id": "python.createPythonFile",
-                        "title": "Create a Python file",
-                        "description": "[Open](command:toSide:workbench.action.files.openFile) or [create](command:toSide:workbench.action.files.newUntitledFile?%7B%22languageId%22%3A%22python%22%7D) a Python file - make sure to save it as \".py\".\n[Create Python File](command:toSide:workbench.action.files.newUntitledFile?%7B%22languageId%22%3A%22python%22%7D)",
+                        "title": "%walkthrough.step.python.createPythonFile.title%",
+                        "description": "%walkthrough.step.python.createPythonFile.description%",
                         "media": {
                             "svg": "resources/walkthrough/open-folder.svg",
-                            "altText": "Open a Python file or a folder with a Python project."
+                            "altText": "%walkthrough.step.python.createPythonFile.altText%"
                         },
                         "when": ""
                     },
                     {
                         "id": "python.installPythonWin8",
-                        "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python [from python.org](https://www.python.org/downloads).\n\n[Install Python](https://www.python.org/downloads)\n",
+                        "title": "%walkthrough.step.python.installPythonWin8.title%",
+                        "description": "%walkthrough.step.python.installPythonWin8.description%",
                         "media": {
                             "markdown": "resources/walkthrough/install-python-windows-8.md"
                         },
@@ -108,8 +108,8 @@
                     },
                     {
                         "id": "python.installPythonMac",
-                        "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Install Python via Brew](command:python.installPythonOnMac)\n",
+                        "title": "%walkthrough.step.python.installPythonMac.title%",
+                        "description": "%walkthrough.step.python.installPythonMac.description%",
                         "media": {
                             "markdown": "resources/walkthrough/install-python-macos.md"
                         },
@@ -118,8 +118,8 @@
                     },
                     {
                         "id": "python.installPythonLinux",
-                        "title": "Install Python",
-                        "description": "The Python Extension requires Python to be installed. Install Python 3 through the terminal.\n[Install Python via terminal](command:python.installPythonOnLinux)\n",
+                        "title": "%walkthrough.step.python.installPythonLinux.title%",
+                        "description": "%walkthrough.step.python.installPythonLinux.description%",
                         "media": {
                             "markdown": "resources/walkthrough/install-python-linux.md"
                         },
@@ -128,40 +128,40 @@
                     },
                     {
                         "id": "python.selectInterpreter",
-                        "title": "Select a Python Interpreter",
-                        "description": "Choose which Python interpreter/environment you want to use for your Python project.\n[Select Python Interpreter](command:python.setInterpreter)\n**Tip**: Run the ``Python: Select Interpreter`` command in the [Command Palette](command:workbench.action.showCommands).",
+                        "title": "%walkthrough.step.python.selectInterpreter.title%",
+                        "description": "%walkthrough.step.python.selectInterpreter.description%",
                         "media": {
                             "svg": "resources/walkthrough/python-interpreter.svg",
-                            "altText": "Selecting a python interpreter from the status bar"
+                            "altText": "%walkthrough.step.python.selectInterpreter.altText%"
                         },
                         "when": "workspaceFolderCount == 0"
                     },
                     {
                         "id": "python.createEnvironment",
-                        "title": "Create a Python Environment ",
-                        "description": "Create an environment for your Python project.\n[Create Environment](command:python.createEnvironment)\n**Tip**: Run the ``Python: Create Environment`` command in the [Command Palette](command:workbench.action.showCommands).\n 🔍 Check out our [docs](https://aka.ms/pythonenvs) to learn more.",
+                        "title": "%walkthrough.step.python.createEnvironment.title%",
+                        "description": "%walkthrough.step.python.createEnvironment.description%",
                         "media": {
                             "svg": "resources/walkthrough/create-environment.svg",
-                            "altText": "Creating a Python environment from the Command Palette"
+                            "altText": "%walkthrough.step.python.createEnvironment.altText%"
                         },
                         "when": "workspaceFolderCount > 0"
                     },
                     {
                         "id": "python.runAndDebug",
-                        "title": "Run and debug your Python file",
-                        "description": "Open your Python file  and click on the play button on the top right of the editor, or press F5 when on the file and select \"Python File\" to run with the debugger. \n  \n[Learn more](https://code.visualstudio.com/docs/python/python-tutorial#_run-hello-world)",
+                        "title": "%walkthrough.step.python.runAndDebug.title%",
+                        "description": "%walkthrough.step.python.runAndDebug.description%",
                         "media": {
                             "svg": "resources/walkthrough/rundebug2.svg",
-                            "altText": "How to run and debug in VS Code with F5 or the play button on the top right."
+                            "altText": "%walkthrough.step.python.runAndDebug.altText%"
                         },
                         "when": ""
                     },
                     {
                         "id": "python.learnMoreWithDS",
-                        "title": "Explore more resources",
-                        "description": "🎨 Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands). \n 📈 Learn more about getting started with [data science](command:workbench.action.openWalkthrough?%7B%22category%22%3A%22ms-python.python%23pythonDataScienceWelcome%22%2C%22step%22%3A%22ms-python.python%23python.createNewNotebook%22%7D) in Python. \n ✨ Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features. \n \n[Learn More](https://aka.ms/AA8dqti)",
+                        "title": "%walkthrough.step.python.learnMoreWithDS.title%",
+                        "description": "%walkthrough.step.python.learnMoreWithDS.description%",
                         "media": {
-                            "altText": "Image representing our documentation page and mailing list resources.",
+                            "altText": "%walkthrough.step.python.learnMoreWithDS.altText%",
                             "svg": "resources/walkthrough/learnmore.svg"
                         },
                         "when": ""
@@ -170,26 +170,26 @@
             },
             {
                 "id": "pythonDataScienceWelcome",
-                "title": "Get Started with Python for Data Science",
-                "description": "Your first steps to getting started with a Data Science project with Python!",
+                "title": "%walkthrough.pythonDataScienceWelcome.title%",
+                "description": "%walkthrough.pythonDataScienceWelcome.description%",
                 "when": "false",
                 "steps": [
                     {
                         "id": "python.installJupyterExt",
-                        "title": "Install Jupyter extension",
-                        "description": "If you haven't already, install the [Jupyter extension](command:workbench.extensions.search?\"ms-toolsai.jupyter\") to take full advantage of notebooks experiences in VS Code!\n \n[Search Jupyter extension](command:workbench.extensions.search?\"ms-toolsai.jupyter\")",
+                        "title": "%walkthrough.step.python.installJupyterExt.title%",
+                        "description": "%walkthrough.step.python.installJupyterExt.description%",
                         "media": {
                             "svg": "resources/walkthrough/data-science.svg",
-                            "altText": "Creating a new Jupyter notebook"
+                            "altText": "%walkthrough.step.python.installJupyterExt.altText%"
                         }
                     },
                     {
                         "id": "python.createNewNotebook",
-                        "title": "Create or open a Jupyter Notebook",
-                        "description": "Right click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create New Blank Notebook``.\n[Create new Jupyter Notebook](command:toSide:jupyter.createnewnotebook)\n If you have an existing project, you can also [open a folder](command:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:git.clone).",
+                        "title": "%walkthrough.step.python.createNewNotebook.title%",
+                        "description": "%walkthrough.step.python.createNewNotebook.description%",
                         "media": {
                             "svg": "resources/walkthrough/create-notebook.svg",
-                            "altText": "Creating a new Jupyter notebook"
+                            "altText": "%walkthrough.step.python.createNewNotebook.altText%"
                         },
                         "completionEvents": [
                             "onCommand:jupyter.createnewnotebook",
@@ -199,11 +199,11 @@
                     },
                     {
                         "id": "python.openInteractiveWindow",
-                        "title": "Open the Python Interactive Window",
-                        "description": "The Python Interactive Window is a Python shell where you can execute and view the results of your Python code. You can create cells on a Python file by typing ``#%%``.\n \nTo open the interactive window anytime, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create Interactive Window``.\n[Open Interactive Window](command:jupyter.createnewinteractive)",
+                        "title": "%walkthrough.step.python.openInteractiveWindow.title%",
+                        "description": "%walkthrough.step.python.openInteractiveWindow.description%",
                         "media": {
                             "svg": "resources/walkthrough/interactive-window.svg",
-                            "altText": "Opening python interactive window"
+                            "altText": "%walkthrough.step.python.openInteractiveWindow.altText%"
                         },
                         "completionEvents": [
                             "onCommand:jupyter.createnewinteractive"
@@ -211,11 +211,11 @@
                     },
                     {
                         "id": "python.dataScienceLearnMore",
-                        "title": "Find out more!",
-                        "description": "📒 Take a look into the [Jupyter extension](command:workbench.extensions.search?\"ms-toolsai.jupyter\") features, by looking for \"Jupyter\" in the [Command Palette](command:workbench.action.showCommands). \n 🏃🏻 Find out more features in our [Tutorials](https://aka.ms/AAdjzpd).  \n[Learn more](https://aka.ms/AAdar6q)",
+                        "title": "%walkthrough.step.python.dataScienceLearnMore.title%",
+                        "description": "%walkthrough.step.python.dataScienceLearnMore.description%",
                         "media": {
                             "svg": "resources/walkthrough/learnmore.svg",
-                            "altText": "Image representing our documentation page and mailing list resources."
+                            "altText": "%walkthrough.step.python.dataScienceLearnMore.altText%"
                         }
                     }
                 ]
