@@ -22,4 +22,4 @@ class TestSubtractFunction(unittest.TestCase):
         self,
     ):
         result = subtract(-2, -3)
-        self.assertEqual(result, 1)
+        self.assertEqual(result, 100000)

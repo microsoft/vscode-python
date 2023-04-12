@@ -82,6 +82,90 @@ def pytest_keyboard_interrupt(excinfo):
     ERRORS.append(excinfo.exconly())
 
 
+# for pytest the outcome for a test is only 'passed', 'skipped' or 'failed'
+class TestOutcome(Dict):
+    """
+    A class that handles outcome for a single test.
+    """
+
+    test: str
+    outcome: Literal["success", "failure", "skipped"]
+    message: str
+    traceback: str
+    subtest: Optional[str]
+
+
+def create_test_outcome(
+    test: str,
+    outcome: str,
+    message: str,
+    traceback: str,
+    subtype: Optional[str] = None,
+) -> TestOutcome:
+    """
+    A function that creates a TestOutcome object.
+    """
+    return TestOutcome(
+        test=test,
+        outcome=outcome,
+        message=message,
+        traceback=traceback,  # TODO: traceback
+        subtest=None,
+    )
+
+
+class testRunResultDict(Dict):
+    # Dict[str, Dict[str, Union[str, None]]]
+    """
+    A class that stores all test run results.
+    """
+
+    outcome: str
+    tests: Dict[str, TestOutcome]
+
+
+collected_tests = testRunResultDict()
+IS_DISCOVERY = False
+
+
+def pytest_load_initial_conftests(early_config, parser, args):
+    print("pytest_addoption")
+    print(args)
+    if "--collect-only" in args:
+        global IS_DISCOVERY
+        IS_DISCOVERY = True
+        print("IS_DISCOVERY: ", IS_DISCOVERY)
+
+
+def pytest_report_teststatus(report, config):
+    """
+    A pytest hook that is called when a test is called. It is called 3 times per test,
+      during setup, call, and teardown.
+    Keyword arguments:
+    report -- the report on the test setup, call, and teardown.
+    config -- configuration object.
+    """
+
+    if report.when == "call":
+        print(report.nodeid)
+        # TODO: fix these on error
+        traceback = None
+        message = None
+        report_value = "skipped"
+        if report.passed:
+            report_value = "success"
+        elif report.failed:
+            report_value = "failure"
+            message = report.longreprtext
+        item_result = create_test_outcome(
+            report.nodeid,
+            report_value,
+            message,
+            traceback,
+        )
+        collected_tests[report.nodeid] = item_result
+
+
 def pytest_sessionfinish(session, exitstatus):
     """A pytest hook that is called after pytest has fulled finished.
 
@@ -90,26 +174,34 @@ def pytest_sessionfinish(session, exitstatus):
     exitstatus -- the status code of the session.
     """
     cwd = pathlib.Path.cwd()
-    try:
-        session_node: Union[TestNode, None] = build_test_tree(session)
-        if not session_node:
-            raise VSCodePytestError(
-                "Something went wrong following pytest finish, \
-                    no session node was created"
+    if IS_DISCOVERY:
+        try:
+            session_node: Union[TestNode, None] = build_test_tree(session)
+            if not session_node:
+                raise VSCodePytestError(
+                    "Something went wrong following pytest finish, \
+                        no session node was created"
+                )
+            post_response(os.fsdecode(cwd), session_node)
+        except Exception as e:
+            ERRORS.append(
+                f"Error Occurred, traceback: {(traceback.format_exc() if e.__traceback__ else '')}"
             )
-        post_response(os.fsdecode(cwd), session_node)
-    except Exception as e:
-        ERRORS.append(
-            f"Error Occurred, traceback: {(traceback.format_exc() if e.__traceback__ else '')}"
-        )
-        errorNode: TestNode = {
-            "name": "",
-            "path": "",
-            "type_": "error",
-            "children": [],
-            "id_": "",
-        }
-        post_response(os.fsdecode(cwd), errorNode)
+            errorNode: TestNode = {
+                "name": "",
+                "path": "",
+                "type_": "error",
+                "children": [],
+                "id_": "",
+            }
+            post_response(os.fsdecode(cwd), errorNode)
+    else:
+        exitstatus_bool = "success" if exitstatus == 0 else "error"
+        if collected_tests:
+            execution_post(os.fsdecode(cwd), exitstatus_bool, collected_tests)
+        else:
+            ERRORS.append("Warning, no tests were collected.")
+            execution_post(os.fsdecode(cwd), exitstatus_bool, None)
 
     # def pytest_report_collectionfinish(config, start_path, startdir, items):
 
@@ -360,13 +452,52 @@ def create_folder_node(folderName: str, path_iterator: pathlib.Path) -> TestNode
     }
 
 
-class PayloadDict(TypedDict):
+class DiscoveryPayloadDict(TypedDict):
     """A dictionary that is used to send a post request to the server."""
 
     cwd: str
     status: Literal["success", "error"]
-    tests: Optional[TestNode]
+    result: Optional[TestNode]
     errors: Optional[List[str]]
+
+
+class ExecutionPayloadDict(Dict):
+    """
+    A dictionary that is used to send a execution post request to the server.
+    """
+
+    cwd: str
+    status: Literal["success", "error"]
+    result: Dict[str, Dict[str, Union[str, None]]]
+    not_found: Optional[List[str]]  # Currently unused need to check
+    error: Optional[str]  # Currently unused need to check
+
+
+def execution_post(cwd, status, tests):
+    """
+    Sends a post request to the server after the tests have been executed.
+    Keyword arguments:
+    cwd -- the current working directory.
+    session_node -- the status of running the tests
+    tests -- the tests that were run and their status.
+    """
+    testPort = os.getenv("TEST_PORT", 45454)
+    testuuid = os.getenv("TEST_UUID")
+    payload: ExecutionPayloadDict = {"cwd": cwd, "status": status, "result": tests}
+    addr = ("localhost", int(testPort))
+    data = json.dumps(payload)
+    request = f"""Content-Length: {len(data)}
+Content-Type: application/json
+Request-uuid: {testuuid}
+
+{data}"""
+    try:
+        with socket_manager.SocketManager(addr) as s:
+            if s.socket is not None:
+                s.socket.sendall(request.encode("utf-8"))
+    except Exception as e:
+        print(f"Error sending response: {e}")
+        print(f"Request data: {request}")
 
 
 def post_response(cwd: str, session_node: TestNode) -> None:
@@ -377,7 +508,7 @@ def post_response(cwd: str, session_node: TestNode) -> None:
     session_node -- the session node, which is the top of the testing tree.
     errors -- a list of errors that occurred during test collection.
     """
-    payload: PayloadDict = {
+    payload: DiscoveryPayloadDict = {
         "cwd": cwd,
         "status": "success" if not ERRORS else "error",
         "tests": session_node,
