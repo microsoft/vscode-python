@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { ProgressOptions, ProgressLocation } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IApplicationShell, IApplicationEnvironment } from '../../common/application/types';
+import { IApplicationShell, IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
 import { IPlatformService } from '../../common/platform/types';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
@@ -36,6 +36,7 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IEnvironmentActivationService) private environmentActivationService: IEnvironmentActivationService,
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
     ) {}
 
     public async activate(): Promise<void> {
@@ -68,6 +69,7 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
     }
 
     public async _applyCollection(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
+        const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
         const env = await this.environmentActivationService.getActivatedEnvironmentVariables(
             resource,
             undefined,
@@ -95,10 +97,10 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
             if (prevValue !== value) {
                 if (value !== undefined) {
                     traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
-                    this.context.environmentVariableCollection.replace(key, value);
+                    this.context.environmentVariableCollection.replace(key, value, {workspaceFolder});
                 } else {
                     traceVerbose(`Clearing environment variable ${key} from collection`);
-                    this.context.environmentVariableCollection.delete(key);
+                    this.context.environmentVariableCollection.delete(key, {workspaceFolder});
                 }
             }
         });
@@ -106,7 +108,7 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
             // If the previous env var is not in the current env, clear it from collection.
             if (!(key in env)) {
                 traceVerbose(`Clearing environment variable ${key} from collection`);
-                this.context.environmentVariableCollection.delete(key);
+                this.context.environmentVariableCollection.delete(key, {workspaceFolder});
             }
         });
     }

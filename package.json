@@ -21,7 +21,8 @@
         "contribEditorContentMenu",
         "quickPickSortByLabel",
         "envShellEvent",
-        "testObserver"
+        "testObserver",
+        "envCollectionWorkspace"
     ],
     "author": {
         "name": "Microsoft Corporation"
