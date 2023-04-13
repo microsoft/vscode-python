@@ -319,21 +319,16 @@ Content-Type: application/json
 Request-uuid: {testuuid}
 
 {data}"""
-    if os.getenv("TEST_OUTPUT_FILE") == "stdout":
+    test_output_file: str = os.getenv("TEST_OUTPUT_FILE", None)
+    if test_output_file == "stdout":
         print(request)
-    elif os.getenv("TEST_OUTPUT_FILE"):
-        # if we are running tests, then write to a file instead of sending a request.
-        test_output_file: str = os.getenv("TEST_OUTPUT_FILE", "")
-        if test_output_file:
-            with open(test_output_file, "w") as f:
-                f.write(request)
-        else:
-            print("TEST_OUTPUT_FILE is set, but no file was specified.")
+    elif test_output_file:
+        pathlib.Path(test_output_file).write_text(request, encoding="utf-8")
     else:
         try:
             with socket_manager.SocketManager(addr) as s:
                 if s.socket is not None:
                     s.socket.sendall(request.encode("utf-8"))
         except Exception as e:
-            print(f"Error sending response: {e}")
-            print(f"Request data: {request}")
+            print(f"Plugin error connection error[vscode-pytest]: {e}")
+            print(f"[vscode-pytest] data: {request}")

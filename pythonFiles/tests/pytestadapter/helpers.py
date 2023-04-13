@@ -10,9 +10,8 @@ import random
 import socket
 import subprocess
 import sys
-import threading
 import uuid
-from typing import List, Union
+from typing import Dict, List, Union
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 from typing_extensions import TypedDict
@@ -26,6 +25,7 @@ def test_output_file(root: pathlib.Path, ext: str = ".txt"):
     )
     fullpath = root / basename
     try:
+        fullpath.write_text("", encoding="utf-8")
         yield fullpath
     finally:
         os.unlink(str(fullpath))
@@ -83,7 +83,7 @@ Env_Dict = TypedDict(
 )
 
 
-def process_rpc_json(data: str) -> dict[str, str]:
+def process_rpc_json(data: str) -> Dict[str, str]:
     """Process the JSON data which comes from the server which runs the pytest discovery."""
     str_stream: io.StringIO = io.StringIO(data)
 
@@ -107,9 +107,9 @@ def process_rpc_json(data: str) -> dict[str, str]:
     return json.loads(raw_json)
 
 
-def runner(args: list[str]) -> Union[dict[str, str], None]:
+def runner(args: List[str]) -> Union[Dict[str, str], None]:
     """Run the pytest discovery and return the JSON data from the server."""
-    process_args: list[str] = [
+    process_args: List[str] = [
         sys.executable,
         "-m",
         "pytest",
@@ -117,20 +117,19 @@ def runner(args: list[str]) -> Union[dict[str, str], None]:
         "vscode_pytest",
     ] + args
 
-    listener: socket.socket = create_server()
-    _, port = listener.getsockname()
-    listener.listen()
     with test_output_file(TEST_DATA_PATH) as output_path:
         env = {
             "TEST_UUID": str(uuid.uuid4()),
-            "TEST_PORT": str(port),
+            "TEST_PORT": str(12345),  # port is not used for tests
             "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
             "TEST_OUTPUT_FILE": os.fspath(output_path),
         }
-        subprocess.run(process_args, env=env, cwd=TEST_DATA_PATH)
-        with open(output_path, "r") as f:
-            data = f.read()
-            return process_rpc_json(data)
+        subprocess.run(
+            process_args,
+            env=env,
+            cwd=os.fspath(TEST_DATA_PATH),
+        )
+        return process_rpc_json(output_path.read_text(encoding="utf-8"))
 
 
 def find_test_line_number(test_name: str, test_file_path) -> str:
