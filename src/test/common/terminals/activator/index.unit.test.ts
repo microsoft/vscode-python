@@ -12,7 +12,12 @@ import {
     ITerminalActivator,
     ITerminalHelper,
 } from '../../../../client/common/terminal/types';
-import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../../client/common/types';
+import {
+    IConfigurationService,
+    IExperimentService,
+    IPythonSettings,
+    ITerminalSettings,
+} from '../../../../client/common/types';
 
 suite('Terminal Activator', () => {
     let activator: TerminalActivator;
@@ -20,9 +25,12 @@ suite('Terminal Activator', () => {
     let handler1: TypeMoq.IMock<ITerminalActivationHandler>;
     let handler2: TypeMoq.IMock<ITerminalActivationHandler>;
     let terminalSettings: TypeMoq.IMock<ITerminalSettings>;
+    let experimentService: TypeMoq.IMock<IExperimentService>;
     setup(() => {
         baseActivator = TypeMoq.Mock.ofType<ITerminalActivator>();
         terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
+        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
+        experimentService.setup((e) => e.inExperimentSync(TypeMoq.It.isAny())).returns(() => false);
         handler1 = TypeMoq.Mock.ofType<ITerminalActivationHandler>();
         handler2 = TypeMoq.Mock.ofType<ITerminalActivationHandler>();
         const configService = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -37,7 +45,12 @@ suite('Terminal Activator', () => {
             protected initialize() {
                 this.baseActivator = baseActivator.object;
             }
-        })(TypeMoq.Mock.ofType<ITerminalHelper>().object, [handler1.object, handler2.object], configService.object);
+        })(
+            TypeMoq.Mock.ofType<ITerminalHelper>().object,
+            [handler1.object, handler2.object],
+            configService.object,
+            experimentService.object,
+        );
     });
     async function testActivationAndHandlers(
         activationSuccessful: boolean,
