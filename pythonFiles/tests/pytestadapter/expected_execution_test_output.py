@@ -3,11 +3,9 @@
 
 TEST_SUBTRACT_FUNCTION = "unittest_folder/test_subtract.py::TestSubtractFunction::"
 TEST_ADD_FUNCTION = "unittest_folder/test_add.py::TestAddFunction::"
-CWD = "/Users/eleanorboyd/Documents/testingFiles/playground_run_tests"
 SUCCESS = "success"
 FAILURE = "failure"
-NONE = "None"
-ASSERTION_ERROR = "<class 'AssertionError'>, AssertionError('1 != 10000'), <traceback object at 0x100eb2880>"
+TEST_SUBTRACT_FUNCTION_NEGATIVE_NUMBERS_ERROR = "self = <test_subtract.TestSubtractFunction testMethod=test_subtract_negative_numbers>\n\n    def test_subtract_negative_numbers(  # test_marker--test_subtract_negative_numbers\n        self,\n    ):\n        result = subtract(-2, -3)\n>       self.assertEqual(result, 100000)\nE       AssertionError: 1 != 100000\n\nunittest_folder/test_subtract.py:25: AssertionError"
 
 # This is the expected output for the unittest_folder execute tests
 # └── unittest_folder
@@ -37,7 +35,7 @@ uf_execution_expected_output = {
     f"{TEST_SUBTRACT_FUNCTION}test_subtract_negative_numbers": {
         "test": f"{TEST_SUBTRACT_FUNCTION}test_subtract_negative_numbers",
         "outcome": FAILURE,
-        "message": "self = <test_subtract.TestSubtractFunction testMethod=test_subtract_negative_numbers>\n\n    def test_subtract_negative_numbers(  # test_marker--test_subtract_negative_numbers\n        self,\n    ):\n        result = subtract(-2, -3)\n>       self.assertEqual(result, 100000)\nE       AssertionError: 1 != 100000\n\nunittest_folder/test_subtract.py:25: AssertionError",
+        "message": TEST_SUBTRACT_FUNCTION_NEGATIVE_NUMBERS_ERROR,
         "traceback": None,
         "subtest": None,
     },
@@ -51,24 +49,24 @@ uf_execution_expected_output = {
 }
 
 
-# This is the expected output for the unittest_folder add only execute tests
+# This is the expected output for the unittest_folder only execute add.py tests
 # └── unittest_folder
 #    ├── test_add.py
 #    │   └── TestAddFunction
 #    │       ├── test_add_negative_numbers: success
 #    │       └── test_add_positive_numbers: success
 uf_single_file_expected_output = {
-    f"{TEST_ADD_FUNCTION}.test_add_negative_numbers": {
-        "test": f"{TEST_ADD_FUNCTION}.test_add_negative_numbers",
+    f"{TEST_ADD_FUNCTION}test_add_negative_numbers": {
+        "test": f"{TEST_ADD_FUNCTION}test_add_negative_numbers",
         "outcome": SUCCESS,
         "message": None,
         "traceback": None,
         "subtest": None,
     },
-    f"{TEST_ADD_FUNCTION}.test_add_positive_numbers": {
-        "test": f"{TEST_ADD_FUNCTION}.test_add_positive_numbers",
+    f"{TEST_ADD_FUNCTION}test_add_positive_numbers": {
+        "test": f"{TEST_ADD_FUNCTION}test_add_positive_numbers",
         "outcome": SUCCESS,
-        "message": NONE,
+        "message": None,
         "traceback": None,
         "subtest": None,
     },
@@ -80,17 +78,13 @@ uf_single_file_expected_output = {
 #    │   └── TestAddFunction
 #    │       └── test_add_positive_numbers: success
 uf_single_method_execution_expected_output = {
-    "cwd": CWD,
-    "status": SUCCESS,
-    "result": {
-        f"{TEST_ADD_FUNCTION}.test_add_positive_numbers": {
-            "test": f"{TEST_ADD_FUNCTION}.test_add_positive_numbers",
-            "outcome": SUCCESS,
-            "message": NONE,
-            "traceback": None,
-            "subtest": None,
-        }
-    },
+    f"{TEST_ADD_FUNCTION}test_add_positive_numbers": {
+        "test": f"{TEST_ADD_FUNCTION}test_add_positive_numbers",
+        "outcome": SUCCESS,
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    }
 }
 
 # This is the expected output for the unittest_folder tests run where two tests
@@ -103,24 +97,137 @@ uf_single_method_execution_expected_output = {
 #        └── TestSubtractFunction
 #            └── test_subtract_positive_numbers: success
 uf_non_adjacent_tests_execution_expected_output = {
-    "cwd": CWD,
-    "status": SUCCESS,
-    "result": {
-        TEST_SUBTRACT_FUNCTION
-        + ".test_subtract_positive_numbers": {
-            "test": TEST_SUBTRACT_FUNCTION + ".test_subtract_positive_numbers",
-            "outcome": SUCCESS,
-            "message": NONE,
-            "traceback": None,
-            "subtest": None,
-        },
-        TEST_ADD_FUNCTION
-        + ".test_add_positive_numbers": {
-            "test": TEST_ADD_FUNCTION + ".test_add_positive_numbers",
-            "outcome": SUCCESS,
-            "message": NONE,
-            "traceback": None,
-            "subtest": None,
-        },
+    TEST_SUBTRACT_FUNCTION
+    + "test_subtract_positive_numbers": {
+        "test": TEST_SUBTRACT_FUNCTION + "test_subtract_positive_numbers",
+        "outcome": SUCCESS,
+        "message": None,
+        "traceback": None,
+        "subtest": None,
     },
+    TEST_ADD_FUNCTION
+    + "test_add_positive_numbers": {
+        "test": TEST_ADD_FUNCTION + "test_add_positive_numbers",
+        "outcome": SUCCESS,
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+}
+
+simple_execution_pytest_expected_output = {
+    "simple_pytest.py::test_function": {
+        "test": "simple_pytest.py::test_function",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    }
+}
+
+unit_pytest_same_file_execution_expected_output = {
+    "unittest_pytest_same_file.py::TestExample::test_true_unittest": {
+        "test": "unittest_pytest_same_file.py::TestExample::test_true_unittest",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "unittest_pytest_same_file.py::test_true_pytest": {
+        "test": "unittest_pytest_same_file.py::test_true_pytest",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+}
+
+dual_level_nested_folder_execution_expected_output = {
+    "dual_level_nested_folder/test_top_folder.py::test_top_function_t": {
+        "test": "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "dual_level_nested_folder/test_top_folder.py::test_top_function_f": {
+        "test": "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
+        "outcome": "failure",
+        "message": "def test_top_function_f():  # test_marker--test_top_function_f\n>       assert False\nE       assert False\n\ndual_level_nested_folder/test_top_folder.py:14: AssertionError",
+        "traceback": None,
+        "subtest": None,
+    },
+    "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_t": {
+        "test": "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f": {
+        "test": "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
+        "outcome": "failure",
+        "message": "def test_bottom_function_f():  # test_marker--test_bottom_function_f\n>       assert False\nE       assert False\n\ndual_level_nested_folder/nested_folder_one/test_bottom_folder.py:14: AssertionError",
+        "traceback": None,
+        "subtest": None,
+    },
+}
+
+double_nested_folder_expected_execution_output = {
+    "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function": {
+        "test": "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    }
+}
+
+# This is the expected output for the nested_folder tests.
+# └── parametrize_tests.py
+#    └── test_adding[3+5-8]
+#    └── test_adding[2+4-6]
+#    └── test_adding[6+9-16]
+parametrize_tests_expected_execution_output = {
+    "parametrize_tests.py::test_adding[3+5-8]": {
+        "test": "parametrize_tests.py::test_adding[3+5-8]",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "parametrize_tests.py::test_adding[2+4-6]": {
+        "test": "parametrize_tests.py::test_adding[2+4-6]",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "parametrize_tests.py::test_adding[6+9-16]": {
+        "test": "parametrize_tests.py::test_adding[6+9-16]",
+        "outcome": "failure",
+        "message": 'actual = \'6+9\', expected = 16\n\n    @pytest.mark.parametrize(  # test_marker--test_adding\n        "actual, expected", [("3+5", 8), ("2+4", 6), ("6+9", 16)]\n    )\n    def test_adding(actual, expected):\n>       assert eval(actual) == expected\nE       AssertionError: assert 15 == 16\nE        +  where 15 = eval(\'6+9\')\n\nparametrize_tests.py:10: AssertionError',
+        "traceback": None,
+        "subtest": None,
+    },
+}
+
+single_parametrize_tests_expected_execution_output = {
+    "parametrize_tests.py::test_adding[3+5-8]": {
+        "test": "parametrize_tests.py::test_adding[3+5-8]",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+}
+
+doctest_pytest_expected_execution_output = {
+    "text_docstring.txt::text_docstring.txt": {
+        "test": "text_docstring.txt::text_docstring.txt",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    }
 }

@@ -172,6 +172,13 @@ def pytest_sessionfinish(session, exitstatus):
     Keyword arguments:
     session -- the pytest session object.
     exitstatus -- the status code of the session.
+
+    0: All tests passed successfully.
+    1: One or more tests failed.
+    2: Pytest was unable to start or run any tests due to issues with test discovery or test collection.
+    3: Pytest was interrupted by the user, for example by pressing Ctrl+C during test execution.
+    4: Pytest encountered an internal error or exception during test execution.
+    5: Pytest was unable to find any tests to run.
     """
     cwd = pathlib.Path.cwd()
     if IS_DISCOVERY:
@@ -196,11 +203,11 @@ def pytest_sessionfinish(session, exitstatus):
             }
             post_response(os.fsdecode(cwd), errorNode)
     else:
-        exitstatus_bool = "success" if exitstatus == 0 else "error"
+        exitstatus_bool = "success" if (exitstatus == 1 or exitstatus == 0) else "error"
         if collected_tests:
             execution_post(os.fsdecode(cwd), exitstatus_bool, collected_tests)
         else:
-            ERRORS.append("Warning, no tests were collected.")
+            ERRORS.append("Warning, no tests were collected and run.")
             execution_post(os.fsdecode(cwd), exitstatus_bool, None)
 
     # def pytest_report_collectionfinish(config, start_path, startdir, items):
