@@ -91,16 +91,16 @@ class TestOutcome(Dict):
 
     test: str
     outcome: Literal["success", "failure", "skipped"]
-    message: str
-    traceback: str
+    message: Union[str, None]
+    traceback: Union[str, None]
     subtest: Optional[str]
 
 
 def create_test_outcome(
     test: str,
     outcome: str,
-    message: str,
-    traceback: str,
+    message: Union[str, None],
+    traceback: Union[str, None],
     subtype: Optional[str] = None,
 ) -> TestOutcome:
     """
@@ -115,7 +115,7 @@ def create_test_outcome(
     )
 
 
-class testRunResultDict(Dict):
+class testRunResultDict(Dict[str, Dict[str, TestOutcome]]):
     """
     A class that stores all test run results.
     """
@@ -219,9 +219,11 @@ def pytest_sessionfinish(session, exitstatus):
             )
             exitstatus_bool = "error"
 
-    execution_post(
-        os.fsdecode(cwd), exitstatus_bool, collected_tests if collected_tests else ""
-    )
+        execution_post(
+            os.fsdecode(cwd),
+            exitstatus_bool,
+            collected_tests if collected_tests else None,
+        )
 
     # def pytest_report_collectionfinish(config, start_path, startdir, items):
 
@@ -477,8 +479,8 @@ class DiscoveryPayloadDict(TypedDict):
 
     cwd: str
     status: Literal["success", "error"]
-    result: Optional[TestNode]
-    errors: Optional[List[str]]
+    tests: Optional[TestNode]
+    error: Optional[List[str]]
 
 
 class ExecutionPayloadDict(Dict):
@@ -488,12 +490,16 @@ class ExecutionPayloadDict(Dict):
 
     cwd: str
     status: Literal["success", "error"]
-    result: Dict[str, Dict[str, Union[str, None]]]
-    not_found: Optional[List[str]]  # Currently unused need to check
-    error: Optional[str]  # Currently unused need to check
+    result: Union[testRunResultDict, None]
+    not_found: Union[List[str], None]  # Currently unused need to check
+    error: Union[str, None]  # Currently unused need to check
 
 
-def execution_post(cwd, status, tests):
+def execution_post(
+    cwd: str,
+    status: Literal["success", "error"],
+    tests: Union[testRunResultDict, None],
+):
     """
     Sends a post request to the server after the tests have been executed.
     Keyword arguments:
@@ -503,7 +509,9 @@ def execution_post(cwd, status, tests):
     """
     testPort = os.getenv("TEST_PORT", 45454)
     testuuid = os.getenv("TEST_UUID")
-    payload: ExecutionPayloadDict = {"cwd": cwd, "status": status, "result": tests}
+    payload: ExecutionPayloadDict = ExecutionPayloadDict(
+        cwd=cwd, status=status, result=tests, not_found=None, error=None
+    )
     if ERRORS:
         payload["error"] = ERRORS
 
