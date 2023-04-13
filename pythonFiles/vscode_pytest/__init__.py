@@ -319,7 +319,7 @@ Content-Type: application/json
 Request-uuid: {testuuid}
 
 {data}"""
-    test_output_file: str = os.getenv("TEST_OUTPUT_FILE", None)
+    test_output_file: Optional[str] = os.getenv("TEST_OUTPUT_FILE", None)
     if test_output_file == "stdout":
         print(request)
     elif test_output_file:
