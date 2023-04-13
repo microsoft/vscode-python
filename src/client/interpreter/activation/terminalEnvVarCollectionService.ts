@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ProgressOptions, ProgressLocation } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
+import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell, IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
 import { IPlatformService } from '../../common/platform/types';
@@ -21,9 +21,10 @@ import { traceDecoratorVerbose, traceVerbose } from '../../logging';
 import { IInterpreterService } from '../contracts';
 import { defaultShells } from './service';
 import { IEnvironmentActivationService } from './types';
+import { PythonSettings } from '../../common/configSettings';
 
 @injectable()
-export class TerminalEnvVarCollectionService implements IExtensionSingleActivationService {
+export class TerminalEnvVarCollectionService implements IExtensionActivationService {
     public readonly supportedWorkspaceTypes = {
         untrustedWorkspace: false,
         virtualWorkspace: false,
@@ -44,13 +45,8 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
         @inject(IEnvironmentActivationService) private environmentActivationService: IEnvironmentActivationService,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-    ) {}
-
-    public async activate(): Promise<void> {
-        if (!inTerminalEnvVarExperiment(this.experimentService)) {
-            this.context.environmentVariableCollection.clear();
-            return;
-        }
+    ) {
+        this.context.environmentVariableCollection.clear();
         this.interpreterService.onDidChangeInterpreter(
             async (resource) => {
                 this.showProgress();
@@ -70,13 +66,22 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
             },
             this,
             this.disposables,
-        );
+        );}
 
-        this._applyCollection(undefined).ignoreErrors();
+    public async activate(resource: Resource): Promise<void> {
+        if (!inTerminalEnvVarExperiment(this.experimentService)) {
+            this.context.environmentVariableCollection.clear();
+            return;
+        }
+        this._applyCollection(resource).ignoreErrors();
     }
 
     public async _applyCollection(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
-        const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
+        let workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
+        if (!workspaceFolder && Array.isArray(this.workspaceService.workspaceFolders) && this.workspaceService.workspaceFolders.length > 0) {
+            workspaceFolder = this.workspaceService.workspaceFolders[0];
+        }
+        console.log('Use workspace folder', workspaceFolder?.uri.fsPath);
         const settings = this.configurationService.getSettings(resource);
         if (!settings.terminal.activateEnvironment) {
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);

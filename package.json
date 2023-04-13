@@ -17,7 +17,13 @@
         }
     },
     "publisher": "ms-python",
-    "enableProposedApi": true,
+    "enabledApiProposals": [
+        "contribEditorContentMenu",
+        "quickPickSortByLabel",
+        "envShellEvent",
+        "testObserver",
+        "envCollectionWorkspace"
+    ],
     "author": {
         "name": "Microsoft Corporation"
     },
