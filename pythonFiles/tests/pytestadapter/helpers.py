@@ -125,7 +125,7 @@ def runner(args: list[str]) -> Union[dict[str, str], None]:
             "TEST_UUID": str(uuid.uuid4()),
             "TEST_PORT": str(port),
             "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
-            "TEST_OUTPUT_FILE": output_path,
+            "TEST_OUTPUT_FILE": os.fspath(output_path),
         }
         subprocess.run(process_args, env=env, cwd=TEST_DATA_PATH)
         with open(output_path, "r") as f:
