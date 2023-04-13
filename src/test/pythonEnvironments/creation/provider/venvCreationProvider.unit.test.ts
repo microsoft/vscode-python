@@ -6,11 +6,7 @@ import * as typemoq from 'typemoq';
 import { assert, use as chaiUse } from 'chai';
 import * as sinon from 'sinon';
 import { CancellationToken, ProgressOptions, Uri } from 'vscode';
-import {
-    CreateEnvironmentProgress,
-    CreateEnvironmentProvider,
-    CreateEnvironmentResult,
-} from '../../../../client/pythonEnvironments/creation/types';
+import { CreateEnvironmentProgress } from '../../../../client/pythonEnvironments/creation/types';
 import { VenvCreationProvider } from '../../../../client/pythonEnvironments/creation/provider/venvCreationProvider';
 import { IInterpreterQuickPick } from '../../../../client/interpreter/configuration/types';
 import * as wsSelect from '../../../../client/pythonEnvironments/creation/common/workspaceSelection';
@@ -23,6 +19,10 @@ import { Output } from '../../../../client/common/process/types';
 import { VENV_CREATED_MARKER } from '../../../../client/pythonEnvironments/creation/provider/venvProgressAndTelemetry';
 import { CreateEnv } from '../../../../client/common/utils/localize';
 import * as venvUtils from '../../../../client/pythonEnvironments/creation/provider/venvUtils';
+import {
+    CreateEnvironmentProvider,
+    CreateEnvironmentResult,
+} from '../../../../client/pythonEnvironments/creation/proposed.createEnvApis';
 
 chaiUse(chaiAsPromised);
 

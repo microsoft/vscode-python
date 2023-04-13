@@ -12,8 +12,8 @@ import * as commandApis from '../../../client/common/vscodeApis/commandApis';
 import { IInterpreterQuickPick } from '../../../client/interpreter/configuration/types';
 import { registerCreateEnvironmentFeatures } from '../../../client/pythonEnvironments/creation/createEnvApi';
 import * as windowApis from '../../../client/common/vscodeApis/windowApis';
-import { CreateEnvironmentProvider } from '../../../client/pythonEnvironments/creation/types';
 import { handleCreateEnvironmentCommand } from '../../../client/pythonEnvironments/creation/createEnvironment';
+import { CreateEnvironmentProvider } from '../../../client/pythonEnvironments/creation/proposed.createEnvApis';
 
 chaiUse(chaiAsPromised);
 
