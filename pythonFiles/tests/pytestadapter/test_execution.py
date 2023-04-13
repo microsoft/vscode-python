@@ -4,8 +4,7 @@ import os
 import shutil
 
 import pytest
-
-from pythonFiles.tests.pytestadapter import expected_execution_test_output
+from tests.pytestadapter import expected_execution_test_output
 
 from .helpers import TEST_DATA_PATH, runner
 
