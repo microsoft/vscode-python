@@ -21,7 +21,6 @@ import { traceDecoratorVerbose, traceVerbose } from '../../logging';
 import { IInterpreterService } from '../contracts';
 import { defaultShells } from './service';
 import { IEnvironmentActivationService } from './types';
-import { PythonSettings } from '../../common/configSettings';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService {
