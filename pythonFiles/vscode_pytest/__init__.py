@@ -69,7 +69,8 @@ def pytest_exception_interact(node, call, report):
     """
     # call.excinfo is the captured exception of the call, if it raised as type ExceptionInfo.
     # call.excinfo.exconly() returns the exception as a string.
-    ERRORS.append(call.excinfo.exconly())
+    if call.excinfo and call.excinfo.typename != "AssertionError":
+        ERRORS.append(call.excinfo.exconly())
 
 
 def pytest_keyboard_interrupt(excinfo):
@@ -115,7 +116,6 @@ def create_test_outcome(
 
 
 class testRunResultDict(Dict):
-    # Dict[str, Dict[str, Union[str, None]]]
     """
     A class that stores all test run results.
     """
@@ -166,6 +166,14 @@ def pytest_report_teststatus(report, config):
         collected_tests[report.nodeid] = item_result
 
 
+ERROR_MESSAGE_CONST = {
+    2: "Pytest was unable to start or run any tests due to issues with test discovery or test collection.",
+    3: "Pytest was interrupted by the user, for example by pressing Ctrl+C during test execution.",
+    4: "Pytest encountered an internal error or exception during test execution.",
+    5: "Pytest was unable to find any tests to run.",
+}
+
+
 def pytest_sessionfinish(session, exitstatus):
     """A pytest hook that is called after pytest has fulled finished.
 
@@ -203,12 +211,17 @@ def pytest_sessionfinish(session, exitstatus):
             }
             post_response(os.fsdecode(cwd), errorNode)
     else:
-        exitstatus_bool = "success" if (exitstatus == 1 or exitstatus == 0) else "error"
-        if collected_tests:
-            execution_post(os.fsdecode(cwd), exitstatus_bool, collected_tests)
+        if exitstatus == 0 or exitstatus == 1:
+            exitstatus_bool = "success"
         else:
-            ERRORS.append("Warning, no tests were collected and run.")
-            execution_post(os.fsdecode(cwd), exitstatus_bool, None)
+            ERRORS.append(
+                f"Pytest exited with error status: {exitstatus}, {ERROR_MESSAGE_CONST[exitstatus]}"
+            )
+            exitstatus_bool = "error"
+
+    execution_post(
+        os.fsdecode(cwd), exitstatus_bool, collected_tests if collected_tests else ""
+    )
 
 
 def build_test_tree(session: pytest.Session) -> TestNode:
@@ -415,6 +428,9 @@ def execution_post(cwd, status, tests):
     testPort = os.getenv("TEST_PORT", 45454)
     testuuid = os.getenv("TEST_UUID")
     payload: ExecutionPayloadDict = {"cwd": cwd, "status": status, "result": tests}
+    if ERRORS:
+        payload["error"] = ERRORS
+
     addr = ("localhost", int(testPort))
     data = json.dumps(payload)
     request = f"""Content-Length: {len(data)}
@@ -443,11 +459,10 @@ def post_response(cwd: str, session_node: TestNode) -> None:
         "cwd": cwd,
         "status": "success" if not ERRORS else "error",
         "tests": session_node,
-        "errors": [],
+        "error": [],
     }
-    if ERRORS:
-        payload["errors"] = ERRORS
-
+    if ERRORS is not None:
+        payload["error"] = ERRORS
     testPort: Union[str, int] = os.getenv("TEST_PORT", 45454)
     testuuid: Union[str, None] = os.getenv("TEST_UUID")
     addr = "localhost", int(testPort)

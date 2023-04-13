@@ -115,6 +115,9 @@ uf_non_adjacent_tests_execution_expected_output = {
     },
 }
 
+# This is the expected output for the simple_pytest.py file.
+# └── simple_pytest.py
+#    └── test_function: success
 simple_execution_pytest_expected_output = {
     "simple_pytest.py::test_function": {
         "test": "simple_pytest.py::test_function",
@@ -125,6 +128,11 @@ simple_execution_pytest_expected_output = {
     }
 }
 
+# This is the expected output for the unittest_pytest_same_file.py file.
+# ├── unittest_pytest_same_file.py
+#   ├── TestExample
+#   │   └── test_true_unittest: success
+#   └── test_true_pytest: success
 unit_pytest_same_file_execution_expected_output = {
     "unittest_pytest_same_file.py::TestExample::test_true_unittest": {
         "test": "unittest_pytest_same_file.py::TestExample::test_true_unittest",
@@ -142,6 +150,15 @@ unit_pytest_same_file_execution_expected_output = {
     },
 }
 
+# This is the expected output for the dual_level_nested_folder.py tests
+#  └── dual_level_nested_folder
+#    └── test_top_folder.py
+#       └── test_top_function_t: success
+#       └── test_top_function_f: failure
+#    └── nested_folder_one
+#       └── test_bottom_folder.py
+#          └── test_bottom_function_t: success
+#          └── test_bottom_function_f: failure
 dual_level_nested_folder_execution_expected_output = {
     "dual_level_nested_folder/test_top_folder.py::test_top_function_t": {
         "test": "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
@@ -173,6 +190,11 @@ dual_level_nested_folder_execution_expected_output = {
     },
 }
 
+# This is the expected output for the nested_folder tests.
+# └── nested_folder_one
+#    └── nested_folder_two
+#       └── test_nest.py
+#          └── test_function: success
 double_nested_folder_expected_execution_output = {
     "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function": {
         "test": "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function",
@@ -185,9 +207,9 @@ double_nested_folder_expected_execution_output = {
 
 # This is the expected output for the nested_folder tests.
 # └── parametrize_tests.py
-#    └── test_adding[3+5-8]
-#    └── test_adding[2+4-6]
-#    └── test_adding[6+9-16]
+#    └── test_adding[3+5-8]: success
+#    └── test_adding[2+4-6]: success
+#    └── test_adding[6+9-16]: failure
 parametrize_tests_expected_execution_output = {
     "parametrize_tests.py::test_adding[3+5-8]": {
         "test": "parametrize_tests.py::test_adding[3+5-8]",
@@ -212,6 +234,9 @@ parametrize_tests_expected_execution_output = {
     },
 }
 
+# This is the expected output for the single parameterized tests.
+# └── parametrize_tests.py
+#    └── test_adding[3+5-8]: success
 single_parametrize_tests_expected_execution_output = {
     "parametrize_tests.py::test_adding[3+5-8]": {
         "test": "parametrize_tests.py::test_adding[3+5-8]",
@@ -222,6 +247,9 @@ single_parametrize_tests_expected_execution_output = {
     },
 }
 
+# This is the expected output for the single parameterized tests.
+# └── text_docstring.txt
+#    └── text_docstring: success
 doctest_pytest_expected_execution_output = {
     "text_docstring.txt::text_docstring.txt": {
         "test": "text_docstring.txt::text_docstring.txt",
@@ -230,4 +258,71 @@ doctest_pytest_expected_execution_output = {
         "traceback": None,
         "subtest": None,
     }
+}
+
+# Will run all tests in the cwd that fit the test file naming pattern.
+no_test_ids_pytest_execution_expected_output = {
+    "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function": {
+        "test": "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "dual_level_nested_folder/test_top_folder.py::test_top_function_t": {
+        "test": "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "dual_level_nested_folder/test_top_folder.py::test_top_function_f": {
+        "test": "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
+        "outcome": "failure",
+        "message": "def test_top_function_f():  # test_marker--test_top_function_f\n>       assert False\nE       assert False\n\ndual_level_nested_folder/test_top_folder.py:14: AssertionError",
+        "traceback": None,
+        "subtest": None,
+    },
+    "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_t": {
+        "test": "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f": {
+        "test": "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
+        "outcome": "failure",
+        "message": "def test_bottom_function_f():  # test_marker--test_bottom_function_f\n>       assert False\nE       assert False\n\ndual_level_nested_folder/nested_folder_one/test_bottom_folder.py:14: AssertionError",
+        "traceback": None,
+        "subtest": None,
+    },
+    "unittest_folder/test_add.py::TestAddFunction::test_add_negative_numbers": {
+        "test": "unittest_folder/test_add.py::TestAddFunction::test_add_negative_numbers",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "unittest_folder/test_add.py::TestAddFunction::test_add_positive_numbers": {
+        "test": "unittest_folder/test_add.py::TestAddFunction::test_add_positive_numbers",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_negative_numbers": {
+        "test": "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_negative_numbers",
+        "outcome": "failure",
+        "message": "self = <test_subtract.TestSubtractFunction testMethod=test_subtract_negative_numbers>\n\n    def test_subtract_negative_numbers(  # test_marker--test_subtract_negative_numbers\n        self,\n    ):\n        result = subtract(-2, -3)\n>       self.assertEqual(result, 100000)\nE       AssertionError: 1 != 100000\n\nunittest_folder/test_subtract.py:25: AssertionError",
+        "traceback": None,
+        "subtest": None,
+    },
+    "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_positive_numbers": {
+        "test": "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_positive_numbers",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
 }

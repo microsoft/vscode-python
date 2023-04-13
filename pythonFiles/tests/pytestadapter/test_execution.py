@@ -1,6 +1,5 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import json
 import os
 import shutil
 
@@ -10,18 +9,45 @@ from pythonFiles.tests.pytestadapter import expected_execution_test_output
 
 from .helpers import TEST_DATA_PATH, runner
 
-test_add_positive_numbers_id = (
-    "unittest_folder.test_add.TestAddFunction.test_add_positive_numbers"
-)
-test_add_negative_numbers_id = (
-    "unittest_folder.test_add.TestAddFunction.test_add_negative_numbers"
-)
-test_subtract_positive_numbers_id = (
-    "unittest_folder.test_subtract.TestSubtractFunction.test_subtract_positive_numbers"
-)
-test_subtract_negative_numbers_id = (
-    "unittest_folder.test_subtract.TestSubtractFunction.test_subtract_negative_numbers"
-)
+
+def test_syntax_error_execution(tmp_path):
+    """Test pytest execution on a file that has a syntax error.
+
+    Copies the contents of a .txt file to a .py file in the temporary directory
+    to then run pytest exeuction on.
+
+    The json should still be returned but the errors list should be present.
+
+    Keyword arguments:
+    tmp_path -- pytest fixture that creates a temporary directory.
+    """
+    # Saving some files as .txt to avoid that file displaying a syntax error for
+    # the extension as a whole. Instead, rename it before running this test
+    # in order to test the error handling.
+    file_path = TEST_DATA_PATH / "error_syntax_discovery.txt"
+    temp_dir = tmp_path / "temp_data"
+    temp_dir.mkdir()
+    p = temp_dir / "error_syntax_discovery.py"
+    shutil.copyfile(file_path, p)
+    actual = runner(["error_syntax_discover.py::test_function"])
+    assert actual
+    assert all(item in actual for item in ("status", "cwd", "error"))
+    assert actual["status"] == "error"
+    assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+    assert len(actual["error"]) == 1
+
+
+def test_bad_id_error_execution():
+    """Test pytest discovery with a non-existent test_id.
+
+    The json should still be returned but the errors list should be present.
+    """
+    actual = runner(["not/a/real::test_id"])
+    assert actual
+    assert all(item in actual for item in ("status", "cwd", "error"))
+    assert actual["status"] == "error"
+    assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+    assert len(actual["error"]) == 1
 
 
 @pytest.mark.parametrize(
@@ -98,17 +124,36 @@ test_subtract_negative_numbers_id = (
             ],
             expected_execution_test_output.doctest_pytest_expected_execution_output,
         ),
+        (
+            [
+                "",
+            ],
+            expected_execution_test_output.no_test_ids_pytest_execution_expected_output,
+        ),
     ],
 )
 def test_pytest_execution(test_ids, expected_const):
     """
-    FILL IN
+    Test that pytest discovery works as expected where run pytest is always successful
+    but the actual test results are both successes and failures.:
+    1. uf_execution_expected_output: unittest tests run on multiple files.
+    2. uf_single_file_expected_output: test run on a single file.
+    3. uf_single_method_execution_expected_output: test run on a single method in a file.
+    4. uf_non_adjacent_tests_execution_expected_output: test run on unittests in two files with single selection in test explorer.
+    5. unit_pytest_same_file_execution_expected_output: test run on a file with both unittest and pytest tests.
+    6. dual_level_nested_folder_execution_expected_output: test run on a file with one test file at the top level and one test file in a nested folder.
+    7. double_nested_folder_expected_execution_output: test run on a double nested folder.
+    8. parametrize_tests_expected_execution_output: test run on a parametrize test with 3 inputs.
+    9. single_parametrize_tests_expected_execution_output: test run on single parametrize test.
+    10. doctest_pytest_expected_execution_output: test run on doctest file.
+    11. no_test_ids_pytest_execution_expected_output: test run with no inputted test ids.
+
 
     Keyword arguments:
-    file -- a string with the file or folder to run pytest execution on.
-    expected_const -- the expected output from running pytest discovery on the file.
+    test_ids -- an array of test_ids to run.
+    expected_const -- a dictionary of the expected output from running pytest discovery on the files.
     """
-    args = test_ids  # [""]
+    args = test_ids
     actual = runner(args)
     assert actual
     assert all(item in actual for item in ("status", "cwd", "result"))
