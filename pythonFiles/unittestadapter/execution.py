@@ -62,7 +62,9 @@ class TestOutcomeEnum(str, enum.Enum):
 
 
 class UnittestTestResult(unittest.TextTestResult):
-    formatted: Dict[str, Dict[str, Union[str, None]]] = dict()
+    def __init__(self, *args, **kwargs):
+        self.formatted: Dict[str, Dict[str, Union[str, None]]] = dict()
+        super(UnittestTestResult, self).__init__(*args, **kwargs)
 
     def startTest(self, test: unittest.TestCase):
         super(UnittestTestResult, self).startTest(test)
@@ -206,10 +208,10 @@ def run_tests(
 
     if error is not None:
         payload["error"] = error
+    else:
+        status = TestExecutionStatus.success
 
     payload["status"] = status
-
-    # print(f"payload: \n{json.dumps(payload, indent=4)}")
 
     return payload
 
