@@ -124,11 +124,19 @@ def runner(args: List[str]) -> Union[Dict[str, str], None]:
             "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
             "TEST_OUTPUT_FILE": os.fspath(output_path),
         }
-        subprocess.run(
+
+        result = subprocess.run(
             process_args,
             env=env,
             cwd=os.fspath(TEST_DATA_PATH),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
+        if result.returncode != 0:
+            raise Exception(
+                f"Subprocess Run failed with:\n{result.stdout.decode(encoding='utf-8')}\n{result.stderr.decode(encoding='utf-8')}"
+            )
+
         return process_rpc_json(output_path.read_text(encoding="utf-8"))
 
 
