@@ -21,7 +21,6 @@ import { traceDecoratorVerbose, traceVerbose } from '../../logging';
 import { IInterpreterService } from '../contracts';
 import { defaultShells } from './service';
 import { IEnvironmentActivationService } from './types';
-import { EnvironmentVariables } from '../../common/variables/types';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService {
@@ -34,8 +33,6 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     private previousEnvVars = _normCaseKeys(process.env);
 
-    public random = this._environmentActivationService;
-
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
@@ -44,7 +41,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(IExperimentService) private experimentService: IExperimentService,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
-        @inject(IEnvironmentActivationService) private _environmentActivationService: IEnvironmentActivationService,
+        @inject(IEnvironmentActivationService) private environmentActivationService: IEnvironmentActivationService,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
     ) {
@@ -59,17 +56,16 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             this.disposables,
         );
         this.applicationEnvironment.onDidChangeShell(
-            async (s: string) => {
+            async (shell: string) => {
                 this.showProgress();
                 // Pass in the shell where known instead of relying on the application environment, because of bug
                 // on VSCode: https://github.com/microsoft/vscode/issues/160694
-                await this._applyCollection(undefined, s);
+                await this._applyCollection(undefined, shell);
                 this.hideProgress();
             },
             this,
             this.disposables,
-        );
-    }
+        );}
 
     public async activate(resource: Resource): Promise<void> {
         if (!inTerminalEnvVarExperiment(this.experimentService)) {
@@ -81,12 +77,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     public async _applyCollection(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
         let workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
-        if (
-            !workspaceFolder &&
-            Array.isArray(this.workspaceService.workspaceFolders) &&
-            this.workspaceService.workspaceFolders.length > 0
-        ) {
-            [workspaceFolder] = this.workspaceService.workspaceFolders;
+        if (!workspaceFolder && Array.isArray(this.workspaceService.workspaceFolders) && this.workspaceService.workspaceFolders.length > 0) {
+            workspaceFolder = this.workspaceService.workspaceFolders[0];
         }
         console.log('Use workspace folder', workspaceFolder?.uri.fsPath);
         const settings = this.configurationService.getSettings(resource);
@@ -94,7 +86,12 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
             return;
         }
-        const env: EnvironmentVariables = { HELLO: workspaceFolder?.name };
+        const env = await this.environmentActivationService.getActivatedEnvironmentVariables(
+            resource,
+            undefined,
+            undefined,
+            shell,
+        );
         if (!env) {
             const shellType = identifyShellFromShellPath(shell);
             const defaultShell = defaultShells[this.platform.osType];
@@ -116,10 +113,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             if (prevValue !== value) {
                 if (value !== undefined) {
                     traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
-                    this.context.environmentVariableCollection.replace(key, value, { workspaceFolder });
+                    this.context.environmentVariableCollection.replace(key, value, {workspaceFolder});
                 } else {
                     traceVerbose(`Clearing environment variable ${key} from collection`);
-                    this.context.environmentVariableCollection.delete(key, { workspaceFolder });
+                    this.context.environmentVariableCollection.delete(key, {workspaceFolder});
                 }
             }
         });
@@ -127,7 +124,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             // If the previous env var is not in the current env, clear it from collection.
             if (!(key in env)) {
                 traceVerbose(`Clearing environment variable ${key} from collection`);
-                this.context.environmentVariableCollection.delete(key, { workspaceFolder });
+                this.context.environmentVariableCollection.delete(key, {workspaceFolder});
             }
         });
     }
