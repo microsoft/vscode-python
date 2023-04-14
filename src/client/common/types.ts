@@ -15,7 +15,7 @@ import {
     Extension,
     ExtensionContext,
     Memento,
-    OutputChannel,
+    LogOutputChannel,
     Uri,
     WorkspaceEdit,
 } from 'vscode';
@@ -30,7 +30,7 @@ export interface IDisposable {
 }
 
 export const IOutputChannel = Symbol('IOutputChannel');
-export interface IOutputChannel extends OutputChannel {}
+export interface IOutputChannel extends LogOutputChannel {}
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
 export interface IDocumentSymbolProvider extends DocumentSymbolProvider {}
 export const IsWindows = Symbol('IS_WINDOWS');

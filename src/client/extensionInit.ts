@@ -4,7 +4,7 @@
 'use strict';
 
 import { Container } from 'inversify';
-import { Disposable, Memento, OutputChannel, window } from 'vscode';
+import { Disposable, LogOutputChannel, Memento, window } from 'vscode';
 import { instance, mock } from 'ts-mockito';
 import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
@@ -54,7 +54,7 @@ export function initializeGlobals(
     serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
     serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, context);
 
-    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python);
+    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python, { log: true });
     disposables.push(standardOutputChannel);
     disposables.push(registerLogger(new OutputChannelLogger(standardOutputChannel)));
 
@@ -63,11 +63,15 @@ export function initializeGlobals(
         workspaceService.isVirtualWorkspace || !workspaceService.isTrusted
             ? // Do not create any test related output UI when using virtual workspaces.
               instance(mock<IOutputChannel>())
-            : window.createOutputChannel(OutputChannelNames.pythonTest);
+            : window.createOutputChannel(OutputChannelNames.pythonTest, { log: true });
     disposables.push(unitTestOutChannel);
 
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
+    serviceManager.addSingletonInstance<LogOutputChannel>(
+        IOutputChannel,
+        standardOutputChannel,
+        STANDARD_OUTPUT_CHANNEL,
+    );
+    serviceManager.addSingletonInstance<LogOutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
 
     return {
         context,
