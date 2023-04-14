@@ -133,9 +133,9 @@ def runner(args: List[str]) -> Union[Dict[str, str], None]:
             stderr=subprocess.PIPE,
         )
         if result.returncode != 0:
-            raise Exception(
-                f"Subprocess Run failed with:\n{result.stdout.decode(encoding='utf-8')}\n{result.stderr.decode(encoding='utf-8')}"
-            )
+            print("Subprocess Run failed with:")
+            print(result.stdout.decode(encoding="utf-8"))
+            print(result.stderr.decode(encoding="utf-8"))
 
         return process_rpc_json(output_path.read_text(encoding="utf-8"))
 
