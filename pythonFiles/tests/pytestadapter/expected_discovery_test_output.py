@@ -576,14 +576,20 @@ dual_level_nested_folder_expected_output = {
 #        └── nested_folder_two
 #            └── test_nest.py
 #                └── test_function
-double_nested_folder_path = f"{TEST_DATA_PATH_STR}/double_nested_folder"
-double_nested_folder_one_path = (
-    f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one"
+double_nested_folder_path = os.fspath(TEST_DATA_PATH / "double_nested_folder")
+double_nested_folder_one_path = os.fspath(
+    TEST_DATA_PATH / "double_nested_folder" / "nested_folder_one"
 )
-double_nested_folder_two_path = (
-    f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two"
+double_nested_folder_two_path = os.fspath(
+    TEST_DATA_PATH / "double_nested_folder" / "nested_folder_one" / "nested_folder_two"
 )
-double_nested_test_nest_path = f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py"
+double_nested_test_nest_path = os.fspath(
+    TEST_DATA_PATH
+    / "double_nested_folder"
+    / "nested_folder_one"
+    / "nested_folder_two"
+    / "test_nest.py"
+)
 double_nested_folder_expected_output = {
     "name": ".data",
     "path": TEST_DATA_PATH_STR,
@@ -591,9 +597,9 @@ double_nested_folder_expected_output = {
     "children": [
         {
             "name": "double_nested_folder",
-            "path": f"{TEST_DATA_PATH_STR}/double_nested_folder",
+            "path": double_nested_folder_path,
             "type_": "folder",
-            "id_": f"{TEST_DATA_PATH_STR}/double_nested_folder",
+            "id_": double_nested_folder_path,
             "children": [
                 {
                     "name": "nested_folder_one",
@@ -641,7 +647,7 @@ double_nested_folder_expected_output = {
 #    └── test_adding[3+5-8]
 #    └── test_adding[2+4-6]
 #    └── test_adding[6+9-16]
-parameterize_tests_path = f"{TEST_DATA_PATH_STR}/parametrize_tests.py"
+parameterize_tests_path = os.fspath(TEST_DATA_PATH / "parametrize_tests.py")
 parametrize_tests_expected_output = {
     "name": ".data",
     "path": TEST_DATA_PATH_STR,
@@ -694,7 +700,7 @@ parametrize_tests_expected_output = {
 
 # This is the expected output for the text_docstring.txt tests.
 # └── text_docstring.txt
-text_docstring_path = f"{TEST_DATA_PATH_STR}/text_docstring.txt"
+text_docstring_path = os.fspath(TEST_DATA_PATH / "text_docstring.txt")
 doctest_pytest_expected_output = {
     "name": ".data",
     "path": TEST_DATA_PATH_STR,
