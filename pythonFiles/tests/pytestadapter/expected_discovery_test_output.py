@@ -1,4 +1,5 @@
 import os
+import pathlib
 
 from .helpers import TEST_DATA_PATH, find_test_line_number
 
@@ -16,7 +17,7 @@ empty_discovery_pytest_expected_output = {
 # This is the expected output for the simple_pytest.py file.
 # └── simple_pytest.py
 #    └── test_function
-simple_test_file_path = f"{TEST_DATA_PATH_STR}/simple_pytest.py"
+simple_test_file_path = os.fspath(TEST_DATA_PATH / "simple_pytest.py")
 simple_discovery_pytest_expected_output = {
     "name": ".data",
     "path": TEST_DATA_PATH_STR,
@@ -50,7 +51,7 @@ simple_discovery_pytest_expected_output = {
 #   ├── TestExample
 #   │   └── test_true_unittest
 #   └── test_true_pytest
-unit_pytest_same_file_path = f"{TEST_DATA_PATH_STR}/unittest_pytest_same_file.py"
+unit_pytest_same_file_path = os.fspath(TEST_DATA_PATH / "unittest_pytest_same_file.py")
 unit_pytest_same_file_discovery_expected_output = {
     "name": ".data",
     "path": TEST_DATA_PATH_STR,
@@ -108,9 +109,9 @@ unit_pytest_same_file_discovery_expected_output = {
 #        └── TestSubtractFunction
 #            ├── test_subtract_negative_numbers
 #            └── test_subtract_positive_numbers
-unittest_folder_path = f"{TEST_DATA_PATH_STR}/unittest_folder"
-test_add_path = f"{TEST_DATA_PATH_STR}/unittest_folder/test_add.py"
-test_subtract_path = f"{TEST_DATA_PATH_STR}/unittest_folder/test_subtract.py"
+unittest_folder_path = os.fspath(TEST_DATA_PATH / "unittest_folder")
+test_add_path = os.fspath(TEST_DATA_PATH / "unittest_folder" / "test_add.py")
+test_subtract_path = os.fspath(TEST_DATA_PATH / "unittest_folder" / "test_subtract.py")
 unittest_folder_discovery_expected_output = {
     "name": ".data",
     "path": TEST_DATA_PATH_STR,
@@ -213,14 +214,19 @@ unittest_folder_discovery_expected_output = {
 #       └── test_bottom_folder.py
 #          └── test_bottom_function_t
 #          └── test_bottom_function_f
-dual_level_nested_folder_path = f"{TEST_DATA_PATH_STR}/dual_level_nested_folder"
-test_top_folder_path = (
-    f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/test_top_folder.py"
+dual_level_nested_folder_path = os.fspath(TEST_DATA_PATH / "dual_level_nested_folder")
+test_top_folder_path = os.fspath(
+    TEST_DATA_PATH / "dual_level_nested_folder" / "test_top_folder.py"
 )
-test_nested_folder_one_path = (
-    f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/nested_folder_one"
+test_nested_folder_one_path = os.fspath(
+    TEST_DATA_PATH / "dual_level_nested_folder" / "nested_folder_one"
 )
-test_bottom_folder_path = f"{TEST_DATA_PATH_STR}/dual_level_nested_folder/nested_folder_one/test_bottom_folder.py"
+test_bottom_folder_path = os.fspath(
+    TEST_DATA_PATH
+    / "dual_level_nested_folder"
+    / "nested_folder_one"
+    / "test_bottom_folder.py"
+)
 
 dual_level_nested_folder_expected_output = {
     "name": ".data",
@@ -313,14 +319,20 @@ dual_level_nested_folder_expected_output = {
 #        └── nested_folder_two
 #            └── test_nest.py
 #                └── test_function
-double_nested_folder_path = f"{TEST_DATA_PATH_STR}/double_nested_folder"
-double_nested_folder_one_path = (
-    f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one"
+double_nested_folder_path = os.fspath(TEST_DATA_PATH / "double_nested_folder")
+double_nested_folder_one_path = os.fspath(
+    TEST_DATA_PATH / "double_nested_folder" / "nested_folder_one"
 )
-double_nested_folder_two_path = (
-    f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two"
+double_nested_folder_two_path = os.fspath(
+    TEST_DATA_PATH / "double_nested_folder" / "nested_folder_one" / "nested_folder_two"
 )
-double_nested_test_nest_path = f"{TEST_DATA_PATH_STR}/double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py"
+double_nested_test_nest_path = os.fspath(
+    TEST_DATA_PATH
+    / "double_nested_folder"
+    / "nested_folder_one"
+    / "nested_folder_two"
+    / "test_nest.py"
+)
 double_nested_folder_expected_output = {
     "name": ".data",
     "path": TEST_DATA_PATH_STR,
@@ -328,9 +340,9 @@ double_nested_folder_expected_output = {
     "children": [
         {
             "name": "double_nested_folder",
-            "path": f"{TEST_DATA_PATH_STR}/double_nested_folder",
+            "path": double_nested_folder_path,
             "type_": "folder",
-            "id_": f"{TEST_DATA_PATH_STR}/double_nested_folder",
+            "id_": double_nested_folder_path,
             "children": [
                 {
                     "name": "nested_folder_one",
@@ -378,7 +390,7 @@ double_nested_folder_expected_output = {
 #    └── test_adding[3+5-8]
 #    └── test_adding[2+4-6]
 #    └── test_adding[6+9-16]
-parameterize_tests_path = f"{TEST_DATA_PATH_STR}/parametrize_tests.py"
+parameterize_tests_path = os.fspath(TEST_DATA_PATH / "parametrize_tests.py")
 parametrize_tests_expected_output = {
     "name": ".data",
     "path": TEST_DATA_PATH_STR,
@@ -431,7 +443,7 @@ parametrize_tests_expected_output = {
 
 # This is the expected output for the text_docstring.txt tests.
 # └── text_docstring.txt
-text_docstring_path = f"{TEST_DATA_PATH_STR}/text_docstring.txt"
+text_docstring_path = os.fspath(TEST_DATA_PATH / "text_docstring.txt")
 doctest_pytest_expected_output = {
     "name": ".data",
     "path": TEST_DATA_PATH_STR,
