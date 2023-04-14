@@ -118,12 +118,15 @@ def runner(args: List[str]) -> Union[Dict[str, str], None]:
     ] + args
 
     with test_output_file(TEST_DATA_PATH) as output_path:
-        env = {
-            "TEST_UUID": str(uuid.uuid4()),
-            "TEST_PORT": str(12345),  # port is not used for tests
-            "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
-            "TEST_OUTPUT_FILE": os.fspath(output_path),
-        }
+        env = os.environ.copy()
+        env.update(
+            {
+                "TEST_UUID": str(uuid.uuid4()),
+                "TEST_PORT": str(12345),  # port is not used for tests
+                "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
+                "TEST_OUTPUT_FILE": os.fspath(output_path),
+            }
+        )
 
         result = subprocess.run(
             process_args,
