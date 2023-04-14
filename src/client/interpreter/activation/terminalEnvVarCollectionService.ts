@@ -14,6 +14,7 @@ import {
     Resource,
     IDisposableRegistry,
     IConfigurationService,
+    IPathUtils,
 } from '../../common/types';
 import { Deferred, createDeferred } from '../../common/utils/async';
 import { Interpreters } from '../../common/utils/localize';
@@ -44,8 +45,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(IEnvironmentActivationService) private environmentActivationService: IEnvironmentActivationService,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
     ) {
-        this.context.environmentVariableCollection.clear();
         this.interpreterService.onDidChangeInterpreter(
             async (resource) => {
                 this.showProgress();
@@ -65,7 +66,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             },
             this,
             this.disposables,
-        );}
+        );
+    }
 
     public async activate(resource: Resource): Promise<void> {
         if (!inTerminalEnvVarExperiment(this.experimentService)) {
@@ -77,10 +79,13 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     public async _applyCollection(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
         let workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
-        if (!workspaceFolder && Array.isArray(this.workspaceService.workspaceFolders) && this.workspaceService.workspaceFolders.length > 0) {
-            workspaceFolder = this.workspaceService.workspaceFolders[0];
+        if (
+            !workspaceFolder &&
+            Array.isArray(this.workspaceService.workspaceFolders) &&
+            this.workspaceService.workspaceFolders.length > 0
+        ) {
+            [workspaceFolder] = this.workspaceService.workspaceFolders;
         }
-        console.log('Use workspace folder', workspaceFolder?.uri.fsPath);
         const settings = this.configurationService.getSettings(resource);
         if (!settings.terminal.activateEnvironment) {
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
@@ -113,10 +118,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             if (prevValue !== value) {
                 if (value !== undefined) {
                     traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
-                    this.context.environmentVariableCollection.replace(key, value, {workspaceFolder});
+                    this.context.environmentVariableCollection.replace(key, value, { workspaceFolder });
                 } else {
                     traceVerbose(`Clearing environment variable ${key} from collection`);
-                    this.context.environmentVariableCollection.delete(key, {workspaceFolder});
+                    this.context.environmentVariableCollection.delete(key, { workspaceFolder });
                 }
             }
         });
@@ -124,8 +129,12 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             // If the previous env var is not in the current env, clear it from collection.
             if (!(key in env)) {
                 traceVerbose(`Clearing environment variable ${key} from collection`);
-                this.context.environmentVariableCollection.delete(key, {workspaceFolder});
+                this.context.environmentVariableCollection.delete(key, { workspaceFolder });
             }
+        });
+        const displayPath = this.pathUtils.getDisplayName(settings.pythonPath, workspaceFolder?.uri.fsPath);
+        this.context.environmentVariableCollection.setDescription(`Activated environment for ${displayPath}`, {
+            workspaceFolder,
         });
     }
 
