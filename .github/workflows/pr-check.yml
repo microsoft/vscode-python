@@ -235,10 +235,6 @@ jobs:
         run: npm run test:unittests
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
-      - name: Reset winsock
-        run: netsh winsock reset catalog
-        if: matrix.test-suite == 'python-unit' && matrix.os == 'windows-latest'
-
       # Run the Python tests in our codebase.
       - name: Run Python unit tests
         run: |
