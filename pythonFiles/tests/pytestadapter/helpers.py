@@ -7,7 +7,6 @@ import json
 import os
 import pathlib
 import random
-import socket
 import subprocess
 import sys
 import uuid
@@ -31,56 +30,7 @@ def test_output_file(root: pathlib.Path, ext: str = ".txt"):
         os.unlink(str(fullpath))
 
 
-def create_server(
-    host: str = "127.0.0.1",
-    port: int = 0,
-    backlog: int = socket.SOMAXCONN,
-    timeout: int = 1000,
-) -> socket.socket:
-    """Return a local server socket listening on the given port."""
-    server: socket.socket = _new_sock()
-    if port:
-        # If binding to a specific port, make sure that the user doesn't have
-        # to wait until the OS times out waiting for socket in order to use
-        # that port again if the server or the adapter crash or are force-killed.
-        if sys.platform == "win32":
-            server.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
-        else:
-            try:
-                server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            except (AttributeError, OSError):
-                pass  # Not available everywhere
-    server.bind((host, port))
-    if timeout:
-        server.settimeout(timeout)
-    server.listen(backlog)
-    return server
-
-
-def _new_sock() -> socket.socket:
-    sock: socket.socket = socket.socket(
-        socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
-    )
-    options = [
-        ("SOL_SOCKET", "SO_KEEPALIVE", 1),
-        ("IPPROTO_TCP", "TCP_KEEPIDLE", 1),
-        ("IPPROTO_TCP", "TCP_KEEPINTVL", 3),
-        ("IPPROTO_TCP", "TCP_KEEPCNT", 5),
-    ]
-
-    for level, name, value in options:
-        try:
-            sock.setsockopt(getattr(socket, level), getattr(socket, name), value)
-        except (AttributeError, OSError):
-            pass  # May not be available everywhere.
-
-    return sock
-
-
 CONTENT_LENGTH: str = "Content-Length:"
-Env_Dict = TypedDict(
-    "Env_Dict", {"TEST_UUID": str, "TEST_PORT": str, "PYTHONPATH": str}
-)
 
 
 def process_rpc_json(data: str) -> Dict[str, str]:
@@ -111,7 +61,6 @@ def runner(args: List[str]) -> Union[Dict[str, str], None]:
     """Run the pytest discovery and return the JSON data from the server."""
     process_args: List[str] = [
         sys.executable,
-        "-m",
         "pytest",
         "-p",
         "vscode_pytest",
@@ -131,7 +80,9 @@ def runner(args: List[str]) -> Union[Dict[str, str], None]:
             cwd=os.fspath(TEST_DATA_PATH),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            shell=True,
         )
+
         if result.returncode != 0:
             print("Subprocess Run failed with:")
             print(result.stdout.decode(encoding="utf-8"))
