@@ -106,7 +106,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 await this._applyCollection(resource, defaultShell?.shell);
                 return;
             }
-            this.context.environmentVariableCollection.clear();
+            this.context.environmentVariableCollection.clear({ workspaceFolder });
             this.previousEnvVars = _normCaseKeys(process.env);
             return;
         }

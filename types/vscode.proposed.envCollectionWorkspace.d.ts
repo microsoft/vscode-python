@@ -25,6 +25,8 @@ declare module 'vscode' {
 		prepend(variable: string, value: string, scope?: EnvironmentVariableScope): void;
 		get(variable: string, scope?: EnvironmentVariableScope): EnvironmentVariableMutator | undefined;
 		delete(variable: string, scope?: EnvironmentVariableScope): void;
+        clear(scope?: EnvironmentVariableScope): void;
+
 	}
 
 	export type EnvironmentVariableScope = {
