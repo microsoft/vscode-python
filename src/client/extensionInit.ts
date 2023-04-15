@@ -4,9 +4,8 @@
 'use strict';
 
 import { Container } from 'inversify';
-import { Disposable, LogOutputChannel, Memento, window } from 'vscode';
+import { Disposable, Memento, window } from 'vscode';
 import { instance, mock } from 'ts-mockito';
-import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
@@ -16,7 +15,8 @@ import {
     IDisposableRegistry,
     IExtensionContext,
     IMemento,
-    IOutputChannel,
+    ILogOutputChannel,
+    ITestOutputChannel,
     WORKSPACE_MEMENTO,
 } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
@@ -26,7 +26,6 @@ import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import * as pythonEnvironments from './pythonEnvironments';
-import { TEST_OUTPUT_CHANNEL } from './testing/constants';
 import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { registerLogger } from './logging';
 import { OutputChannelLogger } from './logging/outputChannelLogger';
@@ -62,16 +61,12 @@ export function initializeGlobals(
     const unitTestOutChannel =
         workspaceService.isVirtualWorkspace || !workspaceService.isTrusted
             ? // Do not create any test related output UI when using virtual workspaces.
-              instance(mock<IOutputChannel>())
-            : window.createOutputChannel(OutputChannelNames.pythonTest, { log: true });
+              instance(mock<ITestOutputChannel>())
+            : window.createOutputChannel(OutputChannelNames.pythonTest);
     disposables.push(unitTestOutChannel);
 
-    serviceManager.addSingletonInstance<LogOutputChannel>(
-        IOutputChannel,
-        standardOutputChannel,
-        STANDARD_OUTPUT_CHANNEL,
-    );
-    serviceManager.addSingletonInstance<LogOutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
+    serviceManager.addSingletonInstance<ILogOutputChannel>(ILogOutputChannel, standardOutputChannel);
+    serviceManager.addSingletonInstance<ITestOutputChannel>(ITestOutputChannel, unitTestOutChannel);
 
     return {
         context,

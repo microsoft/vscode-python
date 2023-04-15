@@ -18,6 +18,7 @@ import {
     LogOutputChannel,
     Uri,
     WorkspaceEdit,
+    OutputChannel,
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
 import type { InstallOptions, InterpreterUri, ModuleInstallFlags } from './installer/types';
@@ -29,8 +30,10 @@ export interface IDisposable {
     dispose(): void | undefined | Promise<void>;
 }
 
-export const IOutputChannel = Symbol('IOutputChannel');
-export interface IOutputChannel extends LogOutputChannel {}
+export const ILogOutputChannel = Symbol('ILogOutputChannel');
+export interface ILogOutputChannel extends LogOutputChannel {}
+export const ITestOutputChannel = Symbol('ITestOutputChannel');
+export interface ITestOutputChannel extends OutputChannel {}
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
 export interface IDocumentSymbolProvider extends DocumentSymbolProvider {}
 export const IsWindows = Symbol('IS_WINDOWS');
