@@ -112,6 +112,7 @@ mockedVSCode.FileSystemError = vscodeMocks.vscMockExtHostedTypes.FileSystemError
 mockedVSCode.LanguageStatusSeverity = vscodeMocks.LanguageStatusSeverity;
 mockedVSCode.QuickPickItemKind = vscodeMocks.QuickPickItemKind;
 mockedVSCode.InlayHint = vscodeMocks.InlayHint;
+mockedVSCode.LogLevel = vscodeMocks.LogLevel;
 (mockedVSCode as any).NotebookCellKind = vscodeMocks.vscMockExtHostedTypes.NotebookCellKind;
 (mockedVSCode as any).CellOutputKind = vscodeMocks.vscMockExtHostedTypes.CellOutputKind;
 (mockedVSCode as any).NotebookCellRunState = vscodeMocks.vscMockExtHostedTypes.NotebookCellRunState;

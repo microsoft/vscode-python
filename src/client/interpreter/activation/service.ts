@@ -25,14 +25,7 @@ import { EventName } from '../../telemetry/constants';
 import { IInterpreterService } from '../contracts';
 import { IEnvironmentActivationService } from './types';
 import { TraceOptions } from '../../logging/types';
-import {
-    traceDecoratorError,
-    traceDecoratorVerbose,
-    traceError,
-    traceInfo,
-    traceVerbose,
-    traceWarn,
-} from '../../logging';
+import { traceDecoratorError, traceDecoratorVerbose, traceError, traceVerbose, traceWarn } from '../../logging';
 import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
@@ -290,7 +283,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     // that's the case, wait and try again. This happens especially on AzDo
                     const excString = (exc as Error).toString();
                     if (condaRetryMessages.find((m) => excString.includes(m)) && tryCount < 10) {
-                        traceInfo(`Conda is busy, attempting to retry ...`);
+                        traceVerbose(`Conda is busy, attempting to retry ...`);
                         result = undefined;
                         tryCount += 1;
                         await sleep(500);
