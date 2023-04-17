@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Disposable, TestItem, TestRun, TestRunProfileKind } from 'vscode';
-import { IOutputChannel } from '../../../common/types';
+import { ITestOutputChannel } from '../../../common/types';
 import { PYTEST_PROVIDER } from '../../common/constants';
 import { ITestDebugLauncher, ITestRunner, LaunchOptions, Options } from '../../common/types';
-import { TEST_OUTPUT_CHANNEL } from '../../constants';
 import { filterArguments, getOptionValues } from '../common/argumentsHelper';
 import { createTemporaryFile } from '../common/externalDependencies';
 import { updateResultFromJunitXml } from '../common/resultsHelper';
@@ -32,7 +31,7 @@ export class PytestRunner implements ITestsRunner {
     constructor(
         @inject(ITestRunner) private readonly runner: ITestRunner,
         @inject(ITestDebugLauncher) private readonly debugLauncher: ITestDebugLauncher,
-        @inject(IOutputChannel) @named(TEST_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
+        @inject(ITestOutputChannel) private readonly outputChannel: ITestOutputChannel,
     ) {}
 
     public async runTests(
