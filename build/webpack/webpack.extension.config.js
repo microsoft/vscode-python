@@ -63,7 +63,7 @@ const config = {
         '@opentelemetry/tracing',
         '@azure/opentelemetry-instrumentation-azure-sdk',
         '@opentelemetry/instrumentation',
-        '@azure/functions-core'
+        '@azure/functions-core',
     ],
     plugins: [...common.getDefaultPlugins('extension')],
     resolve: {
