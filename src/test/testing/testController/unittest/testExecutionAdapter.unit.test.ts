@@ -3,14 +3,16 @@
 
 import * as assert from 'assert';
 import * as path from 'path';
+import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
-import { IConfigurationService } from '../../../../client/common/types';
+import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { ITestServer, TestCommandOptions } from '../../../../client/testing/testController/common/types';
 import { UnittestTestExecutionAdapter } from '../../../../client/testing/testController/unittest/testExecutionAdapter';
 
 suite('Unittest test execution adapter', () => {
     let stubConfigSettings: IConfigurationService;
+    let outputChannel: typemoq.IMock<ITestOutputChannel>;
 
     setup(() => {
         stubConfigSettings = ({
@@ -18,6 +20,7 @@ suite('Unittest test execution adapter', () => {
                 testing: { unittestArgs: ['-v', '-s', '.', '-p', 'test*'] },
             }),
         } as unknown) as IConfigurationService;
+        outputChannel = typemoq.Mock.ofType<ITestOutputChannel>();
     });
 
     test('runTests should send the run command to the test server', async () => {
@@ -25,6 +28,7 @@ suite('Unittest test execution adapter', () => {
 
         const stubTestServer = ({
             sendCommand(opt: TestCommandOptions): Promise<void> {
+                delete opt.outChannel;
                 options = opt;
                 return Promise.resolve();
             },
@@ -37,7 +41,7 @@ suite('Unittest test execution adapter', () => {
         const uri = Uri.file('/foo/bar');
         const script = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'execution.py');
 
-        const adapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings);
+        const adapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings, outputChannel.object);
         adapter.runTests(uri, [], false);
 
         const expectedOptions: TestCommandOptions = {
@@ -66,7 +70,7 @@ suite('Unittest test execution adapter', () => {
         const data = { status: 'success' };
         const uuid = '123456789';
 
-        const adapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings);
+        const adapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings, outputChannel.object);
 
         // triggers runTests flow which will run onDataReceivedHandler and the
         // promise resolves into the parsed data.
@@ -93,7 +97,7 @@ suite('Unittest test execution adapter', () => {
 
         const uri = Uri.file('/foo/bar');
 
-        const adapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings);
+        const adapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings, outputChannel.object);
 
         // triggers runTests flow which will run onDataReceivedHandler and the
         // promise resolves into the parsed data.
