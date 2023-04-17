@@ -1710,7 +1710,7 @@
                 {
                     "submenu": "python.run",
                     "group": "Python",
-                    "when": "editorLangId == python && !virtualWorkspace && shellExecutionSupported"
+                    "when": "editorLangId == python && !virtualWorkspace && shellExecutionSupported && isWorkspaceTrusted"
                 },
                 {
                     "command": "python.sortImports",
@@ -1721,7 +1721,7 @@
                 {
                     "submenu": "python.runFileInteractive",
                     "group": "Jupyter2",
-                    "when": "editorLangId == python && !virtualWorkspace && shellExecutionSupported && !isJupyterInstalled"
+                    "when": "editorLangId == python && !virtualWorkspace && shellExecutionSupported && !isJupyterInstalled && isWorkspaceTrusted"
                 }
             ],
             "python.runFileInteractive": [

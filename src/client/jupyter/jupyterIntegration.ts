@@ -206,11 +206,11 @@ export class JupyterExtensionIntegration {
     ) {}
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
+        this.contextManager.setContext(ExtensionContextKey.IsJupyterInstalled, true);
         if (!this.workspaceService.isTrusted) {
             this.workspaceService.onDidGrantWorkspaceTrust(() => this.registerApi(jupyterExtensionApi));
             return undefined;
         }
-        this.contextManager.setContext(ExtensionContextKey.IsJupyterInstalled, true);
         // Forward python parts
         jupyterExtensionApi.registerPythonApi({
             onDidChangeInterpreter: this.interpreterService.onDidChangeInterpreter,
