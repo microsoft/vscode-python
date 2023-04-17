@@ -1,16 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { injectable, inject, named } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { Location, TestController, TestItem, TestMessage, TestRun, TestRunProfileKind } from 'vscode';
 import * as internalScripts from '../../../common/process/internal/scripts';
 import { splitLines } from '../../../common/stringUtils';
-import { IOutputChannel } from '../../../common/types';
+import { ITestOutputChannel } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
-import { traceError, traceInfo } from '../../../logging';
+import { traceError, traceVerbose } from '../../../logging';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import { ITestRunner, ITestDebugLauncher, IUnitTestSocketServer, LaunchOptions, Options } from '../../common/types';
-import { TEST_OUTPUT_CHANNEL } from '../../constants';
 import { clearAllChildren, getTestCaseNodes } from '../common/testItemUtilities';
 import { ITestRun, ITestsRunner, TestData, TestRunInstanceOptions, TestRunOptions } from '../common/types';
 import { fixLogLines } from '../common/utils';
@@ -33,7 +32,7 @@ export class UnittestRunner implements ITestsRunner {
     constructor(
         @inject(ITestRunner) private readonly runner: ITestRunner,
         @inject(ITestDebugLauncher) private readonly debugLauncher: ITestDebugLauncher,
-        @inject(IOutputChannel) @named(TEST_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
+        @inject(ITestOutputChannel) private readonly outputChannel: ITestOutputChannel,
         @inject(IUnitTestSocketServer) private readonly server: IUnitTestSocketServer,
     ) {}
 
@@ -99,7 +98,7 @@ export class UnittestRunner implements ITestsRunner {
             traceError(`${message} ${data.join(' ')}`);
         });
         this.server.on('log', (message: string, ...data: string[]) => {
-            traceInfo(`${message} ${data.join(' ')}`);
+            traceVerbose(`${message} ${data.join(' ')}`);
         });
         this.server.on('connect', noop);
         this.server.on('start', noop);

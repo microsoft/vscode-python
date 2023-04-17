@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IConfigurationService } from '../../../common/types';
+import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import {
@@ -24,7 +24,11 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
 
     private cwd: string | undefined;
 
-    constructor(public testServer: ITestServer, public configSettings: IConfigurationService) {
+    constructor(
+        public testServer: ITestServer,
+        public configSettings: IConfigurationService,
+        private readonly outputChannel: ITestOutputChannel,
+    ) {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
@@ -37,7 +41,6 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
     }
 
     public async runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload> {
-        const deferred = createDeferred<ExecutionTestPayload>();
         const settings = this.configSettings.getSettings(uri);
         const { unittestArgs } = settings.testing;
 
@@ -52,12 +55,14 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             uuid,
             debugBool,
             testIds,
+            outChannel: this.outputChannel,
         };
 
+        const deferred = createDeferred<ExecutionTestPayload>();
         this.promiseMap.set(uuid, deferred);
 
-        // send test command to server
-        // server fire onDataReceived event once it gets response
+        // Send test command to server.
+        // Server fire onDataReceived event once it gets response.
         this.testServer.sendCommand(options);
 
         return deferred.promise;
