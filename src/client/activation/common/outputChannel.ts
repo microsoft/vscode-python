@@ -6,13 +6,13 @@
 import { inject, injectable } from 'inversify';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import '../../common/extensions';
-import { IDisposableRegistry, IOutputChannel } from '../../common/types';
+import { IDisposableRegistry, ILogOutputChannel } from '../../common/types';
 import { OutputChannelNames } from '../../common/utils/localize';
 import { ILanguageServerOutputChannel } from '../types';
 
 @injectable()
 export class LanguageServerOutputChannel implements ILanguageServerOutputChannel {
-    public output: IOutputChannel | undefined;
+    public output: ILogOutputChannel | undefined;
 
     private registered = false;
 
@@ -22,7 +22,7 @@ export class LanguageServerOutputChannel implements ILanguageServerOutputChannel
         @inject(IDisposableRegistry) private readonly disposable: IDisposableRegistry,
     ) {}
 
-    public get channel(): IOutputChannel {
+    public get channel(): ILogOutputChannel {
         if (!this.output) {
             this.output = this.appShell.createOutputChannel(OutputChannelNames.languageServer);
             this.disposable.push(this.output);

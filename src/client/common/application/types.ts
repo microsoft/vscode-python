@@ -25,10 +25,10 @@ import {
     InputBox,
     InputBoxOptions,
     LanguageStatusItem,
+    LogOutputChannel,
     MessageItem,
     MessageOptions,
     OpenDialogOptions,
-    OutputChannel,
     Progress,
     ProgressOptions,
     QuickPick,
@@ -429,7 +429,7 @@ export interface IApplicationShell {
      *
      * @param name Human-readable string which will be used to represent the channel in the UI.
      */
-    createOutputChannel(name: string): OutputChannel;
+    createOutputChannel(name: string): LogOutputChannel;
     createLanguageStatusItem(id: string, selector: DocumentSelector): LanguageStatusItem;
 }
 

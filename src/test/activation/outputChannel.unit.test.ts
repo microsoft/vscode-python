@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { LanguageServerOutputChannel } from '../../client/activation/common/outputChannel';
 import { IApplicationShell, ICommandManager } from '../../client/common/application/types';
-import { IOutputChannel } from '../../client/common/types';
+import { ILogOutputChannel } from '../../client/common/types';
 import { sleep } from '../../client/common/utils/async';
 import { OutputChannelNames } from '../../client/common/utils/localize';
 
@@ -15,10 +15,10 @@ suite('Language Server Output Channel', () => {
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let languageServerOutputChannel: LanguageServerOutputChannel;
     let commandManager: TypeMoq.IMock<ICommandManager>;
-    let output: TypeMoq.IMock<IOutputChannel>;
+    let output: TypeMoq.IMock<ILogOutputChannel>;
     setup(() => {
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        output = TypeMoq.Mock.ofType<IOutputChannel>();
+        output = TypeMoq.Mock.ofType<ILogOutputChannel>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         languageServerOutputChannel = new LanguageServerOutputChannel(appShell.object, commandManager.object, []);
     });

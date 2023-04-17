@@ -4,12 +4,12 @@
 'use strict';
 
 import * as TypeMoq from 'typemoq';
-import { OutputChannel, TextDocument, Uri } from 'vscode';
+import { TextDocument, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
-import { PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import '../../client/common/extensions';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IConfigurationService, ILintingSettings, IOutputChannel, IPythonSettings } from '../../client/common/types';
+import { IConfigurationService, ILintingSettings, ILogOutputChannel, IPythonSettings } from '../../client/common/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LintingEngine } from '../../client/linters/lintingEngine';
@@ -54,10 +54,8 @@ suite('Linting - LintingEngine', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
             .returns(() => configService.object);
 
-        const outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(STANDARD_OUTPUT_CHANNEL)))
-            .returns(() => outputChannel.object);
+        const outputChannel = TypeMoq.Mock.ofType<ILogOutputChannel>();
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ILogOutputChannel))).returns(() => outputChannel.object);
 
         lintManager = TypeMoq.Mock.ofType<ILinterManager>();
         lintManager.setup((x) => x.isLintingEnabled(TypeMoq.It.isAny())).returns(async () => true);

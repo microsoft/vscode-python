@@ -20,7 +20,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IWorkspaceService } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { IPythonExecutionFactory } from '../../common/process/types';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, ITestOutputChannel, Resource } from '../../common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -92,6 +92,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
         @inject(ITestDebugLauncher) private readonly debugLauncher: ITestDebugLauncher,
+        @inject(ITestOutputChannel) private readonly testOutputChannel: ITestOutputChannel,
     ) {
         this.refreshCancellation = new CancellationTokenSource();
 
@@ -158,12 +159,28 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             let executionAdapter: ITestExecutionAdapter;
             let testProvider: TestProvider;
             if (settings.testing.unittestEnabled) {
-                discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);
-                executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
+                discoveryAdapter = new UnittestTestDiscoveryAdapter(
+                    this.pythonTestServer,
+                    this.configSettings,
+                    this.testOutputChannel,
+                );
+                executionAdapter = new UnittestTestExecutionAdapter(
+                    this.pythonTestServer,
+                    this.configSettings,
+                    this.testOutputChannel,
+                );
                 testProvider = UNITTEST_PROVIDER;
             } else {
-                discoveryAdapter = new PytestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);
-                executionAdapter = new PytestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
+                discoveryAdapter = new PytestTestDiscoveryAdapter(
+                    this.pythonTestServer,
+                    this.configSettings,
+                    this.testOutputChannel,
+                );
+                executionAdapter = new PytestTestExecutionAdapter(
+                    this.pythonTestServer,
+                    this.configSettings,
+                    this.testOutputChannel,
+                );
                 testProvider = PYTEST_PROVIDER;
             }
 

@@ -5,7 +5,7 @@ import { DocumentFilter, LanguageClientOptions, RevealOutputChannelOn } from 'vs
 import { IWorkspaceService } from '../../common/application/types';
 
 import { PYTHON, PYTHON_LANGUAGE } from '../../common/constants';
-import { IOutputChannel, Resource } from '../../common/types';
+import { ILogOutputChannel, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { traceDecoratorError } from '../../logging';
@@ -14,7 +14,7 @@ import { ILanguageServerAnalysisOptions, ILanguageServerOutputChannel } from '..
 
 export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServerAnalysisOptions {
     protected readonly didChange = new EventEmitter<void>();
-    private readonly output: IOutputChannel;
+    private readonly output: ILogOutputChannel;
 
     protected constructor(
         lsOutputChannel: ILanguageServerOutputChannel,

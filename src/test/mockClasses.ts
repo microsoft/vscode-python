@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as util from 'util';
 import {
     Flake8CategorySeverity,
     ILintingSettings,
@@ -7,13 +8,32 @@ import {
     IPylintCategorySeverity,
 } from '../client/common/types';
 
-export class MockOutputChannel implements vscode.OutputChannel {
+export class MockOutputChannel implements vscode.LogOutputChannel {
     public name: string;
     public output: string;
     public isShown!: boolean;
+    private _eventEmitter = new vscode.EventEmitter<vscode.LogLevel>();
+    public onDidChangeLogLevel: vscode.Event<vscode.LogLevel> = this._eventEmitter.event;
     constructor(name: string) {
         this.name = name;
         this.output = '';
+        this.logLevel = vscode.LogLevel.Debug;
+    }
+    public logLevel: vscode.LogLevel;
+    trace(message: string, ...args: any[]): void {
+        this.appendLine(util.format(message, ...args));
+    }
+    debug(message: string, ...args: any[]): void {
+        this.appendLine(util.format(message, ...args));
+    }
+    info(message: string, ...args: any[]): void {
+        this.appendLine(util.format(message, ...args));
+    }
+    warn(message: string, ...args: any[]): void {
+        this.appendLine(util.format(message, ...args));
+    }
+    error(error: string | Error, ...args: any[]): void {
+        this.appendLine(util.format(error, ...args));
     }
     public append(value: string) {
         this.output += value;

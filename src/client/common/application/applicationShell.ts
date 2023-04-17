@@ -14,10 +14,10 @@ import {
     InputBoxOptions,
     languages,
     LanguageStatusItem,
+    LogOutputChannel,
     MessageItem,
     MessageOptions,
     OpenDialogOptions,
-    OutputChannel,
     Progress,
     ProgressOptions,
     QuickPick,
@@ -166,8 +166,8 @@ export class ApplicationShell implements IApplicationShell {
     public createTreeView<T>(viewId: string, options: TreeViewOptions<T>): TreeView<T> {
         return window.createTreeView<T>(viewId, options);
     }
-    public createOutputChannel(name: string): OutputChannel {
-        return window.createOutputChannel(name);
+    public createOutputChannel(name: string): LogOutputChannel {
+        return window.createOutputChannel(name, { log: true });
     }
     public createLanguageStatusItem(id: string, selector: DocumentSelector): LanguageStatusItem {
         return languages.createLanguageStatusItem(id, selector);

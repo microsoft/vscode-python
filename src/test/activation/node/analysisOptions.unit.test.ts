@@ -9,7 +9,7 @@ import { NodeLanguageServerAnalysisOptions } from '../../../client/activation/no
 import { ILanguageServerOutputChannel } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { PYTHON, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { IExperimentService, IOutputChannel } from '../../../client/common/types';
+import { IExperimentService, ILogOutputChannel } from '../../../client/common/types';
 
 suite('Pylance Language Server - Analysis Options', () => {
     class TestClass extends NodeLanguageServerAnalysisOptions {
@@ -28,13 +28,13 @@ suite('Pylance Language Server - Analysis Options', () => {
     }
 
     let analysisOptions: TestClass;
-    let outputChannel: IOutputChannel;
+    let outputChannel: ILogOutputChannel;
     let lsOutputChannel: typemoq.IMock<ILanguageServerOutputChannel>;
     let workspace: typemoq.IMock<IWorkspaceService>;
     let experimentService: IExperimentService;
 
     setup(() => {
-        outputChannel = typemoq.Mock.ofType<IOutputChannel>().object;
+        outputChannel = typemoq.Mock.ofType<ILogOutputChannel>().object;
         workspace = typemoq.Mock.ofType<IWorkspaceService>();
         workspace.setup((w) => w.isVirtualWorkspace).returns(() => false);
         const workspaceConfig = typemoq.Mock.ofType<WorkspaceConfiguration>();

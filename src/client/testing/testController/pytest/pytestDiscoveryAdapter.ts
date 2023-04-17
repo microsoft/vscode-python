@@ -7,7 +7,7 @@ import {
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
-import { IConfigurationService } from '../../../common/types';
+import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { traceVerbose } from '../../../logging';
@@ -21,7 +21,11 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
     private deferred: Deferred<DiscoveredTestPayload> | undefined;
 
-    constructor(public testServer: ITestServer, public configSettings: IConfigurationService) {
+    constructor(
+        public testServer: ITestServer,
+        public configSettings: IConfigurationService,
+        private readonly outputChannel: ITestOutputChannel,
+    ) {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
@@ -68,6 +72,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 TEST_UUID: uuid.toString(),
                 TEST_PORT: this.testServer.getPort().toString(),
             },
+            outputChannel: this.outputChannel,
         };
 
         // Create the Python environment in which to execute the command.

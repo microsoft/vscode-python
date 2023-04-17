@@ -3,14 +3,16 @@
 
 import * as assert from 'assert';
 import * as path from 'path';
+import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
-import { IConfigurationService } from '../../../../client/common/types';
+import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { ITestServer, TestCommandOptions } from '../../../../client/testing/testController/common/types';
 import { UnittestTestDiscoveryAdapter } from '../../../../client/testing/testController/unittest/testDiscoveryAdapter';
 
 suite('Unittest test discovery adapter', () => {
     let stubConfigSettings: IConfigurationService;
+    let outputChannel: typemoq.IMock<ITestOutputChannel>;
 
     setup(() => {
         stubConfigSettings = ({
@@ -18,6 +20,7 @@ suite('Unittest test discovery adapter', () => {
                 testing: { unittestArgs: ['-v', '-s', '.', '-p', 'test*'] },
             }),
         } as unknown) as IConfigurationService;
+        outputChannel = typemoq.Mock.ofType<ITestOutputChannel>();
     });
 
     test('discoverTests should send the discovery command to the test server', async () => {
@@ -25,6 +28,7 @@ suite('Unittest test discovery adapter', () => {
 
         const stubTestServer = ({
             sendCommand(opt: TestCommandOptions): Promise<void> {
+                delete opt.outChannel;
                 options = opt;
                 return Promise.resolve();
             },
@@ -37,7 +41,7 @@ suite('Unittest test discovery adapter', () => {
         const uri = Uri.file('/foo/bar');
         const script = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'discovery.py');
 
-        const adapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings);
+        const adapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings, outputChannel.object);
         adapter.discoverTests(uri);
 
         assert.deepStrictEqual(options, {
@@ -62,7 +66,7 @@ suite('Unittest test discovery adapter', () => {
         const uri = Uri.file('/foo/bar');
         const data = { status: 'success' };
         const uuid = '123456789';
-        const adapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings);
+        const adapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings, outputChannel.object);
         const promise = adapter.discoverTests(uri);
 
         adapter.onDataReceivedHandler({ uuid, data: JSON.stringify(data) });
@@ -87,7 +91,7 @@ suite('Unittest test discovery adapter', () => {
 
         const uri = Uri.file('/foo/bar');
 
-        const adapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings);
+        const adapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings, outputChannel.object);
         const promise = adapter.discoverTests(uri);
 
         const data = { status: 'success' };

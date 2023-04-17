@@ -99,6 +99,7 @@ export class PythonTestServer implements ITestServer, Disposable {
             token: options.token,
             cwd: options.cwd,
             throwOnStdErr: true,
+            outputChannel: options.outChannel,
         };
 
         // Create the Python environment in which to execute the command.

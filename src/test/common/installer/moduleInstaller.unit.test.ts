@@ -13,7 +13,6 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, Disposable, ProgressLocation, Uri, WorkspaceConfiguration } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
 import { ModuleInstaller } from '../../../client/common/installer/moduleInstaller';
 import { PipEnvInstaller, pipenvName } from '../../../client/common/installer/pipEnvInstaller';
@@ -32,7 +31,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IInstaller,
-    IOutputChannel,
+    ILogOutputChannel,
     IPythonSettings,
     Product,
 } from '../../../client/common/types';
@@ -89,7 +88,7 @@ suite('Module Installer', () => {
             return super.elevatedInstall(execPath, args);
         }
     }
-    let outputChannel: TypeMoq.IMock<IOutputChannel>;
+    let outputChannel: TypeMoq.IMock<ILogOutputChannel>;
 
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -104,9 +103,9 @@ suite('Module Installer', () => {
             traceLogStub = sinon.stub(logging, 'traceLog');
 
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-            outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
+            outputChannel = TypeMoq.Mock.ofType<ILogOutputChannel>();
             serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(STANDARD_OUTPUT_CHANNEL)))
+                .setup((c) => c.get(TypeMoq.It.isValue(ILogOutputChannel)))
                 .returns(() => outputChannel.object);
             appShell = TypeMoq.Mock.ofType<IApplicationShell>();
             serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);

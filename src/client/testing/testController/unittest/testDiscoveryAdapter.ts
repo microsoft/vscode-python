@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IConfigurationService } from '../../../common/types';
+import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import {
@@ -23,7 +23,11 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
     private cwd: string | undefined;
 
-    constructor(public testServer: ITestServer, public configSettings: IConfigurationService) {
+    constructor(
+        public testServer: ITestServer,
+        public configSettings: IConfigurationService,
+        private readonly outputChannel: ITestOutputChannel,
+    ) {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
@@ -50,6 +54,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             command,
             cwd: this.cwd,
             uuid,
+            outChannel: this.outputChannel,
         };
 
         this.promiseMap.set(uuid, deferred);
