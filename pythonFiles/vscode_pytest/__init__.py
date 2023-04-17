@@ -83,10 +83,10 @@ def pytest_keyboard_interrupt(excinfo):
     ERRORS.append(excinfo.exconly())
 
 
-# for pytest the outcome for a test is only 'passed', 'skipped' or 'failed'
 class TestOutcome(Dict):
-    """
-    A class that handles outcome for a single test.
+    """A class that handles outcome for a single test.
+
+    for pytest the outcome for a test is only 'passed', 'skipped' or 'failed'
     """
 
     test: str
@@ -103,9 +103,7 @@ def create_test_outcome(
     traceback: Union[str, None],
     subtype: Optional[str] = None,
 ) -> TestOutcome:
-    """
-    A function that creates a TestOutcome object.
-    """
+    """A function that creates a TestOutcome object."""
     return TestOutcome(
         test=test,
         outcome=outcome,
@@ -116,9 +114,7 @@ def create_test_outcome(
 
 
 class testRunResultDict(Dict[str, Dict[str, TestOutcome]]):
-    """
-    A class that stores all test run results.
-    """
+    """A class that stores all test run results."""
 
     outcome: str
     tests: Dict[str, TestOutcome]
@@ -129,12 +125,9 @@ IS_DISCOVERY = False
 
 
 def pytest_load_initial_conftests(early_config, parser, args):
-    print("pytest_addoption")
-    print(args)
     if "--collect-only" in args:
         global IS_DISCOVERY
         IS_DISCOVERY = True
-        print("IS_DISCOVERY: ", IS_DISCOVERY)
 
 
 def pytest_report_teststatus(report, config):
@@ -147,8 +140,6 @@ def pytest_report_teststatus(report, config):
     """
 
     if report.when == "call":
-        print(report.nodeid)
-        # TODO: fix these on error
         traceback = None
         message = None
         report_value = "skipped"
@@ -225,25 +216,6 @@ def pytest_sessionfinish(session, exitstatus):
             collected_tests if collected_tests else None,
         )
 
-    # def pytest_report_collectionfinish(config, start_path, startdir, items):
-
-
-# def pytest_report_teststatus(report, config):
-#     """
-#     A pytest hook that is called when a test is called. It is called 3 times per test,
-#       during setup, call, and teardown.
-
-#     Keyword arguments:
-#     report -- the report on the test setup, call, and teardown.
-#     config -- configuration object.
-#     """
-#     if report.failed:
-#         print("report.failed")
-#         cwd = pathlib.Path.cwd()
-#         errors.append(report.longreprtext)
-#         post_response(os.fsdecode(cwd), TestNode(), errors)
-#     print("report", report)
-
 
 def pytest_internalerror(excrepr, excinfo):
     """A pytest hook that is called when an internal error occurs.
@@ -266,7 +238,7 @@ def pytest_exception_interact(node, call, report):
     """
     # call.excinfo is the captured exception of the call, if it raised as type ExceptionInfo.
     # call.excinfo.exconly() returns the exception as a string.
-    ERRORS.append(call.execinfo.exconly())
+    ERRORS.append(call.excinfo.exconly())
 
 
 def pytest_keyboard_interrupt(excinfo):
@@ -277,29 +249,6 @@ def pytest_keyboard_interrupt(excinfo):
     """
     # The function execonly() returns the exception as a string.
     ERRORS.append(excinfo.exconly())
-
-
-def pytest_sessionfinish(session, exitstatus):
-    """A pytest hook that is called after pytest has fulled finished.
-
-    Keyword arguments:
-    session -- the pytest session object.
-    exitstatus -- the status code of the session.
-    """
-    cwd = pathlib.Path.cwd()
-    try:
-        session_node: Union[TestNode, None] = build_test_tree(session)
-        if not session_node:
-            raise VSCodePytestError(
-                "Something went wrong following pytest finish, \
-                    no session node was created"
-            )
-        post_response(os.fsdecode(cwd), session_node)
-    except Exception as e:
-        ERRORS.append(
-            f"Error Occurred, traceback: {(traceback.format_exc() if e.__traceback__ else '')}"
-        )
-        post_response(os.fsdecode(cwd), TestNode())
 
 
 def build_test_tree(session: pytest.Session) -> TestNode:
@@ -522,13 +471,19 @@ Content-Type: application/json
 Request-uuid: {testuuid}
 
 {data}"""
-    try:
-        with socket_manager.SocketManager(addr) as s:
-            if s.socket is not None:
-                s.socket.sendall(request.encode("utf-8"))
-    except Exception as e:
-        print(f"Error sending response: {e}")
-        print(f"Request data: {request}")
+    test_output_file: Optional[str] = os.getenv("TEST_OUTPUT_FILE", None)
+    if test_output_file == "stdout":
+        print(request)
+    elif test_output_file:
+        pathlib.Path(test_output_file).write_text(request, encoding="utf-8")
+    else:
+        try:
+            with socket_manager.SocketManager(addr) as s:
+                if s.socket is not None:
+                    s.socket.sendall(request.encode("utf-8"))
+        except Exception as e:
+            print(f"Plugin error connection error[vscode-pytest]: {e}")
+            print(f"[vscode-pytest] data: {request}")
 
 
 def post_response(cwd: str, session_node: TestNode) -> None:
