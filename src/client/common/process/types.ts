@@ -3,7 +3,7 @@
 
 import { ChildProcess, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation, PythonEnvironment } from '../../pythonEnvironments/info';
 import { ExecutionInfo, IDisposable } from '../types';
@@ -24,6 +24,7 @@ export type SpawnOptions = ChildProcessSpawnOptions & {
     mergeStdOutErr?: boolean;
     throwOnStdErr?: boolean;
     extraVariables?: NodeJS.ProcessEnv;
+    outputChannel?: OutputChannel;
 };
 
 export type ShellOptions = ExecOptions & { throwOnStdErr?: boolean };
