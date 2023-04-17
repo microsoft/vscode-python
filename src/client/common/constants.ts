@@ -93,8 +93,6 @@ export namespace ThemeIcons {
 
 export const DEFAULT_INTERPRETER_SETTING = 'python';
 
-export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';
-
 export const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
 export function isTestExecution(): boolean {
