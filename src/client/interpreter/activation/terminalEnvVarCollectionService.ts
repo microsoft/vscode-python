@@ -8,7 +8,13 @@ import { IApplicationShell, IApplicationEnvironment } from '../../common/applica
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
 import { IPlatformService } from '../../common/platform/types';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
-import { IExtensionContext, IExperimentService, Resource, IDisposableRegistry } from '../../common/types';
+import {
+    IExtensionContext,
+    IExperimentService,
+    Resource,
+    IDisposableRegistry,
+    IConfigurationService,
+} from '../../common/types';
 import { Deferred, createDeferred } from '../../common/utils/async';
 import { Interpreters } from '../../common/utils/localize';
 import { traceDecoratorVerbose, traceVerbose } from '../../logging';
@@ -36,6 +42,7 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IEnvironmentActivationService) private environmentActivationService: IEnvironmentActivationService,
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
     ) {}
 
     public async activate(): Promise<void> {
@@ -68,6 +75,11 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
     }
 
     public async _applyCollection(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
+        const settings = this.configurationService.getSettings(resource);
+        if (!settings.terminal.activateEnvironment) {
+            traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
+            return;
+        }
         const env = await this.environmentActivationService.getActivatedEnvironmentVariables(
             resource,
             undefined,
