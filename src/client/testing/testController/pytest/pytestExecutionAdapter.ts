@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { IConfigurationService } from '../../../common/types';
+import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { traceVerbose } from '../../../logging';
 import { DataReceivedEvent, ExecutionTestPayload, ITestExecutionAdapter, ITestServer } from '../common/types';
@@ -16,7 +16,11 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
 
     private deferred: Deferred<ExecutionTestPayload> | undefined;
 
-    constructor(public testServer: ITestServer, public configSettings: IConfigurationService) {
+    constructor(
+        public testServer: ITestServer,
+        public configSettings: IConfigurationService,
+        private readonly outputChannel: ITestOutputChannel,
+    ) {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
@@ -31,6 +35,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     // ** Old version of discover tests.
     async runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload> {
         traceVerbose(uri, testIds, debugBool);
+        // TODO:Remove this line after enabling runs
+        this.outputChannel.appendLine('Running tests.');
         this.deferred = createDeferred<ExecutionTestPayload>();
         return this.deferred.promise;
     }
@@ -62,6 +68,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
 //                 TEST_UUID: uuid.toString(),
 //                 TEST_PORT: this.testServer.getPort().toString(),
 //             },
+//             outputChannel: this.outputChannel,
 //         };
 
 //         // Create the Python environment in which to execute the command.
