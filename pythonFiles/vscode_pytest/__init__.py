@@ -217,40 +217,6 @@ def pytest_sessionfinish(session, exitstatus):
         )
 
 
-def pytest_internalerror(excrepr, excinfo):
-    """A pytest hook that is called when an internal error occurs.
-
-    Keyword arguments:
-    excrepr -- the exception representation.
-    excinfo -- the exception information of type ExceptionInfo.
-    """
-    # call.excinfo.exconly() returns the exception as a string.
-    ERRORS.append(excinfo.exconly())
-
-
-def pytest_exception_interact(node, call, report):
-    """A pytest hook that is called when an exception is raised which could be handled.
-
-    Keyword arguments:
-    node -- the node that raised the exception.
-    call -- the call object.
-    report -- the report object of either type CollectReport or TestReport.
-    """
-    # call.excinfo is the captured exception of the call, if it raised as type ExceptionInfo.
-    # call.excinfo.exconly() returns the exception as a string.
-    ERRORS.append(call.excinfo.exconly())
-
-
-def pytest_keyboard_interrupt(excinfo):
-    """A pytest hook that is called when a keyboard interrupt is raised.
-
-    Keyword arguments:
-    excinfo -- the exception information of type ExceptionInfo.
-    """
-    # The function execonly() returns the exception as a string.
-    ERRORS.append(excinfo.exconly())
-
-
 def build_test_tree(session: pytest.Session) -> TestNode:
     """Builds a tree made up of testing nodes from the pytest session.
 

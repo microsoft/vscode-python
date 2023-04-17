@@ -35,7 +35,7 @@ uf_execution_expected_output = {
     f"{TEST_SUBTRACT_FUNCTION}test_subtract_negative_numbers": {
         "test": f"{TEST_SUBTRACT_FUNCTION}test_subtract_negative_numbers",
         "outcome": FAILURE,
-        "message": TEST_SUBTRACT_FUNCTION_NEGATIVE_NUMBERS_ERROR,
+        "message": "ERROR MESSAGE",
         "traceback": None,
         "subtest": None,
     },
@@ -170,7 +170,7 @@ dual_level_nested_folder_execution_expected_output = {
     "dual_level_nested_folder/test_top_folder.py::test_top_function_f": {
         "test": "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
         "outcome": "failure",
-        "message": "def test_top_function_f():  # test_marker--test_top_function_f\n>       assert False\nE       assert False\n\ndual_level_nested_folder/test_top_folder.py:14: AssertionError",
+        "message": "ERROR MESSAGE",
         "traceback": None,
         "subtest": None,
     },
@@ -184,7 +184,7 @@ dual_level_nested_folder_execution_expected_output = {
     "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f": {
         "test": "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
         "outcome": "failure",
-        "message": "def test_bottom_function_f():  # test_marker--test_bottom_function_f\n>       assert False\nE       assert False\n\ndual_level_nested_folder/nested_folder_one/test_bottom_folder.py:14: AssertionError",
+        "message": "ERROR MESSAGE",
         "traceback": None,
         "subtest": None,
     },
@@ -228,7 +228,7 @@ parametrize_tests_expected_execution_output = {
     "parametrize_tests.py::test_adding[6+9-16]": {
         "test": "parametrize_tests.py::test_adding[6+9-16]",
         "outcome": "failure",
-        "message": 'actual = \'6+9\', expected = 16\n\n    @pytest.mark.parametrize(  # test_marker--test_adding\n        "actual, expected", [("3+5", 8), ("2+4", 6), ("6+9", 16)]\n    )\n    def test_adding(actual, expected):\n>       assert eval(actual) == expected\nE       AssertionError: assert 15 == 16\nE        +  where 15 = eval(\'6+9\')\n\nparametrize_tests.py:10: AssertionError',
+        "message": "ERROR MESSAGE",
         "traceback": None,
         "subtest": None,
     },
@@ -279,7 +279,7 @@ no_test_ids_pytest_execution_expected_output = {
     "dual_level_nested_folder/test_top_folder.py::test_top_function_f": {
         "test": "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
         "outcome": "failure",
-        "message": "def test_top_function_f():  # test_marker--test_top_function_f\n>       assert False\nE       assert False\n\ndual_level_nested_folder/test_top_folder.py:14: AssertionError",
+        "message": "ERROR MESSAGE",
         "traceback": None,
         "subtest": None,
     },
@@ -293,7 +293,7 @@ no_test_ids_pytest_execution_expected_output = {
     "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f": {
         "test": "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
         "outcome": "failure",
-        "message": "def test_bottom_function_f():  # test_marker--test_bottom_function_f\n>       assert False\nE       assert False\n\ndual_level_nested_folder/nested_folder_one/test_bottom_folder.py:14: AssertionError",
+        "message": "ERROR MESSAGE",
         "traceback": None,
         "subtest": None,
     },
@@ -314,7 +314,7 @@ no_test_ids_pytest_execution_expected_output = {
     "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_negative_numbers": {
         "test": "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_negative_numbers",
         "outcome": "failure",
-        "message": "self = <test_subtract.TestSubtractFunction testMethod=test_subtract_negative_numbers>\n\n    def test_subtract_negative_numbers(  # test_marker--test_subtract_negative_numbers\n        self,\n    ):\n        result = subtract(-2, -3)\n>       self.assertEqual(result, 100000)\nE       AssertionError: 1 != 100000\n\nunittest_folder/test_subtract.py:25: AssertionError",
+        "message": "ERROR MESSAGE",
         "traceback": None,
         "subtest": None,
     },

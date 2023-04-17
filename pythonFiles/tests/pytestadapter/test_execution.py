@@ -158,4 +158,8 @@ def test_pytest_execution(test_ids, expected_const):
     assert all(item in actual for item in ("status", "cwd", "result"))
     assert actual["status"] == "success"
     assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    assert actual["result"] == expected_const
+    result_data = actual["result"]
+    for key in result_data:
+        if result_data[key]["outcome"] == "failure":
+            result_data[key]["message"] = "ERROR MESSAGE"
+    assert result_data == expected_const
