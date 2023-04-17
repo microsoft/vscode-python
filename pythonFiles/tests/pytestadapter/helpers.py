@@ -1,19 +1,34 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import contextlib
 import io
 import json
 import os
 import pathlib
+import random
 import socket
 import subprocess
 import sys
-import threading
 import uuid
-from typing import List, Union
+from typing import Dict, List, Union
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 from typing_extensions import TypedDict
+
+
+@contextlib.contextmanager
+def test_output_file(root: pathlib.Path, ext: str = ".txt"):
+    """Creates a temporary python file with a random name."""
+    basename = (
+        "".join(random.choice("abcdefghijklmnopqrstuvwxyz") for _ in range(9)) + ext
+    )
+    fullpath = root / basename
+    try:
+        fullpath.write_text("", encoding="utf-8")
+        yield fullpath
+    finally:
+        os.unlink(str(fullpath))
 
 
 def create_server(
@@ -68,7 +83,7 @@ Env_Dict = TypedDict(
 )
 
 
-def process_rpc_json(data: str) -> dict[str, str]:
+def process_rpc_json(data: str) -> Dict[str, str]:
     """Process the JSON data which comes from the server which runs the pytest discovery."""
     str_stream: io.StringIO = io.StringIO(data)
 
@@ -92,9 +107,9 @@ def process_rpc_json(data: str) -> dict[str, str]:
     return json.loads(raw_json)
 
 
-def runner(args: list[str]) -> Union[dict[str, str], None]:
+def runner(args: List[str]) -> Union[Dict[str, str], None]:
     """Run the pytest discovery and return the JSON data from the server."""
-    process_args: list[str] = [
+    process_args: List[str] = [
         sys.executable,
         "-m",
         "pytest",
@@ -102,49 +117,30 @@ def runner(args: list[str]) -> Union[dict[str, str], None]:
         "vscode_pytest",
     ] + args
 
-    listener: socket.socket = create_server()
-    _, port = listener.getsockname()
-    listener.listen()
+    with test_output_file(TEST_DATA_PATH) as output_path:
+        env = os.environ.copy()
+        env.update(
+            {
+                "TEST_UUID": str(uuid.uuid4()),
+                "TEST_PORT": str(12345),  # port is not used for tests
+                "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
+                "TEST_OUTPUT_FILE": os.fspath(output_path),
+            }
+        )
 
-    env = {
-        "TEST_UUID": str(uuid.uuid4()),
-        "TEST_PORT": str(port),
-        "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
-    }
+        result = subprocess.run(
+            process_args,
+            env=env,
+            cwd=os.fspath(TEST_DATA_PATH),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        if result.returncode != 0:
+            print("Subprocess Run failed with:")
+            print(result.stdout.decode(encoding="utf-8"))
+            print(result.stderr.decode(encoding="utf-8"))
 
-    result: list = []
-    t1: threading.Thread = threading.Thread(
-        target=_listen_on_socket, args=(listener, result)
-    )
-    t1.start()
-
-    t2 = threading.Thread(
-        target=lambda proc_args, proc_env, proc_cwd: subprocess.run(
-            proc_args, env=proc_env, cwd=proc_cwd
-        ),
-        args=(process_args, env, TEST_DATA_PATH),
-    )
-    t2.start()
-
-    t1.join()
-    t2.join()
-
-    return process_rpc_json(result[0]) if result else None
-
-
-def _listen_on_socket(listener: socket.socket, result: List[str]):
-    """Listen on the socket for the JSON data from the server.
-
-    Created as a seperate function for clarity in threading.
-    """
-    sock, (other_host, other_port) = listener.accept()
-    all_data: list = []
-    while True:
-        data: bytes = sock.recv(1024 * 1024)
-        if not data:
-            break
-        all_data.append(data.decode("utf-8"))
-    result.append("".join(all_data))
+        return process_rpc_json(output_path.read_text(encoding="utf-8"))
 
 
 def find_test_line_number(test_name: str, test_file_path) -> str:

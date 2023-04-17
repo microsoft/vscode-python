@@ -480,10 +480,16 @@ Content-Type: application/json
 Request-uuid: {testuuid}
 
 {data}"""
-    try:
-        with socket_manager.SocketManager(addr) as s:
-            if s.socket is not None:
-                s.socket.sendall(request.encode("utf-8"))
-    except Exception as e:
-        print(f"Error sending response: {e}")
-        print(f"Request data: {request}")
+    test_output_file: Optional[str] = os.getenv("TEST_OUTPUT_FILE", None)
+    if test_output_file == "stdout":
+        print(request)
+    elif test_output_file:
+        pathlib.Path(test_output_file).write_text(request, encoding="utf-8")
+    else:
+        try:
+            with socket_manager.SocketManager(addr) as s:
+                if s.socket is not None:
+                    s.socket.sendall(request.encode("utf-8"))
+        except Exception as e:
+            print(f"Plugin error connection error[vscode-pytest]: {e}")
+            print(f"[vscode-pytest] data: {request}")

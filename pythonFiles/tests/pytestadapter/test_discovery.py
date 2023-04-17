@@ -28,7 +28,7 @@ def test_syntax_error(tmp_path):
     temp_dir.mkdir()
     p = temp_dir / "error_syntax_discovery.py"
     shutil.copyfile(file_path, p)
-    actual = runner(["--collect-only", p])
+    actual = runner(["--collect-only", os.fspath(p)])
     assert actual
     assert all(item in actual for item in ("status", "cwd", "error"))
     assert actual["status"] == "error"
