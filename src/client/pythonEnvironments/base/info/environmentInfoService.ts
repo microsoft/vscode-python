@@ -7,7 +7,7 @@ import { createDeferred, Deferred, sleep } from '../../../common/utils/async';
 import { createRunningWorkerPool, IWorkerPool, QueuePosition } from '../../../common/utils/workerPool';
 import { getInterpreterInfo, InterpreterInformation } from './interpreter';
 import { buildPythonExecInfo } from '../../exec';
-import { traceError, traceInfo, traceWarn } from '../../../logging';
+import { traceError, traceVerbose, traceWarn } from '../../../logging';
 import { Conda, CONDA_ACTIVATION_TIMEOUT, isCondaEnvironment } from '../../common/environmentManagers/conda';
 import { PythonEnvInfo, PythonEnvKind } from '.';
 import { normCasePath } from '../../common/externalDependencies';
@@ -153,7 +153,7 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
             // as complete env info may not be available at this time.
             const isCondaEnv = env.kind === PythonEnvKind.Conda || (await isCondaEnvironment(env.executable.filename));
             if (isCondaEnv) {
-                traceInfo(
+                traceVerbose(
                     `Validating ${env.executable.filename} normally failed with error, falling back to using conda run: (${reason})`,
                 );
                 if (this.condaRunWorkerPool === undefined) {

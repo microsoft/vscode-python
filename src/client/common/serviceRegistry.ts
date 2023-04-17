@@ -90,6 +90,7 @@ import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStep
 import { Random } from './utils/random';
 import { ContextKeyManager } from './application/contextKeyManager';
 import { CreatePythonFileCommandHandler } from './application/commands/createPythonFile';
+import { RequireJupyterPrompt } from '../jupyter/requireJupyterPrompt';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
@@ -109,6 +110,10 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IJupyterExtensionDependencyManager>(
         IJupyterExtensionDependencyManager,
         JupyterExtensionDependencyManager,
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        RequireJupyterPrompt,
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
