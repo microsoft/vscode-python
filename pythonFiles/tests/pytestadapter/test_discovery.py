@@ -40,9 +40,6 @@ def test_parameterized_error_collect():
     """Tests pytest discovery on specific file that incorrectly uses parametrize.
 
     The json should still be returned but the errors list should be present.
-
-    Keyword arguments:
-    tmp_path -- pytest fixture that creates a temporary directory.
     """
     file_path_str = "error_parametrize_discovery.py"
     actual = runner(["--collect-only", file_path_str])
