@@ -3,21 +3,14 @@
 
 'use strict';
 
-import {
-    debug,
-    DebugConfigurationProvider,
-    DebugConfigurationProviderTriggerKind,
-    languages,
-    OutputChannel,
-    window,
-} from 'vscode';
+import { debug, DebugConfigurationProvider, DebugConfigurationProviderTriggerKind, languages, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './common/application/types';
-import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
+import { Commands, PYTHON, PYTHON_LANGUAGE, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
 import {
@@ -25,7 +18,7 @@ import {
     IDisposableRegistry,
     IExtensions,
     IInterpreterPathService,
-    IOutputChannel,
+    ILogOutputChannel,
     IPathUtils,
 } from './common/types';
 import { noop } from './common/utils/misc';
@@ -173,7 +166,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
             const dispatcher = new DebugSessionEventDispatcher(handlers, DebugService.instance, disposables);
             dispatcher.registerEventHandlers();
 
-            const outputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+            const outputChannel = serviceManager.get<ILogOutputChannel>(ILogOutputChannel);
             disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
             cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
 

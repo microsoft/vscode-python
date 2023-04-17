@@ -18,7 +18,7 @@ import {
     IConfigurationService,
     IInstaller,
     IMypyCategorySeverity,
-    IOutputChannel,
+    ILogOutputChannel,
     IPycodestyleCategorySeverity,
     IPylintCategorySeverity,
     IPythonSettings,
@@ -243,7 +243,7 @@ export class BaseTestFixture {
     public lintingSettings: LintingSettings;
 
     // data
-    public outputChannel: TypeMoq.IMock<IOutputChannel>;
+    public outputChannel: TypeMoq.IMock<ILogOutputChannel>;
 
     // artifacts
     public output: string;
@@ -309,10 +309,10 @@ export class BaseTestFixture {
 
         // data
 
-        this.outputChannel = TypeMoq.Mock.ofType<IOutputChannel>(undefined, TypeMoq.MockBehavior.Strict);
+        this.outputChannel = TypeMoq.Mock.ofType<ILogOutputChannel>(undefined, TypeMoq.MockBehavior.Strict);
 
         this.serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(ILogOutputChannel)))
             .returns(() => this.outputChannel.object);
         this.initData();
 
