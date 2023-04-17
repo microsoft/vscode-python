@@ -12,8 +12,8 @@ import * as commandApis from '../../../client/common/vscodeApis/commandApis';
 import { IInterpreterQuickPick } from '../../../client/interpreter/configuration/types';
 import { registerCreateEnvironmentFeatures } from '../../../client/pythonEnvironments/creation/createEnvApi';
 import * as windowApis from '../../../client/common/vscodeApis/windowApis';
-import { CreateEnvironmentProvider } from '../../../client/pythonEnvironments/creation/types';
 import { handleCreateEnvironmentCommand } from '../../../client/pythonEnvironments/creation/createEnvironment';
+import { CreateEnvironmentProvider } from '../../../client/pythonEnvironments/creation/proposed.createEnvApis';
 
 chaiUse(chaiAsPromised);
 
@@ -57,6 +57,11 @@ suite('Create Environment APIs', () => {
 
     [true, false].forEach((selectEnvironment) => {
         test(`Set environment selectEnvironment == ${selectEnvironment}`, async () => {
+            const workspace1 = {
+                uri: Uri.file('/path/to/env'),
+                name: 'workspace1',
+                index: 0,
+            };
             const provider = typemoq.Mock.ofType<CreateEnvironmentProvider>();
             provider.setup((p) => p.name).returns(() => 'test');
             provider.setup((p) => p.id).returns(() => 'test-id');
@@ -66,7 +71,9 @@ suite('Create Environment APIs', () => {
                 .returns(() =>
                     Promise.resolve({
                         path: '/path/to/env',
-                        uri: Uri.file('/path/to/env'),
+                        workspaceFolder: workspace1,
+                        action: undefined,
+                        error: undefined,
                     }),
                 );
             provider.setup((p) => (p as any).then).returns(() => undefined);

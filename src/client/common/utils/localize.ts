@@ -188,6 +188,9 @@ export namespace LanguageService {
     );
 }
 export namespace Interpreters {
+    export const requireJupyter = l10n.t(
+        'Running in Interactive window requires Jupyter Extension. Would you like to install it? [Learn more](https://aka.ms/pythonJupyterSupport).',
+    );
     export const installingPython = l10n.t('Installing Python into Environment...');
     export const discovering = l10n.t('Discovering Python Interpreters');
     export const refreshing = l10n.t('Refreshing Python Interpreters');
@@ -218,6 +221,9 @@ export namespace Interpreters {
 }
 
 export namespace InterpreterQuickPickList {
+    export const condaEnvWithoutPythonTooltip = l10n.t(
+        'Python is not available in this environment, it will automatically be installed upon selecting it',
+    );
     export const noPythonInstalled = l10n.t('Python is not installed, please download and install it');
     export const clickForInstructions = l10n.t('Click for instructions...');
     export const globalGroupName = l10n.t('Global');
