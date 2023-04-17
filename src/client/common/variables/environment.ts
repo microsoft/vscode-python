@@ -57,7 +57,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
     public mergeVariables(
         source: EnvironmentVariables,
         target: EnvironmentVariables,
-        options?: { overwrite?: boolean },
+        options?: { overwrite?: boolean; mergeAll?: boolean },
     ) {
         if (!target) {
             return;
@@ -67,7 +67,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         source = normCaseKeys(source);
         const settingsNotToMerge = ['PYTHONPATH', this.pathVariable];
         Object.keys(source).forEach((setting) => {
-            if (settingsNotToMerge.indexOf(setting) >= 0) {
+            if (!options?.mergeAll && settingsNotToMerge.indexOf(setting) >= 0) {
                 return;
             }
             if (target[setting] === undefined || options?.overwrite) {
