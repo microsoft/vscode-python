@@ -46,6 +46,7 @@ export namespace Commands {
     export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
     export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
     export const GetSelectedInterpreterPath = 'python.interpreterPath';
+    export const InstallJupyter = 'python.installJupyter';
     export const InstallPython = 'python.installPython';
     export const InstallPythonOnLinux = 'python.installPythonOnLinux';
     export const InstallPythonOnMac = 'python.installPythonOnMac';
