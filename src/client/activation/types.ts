@@ -5,7 +5,7 @@
 
 import { Event } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
-import type { IDisposable, IOutputChannel, Resource } from '../common/types';
+import type { IDisposable, ILogOutputChannel, Resource } from '../common/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 
 export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
@@ -110,10 +110,10 @@ export interface ILanguageServerOutputChannel {
     /**
      * Creates output channel if necessary and returns it
      *
-     * @type {IOutputChannel}
+     * @type {ILogOutputChannel}
      * @memberof ILanguageServerOutputChannel
      */
-    readonly channel: IOutputChannel;
+    readonly channel: ILogOutputChannel;
 }
 
 export const IExtensionSingleActivationService = Symbol('IExtensionSingleActivationService');
