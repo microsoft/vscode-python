@@ -4,8 +4,7 @@
 import { Container } from 'inversify';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Memento, OutputChannel } from 'vscode';
-import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
+import { Disposable, Memento } from 'vscode';
 import { IS_WINDOWS } from '../client/common/platform/constants';
 import { FileSystem } from '../client/common/platform/fileSystem';
 import { PathUtils } from '../client/common/platform/pathUtils';
@@ -28,10 +27,11 @@ import {
     ICurrentProcess,
     IDisposableRegistry,
     IMemento,
-    IOutputChannel,
+    ILogOutputChannel,
     IPathUtils,
     IsWindows,
     WORKSPACE_MEMENTO,
+    ITestOutputChannel,
 } from '../client/common/types';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
 import { registerTypes as formattersRegisterTypes } from '../client/formatters/serviceRegistry';
@@ -48,7 +48,6 @@ import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { registerTypes as lintersRegisterTypes } from '../client/linters/serviceRegistry';
-import { TEST_OUTPUT_CHANNEL } from '../client/testing/constants';
 import { registerTypes as unittestsRegisterTypes } from '../client/testing/serviceRegistry';
 import { LegacyFileSystem } from './legacyFileSystem';
 import { MockOutputChannel } from './mockClasses';
@@ -83,14 +82,10 @@ export class IocContainer {
 
         const stdOutputChannel = new MockOutputChannel('Python');
         this.disposables.push(stdOutputChannel);
-        this.serviceManager.addSingletonInstance<OutputChannel>(
-            IOutputChannel,
-            stdOutputChannel,
-            STANDARD_OUTPUT_CHANNEL,
-        );
+        this.serviceManager.addSingletonInstance<ILogOutputChannel>(ILogOutputChannel, stdOutputChannel);
         const testOutputChannel = new MockOutputChannel('Python Test - UnitTests');
         this.disposables.push(testOutputChannel);
-        this.serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, testOutputChannel, TEST_OUTPUT_CHANNEL);
+        this.serviceManager.addSingletonInstance<ITestOutputChannel>(ITestOutputChannel, testOutputChannel);
 
         this.serviceManager.addSingleton<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,
