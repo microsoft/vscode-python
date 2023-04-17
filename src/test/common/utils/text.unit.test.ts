@@ -5,7 +5,7 @@
 
 import { expect } from 'chai';
 import { Position, Range } from 'vscode';
-import { parsePosition, parseRange } from '../../../client/common/utils/text';
+import { getDedentedLines, getIndent, parsePosition, parseRange } from '../../../client/common/utils/text';
 
 suite('parseRange()', () => {
     test('valid strings', async () => {
@@ -96,5 +96,54 @@ suite('parsePosition()', () => {
         for (const raw of tests) {
             expect(() => parsePosition(raw)).to.throw();
         }
+    });
+});
+
+suite('getIndent()', () => {
+    const testsData = [
+        { line: 'text', expected: '' },
+        { line: ' text', expected: ' ' },
+        { line: '  text', expected: '  ' },
+        { line: '	tabulatedtext', expected: '' },
+    ];
+
+    testsData.forEach((testData) => {
+        test(`getIndent when line is ${testData.line}`, () => {
+            const indent = getIndent(testData.line);
+
+            expect(indent).equal(testData.expected);
+        });
+    });
+});
+
+suite('getDedentedLines()', () => {
+    const testsData = [
+        { text: '', expected: [] },
+        { text: '\n', expected: Error, exceptionMessage: 'expected "first" line to not be blank' },
+        { text: 'line1\n', expected: Error, exceptionMessage: 'expected actual first line to be blank' },
+        {
+            text: '\n  line2\n line3',
+            expected: Error,
+            exceptionMessage: 'line 1 has less indent than the "first" line',
+        },
+        {
+            text: '\n  line2\n  line3',
+            expected: ['line2', 'line3'],
+        },
+        {
+            text: '\n  line2\n     line3',
+            expected: ['line2', '   line3'],
+        },
+    ];
+
+    testsData.forEach((testData) => {
+        test(`getDedentedLines when line is ${testData.text}`, () => {
+            if (Array.isArray(testData.expected)) {
+                const dedentedLines = getDedentedLines(testData.text);
+                expect(dedentedLines).to.deep.equal(testData.expected);
+            } else {
+                expect(() => getDedentedLines(testData.text)).to.throw(testData.expected, testData.exceptionMessage);
+            }
+        });
     });
 });
