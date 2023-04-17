@@ -45,16 +45,15 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     //     const { pytestArgs } = settings.testing;
     //     traceVerbose(pytestArgs);
 
-    //     this.cwd = uri.fsPath;
     //     return this.runPytestDiscovery(uri, executionFactory);
     // }
 
     async runPytestDiscovery(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
         const deferred = createDeferred<DiscoveredTestPayload>();
-        this.deferred = createDeferred<DiscoveredTestPayload>();
         const relativePathToPytest = 'pythonFiles';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         const uuid = this.testServer.createUUID(uri.fsPath);
+        this.promiseMap.set(uuid, deferred);
         const settings = this.configSettings.getSettings(uri);
         const { pytestArgs } = settings.testing;
 
@@ -86,7 +85,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         } catch (ex) {
             console.error(ex);
         }
-
         return deferred.promise;
     }
 }
