@@ -28,6 +28,7 @@ suite('Unittest test execution adapter', () => {
 
         const stubTestServer = ({
             sendCommand(opt: TestCommandOptions): Promise<void> {
+                delete opt.outChannel;
                 options = opt;
                 return Promise.resolve();
             },
