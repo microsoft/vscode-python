@@ -9,7 +9,7 @@ import { NodeLanguageServerAnalysisOptions } from '../../../client/activation/no
 import { ILanguageServerOutputChannel } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { PYTHON, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { ILogOutputChannel } from '../../../client/common/types';
+import { IExperimentService, ILogOutputChannel } from '../../../client/common/types';
 
 suite('Pylance Language Server - Analysis Options', () => {
     class TestClass extends NodeLanguageServerAnalysisOptions {
