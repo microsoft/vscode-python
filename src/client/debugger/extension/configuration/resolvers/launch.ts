@@ -19,6 +19,8 @@ import { getProgram, IDebugEnvironmentVariablesService } from './helper';
 
 @injectable()
 export class LaunchConfigurationResolver extends BaseConfigurationResolver<LaunchRequestArguments> {
+    private isPythonSet = false;
+
     constructor(
         @inject(IDiagnosticsService)
         @named(InvalidPythonPathInDebuggerServiceId)
@@ -36,6 +38,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         debugConfiguration: LaunchRequestArguments,
         _token?: CancellationToken,
     ): Promise<LaunchRequestArguments | undefined> {
+        this.isPythonSet = debugConfiguration.python !== undefined;
         if (
             debugConfiguration.name === undefined &&
             debugConfiguration.type === undefined &&
@@ -84,7 +87,6 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         workspaceFolder: Uri | undefined,
         debugConfiguration: LaunchRequestArguments,
     ): Promise<void> {
-        const isPythonSet = debugConfiguration.python !== undefined;
         if (debugConfiguration.python === undefined) {
             debugConfiguration.python = debugConfiguration.pythonPath;
         }
@@ -104,7 +106,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.envFile = settings.envFile;
         }
         let baseEnvVars: EnvironmentVariables | undefined;
-        if (isPythonSet) {
+        if (this.isPythonSet) {
             baseEnvVars = await this.environmentActivationService.getActivatedEnvironmentVariables(
                 workspaceFolder,
                 await this.interpreterService.getInterpreterDetails(debugConfiguration.python ?? ''),

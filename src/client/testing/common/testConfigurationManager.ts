@@ -5,12 +5,12 @@ import { IFileSystem } from '../../common/platform/types';
 import { IInstaller } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
-import { traceInfo } from '../../logging';
+import { traceVerbose } from '../../logging';
 import { UNIT_TEST_PRODUCTS } from './constants';
 import { ITestConfigSettingsService, ITestConfigurationManager, UnitTestProduct } from './types';
 
 function handleCancelled(): void {
-    traceInfo('testing configuration (in UI) cancelled');
+    traceVerbose('testing configuration (in UI) cancelled');
     throw Error('cancelled');
 }
 

@@ -7,7 +7,7 @@ import { IWorkspaceService } from '../../common/application/types';
 import { isTestExecution } from '../../common/constants';
 import { Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { traceInfo, traceLog } from '../../logging';
+import { traceLog, traceVerbose } from '../../logging';
 import { IApplicationDiagnostics } from '../types';
 import { IDiagnostic, IDiagnosticsService, ISourceMapSupportService } from './types';
 
@@ -21,7 +21,7 @@ function log(diagnostics: IDiagnostic[]): void {
                 break;
             }
             default: {
-                traceInfo(message);
+                traceVerbose(message);
             }
         }
     });
