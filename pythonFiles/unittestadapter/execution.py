@@ -62,7 +62,9 @@ class TestOutcomeEnum(str, enum.Enum):
 
 
 class UnittestTestResult(unittest.TextTestResult):
-    formatted: Dict[str, Dict[str, Union[str, None]]] = dict()
+    def __init__(self, *args, **kwargs):
+        self.formatted: Dict[str, Dict[str, Union[str, None]]] = dict()
+        super(UnittestTestResult, self).__init__(*args, **kwargs)
 
     def startTest(self, test: unittest.TestCase):
         super(UnittestTestResult, self).startTest(test)
@@ -128,7 +130,10 @@ class UnittestTestResult(unittest.TextTestResult):
             formatted = formatted[1:]
             tb = "".join(formatted)
 
-        test_id = test.id()
+        if subtest:
+            test_id = subtest.id()
+        else:
+            test_id = test.id()
 
         result = {
             "test": test.id(),

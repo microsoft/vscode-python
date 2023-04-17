@@ -121,7 +121,10 @@ export function plainExec(
     }
 
     const stdoutBuffers: Buffer[] = [];
-    on(proc.stdout, 'data', (data: Buffer) => stdoutBuffers.push(data));
+    on(proc.stdout, 'data', (data: Buffer) => {
+        stdoutBuffers.push(data);
+        options.outputChannel?.append(data.toString());
+    });
     const stderrBuffers: Buffer[] = [];
     on(proc.stderr, 'data', (data: Buffer) => {
         if (options.mergeStdOutErr) {
@@ -130,6 +133,7 @@ export function plainExec(
         } else {
             stderrBuffers.push(data);
         }
+        options.outputChannel?.append(data.toString());
     });
 
     proc.once('close', () => {

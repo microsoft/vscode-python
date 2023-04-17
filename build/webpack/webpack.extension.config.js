@@ -61,6 +61,9 @@ const config = {
         // See: https://github.com/microsoft/vscode-extension-telemetry/issues/41#issuecomment-598852991
         'applicationinsights-native-metrics',
         '@opentelemetry/tracing',
+        '@azure/opentelemetry-instrumentation-azure-sdk',
+        '@opentelemetry/instrumentation',
+        '@azure/functions-core',
     ],
     plugins: [...common.getDefaultPlugins('extension')],
     resolve: {

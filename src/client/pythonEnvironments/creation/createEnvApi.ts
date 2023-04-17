@@ -9,14 +9,15 @@ import { IInterpreterQuickPick } from '../../interpreter/configuration/types';
 import { getCreationEvents, handleCreateEnvironmentCommand } from './createEnvironment';
 import { condaCreationProvider } from './provider/condaCreationProvider';
 import { VenvCreationProvider } from './provider/venvCreationProvider';
-import {
-    CreateEnvironmentExitedEventArgs,
-    CreateEnvironmentOptions,
-    CreateEnvironmentProvider,
-    CreateEnvironmentResult,
-} from './types';
 import { showInformationMessage } from '../../common/vscodeApis/windowApis';
 import { CreateEnv } from '../../common/utils/localize';
+import {
+    CreateEnvironmentProvider,
+    CreateEnvironmentOptions,
+    CreateEnvironmentResult,
+    ProposedCreateEnvironmentAPI,
+    EnvironmentDidCreateEvent,
+} from './proposed.createEnvApis';
 
 class CreateEnvironmentProviders {
     private _createEnvProviders: CreateEnvironmentProvider[] = [];
@@ -26,6 +27,9 @@ class CreateEnvironmentProviders {
     }
 
     public add(provider: CreateEnvironmentProvider) {
+        if (this._createEnvProviders.filter((p) => p.id === provider.id).length > 0) {
+            throw new Error(`Create Environment provider with id ${provider.id} already registered`);
+        }
         this._createEnvProviders.push(provider);
     }
 
@@ -63,15 +67,36 @@ export function registerCreateEnvironmentFeatures(
                 return handleCreateEnvironmentCommand(providers, options);
             },
         ),
-    );
-    disposables.push(registerCreateEnvironmentProvider(new VenvCreationProvider(interpreterQuickPick)));
-    disposables.push(registerCreateEnvironmentProvider(condaCreationProvider()));
-    disposables.push(
-        onCreateEnvironmentExited(async (e: CreateEnvironmentExitedEventArgs) => {
-            if (e.result?.path && e.options?.selectEnvironment) {
-                await interpreterPathService.update(e.result.uri, ConfigurationTarget.WorkspaceFolder, e.result.path);
-                showInformationMessage(`${CreateEnv.informEnvCreation} ${pathUtils.getDisplayName(e.result.path)}`);
+        registerCreateEnvironmentProvider(new VenvCreationProvider(interpreterQuickPick)),
+        registerCreateEnvironmentProvider(condaCreationProvider()),
+        onCreateEnvironmentExited(async (e: EnvironmentDidCreateEvent) => {
+            if (e.path && e.options?.selectEnvironment) {
+                await interpreterPathService.update(
+                    e.workspaceFolder?.uri,
+                    ConfigurationTarget.WorkspaceFolder,
+                    e.path,
+                );
+                showInformationMessage(`${CreateEnv.informEnvCreation} ${pathUtils.getDisplayName(e.path)}`);
             }
         }),
     );
+}
+
+export function buildEnvironmentCreationApi(): ProposedCreateEnvironmentAPI {
+    return {
+        onWillCreateEnvironment: onCreateEnvironmentStarted,
+        onDidCreateEnvironment: onCreateEnvironmentExited,
+        createEnvironment: async (
+            options?: CreateEnvironmentOptions | undefined,
+        ): Promise<CreateEnvironmentResult | undefined> => {
+            const providers = _createEnvironmentProviders.getAll();
+            try {
+                return await handleCreateEnvironmentCommand(providers, options);
+            } catch (err) {
+                return { path: undefined, workspaceFolder: undefined, action: undefined, error: err as Error };
+            }
+        },
+        registerCreateEnvironmentProvider: (provider: CreateEnvironmentProvider) =>
+            registerCreateEnvironmentProvider(provider),
+    };
 }

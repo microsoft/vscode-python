@@ -4,16 +4,16 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug';
+export type Arguments = unknown[];
+
 export enum LogLevel {
     Off = 0,
-    Error = 10,
-    Warn = 20,
-    Info = 30,
-    Debug = 40,
+    Trace = 1,
+    Debug = 2,
+    Info = 3,
+    Warning = 4,
+    Error = 5,
 }
-
-export type Arguments = unknown[];
 
 export interface ILogging {
     traceLog(...data: Arguments): void;
