@@ -8,7 +8,7 @@ import { inject, injectable, named } from 'inversify';
 import { dirname } from 'path';
 import { CancellationToken, Event, Extension, Memento, Uri } from 'vscode';
 import type { SemVer } from 'semver';
-import { IWorkspaceService } from '../common/application/types';
+import { IContextKeyManager, IWorkspaceService } from '../common/application/types';
 import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../common/constants';
 import { InterpreterUri, ModuleInstallFlags } from '../common/installer/types';
 import {
@@ -35,6 +35,7 @@ import {
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { IDataViewerDataProvider, IJupyterUriProvider } from './types';
 import { PylanceApi } from '../activation/node/pylanceApi';
+import { ExtensionContextKey } from '../common/application/contextKeys';
 /**
  * This allows Python extension to update Product enum without breaking Jupyter.
  * I.e. we have a strict contract, else using numbers (in enums) is bound to break across products.
@@ -201,9 +202,11 @@ export class JupyterExtensionIntegration {
         @inject(IComponentAdapter) private pyenvs: IComponentAdapter,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(ICondaService) private readonly condaService: ICondaService,
+        @inject(IContextKeyManager) private readonly contextManager: IContextKeyManager,
     ) {}
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
+        this.contextManager.setContext(ExtensionContextKey.IsJupyterInstalled, true);
         if (!this.workspaceService.isTrusted) {
             this.workspaceService.onDidGrantWorkspaceTrust(() => this.registerApi(jupyterExtensionApi));
             return undefined;
