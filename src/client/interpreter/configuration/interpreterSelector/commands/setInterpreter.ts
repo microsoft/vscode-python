@@ -415,8 +415,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
                     if (isInterpreterQuickPickItem(item) && isProblematicCondaEnvironment(item.interpreter)) {
                         if (!items[i].label.includes(Octicons.Warning)) {
                             items[i].label = `${Octicons.Warning} ${items[i].label}`;
-                            items[i].tooltip =
-                                'Python is not available in this environment, it will be automatically installed upon selecting it';
+                            items[i].tooltip = InterpreterQuickPickList.condaEnvWithoutPythonTooltip;
                         }
                     }
                 });
