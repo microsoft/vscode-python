@@ -5,7 +5,7 @@ import unittest
 
 # Test class for the test_subtest_run test.
 # The test_failed_tests function should return a dictionary that has a "success" status
-# and the result value is a dict with 6 entries, one for each subtest.
+# and the "result" value is a dict with 6 entries, one for each subtest.
 
 
 class NumbersTest(unittest.TestCase):
