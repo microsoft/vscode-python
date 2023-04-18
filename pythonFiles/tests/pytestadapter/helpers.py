@@ -11,7 +11,7 @@ import socket
 import subprocess
 import sys
 import uuid
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 from typing_extensions import TypedDict
@@ -83,7 +83,7 @@ Env_Dict = TypedDict(
 )
 
 
-def process_rpc_json(data: str) -> Dict[str, str]:
+def process_rpc_json(data: str) -> Dict[str, Any]:
     """Process the JSON data which comes from the server which runs the pytest discovery."""
     str_stream: io.StringIO = io.StringIO(data)
 
@@ -107,7 +107,7 @@ def process_rpc_json(data: str) -> Dict[str, str]:
     return json.loads(raw_json)
 
 
-def runner(args: List[str]) -> Union[Dict[str, str], None]:
+def runner(args: List[str]) -> Optional[Dict[str, Any]]:
     """Run the pytest discovery and return the JSON data from the server."""
     process_args: List[str] = [
         sys.executable,
