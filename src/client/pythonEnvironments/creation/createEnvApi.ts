@@ -71,7 +71,7 @@ export function registerCreateEnvironmentFeatures(
         registerCreateEnvironmentProvider(condaCreationProvider()),
         onCreateEnvironmentExited(async (e: DidCreateEnvironmentParams) => {
             if (e.path && e.options?.selectEnvironment) {
-                await interpreterPathService.update(e.uri, ConfigurationTarget.WorkspaceFolder, e.path);
+                await interpreterPathService.update(e.workspace?.uri, ConfigurationTarget.WorkspaceFolder, e.path);
                 showInformationMessage(`${CreateEnv.informEnvCreation} ${pathUtils.getDisplayName(e.path)}`);
             }
         }),
@@ -89,7 +89,7 @@ export function buildEnvironmentCreationApi(): ProposedCreateEnvironmentAPI {
             try {
                 return await handleCreateEnvironmentCommand(providers, options);
             } catch (err) {
-                return { error: err as Error };
+                return { path: undefined, workspace: undefined, action: undefined, error: err as Error };
             }
         },
         registerCreateEnvironmentProvider: (provider: CreateEnvironmentProvider) =>

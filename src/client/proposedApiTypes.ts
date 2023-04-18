@@ -3,6 +3,6 @@
 
 export interface ProposedExtensionAPI {
     /**
-     * Top level poposed APIs should go here.
+     * Top level proposed APIs should go here.
      */
 }

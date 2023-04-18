@@ -155,7 +155,12 @@ suite('venv Creation provider tests', () => {
         _complete!();
 
         const actual = await promise;
-        assert.deepStrictEqual(actual, { path: 'new_environment', uri: workspace1.uri });
+        assert.deepStrictEqual(actual, {
+            path: 'new_environment',
+            workspace: workspace1,
+            action: undefined,
+            error: undefined,
+        });
         interpreterQuickPick.verifyAll();
         progressMock.verifyAll();
         assert.isTrue(showErrorMessageWithLogsStub.notCalled);

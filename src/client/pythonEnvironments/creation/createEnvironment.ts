@@ -33,7 +33,13 @@ function fireStartedEvent(options?: CreateEnvironmentOptions): void {
 }
 
 function fireExitedEvent(result?: CreateEnvironmentResult, options?: CreateEnvironmentOptions, error?: Error): void {
-    onCreateEnvironmentExitedEvent.fire({ ...result, options, error });
+    onCreateEnvironmentExitedEvent.fire({
+        options,
+        workspace: result?.workspace,
+        path: result?.path,
+        action: result?.action,
+        error: error || result?.error,
+    });
     startedEventCount -= 1;
 }
 
@@ -185,7 +191,7 @@ export async function handleCreateEnvironmentCommand(
     const action = await MultiStepNode.run(envTypeStep);
     if (options?.showBackButton) {
         if (action === MultiStepAction.Back || action === MultiStepAction.Cancel) {
-            result = { action };
+            result = { action, workspace: undefined, path: undefined, error: undefined };
         }
     }
 

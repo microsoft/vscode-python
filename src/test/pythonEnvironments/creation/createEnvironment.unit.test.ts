@@ -233,7 +233,7 @@ suite('Create Environments Tests', () => {
             showBackButton: true,
         });
 
-        assert.deepStrictEqual(result, { action: 'Back' });
+        assert.deepStrictEqual(result, { action: 'Back', workspace: undefined, path: undefined, error: undefined });
         assert.isTrue(showQuickPickStub.notCalled);
         assert.isTrue(showQuickPickWithBackStub.calledOnce);
     });
@@ -259,7 +259,7 @@ suite('Create Environments Tests', () => {
             showBackButton: true,
         });
 
-        assert.deepStrictEqual(result, { action: 'Cancel' });
+        assert.deepStrictEqual(result, { action: 'Cancel', workspace: undefined, path: undefined, error: undefined });
         assert.isTrue(showQuickPickStub.notCalled);
         assert.isTrue(showQuickPickWithBackStub.calledOnce);
     });

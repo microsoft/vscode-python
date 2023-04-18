@@ -131,7 +131,12 @@ suite('Conda Creation provider tests', () => {
 
         _next!({ out: `${CONDA_ENV_CREATED_MARKER}new_environment`, source: 'stdout' });
         _complete!();
-        assert.deepStrictEqual(await promise, { path: 'new_environment', uri: workspace1.uri });
+        assert.deepStrictEqual(await promise, {
+            path: 'new_environment',
+            workspace: workspace1,
+            action: undefined,
+            error: undefined,
+        });
         assert.isTrue(showErrorMessageWithLogsStub.notCalled);
     });
 

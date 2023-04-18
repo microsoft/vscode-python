@@ -257,7 +257,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                     }
                 }
 
-                return { path: envPath, uri: workspace?.uri };
+                return { path: envPath, workspace, action: undefined, error: undefined };
             },
         );
     }

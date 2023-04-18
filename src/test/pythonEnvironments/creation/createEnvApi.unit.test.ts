@@ -57,6 +57,11 @@ suite('Create Environment APIs', () => {
 
     [true, false].forEach((selectEnvironment) => {
         test(`Set environment selectEnvironment == ${selectEnvironment}`, async () => {
+            const workspace1 = {
+                uri: Uri.file('/path/to/env'),
+                name: 'workspace1',
+                index: 0,
+            };
             const provider = typemoq.Mock.ofType<CreateEnvironmentProvider>();
             provider.setup((p) => p.name).returns(() => 'test');
             provider.setup((p) => p.id).returns(() => 'test-id');
@@ -66,7 +71,9 @@ suite('Create Environment APIs', () => {
                 .returns(() =>
                     Promise.resolve({
                         path: '/path/to/env',
-                        uri: Uri.file('/path/to/env'),
+                        workspace: workspace1,
+                        action: undefined,
+                        error: undefined,
                     }),
                 );
             provider.setup((p) => (p as any).then).returns(() => undefined);

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License
 
-import { Uri, Event, Disposable } from 'vscode';
+import { Event, Disposable, WorkspaceFolder } from 'vscode';
 
 export type CreateEnvironmentUserActions = 'Back' | 'Cancel';
 export type CreateEnvironmentProviderId = string;
@@ -27,7 +27,7 @@ export interface CreateEnvironmentOptions {
     showBackButton?: boolean;
 
     /**
-     * Default `true`. If `true`, the environment will be selected as the environment to be used for the workspace.
+     * Default `true`. If `true`, the environment after creation will be selected.
      */
     selectEnvironment?: boolean;
 }
@@ -45,53 +45,33 @@ export interface WillCreateEnvironmentParams {
 /**
  * Params passed on `onDidCreateEnvironment` event handler.
  */
-export interface DidCreateEnvironmentParams {
+export interface DidCreateEnvironmentParams extends CreateEnvironmentResult {
     /**
      * Options used to create the Python environment.
      */
-    options?: CreateEnvironmentOptions;
-
-    /**
-     * Workspace Uri associated with the environment.
-     */
-    uri?: Uri;
-
-    /**
-     * Path to the executable python in the environment
-     */
-    path?: string;
-
-    /**
-     * User action that resulted in exit from the create environment flow.
-     */
-    action?: CreateEnvironmentUserActions;
-
-    /**
-     * Error if any occurred during environment creation.
-     */
-    error?: Error;
+    options: CreateEnvironmentOptions | undefined;
 }
 
 export interface CreateEnvironmentResult {
     /**
      * Workspace Uri associated with the environment.
      */
-    uri?: Uri;
+    workspace: WorkspaceFolder | undefined;
 
     /**
-     * Path to the python executable in the environment.
+     * Path to the executable python in the environment
      */
-    path?: string;
+    path: string | undefined;
 
     /**
      * User action that resulted in exit from the create environment flow.
      */
-    action?: CreateEnvironmentUserActions;
+    action: CreateEnvironmentUserActions | undefined;
 
     /**
      * Error if any occurred during environment creation.
      */
-    error?: Error;
+    error: Error | undefined;
 }
 
 /**
@@ -127,7 +107,8 @@ export interface CreateEnvironmentProvider {
     description: string;
 
     /**
-     * Tools used to manage this environment. e.g., ['conda']
+     * Tools used to manage this environment. e.g., ['conda']. In the most to least priority order
+     * for resolving and working with the environment.
      */
     tools?: string[];
 }
@@ -151,7 +132,7 @@ export interface ProposedCreateEnvironmentAPI {
      * This API will show a QuickPick to select an environment provider from available list of
      * providers. Based on the selection the `createEnvironment` will be called on the provider.
      */
-    createEnvironment(options: CreateEnvironmentOptions): Promise<CreateEnvironmentResult | undefined>;
+    createEnvironment(options?: CreateEnvironmentOptions): Promise<CreateEnvironmentResult | undefined>;
 
     /**
      * This API should be called to register an environment creation provider. It returns
