@@ -21,10 +21,10 @@ export class RequireJupyterPrompt implements IExtensionSingleActivationService {
     ) {}
 
     public async activate(): Promise<void> {
-        this.disposables.push(this.commandManager.registerCommand(Commands.InstallJupyter, () => this.showPrompt()));
+        this.disposables.push(this.commandManager.registerCommand(Commands.InstallJupyter, () => this._showPrompt()));
     }
 
-    private async showPrompt() {
+    public async _showPrompt(): Promise<void> {
         const prompts = [Common.bannerLabelYes, Common.bannerLabelNo];
         const telemetrySelections: ['Yes', 'No'] = ['Yes', 'No'];
         const selection = await this.appShell.showInformationMessage(Interpreters.requireJupyter, ...prompts);
