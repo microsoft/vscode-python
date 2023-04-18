@@ -5,4 +5,5 @@ export enum ExtensionContextKey {
     showInstallPythonTile = 'showInstallPythonTile',
     HasFailedTests = 'hasFailedTests',
     RefreshingTests = 'refreshingTests',
+    IsJupyterInstalled = 'isJupyterInstalled',
 }

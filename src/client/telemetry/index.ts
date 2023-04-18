@@ -1316,6 +1316,22 @@ export interface IEventNamePropertyMapping {
         selection: 'Allow' | 'Close' | undefined;
     };
     /**
+     * Telemetry event sent with details when user attempts to run in interactive window when Jupyter is not installed.
+     */
+    /* __GDPR__
+       "conda_inherit_env_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+     */
+    [EventName.REQUIRE_JUPYTER_PROMPT]: {
+        /**
+         * `Yes` When 'Yes' option is selected
+         * `No` When 'No' option is selected
+         * `undefined` When 'x' is selected
+         */
+        selection: 'Yes' | 'No' | undefined;
+    };
+    /**
      * Telemetry event sent with details when user clicks the prompt with the following message:
      *
      * 'We noticed VS Code was launched from an activated conda environment, would you like to select it?'

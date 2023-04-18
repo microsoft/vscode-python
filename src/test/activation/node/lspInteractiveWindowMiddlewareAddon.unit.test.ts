@@ -19,7 +19,7 @@ import {
 } from '../../../client/interpreter/contracts';
 import { IInterpreterSelector } from '../../../client/interpreter/configuration/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { IWorkspaceService } from '../../../client/common/application/types';
+import { IContextKeyManager, IWorkspaceService } from '../../../client/common/application/types';
 import { MockMemento } from '../../mocks/mementos';
 
 suite('Pylance Language Server - Interactive Window LSP Notebooks', () => {
@@ -41,6 +41,7 @@ suite('Pylance Language Server - Interactive Window LSP Notebooks', () => {
             mock<IComponentAdapter>(),
             mock<IWorkspaceService>(),
             mock<ICondaService>(),
+            mock<IContextKeyManager>(),
         );
         jupyterApi.registerGetNotebookUriForTextDocumentUriFunction(getNotebookUriFunction);
     });

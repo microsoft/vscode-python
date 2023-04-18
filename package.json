@@ -374,6 +374,11 @@
                     "light": "resources/light/repl.svg"
                 },
                 "title": "%python.command.python.viewOutput.title%"
+            },
+            {
+                "category": "Python",
+                "command": "python.installJupyter",
+                "title": "%python.command.python.installJupyter.title%"
             }
         ],
         "configuration": {
@@ -1705,13 +1710,25 @@
                 {
                     "submenu": "python.run",
                     "group": "Python",
-                    "when": "editorLangId == python && !virtualWorkspace && shellExecutionSupported"
+                    "when": "editorLangId == python && !virtualWorkspace && shellExecutionSupported && isWorkspaceTrusted"
                 },
                 {
                     "command": "python.sortImports",
                     "group": "Refactor",
                     "title": "%python.command.python.sortImports.title%",
                     "when": "editorLangId == python && !notebookEditorFocused && !virtualWorkspace && shellExecutionSupported"
+                },
+                {
+                    "submenu": "python.runFileInteractive",
+                    "group": "Jupyter2",
+                    "when": "editorLangId == python && !virtualWorkspace && shellExecutionSupported && !isJupyterInstalled && isWorkspaceTrusted"
+                }
+            ],
+            "python.runFileInteractive": [
+                {
+                    "command": "python.installJupyter",
+                    "group": "Jupyter2",
+                    "when": "resourceLangId == python && !virtualWorkspace && shellExecutionSupported"
                 }
             ],
             "python.run": [
@@ -1779,6 +1796,10 @@
                 "id": "python.run",
                 "label": "%python.editor.context.submenu.runPython%",
                 "icon": "$(play)"
+            },
+            {
+                "id": "python.runFileInteractive",
+                "label": "%python.editor.context.submenu.runPythonInteractive%"
             }
         ],
         "viewsWelcome": [
