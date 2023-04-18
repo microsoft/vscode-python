@@ -53,10 +53,6 @@ export interface IInterpreterQuickPickItem extends QuickPickItem {
 }
 
 export interface ISpecialQuickPickItem extends QuickPickItem {
-    label: string;
-    description?: string;
-    detail?: string;
-    alwaysShow: boolean;
     path?: string;
 }
 
