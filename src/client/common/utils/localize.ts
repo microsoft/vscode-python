@@ -221,6 +221,9 @@ export namespace Interpreters {
 }
 
 export namespace InterpreterQuickPickList {
+    export const condaEnvWithoutPythonTooltip = l10n.t(
+        'Python is not available in this environment, it will automatically be installed upon selecting it',
+    );
     export const noPythonInstalled = l10n.t('Python is not installed, please download and install it');
     export const clickForInstructions = l10n.t('Click for instructions...');
     export const globalGroupName = l10n.t('Global');
