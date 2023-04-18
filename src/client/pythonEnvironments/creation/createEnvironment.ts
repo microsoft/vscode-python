@@ -14,12 +14,12 @@ import {
     CreateEnvironmentOptions,
     CreateEnvironmentResult,
     CreateEnvironmentProvider,
-    WillCreateEnvironmentParams,
-    DidCreateEnvironmentParams,
+    EnvironmentWillCreateEvent,
+    EnvironmentDidCreateEvent,
 } from './proposed.createEnvApis';
 
-const onCreateEnvironmentStartedEvent = new EventEmitter<WillCreateEnvironmentParams>();
-const onCreateEnvironmentExitedEvent = new EventEmitter<DidCreateEnvironmentParams>();
+const onCreateEnvironmentStartedEvent = new EventEmitter<EnvironmentWillCreateEvent>();
+const onCreateEnvironmentExitedEvent = new EventEmitter<EnvironmentDidCreateEvent>();
 
 let startedEventCount = 0;
 
@@ -35,7 +35,7 @@ function fireStartedEvent(options?: CreateEnvironmentOptions): void {
 function fireExitedEvent(result?: CreateEnvironmentResult, options?: CreateEnvironmentOptions, error?: Error): void {
     onCreateEnvironmentExitedEvent.fire({
         options,
-        workspace: result?.workspace,
+        workspaceFolder: result?.workspaceFolder,
         path: result?.path,
         action: result?.action,
         error: error || result?.error,
@@ -44,8 +44,8 @@ function fireExitedEvent(result?: CreateEnvironmentResult, options?: CreateEnvir
 }
 
 export function getCreationEvents(): {
-    onCreateEnvironmentStarted: Event<WillCreateEnvironmentParams>;
-    onCreateEnvironmentExited: Event<DidCreateEnvironmentParams>;
+    onCreateEnvironmentStarted: Event<EnvironmentWillCreateEvent>;
+    onCreateEnvironmentExited: Event<EnvironmentDidCreateEvent>;
     isCreatingEnvironment: () => boolean;
 } {
     return {
@@ -191,7 +191,7 @@ export async function handleCreateEnvironmentCommand(
     const action = await MultiStepNode.run(envTypeStep);
     if (options?.showBackButton) {
         if (action === MultiStepAction.Back || action === MultiStepAction.Cancel) {
-            result = { action, workspace: undefined, path: undefined, error: undefined };
+            result = { action, workspaceFolder: undefined, path: undefined, error: undefined };
         }
     }
 

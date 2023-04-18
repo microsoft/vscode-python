@@ -247,7 +247,7 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
                     showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
                 }
             }
-            return { path: envPath, workspace, action: undefined, error: undefined };
+            return { path: envPath, workspaceFolder: workspace, action: undefined, error: undefined };
         },
     );
 }
@@ -260,5 +260,7 @@ export function condaCreationProvider(): CreateEnvironmentProvider {
         description: CreateEnv.Conda.providerDescription,
 
         id: `${PVSC_EXTENSION_ID}:conda`,
+
+        tools: ['Conda'],
     };
 }

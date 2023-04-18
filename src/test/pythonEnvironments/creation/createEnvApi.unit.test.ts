@@ -71,7 +71,7 @@ suite('Create Environment APIs', () => {
                 .returns(() =>
                     Promise.resolve({
                         path: '/path/to/env',
-                        workspace: workspace1,
+                        workspaceFolder: workspace1,
                         action: undefined,
                         error: undefined,
                     }),

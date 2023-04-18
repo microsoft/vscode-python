@@ -133,7 +133,7 @@ suite('Conda Creation provider tests', () => {
         _complete!();
         assert.deepStrictEqual(await promise, {
             path: 'new_environment',
-            workspace: workspace1,
+            workspaceFolder: workspace1,
             action: undefined,
             error: undefined,
         });

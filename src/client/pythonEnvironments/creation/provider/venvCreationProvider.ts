@@ -257,7 +257,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                     }
                 }
 
-                return { path: envPath, workspace, action: undefined, error: undefined };
+                return { path: envPath, workspaceFolder: workspace, action: undefined, error: undefined };
             },
         );
     }
@@ -267,4 +267,6 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
     description: string = CreateEnv.Venv.providerDescription;
 
     id = `${PVSC_EXTENSION_ID}:venv`;
+
+    tools = ['Venv'];
 }

@@ -16,7 +16,7 @@ import {
     CreateEnvironmentOptions,
     CreateEnvironmentResult,
     ProposedCreateEnvironmentAPI,
-    DidCreateEnvironmentParams,
+    EnvironmentDidCreateEvent,
 } from './proposed.createEnvApis';
 
 class CreateEnvironmentProviders {
@@ -69,9 +69,13 @@ export function registerCreateEnvironmentFeatures(
         ),
         registerCreateEnvironmentProvider(new VenvCreationProvider(interpreterQuickPick)),
         registerCreateEnvironmentProvider(condaCreationProvider()),
-        onCreateEnvironmentExited(async (e: DidCreateEnvironmentParams) => {
+        onCreateEnvironmentExited(async (e: EnvironmentDidCreateEvent) => {
             if (e.path && e.options?.selectEnvironment) {
-                await interpreterPathService.update(e.workspace?.uri, ConfigurationTarget.WorkspaceFolder, e.path);
+                await interpreterPathService.update(
+                    e.workspaceFolder?.uri,
+                    ConfigurationTarget.WorkspaceFolder,
+                    e.path,
+                );
                 showInformationMessage(`${CreateEnv.informEnvCreation} ${pathUtils.getDisplayName(e.path)}`);
             }
         }),
@@ -89,7 +93,7 @@ export function buildEnvironmentCreationApi(): ProposedCreateEnvironmentAPI {
             try {
                 return await handleCreateEnvironmentCommand(providers, options);
             } catch (err) {
-                return { path: undefined, workspace: undefined, action: undefined, error: err as Error };
+                return { path: undefined, workspaceFolder: undefined, action: undefined, error: err as Error };
             }
         },
         registerCreateEnvironmentProvider: (provider: CreateEnvironmentProvider) =>

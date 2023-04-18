@@ -157,7 +157,7 @@ suite('venv Creation provider tests', () => {
         const actual = await promise;
         assert.deepStrictEqual(actual, {
             path: 'new_environment',
-            workspace: workspace1,
+            workspaceFolder: workspace1,
             action: undefined,
             error: undefined,
         });

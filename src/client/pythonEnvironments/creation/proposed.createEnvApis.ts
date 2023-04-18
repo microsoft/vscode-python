@@ -2,9 +2,10 @@
 // Licensed under the MIT License
 
 import { Event, Disposable, WorkspaceFolder } from 'vscode';
+import { EnvironmentTools } from '../../apiTypes';
 
 export type CreateEnvironmentUserActions = 'Back' | 'Cancel';
-export type CreateEnvironmentProviderId = string;
+export type EnvironmentProviderId = string;
 
 /**
  * Options used when creating a Python environment.
@@ -35,7 +36,7 @@ export interface CreateEnvironmentOptions {
 /**
  * Params passed on `onWillCreateEnvironment` event handler.
  */
-export interface WillCreateEnvironmentParams {
+export interface EnvironmentWillCreateEvent {
     /**
      * Options used to create a Python environment.
      */
@@ -45,7 +46,7 @@ export interface WillCreateEnvironmentParams {
 /**
  * Params passed on `onDidCreateEnvironment` event handler.
  */
-export interface DidCreateEnvironmentParams extends CreateEnvironmentResult {
+export interface EnvironmentDidCreateEvent extends CreateEnvironmentResult {
     /**
      * Options used to create the Python environment.
      */
@@ -54,9 +55,9 @@ export interface DidCreateEnvironmentParams extends CreateEnvironmentResult {
 
 export interface CreateEnvironmentResult {
     /**
-     * Workspace Uri associated with the environment.
+     * Workspace folder associated with the environment.
      */
-    workspace: WorkspaceFolder | undefined;
+    workspaceFolder: WorkspaceFolder | undefined;
 
     /**
      * Path to the executable python in the environment
@@ -94,7 +95,7 @@ export interface CreateEnvironmentProvider {
     /**
      * Unique ID for the creation provider, typically <ExtensionId>:<environment-type | guid>
      */
-    id: CreateEnvironmentProviderId;
+    id: EnvironmentProviderId;
 
     /**
      * Display name for the creation provider.
@@ -110,7 +111,7 @@ export interface CreateEnvironmentProvider {
      * Tools used to manage this environment. e.g., ['conda']. In the most to least priority order
      * for resolving and working with the environment.
      */
-    tools?: string[];
+    tools: EnvironmentTools[];
 }
 
 export interface ProposedCreateEnvironmentAPI {
@@ -119,14 +120,14 @@ export interface ProposedCreateEnvironmentAPI {
      * provider (including internal providers). This will also receive any options passed in
      * or defaults used to create environment.
      */
-    onWillCreateEnvironment: Event<WillCreateEnvironmentParams>;
+    onWillCreateEnvironment: Event<EnvironmentWillCreateEvent>;
 
     /**
      * This API can be used to detect when the environment provider exits for any registered
      * provider (including internal providers). This will also receive created environment path,
      * any errors, or user actions taken from the provider.
      */
-    onDidCreateEnvironment: Event<DidCreateEnvironmentParams>;
+    onDidCreateEnvironment: Event<EnvironmentDidCreateEvent>;
 
     /**
      * This API will show a QuickPick to select an environment provider from available list of
