@@ -12,7 +12,6 @@ import {
     Uri,
     WorkspaceFolder,
 } from 'vscode';
-// ** import { IPythonExecutionFactory } from '../../../common/process/types';
 import { TestDiscoveryOptions } from '../../common/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 

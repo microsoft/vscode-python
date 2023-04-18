@@ -39,7 +39,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         }
     }
 
-    // ** Old version of discover tests.
     async runTests(
         uri: Uri,
         testIds: string[],
@@ -48,10 +47,10 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     ): Promise<ExecutionTestPayload> {
         traceVerbose(uri, testIds, debugBool);
         if (executionFactory !== undefined) {
+            // ** new version of run tests.
             return this.runTestsNew(uri, testIds, debugBool, executionFactory);
         }
-        // TODO:Remove this line after enabling runs
-        // if executionFactory is undefined, we are using the old version of discover tests.
+        // if executionFactory is undefined, we are using the old method signature of run tests.
         this.outputChannel.appendLine('Running tests.');
         this.deferred = createDeferred<ExecutionTestPayload>();
         return this.deferred.promise;

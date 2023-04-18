@@ -389,7 +389,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 tool: 'pytest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
-                            // ** new execution runner/adapter
+                            // ** uncomment for NEW execution runner/adapter
                             // const testAdapter =
                             //     this.testAdapters.get(workspace.uri) ||
                             //     (this.testAdapters.values().next().value as WorkspaceTestAdapter);
@@ -415,12 +415,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             );
                         }
                         if (settings.testing.unittestEnabled) {
-                            // potentially squeeze in the new execution way here?
                             sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
                                 tool: 'unittest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
-                            // new execution runner/adapter
+                            // uncomment for NEW execution runner/adapter
                             // const testAdapter =
                             //     this.testAdapters.get(workspace.uri) ||
                             //     (this.testAdapters.values().next().value as WorkspaceTestAdapter);
