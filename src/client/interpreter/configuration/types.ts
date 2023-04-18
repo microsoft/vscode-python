@@ -52,11 +52,7 @@ export interface IInterpreterQuickPickItem extends QuickPickItem {
     interpreter: PythonEnvironment;
 }
 
-export interface ISpecialQuickPickItem {
-    label: string;
-    description?: string;
-    detail?: string;
-    alwaysShow: boolean;
+export interface ISpecialQuickPickItem extends QuickPickItem {
     path?: string;
 }
 

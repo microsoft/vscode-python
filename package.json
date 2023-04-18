@@ -21,7 +21,8 @@
         "contribEditorContentMenu",
         "quickPickSortByLabel",
         "envShellEvent",
-        "testObserver"
+        "testObserver",
+        "quickPickItemTooltip"
     ],
     "author": {
         "name": "Microsoft Corporation"
