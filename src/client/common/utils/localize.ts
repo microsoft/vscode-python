@@ -188,6 +188,9 @@ export namespace LanguageService {
     );
 }
 export namespace Interpreters {
+    export const requireJupyter = l10n.t(
+        'Running in Interactive window requires Jupyter Extension. Would you like to install it? [Learn more](https://aka.ms/pythonJupyterSupport).',
+    );
     export const installingPython = l10n.t('Installing Python into Environment...');
     export const discovering = l10n.t('Discovering Python Interpreters');
     export const refreshing = l10n.t('Refreshing Python Interpreters');
