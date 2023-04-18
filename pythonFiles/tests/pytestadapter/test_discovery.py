@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 import os
 import shutil
-import signal
 
 import pytest
 
@@ -31,10 +30,10 @@ def test_syntax_error(tmp_path):
     shutil.copyfile(file_path, p)
     actual = runner(["--collect-only", os.fspath(p)])
     assert actual
-    assert all(item in actual for item in ("status", "cwd", "errors"))
+    assert all(item in actual for item in ("status", "cwd", "error"))
     assert actual["status"] == "error"
     assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    assert len(actual["errors"]) == 2
+    assert len(actual["error"]) == 2
 
 
 def test_parameterized_error_collect():
@@ -45,10 +44,10 @@ def test_parameterized_error_collect():
     file_path_str = "error_parametrize_discovery.py"
     actual = runner(["--collect-only", file_path_str])
     assert actual
-    assert all(item in actual for item in ("status", "cwd", "errors"))
+    assert all(item in actual for item in ("status", "cwd", "error"))
     assert actual["status"] == "error"
     assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    assert len(actual["errors"]) == 2
+    assert len(actual["error"]) == 2
 
 
 @pytest.mark.parametrize(

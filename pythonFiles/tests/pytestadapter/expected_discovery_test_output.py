@@ -3,6 +3,8 @@ import pathlib
 
 from .helpers import TEST_DATA_PATH, find_test_line_number
 
+# This file contains the expected output dictionaries for tests discovery and is used in test_discovery.py.
+
 # This is the expected output for the empty_discovery.py file.
 # └──
 TEST_DATA_PATH_STR = os.fspath(TEST_DATA_PATH)
