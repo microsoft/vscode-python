@@ -100,6 +100,7 @@
     "python.linting.pylintEnabled.description": "Whether to lint Python files using pylint.",
     "python.linting.pylintPath.description": "Path to Pylint, you can use a custom version of pylint by modifying this setting to include the full path.",
     "python.logging.level.description": "The logging level the extension logs at, defaults to 'error'",
+    "python.logging.level.deprecation": "This setting is deprecated. Please use command `Developer: Set Log Level...` to set logging level.",
     "python.pipenvPath.description": "Path to the pipenv executable to use for activation.",
     "python.poetryPath.description": "Path to the poetry executable.",
     "python.sortImports.args.description": "Arguments passed in. Each argument is a separate item in the array.",

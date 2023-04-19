@@ -47,7 +47,7 @@ import { ImportTracker } from '../telemetry/importTracker';
 import { TensorBoardPromptSelection, TensorBoardSessionStartResult } from './constants';
 import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
 import { ModuleInstallFlags } from '../common/installer/types';
-import { traceError, traceInfo } from '../logging';
+import { traceError, traceVerbose } from '../logging';
 
 enum Messages {
     JumpToSource = 'jump_to_source',
@@ -190,7 +190,7 @@ export class TensorBoardSession {
     // any of their open documents, also try to install the torch-tb-plugin
     // package, but don't block if installing that fails.
     private async ensurePrerequisitesAreInstalled() {
-        traceInfo('Ensuring TensorBoard package is installed into active interpreter');
+        traceVerbose('Ensuring TensorBoard package is installed into active interpreter');
         const interpreter =
             (await this.interpreterService.getActiveInterpreter()) ||
             (await this.commandManager.executeCommand('python.setInterpreter'));
@@ -344,7 +344,7 @@ export class TensorBoardSession {
         const settings = this.configurationService.getSettings();
         const settingValue = settings.tensorBoard?.logDirectory;
         if (settingValue) {
-            traceInfo(`Using log directory resolved by python.tensorBoard.logDirectory setting: ${settingValue}`);
+            traceVerbose(`Using log directory resolved by python.tensorBoard.logDirectory setting: ${settingValue}`);
             return settingValue;
         }
         // No log directory in settings. Ask the user which directory to use
@@ -406,7 +406,7 @@ export class TensorBoardSession {
         const result = await this.applicationShell.withProgress(
             progressOptions,
             (_progress: Progress<unknown>, token: CancellationToken) => {
-                traceInfo(`Starting TensorBoard with log directory ${logDir}...`);
+                traceVerbose(`Starting TensorBoard with log directory ${logDir}...`);
 
                 const spawnTensorBoard = this.waitForTensorBoardStart(observable);
                 const userCancellation = createPromiseFromCancellation({
@@ -421,7 +421,7 @@ export class TensorBoardSession {
 
         switch (result) {
             case 'canceled':
-                traceInfo('Canceled starting TensorBoard session.');
+                traceVerbose('Canceled starting TensorBoard session.');
                 sendTelemetryEvent(
                     EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION,
                     sessionStartStopwatch.elapsedTime,
@@ -468,7 +468,7 @@ export class TensorBoardSession {
                         this.url = match[1];
                         urlThatTensorBoardIsRunningAt.resolve('success');
                     }
-                    traceInfo(output.out);
+                    traceVerbose(output.out);
                 } else if (output.source === 'stderr') {
                     traceError(output.out);
                 }
@@ -482,7 +482,7 @@ export class TensorBoardSession {
     }
 
     private async showPanel() {
-        traceInfo('Showing TensorBoard panel');
+        traceVerbose('Showing TensorBoard panel');
         const panel = this.webviewPanel || (await this.createPanel());
         panel.reveal();
         this._active = true;
