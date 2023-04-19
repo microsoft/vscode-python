@@ -8,7 +8,7 @@ import { createVenvScript } from '../../../common/process/internal/scripts';
 import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
 import { Common, CreateEnv } from '../../../common/utils/localize';
-import { traceError, traceInfo, traceLog } from '../../../logging';
+import { traceError, traceLog, traceVerbose } from '../../../logging';
 import { CreateEnvironmentProgress } from '../types';
 import { pickWorkspaceFolder } from '../common/workspaceSelection';
 import { IInterpreterQuickPick } from '../../../interpreter/configuration/types';
@@ -208,7 +208,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                         throw ex;
                     }
                     if (!installInfo) {
-                        traceInfo('Virtual env creation exited during dependencies selection.');
+                        traceVerbose('Virtual env creation exited during dependencies selection.');
                         return MultiStepAction.Cancel;
                     }
                 }

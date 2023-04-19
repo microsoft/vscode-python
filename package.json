@@ -922,6 +922,7 @@
                 },
                 "python.logging.level": {
                     "default": "error",
+                    "deprecationMessage": "%python.logging.level.deprecation%",
                     "description": "%python.logging.level.description%",
                     "enum": [
                         "debug",

@@ -8,7 +8,7 @@ import {
     InterpreterInfoJson,
 } from '../../../common/process/internal/scripts';
 import { Architecture } from '../../../common/utils/platform';
-import { traceError, traceInfo } from '../../../logging';
+import { traceError, traceVerbose } from '../../../logging';
 import { shellExecute } from '../../common/externalDependencies';
 import { copyPythonExecInfo, PythonExecInfo } from '../../exec';
 import { parseVersion } from './pythonVersion';
@@ -102,6 +102,6 @@ export async function getInterpreterInfo(
         traceError(`Failed to parse interpreter information for >> ${quoted} << with ${ex}`);
         return undefined;
     }
-    traceInfo(`Found interpreter for >> ${quoted} <<: ${JSON.stringify(json)}`);
+    traceVerbose(`Found interpreter for >> ${quoted} <<: ${JSON.stringify(json)}`);
     return extractInterpreterInfo(python.pythonExecutable, json);
 }
