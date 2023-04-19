@@ -30,7 +30,6 @@ import { IInterpreterService } from './interpreter/contracts';
 import { getLanguageConfiguration } from './language/languageConfiguration';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
-import { setLoggingLevel } from './logging';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { ReplProvider } from './providers/replProvider';
 import { registerTypes as providersRegisterTypes } from './providers/serviceRegistry';
@@ -47,7 +46,6 @@ import * as pythonEnvironments from './pythonEnvironments';
 import { ActivationResult, ExtensionState } from './components';
 import { Components } from './extensionInit';
 import { setDefaultLanguageServer } from './activation/common/defaultlanguageServer';
-import { getLoggingLevel } from './logging/settings';
 import { DebugService } from './common/application/debugService';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
@@ -136,11 +134,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
 
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
     await setDefaultLanguageServer(extensions, serviceManager);
-
-    // Note we should not trigger any extension related code which logs, until we have set logging level. So we cannot
-    // use configurations service to get level setting. Instead, we use Workspace service to query for setting as it
-    // directly queries VSCode API.
-    setLoggingLevel(getLoggingLevel());
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     // Settings are dependent on Experiment service, so we need to initialize it after experiments are activated.

@@ -48,7 +48,7 @@ function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): Inter
 }
 
 type Logger = {
-    info(msg: string): void;
+    verbose(msg: string): void;
     error(msg: string): void;
 };
 
@@ -85,7 +85,7 @@ export async function getInterpreterInfo(
     }
     const json = parse(result.stdout);
     if (logger) {
-        logger.info(`Found interpreter for ${argv}`);
+        logger.verbose(`Found interpreter for ${argv}`);
     }
     if (!json) {
         return undefined;
