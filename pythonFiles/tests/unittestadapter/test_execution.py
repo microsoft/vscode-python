@@ -94,6 +94,35 @@ def test_single_ids_run() -> None:
     assert id_result["outcome"] == "success"
 
 
+def test_subtest_run() -> None:
+    """This test runs on a the test_subtest which has a single method, test_even,
+    that uses unittest subtest.
+
+    The actual result of run should return a dict payload with 6 entry for the 6 subtests.
+    """
+    id = "test_subtest.NumbersTest.test_even"
+    actual = run_tests(
+        os.fspath(TEST_DATA_PATH), [id], "test_subtest.py", None, "fake-uuid"
+    )
+    subtests_ids = [
+        "test_subtest.NumbersTest.test_even (i=0)",
+        "test_subtest.NumbersTest.test_even (i=1)",
+        "test_subtest.NumbersTest.test_even (i=2)",
+        "test_subtest.NumbersTest.test_even (i=3)",
+        "test_subtest.NumbersTest.test_even (i=4)",
+        "test_subtest.NumbersTest.test_even (i=5)",
+    ]
+    assert actual
+    assert all(item in actual for item in ("cwd", "status"))
+    assert actual["status"] == "success"
+    assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+    assert "result" in actual
+    result = actual["result"]
+    assert len(result) == 6
+    for id in subtests_ids:
+        assert id in result
+
+
 @pytest.mark.parametrize(
     "test_ids, pattern, cwd, expected_outcome",
     [
