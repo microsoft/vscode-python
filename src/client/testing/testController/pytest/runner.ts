@@ -95,6 +95,10 @@ export class PytestRunner implements ITestsRunner {
                 testArgs.push('--capture', 'no');
             }
 
+            if (options.debug && !testArgs.some((a) => a.startsWith('--no-cov'))) {
+                testArgs.push('--no-cov');
+            }
+
             // Positional arguments control the tests to be run.
             const rawData = idToRawData.get(testNode.id);
             if (!rawData) {
