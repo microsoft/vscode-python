@@ -130,7 +130,10 @@ class UnittestTestResult(unittest.TextTestResult):
             formatted = formatted[1:]
             tb = "".join(formatted)
 
-        test_id = test.id()
+        if subtest:
+            test_id = subtest.id()
+        else:
+            test_id = test.id()
 
         result = {
             "test": test.id(),
