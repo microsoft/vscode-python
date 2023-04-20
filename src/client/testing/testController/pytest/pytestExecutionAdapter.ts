@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import path from 'path';
+import * as path from 'path';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { traceVerbose } from '../../../logging';
@@ -13,7 +13,10 @@ import {
     SpawnOptions,
 } from '../../../common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
+import { removePositionalFoldersAndFiles } from './arguments';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
 /**
  * Wrapper Class for pytest test execution. This is where we call `runTestCommand`?
  */
@@ -93,12 +96,29 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         // need to check what will happen in the exec service is NOT defined and is null
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
 
-        const testIdsString = testIds.join(' ');
-        console.debug('what to do with debug bool?', debugBool);
         try {
-            execService?.exec(['-m', 'pytest', '-p', 'vscode_pytest', testIdsString].concat(pytestArgs), spawnOptions);
+            // Remove positional test folders and files, we will add as needed per node
+            const testArgs = removePositionalFoldersAndFiles(pytestArgs);
+
+            // if user has provided `--rootdir` then use that, otherwise add `cwd`
+            if (testArgs.filter((a) => a.startsWith('--rootdir')).length === 0) {
+                // Make sure root dir is set so pytest can find the relative paths
+                testArgs.splice(0, 0, '--rootdir', uri.fsPath);
+            }
+
+            if (debugBool && !testArgs.some((a) => a.startsWith('--capture') || a === '-s')) {
+                testArgs.push('--capture', 'no');
+            }
+
+            console.debug(`Running test with arguments: ${testArgs.join(' ')}\r\n`);
+            console.debug(`Current working directory: ${uri.fsPath}\r\n`);
+
+            const argArray = ['-m', 'pytest', '-p', 'vscode_pytest'].concat(testArgs).concat(testIds);
+            console.debug('argArray', argArray);
+            execService?.exec(argArray, spawnOptions);
         } catch (ex) {
-            console.error(ex);
+            console.debug(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
+            return Promise.reject(ex);
         }
 
         return deferred.promise;
