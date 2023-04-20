@@ -38,6 +38,7 @@ import {
 } from './common/types';
 import { fixLogLines } from './common/utils';
 import { IPythonExecutionFactory } from '../../common/process/types';
+import { ITestDebugLauncher } from '../common/types';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -77,6 +78,7 @@ export class WorkspaceTestAdapter {
         token?: CancellationToken,
         debugBool?: boolean,
         executionFactory?: IPythonExecutionFactory,
+        debugLauncher?: ITestDebugLauncher,
     ): Promise<void> {
         if (this.executing) {
             return this.executing.promise;
@@ -110,6 +112,7 @@ export class WorkspaceTestAdapter {
                     testCaseIds,
                     debugBool,
                     executionFactory,
+                    debugLauncher,
                 );
                 traceVerbose('executionFactory defined');
             } else {

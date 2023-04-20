@@ -14,6 +14,8 @@ import {
 } from '../../../common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { removePositionalFoldersAndFiles } from './arguments';
+import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
+import { PYTEST_PROVIDER } from '../../common/constants';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
@@ -47,11 +49,12 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         testIds: string[],
         debugBool?: boolean,
         executionFactory?: IPythonExecutionFactory,
+        debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
         traceVerbose(uri, testIds, debugBool);
         if (executionFactory !== undefined) {
             // ** new version of run tests.
-            return this.runTestsNew(uri, testIds, debugBool, executionFactory);
+            return this.runTestsNew(uri, testIds, debugBool, executionFactory, debugLauncher);
         }
         // if executionFactory is undefined, we are using the old method signature of run tests.
         this.outputChannel.appendLine('Running tests.');
@@ -64,6 +67,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         testIds: string[],
         debugBool?: boolean,
         executionFactory?: IPythonExecutionFactory,
+        debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
         const deferred = createDeferred<ExecutionTestPayload>();
         const relativePathToPytest = 'pythonFiles';
@@ -112,10 +116,23 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
 
             console.debug(`Running test with arguments: ${testArgs.join(' ')}\r\n`);
             console.debug(`Current working directory: ${uri.fsPath}\r\n`);
+            // const portString = `--port= ${this.testServer.getPort().toString()}`;
+            const finalArgs = ['-m', 'pytest', '-p', 'vscode_pytest'].concat(testArgs).concat(testIds);
+            console.debug('argArray', finalArgs);
+            // const finalArgs = ['-m', 'pytest', '-p', 'vscode_pytest', testIdsString].concat(pytestArgs);
+            if (debugBool) {
+                const debugArgs = finalArgs.concat(['--port', this.testServer.getPort().toString()]);
+                const launchOptions: LaunchOptions = {
+                    cwd: uri.fsPath,
+                    args: debugArgs,
+                    token: spawnOptions.token,
+                    testProvider: PYTEST_PROVIDER,
+                };
 
-            const argArray = ['-m', 'pytest', '-p', 'vscode_pytest'].concat(testArgs).concat(testIds);
-            console.debug('argArray', argArray);
-            execService?.exec(argArray, spawnOptions);
+                await debugLauncher!.launchDebugger(launchOptions);
+            } else {
+                execService?.exec(finalArgs, spawnOptions);
+            }
         } catch (ex) {
             console.debug(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
             return Promise.reject(ex);

@@ -448,7 +448,9 @@ Request-uuid: {testuuid}
                 if s.socket is not None:
                     s.socket.sendall(request.encode("utf-8"))
         except Exception as e:
-            print(f"Plugin error connection error[vscode-pytest]: {e}")
+            print(
+                f"Plugin error connection error[vscode-pytest]: {e}, port: {testPort}"
+            )
             print(f"[vscode-pytest] data: {request}")
 
 
@@ -488,5 +490,8 @@ Request-uuid: {testuuid}
                 if s.socket is not None:
                     s.socket.sendall(request.encode("utf-8"))
         except Exception as e:
-            print(f"Plugin error connection error[vscode-pytest]: {e}")
+            print(
+                f"Plugin!! error connection error[vscode-pytest]: {e}, port: {testPort}"
+            )
             print(f"[vscode-pytest] data: {request}")
+            print(f"attempted port: {testPort}")

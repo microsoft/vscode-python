@@ -88,7 +88,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
         debugConfig.rules.push({
             path: path.join(EXTENSION_ROOT_DIR, 'pythonFiles'),
-            include: false,
+            include: true,
         });
         DebugLauncher.applyDefaults(debugConfig!, workspaceFolder, configSettings);
 
@@ -180,7 +180,10 @@ export class DebugLauncher implements ITestDebugLauncher {
         const script = DebugLauncher.getTestLauncherScript(options.testProvider);
         const args = script(testArgs);
         const [program] = args;
-        configArgs.program = program;
+        console.debug(`Test launch: ${program} ${args.slice(1).join(' ')}`);
+
+        configArgs.module = 'pytest';
+        configArgs.program = undefined;
         configArgs.args = args.slice(1);
         // We leave configArgs.request as "test" so it will be sent in telemetry.
 
@@ -201,6 +204,19 @@ export class DebugLauncher implements ITestDebugLauncher {
             throw Error(`Invalid debug config "${debugConfig.name}"`);
         }
         launchArgs.request = 'launch';
+        const p = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+        if (launchArgs.env) {
+            launchArgs.env.PYTHONPATH = p;
+            if (launchArgs.args) {
+                if (launchArgs.args.includes('--port')) {
+                    const index = launchArgs.args.indexOf('--port');
+                    const port = launchArgs.args[index + 1];
+                    launchArgs.env.TEST_PORT = port.toString();
+                    launchArgs.args.splice(index, 2);
+                    //         delete launchArgs.args[index + 1]
+                }
+            }
+        }
 
         // Clear out purpose so we can detect if the configuration was used to
         // run via F5 style debugging.
@@ -212,11 +228,12 @@ export class DebugLauncher implements ITestDebugLauncher {
     private static getTestLauncherScript(testProvider: TestProvider) {
         switch (testProvider) {
             case 'unittest': {
-                return internalScripts.visualstudio_py_testlauncher; // old way unittest execution, debugger
-                // return internalScripts.execution_py_testlauncher; // this is the new way to run unittest execution, debugger
+                // return internalScripts.visualstudio_py_testlauncher; // old way unittest execution, debugger
+                return internalScripts.execution_py_testlauncher; // this is the new way to run unittest execution, debugger
             }
             case 'pytest': {
-                return internalScripts.testlauncher;
+                // return internalScripts.shell_exec;
+                return internalScripts.execution_pytest_testlauncher;
             }
             default: {
                 throw new Error(`Unknown test provider '${testProvider}'`);
