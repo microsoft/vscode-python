@@ -37,20 +37,19 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         }
     }
 
-    // ** Old version of discover tests.
-    discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
+    discoverTests(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
+        if (executionFactory !== undefined) {
+            // ** new version of discover tests.
+            const settings = this.configSettings.getSettings(uri);
+            const { pytestArgs } = settings.testing;
+            traceVerbose(pytestArgs);
+            return this.runPytestDiscovery(uri, executionFactory);
+        }
+        // if executionFactory is undefined, we are using the old method signature of discover tests.
         traceVerbose(uri);
         this.deferred = createDeferred<DiscoveredTestPayload>();
         return this.deferred.promise;
     }
-    // Uncomment this version of the function discoverTests to use the new discovery method.
-    // public async discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
-    //     const settings = this.configSettings.getSettings(uri);
-    //     const { pytestArgs } = settings.testing;
-    //     traceVerbose(pytestArgs);
-
-    //     return this.runPytestDiscovery(uri, executionFactory);
-    // }
 
     async runPytestDiscovery(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
         const deferred = createDeferred<DiscoveredTestPayload>();
