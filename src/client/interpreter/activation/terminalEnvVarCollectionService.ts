@@ -76,6 +76,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 this,
                 this.disposables,
             );
+            this.registeredOnce = true;
         }
         this._applyCollection(resource).ignoreErrors();
     }
