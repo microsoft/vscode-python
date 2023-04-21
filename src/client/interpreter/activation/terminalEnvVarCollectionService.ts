@@ -59,7 +59,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             this.interpreterService.onDidChangeInterpreter(
                 async (r) => {
                     this.showProgress();
-                    await this._applyCollection(r);
+                    await this._applyCollection(r).ignoreErrors();
                     this.hideProgress();
                 },
                 this,
@@ -70,7 +70,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     this.showProgress();
                     // Pass in the shell where known instead of relying on the application environment, because of bug
                     // on VSCode: https://github.com/microsoft/vscode/issues/160694
-                    await this._applyCollection(undefined, shell);
+                    await this._applyCollection(undefined, shell).ignoreErrors();
                     this.hideProgress();
                 },
                 this,
