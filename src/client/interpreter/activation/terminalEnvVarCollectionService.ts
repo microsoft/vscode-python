@@ -32,6 +32,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     private deferred: Deferred<void> | undefined;
 
+    private registeredOnce = false;
+
     private previousEnvVars = _normCaseKeys(process.env);
 
     constructor(
@@ -46,33 +48,34 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-    ) {
-        this.interpreterService.onDidChangeInterpreter(
-            async (resource) => {
-                this.showProgress();
-                await this._applyCollection(resource);
-                this.hideProgress();
-            },
-            this,
-            this.disposables,
-        );
-        this.applicationEnvironment.onDidChangeShell(
-            async (shell: string) => {
-                this.showProgress();
-                // Pass in the shell where known instead of relying on the application environment, because of bug
-                // on VSCode: https://github.com/microsoft/vscode/issues/160694
-                await this._applyCollection(undefined, shell);
-                this.hideProgress();
-            },
-            this,
-            this.disposables,
-        );
-    }
+    ) {}
 
     public async activate(resource: Resource): Promise<void> {
         if (!inTerminalEnvVarExperiment(this.experimentService)) {
             this.context.environmentVariableCollection.clear();
             return;
+        }
+        if (!this.registeredOnce) {
+            this.interpreterService.onDidChangeInterpreter(
+                async (r) => {
+                    this.showProgress();
+                    await this._applyCollection(r);
+                    this.hideProgress();
+                },
+                this,
+                this.disposables,
+            );
+            this.applicationEnvironment.onDidChangeShell(
+                async (shell: string) => {
+                    this.showProgress();
+                    // Pass in the shell where known instead of relying on the application environment, because of bug
+                    // on VSCode: https://github.com/microsoft/vscode/issues/160694
+                    await this._applyCollection(undefined, shell);
+                    this.hideProgress();
+                },
+                this,
+                this.disposables,
+            );
         }
         this._applyCollection(resource).ignoreErrors();
     }
