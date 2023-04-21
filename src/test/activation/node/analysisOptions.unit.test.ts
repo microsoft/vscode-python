@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 import { assert, expect } from 'chai';
 import * as typemoq from 'typemoq';
-import { WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { WorkspaceFolder } from 'vscode';
 import { DocumentFilter } from 'vscode-languageclient/node';
 
 import { NodeLanguageServerAnalysisOptions } from '../../../client/activation/node/analysisOptions';
 import { ILanguageServerOutputChannel } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { PYTHON, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { IExperimentService, IOutputChannel } from '../../../client/common/types';
+import { ILogOutputChannel } from '../../../client/common/types';
 
 suite('Pylance Language Server - Analysis Options', () => {
     class TestClass extends NodeLanguageServerAnalysisOptions {
@@ -28,22 +28,17 @@ suite('Pylance Language Server - Analysis Options', () => {
     }
 
     let analysisOptions: TestClass;
-    let outputChannel: IOutputChannel;
+    let outputChannel: ILogOutputChannel;
     let lsOutputChannel: typemoq.IMock<ILanguageServerOutputChannel>;
     let workspace: typemoq.IMock<IWorkspaceService>;
-    let experimentService: IExperimentService;
 
     setup(() => {
-        outputChannel = typemoq.Mock.ofType<IOutputChannel>().object;
+        outputChannel = typemoq.Mock.ofType<ILogOutputChannel>().object;
         workspace = typemoq.Mock.ofType<IWorkspaceService>();
         workspace.setup((w) => w.isVirtualWorkspace).returns(() => false);
-        const workspaceConfig = typemoq.Mock.ofType<WorkspaceConfiguration>();
-        workspace.setup((w) => w.getConfiguration('editor', undefined, true)).returns(() => workspaceConfig.object);
-        workspaceConfig.setup((w) => w.get('formatOnType')).returns(() => true);
         lsOutputChannel = typemoq.Mock.ofType<ILanguageServerOutputChannel>();
         lsOutputChannel.setup((l) => l.channel).returns(() => outputChannel);
-        experimentService = typemoq.Mock.ofType<IExperimentService>().object;
-        analysisOptions = new TestClass(lsOutputChannel.object, workspace.object, experimentService);
+        analysisOptions = new TestClass(lsOutputChannel.object, workspace.object);
     });
 
     test('Workspace folder is undefined', () => {

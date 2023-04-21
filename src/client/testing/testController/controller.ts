@@ -20,7 +20,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IWorkspaceService } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { IPythonExecutionFactory } from '../../common/process/types';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, ITestOutputChannel, Resource } from '../../common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -92,6 +92,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
         @inject(ITestDebugLauncher) private readonly debugLauncher: ITestDebugLauncher,
+        @inject(ITestOutputChannel) private readonly testOutputChannel: ITestOutputChannel,
     ) {
         this.refreshCancellation = new CancellationTokenSource();
 
@@ -158,12 +159,28 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             let executionAdapter: ITestExecutionAdapter;
             let testProvider: TestProvider;
             if (settings.testing.unittestEnabled) {
-                discoveryAdapter = new UnittestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);
-                executionAdapter = new UnittestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
+                discoveryAdapter = new UnittestTestDiscoveryAdapter(
+                    this.pythonTestServer,
+                    this.configSettings,
+                    this.testOutputChannel,
+                );
+                executionAdapter = new UnittestTestExecutionAdapter(
+                    this.pythonTestServer,
+                    this.configSettings,
+                    this.testOutputChannel,
+                );
                 testProvider = UNITTEST_PROVIDER;
             } else {
-                discoveryAdapter = new PytestTestDiscoveryAdapter(this.pythonTestServer, this.configSettings);
-                executionAdapter = new PytestTestExecutionAdapter(this.pythonTestServer, this.configSettings);
+                discoveryAdapter = new PytestTestDiscoveryAdapter(
+                    this.pythonTestServer,
+                    this.configSettings,
+                    this.testOutputChannel,
+                );
+                executionAdapter = new PytestTestExecutionAdapter(
+                    this.pythonTestServer,
+                    this.configSettings,
+                    this.testOutputChannel,
+                );
                 testProvider = PYTEST_PROVIDER;
             }
 
@@ -224,39 +241,46 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         if (uri) {
             const settings = this.configSettings.getSettings(uri);
             traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
+            const rewriteTestingEnabled = process.env.ENABLE_PYTHON_TESTING_REWRITE;
             if (settings.testing.pytestEnabled) {
                 // Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
-                // ** uncomment ~231 - 241 to NEW new test discovery mechanism
-                // const workspace = this.workspaceService.getWorkspaceFolder(uri);
-                // traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
-                // const testAdapter =
-                //     this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                // testAdapter.discoverTests(
-                //     this.testController,
-                //     this.refreshCancellation.token,
-                //     this.testAdapters.size > 1,
-                //     this.workspaceService.workspaceFile?.fsPath,
-                //     this.pythonExecFactory,
-                // );
-                // uncomment ~243 to use OLD test discovery mechanism
-                await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+                if (rewriteTestingEnabled) {
+                    // ** rewriteTestingEnabled set to true to use NEW test discovery mechanism
+                    const workspace = this.workspaceService.getWorkspaceFolder(uri);
+                    traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
+                    const testAdapter =
+                        this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                    testAdapter.discoverTests(
+                        this.testController,
+                        this.refreshCancellation.token,
+                        this.testAdapters.size > 1,
+                        this.workspaceService.workspaceFile?.fsPath,
+                        this.pythonExecFactory,
+                    );
+                } else {
+                    // else use OLD test discovery mechanism
+                    await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+                }
             } else if (settings.testing.unittestEnabled) {
                 // ** Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
-                // uncomment ~248 - 258 to NEW new test discovery mechanism
-                // const workspace = this.workspaceService.getWorkspaceFolder(uri);
-                // traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
-                // const testAdapter =
-                //     this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                // testAdapter.discoverTests(
-                //     this.testController,
-                //     this.refreshCancellation.token,
-                //     this.testAdapters.size > 1,
-                //     this.workspaceService.workspaceFile?.fsPath,
-                // );
-                // uncomment ~260 to use OLD test discovery mechanism
-                await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+                if (rewriteTestingEnabled) {
+                    // ** rewriteTestingEnabled set to true to use NEW test discovery mechanism
+                    const workspace = this.workspaceService.getWorkspaceFolder(uri);
+                    traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
+                    const testAdapter =
+                        this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                    testAdapter.discoverTests(
+                        this.testController,
+                        this.refreshCancellation.token,
+                        this.testAdapters.size > 1,
+                        this.workspaceService.workspaceFile?.fsPath,
+                    );
+                } else {
+                    // else use OLD test discovery mechanism
+                    await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
+                }
             } else {
                 if (this.sendTestDisabledTelemetry) {
                     this.sendTestDisabledTelemetry = false;
@@ -367,25 +391,26 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
                     const settings = this.configSettings.getSettings(workspace.uri);
                     if (testItems.length > 0) {
+                        const rewriteTestingEnabled = process.env.ENABLE_PYTHON_TESTING_REWRITE;
                         if (settings.testing.pytestEnabled) {
                             sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
                                 tool: 'pytest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
-                            // ** new execution runner/adapter
-                            // const testAdapter =
-                            //     this.testAdapters.get(workspace.uri) ||
-                            //     (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                            // return testAdapter.executeTests(
-                            //     this.testController,
-                            //     runInstance,
-                            //     testItems,
-                            //     token,
-                            //     request.profile?.kind === TestRunProfileKind.Debug,
-                            //     this.pythonExecFactory,
-                            // );
-
-                            // below is old way of running pytest execution
+                            // ** rewriteTestingEnabled set to true to use NEW test discovery mechanism
+                            if (rewriteTestingEnabled) {
+                                const testAdapter =
+                                    this.testAdapters.get(workspace.uri) ||
+                                    (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                                return testAdapter.executeTests(
+                                    this.testController,
+                                    runInstance,
+                                    testItems,
+                                    token,
+                                    request.profile?.kind === TestRunProfileKind.Debug,
+                                    this.pythonExecFactory,
+                                );
+                            }
                             return this.pytest.runTests(
                                 {
                                     includes: testItems,
@@ -398,23 +423,23 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             );
                         }
                         if (settings.testing.unittestEnabled) {
-                            // potentially squeeze in the new execution way here?
                             sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
                                 tool: 'unittest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
-                            // new execution runner/adapter
-                            // const testAdapter =
-                            //     this.testAdapters.get(workspace.uri) ||
-                            //     (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                            // return testAdapter.executeTests(
-                            //     this.testController,
-                            //     runInstance,
-                            //     testItems,
-                            //     token,
-                            //     request.profile?.kind === TestRunProfileKind.Debug,
-                            // );
-
+                            // ** rewriteTestingEnabled set to true to use NEW test discovery mechanism
+                            if (rewriteTestingEnabled) {
+                                const testAdapter =
+                                    this.testAdapters.get(workspace.uri) ||
+                                    (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+                                return testAdapter.executeTests(
+                                    this.testController,
+                                    runInstance,
+                                    testItems,
+                                    token,
+                                    request.profile?.kind === TestRunProfileKind.Debug,
+                                );
+                            }
                             // below is old way of running unittest execution
                             return this.unittest.runTests(
                                 {

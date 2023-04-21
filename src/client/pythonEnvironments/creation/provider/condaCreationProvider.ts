@@ -5,12 +5,7 @@ import { CancellationToken, ProgressLocation, WorkspaceFolder } from 'vscode';
 import * as path from 'path';
 import { Commands, PVSC_EXTENSION_ID } from '../../../common/constants';
 import { traceError, traceLog } from '../../../logging';
-import {
-    CreateEnvironmentOptions,
-    CreateEnvironmentProgress,
-    CreateEnvironmentProvider,
-    CreateEnvironmentResult,
-} from '../types';
+import { CreateEnvironmentProgress } from '../types';
 import { pickWorkspaceFolder } from '../common/workspaceSelection';
 import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
@@ -28,6 +23,11 @@ import {
     CONDA_ENV_EXISTING_MARKER,
 } from './condaProgressAndTelemetry';
 import { splitLines } from '../../../common/stringUtils';
+import {
+    CreateEnvironmentOptions,
+    CreateEnvironmentResult,
+    CreateEnvironmentProvider,
+} from '../proposed.createEnvApis';
 
 function generateCommandArgs(version?: string, options?: CreateEnvironmentOptions): string[] {
     let addGitIgnore = true;
@@ -247,7 +247,7 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
                     showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
                 }
             }
-            return { path: envPath, uri: workspace?.uri };
+            return { path: envPath, workspaceFolder: workspace, action: undefined, error: undefined };
         },
     );
 }
@@ -260,5 +260,7 @@ export function condaCreationProvider(): CreateEnvironmentProvider {
         description: CreateEnv.Conda.providerDescription,
 
         id: `${PVSC_EXTENSION_ID}:conda`,
+
+        tools: ['Conda'],
     };
 }

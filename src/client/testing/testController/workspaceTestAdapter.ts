@@ -17,11 +17,12 @@ import {
 import { splitLines } from '../../common/stringUtils';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
-import { traceError } from '../../logging';
+import { traceError, traceVerbose } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestProvider } from '../types';
 import {
+    clearAllChildren,
     createErrorTestItem,
     DebugTestTag,
     ErrorTestItemOptions,
@@ -36,6 +37,7 @@ import {
     ITestExecutionAdapter,
 } from './common/types';
 import { fixLogLines } from './common/utils';
+import { IPythonExecutionFactory } from '../../common/process/types';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -68,13 +70,13 @@ export class WorkspaceTestAdapter {
         this.vsIdToRunId = new Map<string, string>();
     }
 
-    // ** add executionFactory?: IPythonExecutionFactory, to the parameters
     public async executeTests(
         testController: TestController,
         runInstance: TestRun,
         includes: TestItem[],
         token?: CancellationToken,
         debugBool?: boolean,
+        executionFactory?: IPythonExecutionFactory,
     ): Promise<void> {
         if (this.executing) {
             return this.executing.promise;
@@ -101,18 +103,18 @@ export class WorkspaceTestAdapter {
                 }
             });
 
-            // ** First line is old way, section with if statement below is new way.
-            rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri, testCaseIds, debugBool);
-            // if (executionFactory !== undefined) {
-            //     rawTestExecData = await this.executionAdapter.runTests(
-            //         this.workspaceUri,
-            //         testCaseIds,
-            //         debugBool,
-            //         executionFactory,
-            //     );
-            // } else {
-            //     traceVerbose('executionFactory is undefined');
-            // }
+            // ** execution factory only defined for new rewrite way
+            if (executionFactory !== undefined) {
+                rawTestExecData = await this.executionAdapter.runTests(
+                    this.workspaceUri,
+                    testCaseIds,
+                    debugBool,
+                    executionFactory,
+                );
+                traceVerbose('executionFactory defined');
+            } else {
+                rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri, testCaseIds, debugBool);
+            }
             deferred.resolve();
         } catch (ex) {
             // handle token and telemetry here
@@ -135,8 +137,11 @@ export class WorkspaceTestAdapter {
         }
 
         if (rawTestExecData !== undefined && rawTestExecData.result !== undefined) {
+            // Map which holds the subtest information for each test item.
+            const subTestStats: Map<string, { passed: number; failed: number }> = new Map();
+
+            // iterate through payload and update the UI accordingly.
             for (const keyTemp of Object.keys(rawTestExecData.result)) {
-                // check for result and update the UI accordingly.
                 const testCases: TestItem[] = [];
 
                 // grab leaf level test items
@@ -147,7 +152,6 @@ export class WorkspaceTestAdapter {
 
                 if (
                     rawTestExecData.result[keyTemp].outcome === 'failure' ||
-                    rawTestExecData.result[keyTemp].outcome === 'subtest-failure' ||
                     rawTestExecData.result[keyTemp].outcome === 'passed-unexpected'
                 ) {
                     const rawTraceback = rawTestExecData.result[keyTemp].traceback ?? '';
@@ -175,8 +179,7 @@ export class WorkspaceTestAdapter {
                     });
                 } else if (
                     rawTestExecData.result[keyTemp].outcome === 'success' ||
-                    rawTestExecData.result[keyTemp].outcome === 'expected-failure' ||
-                    rawTestExecData.result[keyTemp].outcome === 'subtest-passed'
+                    rawTestExecData.result[keyTemp].outcome === 'expected-failure'
                 ) {
                     const grabTestItem = this.runIdToTestItem.get(keyTemp);
                     const grabVSid = this.runIdToVSid.get(keyTemp);
@@ -203,18 +206,85 @@ export class WorkspaceTestAdapter {
                             }
                         });
                     }
+                } else if (rawTestExecData.result[keyTemp].outcome === 'subtest-failure') {
+                    // split on " " since the subtest ID has the parent test ID in the first part of the ID.
+                    const parentTestCaseId = keyTemp.split(' ')[0];
+                    const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
+                    const data = rawTestExecData.result[keyTemp];
+                    // find the subtest's parent test item
+                    if (parentTestItem) {
+                        const subtestStats = subTestStats.get(parentTestCaseId);
+                        if (subtestStats) {
+                            subtestStats.failed += 1;
+                        } else {
+                            subTestStats.set(parentTestCaseId, { failed: 1, passed: 0 });
+                            runInstance.appendOutput(fixLogLines(`${parentTestCaseId} [subtests]:\r\n`));
+                            // clear since subtest items don't persist between runs
+                            clearAllChildren(parentTestItem);
+                        }
+                        const subtestId = keyTemp;
+                        const subTestItem = testController?.createTestItem(subtestId, subtestId);
+                        runInstance.appendOutput(fixLogLines(`${subtestId} Failed\r\n`));
+                        // create a new test item for the subtest
+                        if (subTestItem) {
+                            const traceback = data.traceback ?? '';
+                            const text = `${data.subtest} Failed: ${data.message ?? data.outcome}\r\n${traceback}\r\n`;
+                            runInstance.appendOutput(fixLogLines(text));
+                            parentTestItem.children.add(subTestItem);
+                            runInstance.started(subTestItem);
+                            const message = new TestMessage(rawTestExecData?.result[keyTemp].message ?? '');
+                            if (parentTestItem.uri && parentTestItem.range) {
+                                message.location = new Location(parentTestItem.uri, parentTestItem.range);
+                            }
+                            runInstance.failed(subTestItem, message);
+                        } else {
+                            throw new Error('Unable to create new child node for subtest');
+                        }
+                    } else {
+                        throw new Error('Parent test item not found');
+                    }
+                } else if (rawTestExecData.result[keyTemp].outcome === 'subtest-success') {
+                    // split on " " since the subtest ID has the parent test ID in the first part of the ID.
+                    const parentTestCaseId = keyTemp.split(' ')[0];
+                    const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
+
+                    // find the subtest's parent test item
+                    if (parentTestItem) {
+                        const subtestStats = subTestStats.get(parentTestCaseId);
+                        if (subtestStats) {
+                            subtestStats.passed += 1;
+                        } else {
+                            subTestStats.set(parentTestCaseId, { failed: 0, passed: 1 });
+                            runInstance.appendOutput(fixLogLines(`${parentTestCaseId} [subtests]:\r\n`));
+                            // clear since subtest items don't persist between runs
+                            clearAllChildren(parentTestItem);
+                        }
+                        const subtestId = keyTemp;
+                        const subTestItem = testController?.createTestItem(subtestId, subtestId);
+                        // create a new test item for the subtest
+                        if (subTestItem) {
+                            parentTestItem.children.add(subTestItem);
+                            runInstance.started(subTestItem);
+                            runInstance.passed(subTestItem);
+                            runInstance.appendOutput(fixLogLines(`${subtestId} Passed\r\n`));
+                        } else {
+                            throw new Error('Unable to create new child node for subtest');
+                        }
+                    } else {
+                        throw new Error('Parent test item not found');
+                    }
                 }
             }
         }
         return Promise.resolve();
     }
 
-    // add `executionFactory?: IPythonExecutionFactory,` to the function for new pytest method
     public async discoverTests(
         testController: TestController,
         token?: CancellationToken,
         isMultiroot?: boolean,
         workspaceFilePath?: string,
+        executionFactory?: IPythonExecutionFactory,
     ): Promise<void> {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: this.testProvider });
 
@@ -230,13 +300,12 @@ export class WorkspaceTestAdapter {
 
         let rawTestData;
         try {
-            // ** First line is old way, section with if statement below is new way.
-            rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri);
-            // if (executionFactory !== undefined) {
-            //     rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
-            // } else {
-            //     traceVerbose('executionFactory is undefined');
-            // }
+            // ** execution factory only defined for new rewrite way
+            if (executionFactory !== undefined) {
+                rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
+            } else {
+                rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri);
+            }
             deferred.resolve();
         } catch (ex) {
             sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: this.testProvider, failed: true });

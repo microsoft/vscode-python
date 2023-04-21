@@ -13,7 +13,6 @@ import { IApplicationShell, IWorkspaceService } from '../../client/common/applic
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { PythonToolExecutionService } from '../../client/common/process/pythonToolService';
 import { IPythonToolExecutionService } from '../../client/common/process/types';
 import {
@@ -21,7 +20,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IFormattingSettings,
-    IOutputChannel,
+    ILogOutputChannel,
     IPythonSettings,
 } from '../../client/common/types';
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
@@ -37,7 +36,7 @@ import { MockOutputChannel } from '../mockClasses';
 
 suite('Formatting - Test Arguments', () => {
     let container: IServiceContainer;
-    let outputChannel: IOutputChannel;
+    let outputChannel: ILogOutputChannel;
     let workspace: IWorkspaceService;
     let settings: IPythonSettings;
     const workspaceUri = Uri.file(__dirname);
@@ -85,9 +84,7 @@ suite('Formatting - Test Arguments', () => {
 
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(workspace.getWorkspaceFolder(anything())).thenReturn({ name: '', index: 0, uri: workspaceUri });
-        when(container.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL)).thenReturn(
-            instance(outputChannel),
-        );
+        when(container.get<ILogOutputChannel>(ILogOutputChannel)).thenReturn(instance(outputChannel));
         when(container.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
         when(container.get<IFormatterHelper>(IFormatterHelper)).thenReturn(formatterHelper);
         when(container.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspace));

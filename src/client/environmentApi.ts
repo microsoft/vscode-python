@@ -31,6 +31,7 @@ import {
     ResolvedEnvironment,
     Resource,
 } from './apiTypes';
+import { buildEnvironmentCreationApi } from './pythonEnvironments/creation/createEnvApi';
 
 type ActiveEnvironmentChangeEvent = {
     resource: WorkspaceFolder | undefined;
@@ -253,6 +254,7 @@ export function buildEnvironmentApi(
             sendApiTelemetry('onDidChangeEnvironments');
             return onEnvironmentsChanged.event;
         },
+        ...buildEnvironmentCreationApi(),
     };
     return environmentApi;
 }
