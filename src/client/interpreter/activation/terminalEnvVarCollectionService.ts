@@ -136,7 +136,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             }
         });
         const displayPath = this.pathUtils.getDisplayName(settings.pythonPath, workspaceFolder?.uri.fsPath);
-        const description = new MarkdownString(`Activated environment for \`${displayPath}\``);
+        const description = new MarkdownString(`${Interpreters.activateTerminalDescription} \`${displayPath}\``);
         this.context.environmentVariableCollection.setDescription(description, {
             workspaceFolder,
         });
