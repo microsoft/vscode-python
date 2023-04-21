@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ProgressOptions, ProgressLocation } from 'vscode';
+import { ProgressOptions, ProgressLocation, MarkdownString } from 'vscode';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell, IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
@@ -133,7 +133,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             }
         });
         const displayPath = this.pathUtils.getDisplayName(settings.pythonPath, workspaceFolder?.uri.fsPath);
-        this.context.environmentVariableCollection.setDescription(`Activated environment for \`${displayPath}\``, {
+        const description = new MarkdownString(`Activated environment for \`${displayPath}\``);
+        this.context.environmentVariableCollection.setDescription(description, {
             workspaceFolder,
         });
     }
