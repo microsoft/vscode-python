@@ -1,0 +1,3 @@
+node_modules
+.pytest_cache
+ms-python-insiders.vsix
