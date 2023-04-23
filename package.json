@@ -22,7 +22,8 @@
         "quickPickSortByLabel",
         "envShellEvent",
         "testObserver",
-        "quickPickItemTooltip"
+        "quickPickItemTooltip",
+        "envCollectionWorkspace"
     ],
     "author": {
         "name": "Microsoft Corporation"
@@ -43,7 +44,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.77.0-20230309"
+        "vscode": "^1.78.0-20230421"
     },
     "keywords": [
         "python",

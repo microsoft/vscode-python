@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ProgressOptions, ProgressLocation } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { IApplicationShell, IApplicationEnvironment } from '../../common/application/types';
+import { ProgressOptions, ProgressLocation, MarkdownString } from 'vscode';
+import { IExtensionActivationService } from '../../activation/types';
+import { IApplicationShell, IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
 import { IPlatformService } from '../../common/platform/types';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
@@ -14,6 +14,7 @@ import {
     Resource,
     IDisposableRegistry,
     IConfigurationService,
+    IPathUtils,
 } from '../../common/types';
 import { Deferred, createDeferred } from '../../common/utils/async';
 import { Interpreters } from '../../common/utils/localize';
@@ -23,13 +24,15 @@ import { defaultShells } from './service';
 import { IEnvironmentActivationService } from './types';
 
 @injectable()
-export class TerminalEnvVarCollectionService implements IExtensionSingleActivationService {
+export class TerminalEnvVarCollectionService implements IExtensionActivationService {
     public readonly supportedWorkspaceTypes = {
         untrustedWorkspace: false,
         virtualWorkspace: false,
     };
 
     private deferred: Deferred<void> | undefined;
+
+    private registeredOnce = false;
 
     private previousEnvVars = _normCaseKeys(process.env);
 
@@ -42,39 +45,51 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IEnvironmentActivationService) private environmentActivationService: IEnvironmentActivationService,
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
     ) {}
 
-    public async activate(): Promise<void> {
+    public async activate(resource: Resource): Promise<void> {
         if (!inTerminalEnvVarExperiment(this.experimentService)) {
             this.context.environmentVariableCollection.clear();
             return;
         }
-        this.interpreterService.onDidChangeInterpreter(
-            async (resource) => {
-                this.showProgress();
-                await this._applyCollection(resource);
-                this.hideProgress();
-            },
-            this,
-            this.disposables,
-        );
-        this.applicationEnvironment.onDidChangeShell(
-            async (shell: string) => {
-                this.showProgress();
-                // Pass in the shell where known instead of relying on the application environment, because of bug
-                // on VSCode: https://github.com/microsoft/vscode/issues/160694
-                await this._applyCollection(undefined, shell);
-                this.hideProgress();
-            },
-            this,
-            this.disposables,
-        );
-
-        this._applyCollection(undefined).ignoreErrors();
+        if (!this.registeredOnce) {
+            this.interpreterService.onDidChangeInterpreter(
+                async (r) => {
+                    this.showProgress();
+                    await this._applyCollection(r).ignoreErrors();
+                    this.hideProgress();
+                },
+                this,
+                this.disposables,
+            );
+            this.applicationEnvironment.onDidChangeShell(
+                async (shell: string) => {
+                    this.showProgress();
+                    // Pass in the shell where known instead of relying on the application environment, because of bug
+                    // on VSCode: https://github.com/microsoft/vscode/issues/160694
+                    await this._applyCollection(undefined, shell).ignoreErrors();
+                    this.hideProgress();
+                },
+                this,
+                this.disposables,
+            );
+            this.registeredOnce = true;
+        }
+        this._applyCollection(resource).ignoreErrors();
     }
 
     public async _applyCollection(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
+        let workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
+        if (
+            !workspaceFolder &&
+            Array.isArray(this.workspaceService.workspaceFolders) &&
+            this.workspaceService.workspaceFolders.length > 0
+        ) {
+            [workspaceFolder] = this.workspaceService.workspaceFolders;
+        }
         const settings = this.configurationService.getSettings(resource);
         if (!settings.terminal.activateEnvironment) {
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
@@ -95,7 +110,7 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
                 await this._applyCollection(resource, defaultShell?.shell);
                 return;
             }
-            this.context.environmentVariableCollection.clear();
+            this.context.environmentVariableCollection.clear({ workspaceFolder });
             this.previousEnvVars = _normCaseKeys(process.env);
             return;
         }
@@ -107,10 +122,10 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
             if (prevValue !== value) {
                 if (value !== undefined) {
                     traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
-                    this.context.environmentVariableCollection.replace(key, value);
+                    this.context.environmentVariableCollection.replace(key, value, { workspaceFolder });
                 } else {
                     traceVerbose(`Clearing environment variable ${key} from collection`);
-                    this.context.environmentVariableCollection.delete(key);
+                    this.context.environmentVariableCollection.delete(key, { workspaceFolder });
                 }
             }
         });
@@ -118,8 +133,13 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
             // If the previous env var is not in the current env, clear it from collection.
             if (!(key in env)) {
                 traceVerbose(`Clearing environment variable ${key} from collection`);
-                this.context.environmentVariableCollection.delete(key);
+                this.context.environmentVariableCollection.delete(key, { workspaceFolder });
             }
+        });
+        const displayPath = this.pathUtils.getDisplayName(settings.pythonPath, workspaceFolder?.uri.fsPath);
+        const description = new MarkdownString(`${Interpreters.activateTerminalDescription} \`${displayPath}\``);
+        this.context.environmentVariableCollection.setDescription(description, {
+            workspaceFolder,
         });
     }
 

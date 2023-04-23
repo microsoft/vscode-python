@@ -109,8 +109,8 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IEnvironmentActivationService,
         EnvironmentActivationService,
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionActivationService>(
+        IExtensionActivationService,
         TerminalEnvVarCollectionService,
     );
 }
