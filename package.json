@@ -977,7 +977,7 @@
                     "type": "boolean"
                 },
                 "python.terminal.activateEnvironment": {
-                    "default": true,
+                    "default": false,
                     "description": "%python.terminal.activateEnvironment.description%",
                     "scope": "resource",
                     "type": "boolean"
