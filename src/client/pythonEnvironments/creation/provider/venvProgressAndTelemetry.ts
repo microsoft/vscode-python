@@ -29,6 +29,7 @@ const INSTALLING_PIP_MARKER = 'CREATE_VENV.INSTALLING_PIP';
 const INSTALL_PIP_FAILED_MARKER = 'CREATE_VENV.INSTALL_PIP_FAILED';
 const DOWNLOADING_PIP_MARKER = 'CREATE_VENV.DOWNLOADING_PIP';
 const DOWNLOAD_PIP_FAILED_MARKER = 'CREATE_VENV.DOWNLOAD_PIP_FAILED';
+const DISTUTILS_NOT_INSTALLED_MARKER = 'CREATE_VENV.DISTUTILS_NOT_INSTALLED';
 
 export class VenvProgressAndTelemetry {
     private readonly processed = new Set<string>();
@@ -86,6 +87,16 @@ export class VenvProgressAndTelemetry {
                     reason: 'noPip',
                 });
                 return PIP_NOT_INSTALLED_MARKER;
+            },
+        ],
+        [
+            DISTUTILS_NOT_INSTALLED_MARKER,
+            (_progress: CreateEnvironmentProgress) => {
+                sendTelemetryEvent(EventName.ENVIRONMENT_FAILED, undefined, {
+                    environmentType: 'venv',
+                    reason: 'noDistUtils',
+                });
+                return VENV_NOT_INSTALLED_MARKER;
             },
         ],
         [

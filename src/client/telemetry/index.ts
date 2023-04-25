@@ -2057,7 +2057,7 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.ENVIRONMENT_FAILED]: {
         environmentType: 'venv' | 'conda' | 'microvenv';
-        reason: 'noVenv' | 'noPip' | 'other';
+        reason: 'noVenv' | 'noPip' | 'noDistUtils' | 'other';
     };
     /**
      * Telemetry event sent before installing packages.
