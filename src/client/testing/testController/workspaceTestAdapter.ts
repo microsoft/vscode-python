@@ -120,14 +120,17 @@ export class WorkspaceTestAdapter {
             // handle token and telemetry here
             sendTelemetryEvent(EventName.UNITTEST_RUN_ALL_FAILED, undefined);
 
-            const cancel = token?.isCancellationRequested
+            let cancel = token?.isCancellationRequested
                 ? Testing.cancelUnittestExecution
                 : Testing.errorUnittestExecution;
+            if (this.testProvider === 'pytest') {
+                cancel = token?.isCancellationRequested ? Testing.cancelPytestExecution : Testing.errorPytestExecution;
+            }
             traceError(`${cancel}\r\n`, ex);
 
             // Also report on the test view
             const message = util.format(`${cancel} ${Testing.seePythonOutput}\r\n`, ex);
-            const options = buildErrorNodeOptions(this.workspaceUri, message);
+            const options = buildErrorNodeOptions(this.workspaceUri, message, this.testProvider);
             const errorNode = createErrorTestItem(testController, options);
             testController.items.add(errorNode);
 
@@ -310,15 +313,18 @@ export class WorkspaceTestAdapter {
         } catch (ex) {
             sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: this.testProvider, failed: true });
 
-            const cancel = token?.isCancellationRequested
+            let cancel = token?.isCancellationRequested
                 ? Testing.cancelUnittestDiscovery
                 : Testing.errorUnittestDiscovery;
+            if (this.testProvider === 'pytest') {
+                cancel = token?.isCancellationRequested ? Testing.cancelPytestDiscovery : Testing.errorPytestDiscovery;
+            }
 
             traceError(`${cancel}\r\n`, ex);
 
             // Report also on the test view.
             const message = util.format(`${cancel} ${Testing.seePythonOutput}\r\n`, ex);
-            const options = buildErrorNodeOptions(this.workspaceUri, message);
+            const options = buildErrorNodeOptions(this.workspaceUri, message, this.testProvider);
             const errorNode = createErrorTestItem(testController, options);
             testController.items.add(errorNode);
 
@@ -336,17 +342,19 @@ export class WorkspaceTestAdapter {
 
         // Check if there were any errors in the discovery process.
         if (rawTestData.status === 'error') {
+            const testingErrorConst =
+                this.testProvider === 'pytest' ? Testing.errorPytestDiscovery : Testing.errorUnittestDiscovery;
             const { errors } = rawTestData;
-            traceError(Testing.errorUnittestDiscovery, '\r\n', errors!.join('\r\n\r\n'));
+            traceError(testingErrorConst, '\r\n', errors!.join('\r\n\r\n'));
 
             let errorNode = testController.items.get(`DiscoveryError:${workspacePath}`);
             const message = util.format(
-                `${Testing.errorUnittestDiscovery} ${Testing.seePythonOutput}\r\n`,
+                `${testingErrorConst} ${Testing.seePythonOutput}\r\n`,
                 errors!.join('\r\n\r\n'),
             );
 
             if (errorNode === undefined) {
-                const options = buildErrorNodeOptions(this.workspaceUri, message);
+                const options = buildErrorNodeOptions(this.workspaceUri, message, this.testProvider);
                 errorNode = createErrorTestItem(testController, options);
                 testController.items.add(errorNode);
             }
@@ -462,10 +470,11 @@ function populateTestTree(
     });
 }
 
-function buildErrorNodeOptions(uri: Uri, message: string): ErrorTestItemOptions {
+function buildErrorNodeOptions(uri: Uri, message: string, testType: string): ErrorTestItemOptions {
+    const labelText = testType === 'pytest' ? 'Pytest Discovery Error' : 'Unittest Discovery Error';
     return {
         id: `DiscoveryError:${uri.fsPath}`,
-        label: `Unittest Discovery Error [${path.basename(uri.fsPath)}]`,
+        label: `${labelText} [${path.basename(uri.fsPath)}]`,
         error: message,
     };
 }

@@ -80,15 +80,11 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             resource: uri,
         };
         const execService = await executionFactory.createActivatedEnvironment(creationOptions);
-
-        try {
-            execService.exec(
-                ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs),
-                spawnOptions,
-            );
-        } catch (ex) {
-            console.error(ex);
-        }
+        execService
+            .exec(['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs), spawnOptions)
+            .catch((ex) => {
+                deferred.reject(ex as Error);
+            });
         return deferred.promise;
     }
 }
