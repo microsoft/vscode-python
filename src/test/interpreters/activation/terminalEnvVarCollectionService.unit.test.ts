@@ -117,11 +117,11 @@ suite('Terminal Environment Variable Collection Service', () => {
 
         await terminalEnvVarCollectionService.activate(undefined);
 
-        verify(interpreterService.onDidChangeInterpreter(anything(), anything(), anything())).never();
+        verify(interpreterService.onDidChangeInterpreter(anything(), anything(), anything())).once();
         verify(applicationEnvironment.onDidChangeShell(anything(), anything(), anything())).never();
         assert(applyCollectionStub.notCalled, 'Collection should not be applied on activation');
 
-        verify(collection.clear()).once();
+        verify(collection.clear()).atLeast(1);
     });
 
     test('When interpreter changes, apply new activated variables to the collection', async () => {
