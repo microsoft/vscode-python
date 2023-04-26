@@ -6,6 +6,7 @@
 
 import '../../common/extensions';
 
+import * as path from 'path';
 import { inject, injectable } from 'inversify';
 
 import { IWorkspaceService } from '../../common/application/types';
@@ -25,10 +26,18 @@ import { EventName } from '../../telemetry/constants';
 import { IInterpreterService } from '../contracts';
 import { IEnvironmentActivationService } from './types';
 import { TraceOptions } from '../../logging/types';
-import { traceDecoratorError, traceDecoratorVerbose, traceError, traceVerbose, traceWarn } from '../../logging';
+import {
+    traceDecoratorError,
+    traceDecoratorVerbose,
+    traceError,
+    traceInfo,
+    traceVerbose,
+    traceWarn,
+} from '../../logging';
 import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
+import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const CACHE_DURATION = 10 * 60 * 1000;
@@ -193,6 +202,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             shellInfo = { shellType: customShellType, shell };
         }
         try {
+            const processService = await this.processServiceFactory.create(resource);
+            const customEnvVars = (await this.envVarsService.getEnvironmentVariables(resource)) ?? {};
+            const hasCustomEnvVars = Object.keys(customEnvVars).length;
+            const env = hasCustomEnvVars ? customEnvVars : { ...this.currentProcess.env };
+
             let command: string | undefined;
             const [args, parse] = internalScripts.printEnvVariables();
             args.forEach((arg, i) => {
@@ -217,6 +231,16 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 );
                 traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
                 if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
+                    if (interpreter?.envType === EnvironmentType.Venv) {
+                        const key = getSearchPathEnvVarNames()[0];
+                        if (env[key]) {
+                            env[key] = `${path.dirname(interpreter.path)}${path.delimiter}${env[key]}`;
+                        } else {
+                            env[key] = `${path.dirname(interpreter.path)}`;
+                        }
+
+                        return env;
+                    }
                     return undefined;
                 }
                 // Run the activate command collect the environment from it.
@@ -225,11 +249,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 // put in a dummy echo we can look for
                 command = `${activationCommand} && echo '${ENVIRONMENT_PREFIX}' && python ${args.join(' ')}`;
             }
-
-            const processService = await this.processServiceFactory.create(resource);
-            const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
-            const hasCustomEnvVars = Object.keys(customEnvVars).length;
-            const env = hasCustomEnvVars ? customEnvVars : { ...this.currentProcess.env };
 
             // Make sure python warnings don't interfere with getting the environment. However
             // respect the warning in the returned values
@@ -283,7 +302,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     // that's the case, wait and try again. This happens especially on AzDo
                     const excString = (exc as Error).toString();
                     if (condaRetryMessages.find((m) => excString.includes(m)) && tryCount < 10) {
-                        traceVerbose(`Conda is busy, attempting to retry ...`);
+                        traceInfo(`Conda is busy, attempting to retry ...`);
                         result = undefined;
                         tryCount += 1;
                         await sleep(500);

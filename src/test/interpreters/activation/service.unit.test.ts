@@ -28,6 +28,7 @@ import { EnvironmentActivationService } from '../../../client/interpreter/activa
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { getSearchPathEnvVarNames } from '../../../client/common/utils/exec';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const defaultShells = {
@@ -116,6 +117,25 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                             expect(env).to.equal(undefined, 'Should not have any variables');
                             verify(
                                 helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter),
+                            ).once();
+                        });
+                        test('Env variables returned for microvenv', async () => {
+                            when(platform.osType).thenReturn(osType.value);
+
+                            const microVenv = { ...pythonInterpreter, envType: EnvironmentType.Venv };
+                            const key = getSearchPathEnvVarNames()[0];
+                            const varsFromEnv = { [key]: '/foo/bar' };
+
+                            when(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), microVenv),
+                            ).thenResolve();
+
+                            const env = await service.getActivatedEnvironmentVariables(resource, microVenv);
+
+                            verify(platform.osType).once();
+                            expect(env).to.deep.equal(varsFromEnv);
+                            verify(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), microVenv),
                             ).once();
                         });
                         test('Validate command used to activation and printing env vars', async () => {

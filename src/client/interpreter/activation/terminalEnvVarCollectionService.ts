@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as path from 'path';
 import { inject, injectable } from 'inversify';
-import { ProgressOptions, ProgressLocation, MarkdownString } from 'vscode';
+import { ProgressOptions, ProgressLocation, MarkdownString, WorkspaceFolder } from 'vscode';
+import { pathExists } from 'fs-extra';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell, IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
@@ -22,6 +24,7 @@ import { traceDecoratorVerbose, traceVerbose } from '../../logging';
 import { IInterpreterService } from '../contracts';
 import { defaultShells } from './service';
 import { IEnvironmentActivationService } from './types';
+import { EnvironmentType } from '../../pythonEnvironments/info';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService {
@@ -53,6 +56,17 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     public async activate(resource: Resource): Promise<void> {
         if (!inTerminalEnvVarExperiment(this.experimentService)) {
             this.context.environmentVariableCollection.clear();
+            await this.handleMicroVenv(resource);
+            if (!this.registeredOnce) {
+                this.interpreterService.onDidChangeInterpreter(
+                    async (r) => {
+                        await this.handleMicroVenv(r);
+                    },
+                    this,
+                    this.disposables,
+                );
+                this.registeredOnce = true;
+            }
             return;
         }
         if (!this.registeredOnce) {
@@ -82,14 +96,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     public async _applyCollection(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
-        let workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
-        if (
-            !workspaceFolder &&
-            Array.isArray(this.workspaceService.workspaceFolders) &&
-            this.workspaceService.workspaceFolders.length > 0
-        ) {
-            [workspaceFolder] = this.workspaceService.workspaceFolders;
-        }
+        const workspaceFolder = this.getWorkspaceFolder(resource);
         const settings = this.configurationService.getSettings(resource);
         if (!settings.terminal.activateEnvironment) {
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
@@ -141,6 +148,37 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         this.context.environmentVariableCollection.setDescription(description, {
             workspaceFolder,
         });
+    }
+
+    private async handleMicroVenv(resource: Resource) {
+        const workspaceFolder = this.getWorkspaceFolder(resource);
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        if (interpreter?.envType === EnvironmentType.Venv) {
+            const activatePath = path.join(path.dirname(interpreter.path), 'activate');
+            if (!(await pathExists(activatePath))) {
+                this.context.environmentVariableCollection.replace(
+                    'PATH',
+                    `${path.dirname(interpreter.path)}${path.delimiter}${process.env.Path}`,
+                    {
+                        workspaceFolder,
+                    },
+                );
+                return;
+            }
+        }
+        this.context.environmentVariableCollection.clear();
+    }
+
+    private getWorkspaceFolder(resource: Resource): WorkspaceFolder | undefined {
+        let workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
+        if (
+            !workspaceFolder &&
+            Array.isArray(this.workspaceService.workspaceFolders) &&
+            this.workspaceService.workspaceFolders.length > 0
+        ) {
+            [workspaceFolder] = this.workspaceService.workspaceFolders;
+        }
+        return workspaceFolder;
     }
 
     @traceDecoratorVerbose('Display activating terminals')
