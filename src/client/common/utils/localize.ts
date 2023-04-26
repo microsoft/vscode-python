@@ -351,7 +351,7 @@ export namespace DebugConfigStrings {
         export const enterManagePyPath = {
             title: l10n.t('Debug Django'),
             prompt: l10n.t(
-                "Enter the path to manage.py ('${workspaceFolderToken}' points to the root of the current workspace folder)",
+                "Enter the path to manage.py ('${workspaceFolder}' points to the root of the current workspace folder)",
             ),
             invalid: l10n.t('Enter a valid Python file path'),
         };
