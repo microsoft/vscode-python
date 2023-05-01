@@ -50,12 +50,14 @@ suite('Module Installer - Poetry', () => {
             switch (command) {
                 case 'poetry env list --full-path':
                     return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
-                case 'poetry env info -p':
-                    if (options.cwd && externalDependencies.arePathsSame(options.cwd, project1)) {
+                case 'poetry env info -p': {
+                    const cwd = typeof options.cwd === 'string' ? options.cwd : options.cwd?.toString();
+                    if (cwd && externalDependencies.arePathsSame(cwd, project1)) {
                         return Promise.resolve<ExecutionResult<string>>({
                             stdout: `${path.join(project1, '.venv')} \n`,
                         });
                     }
+                }
             }
             return Promise.reject(new Error('Command failed'));
         });

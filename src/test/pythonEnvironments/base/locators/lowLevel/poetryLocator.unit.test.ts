@@ -36,7 +36,8 @@ suite('Poetry Locator', () => {
             getOSTypeStub.returns(platformUtils.OSType.Windows);
             shellExecute.callsFake((command: string, options: ShellOptions) => {
                 if (command === 'poetry env list --full-path') {
-                    if (options.cwd && externalDependencies.arePathsSame(options.cwd, project1)) {
+                    const cwd = typeof options.cwd === 'string' ? options.cwd : options.cwd?.toString();
+                    if (cwd && externalDependencies.arePathsSame(cwd, project1)) {
                         return Promise.resolve<ExecutionResult<string>>({
                             stdout: `${path.join(testPoetryDir, 'poetry-tutorial-project-6hnqYwvD-py3.8')} \n
                             ${path.join(testPoetryDir, 'globalwinproject-9hvDnqYw-py3.11')} (Activated)\r\n
@@ -76,7 +77,8 @@ suite('Poetry Locator', () => {
             getOSTypeStub.returns(platformUtils.OSType.Linux);
             shellExecute.callsFake((command: string, options: ShellOptions) => {
                 if (command === 'poetry env list --full-path') {
-                    if (options.cwd && externalDependencies.arePathsSame(options.cwd, project2)) {
+                    const cwd = typeof options.cwd === 'string' ? options.cwd : options.cwd?.toString();
+                    if (cwd && externalDependencies.arePathsSame(cwd, project2)) {
                         return Promise.resolve<ExecutionResult<string>>({
                             stdout: `${path.join(testPoetryDir, 'posix1project-9hvDnqYw-py3.4')} (Activated)\n
                         ${path.join(testPoetryDir, 'posix2project-6hnqYwvD-py3.7')}`,

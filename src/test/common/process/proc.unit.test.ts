@@ -36,14 +36,18 @@ suite('Process - Process Service', function () {
 
     test('Process is killed', async () => {
         const proc = spawnProc();
-
-        ProcessService.kill(proc.proc.pid);
+        expect(proc.proc.pid !== undefined).to.equal(true, 'invalid pid');
+        if (proc.proc.pid) {
+            ProcessService.kill(proc.proc.pid);
+        }
 
         expect(await proc.exited.promise).to.equal(true, 'process did not die');
     });
     test('Process is alive', async () => {
         const proc = spawnProc();
-
-        expect(ProcessService.isAlive(proc.proc.pid)).to.equal(true, 'process is not alive');
+        expect(proc.proc.pid !== undefined).to.equal(true, 'invalid pid');
+        if (proc.proc.pid) {
+            expect(ProcessService.isAlive(proc.proc.pid)).to.equal(true, 'process is not alive');
+        }
     });
 });

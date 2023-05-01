@@ -192,7 +192,7 @@ export function execObservable(
     let procExited = false;
     const disposable: IDisposable = {
         dispose() {
-            if (proc && !proc.killed && !procExited) {
+            if (proc && proc.pid && !proc.killed && !procExited) {
                 killPid(proc.pid);
             }
             if (proc) {
