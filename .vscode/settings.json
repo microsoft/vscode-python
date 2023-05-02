@@ -63,7 +63,7 @@
     ],
     "python.linting.flake8Enabled": true,
     "python.linting.pylintEnabled": false,
-    "python.sortImports.args": ["--profile", "black"],
+    "isort.args": ["--profile", "black"],
     "python.testing.pytestArgs": ["src/test/pythonFiles"],
     "search.exclude": {
         "**/node_modules": true,
