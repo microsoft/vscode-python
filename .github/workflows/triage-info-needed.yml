@@ -17,7 +17,6 @@ jobs:
         with:
           repository: 'karrtikr/vscode-python-github-actions'
           path: ./actions
-          ref: stable
       - name: Install Actions
         run: npm install --production --prefix ./actions
       - name: Add "info-needed" label
@@ -36,7 +35,6 @@ jobs:
         with:
           repository: 'karrtikr/vscode-python-github-actions'
           path: ./actions
-          ref: stable
       - name: Install Actions
         run: npm install --production --prefix ./actions
       - name: Remove "info-needed" label
