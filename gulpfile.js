@@ -226,6 +226,23 @@ gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
 gulp.task('prePublishNonBundle', gulp.series('compile'));
 
+gulp.task('preparePythonDeps', async () => {
+    let args = ['-m', 'pip', 'install', '-U', 'pip'];
+    await spawnAsync(process.env.CI_PYTHON_PATH || 'python', args, undefined, true)
+        .then(() => true)
+        .catch((ex) => {
+            console.error("Failed to upgrade pip using 'python'", ex);
+            return false;
+        });
+    args = ['-m', 'pip', 'install', 'wheel'];
+    await spawnAsync(process.env.CI_PYTHON_PATH || 'python', args, undefined, true)
+        .then(() => true)
+        .catch((ex) => {
+            console.error("Failed to install wheel requirement using 'python'", ex);
+            return false;
+        });
+});
+
 gulp.task('installPythonRequirements', async () => {
     let args = [
         '-m',
@@ -308,7 +325,7 @@ gulp.task('installDebugpy', async () => {
     rmrf.sync('./pythonFiles/lib/temp');
 });
 
-gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installDebugpy'));
+gulp.task('installPythonLibs', gulp.series('preparePythonDeps', 'installPythonRequirements', 'installDebugpy'));
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
     env = env || {};
