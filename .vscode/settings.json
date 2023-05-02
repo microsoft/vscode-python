@@ -33,8 +33,6 @@
         "editor.formatOnPaste": true,
         "editor.formatOnSave": true
     },
-    "cucumberautocomplete.skipDocStringsFormat": true,
-    "debug.javascript.usePreview": false,
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true
     },
@@ -80,5 +78,4 @@
     "typescript.preferences.quoteStyle": "single",
     "typescript.tsc.autoDetect": "off",
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
-    "typescriptHero.imports.stringQuoteStyle": "'"
 }
