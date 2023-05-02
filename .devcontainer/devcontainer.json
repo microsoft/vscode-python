@@ -31,7 +31,7 @@
     "features": {
         "ghcr.io/devcontainers/features/node:1": {
             "nodeGypDependencies": true,
-            "version": "16"
+            "version": "14.18"
         }
     },
     // Configure tool-specific properties.
