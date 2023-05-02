@@ -1,18 +1,26 @@
-name: My Workflow
+name: Community Feedback Auto Comment
 
 on:
   issues:
     types:
       - labeled
-
 jobs:
-  community-feedback-auto-comment:
-    - name: Checkout Actions
-      uses: actions/checkout@v3
-      with:
-        repository: 'karrtikr/vscode-python-github-actions'
-        path: ./actions
-    - name: Install Actions
-      run: npm install --production --prefix ./actions
-    - name: Add community feedback auto comment if applicable
-      uses: ./actions/community-feedback-auto-comment
+  add-comment:
+    if: github.event.label.name == 'needs community feedback'
+    runs-on: ubuntu-latest
+
+    permissions:
+      issues: write
+
+    steps:
+      - name: Check For Existing Comment
+        uses: peter-evans/find-comment@v2
+        id: finder
+        with:
+          issue-number: ${{ github.event.issue.number }}
+
+      - name: Add Community Feedback Comment
+        if: steps.finder.outputs.comment-id == ''
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ github.event.issue.number }}
