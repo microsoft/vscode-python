@@ -54,7 +54,7 @@ export class Proc {
         this.raw = (raw as unknown) as IRawProc;
         this.output = output;
     }
-    public get pid(): number {
+    public get pid(): number | undefined {
         return this.raw.pid;
     }
     public get exited(): boolean {

@@ -28,7 +28,8 @@ export class ProcessLogger implements IProcessLogger {
             : fileOrCommand;
         const info = [`> ${this.getDisplayCommands(command)}`];
         if (options?.cwd) {
-            info.push(`cwd: ${this.getDisplayCommands(options.cwd)}`);
+            const cwd: string = typeof options?.cwd === 'string' ? options?.cwd : options?.cwd?.toString();
+            info.push(`cwd: ${this.getDisplayCommands(cwd)}`);
         }
         if (typeof options?.shell === 'string') {
             info.push(`shell: ${identifyShellFromShellPath(options?.shell)}`);
