@@ -42,3 +42,4 @@ jobs:
         with:
           triagers: ${{ env.TRIAGERS }}
           action: 'remove'
+          token: ${{secrets.GITHUB_TOKEN}}
