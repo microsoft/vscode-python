@@ -15,7 +15,7 @@ jobs:
       - name: Checkout Actions
         uses: actions/checkout@v3
         with:
-          repository: 'microsoft/vscode-github-triage-actions'
+          repository: 'karrtikr/vscode-python-github-actions'
           path: ./actions
           ref: stable
       - name: Install Actions
@@ -34,7 +34,7 @@ jobs:
       - name: Checkout Actions
         uses: actions/checkout@v3
         with:
-          repository: 'microsoft/vscode-github-triage-actions'
+          repository: 'karrtikr/vscode-python-github-actions'
           path: ./actions
           ref: stable
       - name: Install Actions
