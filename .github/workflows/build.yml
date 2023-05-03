@@ -63,11 +63,15 @@ jobs:
     if: github.repository == 'microsoft/vscode-python'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Actions
         uses: actions/checkout@v3
-
+        with:
+          repository: 'microsoft/vscode-python-engineering'
+          path: ./actions
+      - name: Install Actions
+        run: npm install --production --prefix ./actions
       - name: Lint
-        uses: ./.github/actions/lint
+        uses: ./actions/lint
         with:
           node_version: ${{ env.NODE_VERSION }}
 
