@@ -279,6 +279,11 @@
             },
             {
                 "category": "Python",
+                "command": "python.createEnvironment-button",
+                "title": "%python.command.python.createEnvironment.title%"
+            },
+            {
+                "category": "Python",
                 "command": "python.enableLinting",
                 "title": "%python.command.python.enableLinting.title%"
             },
@@ -1700,12 +1705,12 @@
             "editor/content": [
                 {
                     "group": "Python",
-                    "command": "python.createEnvironment",
+                    "command": "python.createEnvironment-button",
                     "when": "resourceLangId == pip-requirements && !virtualWorkspace && shellExecutionSupported && !inDiffEditor"
                 },
                 {
                     "group": "Python",
-                    "command": "python.createEnvironment",
+                    "command": "python.createEnvironment-button",
                     "when": "resourceFilename == pyproject.toml && pipInstallableToml && !virtualWorkspace && shellExecutionSupported  && !inDiffEditor"
                 }
             ],

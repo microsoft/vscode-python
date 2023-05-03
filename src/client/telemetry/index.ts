@@ -2099,6 +2099,13 @@ export interface IEventNamePropertyMapping {
         using: 'pipUpgrade' | 'requirements.txt' | 'pyproject.toml' | 'environment.yml' | 'pipDownload' | 'pipInstall';
     };
     /**
+     * Telemetry event sent if create environment button was used to trigger the command.
+     */
+    /* __GDPR__
+       "environment.button" : {"owner": "karthiknadig" }
+     */
+    [EventName.ENVIRONMENT_BUTTON]: never | undefined;
+    /**
      * Telemetry event sent when a linter or formatter extension is already installed.
      */
     /* __GDPR__
