@@ -4,7 +4,7 @@
 import { ConfigurationTarget, Disposable } from 'vscode';
 import { Commands } from '../../common/constants';
 import { IDisposableRegistry, IInterpreterPathService, IPathUtils } from '../../common/types';
-import { registerCommand } from '../../common/vscodeApis/commandApis';
+import { executeCommand, registerCommand } from '../../common/vscodeApis/commandApis';
 import { IInterpreterQuickPick } from '../../interpreter/configuration/types';
 import { getCreationEvents, handleCreateEnvironmentCommand } from './createEnvironment';
 import { condaCreationProvider } from './provider/condaCreationProvider';
@@ -18,6 +18,8 @@ import {
     ProposedCreateEnvironmentAPI,
     EnvironmentDidCreateEvent,
 } from './proposed.createEnvApis';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 
 class CreateEnvironmentProviders {
     private _createEnvProviders: CreateEnvironmentProvider[] = [];
@@ -65,6 +67,13 @@ export function registerCreateEnvironmentFeatures(
             (options?: CreateEnvironmentOptions): Promise<CreateEnvironmentResult | undefined> => {
                 const providers = _createEnvironmentProviders.getAll();
                 return handleCreateEnvironmentCommand(providers, options);
+            },
+        ),
+        registerCommand(
+            Commands.Create_Environment_Button,
+            async (): Promise<void> => {
+                sendTelemetryEvent(EventName.ENVIRONMENT_BUTTON, undefined, undefined);
+                await executeCommand(Commands.Create_Environment);
             },
         ),
         registerCreateEnvironmentProvider(new VenvCreationProvider(interpreterQuickPick)),
