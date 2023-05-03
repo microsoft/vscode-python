@@ -10,7 +10,7 @@ on:
 
 jobs:
   classify:
-    name: 'Classiasdsadfy PR'
+    name: 'Classify PR'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Actions
