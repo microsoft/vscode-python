@@ -76,7 +76,7 @@ interface InputBoxParameters {
     validate(value: string): Promise<string | undefined>;
 }
 
-type MultiStepInputQuickPicResponseType<T, P> = T | (P extends { buttons: (infer I)[] } ? I : never) | undefined;
+type MultiStepInputQuickPickResponseType<T, P> = T | (P extends { buttons: (infer I)[] } ? I : never) | undefined;
 type MultiStepInputInputBoxResponseType<P> = string | (P extends { buttons: (infer I)[] } ? I : never) | undefined;
 export interface IMultiStepInput<S> {
     run(start: InputStep<S>, state: S): Promise<void>;
@@ -88,7 +88,7 @@ export interface IMultiStepInput<S> {
         activeItem,
         placeholder,
         customButtonSetups,
-    }: P): Promise<MultiStepInputQuickPicResponseType<T, P>>;
+    }: P): Promise<MultiStepInputQuickPickResponseType<T, P>>;
     showInputBox<P extends InputBoxParameters>({
         title,
         step,
@@ -126,7 +126,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         keepScrollPosition,
         sortByLabel,
         initialize,
-    }: P): Promise<MultiStepInputQuickPicResponseType<T, P>> {
+    }: P): Promise<MultiStepInputQuickPickResponseType<T, P>> {
         const disposables: Disposable[] = [];
         const input = this.shell.createQuickPick<T>();
         input.title = title;
