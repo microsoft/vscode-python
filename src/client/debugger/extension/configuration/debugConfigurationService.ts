@@ -114,64 +114,68 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         input: MultiStepInput<DebugConfigurationState>,
         state: DebugConfigurationState,
     ): Promise<InputStep<DebugConfigurationState> | void> {
-        type DebugConfigurationQuickPickItem = QuickPickItem & { type: DebugConfigurationType };
+        type DebugConfigurationQuickPickItemFunc = (
+            input: MultiStepInput<DebugConfigurationState>,
+            state: DebugConfigurationState,
+        ) => Promise<void | InputStep<DebugConfigurationState>>;
+        type DebugConfigurationQuickPickItem = QuickPickItem & {
+            type: DebugConfigurationType;
+            func: DebugConfigurationQuickPickItemFunc;
+        };
         const items: DebugConfigurationQuickPickItem[] = [
             {
+                func: buildFileLaunchDebugConfiguration,
                 label: DebugConfigStrings.file.selectConfiguration.label,
                 type: DebugConfigurationType.launchFile,
                 description: DebugConfigStrings.file.selectConfiguration.description,
             },
             {
+                func: buildModuleLaunchConfiguration,
                 label: DebugConfigStrings.module.selectConfiguration.label,
                 type: DebugConfigurationType.launchModule,
                 description: DebugConfigStrings.module.selectConfiguration.description,
             },
             {
+                func: buildRemoteAttachConfiguration,
                 label: DebugConfigStrings.attach.selectConfiguration.label,
                 type: DebugConfigurationType.remoteAttach,
                 description: DebugConfigStrings.attach.selectConfiguration.description,
             },
             {
+                func: buildPidAttachConfiguration,
                 label: DebugConfigStrings.attachPid.selectConfiguration.label,
                 type: DebugConfigurationType.pidAttach,
                 description: DebugConfigStrings.attachPid.selectConfiguration.description,
             },
             {
+                func: buildDjangoLaunchDebugConfiguration,
                 label: DebugConfigStrings.django.selectConfiguration.label,
                 type: DebugConfigurationType.launchDjango,
                 description: DebugConfigStrings.django.selectConfiguration.description,
             },
             {
+                func: buildFastAPILaunchDebugConfiguration,
                 label: DebugConfigStrings.fastapi.selectConfiguration.label,
                 type: DebugConfigurationType.launchFastAPI,
                 description: DebugConfigStrings.fastapi.selectConfiguration.description,
             },
             {
+                func: buildFlaskLaunchDebugConfiguration,
                 label: DebugConfigStrings.flask.selectConfiguration.label,
                 type: DebugConfigurationType.launchFlask,
                 description: DebugConfigStrings.flask.selectConfiguration.description,
             },
             {
+                func: buildPyramidLaunchConfiguration,
                 label: DebugConfigStrings.pyramid.selectConfiguration.label,
                 type: DebugConfigurationType.launchPyramid,
                 description: DebugConfigStrings.pyramid.selectConfiguration.description,
             },
         ];
-        const debugConfigurations = new Map<
-            DebugConfigurationType,
-            (
-                input: MultiStepInput<DebugConfigurationState>,
-                state: DebugConfigurationState,
-            ) => Promise<void | InputStep<DebugConfigurationState>>
-        >();
-        debugConfigurations.set(DebugConfigurationType.launchDjango, buildDjangoLaunchDebugConfiguration);
-        debugConfigurations.set(DebugConfigurationType.launchFastAPI, buildFastAPILaunchDebugConfiguration);
-        debugConfigurations.set(DebugConfigurationType.launchFile, buildFileLaunchDebugConfiguration);
-        debugConfigurations.set(DebugConfigurationType.launchFlask, buildFlaskLaunchDebugConfiguration);
-        debugConfigurations.set(DebugConfigurationType.launchModule, buildModuleLaunchConfiguration);
-        debugConfigurations.set(DebugConfigurationType.pidAttach, buildPidAttachConfiguration);
-        debugConfigurations.set(DebugConfigurationType.remoteAttach, buildRemoteAttachConfiguration);
-        debugConfigurations.set(DebugConfigurationType.launchPyramid, buildPyramidLaunchConfiguration);
+        const debugConfigurations = new Map<DebugConfigurationType, DebugConfigurationQuickPickItemFunc>();
+        for (const config of items) {
+            debugConfigurations.set(config.type, config.func);
+        }
 
         state.config = {};
         const pick = await input.showQuickPick<
