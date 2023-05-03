@@ -15,9 +15,14 @@ jobs:
   lock-issues:
     runs-on: ubuntu-latest
     steps:
-      - uses: dessant/lock-threads@v4
+      - name: Checkout Actions
+        uses: actions/checkout@v3
         with:
-          github-token: ${{ github.token }}
-          issue-inactive-days: '30'
-          process-only: 'issues'
-          log-output: true
+          repository: 'karrtikr/vscode-python-github-actions'
+          path: ./actions
+      - name: Install Actions
+        run: npm install --production --prefix ./actions
+      - name: 'Lock Issues'
+        uses: ./actions/lock-issues
+        with:
+          token: ${{ github.token }}
