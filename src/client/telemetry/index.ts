@@ -46,7 +46,7 @@ function isTelemetrySupported(): boolean {
  * @returns {boolean}
  */
 export function isTelemetryDisabled(): boolean {
-    const packaJsonPath = path.join(EXTENSION_ROOT_DIR, 'package.json')
+    const packaJsonPath = path.join(EXTENSION_ROOT_DIR, 'package.json');
     const packageJson = fs.readJSONSync(packaJsonPath);
     return !packageJson.enableTelemetry;
 }
@@ -103,7 +103,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     properties?: P[E],
     ex?: Error,
 ): void {
-    if (isTestExecution() || !isTelemetrySupported() ||isTelemetryDisabled()) {
+    if (isTestExecution() || !isTelemetrySupported() || isTelemetryDisabled()) {
         return;
     }
     const reporter = getTelemetryReporter();
