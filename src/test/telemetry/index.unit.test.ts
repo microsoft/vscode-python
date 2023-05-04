@@ -48,7 +48,7 @@ suite('Telemetry', () => {
         process.env.VSC_PYTHON_UNIT_TEST = undefined;
         process.env.VSC_PYTHON_CI_TEST = undefined;
         readJSONSyncStub = sinon.stub(fs, 'readJSONSync');
-        readJSONSyncStub.returns({enableTelemetry: true});
+        readJSONSyncStub.returns({ enableTelemetry: true });
         clearTelemetryReporter();
         Reporter.clear();
     });
@@ -68,7 +68,7 @@ suite('Telemetry', () => {
         },
         {
             testName: 'Returns false ',
-            settings: {enableTelemetry: false},
+            settings: { enableTelemetry: false },
             expectedResult: true,
         },
     ];
