@@ -15,12 +15,13 @@ jobs:
       - name: Checkout Actions
         uses: actions/checkout@v3
         with:
-          repository: 'microsoft/vscode-python-engineering'
+          repository: 'microsoft/vscode-github-triage-actions'
+          ref: stable
           path: ./actions
       - name: Install Actions
         run: npm install --production --prefix ./actions
       - name: Add "info-needed" label
-        uses: ./actions/triage-info-needed
+        uses: ./actions/python-triage-info-needed
         with:
           triagers: ${{ env.TRIAGERS }}
           action: 'add'
@@ -33,12 +34,13 @@ jobs:
       - name: Checkout Actions
         uses: actions/checkout@v3
         with:
-          repository: 'microsoft/vscode-python-engineering'
+          repository: 'microsoft/vscode-github-triage-actions'
+          ref: stable
           path: ./actions
       - name: Install Actions
         run: npm install --production --prefix ./actions
       - name: Remove "info-needed" label
-        uses: ./actions/triage-info-needed
+        uses: ./actions/python-triage-info-needed
         with:
           triagers: ${{ env.TRIAGERS }}
           action: 'remove'

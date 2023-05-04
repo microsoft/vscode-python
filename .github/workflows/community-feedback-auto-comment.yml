@@ -16,11 +16,12 @@ jobs:
       - name: Checkout Actions
         uses: actions/checkout@v3
         with:
-          repository: 'microsoft/vscode-python-engineering'
+          repository: 'microsoft/vscode-github-triage-actions'
+          ref: stable
           path: ./actions
       - name: Install Actions
         run: npm install --production --prefix ./actions
       - name: Add Community Feedback Comment if applicable
-        uses: ./actions/community-feedback-auto-comment
+        uses: ./actions/python-community-feedback-auto-comment
         with:
           issue-number: ${{ github.event.issue.number }}
