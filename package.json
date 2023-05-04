@@ -48,6 +48,7 @@
     "engines": {
         "vscode": "^1.79.0-20230526"
     },
+    "enableTelemetry": false,
     "keywords": [
         "python",
         "django",
