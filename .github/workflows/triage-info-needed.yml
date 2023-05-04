@@ -18,8 +18,10 @@ jobs:
           repository: 'microsoft/vscode-github-triage-actions'
           ref: stable
           path: ./actions
+
       - name: Install Actions
         run: npm install --production --prefix ./actions
+
       - name: Add "info-needed" label
         uses: ./actions/python-triage-info-needed
         with:
@@ -37,8 +39,10 @@ jobs:
           repository: 'microsoft/vscode-github-triage-actions'
           ref: stable
           path: ./actions
+
       - name: Install Actions
         run: npm install --production --prefix ./actions
+
       - name: Remove "info-needed" label
         uses: ./actions/python-triage-info-needed
         with:

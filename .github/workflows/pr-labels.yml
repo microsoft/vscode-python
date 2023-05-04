@@ -19,7 +19,9 @@ jobs:
           repository: 'microsoft/vscode-github-triage-actions'
           ref: stable
           path: ./actions
+
       - name: Install Actions
         run: npm install --production --prefix ./actions
+
       - name: Classify PR
         uses: ./actions/python-pr-labels

@@ -21,7 +21,9 @@ jobs:
           repository: 'microsoft/vscode-github-triage-actions'
           ref: stable
           path: ./actions
+
       - name: Install Actions
         run: npm install --production --prefix ./actions
+
       - name: Check for changed files
         uses: ./actions/python-pr-file-check

@@ -21,8 +21,10 @@ jobs:
           repository: 'microsoft/vscode-github-triage-actions'
           ref: stable
           path: ./actions
+
       - name: Install Actions
         run: npm install --production --prefix ./actions
+
       - name: 'Lock Issues'
         uses: ./actions/python-lock-issues
         with:

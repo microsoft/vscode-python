@@ -19,8 +19,10 @@ jobs:
           repository: 'microsoft/vscode-github-triage-actions'
           ref: stable
           path: ./actions
+
       - name: Install Actions
         run: npm install --production --prefix ./actions
+
       - name: Add Community Feedback Comment if applicable
         uses: ./actions/python-community-feedback-auto-comment
         with:
