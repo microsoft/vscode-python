@@ -5,7 +5,7 @@ import '../../common/extensions';
 import { inject, injectable } from 'inversify';
 import { l10n, Position, Range, TextEditor, Uri } from 'vscode';
 
-import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
+import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { IProcessServiceFactory } from '../../common/process/types';
@@ -123,12 +123,8 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
     public async saveFileIfDirty(file: Uri): Promise<Resource> {
         const docs = this.documentManager.textDocuments.filter((d) => d.uri.path === file.path);
         if (docs.length === 1 && docs[0].isDirty) {
-            const deferred = createDeferred<Uri>();
-            this.documentManager.onDidSaveTextDocument((e) => deferred.resolve(e.uri));
-            const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
-            await commandManager.executeCommand('workbench.action.files.save', file);
-            const savedFileUri = await deferred.promise;
-            return savedFileUri;
+            const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+            return workspaceService.saveAs(docs[0].uri);
         }
         return undefined;
     }
