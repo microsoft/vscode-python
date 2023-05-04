@@ -73,7 +73,7 @@ jobs:
       - name: Checkout Actions
         uses: actions/checkout@v3
       - name: Lint
-        uses: ./.github/actions/lint
+        uses: ./actions/lint
         with:
           node_version: ${{ env.NODE_VERSION }}
 
