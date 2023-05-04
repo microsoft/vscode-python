@@ -45,8 +45,10 @@ jobs:
           path: ./actions
       - name: Install Actions
         run: npm install --production --prefix ./actions
+      - name: Checkout Actions
+        uses: actions/checkout@v3
       - name: Lint
-        uses: ./actions/lint
+        uses: ./.github/actions/lint
         with:
           node_version: ${{ env.NODE_VERSION }}
 
