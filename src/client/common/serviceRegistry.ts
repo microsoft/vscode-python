@@ -57,7 +57,6 @@ import { ProductInstaller } from './installer/productInstaller';
 import { InterpreterPathService } from './interpreterPathService';
 import { BrowserService } from './net/browser';
 import { PersistentStateFactory } from './persistentState';
-import { IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
 import { CurrentProcess } from './process/currentProcess';
 import { ProcessLogger } from './process/logger';
@@ -91,9 +90,10 @@ import { Random } from './utils/random';
 import { ContextKeyManager } from './application/contextKeyManager';
 import { CreatePythonFileCommandHandler } from './application/commands/createPythonFile';
 import { RequireJupyterPrompt } from '../jupyter/requireJupyterPrompt';
+import { isWindows } from './platform/platformService';
 
 export function registerTypes(serviceManager: IServiceManager): void {
-    serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
+    serviceManager.addSingletonInstance<boolean>(IsWindows, isWindows());
 
     serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
     serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);

@@ -5,10 +5,9 @@ import { Container } from 'inversify';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Memento } from 'vscode';
-import { IS_WINDOWS } from '../client/common/platform/constants';
 import { FileSystem } from '../client/common/platform/fileSystem';
 import { PathUtils } from '../client/common/platform/pathUtils';
-import { PlatformService } from '../client/common/platform/platformService';
+import { PlatformService, isWindows } from '../client/common/platform/platformService';
 import { RegistryImplementation } from '../client/common/platform/registry';
 import { registerTypes as platformRegisterTypes } from '../client/common/platform/serviceRegistry';
 import { IFileSystem, IPlatformService, IRegistry } from '../client/common/platform/types';
@@ -195,7 +194,7 @@ export class IocContainer {
     }
 
     public registerMockProcess(): void {
-        this.serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
+        this.serviceManager.addSingletonInstance<boolean>(IsWindows, isWindows());
 
         this.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         this.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, MockProcess);
