@@ -59,7 +59,7 @@ export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
             markupKindPreferred: 'markdown',
             completion: {
                 resolveEagerly: false,
-                disableSnippets: false,
+                disableSnippets: true,
             },
             diagnostics: {
                 enable: true,
