@@ -1,51 +1,6 @@
 // Place your settings in this file to overwrite default and user settings.
 {
-    "files.exclude": {
-        "out": true, // set this to true to hide the "out" folder with the compiled JS files
-        "dist": true,
-        "**/*.pyc": true,
-        ".nyc_output": true,
-        "obj": true,
-        "bin": true,
-        "**/__pycache__": true,
-        "**/node_modules": true,
-        ".vscode-test": false,
-        ".vscode test": false,
-        "**/.mypy_cache/**": true
-    },
-    "search.exclude": {
-        "out": true, // set this to false to include "out" folder in search results
-        "dist": true,
-        "**/node_modules": true,
-        "coverage": true,
-        "languageServer*/**": true,
-        ".vscode-test": true,
-        ".vscode test": true
-    },
-    "[python]": {
-        "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": true
-        },
-        "editor.defaultFormatter": "ms-python.black-formatter",
-        "editor.formatOnPaste": true
-    },
-    "[typescript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.formatOnPaste": true,
-        "editor.formatOnSave": true
-    },
-    "[javascript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.formatOnPaste": true,
-        "editor.formatOnSave": true
-    },
     "[JSON]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.formatOnPaste": true,
-        "editor.formatOnSave": true
-    },
-    "[jsonc]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnPaste": true,
         "editor.formatOnSave": true
@@ -55,30 +10,75 @@
         "editor.formatOnPaste": true,
         "editor.formatOnSave": true
     },
-    "files.autoSave": "onFocusChange",
-    "files.trimTrailingWhitespace": true,
-    "typescript.tsc.autoDetect": "off",
-    "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
-    "python.linting.enabled": false,
-    "python.formatting.provider": "black",
-    "python.sortImports.args": ["--profile", "black"],
-    "python.testing.pytestArgs": ["src/test/pythonFiles"],
-    "typescript.preferences.quoteStyle": "single",
-    "javascript.preferences.quoteStyle": "single",
-    "typescriptHero.imports.stringQuoteStyle": "'",
-    "prettier.printWidth": 120,
-    "prettier.singleQuote": true,
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnPaste": true,
+        "editor.formatOnSave": true
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnPaste": true,
+        "editor.formatOnSave": true
+    },
+    "[python]": {
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+        },
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnPaste": true,
+        "editor.formatOnSave": true
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnPaste": true,
+        "editor.formatOnSave": true
+    },
+    "cucumberautocomplete.skipDocStringsFormat": true,
+    "debug.javascript.usePreview": false,
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true
     },
+    "files.autoSave": "onFocusChange",
+    "files.exclude": {
+        "**/*.pyc": true,
+        "**/.mypy_cache/**": true,
+        "**/__pycache__": true,
+        "**/node_modules": true,
+        ".nyc_output": true,
+        ".vscode test": false,
+        ".vscode-test": false,
+        "bin": true,
+        "dist": true,
+        "obj": true,
+        "out": true // set this to true to hide the "out" folder with the compiled JS files
+    },
+    "files.trimTrailingWhitespace": true,
+    "javascript.preferences.quoteStyle": "single",
+    "prettier.printWidth": 120,
+    "prettier.singleQuote": true,
+    "python.formatting.provider": "black",
     "python.languageServer": "Default",
-    "python.linting.pylintEnabled": false,
-    "python.linting.flake8Enabled": true,
-    "cucumberautocomplete.skipDocStringsFormat": true,
+    "python.linting.enabled": false,
     "python.linting.flake8Args": [
         // Match what black does.
         "--max-line-length=88"
     ],
+    "python.linting.flake8Enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.sortImports.args": ["--profile", "black"],
+    "python.testing.pytestArgs": ["src/test/pythonFiles"],
+    "search.exclude": {
+        "**/node_modules": true,
+        ".vscode test": true,
+        ".vscode-test": true,
+        "coverage": true,
+        "dist": true,
+        "languageServer*/**": true,
+        "out": true // set this to false to include "out" folder in search results
+    },
     "typescript.preferences.importModuleSpecifier": "relative",
-    "debug.javascript.usePreview": false
+    "typescript.preferences.quoteStyle": "single",
+    "typescript.tsc.autoDetect": "off",
+    "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
+    "typescriptHero.imports.stringQuoteStyle": "'"
 }
