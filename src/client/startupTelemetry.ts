@@ -89,7 +89,9 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         return { workspaceFolderCount, terminal: terminalShellType };
     }
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    const mainWorkspaceUri = workspaceService.workspaceFolders ? workspaceService.workspaceFolders[0].uri : undefined;
+    const mainWorkspaceUri = workspaceService.workspaceFolders?.length
+        ? workspaceService.workspaceFolders[0].uri
+        : undefined;
     const hasPythonThree = await interpreterService.hasInterpreters(async (item) => item.version?.major === 3);
     // If an unknown type environment can be found from windows registry or path env var,
     // consider them as global type instead of unknown. Such types can only be known after
