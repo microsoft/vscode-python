@@ -105,7 +105,7 @@ suite('Terminal Service Factory', () => {
         expect(notSameAsThirdInstance).to.not.equal(true, 'Instances are the same');
     });
 
-    test('Ensure same terminal is returned when using resources from the same workspace', () => {
+    test('Ensure different terminal is returned when using different resources from the same workspace', () => {
         const file1A = Uri.file('1a');
         const file2A = Uri.file('2a');
         const fileB = Uri.file('b');
@@ -131,7 +131,7 @@ suite('Terminal Service Factory', () => {
         const terminalForFileB = factory.getTerminalService({ resource: fileB }) as SynchronousTerminalService;
 
         const terminalsAreSameForWorkspaceA = terminalForFile1A.terminalService === terminalForFile2A.terminalService;
-        expect(terminalsAreSameForWorkspaceA).to.equal(true, 'Instances are not the same for Workspace A');
+        expect(terminalsAreSameForWorkspaceA).to.equal(false, 'Instances are the same for Workspace A');
 
         const terminalsForWorkspaceABAreDifferent =
             terminalForFile1A.terminalService === terminalForFileB.terminalService;
