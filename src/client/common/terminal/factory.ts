@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
+import * as path from 'path';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -26,10 +27,14 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
     public getTerminalService(options: TerminalCreationOptions): ITerminalService {
         const resource = options?.resource;
         const title = options?.title;
-        const terminalTitle = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
+        let terminalTitle = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
         const interpreter = options?.interpreter;
         const id = this.getTerminalId(terminalTitle, resource, interpreter);
         if (!this.terminalServices.has(id)) {
+            if (this.terminalServices.size >= 1 && resource) {
+                terminalTitle = `${terminalTitle}: ${path.basename(resource.fsPath).replace('.py', '')}`;
+            }
+            options.title = terminalTitle;
             const terminalService = new TerminalService(this.serviceContainer, options);
             this.terminalServices.set(id, terminalService);
         }
@@ -53,6 +58,6 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
         const workspaceFolder = this.serviceContainer
             .get<IWorkspaceService>(IWorkspaceService)
             .getWorkspaceFolder(resource || undefined);
-        return `${title}:${workspaceFolder?.uri.fsPath || ''}:${interpreter?.path}`;
+        return `${title}:${workspaceFolder?.uri.fsPath || ''}:${interpreter?.path}:${resource?.fsPath || ''}`;
     }
 }
