@@ -29,13 +29,13 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         @inject(IInterpreterService) protected readonly interpreterService: IInterpreterService,
     ) {}
 
-    public async executeFile(file: Uri) {
+    public async executeFile(file: Uri, options?: { newTerminalPerFile: boolean }) {
         await this.setCwdForFileExecution(file);
         const { command, args } = await this.getExecuteFileArgs(file, [
             file.fsPath.fileToCommandArgumentForPythonExt(),
         ]);
 
-        await this.getTerminalService(file).sendCommand(command, args);
+        await this.getTerminalService(file, options).sendCommand(command, args);
     }
 
     public async execute(code: string, resource?: Uri): Promise<void> {
@@ -83,10 +83,11 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<PythonExecInfo> {
         return this.getExecutableInfo(resource, executeArgs);
     }
-    private getTerminalService(resource?: Uri): ITerminalService {
+    private getTerminalService(resource?: Uri, options?: { newTerminalPerFile: boolean }): ITerminalService {
         return this.terminalServiceFactory.getTerminalService({
             resource,
             title: this.terminalTitle,
+            newTerminalPerFile: options?.newTerminalPerFile,
         });
     }
     private async setCwdForFileExecution(file: Uri) {

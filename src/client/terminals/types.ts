@@ -8,7 +8,7 @@ export const ICodeExecutionService = Symbol('ICodeExecutionService');
 
 export interface ICodeExecutionService {
     execute(code: string, resource?: Uri): Promise<void>;
-    executeFile(file: Uri): Promise<void>;
+    executeFile(file: Uri, options?: { newTerminalPerFile: boolean }): Promise<void>;
     initializeRepl(resource?: Uri): Promise<void>;
 }
 
