@@ -169,7 +169,10 @@ suite('Terminal - Code Execution Manager', () => {
             .returns(() => executionService.object);
 
         await commandHandler!(fileToExecute);
-        executionService.verify(async (e) => e.executeFile(TypeMoq.It.isValue(fileToExecute), TypeMoq.It.isAny()), TypeMoq.Times.once());
+        executionService.verify(
+            async (e) => e.executeFile(TypeMoq.It.isValue(fileToExecute), TypeMoq.It.isAny()),
+            TypeMoq.Times.once(),
+        );
     });
 
     async function testExecutionOfSelectionWithoutAnyActiveDocument(commandId: string, executionSericeId: string) {
