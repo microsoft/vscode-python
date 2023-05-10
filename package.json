@@ -404,6 +404,19 @@
                     "type": "array",
                     "uniqueItems": true
                 },
+                "python.createEnvironment.contentButton": {
+                    "default": "show",
+                    "markdownDescription": "%python.createEnvironment.contentButton.description%",
+                    "scope": "machine-overridable",
+                    "type": "string",
+                    "enum": [
+                        "show",
+                        "hide"
+                    ],
+                    "tags": [
+                        "experimental"
+                    ]
+                },
                 "python.condaPath": {
                     "default": "",
                     "description": "%python.condaPath.description%",
@@ -1707,12 +1720,12 @@
                 {
                     "group": "Python",
                     "command": "python.createEnvironment-button",
-                    "when": "resourceLangId == pip-requirements && !virtualWorkspace && shellExecutionSupported && !inDiffEditor"
+                    "when": "showCreateEnvButton && resourceLangId == pip-requirements && !virtualWorkspace && shellExecutionSupported && !inDiffEditor"
                 },
                 {
                     "group": "Python",
                     "command": "python.createEnvironment-button",
-                    "when": "resourceFilename == pyproject.toml && pipInstallableToml && !virtualWorkspace && shellExecutionSupported  && !inDiffEditor"
+                    "when": "showCreateEnvButton && resourceFilename == pyproject.toml && pipInstallableToml && !virtualWorkspace && shellExecutionSupported  && !inDiffEditor"
                 }
             ],
             "editor/context": [

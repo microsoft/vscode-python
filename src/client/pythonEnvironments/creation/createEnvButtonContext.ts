@@ -8,6 +8,8 @@ import {
     onDidOpenTextDocument,
     onDidChangeTextDocument,
     getOpenTextDocuments,
+    getConfiguration,
+    onDidChangeConfiguration,
 } from '../../common/vscodeApis/workspaceApis';
 import { isPipInstallableToml } from './provider/venvUtils';
 
@@ -19,7 +21,13 @@ async function setPyProjectTomlContextKey(doc: TextDocument): Promise<void> {
     }
 }
 
-export function registerPyProjectTomlCreateEnvFeatures(disposables: IDisposableRegistry): void {
+async function setShowCreateEnvButtonContextKey(): Promise<void> {
+    const config = getConfiguration('python');
+    const showCreateEnvButton = config.get<string>('createEnvironment.contentButton', 'show') === 'show';
+    await executeCommand('setContext', 'showCreateEnvButton', showCreateEnvButton);
+}
+
+export function registerCreateEnvButtonFeatures(disposables: IDisposableRegistry): void {
     disposables.push(
         onDidOpenTextDocument(async (doc: TextDocument) => {
             if (doc.fileName.endsWith('pyproject.toml')) {
@@ -27,15 +35,24 @@ export function registerPyProjectTomlCreateEnvFeatures(disposables: IDisposableR
             }
         }),
         onDidChangeTextDocument(async (e: TextDocumentChangeEvent) => {
-            if (e.document.fileName.endsWith('pyproject.toml')) {
-                await setPyProjectTomlContextKey(e.document);
+            const doc = e.document;
+            if (doc.fileName.endsWith('pyproject.toml')) {
+                await setPyProjectTomlContextKey(doc);
             }
+        }),
+        onDidChangeConfiguration(async () => {
+            await setShowCreateEnvButtonContextKey();
         }),
     );
 
-    getOpenTextDocuments().forEach(async (doc: TextDocument) => {
-        if (doc.fileName.endsWith('pyproject.toml')) {
-            await setPyProjectTomlContextKey(doc);
-        }
-    });
+    setShowCreateEnvButtonContextKey();
+
+    const docs = getOpenTextDocuments().filter(
+        (doc) => doc.fileName.endsWith('pyproject.toml') && isPipInstallableToml(doc.getText()),
+    );
+    if (docs.length > 0) {
+        executeCommand('setContext', 'pipInstallableToml', true);
+    } else {
+        executeCommand('setContext', 'pipInstallableToml', false);
+    }
 }

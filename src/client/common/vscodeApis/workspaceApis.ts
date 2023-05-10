@@ -48,10 +48,14 @@ export function getOpenTextDocuments(): readonly vscode.TextDocument[] {
     return vscode.workspace.textDocuments;
 }
 
-export function onDidOpenTextDocument(handler: (doc: vscode.TextDocument) => void): vscode.Disposable {
+export function onDidOpenTextDocument(handler: (doc: vscode.TextDocument) => unknown): vscode.Disposable {
     return vscode.workspace.onDidOpenTextDocument(handler);
 }
 
-export function onDidChangeTextDocument(handler: (e: vscode.TextDocumentChangeEvent) => void): vscode.Disposable {
+export function onDidChangeTextDocument(handler: (e: vscode.TextDocumentChangeEvent) => unknown): vscode.Disposable {
     return vscode.workspace.onDidChangeTextDocument(handler);
+}
+
+export function onDidChangeConfiguration(handler: (e: vscode.ConfigurationChangeEvent) => unknown): vscode.Disposable {
+    return vscode.workspace.onDidChangeConfiguration(handler);
 }
