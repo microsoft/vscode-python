@@ -81,7 +81,6 @@ suite('Terminal - Code Execution Manager', () => {
             Commands.Exec_In_Terminal,
             Commands.Exec_In_Terminal_Icon,
             Commands.Exec_In_Separate_Terminal,
-            Commands.Exec_In_Separate_Terminal,
             Commands.Exec_Selection_In_Django_Shell,
             Commands.Exec_Selection_In_Terminal,
         ]);
