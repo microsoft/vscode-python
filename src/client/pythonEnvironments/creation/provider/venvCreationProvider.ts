@@ -162,6 +162,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                                     EnvironmentType.System,
                                     EnvironmentType.MicrosoftStore,
                                     EnvironmentType.Global,
+                                    EnvironmentType.Pyenv,
                                 ].includes(i.envType),
                             {
                                 skipRecommended: true,
