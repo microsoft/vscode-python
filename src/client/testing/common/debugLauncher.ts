@@ -208,23 +208,19 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
         launchArgs.request = 'launch';
         if (options.testProvider === 'pytest') {
+            if (options.pytestPort && options.pytestUUID) {
+                launchArgs.env = {
+                    ...launchArgs.env,
+                    TEST_PORT: options.pytestPort,
+                    TEST_UUID: options.pytestUUID,
+                };
+            }
             const p = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
             if (launchArgs.env) {
                 launchArgs.env.PYTHONPATH = p;
                 if (launchArgs.args) {
+                    // cut -m and pytest from the args, these are not needed in debug
                     launchArgs.args.splice(0, 2);
-                    if (launchArgs.args.includes('--port')) {
-                        const index = launchArgs.args.indexOf('--port');
-                        const port = launchArgs.args[index + 1];
-                        launchArgs.env.TEST_PORT = port.toString();
-                        launchArgs.args.splice(index, 2);
-                    }
-                    if (launchArgs.args.includes('--uuid')) {
-                        const index = launchArgs.args.indexOf('--uuid');
-                        const uuid = launchArgs.args[index + 1];
-                        launchArgs.env.TEST_UUID = uuid.toString();
-                        launchArgs.args.splice(index, 2);
-                    }
                 }
             }
         }
