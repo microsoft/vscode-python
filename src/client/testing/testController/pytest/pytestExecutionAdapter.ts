@@ -121,7 +121,12 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             console.debug('argArray', finalArgs);
             // const finalArgs = ['-m', 'pytest', '-p', 'vscode_pytest', testIdsString].concat(pytestArgs);
             if (debugBool) {
-                const debugArgs = finalArgs.concat(['--port', this.testServer.getPort().toString()]);
+                const debugArgs = finalArgs.concat([
+                    '--port',
+                    this.testServer.getPort().toString(),
+                    '--uuid',
+                    uuid.toString(),
+                ]);
                 const launchOptions: LaunchOptions = {
                     cwd: uri.fsPath,
                     args: debugArgs,

@@ -218,7 +218,12 @@ export class DebugLauncher implements ITestDebugLauncher {
                         const port = launchArgs.args[index + 1];
                         launchArgs.env.TEST_PORT = port.toString();
                         launchArgs.args.splice(index, 2);
-                        //         delete launchArgs.args[index + 1]
+                    }
+                    if (launchArgs.args.includes('--uuid')) {
+                        const index = launchArgs.args.indexOf('--uuid');
+                        const uuid = launchArgs.args[index + 1];
+                        launchArgs.env.TEST_UUID = uuid.toString();
+                        launchArgs.args.splice(index, 2);
                     }
                 }
             }
