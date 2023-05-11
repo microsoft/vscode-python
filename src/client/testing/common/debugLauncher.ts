@@ -88,7 +88,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
         debugConfig.rules.push({
             path: path.join(EXTENSION_ROOT_DIR, 'pythonFiles'),
-            include: true,
+            include: false,
         });
         DebugLauncher.applyDefaults(debugConfig!, workspaceFolder, configSettings);
 
@@ -180,10 +180,13 @@ export class DebugLauncher implements ITestDebugLauncher {
         const script = DebugLauncher.getTestLauncherScript(options.testProvider);
         const args = script(testArgs);
         const [program] = args;
+        configArgs.program = program;
         console.debug(`Test launch: ${program} ${args.slice(1).join(' ')}`);
 
-        configArgs.module = 'pytest';
-        configArgs.program = undefined;
+        if (options.testProvider === 'pytest') {
+            configArgs.module = 'pytest';
+            configArgs.program = undefined;
+        }
         configArgs.args = args.slice(1);
         // We leave configArgs.request as "test" so it will be sent in telemetry.
 
@@ -204,16 +207,18 @@ export class DebugLauncher implements ITestDebugLauncher {
             throw Error(`Invalid debug config "${debugConfig.name}"`);
         }
         launchArgs.request = 'launch';
-        const p = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
-        if (launchArgs.env) {
-            launchArgs.env.PYTHONPATH = p;
-            if (launchArgs.args) {
-                if (launchArgs.args.includes('--port')) {
-                    const index = launchArgs.args.indexOf('--port');
-                    const port = launchArgs.args[index + 1];
-                    launchArgs.env.TEST_PORT = port.toString();
-                    launchArgs.args.splice(index, 2);
-                    //         delete launchArgs.args[index + 1]
+        if (options.testProvider === 'pytest') {
+            const p = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+            if (launchArgs.env) {
+                launchArgs.env.PYTHONPATH = p;
+                if (launchArgs.args) {
+                    if (launchArgs.args.includes('--port')) {
+                        const index = launchArgs.args.indexOf('--port');
+                        const port = launchArgs.args[index + 1];
+                        launchArgs.env.TEST_PORT = port.toString();
+                        launchArgs.args.splice(index, 2);
+                        //         delete launchArgs.args[index + 1]
+                    }
                 }
             }
         }

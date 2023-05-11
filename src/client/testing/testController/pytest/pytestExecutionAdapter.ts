@@ -110,9 +110,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 testArgs.splice(0, 0, '--rootdir', uri.fsPath);
             }
 
-            if (debugBool && !testArgs.some((a) => a.startsWith('--capture') || a === '-s')) {
-                testArgs.push('--capture', 'no');
-            }
+            // if (debugBool && !testArgs.some((a) => a.startsWith('--capture') || a === '-s')) {
+            //     testArgs.push('--capture', 'no');
+            // }
 
             console.debug(`Running test with arguments: ${testArgs.join(' ')}\r\n`);
             console.debug(`Current working directory: ${uri.fsPath}\r\n`);
