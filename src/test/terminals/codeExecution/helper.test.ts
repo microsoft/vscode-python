@@ -383,7 +383,7 @@ suite('Terminal - Code Execution Helper', () => {
         const untitledUri = Uri.file('Untitled-1');
         document.setup((doc) => doc.uri).returns(() => untitledUri);
         const expectedSavedUri = Uri.file('one.py');
-        workspaceService.setup((w) => w.saveAs(TypeMoq.It.isAny())).returns(() => Promise.resolve(expectedSavedUri));
+        workspaceService.setup((w) => w.save(TypeMoq.It.isAny())).returns(() => Promise.resolve(expectedSavedUri));
 
         const savedUri = await helper.saveFileIfDirty(untitledUri);
 

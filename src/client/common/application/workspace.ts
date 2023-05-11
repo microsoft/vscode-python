@@ -113,10 +113,10 @@ export class WorkspaceService implements IWorkspaceService {
         return `{${enabledSearchExcludes.join(',')}}`;
     }
 
-    public async saveAs(uri: Uri): Promise<Uri | undefined> {
+    public async save(uri: Uri): Promise<Uri | undefined> {
         try {
             // This is a proposed API hence putting it inside try...catch.
-            const result = await workspace.saveAs(uri);
+            const result = await workspace.save(uri);
             return result;
         } catch (ex) {
             return undefined;
