@@ -4,9 +4,9 @@ import '../common/extensions';
 import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { traceError } from '../logging';
-import { IS_WINDOWS } from '../common/platform/constants';
 import { BaseLinter } from './baseLinter';
 import { ILintMessage, LintMessageSeverity } from './types';
+import { isWindows } from '../common/platform/platformService';
 
 export class PyDocStyle extends BaseLinter {
     constructor(serviceContainer: IServiceContainer) {
@@ -47,7 +47,7 @@ export class PyDocStyle extends BaseLinter {
                 .filter((value, index) => index < maxLines && value.indexOf(':') >= 0)
                 .map((line) => {
                     // Windows will have a : after the drive letter (e.g. c:\).
-                    if (IS_WINDOWS) {
+                    if (isWindows()) {
                         return line.substring(line.indexOf(`${baseFileName}:`) + baseFileName.length + 1).trim();
                     }
                     return line.substring(line.indexOf(':') + 1).trim();

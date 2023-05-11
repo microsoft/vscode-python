@@ -1,10 +1,10 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { SystemVariables } from '../../client/common/variables/systemVariables';
 import { getExtensionSettings } from '../extensionSettings';
 import { initialize } from './../initialize';
+import { isWindows } from '../../client/common/platform/platformService';
 
 const workspaceRoot = path.join(__dirname, '..', '..', '..', 'src', 'test');
 
@@ -27,7 +27,7 @@ suite('Configuration Settings', () => {
             }
 
             const pythonSettingValue = (pythonSettings as any)[key] as string;
-            if (key.endsWith('Path') && IS_WINDOWS) {
+            if (key.endsWith('Path') && isWindows()) {
                 assert.strictEqual(
                     settingValue.toUpperCase(),
                     pythonSettingValue.toUpperCase(),
