@@ -852,15 +852,15 @@ export interface IWorkspaceService {
      */
     openTextDocument(options?: { language?: string; content?: string }): Thenable<TextDocument>;
     /**
-     * Saves the editor identified by the given resource to a new file name as provided by the user and
-     * returns the resulting resource or `undefined` if save was not successful or cancelled.
+     * Saves the editor identified by the given resource and returns the resulting resource or `undefined`
+     * if save was not successful.
      *
-     * **Note** that an editor with the provided resource must be opened in order to be saved as.
+     * **Note** that an editor with the provided resource must be opened in order to be saved.
      *
-     * @param uri the associated uri for the opened editor to save as.
-     * @return A thenable that resolves when the save-as operation has finished.
+     * @param uri the associated uri for the opened editor to save.
+     * @return A thenable that resolves when the save operation has finished.
      */
-    saveAs(uri: Uri): Thenable<Uri | undefined>;
+    save(uri: Uri): Thenable<Uri | undefined>;
 }
 
 export const ITerminalManager = Symbol('ITerminalManager');

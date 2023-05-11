@@ -122,9 +122,9 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
     public async saveFileIfDirty(file: Uri): Promise<Resource> {
         const docs = this.documentManager.textDocuments.filter((d) => d.uri.path === file.path);
-        if (docs.length === 1 && docs[0].isDirty) {
+        if (docs.length === 1 && (docs[0].isDirty || docs[0].isUntitled)) {
             const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-            return workspaceService.saveAs(docs[0].uri);
+            return workspaceService.save(docs[0].uri);
         }
         return undefined;
     }
