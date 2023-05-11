@@ -117,7 +117,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             console.debug(`Running test with arguments: ${testArgs.join(' ')}\r\n`);
             console.debug(`Current working directory: ${uri.fsPath}\r\n`);
             // const portString = `--port= ${this.testServer.getPort().toString()}`;
-            const finalArgs = ['-m', 'pytest', '-p', 'vscode_pytest'].concat(testArgs).concat(testIds);
+            const finalArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '-v'].concat(testArgs).concat(testIds);
             console.debug('argArray', finalArgs);
             // const finalArgs = ['-m', 'pytest', '-p', 'vscode_pytest', testIdsString].concat(pytestArgs);
             if (debugBool) {

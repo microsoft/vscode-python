@@ -212,6 +212,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             if (launchArgs.env) {
                 launchArgs.env.PYTHONPATH = p;
                 if (launchArgs.args) {
+                    launchArgs.args.splice(0, 2);
                     if (launchArgs.args.includes('--port')) {
                         const index = launchArgs.args.indexOf('--port');
                         const port = launchArgs.args[index + 1];
