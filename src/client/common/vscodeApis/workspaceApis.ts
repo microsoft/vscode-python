@@ -36,12 +36,12 @@ export function findFiles(
     return vscode.workspace.findFiles(include, exclude, maxResults, token);
 }
 
-export function onDidSaveTextDocument(
-    listener: (e: vscode.TextDocument) => unknown,
-    thisArgs?: unknown,
-    disposables?: vscode.Disposable[],
-): vscode.Disposable {
-    return vscode.workspace.onDidSaveTextDocument(listener, thisArgs, disposables);
+export function onDidCloseTextDocument(handler: (e: vscode.TextDocument) => unknown): vscode.Disposable {
+    return vscode.workspace.onDidCloseTextDocument(handler);
+}
+
+export function onDidSaveTextDocument(handler: (e: vscode.TextDocument) => unknown): vscode.Disposable {
+    return vscode.workspace.onDidSaveTextDocument(handler);
 }
 
 export function getOpenTextDocuments(): readonly vscode.TextDocument[] {

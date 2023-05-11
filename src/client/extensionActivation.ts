@@ -55,6 +55,7 @@ import { registerCreateEnvironmentFeatures } from './pythonEnvironments/creation
 import { IInterpreterQuickPick } from './interpreter/configuration/types';
 import { registerInstallFormatterPrompt } from './providers/prompts/installFormatterPrompt';
 import { registerCreateEnvButtonFeatures } from './pythonEnvironments/creation/createEnvButtonContext';
+import { registerInstalledPackagesChecking } from './pythonEnvironments/creation/installedPackagesDiagnostic';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -99,6 +100,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     const pathUtils = ext.legacyIOC.serviceContainer.get<IPathUtils>(IPathUtils);
     registerCreateEnvironmentFeatures(ext.disposables, interpreterQuickPick, interpreterPathService, pathUtils);
     registerCreateEnvButtonFeatures(ext.disposables);
+    registerInstalledPackagesChecking(interpreterPathService, ext.disposables);
 }
 
 /// //////////////////////////

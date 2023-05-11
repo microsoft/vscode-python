@@ -1526,10 +1526,8 @@
                 ],
                 "configuration": "./languages/pip-requirements.json",
                 "filenamePatterns": [
-                    "**/*-requirements.{txt, in}",
-                    "**/*-constraints.txt",
-                    "**/requirements-*.{txt, in}",
-                    "**/constraints-*.txt",
+                    "**/*requirements*.{txt, in}",
+                    "**/*constraints*.txt",
                     "**/requirements/*.{txt,in}",
                     "**/constraints/*.txt"
                 ],
@@ -1733,7 +1731,7 @@
                 {
                     "group": "Python",
                     "command": "python.createEnvironment-button",
-                    "when": "showCreateEnvButton && resourceLangId == pip-requirements && !virtualWorkspace && shellExecutionSupported && !inDiffEditor"
+                    "when": "showCreateEnvButton && resourceLangId == pip-requirements && !virtualWorkspace && shellExecutionSupported && !inDiffEditor && pipDepsNotInstalled"
                 },
                 {
                     "group": "Python",
