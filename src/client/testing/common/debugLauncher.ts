@@ -15,6 +15,7 @@ import { ITestDebugLauncher, LaunchOptions } from './types';
 import { getConfigurationsForWorkspace } from '../../debugger/extension/configuration/launch.json/launchJsonReader';
 import { getWorkspaceFolder, getWorkspaceFolders } from '../../common/vscodeApis/workspaceApis';
 import { showErrorMessage } from '../../common/vscodeApis/windowApis';
+import { createDeferred } from '../../common/utils/async';
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
@@ -42,16 +43,12 @@ export class DebugLauncher implements ITestDebugLauncher {
         );
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
-        return debugManager.startDebugging(workspaceFolder, launchArgs).then(
-            // Wait for debug session to be complete.
-            () =>
-                new Promise<void>((resolve) => {
-                    debugManager.onDidTerminateDebugSession(() => {
-                        resolve();
-                    });
-                }),
-            (ex) => traceError('Failed to start debugging tests', ex),
-        );
+        const deferred = createDeferred<void>();
+        debugManager.onDidTerminateDebugSession(() => {
+            deferred.resolve();
+        });
+        debugManager.startDebugging(workspaceFolder, launchArgs);
+        return deferred.promise;
     }
 
     private static resolveWorkspaceFolder(cwd: string): WorkspaceFolder {
@@ -181,8 +178,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         const args = script(testArgs);
         const [program] = args;
         configArgs.program = program;
-        console.debug(`Test launch: ${program} ${args.slice(1).join(' ')}`);
-
+        // if the test provider is pytest, then use the pytest module instead of using a program
         if (options.testProvider === 'pytest') {
             configArgs.module = 'pytest';
             configArgs.program = undefined;
