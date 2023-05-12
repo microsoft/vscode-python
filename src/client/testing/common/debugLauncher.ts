@@ -238,7 +238,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             }
             case 'pytest': {
                 if (rewriteTestingEnabled) {
-                    return internalScripts.execution_pytest_testlauncher; // this is the new way to run pytest execution, debugger
+                    return (testArgs: string[]) => testArgs;
                 }
                 return internalScripts.testlauncher; // old way pytest execution, debugger
             }

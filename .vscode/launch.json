@@ -23,7 +23,7 @@
                 "XVSC_PYTHON_LOG_TELEMETRY": "1",
                 // Enable this to log debugger output. Directory must exist ahead of time
                 "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output_Ex",
-                // "ENABLE_PYTHON_TESTING_REWRITE": "1"
+                "ENABLE_PYTHON_TESTING_REWRITE": "1"
             }
         },
         {

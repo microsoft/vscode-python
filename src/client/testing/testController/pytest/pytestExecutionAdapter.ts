@@ -12,13 +12,13 @@ import {
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
-import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { removePositionalFoldersAndFiles } from './arguments';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { PYTEST_PROVIDER } from '../../common/constants';
+import { EXTENSION_ROOT_DIR } from '../../../common/constants';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-(global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
+// (global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
 /**
  * Wrapper Class for pytest test execution. This is where we call `runTestCommand`?
  */
