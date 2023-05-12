@@ -59,7 +59,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         if (!hasWorkspaceFolders) {
             throw new Error('Please open a workspace');
         }
-
+        console.log('hello');
         const cwdUri = cwd ? Uri.file(cwd) : undefined;
         let workspaceFolder = getWorkspaceFolder(cwdUri);
         if (!workspaceFolder) {
