@@ -451,13 +451,9 @@ Request-uuid: {testuuid}
         try:
             with socket_manager.SocketManager(addr) as s:
                 if s.socket is not None:
-                    print(f"Sending msg response to server port: {testPort}")
-                    print(f"data being sent: {request}")
                     s.socket.sendall(request.encode("utf-8"))
         except Exception as e:
-            print(
-                f"Plugin error connection error[vscode-pytest]: {e}, port: {testPort}"
-            )
+            print(f"Plugin error connection error[vscode-pytest]: {e}")
             print(f"[vscode-pytest] data: {request}")
 
 
