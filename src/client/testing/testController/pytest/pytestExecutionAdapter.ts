@@ -110,31 +110,28 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 testArgs.splice(0, 0, '--rootdir', uri.fsPath);
             }
 
-            // if (debugBool && !testArgs.some((a) => a.startsWith('--capture') || a === '-s')) {
-            //     testArgs.push('--capture', 'no');
-            // }
-
-            console.debug(`Running test with arguments: ${testArgs.join(' ')}\r\n`);
-            console.debug(`Current working directory: ${uri.fsPath}\r\n`);
-            // const portString = `--port= ${this.testServer.getPort().toString()}`;
-            const finalArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '-v'].concat(testArgs).concat(testIds);
-            console.debug('argArray', finalArgs);
-            // const finalArgs = ['-m', 'pytest', '-p', 'vscode_pytest', testIdsString].concat(pytestArgs);
+            // why is this needed?
+            if (debugBool && !testArgs.some((a) => a.startsWith('--capture') || a === '-s')) {
+                testArgs.push('--capture', 'no');
+            }
+            const pluginArgs = ['-p', 'vscode_pytest', '-v'].concat(testArgs).concat(testIds);
             if (debugBool) {
                 const pytestPort = this.testServer.getPort().toString();
                 const pytestUUID = uuid.toString();
                 const launchOptions: LaunchOptions = {
                     cwd: uri.fsPath,
-                    args: finalArgs,
+                    args: pluginArgs,
                     token: spawnOptions.token,
                     testProvider: PYTEST_PROVIDER,
                     pytestPort,
                     pytestUUID,
                 };
-
+                console.debug(`Running debug test with arguments: ${pluginArgs.join(' ')}\r\n`);
                 await debugLauncher!.launchDebugger(launchOptions);
             } else {
-                execService?.exec(finalArgs, spawnOptions);
+                const runArgs = ['-m', 'pytest'].concat(pluginArgs);
+                console.debug(`Running test with arguments: ${runArgs.join(' ')}\r\n`);
+                execService?.exec(runArgs, spawnOptions);
             }
         } catch (ex) {
             console.debug(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);

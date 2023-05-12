@@ -214,15 +214,13 @@ export class DebugLauncher implements ITestDebugLauncher {
                     TEST_PORT: options.pytestPort,
                     TEST_UUID: options.pytestUUID,
                 };
+            } else {
+                throw Error(
+                    `Missing value for debug setup, both port and uuid need to be defined. port: "${options.pytestPort}" uuid: "${options.pytestUUID}"`,
+                );
             }
-            const p = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
-            if (launchArgs.env) {
-                launchArgs.env.PYTHONPATH = p;
-                if (launchArgs.args) {
-                    // cut -m and pytest from the args, these are not needed in debug
-                    launchArgs.args.splice(0, 2);
-                }
-            }
+            const pluginPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+            launchArgs.env.PYTHONPATH = pluginPath;
         }
 
         // Clear out purpose so we can detect if the configuration was used to
