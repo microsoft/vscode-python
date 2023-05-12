@@ -497,4 +497,3 @@ Request-uuid: {testuuid}
                 f"Plugin!! error connection error[vscode-pytest]: {e}, port: {testPort}"
             )
             print(f"[vscode-pytest] data: {request}")
-            print(f"attempted port: {testPort}")

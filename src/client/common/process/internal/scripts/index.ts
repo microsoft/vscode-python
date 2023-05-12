@@ -126,7 +126,6 @@ export function execution_py_testlauncher(testArgs: string[]): string[] {
     return [script, ...testArgs];
 }
 
-// execution.py
 // eslint-disable-next-line camelcase
 export function execution_pytest_testlauncher(testArgs: string[]): string[] {
     //  const script = path.join(SCRIPTS_DIR, 'unittestadapter', 'execution.py');

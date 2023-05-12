@@ -179,7 +179,8 @@ export class DebugLauncher implements ITestDebugLauncher {
         const [program] = args;
         configArgs.program = program;
         // if the test provider is pytest, then use the pytest module instead of using a program
-        if (options.testProvider === 'pytest') {
+        const rewriteTestingEnabled = process.env.ENABLE_PYTHON_TESTING_REWRITE;
+        if (options.testProvider === 'pytest' && rewriteTestingEnabled) {
             configArgs.module = 'pytest';
             configArgs.program = undefined;
         }
@@ -203,7 +204,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             throw Error(`Invalid debug config "${debugConfig.name}"`);
         }
         launchArgs.request = 'launch';
-        if (options.testProvider === 'pytest') {
+        if (options.testProvider === 'pytest' && rewriteTestingEnabled) {
             if (options.pytestPort && options.pytestUUID) {
                 launchArgs.env = {
                     ...launchArgs.env,
@@ -227,14 +228,19 @@ export class DebugLauncher implements ITestDebugLauncher {
     }
 
     private static getTestLauncherScript(testProvider: TestProvider) {
+        const rewriteTestingEnabled = process.env.ENABLE_PYTHON_TESTING_REWRITE;
         switch (testProvider) {
             case 'unittest': {
-                // return internalScripts.visualstudio_py_testlauncher; // old way unittest execution, debugger
-                return internalScripts.execution_py_testlauncher; // this is the new way to run unittest execution, debugger
+                if (rewriteTestingEnabled) {
+                    return internalScripts.execution_py_testlauncher; // this is the new way to run unittest execution, debugger
+                }
+                return internalScripts.visualstudio_py_testlauncher; // old way unittest execution, debugger
             }
             case 'pytest': {
-                // return internalScripts.shell_exec;
-                return internalScripts.execution_pytest_testlauncher;
+                if (rewriteTestingEnabled) {
+                    return internalScripts.execution_pytest_testlauncher; // this is the new way to run pytest execution, debugger
+                }
+                return internalScripts.testlauncher; // old way pytest execution, debugger
             }
             default: {
                 throw new Error(`Unknown test provider '${testProvider}'`);
