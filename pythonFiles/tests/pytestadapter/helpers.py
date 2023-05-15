@@ -12,7 +12,7 @@ import subprocess
 import sys
 import threading
 import uuid
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 from typing_extensions import TypedDict
@@ -70,7 +70,7 @@ Env_Dict = TypedDict(
 )
 
 
-def process_rpc_json(data: str) -> Dict[str, Any]:
+def process_rpc_message(data: str) -> Tuple[Dict[str, Any], str]:
     """Process the JSON data which comes from the server which runs the pytest discovery."""
     str_stream: io.StringIO = io.StringIO(data)
 
@@ -91,10 +91,21 @@ def process_rpc_json(data: str) -> Dict[str, Any]:
             break
 
     raw_json: str = str_stream.read(length)
-    return json.loads(raw_json)
+    return json.loads(raw_json), str_stream.read()
 
 
-def runner(args: List[str]) -> Optional[Dict[str, Any]]:
+def process_rpc_json(data: str) -> List[Dict[str, Any]]:
+    """Process the JSON data which comes from the server which runs the pytest discovery."""
+    json_messages = []
+    remaining = data
+    while remaining:
+        json_data, remaining = process_rpc_message(remaining)
+        json_messages.append(json_data)
+
+    return json_messages
+
+
+def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
     """Run the pytest discovery and return the JSON data from the server."""
     process_args: List[str] = [
         sys.executable,
@@ -107,23 +118,25 @@ def runner(args: List[str]) -> Optional[Dict[str, Any]]:
     _, port = listener.getsockname()
     listener.listen()
 
-    env = {
-        "TEST_UUID": str(uuid.uuid4()),
-        "TEST_PORT": str(port),
-        "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
-    }
+    env = os.environ.copy()
+    env.update(
+        {
+            "TEST_UUID": str(uuid.uuid4()),
+            "TEST_PORT": str(port),
+            "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
+        }
+    )
+    completed = threading.Event()
 
-    result: list = []
+    result = []
     t1: threading.Thread = threading.Thread(
-        target=_listen_on_socket, args=(listener, result)
+        target=_listen_on_socket, args=(listener, result, completed)
     )
     t1.start()
 
     t2 = threading.Thread(
-        target=lambda proc_args, proc_env, proc_cwd: subprocess.run(
-            proc_args, env=proc_env, cwd=proc_cwd
-        ),
-        args=(process_args, env, TEST_DATA_PATH),
+        target=_run_test_code,
+        args=(process_args, env, TEST_DATA_PATH, completed),
     )
     t2.start()
 
@@ -133,18 +146,36 @@ def runner(args: List[str]) -> Optional[Dict[str, Any]]:
     return process_rpc_json(result[0]) if result else None
 
 
-def _listen_on_socket(listener: socket.socket, result: List[str]):
+def _listen_on_socket(
+    listener: socket.socket, result: List[str], completed: threading.Event
+):
     """Listen on the socket for the JSON data from the server.
-    Created as a seperate function for clarity in threading.
+    Created as a separate function for clarity in threading.
     """
     sock, (other_host, other_port) = listener.accept()
+    listener.settimeout(1)
     all_data: list = []
     while True:
         data: bytes = sock.recv(1024 * 1024)
         if not data:
-            break
+            if completed.is_set():
+                break
+            else:
+                try:
+                    sock, (other_host, other_port) = listener.accept()
+                except socket.timeout:
+                    result.append("".join(all_data))
+                    return
         all_data.append(data.decode("utf-8"))
     result.append("".join(all_data))
+
+
+def _run_test_code(
+    proc_args: List[str], proc_env, proc_cwd: str, completed: threading.Event
+):
+    result = subprocess.run(proc_args, env=proc_env, cwd=proc_cwd)
+    completed.set()
+    return result
 
 
 def find_test_line_number(test_name: str, test_file_path) -> str:

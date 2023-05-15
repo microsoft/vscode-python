@@ -261,6 +261,7 @@
             "request": "launch",
             "module": "pytest",
             "args": ["${workspaceFolder}/pythonFiles/tests/pytestadapter"],
+            "console": "integratedTerminal",
             "justMyCode": true
         }
     ],

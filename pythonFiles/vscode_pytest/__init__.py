@@ -138,6 +138,7 @@ def pytest_report_teststatus(report, config):
     report -- the report on the test setup, call, and teardown.
     config -- configuration object.
     """
+    cwd = pathlib.Path.cwd()
 
     if report.when == "call":
         traceback = None
@@ -154,7 +155,12 @@ def pytest_report_teststatus(report, config):
             message,
             traceback,
         )
-        collected_tests[report.nodeid] = item_result
+        execution_post(
+            os.fsdecode(cwd),
+            "success",
+            item_result if item_result else None,
+        )
+        # collected_tests[report.nodeid] = item_result
 
 
 ERROR_MESSAGE_CONST = {
@@ -210,11 +216,11 @@ def pytest_sessionfinish(session, exitstatus):
             )
             exitstatus_bool = "error"
 
-        execution_post(
-            os.fsdecode(cwd),
-            exitstatus_bool,
-            collected_tests if collected_tests else None,
-        )
+        # execution_post(
+        #     os.fsdecode(cwd),
+        #     exitstatus_bool,
+        #     collected_tests if collected_tests else None,
+        # )
 
 
 def build_test_tree(session: pytest.Session) -> TestNode:
@@ -413,7 +419,7 @@ class ExecutionPayloadDict(Dict):
 def execution_post(
     cwd: str,
     status: Literal["success", "error"],
-    tests: Union[testRunResultDict, None],
+    tests: Union[TestOutcome, None],
 ):
     """
     Sends a post request to the server after the tests have been executed.
