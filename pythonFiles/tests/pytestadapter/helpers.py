@@ -107,11 +107,14 @@ def runner(args: List[str]) -> Optional[Dict[str, Any]]:
     _, port = listener.getsockname()
     listener.listen()
 
-    env = {
-        "TEST_UUID": str(uuid.uuid4()),
-        "TEST_PORT": str(port),
-        "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
-    }
+    env = os.environ.copy()
+    env.update(
+        {
+            "TEST_UUID": str(uuid.uuid4()),
+            "TEST_PORT": str(port),
+            "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
+        }
+    )
 
     result: list = []
     t1: threading.Thread = threading.Thread(
