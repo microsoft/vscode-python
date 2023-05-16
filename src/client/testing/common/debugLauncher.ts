@@ -41,7 +41,6 @@ export class DebugLauncher implements ITestDebugLauncher {
             options,
             workspaceFolder,
             this.configService.getSettings(workspaceFolder.uri),
-            this.serviceContainer,
         );
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
@@ -72,7 +71,6 @@ export class DebugLauncher implements ITestDebugLauncher {
         options: LaunchOptions,
         workspaceFolder: WorkspaceFolder,
         configSettings: IPythonSettings,
-        serviceContainer?: IServiceContainer,
     ): Promise<LaunchRequestArguments> {
         let debugConfig = await DebugLauncher.readDebugConfig(workspaceFolder);
         if (!debugConfig) {
@@ -90,9 +88,10 @@ export class DebugLauncher implements ITestDebugLauncher {
             path: path.join(EXTENSION_ROOT_DIR, 'pythonFiles'),
             include: false,
         });
+
         DebugLauncher.applyDefaults(debugConfig!, workspaceFolder, configSettings);
 
-        return this.convertConfigToArgs(debugConfig!, workspaceFolder, options, serviceContainer);
+        return this.convertConfigToArgs(debugConfig!, workspaceFolder, options);
     }
 
     public async readAllDebugConfigs(workspace: WorkspaceFolder): Promise<DebugConfiguration[]> {
@@ -173,12 +172,12 @@ export class DebugLauncher implements ITestDebugLauncher {
         debugConfig: LaunchRequestArguments,
         workspaceFolder: WorkspaceFolder,
         options: LaunchOptions,
-        serviceContainer?: IServiceContainer,
     ): Promise<LaunchRequestArguments> {
+        const pythonTestAdapterRewriteExperiment = pythonTestAdapterRewriteEnabled(this.serviceContainer);
         const configArgs = debugConfig as LaunchRequestArguments;
         const testArgs =
             options.testProvider === 'unittest' ? options.args.filter((item) => item !== '--debug') : options.args;
-        const script = DebugLauncher.getTestLauncherScript(options.testProvider, serviceContainer);
+        const script = DebugLauncher.getTestLauncherScript(options.testProvider, pythonTestAdapterRewriteExperiment);
         const args = script(testArgs);
         const [program] = args;
         configArgs.program = program;
@@ -208,7 +207,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             throw Error(`Invalid debug config "${debugConfig.name}"`);
         }
         launchArgs.request = 'launch';
-        if (options.testProvider === 'pytest' && pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
+        if (options.testProvider === 'pytest' && pythonTestAdapterRewriteExperiment) {
             if (options.pytestPort && options.pytestUUID) {
                 launchArgs.env = {
                     ...launchArgs.env,
@@ -231,16 +230,16 @@ export class DebugLauncher implements ITestDebugLauncher {
         return launchArgs;
     }
 
-    private static getTestLauncherScript(testProvider: TestProvider, serviceContainer?: IServiceContainer) {
+    private static getTestLauncherScript(testProvider: TestProvider, pythonTestAdapterRewriteExperiment?: boolean) {
         switch (testProvider) {
             case 'unittest': {
-                if (serviceContainer && pythonTestAdapterRewriteEnabled(serviceContainer)) {
+                if (pythonTestAdapterRewriteExperiment) {
                     return internalScripts.execution_py_testlauncher; // this is the new way to run unittest execution, debugger
                 }
                 return internalScripts.visualstudio_py_testlauncher; // old way unittest execution, debugger
             }
             case 'pytest': {
-                if (serviceContainer && pythonTestAdapterRewriteEnabled(serviceContainer)) {
+                if (pythonTestAdapterRewriteExperiment) {
                     return (testArgs: string[]) => testArgs;
                 }
                 return internalScripts.testlauncher; // old way pytest execution, debugger
