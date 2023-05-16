@@ -16,6 +16,7 @@ import { getConfigurationsForWorkspace } from '../../debugger/extension/configur
 import { getWorkspaceFolder, getWorkspaceFolders } from '../../common/vscodeApis/workspaceApis';
 import { showErrorMessage } from '../../common/vscodeApis/windowApis';
 import { createDeferred } from '../../common/utils/async';
+import { pythonTestAdapterRewriteEnabled } from '../testController/common/utils';
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
@@ -40,6 +41,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             options,
             workspaceFolder,
             this.configService.getSettings(workspaceFolder.uri),
+            this.serviceContainer,
         );
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
@@ -70,6 +72,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         options: LaunchOptions,
         workspaceFolder: WorkspaceFolder,
         configSettings: IPythonSettings,
+        serviceContainer?: IServiceContainer,
     ): Promise<LaunchRequestArguments> {
         let debugConfig = await DebugLauncher.readDebugConfig(workspaceFolder);
         if (!debugConfig) {
@@ -89,7 +92,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         });
         DebugLauncher.applyDefaults(debugConfig!, workspaceFolder, configSettings);
 
-        return this.convertConfigToArgs(debugConfig!, workspaceFolder, options);
+        return this.convertConfigToArgs(debugConfig!, workspaceFolder, options, serviceContainer);
     }
 
     public async readAllDebugConfigs(workspace: WorkspaceFolder): Promise<DebugConfiguration[]> {
@@ -170,11 +173,12 @@ export class DebugLauncher implements ITestDebugLauncher {
         debugConfig: LaunchRequestArguments,
         workspaceFolder: WorkspaceFolder,
         options: LaunchOptions,
+        serviceContainer?: IServiceContainer,
     ): Promise<LaunchRequestArguments> {
         const configArgs = debugConfig as LaunchRequestArguments;
         const testArgs =
             options.testProvider === 'unittest' ? options.args.filter((item) => item !== '--debug') : options.args;
-        const script = DebugLauncher.getTestLauncherScript(options.testProvider);
+        const script = DebugLauncher.getTestLauncherScript(options.testProvider, serviceContainer);
         const args = script(testArgs);
         const [program] = args;
         configArgs.program = program;
@@ -204,7 +208,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             throw Error(`Invalid debug config "${debugConfig.name}"`);
         }
         launchArgs.request = 'launch';
-        if (options.testProvider === 'pytest' && rewriteTestingEnabled) {
+        if (options.testProvider === 'pytest' && pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
             if (options.pytestPort && options.pytestUUID) {
                 launchArgs.env = {
                     ...launchArgs.env,
@@ -227,17 +231,16 @@ export class DebugLauncher implements ITestDebugLauncher {
         return launchArgs;
     }
 
-    private static getTestLauncherScript(testProvider: TestProvider) {
-        const rewriteTestingEnabled = process.env.ENABLE_PYTHON_TESTING_REWRITE;
+    private static getTestLauncherScript(testProvider: TestProvider, serviceContainer?: IServiceContainer) {
         switch (testProvider) {
             case 'unittest': {
-                if (rewriteTestingEnabled) {
+                if (serviceContainer && pythonTestAdapterRewriteEnabled(serviceContainer)) {
                     return internalScripts.execution_py_testlauncher; // this is the new way to run unittest execution, debugger
                 }
                 return internalScripts.visualstudio_py_testlauncher; // old way unittest execution, debugger
             }
             case 'pytest': {
-                if (rewriteTestingEnabled) {
+                if (serviceContainer && pythonTestAdapterRewriteEnabled(serviceContainer)) {
                     return (testArgs: string[]) => testArgs;
                 }
                 return internalScripts.testlauncher; // old way pytest execution, debugger

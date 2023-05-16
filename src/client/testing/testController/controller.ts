@@ -244,12 +244,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         if (uri) {
             const settings = this.configSettings.getSettings(uri);
             traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
-            const rewriteTestingEnabled = process.env.ENABLE_PYTHON_TESTING_REWRITE;
-            if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
+            if (settings.testing.pytestEnabled) {
                 // Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
                 // ** experiment to roll out NEW test discovery mechanism
-                if (rewriteTestingEnabled) {
+                if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
                     const workspace = this.workspaceService.getWorkspaceFolder(uri);
                     traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
                     const testAdapter =
@@ -394,14 +393,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
                     const settings = this.configSettings.getSettings(workspace.uri);
                     if (testItems.length > 0) {
-                        const rewriteTestingEnabled = process.env.ENABLE_PYTHON_TESTING_REWRITE;
-                        if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
+                        if (settings.testing.pytestEnabled) {
                             sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
                                 tool: 'pytest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
                             // ** experiment to roll out NEW test discovery mechanism
-                            if (rewriteTestingEnabled) {
+                            if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
                                 const testAdapter =
                                     this.testAdapters.get(workspace.uri) ||
                                     (this.testAdapters.values().next().value as WorkspaceTestAdapter);
