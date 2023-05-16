@@ -44,6 +44,8 @@ import { PytestTestDiscoveryAdapter } from './pytest/pytestDiscoveryAdapter';
 import { PytestTestExecutionAdapter } from './pytest/pytestExecutionAdapter';
 import { WorkspaceTestAdapter } from './workspaceTestAdapter';
 import { ITestDebugLauncher } from '../common/types';
+import { pythonTestAdapterRewriteEnabled } from './common/utils';
+import { IServiceContainer } from '../../ioc/types';
 
 // Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
 type EventPropertyType = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_TRIGGER];
@@ -93,6 +95,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
         @inject(ITestDebugLauncher) private readonly debugLauncher: ITestDebugLauncher,
         @inject(ITestOutputChannel) private readonly testOutputChannel: ITestOutputChannel,
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
     ) {
         this.refreshCancellation = new CancellationTokenSource();
 
@@ -242,11 +245,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             const settings = this.configSettings.getSettings(uri);
             traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
             const rewriteTestingEnabled = process.env.ENABLE_PYTHON_TESTING_REWRITE;
-            if (settings.testing.pytestEnabled) {
+            if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
                 // Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
+                // ** experiment to roll out NEW test discovery mechanism
                 if (rewriteTestingEnabled) {
-                    // ** rewriteTestingEnabled set to true to use NEW test discovery mechanism
                     const workspace = this.workspaceService.getWorkspaceFolder(uri);
                     traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
                     const testAdapter =
@@ -265,8 +268,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             } else if (settings.testing.unittestEnabled) {
                 // ** Ensure we send test telemetry if it gets disabled again
                 this.sendTestDisabledTelemetry = true;
-                if (rewriteTestingEnabled) {
-                    // ** rewriteTestingEnabled set to true to use NEW test discovery mechanism
+                // ** experiment to roll out NEW test discovery mechanism
+                if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
                     const workspace = this.workspaceService.getWorkspaceFolder(uri);
                     traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
                     const testAdapter =
@@ -392,12 +395,12 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     const settings = this.configSettings.getSettings(workspace.uri);
                     if (testItems.length > 0) {
                         const rewriteTestingEnabled = process.env.ENABLE_PYTHON_TESTING_REWRITE;
-                        if (settings.testing.pytestEnabled) {
+                        if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
                             sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
                                 tool: 'pytest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
-                            // ** rewriteTestingEnabled set to true to use NEW test discovery mechanism
+                            // ** experiment to roll out NEW test discovery mechanism
                             if (rewriteTestingEnabled) {
                                 const testAdapter =
                                     this.testAdapters.get(workspace.uri) ||
@@ -428,8 +431,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 tool: 'unittest',
                                 debugging: request.profile?.kind === TestRunProfileKind.Debug,
                             });
-                            // ** rewriteTestingEnabled set to true to use NEW test discovery mechanism
-                            if (rewriteTestingEnabled) {
+                            // ** experiment to roll out NEW test discovery mechanism
+                            if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
                                 const testAdapter =
                                     this.testAdapters.get(workspace.uri) ||
                                     (this.testAdapters.values().next().value as WorkspaceTestAdapter);

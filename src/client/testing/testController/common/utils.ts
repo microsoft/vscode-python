@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { EnableTestAdapterRewrite } from '../../../common/experiments/groups';
+import { IExperimentService } from '../../../common/types';
+import { IServiceContainer } from '../../../ioc/types';
+
 export function fixLogLines(content: string): string {
     const lines = content.split(/\r?\n/g);
     return `${lines.join('\r\n')}\r\n`;
@@ -49,4 +53,9 @@ export function jsonRPCContent(headers: Map<string, string>, rawData: string): I
         extractedJSON: data,
         remainingRawData,
     };
+}
+
+export function pythonTestAdapterRewriteEnabled(serviceContainer: IServiceContainer): boolean {
+    const experiment = serviceContainer.get<IExperimentService>(IExperimentService);
+    return experiment.inExperimentSync(EnableTestAdapterRewrite.experiment);
 }

@@ -14,3 +14,7 @@ export enum TerminalEnvVarActivation {
 export enum ShowFormatterExtensionPrompt {
     experiment = 'pythonPromptNewFormatterExt',
 }
+// Experiment to enable the new testing rewrite.
+export enum EnableTestAdapterRewrite {
+    experiment = 'pythonTestAdapter',
+}
