@@ -53,7 +53,7 @@ suite('Debugging - Configuration Provider FastAPI', () => {
             type: DebuggerTypeName,
             request: 'launch',
             module: 'uvicorn',
-            args: ['main:app'],
+            args: ['main:app', '--reload'],
             jinja: true,
             justMyCode: true,
         };
@@ -73,7 +73,7 @@ suite('Debugging - Configuration Provider FastAPI', () => {
             type: DebuggerTypeName,
             request: 'launch',
             module: 'uvicorn',
-            args: ['main:app'],
+            args: ['main:app', '--reload'],
             jinja: true,
             justMyCode: true,
         };
