@@ -35,6 +35,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             deferred.resolve(JSON.parse(data));
             this.promiseMap.delete(uuid);
         }
+        this.testServer.deleteUUID(uuid);
     }
 
     discoverTests(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {

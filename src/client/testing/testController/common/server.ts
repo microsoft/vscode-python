@@ -38,7 +38,6 @@ export class PythonTestServer implements ITestServer, Disposable {
                             const rpcContent = jsonRPCContent(rpcHeaders.headers, rawData);
                             rawData = rpcContent.remainingRawData;
                             this._onDataReceived.fire({ uuid, data: rpcContent.extractedJSON });
-                            this.uuids = this.uuids.filter((u) => u !== uuid);
                         } else {
                             traceLog(`Error processing test server request: uuid not found`);
                             this._onDataReceived.fire({ uuid: '', data: '' });
@@ -76,6 +75,10 @@ export class PythonTestServer implements ITestServer, Disposable {
 
     public getPort(): number {
         return (this.server.address() as net.AddressInfo).port;
+    }
+
+    public deleteUUID(uuid: string): void {
+        this.uuids = this.uuids.filter((u) => u !== uuid);
     }
 
     public createUUID(): string {

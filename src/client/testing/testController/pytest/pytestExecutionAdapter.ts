@@ -5,8 +5,14 @@ import { Uri } from 'vscode';
 import * as path from 'path';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
-import { traceVerbose } from '../../../logging';
-import { DataReceivedEvent, ExecutionTestPayload, ITestExecutionAdapter, ITestServer } from '../common/types';
+import { traceError, traceVerbose } from '../../../logging';
+import {
+    DataReceivedEvent,
+    ExecutionTestPayload,
+    ITestExecutionAdapter,
+    ITestResultResolver,
+    ITestServer,
+} from '../common/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
@@ -22,24 +28,17 @@ import { removePositionalFoldersAndFiles } from './arguments';
  */
 
 export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
-    private promiseMap: Map<string, Deferred<ExecutionTestPayload | undefined>> = new Map();
-
-    private deferred: Deferred<ExecutionTestPayload> | undefined;
-
     constructor(
         public testServer: ITestServer,
         public configSettings: IConfigurationService,
         private readonly outputChannel: ITestOutputChannel,
+        private readonly resultResolver: ITestResultResolver,
     ) {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
-    public onDataReceivedHandler({ uuid, data }: DataReceivedEvent): void {
-        const deferred = this.promiseMap.get(uuid);
-        if (deferred) {
-            deferred.resolve(JSON.parse(data));
-            this.promiseMap.delete(uuid);
-        }
+    public onDataReceivedHandler({ data }: DataReceivedEvent): void {
+        this.resultResolver.resolve(JSON.parse(data));
     }
 
     async runTests(
@@ -49,14 +48,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         executionFactory?: IPythonExecutionFactory,
     ): Promise<ExecutionTestPayload> {
         traceVerbose(uri, testIds, debugBool);
-        if (executionFactory !== undefined) {
-            // ** new version of run tests.
-            return this.runTestsNew(uri, testIds, debugBool, executionFactory);
-        }
-        // if executionFactory is undefined, we are using the old method signature of run tests.
-        this.outputChannel.appendLine('Running tests.');
-        this.deferred = createDeferred<ExecutionTestPayload>();
-        return this.deferred.promise;
+        return this.runTestsNew(uri, testIds, debugBool, executionFactory);
     }
 
     private async runTestsNew(
@@ -70,7 +62,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         this.configSettings.isTestExecution();
         const uuid = this.testServer.createUUID(uri.fsPath);
-        this.promiseMap.set(uuid, deferred);
         const settings = this.configSettings.getSettings(uri);
         const { pytestArgs } = settings.testing;
 
@@ -115,7 +106,17 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
 
             const argArray = ['-m', 'pytest', '-p', 'vscode_pytest'].concat(testArgs).concat(testIds);
             console.debug('argArray', argArray);
-            execService?.exec(argArray, spawnOptions);
+            execService
+                ?.exec(argArray, spawnOptions)
+                .then(() => {
+                    this.testServer.deleteUUID(uuid);
+                    deferred.resolve();
+                })
+                .catch((err) => {
+                    traceError(err);
+                    this.testServer.deleteUUID(uuid);
+                    deferred.reject(err);
+                });
         } catch (ex) {
             console.debug(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
             return Promise.reject(ex);

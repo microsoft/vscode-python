@@ -176,6 +176,11 @@ export interface ITestServer {
     serverReady(): Promise<void>;
     getPort(): number;
     createUUID(cwd: string): string;
+    deleteUUID(uuid: string): void;
+}
+
+export interface ITestResultResolver {
+    resolve(p: ExecutionTestPayload): Promise<void>;
 }
 
 export interface ITestDiscoveryAdapter {
