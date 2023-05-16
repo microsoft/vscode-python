@@ -12,7 +12,7 @@ import {
     Uri,
     WorkspaceFolder,
 } from 'vscode';
-import { TestDiscoveryOptions } from '../../common/types';
+import { ITestDebugLauncher, TestDiscoveryOptions } from '../../common/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 
 export type TestRunInstanceOptions = TestRunOptions & {
@@ -193,6 +193,7 @@ export interface ITestExecutionAdapter {
         testIds: string[],
         debugBool?: boolean,
         executionFactory?: IPythonExecutionFactory,
+        debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload>;
 }
 

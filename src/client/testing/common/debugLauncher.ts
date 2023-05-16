@@ -15,6 +15,7 @@ import { ITestDebugLauncher, LaunchOptions } from './types';
 import { getConfigurationsForWorkspace } from '../../debugger/extension/configuration/launch.json/launchJsonReader';
 import { getWorkspaceFolder, getWorkspaceFolders } from '../../common/vscodeApis/workspaceApis';
 import { showErrorMessage } from '../../common/vscodeApis/windowApis';
+import { createDeferred } from '../../common/utils/async';
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
@@ -42,16 +43,12 @@ export class DebugLauncher implements ITestDebugLauncher {
         );
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
-        return debugManager.startDebugging(workspaceFolder, launchArgs).then(
-            // Wait for debug session to be complete.
-            () =>
-                new Promise<void>((resolve) => {
-                    debugManager.onDidTerminateDebugSession(() => {
-                        resolve();
-                    });
-                }),
-            (ex) => traceError('Failed to start debugging tests', ex),
-        );
+        const deferred = createDeferred<void>();
+        debugManager.onDidTerminateDebugSession(() => {
+            deferred.resolve();
+        });
+        debugManager.startDebugging(workspaceFolder, launchArgs);
+        return deferred.promise;
     }
 
     private static resolveWorkspaceFolder(cwd: string): WorkspaceFolder {
@@ -181,6 +178,12 @@ export class DebugLauncher implements ITestDebugLauncher {
         const args = script(testArgs);
         const [program] = args;
         configArgs.program = program;
+        // if the test provider is pytest, then use the pytest module instead of using a program
+        const rewriteTestingEnabled = process.env.ENABLE_PYTHON_TESTING_REWRITE;
+        if (options.testProvider === 'pytest' && rewriteTestingEnabled) {
+            configArgs.module = 'pytest';
+            configArgs.program = undefined;
+        }
         configArgs.args = args.slice(1);
         // We leave configArgs.request as "test" so it will be sent in telemetry.
 
@@ -201,6 +204,21 @@ export class DebugLauncher implements ITestDebugLauncher {
             throw Error(`Invalid debug config "${debugConfig.name}"`);
         }
         launchArgs.request = 'launch';
+        if (options.testProvider === 'pytest' && rewriteTestingEnabled) {
+            if (options.pytestPort && options.pytestUUID) {
+                launchArgs.env = {
+                    ...launchArgs.env,
+                    TEST_PORT: options.pytestPort,
+                    TEST_UUID: options.pytestUUID,
+                };
+            } else {
+                throw Error(
+                    `Missing value for debug setup, both port and uuid need to be defined. port: "${options.pytestPort}" uuid: "${options.pytestUUID}"`,
+                );
+            }
+            const pluginPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+            launchArgs.env.PYTHONPATH = pluginPath;
+        }
 
         // Clear out purpose so we can detect if the configuration was used to
         // run via F5 style debugging.
@@ -210,13 +228,19 @@ export class DebugLauncher implements ITestDebugLauncher {
     }
 
     private static getTestLauncherScript(testProvider: TestProvider) {
+        const rewriteTestingEnabled = process.env.ENABLE_PYTHON_TESTING_REWRITE;
         switch (testProvider) {
             case 'unittest': {
+                if (rewriteTestingEnabled) {
+                    return internalScripts.execution_py_testlauncher; // this is the new way to run unittest execution, debugger
+                }
                 return internalScripts.visualstudio_py_testlauncher; // old way unittest execution, debugger
-                // return internalScripts.execution_py_testlauncher; // this is the new way to run unittest execution, debugger
             }
             case 'pytest': {
-                return internalScripts.testlauncher;
+                if (rewriteTestingEnabled) {
+                    return (testArgs: string[]) => testArgs;
+                }
+                return internalScripts.testlauncher; // old way pytest execution, debugger
             }
             default: {
                 throw new Error(`Unknown test provider '${testProvider}'`);

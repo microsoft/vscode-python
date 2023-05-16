@@ -12,11 +12,13 @@ import {
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
-import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { removePositionalFoldersAndFiles } from './arguments';
+import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
+import { PYTEST_PROVIDER } from '../../common/constants';
+import { EXTENSION_ROOT_DIR } from '../../../common/constants';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-(global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
+// (global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
 /**
  * Wrapper Class for pytest test execution. This is where we call `runTestCommand`?
  */
@@ -47,11 +49,12 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         testIds: string[],
         debugBool?: boolean,
         executionFactory?: IPythonExecutionFactory,
+        debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
         traceVerbose(uri, testIds, debugBool);
         if (executionFactory !== undefined) {
             // ** new version of run tests.
-            return this.runTestsNew(uri, testIds, debugBool, executionFactory);
+            return this.runTestsNew(uri, testIds, debugBool, executionFactory, debugLauncher);
         }
         // if executionFactory is undefined, we are using the old method signature of run tests.
         this.outputChannel.appendLine('Running tests.');
@@ -64,6 +67,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         testIds: string[],
         debugBool?: boolean,
         executionFactory?: IPythonExecutionFactory,
+        debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
         const deferred = createDeferred<ExecutionTestPayload>();
         const relativePathToPytest = 'pythonFiles';
@@ -106,16 +110,29 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 testArgs.splice(0, 0, '--rootdir', uri.fsPath);
             }
 
+            // why is this needed?
             if (debugBool && !testArgs.some((a) => a.startsWith('--capture') || a === '-s')) {
                 testArgs.push('--capture', 'no');
             }
-
-            console.debug(`Running test with arguments: ${testArgs.join(' ')}\r\n`);
-            console.debug(`Current working directory: ${uri.fsPath}\r\n`);
-
-            const argArray = ['-m', 'pytest', '-p', 'vscode_pytest'].concat(testArgs).concat(testIds);
-            console.debug('argArray', argArray);
-            execService?.exec(argArray, spawnOptions);
+            const pluginArgs = ['-p', 'vscode_pytest', '-v'].concat(testArgs).concat(testIds);
+            if (debugBool) {
+                const pytestPort = this.testServer.getPort().toString();
+                const pytestUUID = uuid.toString();
+                const launchOptions: LaunchOptions = {
+                    cwd: uri.fsPath,
+                    args: pluginArgs,
+                    token: spawnOptions.token,
+                    testProvider: PYTEST_PROVIDER,
+                    pytestPort,
+                    pytestUUID,
+                };
+                console.debug(`Running debug test with arguments: ${pluginArgs.join(' ')}\r\n`);
+                await debugLauncher!.launchDebugger(launchOptions);
+            } else {
+                const runArgs = ['-m', 'pytest'].concat(pluginArgs);
+                console.debug(`Running test with arguments: ${runArgs.join(' ')}\r\n`);
+                execService?.exec(runArgs, spawnOptions);
+            }
         } catch (ex) {
             console.debug(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
             return Promise.reject(ex);

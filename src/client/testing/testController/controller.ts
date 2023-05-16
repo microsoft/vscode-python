@@ -409,6 +409,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                     token,
                                     request.profile?.kind === TestRunProfileKind.Debug,
                                     this.pythonExecFactory,
+                                    this.debugLauncher,
                                 );
                             }
                             return this.pytest.runTests(
@@ -438,6 +439,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                     testItems,
                                     token,
                                     request.profile?.kind === TestRunProfileKind.Debug,
+                                    this.pythonExecFactory,
                                 );
                             }
                             // below is old way of running unittest execution

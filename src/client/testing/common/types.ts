@@ -25,6 +25,8 @@ export type LaunchOptions = {
     testProvider: TestProvider;
     token?: CancellationToken;
     outChannel?: OutputChannel;
+    pytestPort?: string;
+    pytestUUID?: string;
 };
 
 export type ParserOptions = TestDiscoveryOptions;

@@ -179,6 +179,12 @@ def pytest_sessionfinish(session, exitstatus):
     4: Pytest encountered an internal error or exception during test execution.
     5: Pytest was unable to find any tests to run.
     """
+    print(
+        "pytest session has finished, exit status: ",
+        exitstatus,
+        "in discovery? ",
+        IS_DISCOVERY,
+    )
     cwd = pathlib.Path.cwd()
     if IS_DISCOVERY:
         try:
@@ -209,7 +215,6 @@ def pytest_sessionfinish(session, exitstatus):
                 f"Pytest exited with error status: {exitstatus}, {ERROR_MESSAGE_CONST[exitstatus]}"
             )
             exitstatus_bool = "error"
-
         execution_post(
             os.fsdecode(cwd),
             exitstatus_bool,
