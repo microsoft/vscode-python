@@ -56,7 +56,7 @@ from .helpers import TEST_DATA_PATH, runner
                 "unittest_folder/test_add.py::TestAddFunction::test_add_positive_numbers",
                 "unittest_folder/test_add.py::TestAddFunction::test_add_negative_numbers",
                 "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_positive_numbers",
-                # "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_negative_numbers",
+                "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_negative_numbers",
             ],
             expected_execution_test_output.uf_execution_expected_output,
         ),
@@ -155,9 +155,17 @@ def test_pytest_execution(test_ids, expected_const):
     actual = runner(args)
     assert actual
     print(actual)
-    # assert all(item in actual for item in ("status", "cwd", "result"))
-    # assert actual["status"] == "success"
-    # assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+    assert len(actual) == len(expected_const)
+    actual_result_dict = dict()
+    for a in actual:
+        assert all(item in a for item in ("status", "cwd", "result"))
+        assert a["status"] == "success"
+        assert a["cwd"] == os.fspath(TEST_DATA_PATH)
+        actual_result_dict.update(a["result"])
+    for key in actual_result_dict:
+        if actual_result_dict[key]["outcome"] == "failure":
+            actual_result_dict[key]["message"] = "ERROR MESSAGE"
+    assert actual_result_dict == expected_const
     # result_data = actual["result"]
     # for key in result_data:
     #     if result_data[key]["outcome"] == "failure":

@@ -120,7 +120,6 @@ class testRunResultDict(Dict[str, Dict[str, TestOutcome]]):
     tests: Dict[str, TestOutcome]
 
 
-collected_tests = testRunResultDict()
 IS_DISCOVERY = False
 
 
@@ -128,6 +127,9 @@ def pytest_load_initial_conftests(early_config, parser, args):
     if "--collect-only" in args:
         global IS_DISCOVERY
         IS_DISCOVERY = True
+
+
+collected_tests_so_far = list()
 
 
 def pytest_report_teststatus(report, config):
@@ -149,17 +151,22 @@ def pytest_report_teststatus(report, config):
         elif report.failed:
             report_value = "failure"
             message = report.longreprtext
-        item_result = create_test_outcome(
-            report.nodeid,
-            report_value,
-            message,
-            traceback,
-        )
-        execution_post(
-            os.fsdecode(cwd),
-            "success",
-            item_result if item_result else None,
-        )
+        node_id = str(report.nodeid)
+        if node_id not in collected_tests_so_far:
+            collected_tests_so_far.append(node_id)
+            item_result = create_test_outcome(
+                node_id,
+                report_value,
+                message,
+                traceback,
+            )
+            collected_test = testRunResultDict()
+            collected_test[node_id] = item_result
+            execution_post(
+                os.fsdecode(cwd),
+                "success",
+                collected_test if collected_test else None,
+            )
         # collected_tests[report.nodeid] = item_result
 
 
@@ -419,7 +426,7 @@ class ExecutionPayloadDict(Dict):
 def execution_post(
     cwd: str,
     status: Literal["success", "error"],
-    tests: Union[TestOutcome, None],
+    tests: Union[testRunResultDict, None],
 ):
     """
     Sends a post request to the server after the tests have been executed.
