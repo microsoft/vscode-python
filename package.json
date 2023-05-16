@@ -1526,10 +1526,8 @@
                 ],
                 "configuration": "./languages/pip-requirements.json",
                 "filenamePatterns": [
-                    "**/*-requirements.{txt, in}",
-                    "**/*-constraints.txt",
-                    "**/requirements-*.{txt, in}",
-                    "**/constraints-*.txt",
+                    "**/*requirements*.{txt, in}",
+                    "**/*constraints*.txt",
                     "**/requirements/*.{txt,in}",
                     "**/constraints/*.txt"
                 ],
@@ -1733,12 +1731,12 @@
                 {
                     "group": "Python",
                     "command": "python.createEnvironment-button",
-                    "when": "showCreateEnvButton && resourceLangId == pip-requirements && !virtualWorkspace && shellExecutionSupported && !inDiffEditor"
+                    "when": "showCreateEnvButton && resourceLangId == pip-requirements && !virtualWorkspace && shellExecutionSupported && !inDiffEditor && pythonDepsNotInstalled"
                 },
                 {
                     "group": "Python",
                     "command": "python.createEnvironment-button",
-                    "when": "showCreateEnvButton && resourceFilename == pyproject.toml && pipInstallableToml && !virtualWorkspace && shellExecutionSupported  && !inDiffEditor"
+                    "when": "showCreateEnvButton && resourceFilename == pyproject.toml && pipInstallableToml && !virtualWorkspace && shellExecutionSupported  && !inDiffEditor && pythonDepsNotInstalled"
                 }
             ],
             "editor/context": [

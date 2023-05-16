@@ -149,3 +149,8 @@ export function createCondaScript(): string {
     const script = path.join(SCRIPTS_DIR, 'create_conda.py');
     return script;
 }
+
+export function installedCheckScript(): string {
+    const script = path.join(SCRIPTS_DIR, 'installed_check.py');
+    return script;
+}

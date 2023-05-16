@@ -51,10 +51,9 @@ import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHan
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { WorkspaceService } from './common/application/workspace';
 import { DynamicPythonDebugConfigurationService } from './debugger/extension/configuration/dynamicdebugConfigurationService';
-import { registerCreateEnvironmentFeatures } from './pythonEnvironments/creation/createEnvApi';
 import { IInterpreterQuickPick } from './interpreter/configuration/types';
 import { registerInstallFormatterPrompt } from './providers/prompts/installFormatterPrompt';
-import { registerCreateEnvButtonFeatures } from './pythonEnvironments/creation/createEnvButtonContext';
+import { registerAllCreateEnvironmentFeatures } from './pythonEnvironments/creation/registrations';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -97,8 +96,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
         IInterpreterPathService,
     );
     const pathUtils = ext.legacyIOC.serviceContainer.get<IPathUtils>(IPathUtils);
-    registerCreateEnvironmentFeatures(ext.disposables, interpreterQuickPick, interpreterPathService, pathUtils);
-    registerCreateEnvButtonFeatures(ext.disposables);
+    registerAllCreateEnvironmentFeatures(ext.disposables, interpreterQuickPick, interpreterPathService, pathUtils);
 }
 
 /// //////////////////////////

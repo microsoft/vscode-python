@@ -8,3 +8,8 @@ typing-extensions==4.5.0
 
 # Fallback env creator for debian
 microvenv
+
+# Checker for installed packages
+importlib_metadata
+packaging
+tomli
