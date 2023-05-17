@@ -180,7 +180,7 @@ export interface ITestServer {
 }
 
 export interface ITestResultResolver {
-    resolve(p: ExecutionTestPayload): Promise<void>;
+    resolve(payload: ExecutionTestPayload): Promise<void>;
 }
 
 export interface ITestDiscoveryAdapter {

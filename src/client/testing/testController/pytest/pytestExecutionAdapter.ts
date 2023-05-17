@@ -4,7 +4,7 @@
 import { Uri } from 'vscode';
 import * as path from 'path';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
-import { createDeferred, Deferred } from '../../../common/utils/async';
+import { createDeferred } from '../../../common/utils/async';
 import { traceError, traceVerbose } from '../../../logging';
 import {
     DataReceivedEvent,
@@ -101,11 +101,11 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 testArgs.push('--capture', 'no');
             }
 
-            console.debug(`Running test with arguments: ${testArgs.join(' ')}\r\n`);
+            const argArray = ['-m', 'pytest', '-p', 'vscode_pytest'].concat(testArgs).concat(testIds);
+
+            console.debug(`Running test with arguments: ${argArray.join(' ')}\r\n`);
             console.debug(`Current working directory: ${uri.fsPath}\r\n`);
 
-            const argArray = ['-m', 'pytest', '-p', 'vscode_pytest'].concat(testArgs).concat(testIds);
-            console.debug('argArray', argArray);
             execService
                 ?.exec(argArray, spawnOptions)
                 .then(() => {
@@ -113,7 +113,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     deferred.resolve();
                 })
                 .catch((err) => {
-                    traceError(err);
+                    traceError(`Error while running tests: ${testIds}\r\n${err}\r\n\r\n`);
                     this.testServer.deleteUUID(uuid);
                     deferred.reject(err);
                 });
