@@ -45,7 +45,6 @@ export class PythonTestServer implements ITestServer, Disposable {
                             this._onDataReceived.fire({ uuid: '', data: '' });
                             return;
                         }
-                        // do I need to check that the UUIDs are the same or smth before adding them?
                         rawData = rpcHeaders.remainingRawData;
                         const rpcContent = jsonRPCContent(rpcHeaders.headers, rawData);
                         const extractedData = rpcContent.extractedJSON;
