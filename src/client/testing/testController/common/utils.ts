@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import * as net from 'net';
 
 export function fixLogLines(content: string): string {
     const lines = content.split(/\r?\n/g);
@@ -50,3 +51,43 @@ export function jsonRPCContent(headers: Map<string, string>, rawData: string): I
         remainingRawData,
     };
 }
+export const startServer = (test_ids: string): Promise<number> =>
+    new Promise((resolve, reject) => {
+        const server = net.createServer((socket: net.Socket) => {
+            console.log('Client connected');
+
+            // Convert the test_ids array to JSON
+            const testData = JSON.stringify(test_ids);
+
+            // Create the headers
+            const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
+
+            // Create the payload by concatenating the headers and the test data
+            const payload = `${headers.join('\r\n')}\r\n\r\n${testData}`;
+
+            // Send the payload to the socket
+            socket.write(payload);
+
+            // Store the port of the socket as test_run_socket
+            const test_run_socket = socket.localPort;
+
+            // Handle socket events
+            socket.on('data', (data) => {
+                console.log('Received data:', data.toString());
+            });
+
+            socket.on('end', () => {
+                console.log('Client disconnected');
+            });
+        });
+
+        server.listen(0, () => {
+            const { port } = server.address() as net.AddressInfo;
+            console.log(`Server listening on port ${port}`);
+            resolve(port);
+        });
+
+        server.on('error', (error: Error) => {
+            reject(error);
+        });
+    });

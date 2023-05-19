@@ -3,6 +3,7 @@
 
 import { Uri } from 'vscode';
 import * as path from 'path';
+import * as net from 'net';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { traceVerbose } from '../../../logging';
@@ -116,6 +117,104 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 testArgs.push('--capture', 'no');
             }
             const pluginArgs = ['-p', 'vscode_pytest'].concat(testArgs).concat(testIds);
+            const scriptPath = path.join(fullPluginPath, 'vscode_pytest', 'run_pytest_script.py');
+            const runArgs = [scriptPath, ...testArgs];
+            // let testRunSocket = '5';
+            // // let s = net.Server;
+            // const serverS = net.createServer((socket: net.Socket) => {
+            //     console.log('Client connected');
+
+            //     // Convert the test_ids array to JSON
+            //     const testData = JSON.stringify(testIds);
+
+            //     // Create the headers
+            //     const headers = [
+            //         `Content-Length: ${Buffer.byteLength(testData)}`,
+            //         'Content-Type: application/json',
+            //     ];
+
+            //     // Create the payload by concatenating the headers and the test data
+            //     const payload = `${headers.join('\r\n')}\r\n\r\n${testData}`;
+
+            //     // Send the payload to the socket
+            //     socket.write(payload);
+
+            //     // Store the port of the socket as test_run_socket
+            //     testRunSocket = socket.localPort ? socket.localPort.toString() : '0';
+            //     if (spawnOptions.extraVariables) spawnOptions.extraVariables.RUN_TEST_IDS_PORT = testRunSocket;
+
+            //     socket.on('end', () => {
+            //         console.log('Client disconnected');
+            //     });
+            // });
+            // const portP = (serverS.address() as net.AddressInfo).port;
+            // await serverS.listen(undefined, 'localhost', () => {
+            //     resolve();
+            // });
+            // console.log(`Test ID Server: listening on port ${portP}`);
+            // serverS.listen(0, () => {
+            //     const { port: assignedPort } = serverS.address() as net.AddressInfo;
+            //     console.log(`Server listening on port ${assignedPort}`);
+            // });
+            // Start the server and wait until it is listening
+            // Convert the test_ids array to JSON
+            const testData = JSON.stringify(testIds);
+
+            // Create the headers
+            const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
+
+            // Create the payload by concatenating the headers and the test data
+            const payload = `${headers.join('\r\n')}\r\n\r\n${testData}`;
+
+            const startServer = (): Promise<number> =>
+                new Promise((resolve, reject) => {
+                    const server = net.createServer((socket: net.Socket) => {
+                        console.log('Client connected');
+
+                        // Send the payload to the socket
+                        socket.write(payload);
+                        console.log('payload sent', payload);
+
+                        // Store the port of the socket as test_run_socket
+                        // const test_run_socket = socket.localPort;
+
+                        // Handle socket events
+                        socket.on('data', (data) => {
+                            console.log('Received data:', data.toString());
+                        });
+
+                        socket.on('end', () => {
+                            console.log('Client disconnected');
+                        });
+                    });
+
+                    server.listen(0, () => {
+                        const { port } = server.address() as net.AddressInfo;
+                        console.log(`Server listening on port ${port}`);
+                        resolve(port);
+                    });
+
+                    server.on('error', (error: Error) => {
+                        reject(error);
+                    });
+                    server.on('connection', (socket: net.Socket) => {
+                        socket.write();
+                        console.log('Test server connected to a client.');
+                    });
+                });
+
+            // Start the server and wait until it is listening
+            await startServer()
+                .then((assignedPort) => {
+                    console.log(`Server started and listening on port ${assignedPort}`);
+                    if (spawnOptions.extraVariables)
+                        spawnOptions.extraVariables.RUN_TEST_IDS_PORT = assignedPort.toString();
+                    // Continue with your code here
+                })
+                .catch((error) => {
+                    console.error('Error starting server:', error);
+                });
+
             if (debugBool) {
                 const pytestPort = this.testServer.getPort().toString();
                 const pytestUUID = uuid.toString();
@@ -130,8 +229,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 console.debug(`Running debug test with arguments: ${pluginArgs.join(' ')}\r\n`);
                 await debugLauncher!.launchDebugger(launchOptions);
             } else {
-                const scriptPath = path.join(fullPluginPath, 'vscode_pytest', 'run_pytest_script.py');
-                const runArgs = [scriptPath, ...testArgs];
                 await execService?.exec(runArgs, spawnOptions).catch((ex) => {
                     console.debug(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
                     return Promise.reject(ex);
