@@ -90,6 +90,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 TEST_PORT: this.testServer.getPort().toString(),
             },
             outputChannel: this.outputChannel,
+            pytestExecutionTestIds: testIds,
         };
 
         // Create the Python environment in which to execute the command.
@@ -114,7 +115,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             if (debugBool && !testArgs.some((a) => a.startsWith('--capture') || a === '-s')) {
                 testArgs.push('--capture', 'no');
             }
-            const pluginArgs = ['-p', 'vscode_pytest', '-v'].concat(testArgs).concat(testIds);
+            const pluginArgs = ['-p', 'vscode_pytest'].concat(testArgs).concat(testIds);
             if (debugBool) {
                 const pytestPort = this.testServer.getPort().toString();
                 const pytestUUID = uuid.toString();
@@ -129,9 +130,12 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 console.debug(`Running debug test with arguments: ${pluginArgs.join(' ')}\r\n`);
                 await debugLauncher!.launchDebugger(launchOptions);
             } else {
-                const runArgs = ['-m', 'pytest'].concat(pluginArgs);
-                console.debug(`Running test with arguments: ${runArgs.join(' ')}\r\n`);
-                execService?.exec(runArgs, spawnOptions);
+                const scriptPath = path.join(fullPluginPath, 'vscode_pytest', 'run_pytest_script.py');
+                const runArgs = [scriptPath, ...testArgs];
+                await execService?.exec(runArgs, spawnOptions).catch((ex) => {
+                    console.debug(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
+                    return Promise.reject(ex);
+                });
             }
         } catch (ex) {
             console.debug(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
