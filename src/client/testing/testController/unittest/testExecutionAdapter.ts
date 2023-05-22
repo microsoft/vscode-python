@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { TestRun, Uri } from 'vscode';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
@@ -14,6 +14,7 @@ import {
     TestCommandOptions,
     TestExecutionCommand,
 } from '../common/types';
+import { ITestResultResolver } from '../common/resultResolver';
 
 /**
  * Wrapper Class for unittest test execution. This is where we call `runTestCommand`?
@@ -24,23 +25,28 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
 
     private cwd: string | undefined;
 
+    private runInstance!: TestRun;
+
     constructor(
         public testServer: ITestServer,
         public configSettings: IConfigurationService,
         private readonly outputChannel: ITestOutputChannel,
+        private readonly resultResolver?: ITestResultResolver,
     ) {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
-    public onDataReceivedHandler({ uuid, data }: DataReceivedEvent): void {
-        const deferred = this.promiseMap.get(uuid);
-        if (deferred) {
-            deferred.resolve(JSON.parse(data));
-            this.promiseMap.delete(uuid);
-        }
+    public onDataReceivedHandler({ data }: DataReceivedEvent): void {
+        this.resultResolver?.resolveRun(JSON.parse(data), this.runInstance);
     }
 
-    public async runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload> {
+    public async runTests(
+        uri: Uri,
+        testIds: string[],
+        debugBool?: boolean,
+        runInstance?: TestRun,
+    ): Promise<ExecutionTestPayload> {
+        this.runInstance = runInstance!;
         const settings = this.configSettings.getSettings(uri);
         const { unittestArgs } = settings.testing;
 

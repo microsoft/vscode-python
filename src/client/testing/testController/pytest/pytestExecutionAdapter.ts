@@ -1,18 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Uri } from 'vscode';
+import { TestRun, Uri } from 'vscode';
 import * as path from 'path';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { traceError, traceVerbose } from '../../../logging';
-import {
-    DataReceivedEvent,
-    ExecutionTestPayload,
-    ITestExecutionAdapter,
-    ITestResultResolver,
-    ITestServer,
-} from '../common/types';
+import { DataReceivedEvent, ExecutionTestPayload, ITestExecutionAdapter, ITestServer } from '../common/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
@@ -20,6 +14,7 @@ import {
 } from '../../../common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { removePositionalFoldersAndFiles } from './arguments';
+import { ITestResultResolver } from '../common/resultResolver';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
@@ -32,13 +27,15 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         public testServer: ITestServer,
         public configSettings: IConfigurationService,
         private readonly outputChannel: ITestOutputChannel,
-        private readonly resultResolver: ITestResultResolver,
+        private readonly resultResolver?: ITestResultResolver,
     ) {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
+    private runInstance!: TestRun;
+
     public onDataReceivedHandler({ data }: DataReceivedEvent): void {
-        this.resultResolver.resolve(JSON.parse(data));
+        this.resultResolver?.resolveRun(JSON.parse(data), this.runInstance);
     }
 
     async runTests(
@@ -46,7 +43,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         testIds: string[],
         debugBool?: boolean,
         executionFactory?: IPythonExecutionFactory,
+        runInstance?: TestRun,
     ): Promise<ExecutionTestPayload> {
+        this.runInstance = runInstance!;
         traceVerbose(uri, testIds, debugBool);
         return this.runTestsNew(uri, testIds, debugBool, executionFactory);
     }

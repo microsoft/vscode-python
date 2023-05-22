@@ -44,6 +44,7 @@ import { PytestTestDiscoveryAdapter } from './pytest/pytestDiscoveryAdapter';
 import { PytestTestExecutionAdapter } from './pytest/pytestExecutionAdapter';
 import { WorkspaceTestAdapter } from './workspaceTestAdapter';
 import { ITestDebugLauncher } from '../common/types';
+import { ITestResultResolver } from './common/resultResolver';
 
 // Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
 type EventPropertyType = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_TRIGGER];
@@ -154,34 +155,40 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
         workspaces.forEach((workspace) => {
             const settings = this.configSettings.getSettings(workspace.uri);
-
             let discoveryAdapter: ITestDiscoveryAdapter;
             let executionAdapter: ITestExecutionAdapter;
             let testProvider: TestProvider;
+            let resultResolver: ITestResultResolver;
             if (settings.testing.unittestEnabled) {
+                testProvider = UNITTEST_PROVIDER;
+                resultResolver = new ITestResultResolver(this.testController, testProvider, workspace.uri);
                 discoveryAdapter = new UnittestTestDiscoveryAdapter(
                     this.pythonTestServer,
                     this.configSettings,
                     this.testOutputChannel,
+                    resultResolver,
                 );
                 executionAdapter = new UnittestTestExecutionAdapter(
                     this.pythonTestServer,
                     this.configSettings,
                     this.testOutputChannel,
+                    resultResolver,
                 );
-                testProvider = UNITTEST_PROVIDER;
             } else {
+                testProvider = PYTEST_PROVIDER;
+                resultResolver = new ITestResultResolver(this.testController, testProvider, workspace.uri);
                 discoveryAdapter = new PytestTestDiscoveryAdapter(
                     this.pythonTestServer,
                     this.configSettings,
                     this.testOutputChannel,
+                    resultResolver,
                 );
                 executionAdapter = new PytestTestExecutionAdapter(
                     this.pythonTestServer,
                     this.configSettings,
                     this.testOutputChannel,
+                    resultResolver,
                 );
-                testProvider = PYTEST_PROVIDER;
             }
 
             const workspaceTestAdapter = new WorkspaceTestAdapter(
@@ -363,7 +370,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             `Running Tests for Workspace(s): ${workspaces.map((w) => w.uri.fsPath).join(';')}`,
             true,
         );
-
         const dispose = token.onCancellationRequested(() => {
             runInstance.end();
         });

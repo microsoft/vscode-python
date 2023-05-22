@@ -11,13 +11,8 @@ import { IConfigurationService, ITestOutputChannel } from '../../../common/types
 import { createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { traceError, traceVerbose } from '../../../logging';
-import {
-    DataReceivedEvent,
-    DiscoveredTestPayload,
-    ITestDiscoveryAdapter,
-    ITestResultResolver,
-    ITestServer,
-} from '../common/types';
+import { DataReceivedEvent, DiscoveredTestPayload, ITestDiscoveryAdapter, ITestServer } from '../common/types';
+import { ITestResultResolver } from '../common/resultResolver';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
@@ -27,13 +22,13 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         public testServer: ITestServer,
         public configSettings: IConfigurationService,
         private readonly outputChannel: ITestOutputChannel,
-        private readonly resultResolver: ITestResultResolver, // is readonly the right type??
+        private readonly resultResolver?: ITestResultResolver, // is readonly the right type??
     ) {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
     public onDataReceivedHandler({ data }: DataReceivedEvent): void {
-        this.resultResolver.resolve(JSON.parse(data));
+        this.resultResolver?.resolveDiscovery(JSON.parse(data));
     }
 
     discoverTests(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {

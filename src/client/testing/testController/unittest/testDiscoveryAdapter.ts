@@ -14,6 +14,7 @@ import {
     TestCommandOptions,
     TestDiscoveryCommand,
 } from '../common/types';
+import { ITestResultResolver } from '../common/resultResolver';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.
@@ -27,16 +28,13 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         public testServer: ITestServer,
         public configSettings: IConfigurationService,
         private readonly outputChannel: ITestOutputChannel,
+        private readonly resultResolver?: ITestResultResolver,
     ) {
         testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
-    public onDataReceivedHandler({ uuid, data }: DataReceivedEvent): void {
-        const deferred = this.promiseMap.get(uuid);
-        if (deferred) {
-            deferred.resolve(JSON.parse(data));
-            this.promiseMap.delete(uuid);
-        }
+    public onDataReceivedHandler({ data }: DataReceivedEvent): void {
+        this.resultResolver?.resolveDiscovery(JSON.parse(data));
     }
 
     public async discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {

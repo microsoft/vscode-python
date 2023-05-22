@@ -180,7 +180,8 @@ export interface ITestServer {
 }
 
 export interface ITestResultResolver {
-    resolve(payload: ExecutionTestPayload): Promise<void>;
+    resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): Promise<void>;
+    resolveExecution(payload: ExecutionTestPayload, token?: CancellationToken): Promise<void>;
 }
 
 export interface ITestDiscoveryAdapter {
@@ -198,6 +199,7 @@ export interface ITestExecutionAdapter {
         testIds: string[],
         debugBool?: boolean,
         executionFactory?: IPythonExecutionFactory,
+        runInstance?: TestRun,
     ): Promise<ExecutionTestPayload>;
 }
 
