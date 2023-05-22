@@ -93,10 +93,6 @@ export function plainExec(
     const spawnOptions = getDefaultOptions(options, defaultEnv);
     const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
     const proc = spawn(file, args, spawnOptions);
-    if (options.pytestExecutionTestIds) {
-        proc.stdin?.write(JSON.stringify(options.pytestExecutionTestIds));
-        proc.stdin?.end();
-    }
     // Listen to these errors (unhandled errors in streams tears down the process).
     // Errors will be bubbled up to the `error` event in `proc`, hence no need to log.
     proc.stdout?.on('error', noop);

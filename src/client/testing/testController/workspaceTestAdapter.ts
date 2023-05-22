@@ -348,7 +348,7 @@ export class WorkspaceTestAdapter {
             const testingErrorConst =
                 this.testProvider === 'pytest' ? Testing.errorPytestDiscovery : Testing.errorUnittestDiscovery;
             const { errors } = rawTestData;
-
+            traceError(testingErrorConst, '\r\n', errors?.join('\r\n\r\n'));
             let errorNode = testController.items.get(`DiscoveryError:${workspacePath}`);
             const message = util.format(
                 `${testingErrorConst} ${Testing.seePythonOutput}\r\n`,

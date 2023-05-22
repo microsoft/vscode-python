@@ -68,9 +68,6 @@ export const startServer = (test_ids: string): Promise<number> =>
             // Send the payload to the socket
             socket.write(payload);
 
-            // Store the port of the socket as test_run_socket
-            const test_run_socket = socket.localPort;
-
             // Handle socket events
             socket.on('data', (data) => {
                 console.log('Received data:', data.toString());
