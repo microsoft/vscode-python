@@ -115,7 +115,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             undefined,
             shell,
         );
-        const envVarCollection = this.getEnvironmentVariableCollection({ workspaceFolder });
+        const envVarCollection = this.getEnvironmentVariableCollection(workspaceFolder);
         if (!env) {
             const shellType = identifyShellFromShellPath(shell);
             const defaultShell = defaultShells[this.platform.osType];
@@ -156,11 +156,13 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         envVarCollection.description = description;
     }
 
-    private getEnvironmentVariableCollection(scope?: EnvironmentVariableScope) {
+    private getEnvironmentVariableCollection(workspaceFolder?: WorkspaceFolder) {
         const envVarCollection = this.context.environmentVariableCollection as EnvironmentVariableCollection & {
             getScopedEnvironmentVariableCollection(scope: EnvironmentVariableScope): EnvironmentVariableCollection;
         };
-        return scope ? envVarCollection.getScopedEnvironmentVariableCollection(scope) : envVarCollection;
+        return workspaceFolder
+            ? envVarCollection.getScopedEnvironmentVariableCollection({ workspaceFolder })
+            : envVarCollection;
     }
 
     private async handleMicroVenv(resource: Resource) {
@@ -169,7 +171,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         if (interpreter?.envType === EnvironmentType.Venv) {
             const activatePath = path.join(path.dirname(interpreter.path), 'activate');
             if (!(await pathExists(activatePath))) {
-                const envVarCollection = this.getEnvironmentVariableCollection({ workspaceFolder });
+                const envVarCollection = this.getEnvironmentVariableCollection(workspaceFolder);
                 envVarCollection.replace(
                     'PATH',
                     `${path.dirname(interpreter.path)}${path.delimiter}${process.env.Path}`,

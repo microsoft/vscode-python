@@ -215,7 +215,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         verify(collection.delete('PATH')).never();
     });
 
-    test('Verify correct scope is used when applying envs and setting description', async () => {
+    test('Verify correct options are used when applying envs and setting description', async () => {
         const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ..._normCaseKeys(process.env) };
         delete envVars.PATH;
         const resource = Uri.file('a');
@@ -229,14 +229,11 @@ suite('Terminal Environment Variable Collection Service', () => {
             environmentActivationService.getActivatedEnvironmentVariables(resource, undefined, undefined, customShell),
         ).thenResolve(envVars);
 
-        when(scopedCollection.replace(anything(), anything(), anything())).thenCall((_e, _v, scope) => {
-            assert.deepEqual(scope, { workspaceFolder });
+        when(scopedCollection.replace(anything(), anything(), anything())).thenCall((_e, _v, options) => {
+            assert.deepEqual(options, { applyAtShellIntegration: true });
             return Promise.resolve();
         });
-        when(scopedCollection.delete(anything())).thenCall((_e, scope) => {
-            assert.deepEqual(scope, { workspaceFolder });
-            return Promise.resolve();
-        });
+        when(scopedCollection.delete(anything())).thenResolve();
 
         await terminalEnvVarCollectionService._applyCollection(resource, customShell);
 
