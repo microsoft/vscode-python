@@ -6,13 +6,14 @@ import os
 import pathlib
 import socket
 import sys
+from typing import List
 
 import pytest
 
 CONTENT_LENGTH: str = "Content-Length:"
 
 
-def process_rpc_json(data: str) -> list[str]:
+def process_rpc_json(data: str) -> List[str]:
     """Process the JSON data which comes from the server which runs the pytest discovery."""
     str_stream: io.StringIO = io.StringIO(data)
 

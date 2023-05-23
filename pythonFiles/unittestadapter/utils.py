@@ -6,8 +6,15 @@ import enum
 import inspect
 import os
 import pathlib
+import sys
 import unittest
-from typing import List, Tuple, TypedDict, Union
+from typing import List, Tuple, Union
+
+script_dir = pathlib.Path(__file__).parent.parent
+sys.path.append(os.fspath(script_dir))
+sys.path.append(os.fspath(script_dir / "lib" / "python"))
+
+from typing_extensions import TypedDict
 
 # Types
 
