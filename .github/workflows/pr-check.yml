@@ -75,6 +75,7 @@ jobs:
           python -m pip install --upgrade -r build/test-requirements.txt
 
       - name: Run Pyright
+        version: 1.1.308
         uses: jakebailey/pyright-action@v1
         with:
           version: 1.1.308
