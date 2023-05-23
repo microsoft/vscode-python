@@ -193,14 +193,16 @@ export interface ITestDiscoveryAdapter {
 // interface for execution/runner adapter
 export interface ITestExecutionAdapter {
     // ** first line old method signature, second line new method signature
-    runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload>;
+
+    // runTests(uri: Uri, testIds: string[], debugBool?: boolean, runInstance?: TestRun): Promise<ExecutionTestPayload>;
     runTests(
         uri: Uri,
         testIds: string[],
         debugBool?: boolean,
-        executionFactory?: IPythonExecutionFactory,
         runInstance?: TestRun,
+        executionFactory?: IPythonExecutionFactory,
     ): Promise<ExecutionTestPayload>;
+    runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload>;
 }
 
 // Same types as in pythonFiles/unittestadapter/utils.py

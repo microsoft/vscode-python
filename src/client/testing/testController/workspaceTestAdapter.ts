@@ -83,8 +83,8 @@ export class WorkspaceTestAdapter {
                     this.workspaceUri,
                     testCaseIds,
                     debugBool,
-                    executionFactory,
                     runInstance,
+                    executionFactory,
                 );
                 traceVerbose('executionFactory defined');
             } else {

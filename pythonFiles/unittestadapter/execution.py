@@ -48,6 +48,8 @@ def parse_execution_cli_args(
 ErrorType = Union[
     Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]
 ]
+PORT = 0
+UUID = 0
 
 
 class TestOutcomeEnum(str, enum.Enum):
@@ -144,6 +146,9 @@ class UnittestTestResult(unittest.TextTestResult):
         }
 
         self.formatted[test_id] = result
+        if PORT == 0 or UUID == 0:
+            print("Error sending response, port or uuid unknown to python server.")
+        send_run_data(result, PORT, UUID)
 
 
 class TestExecutionStatus(str, enum.Enum):
@@ -219,17 +224,7 @@ def run_tests(
     return payload
 
 
-if __name__ == "__main__":
-    # Get unittest test execution arguments.
-    argv = sys.argv[1:]
-    index = argv.index("--udiscovery")
-
-    start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
-
-    # Perform test execution.
-    port, uuid, testids = parse_execution_cli_args(argv[:index])
-    payload = run_tests(start_dir, testids, pattern, top_level_dir, uuid)
-
+def send_run_data(payload, port, uuid):
     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
     addr = ("localhost", port)
     data = json.dumps(payload)
@@ -245,3 +240,15 @@ Request-uuid: {uuid}
     except Exception as e:
         print(f"Error sending response: {e}")
         print(f"Request data: {request}")
+
+
+if __name__ == "__main__":
+    # Get unittest test execution arguments.
+    argv = sys.argv[1:]
+    index = argv.index("--udiscovery")
+
+    start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
+
+    # Perform test execution.
+    PORT, UUID, testids = parse_execution_cli_args(argv[:index])
+    payload = run_tests(start_dir, testids, pattern, top_level_dir, uuid)

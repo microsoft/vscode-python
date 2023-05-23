@@ -42,8 +42,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         uri: Uri,
         testIds: string[],
         debugBool?: boolean,
-        executionFactory?: IPythonExecutionFactory,
         runInstance?: TestRun,
+        executionFactory?: IPythonExecutionFactory,
     ): Promise<ExecutionTestPayload> {
         this.runInstance = runInstance!;
         traceVerbose(uri, testIds, debugBool);
