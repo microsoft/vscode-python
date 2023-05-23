@@ -1,33 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-import contextlib
 import io
 import json
 import os
 import pathlib
-import random
 import socket
-import subprocess
 import sys
-import threading
-import uuid
-from typing import Any, Dict, List, Optional, Union
 
 import pytest
 
-# Path to the directory you want to append
-directory_path = pathlib.Path(__file__).parent.parent / "lib" / "python"
-import os
-
-sys.path.append(os.fspath(directory_path))
-print(sys.path)
-
-# Disable Flake8 rule for the next import statement
-# flake8: noqa: E402
-import debugpy
-
-debugpy.connect(5678)
-debugpy.breakpoint()
 CONTENT_LENGTH: str = "Content-Length:"
 
 

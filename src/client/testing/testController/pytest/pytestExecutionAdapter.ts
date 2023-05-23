@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as net from 'net';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
-import { traceVerbose } from '../../../logging';
+import { traceLog, traceVerbose } from '../../../logging';
 import { DataReceivedEvent, ExecutionTestPayload, ITestExecutionAdapter, ITestServer } from '../common/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
@@ -127,16 +127,14 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             const startServer = (): Promise<number> =>
                 new Promise((resolve, reject) => {
                     const server = net.createServer((socket: net.Socket) => {
-                        console.log('Client connected');
-
                         socket.on('end', () => {
-                            console.log('Client disconnected');
+                            traceLog('Client disconnected');
                         });
                     });
 
                     server.listen(0, () => {
                         const { port } = server.address() as net.AddressInfo;
-                        console.log(`Server listening on port ${port}`);
+                        traceLog(`Server listening on port ${port}`);
                         resolve(port);
                     });
 
@@ -145,14 +143,14 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     });
                     server.on('connection', (socket: net.Socket) => {
                         socket.write(payload);
-                        console.log('payload sent', payload);
+                        traceLog('payload sent', payload);
                     });
                 });
 
             // Start the server and wait until it is listening
             await startServer()
                 .then((assignedPort) => {
-                    console.log(`Server started and listening on port ${assignedPort}`);
+                    traceLog(`Server started and listening on port ${assignedPort}`);
                     if (spawnOptions.extraVariables)
                         spawnOptions.extraVariables.RUN_TEST_IDS_PORT = assignedPort.toString();
                 })
