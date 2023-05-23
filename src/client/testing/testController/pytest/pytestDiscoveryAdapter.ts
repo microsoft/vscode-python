@@ -24,18 +24,34 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         private readonly outputChannel: ITestOutputChannel,
         private readonly resultResolver?: ITestResultResolver, // is readonly the right type??
     ) {
-        testServer.onDataReceived(this.onDataReceivedHandler, this);
+        // testServer.onDiscoveryDataReceived(this.onDiscoveryDataReceivedHandler, this);
     }
 
-    public onDataReceivedHandler({ data }: DataReceivedEvent): void {
-        this.resultResolver?.resolveDiscovery(JSON.parse(data));
-    }
+    // public onDiscoveryDataReceivedHandler({ data }: DataReceivedEvent): void {
+    //     this.resultResolver?.resolveDiscovery(JSON.parse(data));
+    // }
 
-    discoverTests(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
+    async discoverTests(
+        uri: Uri,
+        isMultiroot?: boolean,
+        executionFactory?: IPythonExecutionFactory,
+    ): Promise<DiscoveredTestPayload> {
         const settings = this.configSettings.getSettings(uri);
         const { pytestArgs } = settings.testing;
         traceVerbose(pytestArgs);
-        return this.runPytestDiscovery(uri, executionFactory);
+        const disposable = this.testServer.onDiscoveryDataReceived((e: DataReceivedEvent) => {
+            if (isMultiroot !== undefined) {
+                this.resultResolver?.resolveDiscovery(JSON.parse(e.data), isMultiroot);
+            }
+        });
+        try {
+            await this.runPytestDiscovery(uri, executionFactory);
+        } finally {
+            disposable.dispose();
+            // confirm with testing that this gets called (it must clean this up)
+        }
+        const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
+        return discoveryPayload;
     }
 
     async runPytestDiscovery(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
@@ -71,12 +87,12 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             ?.exec(['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs), spawnOptions)
             .then(() => {
                 this.testServer.deleteUUID(uuid);
-                deferred.resolve();
+                return deferred.resolve();
             })
             .catch((err) => {
                 traceError(`Error while trying to run pytest discovery, \n${err}\r\n\r\n`);
                 this.testServer.deleteUUID(uuid);
-                deferred.reject(err);
+                return deferred.reject(err);
             });
 
         return deferred.promise;

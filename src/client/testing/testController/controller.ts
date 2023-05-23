@@ -196,6 +196,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 discoveryAdapter,
                 executionAdapter,
                 workspace.uri,
+                resultResolver,
             );
 
             this.testAdapters.set(workspace.uri, workspaceTestAdapter);
@@ -283,6 +284,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                         this.refreshCancellation.token,
                         this.testAdapters.size > 1,
                         this.workspaceService.workspaceFile?.fsPath,
+                        this.pythonExecFactory,
                     );
                 } else {
                     // else use OLD test discovery mechanism
@@ -444,6 +446,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                     testItems,
                                     token,
                                     request.profile?.kind === TestRunProfileKind.Debug,
+                                    this.pythonExecFactory,
                                 );
                             }
                             // below is old way of running unittest execution

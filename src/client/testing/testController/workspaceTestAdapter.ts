@@ -13,6 +13,7 @@ import { TestProvider } from '../types';
 import { ErrorTestItemOptions, createErrorTestItem, getTestCaseNodes } from './common/testItemUtilities';
 import { ITestDiscoveryAdapter, ITestExecutionAdapter } from './common/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
+import { ITestResultResolver } from './common/resultResolver';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -28,22 +29,13 @@ export class WorkspaceTestAdapter {
 
     private executing: Deferred<void> | undefined;
 
-    runIdToTestItem: Map<string, TestItem>;
-
-    runIdToVSid: Map<string, string>;
-
-    vsIdToRunId: Map<string, string>;
-
     constructor(
         private testProvider: TestProvider,
         private discoveryAdapter: ITestDiscoveryAdapter,
         private executionAdapter: ITestExecutionAdapter,
         private workspaceUri: Uri,
-    ) {
-        this.runIdToTestItem = new Map<string, TestItem>();
-        this.runIdToVSid = new Map<string, string>();
-        this.vsIdToRunId = new Map<string, string>();
-    }
+        private resultResolver: ITestResultResolver,
+    ) {}
 
     public async executeTests(
         testController: TestController,
@@ -71,7 +63,7 @@ export class WorkspaceTestAdapter {
             // iterate through testItems nodes and fetch their unittest runID to pass in as argument
             testCaseNodes.forEach((node) => {
                 runInstance.started(node); // do the vscode ui test item start here before runtest
-                const runId = this.vsIdToRunId.get(node.id);
+                const runId = this.resultResolver.vsIdToRunId.get(node.id);
                 if (runId) {
                     testCaseIds.push(runId);
                 }
@@ -136,13 +128,16 @@ export class WorkspaceTestAdapter {
         try {
             // ** execution factory only defined for new rewrite way
             if (executionFactory !== undefined) {
-                await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
+                await this.discoveryAdapter.discoverTests(this.workspaceUri, isMultiroot, executionFactory);
             } else {
                 await this.discoveryAdapter.discoverTests(this.workspaceUri);
             }
             deferred.resolve();
         } catch (ex) {
-            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: this.testProvider, failed: true });
+            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
+                tool: this.testProvider,
+                failed: true,
+            });
 
             let cancel = token?.isCancellationRequested
                 ? Testing.cancelUnittestDiscovery

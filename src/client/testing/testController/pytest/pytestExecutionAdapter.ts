@@ -29,13 +29,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         private readonly outputChannel: ITestOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
     ) {
-        testServer.onDataReceived(this.onDataReceivedHandler, this);
-    }
-
-    private runInstance!: TestRun;
-
-    public onDataReceivedHandler({ data }: DataReceivedEvent): void {
-        this.resultResolver?.resolveRun(JSON.parse(data), this.runInstance);
+        // testServer.onRunDataReceived(this.onRunDataReceivedHandler, this);
     }
 
     async runTests(
@@ -45,9 +39,20 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         runInstance?: TestRun,
         executionFactory?: IPythonExecutionFactory,
     ): Promise<ExecutionTestPayload> {
-        this.runInstance = runInstance!;
         traceVerbose(uri, testIds, debugBool);
-        return this.runTestsNew(uri, testIds, debugBool, executionFactory);
+        const disposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
+            if (runInstance) {
+                this.resultResolver?.resolveRun(JSON.parse(e.data), runInstance);
+            }
+        });
+        try {
+            await this.runTestsNew(uri, testIds, debugBool, executionFactory);
+        } finally {
+            disposable.dispose();
+            // confirm with testing that this gets called (it must clean this up)
+        }
+        const executionPayload: ExecutionTestPayload = { cwd: uri.fsPath, status: 'success', error: '' };
+        return executionPayload;
     }
 
     private async runTestsNew(

@@ -57,10 +57,13 @@ export class ITestResultResolver {
         this.vsIdToRunId = new Map<string, string>();
     }
 
-    public resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): Promise<void> {
+    public resolveDiscovery(
+        payload: DiscoveredTestPayload,
+        isMultiroot?: boolean,
+        token?: CancellationToken,
+    ): Promise<void> {
         const workspacePath = this.workspaceUri.fsPath;
-        const workspaceFilePath = ''; // FIX THIS
-        const isMultiroot = false; // FIX THIS
+        const workspaceFilePath = this.workspaceUri.fsPath;
 
         const rawTestData = payload;
         if (!rawTestData) {

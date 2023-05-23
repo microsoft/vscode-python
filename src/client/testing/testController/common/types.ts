@@ -172,6 +172,8 @@ export type TestCommandOptionsPytest = {
  */
 export interface ITestServer {
     readonly onDataReceived: Event<DataReceivedEvent>;
+    readonly onRunDataReceived: Event<DataReceivedEvent>;
+    readonly onDiscoveryDataReceived: Event<DataReceivedEvent>;
     sendCommand(options: TestCommandOptions): Promise<void>;
     serverReady(): Promise<void>;
     getPort(): number;
@@ -187,14 +189,18 @@ export interface ITestResultResolver {
 export interface ITestDiscoveryAdapter {
     // ** first line old method signature, second line new method signature
     discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
-    discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload>;
+    discoverTests(
+        uri: Uri,
+        isMultiroot?: boolean,
+        executionFactory?: IPythonExecutionFactory,
+    ): Promise<DiscoveredTestPayload>;
 }
 
 // interface for execution/runner adapter
 export interface ITestExecutionAdapter {
     // ** first line old method signature, second line new method signature
-
-    // runTests(uri: Uri, testIds: string[], debugBool?: boolean, runInstance?: TestRun): Promise<ExecutionTestPayload>;
+    runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload>;
+    // due to this being a breaking change, we will leave the old method signature in place and runInstance as optional
     runTests(
         uri: Uri,
         testIds: string[],

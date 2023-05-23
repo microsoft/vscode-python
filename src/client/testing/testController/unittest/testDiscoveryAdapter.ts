@@ -30,14 +30,14 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         private readonly outputChannel: ITestOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
     ) {
-        testServer.onDataReceived(this.onDataReceivedHandler, this);
+        // testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
-    public onDataReceivedHandler({ data }: DataReceivedEvent): void {
-        this.resultResolver?.resolveDiscovery(JSON.parse(data));
-    }
+    // public onDataReceivedHandler({ data }: DataReceivedEvent): void {
+    //     this.resultResolver?.resolveDiscovery(JSON.parse(data));
+    // }
 
-    public async discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
+    public async discoverTests(uri: Uri, isMultiroot?: boolean): Promise<DiscoveredTestPayload> {
         const deferred = createDeferred<DiscoveredTestPayload>();
         const settings = this.configSettings.getSettings(uri);
         const { unittestArgs } = settings.testing;
@@ -59,9 +59,26 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
         // Send the test command to the server.
         // The server will fire an onDataReceived event once it gets a response.
-        this.testServer.sendCommand(options);
 
-        return deferred.promise;
+        const disposable = this.testServer.onDiscoveryDataReceived((e: DataReceivedEvent) => {
+            if (isMultiroot !== undefined) {
+                this.resultResolver?.resolveDiscovery(JSON.parse(e.data), isMultiroot);
+            }
+        });
+        try {
+            await this.callSendCommand(options);
+        } finally {
+            disposable.dispose();
+            // confirm with testing that this gets called (it must clean this up)
+        }
+        const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
+        return discoveryPayload;
+    }
+
+    private async callSendCommand(options: TestCommandOptions): Promise<DiscoveredTestPayload> {
+        await this.testServer.sendCommand(options);
+        const discoveryPayload: DiscoveredTestPayload = { cwd: '', status: 'success' };
+        return discoveryPayload;
     }
 }
 

@@ -5,11 +5,25 @@ import argparse
 import enum
 import json
 import os
+import pathlib
 import sys
 import traceback
 import unittest
 from types import TracebackType
 from typing import Dict, List, Optional, Tuple, Type, Union
+
+directory_path = pathlib.Path(__file__).parent.parent / "lib" / "python"
+import os
+
+# sys.path.append(os.fspath(directory_path))
+# print(sys.path)
+
+# # Disable Flake8 rule for the next import statement
+# # flake8: noqa: E402
+# import debugpy
+
+# debugpy.connect(5678)
+# debugpy.breakpoint()
 
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -50,6 +64,7 @@ ErrorType = Union[
 ]
 PORT = 0
 UUID = 0
+START_DIR = ""
 
 
 class TestOutcomeEnum(str, enum.Enum):
@@ -224,8 +239,15 @@ def run_tests(
     return payload
 
 
-def send_run_data(payload, port, uuid):
+def send_run_data(raw_data, port, uuid):
     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
+    status = raw_data["outcome"]
+    cwd = os.path.abspath(START_DIR)
+    test_id = raw_data["test"]
+    test_dict = {}
+    test_dict[test_id] = raw_data
+    payload: PayloadDict = {"cwd": cwd, "status": status, "result": test_dict}
+
     addr = ("localhost", port)
     data = json.dumps(payload)
     request = f"""Content-Length: {len(data)}
@@ -247,8 +269,8 @@ if __name__ == "__main__":
     argv = sys.argv[1:]
     index = argv.index("--udiscovery")
 
-    start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
+    START_DIR, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
 
     # Perform test execution.
     PORT, UUID, testids = parse_execution_cli_args(argv[:index])
-    payload = run_tests(start_dir, testids, pattern, top_level_dir, uuid)
+    payload = run_tests(START_DIR, testids, pattern, top_level_dir, UUID)

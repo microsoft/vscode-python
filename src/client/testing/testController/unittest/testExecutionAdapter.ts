@@ -25,19 +25,13 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
 
     private cwd: string | undefined;
 
-    private runInstance!: TestRun;
-
     constructor(
         public testServer: ITestServer,
         public configSettings: IConfigurationService,
         private readonly outputChannel: ITestOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
     ) {
-        testServer.onDataReceived(this.onDataReceivedHandler, this);
-    }
-
-    public onDataReceivedHandler({ data }: DataReceivedEvent): void {
-        this.resultResolver?.resolveRun(JSON.parse(data), this.runInstance);
+        // testServer.onDataReceived(this.onDataReceivedHandler, this);
     }
 
     public async runTests(
@@ -46,7 +40,6 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         debugBool?: boolean,
         runInstance?: TestRun,
     ): Promise<ExecutionTestPayload> {
-        this.runInstance = runInstance!;
         const settings = this.configSettings.getSettings(uri);
         const { unittestArgs } = settings.testing;
 
@@ -69,9 +62,25 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
 
         // Send test command to server.
         // Server fire onDataReceived event once it gets response.
-        this.testServer.sendCommand(options);
+        const disposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
+            if (runInstance) {
+                this.resultResolver?.resolveRun(JSON.parse(e.data), runInstance);
+            }
+        });
+        try {
+            await this.callSendCommand(options);
+        } finally {
+            disposable.dispose();
+            // confirm with testing that this gets called (it must clean this up)
+        }
+        const executionPayload: ExecutionTestPayload = { cwd: uri.fsPath, status: 'success', error: '' };
+        return executionPayload;
+    }
 
-        return deferred.promise;
+    private async callSendCommand(options: TestCommandOptions): Promise<ExecutionTestPayload> {
+        await this.testServer.sendCommand(options);
+        const executionPayload: ExecutionTestPayload = { cwd: '', status: 'success', error: '' };
+        return executionPayload;
     }
 }
 

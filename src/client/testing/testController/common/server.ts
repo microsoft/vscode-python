@@ -18,6 +18,10 @@ import { jsonRPCHeaders, jsonRPCContent, JSONRPC_UUID_HEADER } from './utils';
 export class PythonTestServer implements ITestServer, Disposable {
     private _onDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
 
+    private _onRunDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
+
+    private _onDiscoveryDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
+
     private uuids: Array<string> = [];
 
     private server: net.Server;
@@ -36,8 +40,18 @@ export class PythonTestServer implements ITestServer, Disposable {
                         rawData = rpcHeaders.remainingRawData;
                         if (uuid && this.uuids.includes(uuid)) {
                             const rpcContent = jsonRPCContent(rpcHeaders.headers, rawData);
+                            if (rawData.includes(`"tests":`)) {
+                                this._onDiscoveryDataReceived.fire({ uuid, data: rpcContent.extractedJSON });
+                            } else if (rawData.includes(`"result":`)) {
+                                this._onRunDataReceived.fire({ uuid, data: rpcContent.extractedJSON });
+                            } else {
+                                traceLog(
+                                    `Error processing test server request: request is not recognized as discovery or run.`,
+                                );
+                                this._onDataReceived.fire({ uuid: '', data: '' });
+                                return;
+                            }
                             rawData = rpcContent.remainingRawData;
-                            this._onDataReceived.fire({ uuid, data: rpcContent.extractedJSON });
                         } else {
                             traceLog(`Error processing test server request: uuid not found`);
                             this._onDataReceived.fire({ uuid: '', data: '' });
@@ -94,6 +108,14 @@ export class PythonTestServer implements ITestServer, Disposable {
 
     public get onDataReceived(): Event<DataReceivedEvent> {
         return this._onDataReceived.event;
+    }
+
+    public get onRunDataReceived(): Event<DataReceivedEvent> {
+        return this._onRunDataReceived.event;
+    }
+
+    public get onDiscoveryDataReceived(): Event<DataReceivedEvent> {
+        return this._onDiscoveryDataReceived.event;
     }
 
     async sendCommand(options: TestCommandOptions): Promise<void> {
