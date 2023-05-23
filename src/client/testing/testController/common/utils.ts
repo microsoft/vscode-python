@@ -51,13 +51,13 @@ export function jsonRPCContent(headers: Map<string, string>, rawData: string): I
         remainingRawData,
     };
 }
-export const startServer = (test_ids: string): Promise<number> =>
+export const startServer = (testIds: string): Promise<number> =>
     new Promise((resolve, reject) => {
         const server = net.createServer((socket: net.Socket) => {
             console.log('Client connected');
 
             // Convert the test_ids array to JSON
-            const testData = JSON.stringify(test_ids);
+            const testData = JSON.stringify(testIds);
 
             // Create the headers
             const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
