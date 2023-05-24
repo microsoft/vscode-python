@@ -3,9 +3,10 @@
 
 import { Uri } from 'vscode';
 import * as path from 'path';
+import * as net from 'net';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
-import { traceVerbose } from '../../../logging';
+import { traceLog, traceVerbose } from '../../../logging';
 import { DataReceivedEvent, ExecutionTestPayload, ITestExecutionAdapter, ITestServer } from '../common/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
@@ -90,6 +91,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 TEST_PORT: this.testServer.getPort().toString(),
             },
             outputChannel: this.outputChannel,
+            stdinStr: testIds.toString(),
         };
 
         // Create the Python environment in which to execute the command.
@@ -114,7 +116,48 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             if (debugBool && !testArgs.some((a) => a.startsWith('--capture') || a === '-s')) {
                 testArgs.push('--capture', 'no');
             }
-            const pluginArgs = ['-p', 'vscode_pytest', '-v'].concat(testArgs).concat(testIds);
+            const pluginArgs = ['-p', 'vscode_pytest'].concat(testArgs).concat(testIds);
+            const scriptPath = path.join(fullPluginPath, 'vscode_pytest', 'run_pytest_script.py');
+            const runArgs = [scriptPath, ...testArgs];
+
+            const testData = JSON.stringify(testIds);
+            const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
+            const payload = `${headers.join('\r\n')}\r\n\r\n${testData}`;
+
+            const startServer = (): Promise<number> =>
+                new Promise((resolve, reject) => {
+                    const server = net.createServer((socket: net.Socket) => {
+                        socket.on('end', () => {
+                            traceLog('Client disconnected');
+                        });
+                    });
+
+                    server.listen(0, () => {
+                        const { port } = server.address() as net.AddressInfo;
+                        traceLog(`Server listening on port ${port}`);
+                        resolve(port);
+                    });
+
+                    server.on('error', (error: Error) => {
+                        reject(error);
+                    });
+                    server.on('connection', (socket: net.Socket) => {
+                        socket.write(payload);
+                        traceLog('payload sent', payload);
+                    });
+                });
+
+            // Start the server and wait until it is listening
+            await startServer()
+                .then((assignedPort) => {
+                    traceLog(`Server started and listening on port ${assignedPort}`);
+                    if (spawnOptions.extraVariables)
+                        spawnOptions.extraVariables.RUN_TEST_IDS_PORT = assignedPort.toString();
+                })
+                .catch((error) => {
+                    console.error('Error starting server:', error);
+                });
+
             if (debugBool) {
                 const pytestPort = this.testServer.getPort().toString();
                 const pytestUUID = uuid.toString();
@@ -129,9 +172,10 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 console.debug(`Running debug test with arguments: ${pluginArgs.join(' ')}\r\n`);
                 await debugLauncher!.launchDebugger(launchOptions);
             } else {
-                const runArgs = ['-m', 'pytest'].concat(pluginArgs);
-                console.debug(`Running test with arguments: ${runArgs.join(' ')}\r\n`);
-                execService?.exec(runArgs, spawnOptions);
+                await execService?.exec(runArgs, spawnOptions).catch((ex) => {
+                    console.debug(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
+                    return Promise.reject(ex);
+                });
             }
         } catch (ex) {
             console.debug(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);

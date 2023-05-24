@@ -1,5 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import * as net from 'net';
+import { traceLog } from '../../../logging';
 
 export function fixLogLines(content: string): string {
     const lines = content.split(/\r?\n/g);
@@ -50,3 +52,38 @@ export function jsonRPCContent(headers: Map<string, string>, rawData: string): I
         remainingRawData,
     };
 }
+export const startServer = (testIds: string): Promise<number> =>
+    new Promise((resolve, reject) => {
+        const server = net.createServer((socket: net.Socket) => {
+            // Convert the test_ids array to JSON
+            const testData = JSON.stringify(testIds);
+
+            // Create the headers
+            const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
+
+            // Create the payload by concatenating the headers and the test data
+            const payload = `${headers.join('\r\n')}\r\n\r\n${testData}`;
+
+            // Send the payload to the socket
+            socket.write(payload);
+
+            // Handle socket events
+            socket.on('data', (data) => {
+                traceLog('Received data:', data.toString());
+            });
+
+            socket.on('end', () => {
+                traceLog('Client disconnected');
+            });
+        });
+
+        server.listen(0, () => {
+            const { port } = server.address() as net.AddressInfo;
+            traceLog(`Server listening on port ${port}`);
+            resolve(port);
+        });
+
+        server.on('error', (error: Error) => {
+            reject(error);
+        });
+    });

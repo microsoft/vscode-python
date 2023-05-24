@@ -26,23 +26,35 @@ export class PythonTestServer implements ITestServer, Disposable {
 
     constructor(private executionFactory: IPythonExecutionFactory, private debugLauncher: ITestDebugLauncher) {
         this.server = net.createServer((socket: net.Socket) => {
+            let buffer: Buffer = Buffer.alloc(0); // Buffer to accumulate received data
             socket.on('data', (data: Buffer) => {
                 try {
                     let rawData: string = data.toString();
-
-                    while (rawData.length > 0) {
-                        const rpcHeaders = jsonRPCHeaders(rawData);
+                    buffer = Buffer.concat([buffer, data]);
+                    while (buffer.length > 0) {
+                        const rpcHeaders = jsonRPCHeaders(buffer.toString());
                         const uuid = rpcHeaders.headers.get(JSONRPC_UUID_HEADER);
-                        rawData = rpcHeaders.remainingRawData;
-                        if (uuid && this.uuids.includes(uuid)) {
-                            const rpcContent = jsonRPCContent(rpcHeaders.headers, rawData);
-                            rawData = rpcContent.remainingRawData;
-                            this._onDataReceived.fire({ uuid, data: rpcContent.extractedJSON });
-                            this.uuids = this.uuids.filter((u) => u !== uuid);
-                        } else {
-                            traceLog(`Error processing test server request: uuid not found`);
+                        const totalContentLength = rpcHeaders.headers.get('Content-Length');
+                        if (!uuid) {
+                            traceLog('On data received: Error occurred because payload UUID is undefined');
                             this._onDataReceived.fire({ uuid: '', data: '' });
                             return;
+                        }
+                        if (!this.uuids.includes(uuid)) {
+                            traceLog('On data received: Error occurred because the payload UUID is not recognized');
+                            this._onDataReceived.fire({ uuid: '', data: '' });
+                            return;
+                        }
+                        rawData = rpcHeaders.remainingRawData;
+                        const rpcContent = jsonRPCContent(rpcHeaders.headers, rawData);
+                        const extractedData = rpcContent.extractedJSON;
+                        if (extractedData.length === Number(totalContentLength)) {
+                            // do not send until we have the full content
+                            this._onDataReceived.fire({ uuid, data: extractedData });
+                            this.uuids = this.uuids.filter((u) => u !== uuid);
+                            buffer = Buffer.alloc(0);
+                        } else {
+                            break;
                         }
                     }
                 } catch (ex) {
