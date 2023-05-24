@@ -9,6 +9,7 @@ import { ChildProcessAttachEventHandler } from '../../../../client/debugger/exte
 import { ChildProcessAttachService } from '../../../../client/debugger/extension/hooks/childProcessAttachService';
 import { DebuggerEvents } from '../../../../client/debugger/extension/hooks/constants';
 import { AttachRequestArguments } from '../../../../client/debugger/types';
+import { DebuggerTypeName } from '../../../../client/debugger/constants';
 
 suite('Debug - Child Process', () => {
     test('Do not attach if the event is undefined', async () => {
@@ -21,7 +22,15 @@ suite('Debug - Child Process', () => {
         const attachService = mock(ChildProcessAttachService);
         const handler = new ChildProcessAttachEventHandler(instance(attachService));
         const body: any = {};
-        const session: any = {};
+        const session: any = { configuration: { type: DebuggerTypeName } };
+        await handler.handleCustomEvent({ event: 'abc', body, session });
+        verify(attachService.attach(body, session)).never();
+    });
+    test('Do not attach to child process if debugger type is different', async () => {
+        const attachService = mock(ChildProcessAttachService);
+        const handler = new ChildProcessAttachEventHandler(instance(attachService));
+        const body: any = {};
+        const session: any = { configuration: { type: 'other-type' } };
         await handler.handleCustomEvent({ event: 'abc', body, session });
         verify(attachService.attach(body, session)).never();
     });
@@ -29,7 +38,7 @@ suite('Debug - Child Process', () => {
         const attachService = mock(ChildProcessAttachService);
         const handler = new ChildProcessAttachEventHandler(instance(attachService));
         const body: any = {};
-        const session: any = {};
+        const session: any = { configuration: { type: DebuggerTypeName } };
         await handler.handleCustomEvent({ event: DebuggerEvents.PtvsdAttachToSubprocess, body, session });
         verify(attachService.attach(body, session)).never();
     });
@@ -37,7 +46,7 @@ suite('Debug - Child Process', () => {
         const attachService = mock(ChildProcessAttachService);
         const handler = new ChildProcessAttachEventHandler(instance(attachService));
         const body: any = {};
-        const session: any = {};
+        const session: any = { configuration: { type: DebuggerTypeName } };
         await handler.handleCustomEvent({ event: DebuggerEvents.DebugpyAttachToSubprocess, body, session });
         verify(attachService.attach(body, session)).never();
     });
@@ -51,9 +60,11 @@ suite('Debug - Child Process', () => {
             port: 1234,
             subProcessId: 2,
         };
-        const session: any = {};
+        const session: any = {
+            configuration: { type: DebuggerTypeName },
+        };
         when(attachService.attach(body, session)).thenThrow(new Error('Kaboom'));
-        await handler.handleCustomEvent({ event: DebuggerEvents.DebugpyAttachToSubprocess, body, session: {} as any });
+        await handler.handleCustomEvent({ event: DebuggerEvents.DebugpyAttachToSubprocess, body, session });
         verify(attachService.attach(body, anything())).once();
         const [, secondArg] = capture(attachService.attach).last();
         expect(secondArg).to.deep.equal(session);
