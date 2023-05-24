@@ -29,13 +29,7 @@ import {
     getTestCaseNodes,
     RunTestTag,
 } from './common/testItemUtilities';
-import {
-    DiscoveredTestItem,
-    DiscoveredTestNode,
-    DiscoveredTestType,
-    ITestDiscoveryAdapter,
-    ITestExecutionAdapter,
-} from './common/types';
+import { DiscoveredTestItem, DiscoveredTestNode, ITestDiscoveryAdapter, ITestExecutionAdapter } from './common/types';
 import { fixLogLines } from './common/utils';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { ITestDebugLauncher } from '../common/types';
@@ -288,8 +282,6 @@ export class WorkspaceTestAdapter {
     public async discoverTests(
         testController: TestController,
         token?: CancellationToken,
-        isMultiroot?: boolean,
-        workspaceFilePath?: string,
         executionFactory?: IPythonExecutionFactory,
     ): Promise<void> {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: this.testProvider });
