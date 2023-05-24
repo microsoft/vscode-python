@@ -91,7 +91,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 TEST_PORT: this.testServer.getPort().toString(),
             },
             outputChannel: this.outputChannel,
-            pytestExecutionTestIds: testIds,
+            stdinStr: testIds.toString(),
         };
 
         // Create the Python environment in which to execute the command.

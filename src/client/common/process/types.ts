@@ -25,7 +25,7 @@ export type SpawnOptions = ChildProcessSpawnOptions & {
     throwOnStdErr?: boolean;
     extraVariables?: NodeJS.ProcessEnv;
     outputChannel?: OutputChannel;
-    pytestExecutionTestIds?: string[];
+    stdinStr?: string;
 };
 
 export type ShellOptions = ExecOptions & { throwOnStdErr?: boolean };
