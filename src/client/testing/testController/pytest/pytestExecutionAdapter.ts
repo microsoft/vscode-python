@@ -112,18 +112,16 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 testArgs.splice(0, 0, '--rootdir', uri.fsPath);
             }
 
-            // why is this needed?
             if (debugBool && !testArgs.some((a) => a.startsWith('--capture') || a === '-s')) {
                 testArgs.push('--capture', 'no');
             }
-            const pluginArgs = ['-p', 'vscode_pytest'].concat(testArgs).concat(testIds);
-            const scriptPath = path.join(fullPluginPath, 'vscode_pytest', 'run_pytest_script.py');
-            const runArgs = [scriptPath, ...testArgs];
 
+            // create payload with testIds to send to run pytest script
             const testData = JSON.stringify(testIds);
             const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
             const payload = `${headers.join('\r\n')}\r\n\r\n${testData}`;
 
+            let pytestRunTestIdsPort: string | undefined;
             const startServer = (): Promise<number> =>
                 new Promise((resolve, reject) => {
                     const server = net.createServer((socket: net.Socket) => {
@@ -151,8 +149,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             await startServer()
                 .then((assignedPort) => {
                     traceLog(`Server started and listening on port ${assignedPort}`);
+                    pytestRunTestIdsPort = assignedPort.toString();
                     if (spawnOptions.extraVariables)
-                        spawnOptions.extraVariables.RUN_TEST_IDS_PORT = assignedPort.toString();
+                        spawnOptions.extraVariables.RUN_TEST_IDS_PORT = pytestRunTestIdsPort;
                 })
                 .catch((error) => {
                     console.error('Error starting server:', error);
@@ -163,15 +162,20 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 const pytestUUID = uuid.toString();
                 const launchOptions: LaunchOptions = {
                     cwd: uri.fsPath,
-                    args: pluginArgs,
+                    args: testArgs,
                     token: spawnOptions.token,
                     testProvider: PYTEST_PROVIDER,
                     pytestPort,
                     pytestUUID,
+                    pytestRunTestIdsPort,
                 };
-                console.debug(`Running debug test with arguments: ${pluginArgs.join(' ')}\r\n`);
+                console.debug(`Running debug test with arguments: ${testArgs.join(' ')}\r\n`);
                 await debugLauncher!.launchDebugger(launchOptions);
             } else {
+                // combine path to run script with run args
+                const scriptPath = path.join(fullPluginPath, 'vscode_pytest', 'run_pytest_script.py');
+                const runArgs = [scriptPath, ...testArgs];
+
                 await execService?.exec(runArgs, spawnOptions).catch((ex) => {
                     console.debug(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
                     return Promise.reject(ex);
