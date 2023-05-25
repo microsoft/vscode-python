@@ -16,6 +16,7 @@ import { getConfigurationsForWorkspace } from '../../debugger/extension/configur
 import { getWorkspaceFolder, getWorkspaceFolders } from '../../common/vscodeApis/workspaceApis';
 import { showErrorMessage } from '../../common/vscodeApis/windowApis';
 import { createDeferred } from '../../common/utils/async';
+import { pythonTestAdapterRewriteEnabled } from '../testController/common/utils';
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
@@ -87,6 +88,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             path: path.join(EXTENSION_ROOT_DIR, 'pythonFiles'),
             include: false,
         });
+
         DebugLauncher.applyDefaults(debugConfig!, workspaceFolder, configSettings);
 
         return this.convertConfigToArgs(debugConfig!, workspaceFolder, options);
@@ -171,10 +173,11 @@ export class DebugLauncher implements ITestDebugLauncher {
         workspaceFolder: WorkspaceFolder,
         options: LaunchOptions,
     ): Promise<LaunchRequestArguments> {
+        const pythonTestAdapterRewriteExperiment = pythonTestAdapterRewriteEnabled(this.serviceContainer);
         const configArgs = debugConfig as LaunchRequestArguments;
         const testArgs =
             options.testProvider === 'unittest' ? options.args.filter((item) => item !== '--debug') : options.args;
-        const script = DebugLauncher.getTestLauncherScript(options.testProvider);
+        const script = DebugLauncher.getTestLauncherScript(options.testProvider, pythonTestAdapterRewriteExperiment);
         const args = script(testArgs);
         const [program] = args;
         configArgs.program = program;
@@ -199,10 +202,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             throw Error(`Invalid debug config "${debugConfig.name}"`);
         }
         launchArgs.request = 'launch';
-
-        // If we are in the pytest rewrite then we must send additional environment variables.
-        const rewriteTestingEnabled = process.env.ENABLE_PYTHON_TESTING_REWRITE;
-        if (options.testProvider === 'pytest' && rewriteTestingEnabled) {
+        if (options.testProvider === 'pytest' && pythonTestAdapterRewriteExperiment) {
             if (options.pytestPort && options.pytestUUID) {
                 launchArgs.env = {
                     ...launchArgs.env,
@@ -226,17 +226,16 @@ export class DebugLauncher implements ITestDebugLauncher {
         return launchArgs;
     }
 
-    private static getTestLauncherScript(testProvider: TestProvider) {
-        const rewriteTestingEnabled = process.env.ENABLE_PYTHON_TESTING_REWRITE;
+    private static getTestLauncherScript(testProvider: TestProvider, pythonTestAdapterRewriteExperiment?: boolean) {
         switch (testProvider) {
             case 'unittest': {
-                if (rewriteTestingEnabled) {
+                if (pythonTestAdapterRewriteExperiment) {
                     return internalScripts.execution_py_testlauncher; // this is the new way to run unittest execution, debugger
                 }
                 return internalScripts.visualstudio_py_testlauncher; // old way unittest execution, debugger
             }
             case 'pytest': {
-                if (rewriteTestingEnabled) {
+                if (pythonTestAdapterRewriteExperiment) {
                     return internalScripts.pytestlauncher; // this is the new way to run pytest execution, debugger
                 }
                 return internalScripts.testlauncher; // old way pytest execution, debugger

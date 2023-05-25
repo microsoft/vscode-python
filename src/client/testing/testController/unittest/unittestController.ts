@@ -251,20 +251,25 @@ export class UnittestController implements ITestFrameworkController {
         testController?: TestController,
     ): Promise<void> {
         const settings = this.configService.getSettings(workspace.uri);
-        return this.runner.runTests(
-            testRun,
-            {
-                workspaceFolder: workspace.uri,
-                cwd:
-                    settings.testing.cwd && settings.testing.cwd.length > 0
-                        ? settings.testing.cwd
-                        : workspace.uri.fsPath,
-                token,
-                args: settings.testing.unittestArgs,
-            },
-            this.idToRawData,
-            testController,
-        );
+        try {
+            return this.runner.runTests(
+                testRun,
+                {
+                    workspaceFolder: workspace.uri,
+                    cwd:
+                        settings.testing.cwd && settings.testing.cwd.length > 0
+                            ? settings.testing.cwd
+                            : workspace.uri.fsPath,
+                    token,
+                    args: settings.testing.unittestArgs,
+                },
+                this.idToRawData,
+                testController,
+            );
+        } catch (ex) {
+            sendTelemetryEvent(EventName.UNITTEST_RUN_ALL_FAILED, undefined);
+            throw new Error(`Failed to run tests: ${ex}`);
+        }
     }
 }
 

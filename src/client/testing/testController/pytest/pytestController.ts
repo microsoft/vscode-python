@@ -285,19 +285,24 @@ export class PytestController implements ITestFrameworkController {
 
     public runTests(testRun: ITestRun, workspace: WorkspaceFolder, token: CancellationToken): Promise<void> {
         const settings = this.configService.getSettings(workspace.uri);
-        return this.runner.runTests(
-            testRun,
-            {
-                workspaceFolder: workspace.uri,
-                cwd:
-                    settings.testing.cwd && settings.testing.cwd.length > 0
-                        ? settings.testing.cwd
-                        : workspace.uri.fsPath,
-                token,
-                args: settings.testing.pytestArgs,
-            },
-            this.idToRawData,
-        );
+        try {
+            return this.runner.runTests(
+                testRun,
+                {
+                    workspaceFolder: workspace.uri,
+                    cwd:
+                        settings.testing.cwd && settings.testing.cwd.length > 0
+                            ? settings.testing.cwd
+                            : workspace.uri.fsPath,
+                    token,
+                    args: settings.testing.pytestArgs,
+                },
+                this.idToRawData,
+            );
+        } catch (ex) {
+            sendTelemetryEvent(EventName.UNITTEST_RUN_ALL_FAILED, undefined);
+            throw new Error(`Failed to run tests: ${ex}`);
+        }
     }
 }
 
