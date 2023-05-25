@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as net from 'net';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
-import { traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceLog, traceVerbose } from '../../../logging';
 import { DataReceivedEvent, ExecutionTestPayload, ITestExecutionAdapter, ITestServer } from '../common/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
@@ -154,7 +154,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                         spawnOptions.extraVariables.RUN_TEST_IDS_PORT = pytestRunTestIdsPort;
                 })
                 .catch((error) => {
-                    traceVerbose('Error starting server:', error);
+                    traceError('Error starting server:', error);
                 });
 
             if (debugBool) {
@@ -177,7 +177,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 const runArgs = [scriptPath, ...testArgs];
 
                 await execService?.exec(runArgs, spawnOptions).catch((ex) => {
-                    traceVerbose(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
+                    traceError(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
                     return Promise.reject(ex);
                 });
             }
