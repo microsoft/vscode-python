@@ -1,13 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Uri } from 'vscode';
+import { TestRun, Uri } from 'vscode';
 import * as path from 'path';
 import * as net from 'net';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
-import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
-import { DataReceivedEvent, ExecutionTestPayload, ITestExecutionAdapter, ITestServer } from '../common/types';
+import { traceError, traceLog, traceVerbose } from '../../../logging';
+import {
+    DataReceivedEvent,
+    ExecutionTestPayload,
+    ITestExecutionAdapter,
+    ITestResultResolver,
+    ITestServer,
+} from '../common/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
@@ -27,39 +33,35 @@ import { EXTENSION_ROOT_DIR } from '../../../common/constants';
 export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     private promiseMap: Map<string, Deferred<ExecutionTestPayload | undefined>> = new Map();
 
-    private deferred: Deferred<ExecutionTestPayload> | undefined;
-
     constructor(
         public testServer: ITestServer,
         public configSettings: IConfigurationService,
         private readonly outputChannel: ITestOutputChannel,
-    ) {
-        testServer.onDataReceived(this.onDataReceivedHandler, this);
-    }
-
-    public onDataReceivedHandler({ uuid, data }: DataReceivedEvent): void {
-        const deferred = this.promiseMap.get(uuid);
-        if (deferred) {
-            deferred.resolve(JSON.parse(data));
-            this.promiseMap.delete(uuid);
-        }
-    }
+        private readonly resultResolver?: ITestResultResolver,
+    ) {}
 
     async runTests(
         uri: Uri,
         testIds: string[],
         debugBool?: boolean,
+        runInstance?: TestRun,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
-        if (executionFactory !== undefined) {
-            // ** new version of run tests.
-            return this.runTestsNew(uri, testIds, debugBool, executionFactory, debugLauncher);
+        traceVerbose(uri, testIds, debugBool);
+        const disposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
+            if (runInstance) {
+                this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance);
+            }
+        });
+        try {
+            await this.runTestsNew(uri, testIds, debugBool, executionFactory, debugLauncher);
+        } finally {
+            disposable.dispose();
+            // confirm with testing that this gets called (it must clean this up)
         }
-        // if executionFactory is undefined, we are using the old method signature of run tests.
-        this.outputChannel.appendLine('Running tests.');
-        this.deferred = createDeferred<ExecutionTestPayload>();
-        return this.deferred.promise;
+        const executionPayload: ExecutionTestPayload = { cwd: uri.fsPath, status: 'success', error: '' };
+        return executionPayload;
     }
 
     private async runTestsNew(
