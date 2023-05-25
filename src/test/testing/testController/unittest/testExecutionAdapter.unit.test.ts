@@ -27,10 +27,9 @@
 //         let options: TestCommandOptions | undefined;
 
 //         const stubTestServer = ({
-//             sendCommand(opt: TestCommandOptions, runTestIdPort?: string): Promise<void> {
+//             sendCommand(opt: TestCommandOptions): Promise<void> {
 //                 delete opt.outChannel;
 //                 options = opt;
-//                 assert(runTestIdPort !== undefined);
 //                 return Promise.resolve();
 //             },
 //             onDataReceived: () => {
@@ -43,17 +42,18 @@
 //         const script = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'execution.py');
 
 //         const adapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings, outputChannel.object);
-//         adapter.runTests(uri, [], false).then(() => {
-//             const expectedOptions: TestCommandOptions = {
-//                 workspaceFolder: uri,
-//                 command: { script, args: ['--udiscovery', '-v', '-s', '.', '-p', 'test*'] },
-//                 cwd: uri.fsPath,
-//                 uuid: '123456789',
-//                 debugBool: false,
-//                 testIds: [],
-//             };
-//             assert.deepStrictEqual(options, expectedOptions);
-//         });
+//         adapter.runTests(uri, [], false);
+
+//         const expectedOptions: TestCommandOptions = {
+//             workspaceFolder: uri,
+//             command: { script, args: ['--udiscovery', '-v', '-s', '.', '-p', 'test*'] },
+//             cwd: uri.fsPath,
+//             uuid: '123456789',
+//             debugBool: false,
+//             testIds: [],
+//         };
+
+//         assert.deepStrictEqual(options, expectedOptions);
 //     });
 //     test("onDataReceivedHandler should parse the data if the cwd from the payload matches the test adapter's cwd", async () => {
 //         const stubTestServer = ({
