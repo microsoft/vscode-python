@@ -25,6 +25,7 @@ export type SpawnOptions = ChildProcessSpawnOptions & {
     throwOnStdErr?: boolean;
     extraVariables?: NodeJS.ProcessEnv;
     outputChannel?: OutputChannel;
+    stdinStr?: string;
 };
 
 export type ShellOptions = ExecOptions & { throwOnStdErr?: boolean };

@@ -29,13 +29,7 @@ import {
     getTestCaseNodes,
     RunTestTag,
 } from './common/testItemUtilities';
-import {
-    DiscoveredTestItem,
-    DiscoveredTestNode,
-    DiscoveredTestType,
-    ITestDiscoveryAdapter,
-    ITestExecutionAdapter,
-} from './common/types';
+import { DiscoveredTestItem, DiscoveredTestNode, ITestDiscoveryAdapter, ITestExecutionAdapter } from './common/types';
 import { fixLogLines } from './common/utils';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { ITestDebugLauncher } from '../common/types';
@@ -288,8 +282,6 @@ export class WorkspaceTestAdapter {
     public async discoverTests(
         testController: TestController,
         token?: CancellationToken,
-        isMultiroot?: boolean,
-        workspaceFilePath?: string,
         executionFactory?: IPythonExecutionFactory,
     ): Promise<void> {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: this.testProvider });
@@ -348,12 +340,11 @@ export class WorkspaceTestAdapter {
             const testingErrorConst =
                 this.testProvider === 'pytest' ? Testing.errorPytestDiscovery : Testing.errorUnittestDiscovery;
             const { errors } = rawTestData;
-            traceError(testingErrorConst, '\r\n', errors!.join('\r\n\r\n'));
-
+            traceError(testingErrorConst, '\r\n', errors?.join('\r\n\r\n'));
             let errorNode = testController.items.get(`DiscoveryError:${workspacePath}`);
             const message = util.format(
                 `${testingErrorConst} ${Testing.seePythonOutput}\r\n`,
-                errors!.join('\r\n\r\n'),
+                errors?.join('\r\n\r\n'),
             );
 
             if (errorNode === undefined) {
@@ -366,39 +357,6 @@ export class WorkspaceTestAdapter {
             // Remove the error node if necessary,
             // then parse and insert test data.
             testController.items.delete(`DiscoveryError:${workspacePath}`);
-
-            // Wrap the data under a root node named after the test provider.
-            const wrappedTests = rawTestData.tests;
-
-            // If we are in a multiroot workspace scenario, wrap the current folder's test result in a tree under the overall root + the current folder name.
-            let rootPath = workspacePath;
-            let childrenRootPath = rootPath;
-            let childrenRootName = path.basename(rootPath);
-
-            if (isMultiroot) {
-                rootPath = workspaceFilePath!;
-                childrenRootPath = workspacePath;
-                childrenRootName = path.basename(workspacePath);
-            }
-
-            const children = [
-                {
-                    path: childrenRootPath,
-                    name: childrenRootName,
-                    type_: 'folder' as DiscoveredTestType,
-                    id_: childrenRootPath,
-                    children: wrappedTests ? [wrappedTests] : [],
-                },
-            ];
-
-            // Update the raw test data with the wrapped data.
-            rawTestData.tests = {
-                path: rootPath,
-                name: this.testProvider,
-                type_: 'folder',
-                id_: rootPath,
-                children,
-            };
 
             if (rawTestData.tests) {
                 // If the test root for this folder exists: Workspace refresh, update its children.

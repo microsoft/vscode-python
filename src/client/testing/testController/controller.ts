@@ -256,8 +256,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     testAdapter.discoverTests(
                         this.testController,
                         this.refreshCancellation.token,
-                        this.testAdapters.size > 1,
-                        this.workspaceService.workspaceFile?.fsPath,
                         this.pythonExecFactory,
                     );
                 } else {
@@ -276,8 +274,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     testAdapter.discoverTests(
                         this.testController,
                         this.refreshCancellation.token,
-                        this.testAdapters.size > 1,
-                        this.workspaceService.workspaceFile?.fsPath,
+                        this.pythonExecFactory,
                     );
                 } else {
                     // else use OLD test discovery mechanism
