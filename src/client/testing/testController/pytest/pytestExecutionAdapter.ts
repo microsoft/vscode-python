@@ -154,7 +154,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                         spawnOptions.extraVariables.RUN_TEST_IDS_PORT = pytestRunTestIdsPort;
                 })
                 .catch((error) => {
-                    console.error('Error starting server:', error);
+                    traceVerbose('Error starting server:', error);
                 });
 
             if (debugBool) {
@@ -169,7 +169,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     pytestUUID,
                     pytestRunTestIdsPort,
                 };
-                console.debug(`Running debug test with arguments: ${testArgs.join(' ')}\r\n`);
+                traceVerbose(`Running debug test with arguments: ${testArgs.join(' ')}\r\n`);
                 await debugLauncher!.launchDebugger(launchOptions);
             } else {
                 // combine path to run script with run args
@@ -177,12 +177,12 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 const runArgs = [scriptPath, ...testArgs];
 
                 await execService?.exec(runArgs, spawnOptions).catch((ex) => {
-                    console.debug(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
+                    traceVerbose(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
                     return Promise.reject(ex);
                 });
             }
         } catch (ex) {
-            console.debug(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
+            traceVerbose(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
             return Promise.reject(ex);
         }
 
