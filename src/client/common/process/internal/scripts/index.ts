@@ -110,6 +110,13 @@ export function testlauncher(testArgs: string[]): string[] {
     return [script, ...testArgs];
 }
 
+// run_pytest_script.py
+export function pytestlauncher(testArgs: string[]): string[] {
+    const script = path.join(SCRIPTS_DIR, 'vscode_pytest', 'run_pytest_script.py');
+    // There is no output to parse, so we do not return a function.
+    return [script, ...testArgs];
+}
+
 // visualstudio_py_testlauncher.py
 
 // eslint-disable-next-line camelcase
