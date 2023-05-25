@@ -48,8 +48,6 @@ import { WorkspaceTestAdapter } from './workspaceTestAdapter';
 import { ITestDebugLauncher } from '../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonResultResolver } from './common/resultResolver';
-import { pythonTestAdapterRewriteEnabled } from './common/utils';
-import { IServiceContainer } from '../../ioc/types';
 
 // Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
 type EventPropertyType = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_TRIGGER];
