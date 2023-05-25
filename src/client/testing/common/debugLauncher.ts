@@ -181,12 +181,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         const args = script(testArgs);
         const [program] = args;
         configArgs.program = program;
-        // if the test provider is pytest, then use the pytest module instead of using a program
-        const rewriteTestingEnabled = process.env.ENABLE_PYTHON_TESTING_REWRITE;
-        if (options.testProvider === 'pytest' && rewriteTestingEnabled) {
-            configArgs.module = 'pytest';
-            configArgs.program = undefined;
-        }
+
         configArgs.args = args.slice(1);
         // We leave configArgs.request as "test" so it will be sent in telemetry.
 
@@ -213,6 +208,7 @@ export class DebugLauncher implements ITestDebugLauncher {
                     ...launchArgs.env,
                     TEST_PORT: options.pytestPort,
                     TEST_UUID: options.pytestUUID,
+                    RUN_TEST_IDS_PORT: options.pytestRunTestIdsPort,
                 };
             } else {
                 throw Error(
@@ -240,7 +236,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             }
             case 'pytest': {
                 if (pythonTestAdapterRewriteExperiment) {
-                    return (testArgs: string[]) => testArgs;
+                    return internalScripts.pytestlauncher; // this is the new way to run pytest execution, debugger
                 }
                 return internalScripts.testlauncher; // old way pytest execution, debugger
             }
