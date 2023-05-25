@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { Uri } from 'vscode';
-import * as net from 'net';
+import { TestRun, Uri } from 'vscode';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
@@ -11,6 +10,7 @@ import {
     DataReceivedEvent,
     ExecutionTestPayload,
     ITestExecutionAdapter,
+    ITestResultResolver,
     ITestServer,
     TestCommandOptions,
     TestExecutionCommand,
@@ -30,19 +30,15 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         public testServer: ITestServer,
         public configSettings: IConfigurationService,
         private readonly outputChannel: ITestOutputChannel,
-    ) {
-        testServer.onDataReceived(this.onDataReceivedHandler, this);
-    }
+        private readonly resultResolver?: ITestResultResolver,
+    ) {}
 
-    public onDataReceivedHandler({ uuid, data }: DataReceivedEvent): void {
-        const deferred = this.promiseMap.get(uuid);
-        if (deferred) {
-            deferred.resolve(JSON.parse(data));
-            this.promiseMap.delete(uuid);
-        }
-    }
-
-    public async runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload> {
+    public async runTests(
+        uri: Uri,
+        testIds: string[],
+        debugBool?: boolean,
+        runInstance?: TestRun,
+    ): Promise<ExecutionTestPayload> {
         const settings = this.configSettings.getSettings(uri);
         const { unittestArgs } = settings.testing;
 
@@ -107,7 +103,10 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                 traceError('Error starting server:', error);
             });
 
-        return deferred.promise;
+    private async callSendCommand(options: TestCommandOptions): Promise<ExecutionTestPayload> {
+        await this.testServer.sendCommand(options);
+        const executionPayload: ExecutionTestPayload = { cwd: '', status: 'success', error: '' };
+        return executionPayload;
     }
 }
 
