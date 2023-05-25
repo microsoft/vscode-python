@@ -57,7 +57,6 @@ export function jsonRPCContent(headers: Map<string, string>, rawData: string): I
     };
 }
 
-
 export function pythonTestAdapterRewriteEnabled(serviceContainer: IServiceContainer): boolean {
     const experiment = serviceContainer.get<IExperimentService>(IExperimentService);
     return experiment.inExperimentSync(EnableTestAdapterRewrite.experiment);
@@ -98,4 +97,3 @@ export const startServer = (testIds: string): Promise<number> =>
             reject(error);
         });
     });
- 
