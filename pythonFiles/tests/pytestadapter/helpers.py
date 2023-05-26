@@ -1,18 +1,15 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
-import contextlib
 import io
 import json
 import os
 import pathlib
-import random
 import socket
 import subprocess
 import sys
 import threading
 import uuid
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 from typing_extensions import TypedDict
@@ -70,31 +67,29 @@ Env_Dict = TypedDict(
 )
 
 
-def process_rpc_json(data: str) -> Dict[str, Any]:
+def process_rpc_message(data: str) -> Tuple[Dict[str, Any], str]:
     """Process the JSON data which comes from the server which runs the pytest discovery."""
     str_stream: io.StringIO = io.StringIO(data)
 
     length: int = 0
-
     while True:
         line: str = str_stream.readline()
         if CONTENT_LENGTH.lower() in line.lower():
             length = int(line[len(CONTENT_LENGTH) :])
             break
-
         if not line or line.isspace():
             raise ValueError("Header does not contain Content-Length")
-
     while True:
         line: str = str_stream.readline()
         if not line or line.isspace():
             break
 
     raw_json: str = str_stream.read(length)
-    return json.loads(raw_json)
+    dict_json: Dict[str, Any] = json.loads(raw_json)
+    return dict_json, str_stream.read()
 
 
-def runner(args: List[str]) -> Optional[Dict[str, Any]]:
+def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
     """Run the pytest discovery and return the JSON data from the server."""
     process_args: List[str] = [
         sys.executable,
@@ -133,7 +128,19 @@ def runner(args: List[str]) -> Optional[Dict[str, Any]]:
     t1.join()
     t2.join()
 
-    return process_rpc_json(result[0]) if result else None
+    a = process_rpc_json(result[0])
+    return a if result else None
+
+
+def process_rpc_json(data: str) -> List[Dict[str, Any]]:
+    """Process the JSON data which comes from the server which runs the pytest discovery."""
+    json_messages = []
+    remaining = data
+    while remaining:
+        json_data, remaining = process_rpc_message(remaining)
+        json_messages.append(json_data)
+
+    return json_messages
 
 
 def _listen_on_socket(listener: socket.socket, result: List[str]):

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 import os
 import shutil
+from typing import Any, Dict, List, Optional
 
 import pytest
 
@@ -28,12 +29,15 @@ def test_syntax_error(tmp_path):
     temp_dir.mkdir()
     p = temp_dir / "error_syntax_discovery.py"
     shutil.copyfile(file_path, p)
-    actual = runner(["--collect-only", os.fspath(p)])
-    assert actual
-    assert all(item in actual for item in ("status", "cwd", "error"))
-    assert actual["status"] == "error"
-    assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    assert len(actual["error"]) == 2
+    actual_list: Optional[List[Dict[str, Any]]] = runner(
+        ["--collect-only", os.fspath(p)]
+    )
+    assert actual_list
+    for actual in actual_list:
+        assert all(item in actual for item in ("status", "cwd", "error"))
+        assert actual["status"] == "error"
+        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+        assert len(actual["error"]) == 2
 
 
 def test_parameterized_error_collect():
@@ -42,12 +46,15 @@ def test_parameterized_error_collect():
     The json should still be returned but the errors list should be present.
     """
     file_path_str = "error_parametrize_discovery.py"
-    actual = runner(["--collect-only", file_path_str])
-    assert actual
-    assert all(item in actual for item in ("status", "cwd", "error"))
-    assert actual["status"] == "error"
-    assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    assert len(actual["error"]) == 2
+    actual_list: Optional[List[Dict[str, Any]]] = runner(
+        ["--collect-only", file_path_str]
+    )
+    assert actual_list
+    for actual in actual_list:
+        assert all(item in actual for item in ("status", "cwd", "error"))
+        assert actual["status"] == "error"
+        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+        assert len(actual["error"]) == 2
 
 
 @pytest.mark.parametrize(
@@ -98,14 +105,15 @@ def test_pytest_collect(file, expected_const):
     file -- a string with the file or folder to run pytest discovery on.
     expected_const -- the expected output from running pytest discovery on the file.
     """
-    actual = runner(
+    actual_list: Optional[List[Dict[str, Any]]] = runner(
         [
             "--collect-only",
             os.fspath(TEST_DATA_PATH / file),
         ]
     )
-    assert actual
-    assert all(item in actual for item in ("status", "cwd", "tests"))
-    assert actual["status"] == "success"
-    assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    assert actual["tests"] == expected_const
+    assert actual_list
+    for actual in actual_list:
+        assert all(item in actual for item in ("status", "cwd", "tests"))
+        assert actual["status"] == "success"
+        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+        assert actual["tests"] == expected_const

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 import os
 import shutil
+from typing import Any, Dict, List, Optional
 
 import pytest
 from tests.pytestadapter import expected_execution_test_output
@@ -13,7 +14,7 @@ def test_syntax_error_execution(tmp_path):
     """Test pytest execution on a file that has a syntax error.
 
     Copies the contents of a .txt file to a .py file in the temporary directory
-    to then run pytest exeuction on.
+    to then run pytest execution on.
 
     The json should still be returned but the errors list should be present.
 
@@ -28,12 +29,15 @@ def test_syntax_error_execution(tmp_path):
     temp_dir.mkdir()
     p = temp_dir / "error_syntax_discovery.py"
     shutil.copyfile(file_path, p)
-    actual = runner(["error_syntax_discover.py::test_function"])
-    assert actual
-    assert all(item in actual for item in ("status", "cwd", "error"))
-    assert actual["status"] == "error"
-    assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    assert len(actual["error"]) == 1
+    actual_list: Optional[List[Dict[str, Any]]] = runner(
+        ["error_syntax_discover.py::test_function"]
+    )
+    assert actual_list
+    for actual in actual_list:
+        assert all(item in actual for item in ("status", "cwd", "error"))
+        assert actual["status"] == "error"
+        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+        assert len(actual["error"]) == 1
 
 
 def test_bad_id_error_execution():
@@ -41,12 +45,13 @@ def test_bad_id_error_execution():
 
     The json should still be returned but the errors list should be present.
     """
-    actual = runner(["not/a/real::test_id"])
-    assert actual
-    assert all(item in actual for item in ("status", "cwd", "error"))
-    assert actual["status"] == "error"
-    assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    assert len(actual["error"]) == 1
+    actual_list: Optional[List[Dict[str, Any]]] = runner(["not/a/real::test_id"])
+    assert actual_list
+    for actual in actual_list:
+        assert all(item in actual for item in ("status", "cwd", "error"))
+        assert actual["status"] == "error"
+        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+        assert len(actual["error"]) == 1
 
 
 @pytest.mark.parametrize(
@@ -153,13 +158,14 @@ def test_pytest_execution(test_ids, expected_const):
     expected_const -- a dictionary of the expected output from running pytest discovery on the files.
     """
     args = test_ids
-    actual = runner(args)
-    assert actual
-    assert all(item in actual for item in ("status", "cwd", "result"))
-    assert actual["status"] == "success"
-    assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    result_data = actual["result"]
-    for key in result_data:
-        if result_data[key]["outcome"] == "failure":
-            result_data[key]["message"] = "ERROR MESSAGE"
-    assert result_data == expected_const
+    actual_list: Optional[List[Dict[str, Any]]] = runner(args)
+    assert actual_list
+    for actual in actual_list:
+        assert all(item in actual for item in ("status", "cwd", "result"))
+        assert actual["status"] == "success"
+        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+        result_data = actual["result"]
+        for key in result_data:
+            if result_data[key]["outcome"] == "failure":
+                result_data[key]["message"] = "ERROR MESSAGE"
+        assert result_data == expected_const
