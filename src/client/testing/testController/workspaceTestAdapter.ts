@@ -151,7 +151,7 @@ export class WorkspaceTestAdapter {
             const errorNode = createErrorTestItem(testController, options);
             testController.items.add(errorNode);
 
-            deferred.reject(ex as Error);
+            return deferred.reject(ex as Error);
         } finally {
             // Discovery has finished running, we have the data,
             // we don't need the deferred promise anymore.
