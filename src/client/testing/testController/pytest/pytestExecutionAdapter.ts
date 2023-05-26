@@ -189,6 +189,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             return Promise.reject(ex);
         }
 
-        return deferred.promise;
+        const executionPayload: ExecutionTestPayload = { cwd: uri.fsPath, status: 'success', error: '' };
+        return executionPayload;
     }
 }
