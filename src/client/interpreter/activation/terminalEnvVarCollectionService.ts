@@ -3,7 +3,14 @@
 
 import * as path from 'path';
 import { inject, injectable } from 'inversify';
-import { ProgressOptions, ProgressLocation, MarkdownString, WorkspaceFolder } from 'vscode';
+import {
+    ProgressOptions,
+    ProgressLocation,
+    MarkdownString,
+    WorkspaceFolder,
+    EnvironmentVariableCollection,
+    EnvironmentVariableScope,
+} from 'vscode';
 import { pathExists } from 'fs-extra';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell, IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
@@ -108,6 +115,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             undefined,
             shell,
         );
+        const envVarCollection = this.getEnvironmentVariableCollection(workspaceFolder);
         if (!env) {
             const shellType = identifyShellFromShellPath(shell);
             const defaultShell = defaultShells[this.platform.osType];
@@ -117,7 +125,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 await this._applyCollection(resource, defaultShell?.shell);
                 return;
             }
-            this.context.environmentVariableCollection.clear({ workspaceFolder });
+            envVarCollection.clear();
             this.previousEnvVars = _normCaseKeys(process.env);
             return;
         }
@@ -129,10 +137,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             if (prevValue !== value) {
                 if (value !== undefined) {
                     traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
-                    this.context.environmentVariableCollection.replace(key, value, { workspaceFolder });
+                    envVarCollection.replace(key, value, { applyAtShellIntegration: true });
                 } else {
                     traceVerbose(`Clearing environment variable ${key} from collection`);
-                    this.context.environmentVariableCollection.delete(key, { workspaceFolder });
+                    envVarCollection.delete(key);
                 }
             }
         });
@@ -140,14 +148,21 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             // If the previous env var is not in the current env, clear it from collection.
             if (!(key in env)) {
                 traceVerbose(`Clearing environment variable ${key} from collection`);
-                this.context.environmentVariableCollection.delete(key, { workspaceFolder });
+                envVarCollection.delete(key);
             }
         });
         const displayPath = this.pathUtils.getDisplayName(settings.pythonPath, workspaceFolder?.uri.fsPath);
         const description = new MarkdownString(`${Interpreters.activateTerminalDescription} \`${displayPath}\``);
-        this.context.environmentVariableCollection.setDescription(description, {
-            workspaceFolder,
-        });
+        envVarCollection.description = description;
+    }
+
+    private getEnvironmentVariableCollection(workspaceFolder?: WorkspaceFolder) {
+        const envVarCollection = this.context.environmentVariableCollection as EnvironmentVariableCollection & {
+            getScopedEnvironmentVariableCollection(scope: EnvironmentVariableScope): EnvironmentVariableCollection;
+        };
+        return workspaceFolder
+            ? envVarCollection.getScopedEnvironmentVariableCollection({ workspaceFolder })
+            : envVarCollection;
     }
 
     private async handleMicroVenv(resource: Resource) {
@@ -156,12 +171,11 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         if (interpreter?.envType === EnvironmentType.Venv) {
             const activatePath = path.join(path.dirname(interpreter.path), 'activate');
             if (!(await pathExists(activatePath))) {
-                this.context.environmentVariableCollection.replace(
+                const envVarCollection = this.getEnvironmentVariableCollection(workspaceFolder);
+                envVarCollection.replace(
                     'PATH',
                     `${path.dirname(interpreter.path)}${path.delimiter}${process.env.Path}`,
-                    {
-                        workspaceFolder,
-                    },
+                    { applyAtShellIntegration: true },
                 );
                 return;
             }

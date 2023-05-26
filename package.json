@@ -24,7 +24,8 @@
         "testObserver",
         "quickPickItemTooltip",
         "envCollectionWorkspace",
-        "saveEditor"
+        "saveEditor",
+        "envCollectionOptions"
     ],
     "author": {
         "name": "Microsoft Corporation"
@@ -45,7 +46,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.78.0-20230421"
+        "vscode": "^1.79.0-20230526"
     },
     "keywords": [
         "python",

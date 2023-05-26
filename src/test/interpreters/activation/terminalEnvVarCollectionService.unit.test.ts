@@ -7,7 +7,13 @@ import * as sinon from 'sinon';
 import { assert, expect } from 'chai';
 import { cloneDeep } from 'lodash';
 import { mock, instance, when, anything, verify, reset } from 'ts-mockito';
-import { EnvironmentVariableCollection, ProgressLocation, Uri, WorkspaceFolder } from 'vscode';
+import {
+    EnvironmentVariableCollection,
+    EnvironmentVariableScope,
+    ProgressLocation,
+    Uri,
+    WorkspaceFolder,
+} from 'vscode';
 import {
     IApplicationShell,
     IApplicationEnvironment,
@@ -39,7 +45,10 @@ suite('Terminal Environment Variable Collection Service', () => {
     let context: IExtensionContext;
     let shell: IApplicationShell;
     let experimentService: IExperimentService;
-    let collection: EnvironmentVariableCollection;
+    let collection: EnvironmentVariableCollection & {
+        getScopedEnvironmentVariableCollection(scope: EnvironmentVariableScope): EnvironmentVariableCollection;
+    };
+    let scopedCollection: EnvironmentVariableCollection;
     let applicationEnvironment: IApplicationEnvironment;
     let environmentActivationService: IEnvironmentActivationService;
     let workspaceService: IWorkspaceService;
@@ -62,7 +71,13 @@ suite('Terminal Environment Variable Collection Service', () => {
         interpreterService = mock<IInterpreterService>();
         context = mock<IExtensionContext>();
         shell = mock<IApplicationShell>();
-        collection = mock<EnvironmentVariableCollection>();
+        collection = mock<
+            EnvironmentVariableCollection & {
+                getScopedEnvironmentVariableCollection(scope: EnvironmentVariableScope): EnvironmentVariableCollection;
+            }
+        >();
+        scopedCollection = mock<EnvironmentVariableCollection>();
+        when(collection.getScopedEnvironmentVariableCollection(anything())).thenReturn(instance(scopedCollection));
         when(context.environmentVariableCollection).thenReturn(instance(collection));
         experimentService = mock<IExperimentService>();
         when(experimentService.inExperimentSync(TerminalEnvVarActivation.experiment)).thenReturn(true);
@@ -166,12 +181,12 @@ suite('Terminal Environment Variable Collection Service', () => {
         ).thenResolve(envVars);
 
         when(collection.replace(anything(), anything(), anything())).thenResolve();
-        when(collection.delete(anything(), anything())).thenResolve();
+        when(collection.delete(anything())).thenResolve();
 
         await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
 
         verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
-        verify(collection.delete('PATH', anything())).once();
+        verify(collection.delete('PATH')).once();
     });
 
     test('Verify envs are not applied if env activation is disabled', async () => {
@@ -187,7 +202,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         ).thenResolve(envVars);
 
         when(collection.replace(anything(), anything(), anything())).thenResolve();
-        when(collection.delete(anything(), anything())).thenResolve();
+        when(collection.delete(anything())).thenResolve();
         reset(configService);
         when(configService.getSettings(anything())).thenReturn(({
             terminal: { activateEnvironment: false },
@@ -197,10 +212,10 @@ suite('Terminal Environment Variable Collection Service', () => {
         await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
 
         verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).never();
-        verify(collection.delete('PATH', anything())).never();
+        verify(collection.delete('PATH')).never();
     });
 
-    test('Verify correct scope is used when applying envs and setting description', async () => {
+    test('Verify correct options are used when applying envs and setting description', async () => {
         const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ..._normCaseKeys(process.env) };
         delete envVars.PATH;
         const resource = Uri.file('a');
@@ -214,25 +229,16 @@ suite('Terminal Environment Variable Collection Service', () => {
             environmentActivationService.getActivatedEnvironmentVariables(resource, undefined, undefined, customShell),
         ).thenResolve(envVars);
 
-        when(collection.replace(anything(), anything(), anything())).thenCall((_e, _v, scope) => {
-            assert.deepEqual(scope, { workspaceFolder });
+        when(scopedCollection.replace(anything(), anything(), anything())).thenCall((_e, _v, options) => {
+            assert.deepEqual(options, { applyAtShellIntegration: true });
             return Promise.resolve();
         });
-        when(collection.delete(anything(), anything())).thenCall((_e, scope) => {
-            assert.deepEqual(scope, { workspaceFolder });
-            return Promise.resolve();
-        });
-        let description = '';
-        when(collection.setDescription(anything(), anything())).thenCall((d, scope) => {
-            assert.deepEqual(scope, { workspaceFolder });
-            description = d.value;
-        });
+        when(scopedCollection.delete(anything())).thenResolve();
 
         await terminalEnvVarCollectionService._applyCollection(resource, customShell);
 
-        verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
-        verify(collection.delete('PATH', anything())).once();
-        expect(description).to.equal(`${Interpreters.activateTerminalDescription} \`${displayPath}\``);
+        verify(scopedCollection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
+        verify(scopedCollection.delete('PATH')).once();
     });
 
     test('Only relative changes to previously applied variables are applied to the collection', async () => {
@@ -251,7 +257,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         ).thenResolve(envVars);
 
         when(collection.replace(anything(), anything(), anything())).thenResolve();
-        when(collection.delete(anything(), anything())).thenResolve();
+        when(collection.delete(anything())).thenResolve();
 
         await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
 
@@ -270,8 +276,8 @@ suite('Terminal Environment Variable Collection Service', () => {
 
         await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
 
-        verify(collection.delete('CONDA_PREFIX', anything())).once();
-        verify(collection.delete('RANDOM_VAR', anything())).once();
+        verify(collection.delete('CONDA_PREFIX')).once();
+        verify(collection.delete('RANDOM_VAR')).once();
     });
 
     test('If no activated variables are returned for custom shell, fallback to using default shell', async () => {
@@ -294,12 +300,12 @@ suite('Terminal Environment Variable Collection Service', () => {
         ).thenResolve(envVars);
 
         when(collection.replace(anything(), anything(), anything())).thenResolve();
-        when(collection.delete(anything(), anything())).thenResolve();
+        when(collection.delete(anything())).thenResolve();
 
         await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
 
         verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
-        verify(collection.delete(anything(), anything())).never();
+        verify(collection.delete(anything())).never();
     });
 
     test('If no activated variables are returned for default shell, clear collection', async () => {
@@ -313,12 +319,10 @@ suite('Terminal Environment Variable Collection Service', () => {
         ).thenResolve(undefined);
 
         when(collection.replace(anything(), anything(), anything())).thenResolve();
-        when(collection.delete(anything(), anything())).thenResolve();
-        when(collection.setDescription(anything(), anything())).thenReturn();
+        when(collection.delete(anything())).thenResolve();
 
         await terminalEnvVarCollectionService._applyCollection(undefined, defaultShell?.shell);
 
-        verify(collection.clear(anything())).once();
-        verify(collection.setDescription(anything(), anything())).never();
+        verify(collection.clear()).once();
     });
 });
