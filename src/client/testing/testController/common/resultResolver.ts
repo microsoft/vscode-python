@@ -22,7 +22,7 @@ import {
     ITestResultResolver,
 } from './types';
 import { TestProvider } from '../../types';
-import { traceError } from '../../../logging';
+import { traceError, traceLog } from '../../../logging';
 import { Testing } from '../../../common/utils/localize';
 import {
     DebugTestTag,
@@ -59,6 +59,7 @@ export class PythonResultResolver implements ITestResultResolver {
 
     public resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): Promise<void> {
         const workspacePath = this.workspaceUri.fsPath;
+        traceLog('Using result resolver for discovery');
 
         const rawTestData = payload;
         if (!rawTestData) {
