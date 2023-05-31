@@ -9,7 +9,7 @@ import {
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
-import { traceLog } from '../../../logging';
+import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
@@ -36,12 +36,12 @@ export class PythonTestServer implements ITestServer, Disposable {
                         const uuid = rpcHeaders.headers.get(JSONRPC_UUID_HEADER);
                         const totalContentLength = rpcHeaders.headers.get('Content-Length');
                         if (!uuid) {
-                            traceLog('On data received: Error occurred because payload UUID is undefined');
+                            traceError('On data received: Error occurred because payload UUID is undefined');
                             this._onDataReceived.fire({ uuid: '', data: '' });
                             return;
                         }
                         if (!this.uuids.includes(uuid)) {
-                            traceLog('On data received: Error occurred because the payload UUID is not recognized');
+                            traceError('On data received: Error occurred because the payload UUID is not recognized');
                             this._onDataReceived.fire({ uuid: '', data: '' });
                             return;
                         }
@@ -50,6 +50,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                         const extractedData = rpcContent.extractedJSON;
                         if (extractedData.length === Number(totalContentLength)) {
                             // do not send until we have the full content
+                            traceVerbose(`Received data from test server: ${extractedData}`);
                             this._onDataReceived.fire({ uuid, data: extractedData });
                             this.uuids = this.uuids.filter((u) => u !== uuid);
                             buffer = Buffer.alloc(0);
@@ -58,7 +59,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                         }
                     }
                 } catch (ex) {
-                    traceLog(`Error processing test server request: ${ex} observe`);
+                    traceError(`Error processing test server request: ${ex} observe`);
                     this._onDataReceived.fire({ uuid: '', data: '' });
                 }
             });
@@ -114,6 +115,8 @@ export class PythonTestServer implements ITestServer, Disposable {
             outputChannel: options.outChannel,
         };
 
+        const isRun = !options.testIds;
+
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
@@ -154,9 +157,16 @@ export class PythonTestServer implements ITestServer, Disposable {
                     token: options.token,
                     testProvider: UNITTEST_PROVIDER,
                 };
-
+                traceInfo(`Running DEBUG unittest with arguments: ${args}\r\n`);
                 await this.debugLauncher!.launchDebugger(launchOptions);
             } else {
+                if (isRun) {
+                    // This means it is running the test
+                    traceInfo(`Running unittests with arguments: ${args}\r\n`);
+                } else {
+                    // This means it is running discovery
+                    traceLog(`Discovering unittest tests with arguments: ${args}\r\n`);
+                }
                 await execService.exec(args, spawnOptions);
             }
         } catch (ex) {

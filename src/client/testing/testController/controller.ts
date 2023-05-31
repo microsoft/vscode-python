@@ -24,7 +24,7 @@ import { IConfigurationService, IDisposableRegistry, ITestOutputChannel, Resourc
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { traceError, traceVerbose } from '../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../logging';
 import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
@@ -243,14 +243,14 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.refreshingStartedEvent.fire();
         if (uri) {
             const settings = this.configSettings.getSettings(uri);
-            traceVerbose(`Testing: Refreshing test data for ${uri.fsPath}`);
+            const workspace = this.workspaceService.getWorkspaceFolder(uri);
+            traceInfo(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
+            // Ensure we send test telemetry if it gets disabled again
+            this.sendTestDisabledTelemetry = true;
+            // ** experiment to roll out NEW test discovery mechanism
             if (settings.testing.pytestEnabled) {
-                // Ensure we send test telemetry if it gets disabled again
-                this.sendTestDisabledTelemetry = true;
-                // ** experiment to roll out NEW test discovery mechanism
                 if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
-                    const workspace = this.workspaceService.getWorkspaceFolder(uri);
-                    traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
+                    traceInfo(`Running discovery for pytest using the new test adapter.`);
                     const testAdapter =
                         this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
                     testAdapter.discoverTests(
@@ -263,12 +263,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
                 }
             } else if (settings.testing.unittestEnabled) {
-                // ** Ensure we send test telemetry if it gets disabled again
-                this.sendTestDisabledTelemetry = true;
-                // ** experiment to roll out NEW test discovery mechanism
                 if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
-                    const workspace = this.workspaceService.getWorkspaceFolder(uri);
-                    traceVerbose(`Discover tests for workspace name: ${workspace?.name} - uri: ${uri.fsPath}`);
+                    traceInfo(`Running discovery for unittest using the new test adapter.`);
                     const testAdapter =
                         this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
                     testAdapter.discoverTests(
@@ -288,7 +284,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 // If we are here we may have to remove an existing node from the tree
                 // This handles the case where user removes test settings. Which should remove the
                 // tests for that particular case from the tree view
-                const workspace = this.workspaceService.getWorkspaceFolder(uri);
                 if (workspace) {
                     const toDelete: string[] = [];
                     this.testController.items.forEach((i: TestItem) => {
