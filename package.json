@@ -1602,6 +1602,12 @@
                 },
                 {
                     "category": "Python",
+                    "command": "python.createEnvironment-button",
+                    "title": "%python.command.python.createEnvironment.title%",
+                    "when": "false"
+                },
+                {
+                    "category": "Python",
                     "command": "python.createTerminal",
                     "title": "%python.command.python.createTerminal.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported"
@@ -1629,14 +1635,14 @@
                     "command": "python.execInTerminal-icon",
                     "icon": "$(play)",
                     "title": "%python.command.python.execInTerminalIcon.title%",
-                    "when": "false && editorLangId == python"
+                    "when": "false"
                 },
                 {
                     "category": "Python",
                     "command": "python.execInDedicatedTerminal",
                     "icon": "$(play)",
                     "title": "%python.command.python.execInDedicatedTerminal.title%",
-                    "when": "false && editorLangId == python"
+                    "when": "false"
                 },
                 {
                     "category": "Python",
