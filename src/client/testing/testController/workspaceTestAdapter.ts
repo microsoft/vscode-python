@@ -101,6 +101,7 @@ export class WorkspaceTestAdapter {
             const testCaseIds = Array.from(testCaseIdsSet);
             // ** execution factory only defined for new rewrite way
             if (executionFactory !== undefined) {
+                traceVerbose('executionFactory defined');
                 rawTestExecData = await this.executionAdapter.runTests(
                     this.workspaceUri,
                     testCaseIds,
@@ -108,7 +109,6 @@ export class WorkspaceTestAdapter {
                     executionFactory,
                     debugLauncher,
                 );
-                traceVerbose('executionFactory defined');
             } else {
                 rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri, testCaseIds, debugBool);
             }
@@ -300,6 +300,7 @@ export class WorkspaceTestAdapter {
         try {
             // ** execution factory only defined for new rewrite way
             if (executionFactory !== undefined) {
+                traceVerbose('executionFactory defined');
                 rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
             } else {
                 rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri);

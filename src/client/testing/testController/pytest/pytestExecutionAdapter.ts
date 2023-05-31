@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as net from 'net';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
-import { traceError, traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
 import { DataReceivedEvent, ExecutionTestPayload, ITestExecutionAdapter, ITestServer } from '../common/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
@@ -21,7 +21,7 @@ import { EXTENSION_ROOT_DIR } from '../../../common/constants';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 // (global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
 /**
- * Wrapper Class for pytest test execution. This is where we call `runTestCommand`?
+ * Wrapper Class for pytest test execution..
  */
 
 export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
@@ -52,7 +52,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
-        traceVerbose(uri, testIds, debugBool);
         if (executionFactory !== undefined) {
             // ** new version of run tests.
             return this.runTestsNew(uri, testIds, debugBool, executionFactory, debugLauncher);
@@ -120,41 +119,43 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             const testData = JSON.stringify(testIds);
             const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
             const payload = `${headers.join('\r\n')}\r\n\r\n${testData}`;
+            traceLog(`Running pytest execution for the following test ids: ${testIds}`);
 
             let pytestRunTestIdsPort: string | undefined;
             const startServer = (): Promise<number> =>
                 new Promise((resolve, reject) => {
                     const server = net.createServer((socket: net.Socket) => {
                         socket.on('end', () => {
-                            traceLog('Client disconnected');
+                            traceVerbose('Client disconnected for pytest test ids server');
                         });
                     });
 
                     server.listen(0, () => {
                         const { port } = server.address() as net.AddressInfo;
-                        traceLog(`Server listening on port ${port}`);
+                        traceVerbose(`Server listening on port ${port} for pytest test ids server`);
                         resolve(port);
                     });
 
                     server.on('error', (error: Error) => {
+                        traceError('Error starting server for pytest test ids server:', error);
                         reject(error);
                     });
                     server.on('connection', (socket: net.Socket) => {
                         socket.write(payload);
-                        traceLog('payload sent', payload);
+                        traceVerbose('payload sent for pytest execution', payload);
                     });
                 });
 
             // Start the server and wait until it is listening
             await startServer()
                 .then((assignedPort) => {
-                    traceLog(`Server started and listening on port ${assignedPort}`);
+                    traceVerbose(`Server started for pytest test ids server and listening on port ${assignedPort}`);
                     pytestRunTestIdsPort = assignedPort.toString();
                     if (spawnOptions.extraVariables)
                         spawnOptions.extraVariables.RUN_TEST_IDS_PORT = pytestRunTestIdsPort;
                 })
                 .catch((error) => {
-                    traceError('Error starting server:', error);
+                    traceError('Error starting server for pytest test ids server:', error);
                 });
 
             if (debugBool) {
@@ -169,12 +170,13 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     pytestUUID,
                     pytestRunTestIdsPort,
                 };
-                traceVerbose(`Running debug test with arguments: ${testArgs.join(' ')}\r\n`);
+                traceInfo(`Running DEBUG pytest with arguments: ${testArgs.join(' ')}\r\n`);
                 await debugLauncher!.launchDebugger(launchOptions);
             } else {
                 // combine path to run script with run args
                 const scriptPath = path.join(fullPluginPath, 'vscode_pytest', 'run_pytest_script.py');
                 const runArgs = [scriptPath, ...testArgs];
+                traceInfo(`Running pytests with arguments: ${runArgs.join(' ')}\r\n`);
 
                 await execService?.exec(runArgs, spawnOptions).catch((ex) => {
                     traceError(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
@@ -182,7 +184,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 });
             }
         } catch (ex) {
-            traceVerbose(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
+            traceError(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
             return Promise.reject(ex);
         }
 
