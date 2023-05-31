@@ -1,41 +1,17 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-import io
 import json
 import os
 import pathlib
 import socket
 import sys
-from typing import List
 
 import pytest
 
-CONTENT_LENGTH: str = "Content-Length:"
-
-
-def process_rpc_json(data: str) -> List[str]:
-    """Process the JSON data which comes from the server which runs the pytest discovery."""
-    str_stream: io.StringIO = io.StringIO(data)
-
-    length: int = 0
-
-    while True:
-        line: str = str_stream.readline()
-        if CONTENT_LENGTH.lower() in line.lower():
-            length = int(line[len(CONTENT_LENGTH) :])
-            break
-
-        if not line or line.isspace():
-            raise ValueError("Header does not contain Content-Length")
-
-    while True:
-        line: str = str_stream.readline()
-        if not line or line.isspace():
-            break
-
-    raw_json: str = str_stream.read(length)
-    return json.loads(raw_json)
-
+script_dir = pathlib.Path(__file__).parent.parent
+sys.path.append(os.fspath(script_dir))
+sys.path.append(os.fspath(script_dir / "lib" / "python"))
+from testing_tools import process_json_util
 
 # This script handles running pytest via pytest.main(). It is called via run in the
 # pytest execution adapter and gets the test_ids to run via stdin and the rest of the
@@ -69,7 +45,9 @@ if __name__ == "__main__":
 
             try:
                 # Try to parse the buffer as JSON
-                test_ids_from_buffer = process_rpc_json(buffer.decode("utf-8"))
+                test_ids_from_buffer = process_json_util.process_rpc_json(
+                    buffer.decode("utf-8")
+                )
                 # Clear the buffer as complete JSON object is received
                 buffer = b""
 

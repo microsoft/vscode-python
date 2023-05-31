@@ -202,13 +202,20 @@ export class DebugLauncher implements ITestDebugLauncher {
             throw Error(`Invalid debug config "${debugConfig.name}"`);
         }
         launchArgs.request = 'launch';
+
+        // Both types of tests need to have the port for the test result server.
+        if (options.runTestIdsPort) {
+            launchArgs.env = {
+                ...launchArgs.env,
+                RUN_TEST_IDS_PORT: options.runTestIdsPort,
+            };
+        }
         if (options.testProvider === 'pytest' && pythonTestAdapterRewriteExperiment) {
             if (options.pytestPort && options.pytestUUID) {
                 launchArgs.env = {
                     ...launchArgs.env,
                     TEST_PORT: options.pytestPort,
                     TEST_UUID: options.pytestUUID,
-                    RUN_TEST_IDS_PORT: options.pytestRunTestIdsPort,
                 };
             } else {
                 throw Error(
