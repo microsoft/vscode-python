@@ -83,7 +83,7 @@ export class WorkspaceTestAdapter {
 
         let rawTestExecData;
         const testCaseNodes: TestItem[] = [];
-        const testCaseIds: string[] = [];
+        const testCaseIdsSet = new Set<string>();
         try {
             // first fetch all the individual test Items that we necessarily want
             includes.forEach((t) => {
@@ -95,10 +95,10 @@ export class WorkspaceTestAdapter {
                 runInstance.started(node); // do the vscode ui test item start here before runtest
                 const runId = this.vsIdToRunId.get(node.id);
                 if (runId) {
-                    testCaseIds.push(runId);
+                    testCaseIdsSet.add(runId);
                 }
             });
-
+            const testCaseIds = Array.from(testCaseIdsSet);
             // ** execution factory only defined for new rewrite way
             if (executionFactory !== undefined) {
                 rawTestExecData = await this.executionAdapter.runTests(
