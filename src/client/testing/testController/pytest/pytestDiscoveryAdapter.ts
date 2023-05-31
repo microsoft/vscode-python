@@ -10,7 +10,7 @@ import {
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { traceVerbose } from '../../../logging';
+import { traceError, traceLog, traceVerbose } from '../../../logging';
 import { DataReceivedEvent, DiscoveredTestPayload, ITestDiscoveryAdapter, ITestServer } from '../common/types';
 
 /**
@@ -80,11 +80,12 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             resource: uri,
         };
         const execService = await executionFactory.createActivatedEnvironment(creationOptions);
-        execService
-            .exec(['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs), spawnOptions)
-            .catch((ex) => {
-                deferred.reject(ex as Error);
-            });
+        const discoveryArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
+        traceLog(`Discovering pytest tests with arguments: ${discoveryArgs.join(' ')}`);
+        execService.exec(discoveryArgs, spawnOptions).catch((ex) => {
+            traceError(`Error occurred while discovering tests: ${ex}`);
+            deferred.reject(ex as Error);
+        });
         return deferred.promise;
     }
 }

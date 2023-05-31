@@ -14,6 +14,7 @@ import {
     TestCommandOptions,
     TestDiscoveryCommand,
 } from '../common/types';
+import { traceInfo } from '../../../logging';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.
@@ -61,6 +62,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
         // Send the test command to the server.
         // The server will fire an onDataReceived event once it gets a response.
+        traceInfo(`Sending discover unittest script to server.`);
         this.testServer.sendCommand(options);
 
         return deferred.promise;
