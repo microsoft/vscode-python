@@ -60,7 +60,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             outChannel: this.outputChannel,
         };
 
-        const deferred = createDeferred<ExecutionTestPayload>(); // what is this for - check in on it
+        const deferred = createDeferred<ExecutionTestPayload>();
         this.promiseMap.set(uuid, deferred);
 
         // create payload with testIds to send to run pytest script
