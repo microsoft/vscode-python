@@ -462,13 +462,15 @@
                             "All",
                             "pythonSurveyNotification",
                             "pythonPromptNewToolsExt",
-                            "pythonTerminalEnvVarActivation"
+                            "pythonTerminalEnvVarActivation",
+                            "pythonTestAdapter"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
                             "%python.experiments.pythonSurveyNotification.description%",
                             "%python.experiments.pythonPromptNewToolsExt.description%",
-                            "%python.experiments.pythonTerminalEnvVarActivation.description%"
+                            "%python.experiments.pythonTerminalEnvVarActivation.description%",
+                            "%python.experiments.pythonTestAdapter.description%"
                         ]
                     },
                     "scope": "machine",
@@ -483,13 +485,15 @@
                             "All",
                             "pythonSurveyNotification",
                             "pythonPromptNewToolsExt",
-                            "pythonTerminalEnvVarActivation"
+                            "pythonTerminalEnvVarActivation",
+                            "pythonTestAdapter"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
                             "%python.experiments.pythonSurveyNotification.description%",
                             "%python.experiments.pythonPromptNewToolsExt.description%",
-                            "%python.experiments.pythonTerminalEnvVarActivation.description%"
+                            "%python.experiments.pythonTerminalEnvVarActivation.description%",
+                            "%python.experiments.pythonTestAdapter.description%"
                         ]
                     },
                     "scope": "machine",
