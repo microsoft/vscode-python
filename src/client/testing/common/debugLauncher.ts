@@ -31,7 +31,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
-    public async launchDebugger(options: LaunchOptions): Promise<void> {
+    public async launchDebugger(options: LaunchOptions, callback?: () => void): Promise<void> {
         if (options.token && options.token.isCancellationRequested) {
             return undefined;
         }
@@ -47,6 +47,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         const deferred = createDeferred<void>();
         debugManager.onDidTerminateDebugSession(() => {
             deferred.resolve();
+            callback?.();
         });
         debugManager.startDebugging(workspaceFolder, launchArgs);
         return deferred.promise;
