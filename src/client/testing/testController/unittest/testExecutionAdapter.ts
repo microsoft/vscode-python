@@ -63,7 +63,8 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
 
         // Send test command to server.
         // Server fire onDataReceived event once it gets response.
-        this.testServer.sendCommand(options);
+        await this.testServer.sendCommand(options);
+        deferred.resolve();
 
         return deferred.promise;
     }

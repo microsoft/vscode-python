@@ -171,7 +171,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     pytestRunTestIdsPort,
                 };
                 traceInfo(`Running DEBUG pytest with arguments: ${testArgs.join(' ')}\r\n`);
-                await debugLauncher!.launchDebugger(launchOptions);
+                await debugLauncher!.launchDebugger(launchOptions).then(() => {
+                    traceInfo('Debugging has finished.');
+                });
             } else {
                 // combine path to run script with run args
                 const scriptPath = path.join(fullPluginPath, 'vscode_pytest', 'run_pytest_script.py');
@@ -187,7 +189,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             traceError(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
             return Promise.reject(ex);
         }
-
+        deferred.resolve();
         return deferred.promise;
     }
 }

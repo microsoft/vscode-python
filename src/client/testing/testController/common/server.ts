@@ -158,7 +158,9 @@ export class PythonTestServer implements ITestServer, Disposable {
                     testProvider: UNITTEST_PROVIDER,
                 };
                 traceInfo(`Running DEBUG unittest with arguments: ${args}\r\n`);
-                await this.debugLauncher!.launchDebugger(launchOptions);
+                await this.debugLauncher!.launchDebugger(launchOptions).then(() => {
+                    traceInfo('Debugging has finished.');
+                });
             } else {
                 if (isRun) {
                     // This means it is running the test
