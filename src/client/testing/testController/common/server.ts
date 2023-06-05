@@ -106,7 +106,7 @@ export class PythonTestServer implements ITestServer, Disposable {
         return this._onDataReceived.event;
     }
 
-    async sendCommand(options: TestCommandOptions, runTestIdPort?: string): Promise<void> {
+    async sendCommand(options: TestCommandOptions, runTestIdPort?: string, callback?: () => void): Promise<void> {
         const { uuid } = options;
         const spawnOptions: SpawnOptions = {
             token: options.token,
@@ -146,7 +146,10 @@ export class PythonTestServer implements ITestServer, Disposable {
                     runTestIdsPort: runTestIdPort,
                 };
                 traceInfo(`Running DEBUG unittest with arguments: ${args}\r\n`);
-                await this.debugLauncher!.launchDebugger(launchOptions);
+
+                await this.debugLauncher!.launchDebugger(launchOptions, () => {
+                    callback?.();
+                });
             } else {
                 if (isRun) {
                     // This means it is running the test

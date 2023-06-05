@@ -99,7 +99,9 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                 runTestIdsPort = assignedPort.toString();
                 // Send test command to server.
                 // Server fire onDataReceived event once it gets response.
-                this.testServer.sendCommand(options, runTestIdsPort); // does this need an await?
+                this.testServer.sendCommand(options, runTestIdsPort, () => {
+                    deferred.resolve();
+                });
             })
             .catch((error) => {
                 traceError('Error starting server:', error);
