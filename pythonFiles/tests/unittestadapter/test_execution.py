@@ -20,14 +20,12 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
                 "111",
                 "--uuid",
                 "fake-uuid",
-                "--testids",
-                "test_file.test_class.test_method",
             ],
-            (111, "fake-uuid", ["test_file.test_class.test_method"]),
+            (111, "fake-uuid"),
         ),
         (
-            ["--port", "111", "--uuid", "fake-uuid", "--testids", ""],
-            (111, "fake-uuid", [""]),
+            ["--port", "111", "--uuid", "fake-uuid"],
+            (111, "fake-uuid"),
         ),
         (
             [
@@ -35,12 +33,10 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
                 "111",
                 "--uuid",
                 "fake-uuid",
-                "--testids",
-                "test_file.test_class.test_method",
                 "-v",
                 "-s",
             ],
-            (111, "fake-uuid", ["test_file.test_class.test_method"]),
+            (111, "fake-uuid"),
         ),
     ],
 )

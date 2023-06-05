@@ -3,6 +3,7 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
+import * as net from 'net';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
@@ -14,6 +15,7 @@ import {
     TestCommandOptions,
     TestExecutionCommand,
 } from '../common/types';
+import { traceLog, traceError } from '../../../logging';
 
 /**
  * Wrapper Class for unittest test execution. This is where we call `runTestCommand`?
@@ -61,9 +63,47 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         const deferred = createDeferred<ExecutionTestPayload>();
         this.promiseMap.set(uuid, deferred);
 
-        // Send test command to server.
-        // Server fire onDataReceived event once it gets response.
-        this.testServer.sendCommand(options);
+        // create payload with testIds to send to run pytest script
+        const testData = JSON.stringify(testIds);
+        const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
+        const payload = `${headers.join('\r\n')}\r\n\r\n${testData}`;
+
+        let runTestIdsPort: string | undefined;
+        const startServer = (): Promise<number> =>
+            new Promise((resolve, reject) => {
+                const server = net.createServer((socket: net.Socket) => {
+                    socket.on('end', () => {
+                        traceLog('Client disconnected');
+                    });
+                });
+
+                server.listen(0, () => {
+                    const { port } = server.address() as net.AddressInfo;
+                    traceLog(`Server listening on port ${port}`);
+                    resolve(port);
+                });
+
+                server.on('error', (error: Error) => {
+                    reject(error);
+                });
+                server.on('connection', (socket: net.Socket) => {
+                    socket.write(payload);
+                    traceLog('payload sent', payload);
+                });
+            });
+
+        // Start the server and wait until it is listening
+        await startServer()
+            .then((assignedPort) => {
+                traceLog(`Server started and listening on port ${assignedPort}`);
+                runTestIdsPort = assignedPort.toString();
+                // Send test command to server.
+                // Server fire onDataReceived event once it gets response.
+                this.testServer.sendCommand(options, runTestIdsPort); // does this need an await?
+            })
+            .catch((error) => {
+                traceError('Error starting server:', error);
+            });
 
         return deferred.promise;
     }

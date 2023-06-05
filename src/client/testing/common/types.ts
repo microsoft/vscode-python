@@ -27,7 +27,7 @@ export type LaunchOptions = {
     outChannel?: OutputChannel;
     pytestPort?: string;
     pytestUUID?: string;
-    pytestRunTestIdsPort?: string;
+    runTestIdsPort?: string;
 };
 
 export type ParserOptions = TestDiscoveryOptions;
