@@ -168,7 +168,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     testProvider: PYTEST_PROVIDER,
                     pytestPort,
                     pytestUUID,
-                    pytestRunTestIdsPort,
+                    runTestIdsPort: pytestRunTestIdsPort,
                 };
                 traceInfo(`Running DEBUG pytest with arguments: ${testArgs.join(' ')}\r\n`);
                 await debugLauncher!.launchDebugger(launchOptions);

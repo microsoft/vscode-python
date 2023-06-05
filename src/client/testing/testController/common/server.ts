@@ -106,17 +106,18 @@ export class PythonTestServer implements ITestServer, Disposable {
         return this._onDataReceived.event;
     }
 
-    async sendCommand(options: TestCommandOptions): Promise<void> {
+    async sendCommand(options: TestCommandOptions, runTestIdPort?: string): Promise<void> {
         const { uuid } = options;
         const spawnOptions: SpawnOptions = {
             token: options.token,
             cwd: options.cwd,
             throwOnStdErr: true,
             outputChannel: options.outChannel,
+            extraVariables: {},
         };
 
+        if (spawnOptions.extraVariables) spawnOptions.extraVariables.RUN_TEST_IDS_PORT = runTestIdPort;
         const isRun = !options.testIds;
-
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
@@ -127,23 +128,9 @@ export class PythonTestServer implements ITestServer, Disposable {
         // Add the generated UUID to the data to be sent (expecting to receive it back).
         // first check if we have testIds passed in (in case of execution) and
         // insert appropriate flag and test id array
-        let args = [];
-        if (options.testIds) {
-            args = [
-                options.command.script,
-                '--port',
-                this.getPort().toString(),
-                '--uuid',
-                uuid,
-                '--testids',
-                ...options.testIds,
-            ].concat(options.command.args);
-        } else {
-            // if not case of execution, go with the normal args
-            args = [options.command.script, '--port', this.getPort().toString(), '--uuid', uuid].concat(
-                options.command.args,
-            );
-        }
+        const args = [options.command.script, '--port', this.getPort().toString(), '--uuid', uuid].concat(
+            options.command.args,
+        );
 
         if (options.outChannel) {
             options.outChannel.appendLine(`python ${args.join(' ')}`);
@@ -156,6 +143,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                     args,
                     token: options.token,
                     testProvider: UNITTEST_PROVIDER,
+                    runTestIdsPort: runTestIdPort,
                 };
                 traceInfo(`Running DEBUG unittest with arguments: ${args}\r\n`);
                 await this.debugLauncher!.launchDebugger(launchOptions);
