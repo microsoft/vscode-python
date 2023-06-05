@@ -497,6 +497,8 @@ Request-uuid: {testuuid}
 
 
 class PathEncoder(json.JSONEncoder):
+    """A custom JSON encoder that encodes pathlib.Path objects as strings."""
+
     def default(self, obj):
         if isinstance(obj, pathlib.Path):
             return os.fspath(obj)
