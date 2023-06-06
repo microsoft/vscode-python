@@ -61,6 +61,10 @@ extends:
           python ./build/update_ext_version.py --for-publishing
         displayName: Update build number
 
+      - script: |
+          python ./build/update_package_file.py
+        displayName: Update telemetry in package.json
+
       - script: npm run addExtensionPackDependencies
         displayName: Update optional extension dependencies
 
