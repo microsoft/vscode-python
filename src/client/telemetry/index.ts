@@ -46,8 +46,8 @@ function isTelemetrySupported(): boolean {
  * @returns {boolean}
  */
 export function isTelemetryDisabled(): boolean {
-    const packaJsonPath = path.join(EXTENSION_ROOT_DIR, 'package.json');
-    const packageJson = fs.readJSONSync(packaJsonPath);
+    const packageJsonPath = path.join(EXTENSION_ROOT_DIR, 'package.json');
+    const packageJson = fs.readJSONSync(packageJsonPath);
     return !packageJson.enableTelemetry;
 }
 
