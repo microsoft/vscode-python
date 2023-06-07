@@ -3,6 +3,7 @@
 
 import * as path from 'path';
 import { TestRun, Uri } from 'vscode';
+import * as net from 'net';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
@@ -59,6 +60,12 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         const deferred = createDeferred<ExecutionTestPayload>();
         this.promiseMap.set(uuid, deferred);
 
+        const disposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
+            if (runInstance) {
+                this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance);
+            }
+        });
+
         // create payload with testIds to send to run pytest script
         const testData = JSON.stringify(testIds);
         const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
@@ -95,7 +102,9 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                 runTestIdsPort = assignedPort.toString();
                 // Send test command to server.
                 // Server fire onDataReceived event once it gets response.
+
                 this.testServer.sendCommand(options, runTestIdsPort, () => {
+                    disposable.dispose();
                     deferred.resolve();
                 });
             })
@@ -103,10 +112,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                 traceError('Error starting server:', error);
             });
 
-    private async callSendCommand(options: TestCommandOptions): Promise<ExecutionTestPayload> {
-        await this.testServer.sendCommand(options);
-        const executionPayload: ExecutionTestPayload = { cwd: '', status: 'success', error: '' };
-        return executionPayload;
+        return deferred.promise;
     }
 }
 
