@@ -31,6 +31,7 @@ import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { TestProvider } from '../types';
 import { PythonTestServer } from './common/server';
 import { DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
+import { pythonTestAdapterRewriteEnabled } from './common/utils';
 import {
     ITestController,
     ITestDiscoveryAdapter,

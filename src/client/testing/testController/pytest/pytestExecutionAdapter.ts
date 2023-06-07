@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as net from 'net';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
-import { traceError, traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
 import {
     DataReceivedEvent,
     ExecutionTestPayload,

@@ -6,7 +6,7 @@ import * as util from 'util';
 import { CancellationToken, TestController, TestItem, TestRun, Uri } from 'vscode';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
-import { traceError, traceVerbose } from '../../logging';
+import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestProvider } from '../types';

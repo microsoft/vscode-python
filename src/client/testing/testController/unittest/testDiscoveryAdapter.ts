@@ -15,7 +15,6 @@ import {
     TestCommandOptions,
     TestDiscoveryCommand,
 } from '../common/types';
-import { traceInfo } from '../../../logging';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.

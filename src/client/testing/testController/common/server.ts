@@ -9,7 +9,7 @@ import {
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
-import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceLog } from '../../../logging';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
