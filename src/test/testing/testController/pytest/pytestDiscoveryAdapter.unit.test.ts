@@ -13,6 +13,7 @@ import {
     SpawnOptions,
 } from '../../../../client/common/process/types';
 import { createDeferred, Deferred } from '../../../../client/common/utils/async';
+import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 
 suite('pytest test discovery adapter', () => {
     let testServer: typeMoq.IMock<ITestServer>;
@@ -29,13 +30,16 @@ suite('pytest test discovery adapter', () => {
     let expectedExtraVariables: Record<string, string>;
 
     setup(() => {
+        const mockExtensionRootDir = typeMoq.Mock.ofType<string>();
+        mockExtensionRootDir.setup((m) => m.toString()).returns(() => '/mocked/extension/root/dir');
+
         // constants
         portNum = 12345;
         uuid = 'uuid123';
         expectedPath = '/my/test/path/';
         uri = Uri.file(expectedPath);
         expectedExtraVariables = {
-            PYTHONPATH: '/Users/eleanorboyd/vscode-python/pythonFiles',
+            PYTHONPATH: EXTENSION_ROOT_DIR.concat('/pythonFiles'),
             TEST_UUID: uuid,
             TEST_PORT: portNum.toString(),
         };
