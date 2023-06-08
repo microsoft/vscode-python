@@ -40,6 +40,22 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         debugBool?: boolean,
         runInstance?: TestRun,
     ): Promise<ExecutionTestPayload> {
+        const disposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
+            if (runInstance) {
+                this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance);
+            }
+        });
+        try {
+            await this.runTestsNew(uri, testIds, debugBool);
+        } finally {
+            disposable.dispose();
+            // confirm with testing that this gets called (it must clean this up)
+        }
+        const executionPayload: ExecutionTestPayload = { cwd: uri.fsPath, status: 'success', error: '' };
+        return executionPayload;
+    }
+
+    private async runTestsNew(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload> {
         const settings = this.configSettings.getSettings(uri);
         const { unittestArgs } = settings.testing;
 
@@ -59,13 +75,6 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
 
         const deferred = createDeferred<ExecutionTestPayload>();
         this.promiseMap.set(uuid, deferred);
-
-        const disposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
-            if (runInstance) {
-                this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance);
-            }
-        });
-
         // create payload with testIds to send to run pytest script
         const testData = JSON.stringify(testIds);
         const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
@@ -102,17 +111,18 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                 runTestIdsPort = assignedPort.toString();
                 // Send test command to server.
                 // Server fire onDataReceived event once it gets response.
-
-                this.testServer.sendCommand(options, runTestIdsPort, () => {
-                    disposable.dispose();
-                    deferred.resolve();
-                });
             })
             .catch((error) => {
                 traceError('Error starting server:', error);
             });
 
-        return deferred.promise;
+        await this.testServer.sendCommand(options, runTestIdsPort, () => {
+            // disposable.dispose();
+            deferred.resolve();
+        });
+        // return deferred.promise;
+        const executionPayload: ExecutionTestPayload = { cwd: uri.fsPath, status: 'success', error: '' };
+        return executionPayload;
     }
 }
 
