@@ -257,6 +257,9 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 test_file_node["children"].append(test_class_node)
         elif hasattr(test_case, "callspec"):  # This means it is a parameterized test.
             function_name: str = ""
+            # parameterized test cases cut the repetitive part of the name off.
+            name_split = test_node["name"].split("[")[1]
+            test_node["name"] = "[" + name_split
             try:
                 function_name = test_case.originalname  # type: ignore
                 function_test_case = function_nodes_dict[function_name]

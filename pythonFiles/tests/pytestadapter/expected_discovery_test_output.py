@@ -389,9 +389,9 @@ double_nested_folder_expected_output = {
 # This is the expected output for the nested_folder tests.
 # └── parametrize_tests.py
 #    └── test_adding
-#       └── test_adding[3+5-8]
-#       └── test_adding[2+4-6]
-#       └── test_adding[6+9-16]
+#       └── [3+5-8]
+#       └── [2+4-6]
+#       └── [6+9-16]
 parameterize_tests_path = os.fspath(TEST_DATA_PATH / "parametrize_tests.py")
 parametrize_tests_expected_output = {
     "name": ".data",
@@ -411,7 +411,7 @@ parametrize_tests_expected_output = {
                     "id_": "parametrize_tests.py::test_adding",
                     "children": [
                         {
-                            "name": "test_adding[3+5-8]",
+                            "name": "[3+5-8]",
                             "path": parameterize_tests_path,
                             "lineno": find_test_line_number(
                                 "test_adding[3+5-8]",
@@ -422,7 +422,7 @@ parametrize_tests_expected_output = {
                             "runID": "parametrize_tests.py::test_adding[3+5-8]",
                         },
                         {
-                            "name": "test_adding[2+4-6]",
+                            "name": "[2+4-6]",
                             "path": parameterize_tests_path,
                             "lineno": find_test_line_number(
                                 "test_adding[2+4-6]",
@@ -433,7 +433,7 @@ parametrize_tests_expected_output = {
                             "runID": "parametrize_tests.py::test_adding[2+4-6]",
                         },
                         {
-                            "name": "test_adding[6+9-16]",
+                            "name": "[6+9-16]",
                             "path": parameterize_tests_path,
                             "lineno": find_test_line_number(
                                 "test_adding[6+9-16]",
