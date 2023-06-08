@@ -20,8 +20,8 @@ class TestData(TypedDict):
     """A general class that all test objects inherit from."""
 
     name: str
-    path: str
-    type_: Literal["class", "file", "folder", "test", "error"]
+    path: pathlib.Path
+    type_: Literal["class", "function", "file", "folder", "test", "error"]
     id_: str
 
 
@@ -196,12 +196,10 @@ def pytest_sessionfinish(session, exitstatus):
                 )
             post_response(os.fsdecode(cwd), session_node)
         except Exception as e:
-            ERRORS.append(
-                f"Error Occurred, traceback: {(traceback.format_exc() if e.__traceback__ else '')}"
-            )
+            f"Error Occurred, description: {e.args[0] if e.args and e.args[0] else ''} traceback: {(traceback.format_exc() if e.__traceback__ else '')}"
             errorNode: TestNode = {
                 "name": "",
-                "path": "",
+                "path": cwd,
                 "type_": "error",
                 "children": [],
                 "id_": "",
@@ -232,6 +230,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     session_children_dict: Dict[str, TestNode] = {}
     file_nodes_dict: Dict[Any, TestNode] = {}
     class_nodes_dict: Dict[str, TestNode] = {}
+    function_nodes_dict: Dict[str, TestNode] = {}
 
     for test_case in session.items:
         test_node = create_test_node(test_case)
@@ -256,6 +255,35 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             # Check if the class is already a child of the file node.
             if test_class_node not in test_file_node["children"]:
                 test_file_node["children"].append(test_class_node)
+        elif hasattr(test_case, "callspec"):  # This means it is a parameterized test.
+            function_name: str = ""
+            # parameterized test cases cut the repetitive part of the name off.
+            name_split = test_node["name"].split("[")[1]
+            test_node["name"] = "[" + name_split
+            try:
+                function_name = test_case.originalname  # type: ignore
+                function_test_case = function_nodes_dict[function_name]
+            except AttributeError:  # actual error has occurred
+                ERRORS.append(
+                    f"unable to find original name for {test_case.name} with parameterization detected."
+                )
+                raise VSCodePytestError(
+                    "Unable to find original name for parameterized test case"
+                )
+            except KeyError:
+                function_test_case: TestNode = create_parameterized_function_node(
+                    function_name, test_case.path, test_case.nodeid
+                )
+                function_nodes_dict[function_name] = function_test_case
+            function_test_case["children"].append(test_node)
+            # Now, add the function node to file node.
+            try:
+                parent_test_case = file_nodes_dict[test_case.parent]
+            except KeyError:
+                parent_test_case = create_file_node(test_case.parent)
+                file_nodes_dict[test_case.parent] = parent_test_case
+            if function_test_case not in parent_test_case["children"]:
+                parent_test_case["children"].append(function_test_case)
         else:  # This includes test cases that are pytest functions or a doctests.
             try:
                 parent_test_case = file_nodes_dict[test_case.parent]
@@ -264,10 +292,10 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 file_nodes_dict[test_case.parent] = parent_test_case
             parent_test_case["children"].append(test_node)
     created_files_folders_dict: Dict[str, TestNode] = {}
-    for file_module, file_node in file_nodes_dict.items():
+    for _, file_node in file_nodes_dict.items():
         # Iterate through all the files that exist and construct them into nested folders.
         root_folder_node: TestNode = build_nested_folders(
-            file_module, file_node, created_files_folders_dict, session
+            file_node, created_files_folders_dict, session
         )
         # The final folder we get to is the highest folder in the path
         # and therefore we add this as a child to the session.
@@ -279,7 +307,6 @@ def build_test_tree(session: pytest.Session) -> TestNode:
 
 
 def build_nested_folders(
-    file_module: Any,
     file_node: TestNode,
     created_files_folders_dict: Dict[str, TestNode],
     session: pytest.Session,
@@ -295,7 +322,7 @@ def build_nested_folders(
     prev_folder_node = file_node
 
     # Begin the iterator_path one level above the current file.
-    iterator_path = file_module.path.parent
+    iterator_path = file_node["path"].parent
     while iterator_path != session.path:
         curr_folder_name = iterator_path.name
         try:
@@ -325,7 +352,7 @@ def create_test_node(
     )
     return {
         "name": test_case.name,
-        "path": os.fspath(test_case.path),
+        "path": test_case.path,
         "lineno": test_case_loc,
         "type_": "test",
         "id_": test_case.nodeid,
@@ -341,7 +368,7 @@ def create_session_node(session: pytest.Session) -> TestNode:
     """
     return {
         "name": session.name,
-        "path": os.fspath(session.path),
+        "path": session.path,
         "type_": "folder",
         "children": [],
         "id_": os.fspath(session.path),
@@ -356,10 +383,31 @@ def create_class_node(class_module: pytest.Class) -> TestNode:
     """
     return {
         "name": class_module.name,
-        "path": os.fspath(class_module.path),
+        "path": class_module.path,
         "type_": "class",
         "children": [],
         "id_": class_module.nodeid,
+    }
+
+
+def create_parameterized_function_node(
+    function_name: str, test_path: pathlib.Path, test_id: str
+) -> TestNode:
+    """Creates a function node to be the parent for the parameterized test nodes.
+
+    Keyword arguments:
+    function_name -- the name of the function.
+    test_path -- the path to the test file.
+    test_id -- the id of the test, which is a parameterized test so it
+      must be edited to get a unique id for the function node.
+    """
+    function_id: str = test_id.split("::")[0] + "::" + function_name
+    return {
+        "name": function_name,
+        "path": test_path,
+        "type_": "function",
+        "children": [],
+        "id_": function_id,
     }
 
 
@@ -371,14 +419,14 @@ def create_file_node(file_module: Any) -> TestNode:
     """
     return {
         "name": file_module.path.name,
-        "path": os.fspath(file_module.path),
+        "path": file_module.path,
         "type_": "file",
         "id_": os.fspath(file_module.path),
         "children": [],
     }
 
 
-def create_folder_node(folderName: str, path_iterator: pathlib.Path) -> TestNode:
+def create_folder_node(folder_name: str, path_iterator: pathlib.Path) -> TestNode:
     """Creates a folder node from a pytest folder name and its path.
 
     Keyword arguments:
@@ -386,8 +434,8 @@ def create_folder_node(folderName: str, path_iterator: pathlib.Path) -> TestNode
     path_iterator -- the path of the folder.
     """
     return {
-        "name": folderName,
-        "path": os.fspath(path_iterator),
+        "name": folder_name,
+        "path": path_iterator,
         "type_": "folder",
         "id_": os.fspath(path_iterator),
         "children": [],
@@ -451,6 +499,15 @@ Request-uuid: {testuuid}
         print(f"[vscode-pytest] data: {request}")
 
 
+class PathEncoder(json.JSONEncoder):
+    """A custom JSON encoder that encodes pathlib.Path objects as strings."""
+
+    def default(self, obj):
+        if isinstance(obj, pathlib.Path):
+            return os.fspath(obj)
+        return super().default(obj)
+
+
 def post_response(cwd: str, session_node: TestNode) -> None:
     """Sends a post request to the server.
 
@@ -467,13 +524,13 @@ def post_response(cwd: str, session_node: TestNode) -> None:
     }
     if ERRORS is not None:
         payload["error"] = ERRORS
-    testPort: Union[str, int] = os.getenv("TEST_PORT", 45454)
-    testuuid: Union[str, None] = os.getenv("TEST_UUID")
-    addr = "localhost", int(testPort)
-    data = json.dumps(payload)
+    test_port: Union[str, int] = os.getenv("TEST_PORT", 45454)
+    test_uuid: Union[str, None] = os.getenv("TEST_UUID")
+    addr = "localhost", int(test_port)
+    data = json.dumps(payload, cls=PathEncoder)
     request = f"""Content-Length: {len(data)}
 Content-Type: application/json
-Request-uuid: {testuuid}
+Request-uuid: {test_uuid}
 
 {data}"""
     try:

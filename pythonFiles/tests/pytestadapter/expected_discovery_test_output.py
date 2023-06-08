@@ -1,5 +1,4 @@
 import os
-import pathlib
 
 from .helpers import TEST_DATA_PATH, find_test_line_number
 
@@ -389,9 +388,10 @@ double_nested_folder_expected_output = {
 
 # This is the expected output for the nested_folder tests.
 # └── parametrize_tests.py
-#    └── test_adding[3+5-8]
-#    └── test_adding[2+4-6]
-#    └── test_adding[6+9-16]
+#    └── test_adding
+#       └── [3+5-8]
+#       └── [2+4-6]
+#       └── [6+9-16]
 parameterize_tests_path = os.fspath(TEST_DATA_PATH / "parametrize_tests.py")
 parametrize_tests_expected_output = {
     "name": ".data",
@@ -405,40 +405,48 @@ parametrize_tests_expected_output = {
             "id_": parameterize_tests_path,
             "children": [
                 {
-                    "name": "test_adding[3+5-8]",
+                    "name": "test_adding",
                     "path": parameterize_tests_path,
-                    "lineno": find_test_line_number(
-                        "test_adding[3+5-8]",
-                        parameterize_tests_path,
-                    ),
-                    "type_": "test",
-                    "id_": "parametrize_tests.py::test_adding[3+5-8]",
-                    "runID": "parametrize_tests.py::test_adding[3+5-8]",
-                },
-                {
-                    "name": "test_adding[2+4-6]",
-                    "path": parameterize_tests_path,
-                    "lineno": find_test_line_number(
-                        "test_adding[2+4-6]",
-                        parameterize_tests_path,
-                    ),
-                    "type_": "test",
-                    "id_": "parametrize_tests.py::test_adding[2+4-6]",
-                    "runID": "parametrize_tests.py::test_adding[2+4-6]",
-                },
-                {
-                    "name": "test_adding[6+9-16]",
-                    "path": parameterize_tests_path,
-                    "lineno": find_test_line_number(
-                        "test_adding[6+9-16]",
-                        parameterize_tests_path,
-                    ),
-                    "type_": "test",
-                    "id_": "parametrize_tests.py::test_adding[6+9-16]",
-                    "runID": "parametrize_tests.py::test_adding[6+9-16]",
+                    "type_": "function",
+                    "id_": "parametrize_tests.py::test_adding",
+                    "children": [
+                        {
+                            "name": "[3+5-8]",
+                            "path": parameterize_tests_path,
+                            "lineno": find_test_line_number(
+                                "test_adding[3+5-8]",
+                                parameterize_tests_path,
+                            ),
+                            "type_": "test",
+                            "id_": "parametrize_tests.py::test_adding[3+5-8]",
+                            "runID": "parametrize_tests.py::test_adding[3+5-8]",
+                        },
+                        {
+                            "name": "[2+4-6]",
+                            "path": parameterize_tests_path,
+                            "lineno": find_test_line_number(
+                                "test_adding[2+4-6]",
+                                parameterize_tests_path,
+                            ),
+                            "type_": "test",
+                            "id_": "parametrize_tests.py::test_adding[2+4-6]",
+                            "runID": "parametrize_tests.py::test_adding[2+4-6]",
+                        },
+                        {
+                            "name": "[6+9-16]",
+                            "path": parameterize_tests_path,
+                            "lineno": find_test_line_number(
+                                "test_adding[6+9-16]",
+                                parameterize_tests_path,
+                            ),
+                            "type_": "test",
+                            "id_": "parametrize_tests.py::test_adding[6+9-16]",
+                            "runID": "parametrize_tests.py::test_adding[6+9-16]",
+                        },
+                    ],
                 },
             ],
-        }
+        },
     ],
     "id_": TEST_DATA_PATH_STR,
 }
