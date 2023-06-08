@@ -88,7 +88,7 @@ export interface ITestConfigurationManagerFactory {
 }
 export const ITestDebugLauncher = Symbol('ITestDebugLauncher');
 export interface ITestDebugLauncher {
-    launchDebugger(options: LaunchOptions): Promise<void>;
+    launchDebugger(options: LaunchOptions, callback?: () => void): Promise<void>;
 }
 
 export const IUnitTestSocketServer = Symbol('IUnitTestSocketServer');

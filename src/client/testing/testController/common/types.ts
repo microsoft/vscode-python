@@ -172,7 +172,7 @@ export type TestCommandOptionsPytest = {
  */
 export interface ITestServer {
     readonly onDataReceived: Event<DataReceivedEvent>;
-    sendCommand(options: TestCommandOptions, runTestIdsPort?: string): Promise<void>;
+    sendCommand(options: TestCommandOptions, runTestIdsPort?: string, callback?: () => void): Promise<void>;
     serverReady(): Promise<void>;
     getPort(): number;
     createUUID(cwd: string): string;
