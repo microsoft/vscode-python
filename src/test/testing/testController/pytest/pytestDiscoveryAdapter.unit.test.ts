@@ -4,6 +4,7 @@
 import * as assert from 'assert';
 import { Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
+import * as path from 'path';
 import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
 import { PytestTestDiscoveryAdapter } from '../../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
 import { ITestServer } from '../../../../client/testing/testController/common/types';
@@ -38,8 +39,10 @@ suite('pytest test discovery adapter', () => {
         uuid = 'uuid123';
         expectedPath = '/my/test/path/';
         uri = Uri.file(expectedPath);
+        const relativePathToPytest = 'pythonFiles';
+        const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         expectedExtraVariables = {
-            PYTHONPATH: EXTENSION_ROOT_DIR.concat('/pythonFiles'),
+            PYTHONPATH: fullPluginPath,
             TEST_UUID: uuid,
             TEST_PORT: portNum.toString(),
         };
