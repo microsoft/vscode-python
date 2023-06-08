@@ -3,7 +3,6 @@
 
 import { TestRun, Uri } from 'vscode';
 import * as path from 'path';
-import * as net from 'net';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
