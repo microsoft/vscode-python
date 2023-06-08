@@ -4,9 +4,10 @@
 
 import TelemetryReporter from '@vscode/extension-telemetry';
 
+import * as path from 'path';
+import * as fs from 'fs-extra';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
-import { IWorkspaceService } from '../common/application/types';
-import { AppinsightsKey, isTestExecution, isUnitTestExecution } from '../common/constants';
+import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, isUnitTestExecution } from '../common/constants';
 import type { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { isPromise } from '../common/utils/async';
@@ -41,12 +42,13 @@ function isTelemetrySupported(): boolean {
 }
 
 /**
- * Checks if the telemetry is disabled in user settings
+ * Checks if the telemetry is disabled
  * @returns {boolean}
  */
-export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolean {
-    const settings = workspaceService.getConfiguration('telemetry').inspect<boolean>('enableTelemetry')!;
-    return settings.globalValue === false;
+export function isTelemetryDisabled(): boolean {
+    const packageJsonPath = path.join(EXTENSION_ROOT_DIR, 'package.json');
+    const packageJson = fs.readJSONSync(packageJsonPath);
+    return !packageJson.enableTelemetry;
 }
 
 const sharedProperties: Record<string, unknown> = {};
@@ -101,7 +103,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     properties?: P[E],
     ex?: Error,
 ): void {
-    if (isTestExecution() || !isTelemetrySupported()) {
+    if (isTestExecution() || !isTelemetrySupported() || isTelemetryDisabled()) {
         return;
     }
     const reporter = getTelemetryReporter();

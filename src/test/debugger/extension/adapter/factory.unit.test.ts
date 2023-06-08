@@ -6,6 +6,7 @@
 import * as assert from 'assert';
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import rewiremock from 'rewiremock';
@@ -36,6 +37,7 @@ suite('Debugging - Adapter Factory', () => {
     let stateFactory: IPersistentStateFactory;
     let state: PersistentState<boolean | undefined>;
     let showErrorMessageStub: sinon.SinonStub;
+    let readJSONSyncStub: sinon.SinonStub;
     let commandManager: ICommandManager;
 
     const nodeExecutable = undefined;
@@ -66,6 +68,8 @@ suite('Debugging - Adapter Factory', () => {
     setup(() => {
         process.env.VSC_PYTHON_UNIT_TEST = undefined;
         process.env.VSC_PYTHON_CI_TEST = undefined;
+        readJSONSyncStub = sinon.stub(fs, 'readJSONSync');
+        readJSONSyncStub.returns({ enableTelemetry: true });
         rewiremock.enable();
         rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
         stateFactory = mock(PersistentStateFactory);
